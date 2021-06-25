@@ -14,7 +14,6 @@
 
 name: VerifyContent
 on:
-  push:
   pull_request:
     paths:
       - "site/**"

@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Generate Site
-        run: make site-generate
+        run: make site-run-server
       - name: Generate sitemap
         run: make site-map
       - uses: FirebaseExtended/action-hosting-deploy@276388dd6c2cde23455b30293105cc866c22282d # v0

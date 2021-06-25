@@ -15,8 +15,6 @@
 name: "Kpt Live - KinD Tests"
 on:
   pull_request:
-    branches:
-      - main
     paths-ignore:
       - "docs/**"
       - "site/**"

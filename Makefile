@@ -98,6 +98,7 @@ site-generate:
 	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
 
 site-map:
+	make site-run-server
 	./scripts/generate-sitemap.sh
 
 site-run-server:
