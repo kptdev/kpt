@@ -13,7 +13,7 @@ provide your business logic.
 The following is an example package with a `starlark` function declaration:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark/set-namespace@starlark/v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark-set-namespace@starlark/v0.1
 ```
 
 It contains the following `functionConfig`:
@@ -57,7 +57,7 @@ data structures.
 The following is an example package with a `gatekeeper` function declaration:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/gatekeeper/invalid-configmap@gatekeeper/v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/gatekeeper-invalid-configmap@gatekeeper/v0.1
 ```
 
 It contains the policy constraint containing the Rego logic which looks for

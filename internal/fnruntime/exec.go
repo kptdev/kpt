@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 )
 
 type ExecFn struct {

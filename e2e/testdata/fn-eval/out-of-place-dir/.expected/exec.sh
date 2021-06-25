@@ -15,4 +15,6 @@
 
 set -eo pipefail
 
+rm -rf out
+
 kpt fn eval --image gcr.io/kpt-fn/set-namespace:v0.1.3 -o out -- namespace=staging

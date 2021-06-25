@@ -31,6 +31,10 @@ func TestFnEval(t *testing.T) {
 	runAllTests(t, filepath.Join(".", "testdata", "fn-eval"))
 }
 
+func TestFnSink(t *testing.T) {
+	runAllTests(t, filepath.Join(".", "testdata", "fn-sink"))
+}
+
 // runTests will scan test cases in 'path', run the command
 // on all of the packages in path, and test that
 // the diff between the results and the original package is as

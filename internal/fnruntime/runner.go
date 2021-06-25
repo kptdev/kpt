@@ -27,8 +27,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -39,7 +39,7 @@ import (
 // NewContainerRunner returns a kio.Filter given a specification of a container function
 // and it's config.
 func NewContainerRunner(
-	ctx context.Context, f *kptfilev1alpha2.Function,
+	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
@@ -124,7 +124,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 // do executes the kpt function and returns the modified resources.
 // fnResult is updated with the function results returned by the kpt function.
 func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	if krmErr := kptfilev1alpha2.AreKRM(input); krmErr != nil {
+	if krmErr := kptfilev1.AreKRM(input); krmErr != nil {
 		return output, fmt.Errorf("input resource list must contain only KRM resources: %s", krmErr.Error())
 	}
 
@@ -133,7 +133,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	if pathErr := enforcePathInvariants(output); pathErr != nil {
 		return output, pathErr
 	}
-	if krmErr := kptfilev1alpha2.AreKRM(output); krmErr != nil {
+	if krmErr := kptfilev1.AreKRM(output); krmErr != nil {
 		return output, fmt.Errorf("output resource list must contain only KRM resources: %s", krmErr.Error())
 	}
 
@@ -407,7 +407,7 @@ func resourceRefToString(ref yaml.ResourceIdentifier) string {
 	return s.String()
 }
 
-func newFnConfig(f *kptfilev1alpha2.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	var fn errors.Fn = errors.Fn(f.Image)
 

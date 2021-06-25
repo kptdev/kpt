@@ -187,9 +187,13 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
 	dryRunStrategy common.DryRunStrategy) error {
 	if r.installCRD {
-		err := cmdutil.InstallResourceGroupCRD(r.ctx, r.provider.Factory())
-		if err != nil {
-			return err
+		f := r.provider.Factory()
+		// Only install the ResourceGroup CRD if it is not already installed.
+		if err := cmdutil.VerifyResourceGroupCRD(f); err != nil {
+			err = cmdutil.InstallResourceGroupCRD(r.ctx, f)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

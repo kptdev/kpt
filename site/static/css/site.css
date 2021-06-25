@@ -125,7 +125,7 @@ pre.language-shell button.copy-button:hover {
 
 .github-widget {
   position: absolute;
-  left: 50%;
+  left: 47%;
   margin-top: 2.5em;
   padding-top: 8px;
 }
@@ -142,4 +142,8 @@ pre.language-shell button.copy-button:hover {
 .pagination-item-label {
   z-index: -1;
   position: relative;
+}
+
+.pagination-item a:hover {
+  color: black;
 }

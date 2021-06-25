@@ -48,7 +48,7 @@ function convertFromHugo(content) {
 
 async function addVersionDropdown() {
   const sidebar = document.getElementsByClassName("sidebar").item(0);
-  const latestVersion = "v1.0.0-alpha";
+  const latestVersion = "v1.0.0-beta";
   const versionDropdown = `
   <div class="dropdown">
                 <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">${latestVersion}

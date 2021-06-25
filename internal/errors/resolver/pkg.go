@@ -19,7 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
 //nolint:gochecknoinits
@@ -33,8 +33,14 @@ Error: No Kptfile found at {{ printf "%q" .path }}.
 `
 
 	//nolint:lll
-	deprecatedKptfileMsg = `
-Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema. Please update the package to the latest format. See https://kpt.dev/installation/migration for more details.
+	deprecatedv1Alpha1KptfileMsg = `
+Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
+Please update the package to the latest format by following https://kpt.dev/installation/migration.
+`
+
+	deprecatedv1Alpha2KptfileMsg = `
+Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
+Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.2" to upgrade the package and retry.
 `
 
 	unknownKptfileResourceMsg = `
@@ -91,11 +97,23 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 		}, true
 	}
 
-	var deprecatedKptfileError *pkg.DeprecatedKptfileError
-	if errors.As(err, &deprecatedKptfileError) {
-		tmplArgs["version"] = deprecatedKptfileError.Version
+	var deprecatedv1alpha1KptfileError *pkg.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
+		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[0] {
+		tmplArgs["version"] = deprecatedv1alpha1KptfileError.Version
+		errMsg := deprecatedv1Alpha1KptfileMsg
 		return ResolvedResult{
-			Message: ExecuteTemplate(deprecatedKptfileMsg, tmplArgs),
+			Message: ExecuteTemplate(errMsg, tmplArgs),
+		}, true
+	}
+
+	var deprecatedv1alpha2KptfileError *pkg.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
+		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[1] {
+		tmplArgs["version"] = deprecatedv1alpha2KptfileError.Version
+		errMsg := deprecatedv1Alpha2KptfileMsg
+		return ResolvedResult{
+			Message: ExecuteTemplate(errMsg, tmplArgs),
 		}, true
 	}
 

@@ -4,11 +4,11 @@ committing them to a Git repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.5
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit
-SHA. In this case, we are specifying tag `v0.5`.
+SHA. In this case, we are specifying tag `v0.7`.
 
 ?> Refer to the [get command reference][get-doc] for usage.
 
@@ -17,7 +17,7 @@ look at the content of the `Kptfile` on your local filesystem:
 
 ```yaml
 # wordpress/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
@@ -26,15 +26,15 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: v0.5
+    ref: v0.7
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.5
-    commit: 4af5f509f33ab00ac99b1c3d146f8d1a4f4d3d0e
+    ref: package-examples/wordpress/v0.7
+    commit: cbd342d350b88677e522bf0d9faa0675edb8bbc1
 info:
   emails:
     - kpt-team@google.com
@@ -65,7 +65,7 @@ Now, let's look at the `Kptfile` for the `mysql` subpackage:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
@@ -101,7 +101,7 @@ For example, the following fetches the packages to a directory named
 `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.5 mywordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a

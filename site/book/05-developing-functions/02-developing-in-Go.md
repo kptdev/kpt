@@ -70,7 +70,7 @@ $ go build -o my-fn .
 Fetch the wordpress package:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.5
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7
 ```
 
 Test it by running the function imperatively:

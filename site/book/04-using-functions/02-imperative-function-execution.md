@@ -17,7 +17,7 @@ For comparison, this has the same effect as the following declaration:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
@@ -158,7 +158,7 @@ Here is an example:
 $ kpt fn source wordpress \
   | kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
   | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1 -- app=wordpress env=prod \
-  | kpt fn sink wordpress
+  | kpt fn sink my-wordpress
 ```
 
 ?> Refer to the command reference for usage of [source][source-doc] and
@@ -177,8 +177,7 @@ The following describes the above pipeline:
    the output items.
 3. The output of the `set-namespace` function is piped into `set-labels`
    function which adds the given labels to all resources.
-4. The `sink` command writes the output of `set-labels` to the filesystem
-   in-place.
+4. The `sink` command writes the output of `set-labels` to the filesystem.
 
 This is a low-level and less abstracted approach to executing functions. You can
 instead write the output of the pipeline to a different directory instead of

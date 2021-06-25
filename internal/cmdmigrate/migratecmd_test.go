@@ -27,7 +27,7 @@ var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
 var kptfileStr = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 inventory:
   name: test-inventory-obj
@@ -345,7 +345,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 }
 
 var kptFileWithInventory = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -363,7 +363,7 @@ inventory:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFile = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1

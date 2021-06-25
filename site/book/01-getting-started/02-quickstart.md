@@ -9,7 +9,7 @@ package of configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.4
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.7
 ```
 
 Subsequent commands are run from the `nginx` directory:
@@ -155,10 +155,10 @@ First, commit your local changes:
 $ git add .; git commit -m "My customizations"
 ```
 
-Then update to version `v0.5`:
+Then update to version `v0.8`:
 
 ```shell
-$ kpt pkg update @v0.5
+$ kpt pkg update @v0.8
 ```
 
 This merges the upstream changes with your local changes using a schema-aware

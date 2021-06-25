@@ -29,8 +29,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -326,7 +326,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	if pl.IsEmpty() {
-		if err := kptfilev1alpha2.AreKRM(input); err != nil {
+		if err := kptfilev1.AreKRM(input); err != nil {
 			return nil, fmt.Errorf("input resource list must contain only KRM resources: %s", err.Error())
 		}
 		return input, nil
@@ -457,7 +457,7 @@ func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, erro
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
