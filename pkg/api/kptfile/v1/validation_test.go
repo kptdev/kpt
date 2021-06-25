@@ -235,7 +235,7 @@ func TestValidateFunctionName(t *testing.T) {
 	for _, n := range inputs {
 		n := n
 		t.Run(n.Name, func(t *testing.T) {
-			err := ValidateFunctionName(n.Name)
+			err := ValidateFunctionImageURL(n.Name)
 			if n.Valid && err != nil {
 				t.Fatalf("function name %s should be valid", n.Name)
 			}

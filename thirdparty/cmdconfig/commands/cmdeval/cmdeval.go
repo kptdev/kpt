@@ -162,7 +162,7 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 	fn := &runtimeutil.FunctionSpec{}
 	var execArgs []string
 	if r.Image != "" {
-		if err := kptfile.ValidateFunctionName(r.Image); err != nil {
+		if err := kptfile.ValidateFunctionImageURL(r.Image); err != nil {
 			return nil, nil, err
 		}
 		fn.Container.Image = r.Image
