@@ -13,4 +13,4 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn-demo/drop-comments:unstable
+image: gcr.io/kpt-fn-demo/drop-comments:v0.1

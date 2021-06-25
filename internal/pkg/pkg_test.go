@@ -255,7 +255,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:unstable
+    - image: gcr.io/kpt-fn/apply-setters:v0.1
       configMap:
         replicas: 5
 `,

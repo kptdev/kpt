@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/upsert-resource:unstable
+    - image: gcr.io/kpt-fn/upsert-resource:v0.1
       configPath: fn-config.yaml
