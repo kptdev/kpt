@@ -4,7 +4,7 @@ metadata:
   name: app
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/enforce-gatekeeper:0.1.0
+    - image: gcr.io/kpt-fn/gatekeeper:0.1.0
     - image: gcr.io/kpt-fn/kubeval:v0.1.1
       configMap:
         ignore_missing_schemas: "true"

@@ -24,7 +24,7 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: wordpress
   validators:
@@ -55,7 +55,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         tier: mysql
 ```
@@ -66,11 +66,11 @@ Now, let's render the package hierarchy:
 $ kpt fn render wordpress
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 3 function(s) in 2 package(s).
@@ -136,7 +136,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configPath: labels.yaml
 ```
 
@@ -166,7 +166,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         tier: mysql
 ```
