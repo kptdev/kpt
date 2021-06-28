@@ -207,11 +207,33 @@ Since you are the package publisher, you are expected to have the latest version
 of published package on your local disk. If you do not already have it, you can [git clone]
 the latest version of remote package on to your local disk.
 
+```shell
+$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+```
+
+```shell
+$ export ORG_NAME=example-org; export PKG_DIR=example
+```
+
+```shell
+$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
+```
+
+```shell
+$ git clone $PKG_REPO
+```
+
+```shell
+# verify the version of kpt
+$ kpt version
+1.0.0+
+```
+
 Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+$ kpt fn eval ${PKG_DIR} --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
 ```
 
 ##### Changes made by the function
@@ -275,8 +297,25 @@ and migrate the local customizations(if any) already performed to their existing
   from your existing package directory.
 
 ```shell
-# you must be using v1.0 version of kpt to run this command
-$ kpt pkg get https://example.com/some-pkg@latest
+$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+```
+
+```shell
+$ export ORG_NAME=example-org; export PKG_DIR=example
+```
+
+```shell
+$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
+```
+
+```shell
+# verify the version of kpt
+$ kpt version
+1.0.0+
+```
+
+```shell
+$ kpt pkg get $PKG_REPO
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -287,7 +326,7 @@ $ kpt pkg get https://example.com/some-pkg@latest
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render PKG_PATH
+$ kpt fn render $PKG_DIR
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
