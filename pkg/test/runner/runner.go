@@ -135,9 +135,15 @@ func (r *Runner) runFnEval() error {
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
 
+	if r.testCase.Config.Debug {
+		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, pkgPath)
+	}
+	if !r.testCase.Config.Debug {
+		// if debug is true, keep the test directory around for debugging
+		defer os.RemoveAll(tmpDir)
+	}
 	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
