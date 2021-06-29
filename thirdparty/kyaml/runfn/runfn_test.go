@@ -318,6 +318,106 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	assert.Contains(t, string(b), "kind: ReplicaSet")
 }
 
+func TestCmd_Execute_forSubdir(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+	testFiles, err := filepath.Glob(filepath.Join(dir, "*"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	subdir := filepath.Join(dir, "subdir")
+	err = os.MkdirAll(filepath.Join(dir, "subdir"), 0700)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	for _, f := range testFiles {
+		err = os.Rename(f, filepath.Join(subdir, filepath.Base(f)))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+	}
+
+	// write a test filter to a separate directory
+	tmpF, err := ioutil.TempFile(subdir, "filter*.yaml")
+	if !assert.NoError(t, err) {
+		return
+	}
+	os.RemoveAll(tmpF.Name())
+	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
+		return
+	}
+
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
+	}
+
+	// run the functions, providing the path to the directory of filters
+	instance := RunFns{
+		Ctx:          fake.CtxWithDefaultPrinter(),
+		FnConfigPath: tmpF.Name(),
+		Path:         dir,
+		Function:     fn,
+		FnConfig:     fnConfig,
+		fnResults:    fnresult.NewResultList(),
+	}
+	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
+	// initialize the defaults
+	assert.NoError(t, instance.init())
+
+	err = instance.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	b, err := ioutil.ReadFile(
+		filepath.Join(subdir, "java", "java-deployment.resource.yaml"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	assert.Contains(t, string(b), "kind: ReplicaSet")
+}
+
+func TestCmd_Execute_nonexistentFnConfigPath(t *testing.T) {
+	dir := setupTest(t)
+	defer os.RemoveAll(dir)
+
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
+	}
+
+	// run the functions, providing the path to the directory of filters
+	instance := RunFns{
+		Ctx:          fake.CtxWithDefaultPrinter(),
+		FnConfigPath: filepath.Join(dir, "fakepath"),
+		Path:         dir,
+		Function:     fn,
+		FnConfig:     fnConfig,
+		fnResults:    fnresult.NewResultList(),
+	}
+	// instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
+	// initialize the defaults
+	assert.NoError(t, instance.init())
+
+	err = instance.Execute()
+	if err == nil {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "functionConfig must exist")
+}
+
 // TestCmd_Execute_setOutput tests the execution of a filter using an io.Writer as output
 func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
