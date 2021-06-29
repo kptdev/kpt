@@ -195,14 +195,6 @@ func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
 	return sms
 }
 
-func checkFnConfigPathExistence(path string) error {
-	// check does fn config file exist
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		return fmt.Errorf("missing function config file: %s", path)
-	}
-	return nil
-}
-
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
@@ -277,13 +269,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	// parse mounts to set storageMounts
 	storageMounts := toStorageMounts(r.Mounts)
-
-	if r.FnConfigPath != "" {
-		err = checkFnConfigPathExistence(r.FnConfigPath)
-		if err != nil {
-			return err
-		}
-	}
 
 	r.RunFns = runfn.RunFns{
 		Ctx:                  r.Ctx,

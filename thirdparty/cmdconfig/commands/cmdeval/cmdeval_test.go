@@ -288,9 +288,31 @@ apiVersion: v1
 `,
 		},
 		{
-			name: "--fn-config flag",
-			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
-			err:  "missing function config file: a/b/c",
+			name:         "--fn-config flag ",
+			args:         []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
+			path:         "dir",
+			fnConfigPath: "a/b/c",
+			expectedStruct: &runfn.RunFns{
+				Path:                  "dir",
+				AsCurrentUser:         false,
+				ImagePullPolicy:       fnruntime.AlwaysPull,
+				Env:                   []string{},
+				FnConfigPath:          "a/b/c",
+				ContinueOnEmptyResult: true,
+				Ctx:                   context.TODO(),
+			},
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "foo:bar",
+				},
+			},
+			expectedFnConfig: `
+metadata:
+  name: function-input
+data: {}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 		{
 			name: "--fn-config with function arguments",
