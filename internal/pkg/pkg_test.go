@@ -775,6 +775,36 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 	}
 }
 
+func TestValidatePipelineWithSubpackageResource(t *testing.T) {
+	subdir := "config"
+	resourceName := "myconfig.yaml"
+	manifest := `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: resize
+data:
+  by-path: spec.replicas
+  by-value: "3"
+  put-value: "5"
+`
+	pkgPath := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithPipeline(pkgbuilder.NewFunction("functionImage").WithConfigPath(filepath.Join(subdir, resourceName)))).
+		WithSubPackages(pkgbuilder.NewSubPkg(subdir).WithRawResource(resourceName, manifest)).
+		ExpandPkg(t, nil)
+	p, err := New(pkgPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = p.ValidatePipeline()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+}
+
 func Chdir(t *testing.T, path string) func() {
 	cwd, err := os.Getwd()
 	if !assert.NoError(t, err) {
