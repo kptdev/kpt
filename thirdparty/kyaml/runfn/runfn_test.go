@@ -407,7 +407,7 @@ func TestCmd_Execute_nonexistentFnConfigPath(t *testing.T) {
 		FnConfig:     fnConfig,
 		fnResults:    fnresult.NewResultList(),
 	}
-	// instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
+
 	// initialize the defaults
 	assert.NoError(t, instance.init())
 
