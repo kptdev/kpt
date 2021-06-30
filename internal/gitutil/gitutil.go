@@ -113,7 +113,7 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	}
 
 	if g.Debug {
-		_, _ = fmt.Fprintf(os.Stderr, "[%s]\n", strings.Join(args, ","))
+		_, _ = fmt.Fprintf(os.Stderr, "[git -C %s %s]\n", g.Dir, strings.Join(fullArgs, " "))
 	}
 	start := time.Now()
 	err := cmd.Run()
