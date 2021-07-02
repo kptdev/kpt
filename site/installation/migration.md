@@ -212,26 +212,13 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-# replace it with your repo org
-$ export REPO_ORG=GoogleContainerTools
+# replace it with your package repo uri
+$ git clone https://github.com/GoogleContainerTools/kpt-functions-catalog.git
 ```
 
 ```shell
-# replace it with your repo name
-$ export REPO_NAME=kpt-functions-catalog
-```
-
-```shell
-# replace it with the path to the package directory in the repo
-$ export PKG_PATH=testdata/fix/nginx-v1alpha1
-```
-
-```shell
-$ export REPO_URI=https://github.com/${REPO_ORG}/${REPO_NAME}.git
-```
-
-```shell
-$ git clone $REPO_URI; cd $REPO_NAME
+# cd to the package directory which you want to migrate
+$ cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
 ```
 
 ```shell
@@ -244,7 +231,7 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval ${PKG_PATH} -i gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+$ kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
 ```
 
 ```shell
@@ -317,37 +304,14 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-# replace it with your repo org
-$ export REPO_ORG=GoogleContainerTools
-```
-
-```shell
-# replace it with your repo name
-$ export REPO_NAME=kpt-functions-catalog
-```
-
-```shell
-# replace it with the path to the package directory in the repo
-$ export PKG_PATH=testdata/fix/nginx-v1
-```
-
-```shell
-# replace it with the published package version
-$ export VERSION=master
-```
-
-```shell
-$ export REPO_URI=https://github.com/${REPO_ORG}/${REPO_NAME}.git
-```
-
-```shell
 # verify the version of kpt
 $ kpt version
 1.0.0+
 ```
 
 ```shell
-$ kpt pkg get ${REPO_URI}/${PKG_PATH}@${VERSION}
+# fetch the package with upgraded version
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/testdata/fix/nginx-v1@master
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -358,7 +322,7 @@ $ kpt pkg get ${REPO_URI}/${PKG_PATH}@${VERSION}
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render $PKG_DIR
+$ kpt fn render nginx-v1/
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
