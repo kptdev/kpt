@@ -212,15 +212,26 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-$ export ORG_NAME=example-org; export PKG_DIR=example
+# replace it with your repo org
+$ export REPO_ORG=GoogleContainerTools
 ```
 
 ```shell
-$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
+# replace it with your repo name
+$ export REPO_NAME=kpt-functions-catalog
 ```
 
 ```shell
-$ git clone $PKG_REPO
+# replace it with the path to the package directory in the repo
+$ export PKG_PATH=testdata/fix/nginx-v1alpha1
+```
+
+```shell
+$ export REPO_URI=https://github.com/${REPO_ORG}/${REPO_NAME}.git
+```
+
+```shell
+$ git clone $REPO_URI; cd $REPO_NAME
 ```
 
 ```shell
@@ -233,7 +244,12 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval ${PKG_DIR} --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+$ kpt fn eval ${PKG_PATH} -i gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+```
+
+```shell
+# observe the changes done by the fix function
+$ git diff
 ```
 
 ##### Changes made by the function
@@ -282,8 +298,8 @@ Test your migrated kpt package end-to-end and make sure that the
 functionality is as expected. `gcr.io/kpt-fn/fix` is a helper for migration and
 doesn't guarantee functional parity.
 
-Finally, publish your package to git by upgrading the major version so that your
-consumers can fetch with the specific version.
+Finally, [publish your package] to git by upgrading the version so that your
+consumers can fetch the specific version of the package.
 
 ### For Package Consumers
 
@@ -301,11 +317,27 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-$ export ORG_NAME=example-org; export PKG_DIR=example
+# replace it with your repo org
+$ export REPO_ORG=GoogleContainerTools
 ```
 
 ```shell
-$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
+# replace it with your repo name
+$ export REPO_NAME=kpt-functions-catalog
+```
+
+```shell
+# replace it with the path to the package directory in the repo
+$ export PKG_PATH=testdata/fix/nginx-v1
+```
+
+```shell
+# replace it with the published package version
+$ export VERSION=master
+```
+
+```shell
+$ export REPO_URI=https://github.com/${REPO_ORG}/${REPO_NAME}.git
 ```
 
 ```shell
@@ -315,7 +347,7 @@ $ kpt version
 ```
 
 ```shell
-$ kpt pkg get $PKG_REPO
+$ kpt pkg get ${REPO_URI}/${PKG_PATH}@${VERSION}
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -383,3 +415,4 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [kpt-functions-catalog]: https://catalog.kpt.dev/
 [v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
+[publish your package]: https://kpt.dev/book/03-packages/08-publishing-a-package
