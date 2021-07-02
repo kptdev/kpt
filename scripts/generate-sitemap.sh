@@ -1,4 +1,5 @@
-# Copyright 2019 Google LLC
+#!/usr/bin/env bash
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Markdown
-on:
-  pull_request:
-    branches:
-      - v0
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: xt0rted/markdownlint-problem-matcher@v1
-      - run: (cd site && npm run lint-check)
+set -o errexit
+set -o pipefail
+
+cd site
+npm i
+
+npx sitemap http://localhost:3000/
+sed -i.bak "s|http://localhost:3000|https://kpt.dev|g" sitemap.xml && rm sitemap.xml.bak

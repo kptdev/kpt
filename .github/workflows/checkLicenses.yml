@@ -14,14 +14,8 @@
 
 name: Check Licenses
 on:
-  push:
-    branches:
-      - v0
-      - main
   pull_request:
-    branches:
-      - v0
-      - main
+  push:
 jobs:
   build:
     runs-on: ubuntu-latest
