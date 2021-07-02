@@ -104,9 +104,8 @@ func (c Command) Run(ctx context.Context) error {
 	return nil
 }
 
-// fetchRemoteSubpackages goes through the root package and its subpackages
-// and fetches any remote subpackages referenced. It will also handle situations
-// where a remote subpackage references other remote subpackages.
+// Fetches any remote subpackages referenced through the root package and its subpackages.
+// It will also handle situations where a remote subpackage references other remote subpackages.
 func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 	const op errors.Op = "get.fetchPackages"
 	pr := printer.FromContextOrDie(ctx)
