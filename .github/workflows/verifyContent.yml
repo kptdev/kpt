@@ -19,6 +19,11 @@ on:
       - "site/**"
       - "commands/**"
       - "internal/**"
+  push:
+    paths:
+      - "site/**"
+      - "commands/**"
+      - "internal/**"
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -18,6 +18,10 @@ on:
     paths-ignore:
       - "docs/**"
       - "site/**"
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "site/**"
 
 jobs:
   kind:
