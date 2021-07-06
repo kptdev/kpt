@@ -20,7 +20,7 @@ function addGitHubWidget(hook) {
 
   // Refresh widget links.
   hook.doneEach(function () {
-    createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title}`;
+    createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title} (${document.})`;
 
     let path = document.location.pathname;
     const pageName = path.match(bookPath) ? "00.md" : "README.md";
