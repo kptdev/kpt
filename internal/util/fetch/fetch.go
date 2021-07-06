@@ -110,10 +110,7 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
 	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
 		if _, isPathError := err.(*fs.PathError); isPathError {
-			return &pkg.RemoteKptfileError{
-				RepoSpec: r,
-				Err:      err,
-			}
+			return errors.E(op, "Missing path at package", errors.Repo(r.RepoRef()), err)
 		}
 		return errors.E(op, types.UniquePath(dest), err)
 	}
