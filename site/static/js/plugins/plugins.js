@@ -1,43 +1,6 @@
 // Matches a path like /book/02-concepts/01-packages
 const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
 
-function addGitHubWidget(hook) {
-  const issueIcon = document.createElement("span");
-  issueIcon.innerText = "bug_report";
-  issueIcon.classList.add("material-icons-outlined");
-  const createIssue = document.createElement("a");
-  createIssue.target = "_blank";
-  createIssue.title = "Create documentation issue";
-  createIssue.appendChild(issueIcon);
-
-  const editIcon = document.createElement("span");
-  editIcon.innerText = "edit";
-  editIcon.classList.add("material-icons-outlined");
-  const editPage = document.createElement("a");
-  editPage.target = "_blank";
-  editPage.title = "Edit this page";
-  editPage.appendChild(editIcon);
-
-  // Refresh widget links.
-  hook.doneEach(function () {
-    createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title} (${document.URL})`;
-
-    let path = document.location.pathname;
-    const pageName = path.match(bookPath) ? "00.md" : "README.md";
-    path += path.endsWith("/") ? pageName : ".md";
-    editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/main/site${path}`;
-
-    const container = document.createElement("div");
-    container.classList.add("github-widget");
-    container.appendChild(createIssue);
-    container.appendChild(editPage);
-    document
-      .getElementsByClassName("docsify-pagination-container")
-      .item(0)
-      .append(container);
-  });
-}
-
 function convertFromHugo(content) {
   const hugoHideDirectives = /{{% hide %}}.+?{{% \/hide %}}/gms;
   const hugoDirectiveTags = /{{.*}}/g;
@@ -158,8 +121,6 @@ function localPlugins(hook, _vm) {
 
   // Reset all external links to their appropriate targets.
   hook.doneEach(defaultLinkTargets);
-
-  addGitHubWidget(hook);
 
   // Process elements in the navigation sidebar.
   hook.doneEach(function () {

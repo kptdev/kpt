@@ -24,7 +24,7 @@ function processBookPageTitle(content) {
 // Load plugins into Docsify.
 window.$docsify = window.$docsify || {};
 window.$docsify.plugins = [
-  (hook) => hook.beforeEach(processBookPageTitle),
+  (hook, _vm) => hook.beforeEach(processBookPageTitle),
 ].concat(window.$docsify.plugins || []);
 
 // Export functions for testing.

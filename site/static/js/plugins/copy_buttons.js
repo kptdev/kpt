@@ -40,7 +40,7 @@ function addCodeCopyButtons() {
 
 // Load plugins into Docsify.
 window.$docsify = window.$docsify || {};
-window.$docsify.plugins = [(hook) => hook.doneEach(addCodeCopyButtons)].concat(
+window.$docsify.plugins = [(hook, _vm) => hook.doneEach(addCodeCopyButtons)].concat(
   window.$docsify.plugins || []
 );
 
