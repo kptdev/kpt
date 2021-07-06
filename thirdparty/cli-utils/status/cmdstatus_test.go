@@ -4,6 +4,7 @@
 package status
 
 import (
+	"bytes"
 	"context"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
@@ -239,7 +239,6 @@ deployment.apps/foo is InProgress: inProgress
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("namespace")
 			defer tf.Cleanup()
-			ioStreams, _, outBuf, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
 			w, clean := testutil.SetupWorkspace(t)
 			defer clean()
@@ -250,8 +249,9 @@ deployment.apps/foo is InProgress: inProgress
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
+			var outBuf bytes.Buffer
 			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
-			runner := NewRunner(fake.CtxWithDefaultPrinter(), provider, ioStreams)
+			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), provider)
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}
