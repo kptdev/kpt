@@ -1,0 +1,11 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pkg-a
+info:
+  description: sample description
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+      configMap:
+        namespace: dev

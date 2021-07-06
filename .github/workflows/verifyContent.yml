@@ -14,8 +14,12 @@
 
 name: VerifyContent
 on:
-  push:
   pull_request:
+    paths:
+      - "site/**"
+      - "commands/**"
+      - "internal/**"
+  push:
     paths:
       - "site/**"
       - "commands/**"

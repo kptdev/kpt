@@ -17,6 +17,9 @@ on:
   pull_request:
     paths:
       - "site/**"
+  push:
+    paths:
+      - "site/**"
 jobs:
   build:
     runs-on: ubuntu-latest

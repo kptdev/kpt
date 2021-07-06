@@ -359,5 +359,5 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		fnResult.ExecPath = r.OriginalExec
 
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, fnResult, r.fnResults)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false)
 }
