@@ -28,6 +28,9 @@ func SaveResults(resultsDir string, fnResults *fnresult.ResultList) (string, err
 	if resultsDir == "" {
 		return "", nil
 	}
+	for _, item := range fnResults.Items {
+		item.Image = AddDefaultImagePathPrefix(item.Image)
+	}
 	filePath := filepath.Join(resultsDir, "results.yaml")
 	out := &bytes.Buffer{}
 
