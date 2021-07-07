@@ -55,11 +55,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-<<<<<<< HEAD
     - image: gcr.io/kpt-fn/set-labels:v0.1
-=======
-    - image: set-label:v0.1
->>>>>>> 52d24872 (Update book and package examples docs)
       configMap:
         tier: mysql
 ```
@@ -70,21 +66,12 @@ Now, let's render the package hierarchy:
 $ kpt fn render wordpress
 Package "wordpress/mysql":
 
-<<<<<<< HEAD
 [PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 
 Package "wordpress":
 
 [PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
-=======
-[PASS] "set-label:v0.1"
-
-Package "wordpress":
-
-[PASS] "set-label:v0.1"
-[PASS] "kubeval:v0.1"
->>>>>>> 52d24872 (Update book and package examples docs)
 
 Successfully executed 3 function(s) in 2 package(s).
 ```
