@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
@@ -214,6 +215,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("must specify --image or --exec")
 	}
 	if r.Image != "" {
+		r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
 		err := cmdutil.DockerCmdAvailable()
 		if err != nil {
 			return err

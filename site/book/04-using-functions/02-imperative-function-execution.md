@@ -5,6 +5,12 @@ For example, to set the namespace of all resources in the wordpress package
 hierarchy:
 
 ```shell
+$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
+```
+
+Alternatively, for convenience, you can use the short-hand form of the above command
+
+```shell
 $ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
 ```
 

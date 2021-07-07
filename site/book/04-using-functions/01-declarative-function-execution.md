@@ -126,6 +126,9 @@ The general way to provide a `functionConfig` of arbitrary kind (core or custom
 resources), is to declare the resource in a separate file in the same directory
 as the `Kptfile` and refer to it using the `configPath` field.
 
+You may use the short-hand form to specify value of `image` field.
+`gcr.io/kpt-fn/` is prepended by default to the specified image.
+
 For example:
 
 ```yaml
@@ -136,7 +139,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: set-labels:v0.1
       configPath: labels.yaml
 ```
 
@@ -166,7 +169,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: set-labels:v0.1
       configMap:
         tier: mysql
 ```

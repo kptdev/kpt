@@ -494,6 +494,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
+		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
 		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return nil, err

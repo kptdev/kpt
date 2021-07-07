@@ -197,7 +197,6 @@ func (f *ContainerFn) prepareImage() error {
 	// This can help to ensure we have the latest release for "moving tags" like
 	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
 	// checks the SHA first and only pull the missing docker layer(s).
-	f.Image = AddDefaultImagePathPrefix(f.Image)
 	args := []string{"image", "pull", f.Image}
 	// setup timeout
 	timeout := defaultLongTimeout

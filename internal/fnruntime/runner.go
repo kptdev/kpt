@@ -108,7 +108,6 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
-	fr.name = AddDefaultImagePathPrefix(fr.name)
 	if !fr.disableCLIOutput {
 		pr.Printf("[RUNNING] %q\n", fr.name)
 	}
