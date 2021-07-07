@@ -1,6 +1,3 @@
-// Matches a path like /book/02-concepts/01-packages
-const bookPath = /^\/book\/(\d+)-(.+)\/(\d+)?-?(.+)?/;
-
 function convertFromHugo(content) {
   const hugoHideDirectives = /{{% hide %}}.+?{{% \/hide %}}/gms;
   const hugoDirectiveTags = /{{.*}}/g;
