@@ -56,7 +56,7 @@ func NewContainerRunner(
 	}
 	cfn := &ContainerFn{
 		Path:            pkgPath,
-		Image:           AddDefaultImagePathPrefix(f.Image),
+		Image:           f.Image,
 		ImagePullPolicy: imagePullPolicy,
 		Ctx:             ctx,
 		FnResult:        fnResult,
@@ -82,7 +82,7 @@ func NewFunctionRunner(ctx context.Context,
 	}
 	return &FunctionRunner{
 		ctx:                  ctx,
-		name:                 AddDefaultImagePathPrefix(name),
+		name:                 name,
 		pkgPath:              pkgPath,
 		filter:               fltr,
 		fnResult:             fnResult,
