@@ -56,7 +56,7 @@ func NewContainerRunner(
 	}
 	cfn := &ContainerFn{
 		Path:            pkgPath,
-		Image:           f.Image,
+		Image:           AddDefaultImagePathPrefix(f.Image),
 		ImagePullPolicy: imagePullPolicy,
 		Ctx:             ctx,
 		FnResult:        fnResult,
@@ -82,7 +82,7 @@ func NewFunctionRunner(ctx context.Context,
 	}
 	return &FunctionRunner{
 		ctx:                  ctx,
-		name:                 name,
+		name:                 AddDefaultImagePathPrefix(name),
 		pkgPath:              pkgPath,
 		filter:               fltr,
 		fnResult:             fnResult,
@@ -108,14 +108,14 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
-	fnPath := AddDefaultImagePathPrefix(fr.name)
+	fr.name = AddDefaultImagePathPrefix(fr.name)
 	if !fr.disableCLIOutput {
-		pr.Printf("[RUNNING] %q\n", fnPath)
+		pr.Printf("[RUNNING] %q\n", fr.name)
 	}
 	output, err = fr.do(input)
 	if err != nil {
 		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fnPath)
+		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
 		if goerrors.As(err, &fnErr) {
@@ -125,7 +125,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q\n", fnPath)
+		pr.Printf("[PASS] %q\n", fr.name)
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
 	}
 	return output, err
