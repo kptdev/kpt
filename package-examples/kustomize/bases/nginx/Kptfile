@@ -18,4 +18,4 @@ upstreamLock:
     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
 pipeline:
   validators:
-    - image: kubeval:v0.1
+    - image: gcr.io/kpt-fn/kubeval:v0.1

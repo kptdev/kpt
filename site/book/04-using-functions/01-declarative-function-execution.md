@@ -28,7 +28,7 @@ pipeline:
       configMap:
         app: wordpress
   validators:
-    - image: kubeval:v0.1
+    - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
 This declares two functions:

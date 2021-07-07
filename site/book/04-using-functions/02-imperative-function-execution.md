@@ -23,7 +23,7 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: set-namespace:v0.1
+    - image: gcr.io/kpt-fn/set-namespace:v0.1
       configMap:
         namespace: mywordpress
 ```
