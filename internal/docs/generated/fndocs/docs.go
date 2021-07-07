@@ -87,7 +87,7 @@ Flags:
     the local cache.
     If using never, kpt will only use images from the local cache.
   
-  --include-meta-resources:
+  --include-meta-resources, m:
     If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
     in the input to the function. By default it is disabled.
   
