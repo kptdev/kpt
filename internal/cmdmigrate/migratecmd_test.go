@@ -11,15 +11,15 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 var testNamespace = "test-inventory-namespace"
@@ -142,11 +142,12 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 
 			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "updateKptfile"
-			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
-			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
+				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			}
 			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
 			// Check if there should be an error
 			if tc.isError {
@@ -203,10 +204,11 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 
 			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
-			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
-			rgProvider := live.NewResourceGroupProvider(tf)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
+			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
+				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			}
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
@@ -284,14 +286,14 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 		},
 		"One migrate object is valid": {
 			invObj:  kptfileStr,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMeta(pod1)},
+			objs:    []object.ObjMetadata{object.UnstructuredToObjMetaOrDie(pod1)},
 			isError: false,
 		},
 		"Multiple migrate objects are valid": {
 			invObj: kptfileStr,
 			objs: []object.ObjMetadata{
-				object.UnstructuredToObjMeta(pod1),
-				object.UnstructuredToObjMeta(pod2),
+				object.UnstructuredToObjMetaOrDie(pod1),
+				object.UnstructuredToObjMetaOrDie(pod2),
 			},
 			isError: false,
 		},
@@ -306,11 +308,10 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 
 			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
-			cmProvider := provider.NewFakeProvider(tf, []object.ObjMetadata{})
-			rgProvider := live.NewFakeResourceGroupProvider(tf, tc.objs)
+			rgInvClient := inventory.NewFakeInventoryClient(tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
-			err := migrateRunner.migrateObjs(tc.objs, strings.NewReader(tc.invObj), []string{"-"})
+			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			err := migrateRunner.migrateObjs(rgInvClient, tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
 				if err == nil {
@@ -320,9 +321,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			// Retrieve the objects stored by the inventory client and validate.
-			invClient, err := migrateRunner.rgProvider.InventoryClient()
-			assert.NoError(t, err)
-			migratedObjs, err := invClient.GetClusterObjs(nil)
+			migratedObjs, err := rgInvClient.GetClusterObjs(nil)
 			assert.NoError(t, err)
 			if len(tc.objs) != len(migratedObjs) {
 				t.Errorf("expected num migrated objs (%d), got (%d)", len(tc.objs), len(migratedObjs))

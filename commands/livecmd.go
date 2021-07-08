@@ -26,14 +26,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
 	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
-	"sigs.k8s.io/cli-utils/pkg/provider"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
@@ -51,25 +49,23 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	}
 
 	f := newFactory(liveCmd, version)
-	rgProvider := live.NewResourceGroupProvider(f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
-	applyCmd := cmdapply.NewCommand(ctx, rgProvider, ioStreams)
-	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, ioStreams)
-	statusCmd := status.NewCommand(ctx, rgProvider)
+	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams)
+	destroyCmd := cmddestroy.NewCommand(ctx, f, ioStreams)
+	statusCmd := status.NewCommand(ctx, f)
 	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
 	// object.
 	klog.V(2).Infoln("adding kpt live migrate command")
-	cmProvider := provider.NewProvider(f)
 	// TODO: Remove the loader implementation for ConfigMap once we remove the
 	// migrate command.
 	cmLoader := manifestreader.NewManifestLoader(f)
-	migrateCmd := cmdmigrate.NewCommand(ctx, cmProvider, rgProvider, cmLoader, ioStreams)
+	migrateCmd := cmdmigrate.NewCommand(ctx, f, cmLoader, ioStreams)
 
 	liveCmd.AddCommand(migrateCmd)
 

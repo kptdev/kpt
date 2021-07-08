@@ -30,20 +30,21 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	"sigs.k8s.io/cli-utils/pkg/provider"
+	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 // NewRunner returns a command runner
-func NewRunner(ctx context.Context, provider provider.Provider,
+func NewRunner(ctx context.Context, factory util.Factory,
 	ioStreams genericclioptions.IOStreams) *Runner {
+
 	r := &Runner{
 		ctx:         ctx,
-		Applier:     apply.NewApplier(provider),
-		provider:    provider,
 		ioStreams:   ioStreams,
+		factory:     factory,
 		applyRunner: runApply,
 	}
 	c := &cobra.Command{
@@ -82,9 +83,9 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	return r
 }
 
-func NewCommand(ctx context.Context, provider provider.Provider,
+func NewCommand(ctx context.Context, factory util.Factory,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, ioStreams).Command
+	return NewRunner(ctx, factory, ioStreams).Command
 }
 
 // Runner contains the run function
@@ -93,8 +94,7 @@ type Runner struct {
 	Command    *cobra.Command
 	PreProcess func(info inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error)
 	ioStreams  genericclioptions.IOStreams
-	Applier    *apply.Applier
-	provider   provider.Provider
+	factory    util.Factory
 
 	installCRD                   bool
 	serverSideOptions            common.ServerSideOptions
@@ -136,7 +136,7 @@ func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !r.installCRD {
-		err := cmdutil.VerifyResourceGroupCRD(r.provider.Factory())
+		err := cmdutil.VerifyResourceGroupCRD(r.factory)
 		if err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	objs, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	objs, inv, err := live.Load(r.factory, args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
 	dryRunStrategy common.DryRunStrategy) error {
 	if r.installCRD {
-		f := r.provider.Factory()
+		f := r.factory
 		// Only install the ResourceGroup CRD if it is not already installed.
 		if err := cmdutil.VerifyResourceGroupCRD(f); err != nil {
 			err = cmdutil.InstallResourceGroupCRD(r.ctx, f)
@@ -199,10 +199,19 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	if err := r.Applier.Initialize(); err != nil {
+	poller, err := status.NewStatusPoller(r.factory)
+	if err != nil {
 		return err
 	}
-	ch := r.Applier.Run(r.ctx, invInfo, objs, apply.Options{
+	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+	if err != nil {
+		return err
+	}
+	applier, err := apply.NewApplier(r.factory, invClient, poller)
+	if err != nil {
+		return err
+	}
+	ch := applier.Run(r.ctx, invInfo, objs, apply.Options{
 		ServerSideOptions: r.serverSideOptions,
 		PollInterval:      r.period,
 		ReconcileTimeout:  r.reconcileTimeout,

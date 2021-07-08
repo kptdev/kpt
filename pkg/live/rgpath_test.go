@@ -211,7 +211,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			readObjMetas := object.UnstructuredsToObjMetas(readObjs)
+			readObjMetas := object.UnstructuredsToObjMetasOrDie(readObjs)
 
 			sort.Slice(readObjMetas, func(i, j int) bool {
 				return readObjMetas[i].String() < readObjMetas[j].String()

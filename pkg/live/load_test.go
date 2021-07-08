@@ -184,7 +184,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetas(objs)
+			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})
@@ -342,7 +342,7 @@ func TestLoad_StdIn(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetas(objs)
+			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})

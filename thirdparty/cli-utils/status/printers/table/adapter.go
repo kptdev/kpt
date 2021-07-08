@@ -4,10 +4,10 @@
 package table
 
 import (
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/table"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	pe "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
 
 // CollectorAdapter wraps the ResourceStatusCollector and
