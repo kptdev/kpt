@@ -110,6 +110,13 @@ The end result is that:
 If any of the functions in the pipeline fails for whatever reason, then the
 entire pipeline is aborted and the local filesystem is left intact.
 
+## Specifying `image`
+
+The `image` field specifies the container image for the function. You can specify
+an image from any container registry. If the registry is omitted, the default
+container registry for functions catalog (`gcr.io/kpt-fn`) is prepended automatically.
+For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-labels:v0.1`.
+
 ## Specifying `functionConfig`
 
 In [Chapter 2], we saw this conceptual representation of a function invocation:
@@ -125,9 +132,6 @@ the `functionConfig`.
 The general way to provide a `functionConfig` of arbitrary kind (core or custom
 resources), is to declare the resource in a separate file in the same directory
 as the `Kptfile` and refer to it using the `configPath` field.
-
-You may use the short-hand form to specify value of `image` field.
-`gcr.io/kpt-fn/` is prepended by default to the specified image.
 
 For example:
 
