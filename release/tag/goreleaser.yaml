@@ -29,11 +29,9 @@ builds:
 dockers:
   - image_templates:
       - "gcr.io/kpt-dev/kpt:{{ .Tag }}"
-      - "gcr.io/kpt-dev/kpt:next"
     dockerfile: "release/images/Dockerfile"
   - image_templates:
       - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
-      - "gcr.io/kpt-dev/kpt-gcloud:next"
     dockerfile: "release/images/Dockerfile-gcloud"
 archives:
   - id: archived
