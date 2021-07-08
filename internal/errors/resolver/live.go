@@ -101,28 +101,30 @@ Resource types:
 type liveErrorResolver struct{}
 
 func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	tmplArgs := map[string]interface{}{
-		"err": err,
-	}
-
 	var noInventoryObjError *inventory.NoInventoryObjError
 	if errors.As(err, &noInventoryObjError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(noInventoryObjErrorMsg, tmplArgs),
+			Message: ExecuteTemplate(noInventoryObjErrorMsg, map[string]interface{}{
+				"err": *noInventoryObjError,
+			}),
 		}, true
 	}
 
 	var multipleInventoryObjError *inventory.MultipleInventoryObjError
 	if errors.As(err, &multipleInventoryObjError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(multipleInventoryObjErrorMsg, tmplArgs),
+			Message: ExecuteTemplate(multipleInventoryObjErrorMsg, map[string]interface{}{
+				"err": *multipleInventoryObjError,
+			}),
 		}, true
 	}
 
 	var timeoutError *taskrunner.TimeoutError
 	if errors.As(err, &timeoutError) {
 		return ResolvedResult{
-			Message:  ExecuteTemplate(timeoutErrorMsg, tmplArgs),
+			Message: ExecuteTemplate(timeoutErrorMsg, map[string]interface{}{
+				"err": *timeoutError,
+			}),
 			ExitCode: TimeoutErrorExitCode,
 		}, true
 	}
@@ -139,35 +141,45 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var noResourceGroupCRDError *cmdutil.NoResourceGroupCRDError
 	if errors.As(err, &noResourceGroupCRDError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(noResourceGroupCRDMsg, tmplArgs),
+			Message: ExecuteTemplate(noResourceGroupCRDMsg, map[string]interface{}{
+				"err": *noResourceGroupCRDError,
+			}),
 		}, true
 	}
 
 	var invExistsError *cmdliveinit.InvExistsError
 	if errors.As(err, &invExistsError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, tmplArgs),
+			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, map[string]interface{}{
+				"err": *invExistsError,
+			}),
 		}, true
 	}
 
 	var multipleInvInfoError *live.MultipleInventoryInfoError
 	if errors.As(err, &multipleInvInfoError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(multipleInvInfoMsg, tmplArgs),
+			Message: ExecuteTemplate(multipleInvInfoMsg, map[string]interface{}{
+				"err": *multipleInvInfoError,
+			}),
 		}, true
 	}
 
 	var inventoryInfoValidationError *live.InventoryInfoValidationError
 	if errors.As(err, &inventoryInfoValidationError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(inventoryInfoValidationMsg, tmplArgs),
+			Message: ExecuteTemplate(inventoryInfoValidationMsg, map[string]interface{}{
+				"err": *inventoryInfoValidationError,
+			}),
 		}, true
 	}
 
 	var unknownTypesError *manifestreader.UnknownTypesError
 	if errors.As(err, &unknownTypesError) {
 		return ResolvedResult{
-			Message: ExecuteTemplate(unknownTypesMsg, tmplArgs),
+			Message: ExecuteTemplate(unknownTypesMsg, map[string]interface{}{
+				"err": *unknownTypesError,
+			}),
 		}, true
 	}
 	return ResolvedResult{}, false
