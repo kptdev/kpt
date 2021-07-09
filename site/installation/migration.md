@@ -70,12 +70,12 @@ directory by default.
 | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]`                      | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [flags] [LOCAL_DEST_DIRECTORY]` <br> Fetch a remote package from a git subdirectory and writes it to a new local directory.                                                                           |
 | `kpt pkg init DIR [flags]`                                                                        | `kpt pkg init [DIR] [flags]` <br> Initializes an existing empty directory as a kpt package by adding a Kptfile.                                                                                                                                      |
 | `kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]`                                                  | `kpt pkg update [PKG_PATH][@version] [flags]` <br> Pulls in upstream changes and merges them into a local package.                                                                                                                                   |
-| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.2` <br> Fix a local package which is using deprecated features.                                                                                                                                        |
+| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources` <br> Fix a local package which is using deprecated features.                                                                                                                                            |
 | `kpt pkg desc DIR [flags]`                                                                        | Deprecated in favor of reading Kptfile directly                                                                                                                                                                                                      |
 | `kpt pkg diff DIR[@VERSION] [flags]`                                                              | `kpt pkg diff [PKG_PATH][@version] [flags]` <br> Display differences between upstream and local packages.                                                                                                                                            |
-| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:v0.1`                                                                                                                                                                                                  |
+| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:v0.1`                                                                                                                                                                                                      |
 | `kpt cfg tree DIR/STDIN [flags]`                                                                  | `kpt pkg tree [DIR] [flags]` <br> Displays resources, files and packages in a tree structure.                                                                                                                                                        |
-| `kpt cfg cat DIR/STDIN [flags]`                                                                   | Deprecated. Will be added back soon.                                                                                                                                                                                                                 |
+| `kpt cfg cat DIR/STDIN [flags]`                                                                   | `kpt fn source [DIR] -o unwrap`                                                                                                                                                                                                                      |
 | `kpt fn run DIR/STDIN [flags]`                                                                    | `kpt fn eval [DIR / -] [flags]` <br> Executes a single function on resources in a directory. <br> <br> `kpt fn render [PKG_PATH]` <br> Executes the pipeline of functions on resources in the package and writes the output to the local filesystem. |
 | `kpt fn source DIR [flags]`                                                                       | `kpt fn source [DIR] [flags]` <br> Reads resources from a local directory and writes them in Function Specification wire format to stdout.                                                                                                           |
 | `kpt fn sink DIR [flags]`                                                                         | `kpt fn sink [DIR] [flags]` <br> Reads resources from stdin and writes them to a local directory.                                                                                                                                                    |
@@ -190,7 +190,7 @@ information on the new structure of function results.
 
 Kpt live in `v1.0` no longer uses an inventory object to track the grouping of
 resources in the cluster. Instead, it uses a more expressive `ResourceGroup`
-CRD. Please refer to the detailed guide on [migrating inventory objects] to the
+CRD. Please refer to the user guide on [migrating inventory objects] to the
 `ResourceGroup` equivalent.
 
 ## Migration Steps
@@ -212,15 +212,13 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-$ export ORG_NAME=example-org; export PKG_DIR=example
+# replace it with your package repo uri
+$ git clone https://github.com/GoogleContainerTools/kpt-functions-catalog.git
 ```
 
 ```shell
-$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
-```
-
-```shell
-$ git clone $PKG_REPO
+# cd to the package directory which you want to migrate
+$ cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
 ```
 
 ```shell
@@ -233,7 +231,12 @@ Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval ${PKG_DIR} --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+$ kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+```
+
+```shell
+# observe the changes done by the fix function
+$ git diff
 ```
 
 ##### Changes made by the function
@@ -282,8 +285,8 @@ Test your migrated kpt package end-to-end and make sure that the
 functionality is as expected. `gcr.io/kpt-fn/fix` is a helper for migration and
 doesn't guarantee functional parity.
 
-Finally, publish your package to git by upgrading the major version so that your
-consumers can fetch with the specific version.
+Finally, [publish your package] to git by upgrading the version so that your
+consumers can fetch the specific version of the package.
 
 ### For Package Consumers
 
@@ -301,21 +304,14 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 ```
 
 ```shell
-$ export ORG_NAME=example-org; export PKG_DIR=example
-```
-
-```shell
-$ export PKG_REPO=https://github.com/${ORG_NAME}/${PKG_DIR}.git
-```
-
-```shell
 # verify the version of kpt
 $ kpt version
 1.0.0+
 ```
 
 ```shell
-$ kpt pkg get $PKG_REPO
+# fetch the package with upgraded version
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/testdata/fix/nginx-v1@master
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -326,7 +322,7 @@ $ kpt pkg get $PKG_REPO
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render $PKG_DIR
+$ kpt fn render nginx-v1/
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
@@ -366,7 +362,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
 [required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
 [auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
-[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/live/alpha/
 [live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
 [configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
@@ -383,3 +379,4 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [kpt-functions-catalog]: https://catalog.kpt.dev/
 [v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
+[publish your package]: https://kpt.dev/book/03-packages/08-publishing-a-package

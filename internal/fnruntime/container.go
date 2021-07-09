@@ -230,6 +230,14 @@ func (f *ContainerFn) checkImageExistence() bool {
 	return false
 }
 
+// AddDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
+func AddDefaultImagePathPrefix(image string) string {
+	if !strings.Contains(image, "/") {
+		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
+	}
+	return image
+}
+
 // ContainerImageError is an error type which will be returned when
 // the container run time cannot verify docker image.
 type ContainerImageError struct {

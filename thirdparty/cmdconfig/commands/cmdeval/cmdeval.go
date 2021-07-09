@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
@@ -47,8 +48,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-	r.Command.Flags().BoolVar(
-		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
+	r.Command.Flags().BoolVarP(
+		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 	r.Command.Flags().BoolVar(
@@ -214,6 +215,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("must specify --image or --exec")
 	}
 	if r.Image != "" {
+		r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
 		err := cmdutil.DockerCmdAvailable()
 		if err != nil {
 			return err

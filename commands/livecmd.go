@@ -57,7 +57,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
 	applyCmd := cmdapply.NewCommand(ctx, rgProvider, ioStreams)
 	destroyCmd := cmddestroy.NewCommand(ctx, rgProvider, ioStreams)
-	statusCmd := status.NewCommand(ctx, rgProvider, ioStreams)
+	statusCmd := status.NewCommand(ctx, rgProvider)
 	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 

@@ -29,7 +29,7 @@ on the package. For example, to search for resources that have a field with path
 `spec.selector.tier`:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-path=spec.selector.tier'
+$ kpt fn eval wordpress -i search-replace:v0.1 -- 'by-path=spec.selector.tier'
 ```
 
 [tree-doc]: /reference/cli/pkg/tree/
