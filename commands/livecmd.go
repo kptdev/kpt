@@ -34,6 +34,7 @@ import (
 	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
+	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
@@ -79,8 +80,11 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
+	cachingConfigFlags := &factory.CachingRESTClientGetter{
+		Delegate: kubeConfigFlags,
+	}
 	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
-		Delegate:  kubeConfigFlags,
+		Delegate:  cachingConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
 	}
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
