@@ -21,5 +21,5 @@ type Printer interface {
 	// needs to, and that it has completed shutting down. The latter is important
 	// to make sure the printer has a chance to output all data before the
 	// program terminates.
-	Print(ch <-chan event.Event, identifiers []object.ObjMetadata, cancelFunc collector.ObserverFunc)
+	Print(ch <-chan event.Event, identifiers []object.ObjMetadata, cancelFunc collector.ObserverFunc) error
 }
