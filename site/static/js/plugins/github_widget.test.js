@@ -21,11 +21,13 @@ test.each([
     "faq/",
   ],
 ])("github urls are correct", (expectedIssueUrl, expectedEditUrl, path) => {
+  // Configure test environment.
   delete window.location;
   window.location = new URL(path, "https://test.test");
   document.title = "title";
   const container = document.createElement("div");
   container.classList.add("docsify-pagination-container");
+  
   document.body.append(container);
   plugins.addGitHubWidget();
   const issueUrl = document.getElementById("create_issue_button").href;
