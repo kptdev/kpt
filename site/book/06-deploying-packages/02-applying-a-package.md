@@ -1,7 +1,19 @@
-Once you have initialized the package, you can deploy it using `live apply`:
+Once you have initialized the package, you can deploy it using `live apply`.
+
+The `wordpress` package requires a `Secret` containing the mysql password.
+Let's create that first:
 
 ```shell
-$ kpt live apply wordpress
+$ kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
+```
+
+!> You can also declare the `Secret` resource, but make sure it is not commited to
+Git as part of the package.
+
+Then deploy the package and wait for the resources to be reconciled:
+
+```shell
+$ kpt live apply wordpress --reconcile-timeout=2m
 installing inventory ResourceGroup CRD.
 service/wordpress created
 service/wordpress-mysql created
@@ -11,13 +23,6 @@ persistentvolumeclaim/mysql-pv-claim created
 persistentvolumeclaim/wp-pv-claim created
 6 resource(s) applied. 6 created, 0 unchanged, 0 configured, 0 failed
 0 resource(s) pruned, 0 skipped, 0 failed
-```
-
-Alternatively, you can specify whether you want to wait for resources to be
-reconciled:
-
-```shell
-$ kpt live apply wordpress --reconcile-timeout=2m
 ```
 
 ?> Refer to the [apply command reference][apply-doc] for usage.
