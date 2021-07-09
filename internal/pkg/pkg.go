@@ -487,6 +487,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
 		MatchFilesGlob:     kio.MatchAll,
+		PreserveSeqIndent:  true,
 		SetAnnotations: map[string]string{
 			pkgPathAnnotation: string(p.UniquePath),
 		},

@@ -73,7 +73,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	// if there is a function-config specified, emit it
 	var functionConfig *yaml.RNode
 	if r.FunctionConfig != "" {
-		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig}.Read()
+		configs, err := kio.LocalPackageReader{PackagePath: r.FunctionConfig, PreserveSeqIndent: true}.Read()
 		if err != nil {
 			return err
 		}
@@ -98,9 +98,10 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath:    a,
-			MatchFilesGlob: matchFilesGlob,
-			FileSkipFunc:   functionConfigFilter,
+			PackagePath:       a,
+			MatchFilesGlob:    matchFilesGlob,
+			FileSkipFunc:      functionConfigFilter,
+			PreserveSeqIndent: true,
 		})
 	}
 

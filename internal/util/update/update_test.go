@@ -1795,9 +1795,10 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				// Format the Kptfiles so we can diff the output without
 				// formatting issues.
 				rw := &kio.LocalPackageReadWriter{
-					NoDeleteFiles:  true,
-					PackagePath:    g.LocalWorkspace.FullPackagePath(),
-					MatchFilesGlob: []string{kptfilev1.KptFileName},
+					NoDeleteFiles:     true,
+					PackagePath:       g.LocalWorkspace.FullPackagePath(),
+					MatchFilesGlob:    []string{kptfilev1.KptFileName},
+					PreserveSeqIndent: true,
 				}
 				err = kio.Pipeline{
 					Inputs:  []kio.Reader{rw},
@@ -3327,9 +3328,10 @@ func TestRun_remote_subpackages(t *testing.T) {
 			// Format the Kptfiles so we can diff the output without
 			// formatting issues.
 			rw := &kio.LocalPackageReadWriter{
-				NoDeleteFiles:  true,
-				PackagePath:    g.LocalWorkspace.FullPackagePath(),
-				MatchFilesGlob: []string{kptfilev1.KptFileName},
+				NoDeleteFiles:     true,
+				PackagePath:       g.LocalWorkspace.FullPackagePath(),
+				MatchFilesGlob:    []string{kptfilev1.KptFileName},
+				PreserveSeqIndent: true,
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},

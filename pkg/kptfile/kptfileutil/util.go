@@ -34,7 +34,7 @@ import (
 
 func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	const op errors.Op = "kptfileutil.WriteFile"
-	b, err := yaml.Marshal(k)
+	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSeqIndent})
 	if err != nil {
 		return err
 	}
@@ -42,20 +42,8 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 
-	// convert to rNode and back to string to make indentation consistent
-	// with rest of the yaml serialization to avoid unwanted diffs
-	rNode, err := yaml.Parse(string(b))
-	if err != nil {
-		return errors.E(op, errors.YAML, types.UniquePath(dir), err)
-	}
-
-	kptFileStr, err := rNode.String()
-	if err != nil {
-		return errors.E(op, errors.YAML, types.UniquePath(dir), err)
-	}
-
 	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(kptFileStr), 0600)
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
