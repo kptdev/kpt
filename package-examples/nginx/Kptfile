@@ -1,4 +1,4 @@
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: nginx
@@ -10,4 +10,4 @@ pipeline:
   validators:
     - image: gcr.io/kpt-fn/kubeval:v0.1
       configMap:
-        strict: 'true'
+        strict: "true"

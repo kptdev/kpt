@@ -15,7 +15,9 @@
 # don't add licenses to the site directory, it will break the docs
 # and will add them to the theme which is a submodule (bad)
 which addlicense || go get github.com/google/addlicense
-ls | grep -v site | grep -v docs | grep -v e2e | xargs $GOBIN/addlicense -y 2021 -l apache
-# process e2e separately because expected result files shouldn't have license
-# otherwise the test will fail
-find e2e -type f | grep -v '.expected/results.yaml' | xargs $GOBIN/addlicense -y 2021 -l apache
+find . -type f \
+! -path "./site/*" \
+! -path "./docs/*" \
+! -path "**/.expected/results.yaml" \
+! -path "**/generated/*" \
+| xargs $GOBIN/addlicense -y 2021 -l apache

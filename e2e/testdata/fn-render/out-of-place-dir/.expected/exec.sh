@@ -16,4 +16,6 @@
 
 set -eo pipefail
 
+rm -rf out
+
 kpt fn render -o out

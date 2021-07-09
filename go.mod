@@ -6,6 +6,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
 	github.com/go-swagger/go-swagger v0.27.0 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/posener/complete/v2 v2.0.1-alpha.12
@@ -23,5 +24,5 @@ require (
 	k8s.io/kubectl v0.21.1
 	sigs.k8s.io/cli-utils v0.25.1-0.20210603052138-670dee18a123
 	sigs.k8s.io/kustomize/api v0.8.10 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.10.21
+	sigs.k8s.io/kustomize/kyaml v0.10.22-0.20210614195535-7e8ba62e9fd9
 )

@@ -4,6 +4,7 @@
 package status
 
 import (
+	"bytes"
 	"context"
 	"path/filepath"
 	"strings"
@@ -12,12 +13,11 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
@@ -52,7 +52,7 @@ func TestStatusCommand(t *testing.T) {
 		pollUntil      string
 		printer        string
 		timeout        time.Duration
-		kptfileInv     *kptfilev1alpha2.Inventory
+		kptfileInv     *kptfilev1.Inventory
 		inventory      []object.ObjMetadata
 		events         []pollevent.Event
 		expectedErrMsg string
@@ -67,7 +67,7 @@ func TestStatusCommand(t *testing.T) {
 			expectedErrMsg: "pollUntil must be one of \"known\", \"current\", \"deleted\", \"forever\"",
 		},
 		"no inventory in live state": {
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -77,7 +77,7 @@ func TestStatusCommand(t *testing.T) {
 		"wait for all known": {
 			pollUntil: "known",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -112,7 +112,7 @@ statefulset.apps/bar is Current: current
 		"wait for all current": {
 			pollUntil: "current",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -165,7 +165,7 @@ deployment.apps/foo is Current: current
 		"wait for all deleted": {
 			pollUntil: "deleted",
 			printer:   "events",
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -201,7 +201,7 @@ deployment.apps/foo is NotFound: notFound
 			pollUntil: "forever",
 			printer:   "events",
 			timeout:   2 * time.Second,
-			kptfileInv: &kptfilev1alpha2.Inventory{
+			kptfileInv: &kptfilev1.Inventory{
 				Name:        "foo",
 				Namespace:   "default",
 				InventoryID: "test",
@@ -239,7 +239,6 @@ deployment.apps/foo is InProgress: inProgress
 		t.Run(tn, func(t *testing.T) {
 			tf := cmdtesting.NewTestFactory().WithNamespace("namespace")
 			defer tf.Cleanup()
-			ioStreams, _, outBuf, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
 			w, clean := testutil.SetupWorkspace(t)
 			defer clean()
@@ -250,8 +249,9 @@ deployment.apps/foo is InProgress: inProgress
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
+			var outBuf bytes.Buffer
 			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
-			runner := NewRunner(fake.CtxWithDefaultPrinter(), provider, ioStreams)
+			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), provider)
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}

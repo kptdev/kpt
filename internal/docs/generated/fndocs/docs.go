@@ -10,16 +10,21 @@ using containerized functions.
 var DocShort = `Display the documentation for a function`
 var DocLong = `
 ` + "`" + `kpt fn doc` + "`" + ` invokes the function container with ` + "`" + `--help` + "`" + ` flag.
+If the function supports ` + "`" + `--help` + "`" + `, it will print the documentation to STDOUT.
+Otherwise, it will exit with non-zero exit code and print the error message to STDERR.
 
   kpt fn doc --image=IMAGE
 
---image is a required flag. If the function supports --help, it will print the
-documentation to STDOUT. Otherwise, it will exit with non-zero exit code and
-print the error message to STDERR.
+Flags:
+
+  --image, i: (required flag)
+    Container image of the function e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
+    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
 `
 var DocExamples = `
-  # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
-  $ kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
+  # display the documentation for image set-namespace:v0.1.1
+  kpt fn doc -i set-namespace:v0.1.1
 `
 
 var EvalShort = `Execute function on resources`
@@ -59,17 +64,20 @@ Flags:
     container running the function. The value can be in ` + "`" + `key=value` + "`" + ` format or only
     the key of an already exported environment variable.
   
-  --exec-path:
-    Path to the local executable binary to execute as a function. ` + "`" + `eval` + "`" + ` executes
-    only one function, so do not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful
-    for testing function locally during development. It enables faster dev iterations
-    by avoiding the function to be published as container image.
+  --exec:
+    Path to the local executable binary to execute as a function. Quotes are needed
+    if the executable requires arguments. ` + "`" + `eval` + "`" + ` executes only one function, so do
+    not use ` + "`" + `--image` + "`" + ` flag with this flag. This is useful for testing function locally
+    during development. It enables faster dev iterations by avoiding the function to
+    be published as container image.
   
   --fn-config:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
   
   --image, i:
     Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
+    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
     ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec-path` + "`" + ` flag with this flag.
   
   --image-pull-policy:
@@ -82,7 +90,7 @@ Flags:
     the local cache.
     If using never, kpt will only use images from the local cache.
   
-  --include-meta-resources:
+  --include-meta-resources, m:
     If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
     in the input to the function. By default it is disabled.
   
@@ -102,7 +110,8 @@ Flags:
     Allowed values: stdout|unwrap|<OUT_DIR_PATH>
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
-    3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+    3. OUT_DIR_PATH: output resources are written to provided directory.
+       The provided directory must not already exist.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -124,7 +133,11 @@ var EvalExamples = `
 
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
-  $ kpt fn eval DIR --exec-path ./my-fn
+  $ kpt fn eval DIR --exec ./my-fn
+
+  # execute executable my-fn with arguments on the resources in DIR directory and
+  # write output back to DIR
+  $ kpt fn eval DIR --exec "./my-fn arg1 arg2"
 
   # execute container my-fn on the resources in DIR directory,
   # save structured results in /tmp/my-results dir and write output back to DIR
@@ -221,7 +234,8 @@ Flags:
     Allowed values: stdout|unwrap|<OUT_DIR_PATH>
     1. stdout: output resources are wrapped in ResourceList and written to stdout.
     2. unwrap: output resources are written to stdout, in multi-object yaml format.
-    3. OUT_DIR_PATH: output resources are written to provided directory, the directory is created if it doesn't already exist.
+    3. OUT_DIR_PATH: output resources are written to provided directory.
+       The provided directory must not already exist.
   
   --results-dir:
     Path to a directory to write structured results. Directory will be created if
@@ -255,18 +269,17 @@ var RenderExamples = `
 
 var SinkShort = `Write resources to a local directory`
 var SinkLong = `
-  kpt fn sink [DIR] [flags]
+  kpt fn sink DIR [flags]
   
   DIR:
-    Path to a local directory to write resources to. Defaults to the current
-    working directory. Directory must exist.
+    Path to a local directory to write resources to. The directory must not already exist.
 `
 var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval - --image gcr.io/example.com/my-fn - |
-    kpt fn sink DIR
+    kpt fn eval - --image gcr.io/example.com/my-fn |
+    kpt fn sink NEW_DIR
 `
 
 var SourceShort = `Source resources from a local directory`

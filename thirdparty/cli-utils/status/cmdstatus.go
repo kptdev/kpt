@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
+	statusprinters "github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -40,13 +42,11 @@ var (
 	PollUntilOptions = []string{Known, Current, Deleted, Forever}
 )
 
-func NewRunner(ctx context.Context, provider provider.Provider,
-	ioStreams genericclioptions.IOStreams) *Runner {
+func NewRunner(ctx context.Context, provider provider.Provider) *Runner {
 	r := &Runner{
 		ctx:               ctx,
 		provider:          provider,
 		pollerFactoryFunc: pollerFactoryFunc,
-		ioStreams:         ioStreams,
 	}
 	c := &cobra.Command{
 		Use:     "status [PKG_PATH | -]",
@@ -67,18 +67,16 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	return r
 }
 
-func NewCommand(ctx context.Context, provider provider.Provider,
-	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, ioStreams).Command
+func NewCommand(ctx context.Context, provider provider.Provider) *cobra.Command {
+	return NewRunner(ctx, provider).Command
 }
 
 // Runner captures the parameters for the command and contains
 // the run function.
 type Runner struct {
-	ctx       context.Context
-	Command   *cobra.Command
-	ioStreams genericclioptions.IOStreams
-	provider  provider.Provider
+	ctx      context.Context
+	Command  *cobra.Command
+	provider provider.Provider
 
 	period    time.Duration
 	pollUntil string
@@ -93,6 +91,10 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 		return fmt.Errorf("pollUntil must be one of %s",
 			strings.JoinStringsWithQuotes(PollUntilOptions))
 	}
+
+	if found := printers.ValidatePrinterType(r.output); !found {
+		return fmt.Errorf("unknown output type %q", r.output)
+	}
 	return nil
 }
 
@@ -100,6 +102,7 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	pr := printer.FromContextOrDie(r.ctx)
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
@@ -138,7 +141,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// Exit here if the inventory is empty.
 	if len(identifiers) == 0 {
-		_, _ = fmt.Fprint(r.ioStreams.Out, "no resources found in the inventory\n")
+		pr.Printf("no resources found in the inventory\n")
 		return nil
 	}
 
@@ -149,7 +152,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// Fetch a printer implementation based on the desired output format as
 	// specified in the output flag.
-	printer, err := printers.CreatePrinter(r.output, r.ioStreams)
+	printer, err := statusprinters.CreatePrinter(r.output, genericclioptions.IOStreams{
+		Out:    pr.OutStream(),
+		ErrOut: pr.ErrStream(),
+	})
 	if err != nil {
 		return errors.WrapPrefix(err, "error creating printer", 1)
 	}
@@ -186,8 +192,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		UseCache:     true,
 	})
 
-	printer.Print(eventChannel, identifiers, cancelFunc)
-	return nil
+	return printer.Print(eventChannel, identifiers, cancelFunc)
 }
 
 // desiredStatusNotifierFunc returns an Observer function for the

@@ -20,7 +20,7 @@ The `info` section of the `Kptfile` contains some optional package metadata you
 may want to set. These fields are not consumed by any functionality in kpt:
 
 ```yaml
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: awesomeapp

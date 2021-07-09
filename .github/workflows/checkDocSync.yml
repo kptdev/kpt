@@ -15,9 +15,7 @@
 name: Check Documentation Synchronized
 on:
   pull_request:
-    branches:
-      - v0
-      - main
+  push:
 jobs:
   build:
     runs-on: ubuntu-latest

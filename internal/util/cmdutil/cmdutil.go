@@ -150,7 +150,7 @@ func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
 func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	var outputs []kio.Writer
 	if outDir != "" {
-		err := os.MkdirAll(outDir, 0700)
+		err := os.MkdirAll(outDir, 0755)
 		if err != nil {
 			return fmt.Errorf("failed to create output directory %q: %q", outDir, err.Error())
 		}
@@ -165,4 +165,16 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	return kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
 		Outputs: outputs}.Execute()
+}
+
+// CheckDirectoryNotPresent returns error if the directory already exists
+func CheckDirectoryNotPresent(outDir string) error {
+	_, err := os.Stat(outDir)
+	if err == nil || os.IsExist(err) {
+		return fmt.Errorf("directory %q already exists, please delete the directory and retry", outDir)
+	}
+	if !os.IsNotExist(err) {
+		return err
+	}
+	return nil
 }

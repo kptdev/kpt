@@ -12,11 +12,14 @@ import (
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
+	"github.com/google/shlex"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -42,11 +45,11 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
-		&r.ExecPath, "exec-path", "", "run an executable as a function.")
+		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-	r.Command.Flags().BoolVar(
-		&r.IncludeMetaResources, "include-meta-resources", false, "include package meta resources in function input")
+	r.Command.Flags().BoolVarP(
+		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 	r.Command.Flags().BoolVar(
@@ -76,7 +79,7 @@ type EvalFnRunner struct {
 	OutContent           bytes.Buffer
 	FromStdin            bool
 	Image                string
-	ExecPath             string
+	Exec                 string
 	FnConfigPath         string
 	RunFns               runfn.RunFns
 	ResultsDir           string
@@ -97,61 +100,16 @@ func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
 	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, printer.FromContextOrDie(r.Ctx).OutStream())
 }
 
-// getContainerFunctions parses the commandline flags and arguments into explicit
-// Functions to run.
-// TODO: refactor this function to avoid using annotations in function config.
-func (r *EvalFnRunner) getContainerFunctions(dataItems []string) (
-	[]*yaml.RNode, error) {
+// getCLIFunctionConfig parses the commandline flags and arguments into explicit
+// function config
+func (r *EvalFnRunner) getCLIFunctionConfig(dataItems []string) (
+	*yaml.RNode, error) {
 
-	if r.Image == "" && r.ExecPath == "" {
+	if r.Image == "" && r.Exec == "" {
 		return nil, nil
 	}
 
-	var fn *yaml.RNode
 	var err error
-
-	if r.Image != "" {
-		// create the function spec to set as an annotation
-		fn, err = yaml.Parse(`container: {}`)
-		if err != nil {
-			return nil, err
-		}
-		// TODO: add support network, volumes, etc based on flag values
-		err = fn.PipeE(
-			yaml.Lookup("container"),
-			yaml.SetField("image", yaml.NewScalarRNode(r.Image)))
-		if err != nil {
-			return nil, err
-		}
-		if r.Network {
-			err = fn.PipeE(
-				yaml.Lookup("container"),
-				yaml.SetField("network", yaml.NewScalarRNode("true")))
-			if err != nil {
-				return nil, err
-			}
-		}
-	} else if r.ExecPath != "" {
-		// check the flags that doesn't make sense with exec function
-		// --mount, --as-current-user, --network and --env are
-		// only used with container functions
-		if r.AsCurrentUser || r.Network ||
-			len(r.Mounts) != 0 || len(r.Env) != 0 {
-			return nil, fmt.Errorf("--mount, --as-current-user, --network and --env can only be used with container functions")
-		}
-		// create the function spec to set as an annotation
-		fn, err = yaml.Parse(`exec: {}`)
-		if err != nil {
-			return nil, err
-		}
-
-		err = fn.PipeE(
-			yaml.Lookup("exec"),
-			yaml.SetField("path", yaml.NewScalarRNode(r.ExecPath)))
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	// create the function config
 	rc, err := yaml.Parse(`
@@ -159,19 +117,6 @@ metadata:
   name: function-input
 data: {}
 `)
-	if err != nil {
-		return nil, err
-	}
-
-	// set the function annotation on the function config so it
-	// is parsed by RunFns
-	value, err := fn.String()
-	if err != nil {
-		return nil, err
-	}
-	err = rc.PipeE(
-		yaml.LookupCreate(yaml.MappingNode, "metadata", "annotations"),
-		yaml.SetField(runtimeutil.FunctionAnnotationKey, yaml.NewScalarRNode(value)))
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +156,36 @@ data: {}
 	if err != nil {
 		return nil, err
 	}
-	return []*yaml.RNode{rc}, nil
+	return rc, nil
+}
+
+func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, error) {
+	fn := &runtimeutil.FunctionSpec{}
+	var execArgs []string
+	if r.Image != "" {
+		if err := kptfile.ValidateFunctionImageURL(r.Image); err != nil {
+			return nil, nil, err
+		}
+		fn.Container.Image = r.Image
+	} else if r.Exec != "" {
+		// check the flags that doesn't make sense with exec function
+		// --mount, --as-current-user, --network and --env are
+		// only used with container functions
+		if r.AsCurrentUser || r.Network ||
+			len(r.Mounts) != 0 || len(r.Env) != 0 {
+			return nil, nil, fmt.Errorf("--mount, --as-current-user, --network and --env can only be used with container functions")
+		}
+		s, err := shlex.Split(r.Exec)
+		if err != nil {
+			return nil, nil, fmt.Errorf("exec command %q must be valid: %w", r.Exec, err)
+		}
+		if len(s) > 0 {
+			fn.Exec.Path = s[0]
+			execArgs = s[1:]
+		}
+
+	}
+	return fn, execArgs, nil
 }
 
 func toStorageMounts(mounts []string) []runtimeutil.StorageMount {
@@ -231,10 +205,17 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
-	if r.Image == "" && r.ExecPath == "" {
-		return errors.Errorf("must specify --image or --exec-path")
+	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
+		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
+			return err
+		}
+	}
+
+	if r.Image == "" && r.Exec == "" {
+		return errors.Errorf("must specify --image or --exec")
 	}
 	if r.Image != "" {
+		r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
 		err := cmdutil.DockerCmdAvailable()
 		if err != nil {
 			return err
@@ -265,7 +246,11 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
 
-	fns, err := r.getContainerFunctions(dataItems)
+	fnConfig, err := r.getCLIFunctionConfig(dataItems)
+	if err != nil {
+		return err
+	}
+	fnSpec, execArgs, err := r.getFunctionSpec()
 	if err != nil {
 		return err
 	}
@@ -304,7 +289,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	r.RunFns = runfn.RunFns{
 		Ctx:                  r.Ctx,
-		Functions:            fns,
+		Function:             fnSpec,
+		ExecArgs:             execArgs,
+		OriginalExec:         r.Exec,
 		Output:               output,
 		Input:                input,
 		Path:                 path,
@@ -313,6 +300,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		ResultsDir:           r.ResultsDir,
 		Env:                  r.Env,
 		AsCurrentUser:        r.AsCurrentUser,
+		FnConfig:             fnConfig,
 		FnConfigPath:         r.FnConfigPath,
 		IncludeMetaResources: r.IncludeMetaResources,
 		ImagePullPolicy:      cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),

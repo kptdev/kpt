@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -63,7 +63,7 @@ func (m Command) Run() error {
 		return err
 	}
 	if k.Info == nil {
-		k.Info = &v1alpha2.PackageInfo{}
+		k.Info = &v1.PackageInfo{}
 	}
 
 	if k.Info.Man == "" {

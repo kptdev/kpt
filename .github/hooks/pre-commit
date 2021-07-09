@@ -6,7 +6,7 @@ diff=`git diff`
 
 if [[ $diff != "" ]];
 then 
-        echo "Found unstaged changes. Make sure to run `make generate` for updating the docs before you commit the changes."
+        echo "Found unstaged changes [$diff]. Make sure to run `make generate` for updating the docs before you commit the changes."
         exit 1
 else 
         exit 0

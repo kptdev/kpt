@@ -70,12 +70,12 @@ directory by default.
 | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]`                      | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [flags] [LOCAL_DEST_DIRECTORY]` <br> Fetch a remote package from a git subdirectory and writes it to a new local directory.                                                                           |
 | `kpt pkg init DIR [flags]`                                                                        | `kpt pkg init [DIR] [flags]` <br> Initializes an existing empty directory as a kpt package by adding a Kptfile.                                                                                                                                      |
 | `kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]`                                                  | `kpt pkg update [PKG_PATH][@version] [flags]` <br> Pulls in upstream changes and merges them into a local package.                                                                                                                                   |
-| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:unstable` <br> Fix a local package which is using deprecated features.                                                                                                                                        |
+| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources` <br> Fix a local package which is using deprecated features.                                                                                                                                            |
 | `kpt pkg desc DIR [flags]`                                                                        | Deprecated in favor of reading Kptfile directly                                                                                                                                                                                                      |
 | `kpt pkg diff DIR[@VERSION] [flags]`                                                              | `kpt pkg diff [PKG_PATH][@version] [flags]` <br> Display differences between upstream and local packages.                                                                                                                                            |
-| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:unstable`                                                                                                                                                                                                  |
+| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:v0.1`                                                                                                                                                                                                      |
 | `kpt cfg tree DIR/STDIN [flags]`                                                                  | `kpt pkg tree [DIR] [flags]` <br> Displays resources, files and packages in a tree structure.                                                                                                                                                        |
-| `kpt cfg cat DIR/STDIN [flags]`                                                                   | Deprecated. Will be added back soon.                                                                                                                                                                                                                 |
+| `kpt cfg cat DIR/STDIN [flags]`                                                                   | `kpt fn source [DIR] -o unwrap`                                                                                                                                                                                                                      |
 | `kpt fn run DIR/STDIN [flags]`                                                                    | `kpt fn eval [DIR / -] [flags]` <br> Executes a single function on resources in a directory. <br> <br> `kpt fn render [PKG_PATH]` <br> Executes the pipeline of functions on resources in the package and writes the output to the local filesystem. |
 | `kpt fn source DIR [flags]`                                                                       | `kpt fn source [DIR] [flags]` <br> Reads resources from a local directory and writes them in Function Specification wire format to stdout.                                                                                                           |
 | `kpt fn sink DIR [flags]`                                                                         | `kpt fn sink [DIR] [flags]` <br> Reads resources from stdin and writes them to a local directory.                                                                                                                                                    |
@@ -91,19 +91,19 @@ directory by default.
 | `kpt cfg create-subst DIR subst_name --field-value nginx:1.7.1 --pattern ${image}:${tag} [flags]` | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=nginx:1.7.1' 'put-comment=kpt-set: ${image}:${tag}'`                                                                                                                             |
 | `kpt cfg delete-setter DIR setter_name`                                                           | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=nginx' put-comment=''`                                                                                                                                                           |
 | `kpt cfg delete-subst DIR subst_name [flags]`                                                     | `kpt fn eval --image gcr.io/kpt-fn/search-replace:0.1 -- 'by-value=nginx:1.7.1' put-comment=''`                                                                                                                                                      |
-| `kpt cfg annotate DIR/STDIN [flags]`                                                              | `kpt fn eval --image gcr.io/kpt-fn/set-annotation:v0.1 -- 'name=foo' 'value=bar'`                                                                                                                                                                    |
+| `kpt cfg annotate DIR/STDIN [flags]`                                                              | `kpt fn eval --image gcr.io/kpt-fn/set-annotations:v0.1 -- 'name=foo' 'value=bar'`                                                                                                                                                                   |
 | `kpt cfg grep DIR/STDIN [flags]`                                                                  | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=foo' 'by-path=bar'`                                                                                                                                                              |
 | `kpt cfg count DIR/STDIN [flags]`                                                                 | Deprecated.                                                                                                                                                                                                                                          |
 
 ### Kptfile schema changes
 
 The existing [v1alpha1 Kptfile] format/schema is not compatible with kpt `v1.0`.
-Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
+Here is the schema for [v1 Kptfile] which is compatible with kpt `v1.0`.
 
 1. The `packageMetaData` section in `v1alpha1` Kptfile is transformed to `info`
-   section in `v1alpha2` Kptfile.
+   section in `v1` Kptfile.
 2. `upstream` section, in the `v1alpha1` Kptfile is split into `upstream` and
-   `upstreamLock` sections in `v1alpha2` Kptfile. `upstream` section can be
+   `upstreamLock` sections in `v1` Kptfile. `upstream` section can be
    modified by users to declare the desired version of the package,
    `upstreamLock` is the resolved package state and should not be modified by
    users.
@@ -113,8 +113,8 @@ Here is the schema for [v1alpha2 Kptfile] which is compatible with kpt `v1.0`.
    [Details below](#sync-merged-with-update).
 5. `functions` section in `v1alpha1` Kptfile holds definitions for Starlark
    functions only. This section is deprecated and all the functions can be
-   declared in the `pipeline` section including [Starlark functions].
-6. `inventory-object` is moved to `inventory` section in `v1alpha2` Kptfile.
+   declared in the `pipeline` section including [Starlark function].
+6. `inventory-object` is moved to `inventory` section in `v1` Kptfile.
    [Details below](#live-group-changes).
 
 ### `pkg`
@@ -190,7 +190,7 @@ information on the new structure of function results.
 
 Kpt live in `v1.0` no longer uses an inventory object to track the grouping of
 resources in the cluster. Instead, it uses a more expressive `ResourceGroup`
-CRD. Please refer to the detailed guide on [migrating inventory objects] to the
+CRD. Please refer to the user guide on [migrating inventory objects] to the
 `ResourceGroup` equivalent.
 
 ## Migration Steps
@@ -207,11 +207,36 @@ Since you are the package publisher, you are expected to have the latest version
 of published package on your local disk. If you do not already have it, you can [git clone]
 the latest version of remote package on to your local disk.
 
+```shell
+$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+```
+
+```shell
+# replace it with your package repo uri
+$ git clone https://github.com/GoogleContainerTools/kpt-functions-catalog.git
+```
+
+```shell
+# cd to the package directory which you want to migrate
+$ cd kpt-functions-catalog/testdata/fix/nginx-v1alpha1
+```
+
+```shell
+# verify the version of kpt
+$ kpt version
+1.0.0+
+```
+
 Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resources
+$ kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+```
+
+```shell
+# observe the changes done by the fix function
+$ git diff
 ```
 
 ##### Changes made by the function
@@ -219,7 +244,7 @@ $ kpt fn eval PKG_PATH --image gcr.io/kpt-fn/fix:unstable --include-meta-resourc
 1. Best effort is made by the function to transform the `packageMetaData`
    section to the `info` section.
 2. `upstream` section, in the `v1alpha1` Kptfile is converted to `upstream` and
-   `upstreamLock` sections in `v1alpha2` version of Kptfile.
+   `upstreamLock` sections in `v1` version of Kptfile.
 3. `dependencies` section is removed from Kptfile.
 4. Starlark functions section is removed from Kptfile.
 5. `Setters` and `substitutions` are converted to new and simple setter
@@ -239,7 +264,7 @@ changes to the resources in the live cluster.
 1. All the functions are treated as `mutators` by the `gcr.io/kpt-fn/fix`
    function and are added to the `mutators` section in the pipeline. Users must
    manually go through the functions and move the validator functions to the
-   `validators` section in the pipeline section of `v1alpha2` Kptfile.
+   `validators` section in the pipeline section of `v1` Kptfile.
    1. The order of functions also must be re-arranged manually by users if
       needed.
    2. Also, note that the [function config] is used to configure the function
@@ -260,8 +285,8 @@ Test your migrated kpt package end-to-end and make sure that the
 functionality is as expected. `gcr.io/kpt-fn/fix` is a helper for migration and
 doesn't guarantee functional parity.
 
-Finally, publish your package to git by upgrading the major version so that your
-consumers can fetch with the specific version.
+Finally, [publish your package] to git by upgrading the version so that your
+consumers can fetch the specific version of the package.
 
 ### For Package Consumers
 
@@ -275,8 +300,18 @@ and migrate the local customizations(if any) already performed to their existing
   from your existing package directory.
 
 ```shell
-# you must be using v1.0 version of kpt to run this command
-$ kpt pkg get https://example.com/some-pkg@latest
+$ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
+```
+
+```shell
+# verify the version of kpt
+$ kpt version
+1.0.0+
+```
+
+```shell
+# fetch the package with upgraded version
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/testdata/fix/nginx-v1@master
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -287,21 +322,21 @@ $ kpt pkg get https://example.com/some-pkg@latest
 - Render the package resources with customizations
 
 ```shell
-$ kpt fn render
+$ kpt fn render nginx-v1/
 ```
 
 - The step is only applicable if you're using `kpt live` functionality.
   a. If you are using the inventory object in order to manage live resources in the cluster,
-  please refer to `live migrate` command docs to perform [live migration].
+     please refer to `live migrate` command docs to perform [live migration].
   b. If you are using ResourceGroup CRD to manage live resources, copy the inventory
-  section in the Kptfile of existing package to the Kptfile of new package.
+     section in the Kptfile of existing package to the Kptfile of new package.
 
 - Once you test your new package and confirm that all the changes are as expected,
   you can simply discard the existing package and move forward with the new version
   of the fetched and customized package.
 
 Here is an [example kpt package], migrated from `v1alpha1` version(compatible with
-kpt `v0.39`) to `v1alpha2` version(compatible with kpt `v1.0`).
+kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 
 ## Timeline
 
@@ -320,20 +355,19 @@ kpt `v0.39`) to `v1alpha2` version(compatible with kpt `v1.0`).
 
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
-[v1alpha2 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1alpha2/types.go
-[starlark functions]: https://catalog.kpt.dev/starlark/v0.1/
+[v1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1/types.go
 [starlark function]: https://catalog.kpt.dev/starlark/v0.1/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
 [setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
 [openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
 [required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
 [auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
-[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/live/alpha/
 [live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
 [configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
 [simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
-[function config]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-functionconfig
+[function config]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
 [starlark runtime]: https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
 [render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
@@ -345,3 +379,4 @@ kpt `v0.39`) to `v1alpha2` version(compatible with kpt `v1.0`).
 [kpt-functions-catalog]: https://catalog.kpt.dev/
 [v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
+[publish your package]: https://kpt.dev/book/03-packages/08-publishing-a-package

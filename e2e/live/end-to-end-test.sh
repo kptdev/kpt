@@ -61,15 +61,13 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
-DEFAULT_KIND_VERSION=0.9.0
-KIND_1_19_VERSION=1.19.1
-KIND_1_18_VERSION=1.18.8
-KIND_1_17_VERSION=1.17.11
+KIND_1_21_VERSION=1.21.1
+KIND_1_20_VERSION=1.20.7
+KIND_1_19_VERSION=1.19.11
+KIND_1_18_VERSION=1.18.19
+KIND_1_17_VERSION=1.17.17
 KIND_1_16_VERSION=1.16.15
-KIND_1_15_VERSION=1.15.12
-KIND_1_14_VERSION=1.14.10
-KIND_1_13_VERSION=1.13.12
-DEFAULT_K8S_VERSION=${KIND_1_17_VERSION}
+DEFAULT_K8S_VERSION=${KIND_1_20_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -87,12 +85,6 @@ while getopts $options opt; do
 	b)  BUILD_DEPS_AT_HEAD=1;;
 	k)  short_version=$OPTARG
 	    case "$short_version" in
-		1.13) K8S_VERSION=$KIND_1_13_VERSION
-		      ;;
-		1.14) K8S_VERSION=$KIND_1_14_VERSION
-		      ;;
-		1.15) K8S_VERSION=$KIND_1_15_VERSION
-		      ;;
 		1.16) K8S_VERSION=$KIND_1_16_VERSION
 		      ;;
 		1.17) K8S_VERSION=$KIND_1_17_VERSION
@@ -100,6 +92,10 @@ while getopts $options opt; do
 		1.18) K8S_VERSION=$KIND_1_18_VERSION
 		      ;;
 		1.19) K8S_VERSION=$KIND_1_19_VERSION
+		      ;;
+		1.20) K8S_VERSION=$KIND_1_20_VERSION
+		      ;;
+		1.21) K8S_VERSION=$KIND_1_21_VERSION
 		      ;;
 	    esac
 	    ;;
@@ -188,7 +184,8 @@ function buildKpt {
     set +e
 }
 
-# createTestSuite deletes then creates the kind cluster.
+# createTestSuite deletes then creates the kind cluster. We wait for the node
+# to become ready before we run the tests.
 function createTestSuite {
     set -e
     echo "Setting Up Test Suite..."
@@ -199,6 +196,7 @@ function createTestSuite {
     echo "Deleting kind cluster...SUCCESS"
     echo "Creating kind cluster..."
     kind create cluster --image=kindest/node:v${K8S_VERSION} > $OUTPUT_DIR/k8sstartup 2>&1
+    kubectl wait node/kind-control-plane --for condition=ready --timeout=2m
     echo "Creating kind cluster...SUCCESS"
     echo
     echo "Setting Up Test Suite...SUCCESS"
@@ -432,10 +430,12 @@ ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
-# Test: Apply forcing ResourceGroup CRD installation succeeds
+# Test: Apply installs ResourceGroup CRD
 echo "[ResourceGroup] Testing create inventory CRD before basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+# The ResourceGroup inventory CRD is automatically installed on the initial apply.
+assertContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -446,6 +446,17 @@ wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
+
+# Apply again, but the ResourceGroup CRD is not re-installed.
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertNotContains "installing inventory ResourceGroup CRD"  # Not applied again
+assertContains "namespace/rg-test-namespace"
+assertContains "pod/pod-a unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+assertContains "4 resource(s) applied. 0 created, 4 unchanged, 0 configured, 0 failed"
+wait 2
+
 printResult
 
 # Cleanup by resetting Kptfile
@@ -530,6 +541,8 @@ printResult
 echo "[ResourceGroup] Testing basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+# The ResourceGroup CRD is already installed.
+assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -569,6 +582,7 @@ printResult
 echo "[ResourceGroup] Testing basic prune"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
 assertContains "namespace/rg-test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"

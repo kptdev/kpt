@@ -1,0 +1,6 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pkg-a
+info:
+  description: sample description
