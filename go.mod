@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
+	github.com/go-swagger/go-swagger v0.27.0 // indirect
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/posener/complete/v2 v2.0.1-alpha.12

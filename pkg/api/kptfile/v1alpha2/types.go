@@ -13,6 +13,8 @@
 // limitations under the License.
 
 // Package defines the schema for Kptfile version v1alpha2.
+// Version: v1alpha2
+// swagger:meta
 package v1alpha2
 
 import (
@@ -38,6 +40,9 @@ var TypeMeta = yaml.ResourceMeta{
 }
 
 // KptFile contains information about a package managed with kpt.
+// swagger:model kptfile
+// Extensions:
+// x-order: 1
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
