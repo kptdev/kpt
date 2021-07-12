@@ -93,9 +93,6 @@ docker:
 lintdocs:
 	(cd site && npm run lint-fix)
 
-schema-generate:
-	swagger generate spec -m -w pkg/api/kptfile/v1 -o site/reference/schema/kptfile/kptfile.yaml
-
 site-generate:
 	go run ./scripts/generate_site_sidebar > site/sidebar.md
 	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
