@@ -80,6 +80,9 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
+	// Use the CachingRESTClientGetter to make sure the same RESTMapper is shared
+	// across all kpt live functionality. This is needed to properly invalidate the
+	// RESTMapper cache when CRDs have been installed in the cluster.
 	cachingConfigFlags := &factory.CachingRESTClientGetter{
 		Delegate: kubeConfigFlags,
 	}
