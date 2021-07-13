@@ -45,6 +45,7 @@ fmt:
 	go fmt ./...
 
 generate:
+	go get ./...
 	go install ./mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
