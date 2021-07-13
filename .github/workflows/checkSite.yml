@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: '14'
       - name: Lint site content
-        run: npm run lint-check
+        run: npm i && npm run lint-check
         working-directory: site
       - name: Install Site Checker
         run: yarn install
