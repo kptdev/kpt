@@ -188,7 +188,7 @@ information on the new structure of function results.
 
 ### `live`
 
-Kpt live in `v1.0` no longer uses an inventory object to track the grouping of
+kpt live in `v1.0` no longer uses an inventory object to track the grouping of
 resources in the cluster. Instead, it uses a more expressive `ResourceGroup`
 CRD. Please refer to the user guide on [migrating inventory objects] to the
 `ResourceGroup` equivalent.
