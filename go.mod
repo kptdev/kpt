@@ -3,6 +3,7 @@ module github.com/GoogleContainerTools/kpt
 go 1.16
 
 require (
+	github.com/Azure/go-autorest/autorest/adal v0.9.5 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
 	github.com/go-swagger/go-swagger v0.27.0 // indirect
