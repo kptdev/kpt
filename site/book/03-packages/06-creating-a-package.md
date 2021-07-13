@@ -2,26 +2,25 @@ Creating a new package is simple: create a new directory and [author resources]:
 
 ```shell
 $ mkdir awesomeapp
-$ cd awesomeapp
-# Create resources in awesome/
+# Create resources in awesomeapp/
 ```
 
-For convenience, you can use `pkg init` command to create a minimal `Kptfile` and `README` files:
+For convenience, you can use `pkg init` command to create a minimal `Kptfile`
+and `README` files:
 
 ```shell
-$ cd awesomeapp
-$ kpt pkg init
+$ kpt pkg init awesomeapp
 writing Kptfile
 writing README.md
 ```
 
 ?> Refer to the [init command reference][init-doc] for usage.
 
-The `info` section of the `Kptfile` contains some optional package metadata you may want to set.
-These fields are not consumed by any functionality in kpt:
+The `info` section of the `Kptfile` contains some optional package metadata you
+may want to set. These fields are not consumed by any functionality in kpt:
 
 ```yaml
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: awesomeapp
@@ -38,4 +37,4 @@ info:
 ```
 
 [author resources]: /book/03-packages/03-editing-a-package
-[init-doc]: /reference/pkg/init/
+[init-doc]: /reference/cli/pkg/init/

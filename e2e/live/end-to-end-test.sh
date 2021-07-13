@@ -61,15 +61,13 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
-DEFAULT_KIND_VERSION=0.9.0
-KIND_1_19_VERSION=1.19.1
-KIND_1_18_VERSION=1.18.8
-KIND_1_17_VERSION=1.17.11
+KIND_1_21_VERSION=1.21.1
+KIND_1_20_VERSION=1.20.7
+KIND_1_19_VERSION=1.19.11
+KIND_1_18_VERSION=1.18.19
+KIND_1_17_VERSION=1.17.17
 KIND_1_16_VERSION=1.16.15
-KIND_1_15_VERSION=1.15.12
-KIND_1_14_VERSION=1.14.10
-KIND_1_13_VERSION=1.13.12
-DEFAULT_K8S_VERSION=${KIND_1_17_VERSION}
+DEFAULT_K8S_VERSION=${KIND_1_20_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -87,12 +85,6 @@ while getopts $options opt; do
 	b)  BUILD_DEPS_AT_HEAD=1;;
 	k)  short_version=$OPTARG
 	    case "$short_version" in
-		1.13) K8S_VERSION=$KIND_1_13_VERSION
-		      ;;
-		1.14) K8S_VERSION=$KIND_1_14_VERSION
-		      ;;
-		1.15) K8S_VERSION=$KIND_1_15_VERSION
-		      ;;
 		1.16) K8S_VERSION=$KIND_1_16_VERSION
 		      ;;
 		1.17) K8S_VERSION=$KIND_1_17_VERSION
@@ -100,6 +92,10 @@ while getopts $options opt; do
 		1.18) K8S_VERSION=$KIND_1_18_VERSION
 		      ;;
 		1.19) K8S_VERSION=$KIND_1_19_VERSION
+		      ;;
+		1.20) K8S_VERSION=$KIND_1_20_VERSION
+		      ;;
+		1.21) K8S_VERSION=$KIND_1_21_VERSION
 		      ;;
 	    esac
 	    ;;
@@ -144,6 +140,8 @@ function downloadPreviousKpt {
 function buildKpt {
     set -e
     if [ -z $BUILD_DEPS_AT_HEAD ]; then
+	echo "checking go version"
+	go version
 	echo "Building kpt locally..."
 	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
 	echo "Building kpt locally...SUCCESS"
@@ -186,7 +184,8 @@ function buildKpt {
     set +e
 }
 
-# createTestSuite deletes then creates the kind cluster.
+# createTestSuite deletes then creates the kind cluster. We wait for the node
+# to become ready before we run the tests.
 function createTestSuite {
     set -e
     echo "Setting Up Test Suite..."
@@ -197,6 +196,7 @@ function createTestSuite {
     echo "Deleting kind cluster...SUCCESS"
     echo "Creating kind cluster..."
     kind create cluster --image=kindest/node:v${K8S_VERSION} > $OUTPUT_DIR/k8sstartup 2>&1
+    kubectl wait node/kind-control-plane --for condition=ready --timeout=2m
     echo "Creating kind cluster...SUCCESS"
     echo
     echo "Setting Up Test Suite...SUCCESS"
@@ -421,27 +421,21 @@ createTestSuite
 waitForDefaultServiceAccount
 
 # Basic init as setup for follow-on tests
-# Test: Preview without ResourceGroup CRD installation fails
-echo "[ResourceGroup] Testing initial preview without ResourceGroup inventory CRD"
+# Test: Apply dry-run without ResourceGroup CRD installation fails
+echo "[ResourceGroup] Testing initial apply dry-run without ResourceGroup inventory CRD"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
 ${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a
-echo "kpt live preview e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live preview e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
-assertContains "inventory ResourceGroup CRD is missing"
-assertContains "run 'kpt live install-resource-group' to remedy"
-printResult
-
-# Test: Apply without ResourceGroup CRD installation fails
-echo "[ResourceGroup] Testing basic apply without ResourceGroup inventory CRD"
-echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
-# Test: Apply forcing ResourceGroup CRD installation succeeds
+# Test: Apply installs ResourceGroup CRD
 echo "[ResourceGroup] Testing create inventory CRD before basic apply"
-echo "kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply --install-resource-group e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+# The ResourceGroup inventory CRD is automatically installed on the initial apply.
+assertContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -452,6 +446,17 @@ wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
+
+# Apply again, but the ResourceGroup CRD is not re-installed.
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+assertNotContains "installing inventory ResourceGroup CRD"  # Not applied again
+assertContains "namespace/rg-test-namespace"
+assertContains "pod/pod-a unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+assertContains "4 resource(s) applied. 0 created, 4 unchanged, 0 configured, 0 failed"
+wait 2
+
 printResult
 
 # Cleanup by resetting Kptfile
@@ -489,7 +494,7 @@ printResult
 echo "Testing init for Kptfile/ResourceGroup"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile > $OUTPUT_DIR/status 2>&1
@@ -503,7 +508,7 @@ echo "Testing init Kptfile/ResourceGroup already initialized"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...failed"
-assertContains "error: ResourceGroup configuration has already been created."
+assertContains "Error: Inventory information has already been added to the package Kptfile."
 printResult
 
 echo "Testing init force Kptfile/ResourceGroup"
@@ -518,15 +523,15 @@ ${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR
 assertNotContains "initializing Kptfile inventory info"
 printResult
 
-# Test: Basic kpt live preview
-# Preview run for "rg-test-case-1a" directory
-echo "[ResourceGroup] Testing initial preview"
-echo "kpt live preview e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live preview e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
-assertContains "namespace/rg-test-namespace created (preview)"
-assertContains "pod/pod-a created (preview)"
-assertContains "pod/pod-b created (preview)"
-assertContains "pod/pod-c created (preview)"
+# Test: Basic kpt live apply dry-run
+# Apply run-run for "rg-test-case-1a" directory
+echo "[ResourceGroup] Testing initial apply dry-run"
+echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+assertContains "namespace/rg-test-namespace created (dry-run)"
+assertContains "pod/pod-a created (dry-run)"
+assertContains "pod/pod-b created (dry-run)"
+assertContains "pod/pod-c created (dry-run)"
 assertContains "4 resource(s) applied. 4 created, 0 unchanged, 0 configured, 0 failed"
 assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
 printResult
@@ -536,6 +541,8 @@ printResult
 echo "[ResourceGroup] Testing basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+# The ResourceGroup CRD is already installed.
+assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -548,19 +555,19 @@ wait 2
 assertRGInventory "rg-test-namespace" "4"
 printResult
 
-# Test: kpt live preview of apply/prune
+# Test: kpt live apply dry-run of with prune
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
-echo "[ResourceGroup] Testing basic preview"
-echo "kpt live preview e2e/live/testdata/rg-test-case-1b"
+echo "[ResourceGroup] Testing basic apply dry-run"
+echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b"
 cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b
-${BIN_DIR}/kpt live preview e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
-assertContains "namespace/rg-test-namespace configured (preview)"
-assertContains "pod/pod-b configured (preview)"
-assertContains "pod/pod-c configured (preview)"
-assertContains "pod/pod-d created (preview)"
-assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed (preview)"
-assertContains "pod/pod-a pruned (preview)"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed (preview)"
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+assertContains "namespace/rg-test-namespace configured (dry-run)"
+assertContains "pod/pod-b configured (dry-run)"
+assertContains "pod/pod-c configured (dry-run)"
+assertContains "pod/pod-d created (dry-run)"
+assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed (dry-run)"
+assertContains "pod/pod-a pruned (dry-run)"
+assertContains "1 resource(s) pruned, 0 skipped, 0 failed (dry-run)"
 wait 2
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
@@ -575,6 +582,7 @@ printResult
 echo "[ResourceGroup] Testing basic prune"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
 assertContains "namespace/rg-test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
@@ -592,15 +600,15 @@ assertPodExists "pod-d" "rg-test-namespace"
 assertPodNotExists "pod-a" "rg-test-namespace"
 printResult
 
-# Basic kpt live preview --destroy
-echo "[ResourceGroup] Testing basic preview destroy"
-echo "kpt live preview --destroy e2e/live/testdata/rg-test-case-1b"
-${BIN_DIR}/kpt live preview --destroy e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
-assertContains "pod/pod-d deleted (preview)"
-assertContains "pod/pod-c deleted (preview)"
-assertContains "pod/pod-b deleted (preview)"
-assertContains "namespace/rg-test-namespace deleted (preview)"
-assertContains "4 resource(s) deleted, 0 skipped (preview)"
+# Basic kpt live destroy --dry-run
+echo "[ResourceGroup] Testing basic destroy dry-run"
+echo "kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b"
+${BIN_DIR}/kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+assertContains "pod/pod-d deleted (dry-run)"
+assertContains "pod/pod-c deleted (dry-run)"
+assertContains "pod/pod-b deleted (dry-run)"
+assertContains "namespace/rg-test-namespace deleted (dry-run)"
+assertContains "4 resource(s) deleted, 0 skipped (dry-run)"
 # Validate resources NOT DESTROYED in the cluster
 assertPodExists "pod-b" "rg-test-namespace"
 assertPodExists "pod-c" "rg-test-namespace"
@@ -633,7 +641,7 @@ assertContains "namespace: continue-err-namespace"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
 assertRGInventory "continue-err-namespace" "2"
 assertContains "pod/pod-a created"
-assertContains "pod/pod-B failed"
+assertContains "pod/pod-B apply failed"
 assertPodExists "pod-a" "continue-err-namespace"
 assertPodNotExists "pod-B" "continue-err-namespace"
 printResult
@@ -663,9 +671,9 @@ wait 2
 
 # Attempt to apply two ConfigMaps: one in the default namespace (fails), and one
 # in the "rbac-error" namespace (succeeds).
-${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
 assertRGInventory "rbac-error" "1"
-assertContains "configmap/error-config-map failed"
+assertContains "configmap/error-config-map apply failed"
 assertContains "configmap/valid-config-map created"
 assertContains "2 resource(s) applied. 1 created, 0 unchanged, 0 configured, 1 failed"
 assertContains "0 resource(s) pruned, 0 skipped, 0 failed"

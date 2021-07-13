@@ -15,11 +15,11 @@ For example:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 3 function(s) in 2 package(s).
@@ -30,15 +30,15 @@ The results are provided as resource of kind `FunctionResultList`:
 
 ```yaml
 # /tmp/results.yaml
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: FunctionResultList
 metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: gcr.io/kpt-fn/set-label:v0.1
+  - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/set-label:v0.1
+  - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
   - image: gcr.io/kpt-fn/kubeval:v0.1
     exitCode: 0
@@ -52,14 +52,14 @@ rerun:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 [FAIL] "gcr.io/kpt-fn/kubeval:v0.1"
   Results:
-    [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/" in file "service.yaml" in field "spec.ports.0.port"
+    [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/wordpress" in file "service.yaml" in field "spec.ports.0.port"
   Exit code: 1
 
 For complete results, see /tmp/results.yaml
@@ -69,15 +69,15 @@ The results resource will now contain failure details:
 
 ```yaml
 # /tmp/results.yaml
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: FunctionResultList
 metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/set-label:v0.1
+  - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
-  - image: gcr.io/kpt-fn/set-label:v0.1
+  - image: gcr.io/kpt-fn/set-labels:v0.1
     exitCode: 0
   - image: gcr.io/kpt-fn/kubeval:v0.1
     exitCode: 1
@@ -87,6 +87,7 @@ items:
         resourceRef:
           apiVersion: v1
           kind: Service
+          name: wordpress
         field:
           path: spec.ports.0.port
         file:

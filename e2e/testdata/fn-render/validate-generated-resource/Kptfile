@@ -1,11 +1,11 @@
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:unstable # generates httpbin deployment
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
       configPath: starlark-httpbin-gen.yaml
   validators:
-    - image: gcr.io/kpt-fn/starlark:unstable # validates httpbin deployment exists
+    - image: gcr.io/kpt-fn/starlark:v0.1.0
       configPath: starlark-httpbin-val.yaml

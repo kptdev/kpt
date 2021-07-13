@@ -1,9 +1,9 @@
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
-index 6cfff34..0000000
+index 737526e..0000000
 --- a/deployment.yaml
 +++ /dev/null
-@@ -1,25 +0,0 @@
+@@ -1,24 +0,0 @@
 -# Copyright 2021 Google LLC
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@ index 6cfff34..0000000
 -# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -# See the License for the specific language governing permissions and
 -# limitations under the License.
--
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
@@ -27,14 +26,14 @@ index 6cfff34..0000000
 -  template:
 -    spec:
 -      containers:
--      - image: kennethreitz/httpbin
--        name: httpbin
+-        - name: httpbin
+-          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
-index cf4a2cf..0000000
+index 6590f6c..0000000
 --- a/resources.yaml
 +++ /dev/null
-@@ -1,20 +0,0 @@
+@@ -1,19 +0,0 @@
 -# Copyright 2021 Google LLC
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,7 +47,6 @@ index cf4a2cf..0000000
 -# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -# See the License for the specific language governing permissions and
 -# limitations under the License.
--
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:

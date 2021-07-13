@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"gopkg.in/yaml.v3"
 )
@@ -63,9 +64,13 @@ type TestCaseConfig struct {
 	// Default: ""
 	StdOut string `json:"stdOut,omitempty" yaml:"stdOut,omitempty"`
 
-	// NonIdempotent indicates if the test case is not idempotent.
-	// By default, tests are assumed to be idempotent, so it defaults to false.
-	NonIdempotent bool `json:"nonIdempotent,omitempty" yaml:"nonIdempotent,omitempty"`
+	// Sequential means should this test case be run sequentially. Default: false
+	Sequential bool `json:"sequential,omitempty" yaml:"sequential,omitempty"`
+
+	// ImagePullPolicy controls the image pulling behavior. It can be set to one
+	// of always, ifNotPresent and never. If unspecified, the default will be
+	// the same as the CLI flag.
+	ImagePullPolicy fnruntime.ImagePullPolicy `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
 
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
@@ -88,9 +93,6 @@ type TestCaseConfig struct {
 }
 
 func (c *TestCaseConfig) RunCount() int {
-	if c.NonIdempotent {
-		return 1
-	}
 	return 2
 }
 

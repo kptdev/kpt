@@ -4,12 +4,14 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
@@ -35,7 +37,7 @@ type ExecuteCmdOnPkgs struct {
 // ExecuteCmdOnPkgs takes the function definition for a command to be executed on single package, applies that definition
 // recursively on all the subpackages present in rootPkgPath if recurseSubPackages is true, else applies the command on rootPkgPath only
 func (e ExecuteCmdOnPkgs) Execute() error {
-	pkgsPaths, err := pathutil.DirsWithFile(e.RootPkgPath, kptfilev1alpha2.KptFileName, e.RecurseSubPackages)
+	pkgsPaths, err := pathutil.DirsWithFile(e.RootPkgPath, kptfilev1.KptFileName, e.RecurseSubPackages)
 	if err != nil {
 		return err
 	}
@@ -44,7 +46,7 @@ func (e ExecuteCmdOnPkgs) Execute() error {
 		// at this point, there are no openAPI files in the rootPkgPath
 		if e.NeedOpenAPI {
 			// few executions need openAPI file to be present(ex: setters commands), if true throw an error
-			return errors.Errorf("unable to find %q in package %q", kptfilev1alpha2.KptFileName, e.RootPkgPath)
+			return errors.Errorf("unable to find %q in package %q", kptfilev1.KptFileName, e.RootPkgPath)
 		}
 
 		// add root path for commands which doesn't need openAPI(ex: annotate, fmt)
@@ -105,18 +107,19 @@ func ParseFieldPath(path string) ([]string, error) {
 	return newParts, nil
 }
 
-func HandleError(c *cobra.Command, err error) error {
+func HandleError(ctx context.Context, err error) error {
 	if err == nil {
 		return nil
 	}
+	pr := printer.FromContextOrDie(ctx)
 	if StackOnError {
 		if err, ok := err.(*errors.Error); ok {
-			fmt.Fprintf(os.Stderr, "%s", err.Stack())
+			pr.Printf("%s", err.Stack())
 		}
 	}
 
 	if ExitOnError {
-		fmt.Fprintf(c.ErrOrStderr(), "Error: %v\n", err)
+		pr.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 	return err

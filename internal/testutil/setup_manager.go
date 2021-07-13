@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -106,22 +105,22 @@ func (g *TestSetupManager) Init() bool {
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
-		}}.Run(fake.CtxWithNilPrinter())) {
+		}}.Run(fake.CtxWithDefaultPrinter())) {
 		return false
 	}
 	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
 	if !assert.NoError(g.T, err) {
 		return false
 	}
-	_, err = localGit.Run(context.Background(), "add", ".")
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "add", ".")
 	if !assert.NoError(g.T, err) {
 		return false
 	}
-	_, err = localGit.Run(context.Background(), "commit", "-m", "add files")
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "commit", "-m", "add files")
 	if !assert.NoError(g.T, err) {
 		return false
 	}
@@ -198,8 +197,8 @@ func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Cont
 	return nil
 }
 
-func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptfilev1alpha2.UpdateStrategyType) bool {
-	expectedKptfile := kptfilev1alpha2.KptFile{
+func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptfilev1.UpdateStrategyType) bool {
+	expectedKptfile := kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -207,21 +206,21 @@ func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptf
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
+		Upstream: &kptfilev1.Upstream{
 			Type: "git",
-			Git: &kptfilev1alpha2.Git{
+			Git: &kptfilev1.Git{
 				Directory: g.GetSubDirectory,
 				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,
 			},
 			UpdateStrategy: strategy,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
 			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1.GitLock{
 				Directory: g.GetSubDirectory,
 				Repo:      g.Repos[Upstream].RepoDirectory,
 				Ref:       ref,

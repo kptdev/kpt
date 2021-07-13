@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -118,7 +118,7 @@ type Command struct {
 func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
-	kptFile, err := kptfileutil.ReadFile(c.Path)
+	kptFile, err := pkg.ReadKptfile(c.Path)
 	if err != nil {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
@@ -312,7 +312,7 @@ func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 // prepareForDiff removes metadata such as .git and Kptfile from a staged package
 // to exclude them from diffing.
 func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
-	excludePaths := []string{".git", kptfilev1alpha2.KptFileName}
+	excludePaths := []string{".git", kptfilev1.KptFileName}
 	for _, path := range excludePaths {
 		path = filepath.Join(dir, path)
 		if err := os.RemoveAll(path); err != nil {
@@ -343,9 +343,9 @@ func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, re
 
 	name := filepath.Base(dir)
 	kf := kptfileutil.DefaultKptfile(name)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.Git{
+	kf.Upstream = &kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
 			Repo:      repo,
 			Directory: path,
 			Ref:       ref,

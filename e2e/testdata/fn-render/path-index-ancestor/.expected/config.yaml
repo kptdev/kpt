@@ -12,8 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This package is nonIdempotent because functions in the subpackage (db)
-# do not have knowledge of the resources in the parent package. Therefore
-# when it runs twice, it tries to recreate the same resource in the parent,
-# resulting in a filepath conflict and throwing an error.
-nonIdempotent: true
+exitCode: 1
+stdErr: "Error: function must not modify resources outside of package: resource has path ../deployment_httpbin.yaml"

@@ -17,7 +17,7 @@ package cmdinit
 
 import (
 	"bytes"
-	"fmt"
+	"context"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -26,17 +26,20 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // NewRunner returns a command runner.
-func NewRunner(parent string) *Runner {
-	r := &Runner{}
+func NewRunner(ctx context.Context, parent string) *Runner {
+	r := &Runner{
+		Ctx: ctx,
+	}
 	c := &cobra.Command{
 		Use:     "init [DIR]",
 		Args:    cobra.MaximumNArgs(1),
@@ -54,8 +57,8 @@ func NewRunner(parent string) *Runner {
 	return r
 }
 
-func NewCommand(parent string) *cobra.Command {
-	return NewRunner(parent).Command
+func NewCommand(ctx context.Context, parent string) *cobra.Command {
+	return NewRunner(ctx, parent).Command
 }
 
 // Runner contains the run function
@@ -65,6 +68,7 @@ type Runner struct {
 	Name        string
 	Description string
 	Site        string
+	Ctx         context.Context
 }
 
 func (r *Runner) runE(c *cobra.Command, args []string) error {
@@ -82,9 +86,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return errors.Errorf("%s does not exist", err)
 	}
 
-	if _, err = os.Stat(filepath.Join(up, kptfilev1alpha2.KptFileName)); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], "Kptfile"))
-		k := kptfilev1alpha2.KptFile{
+	pr := printer.FromContextOrDie(r.Ctx)
+
+	if _, err = os.Stat(filepath.Join(up, kptfilev1.KptFileName)); os.IsNotExist(err) {
+		pr.Printf("writing %s\n", filepath.Join(args[0], "Kptfile"))
+		k := kptfilev1.KptFile{
 			ResourceMeta: yaml.ResourceMeta{
 				ObjectMeta: yaml.ObjectMeta{
 					NameMeta: yaml.NameMeta{
@@ -92,7 +98,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 					},
 				},
 			},
-			Info: &kptfilev1alpha2.PackageInfo{
+			Info: &kptfilev1.PackageInfo{
 				Description: r.Description,
 				Site:        r.Site,
 				Keywords:    r.Keywords,
@@ -100,11 +106,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 
 		// serialize the gvk when writing the Kptfile
-		k.Kind = kptfilev1alpha2.TypeMeta.Kind
-		k.APIVersion = kptfilev1alpha2.TypeMeta.APIVersion
+		k.Kind = kptfilev1.TypeMeta.Kind
+		k.APIVersion = kptfilev1.TypeMeta.APIVersion
 
 		err = func() error {
-			f, err := os.Create(filepath.Join(up, kptfilev1alpha2.KptFileName))
+			f, err := os.Create(filepath.Join(up, kptfilev1.KptFileName))
 			if err != nil {
 				return err
 			}
@@ -120,7 +126,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	}
 
 	if _, err = os.Stat(filepath.Join(up, man.ManFilename)); os.IsNotExist(err) {
-		fmt.Fprintf(c.OutOrStdout(), "writing %s\n", filepath.Join(args[0], man.ManFilename))
+		pr.Printf("writing %s\n", filepath.Join(args[0], man.ManFilename))
 		buff := &bytes.Buffer{}
 		t, err := template.New("man").Parse(manTemplate)
 		if err != nil {
@@ -156,16 +162,16 @@ var manTemplate = `# {{.Name}}
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] {{.Name}}'
-Details: https://kpt.dev/reference/pkg/get/
+Details: https://kpt.dev/reference/cli/pkg/get/
 
 ### View package content
 'kpt pkg tree {{.Name}}'
-Details: https://kpt.dev/reference/pkg/tree/
+Details: https://kpt.dev/reference/cli/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init {{.Name}}
 kpt live apply {{.Name}} --reconcile-timeout=2m --output=table
 '''
-Details: https://kpt.dev/reference/live/
+Details: https://kpt.dev/reference/cli/live/
 `

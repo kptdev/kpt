@@ -4,83 +4,131 @@
 package live
 
 import (
-	"fmt"
+	"encoding/json"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/klog"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // ResourceGroupPathManifestReader encapsulates the default path
 // manifest reader.
 type ResourceGroupPathManifestReader struct {
-	pathReader *manifestreader.PathManifestReader
+	PkgPath string
+
+	manifestreader.ReaderOptions
 }
 
 // Read reads the manifests and returns them as Info objects.
 // Generates and adds a ResourceGroup inventory object from
 // Kptfile data. If unable to generate the ResourceGroup inventory
 // object from the Kptfile, it is NOT an error.
-func (p *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
-	// Using the default path reader to generate the objects.
-	objs, err := p.pathReader.Read()
+func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
+	p, err := pkg.New(r.PkgPath)
 	if err != nil {
-		return []*unstructured.Unstructured{}, err
-	}
-	klog.V(4).Infof("path Read() %d resources", len(objs))
-	// Read the Kptfile in the top directory to get the inventory
-	// parameters to create the ResourceGroup inventory object.
-	kf, err := kptfileutil.ReadFile(p.pathReader.Path)
-	if err != nil {
-		klog.V(4).Infof("unable to parse Kptfile for ResourceGroup inventory: %s", err)
-		return objs, nil
-	}
-	inv := kf.Inventory
-	invObj, err := generateInventoryObj(inv)
-	if err == nil {
-		klog.V(4).Infof("from Kptfile generating ResourceGroup inventory object %s/%s/%s",
-			inv.Namespace, inv.Name, inv.InventoryID)
-		objs = append(objs, invObj)
-	} else {
-		klog.V(4).Infof("unable to generate ResourceGroup inventory: %s", err)
-	}
-	return objs, nil
-}
-
-// generateInventoryObj returns the ResourceGroupInventory object using the
-// passed information.
-func generateInventoryObj(inv *kptfilev1alpha2.Inventory) (*unstructured.Unstructured, error) {
-	// First, ensure the Kptfile inventory section is valid.
-	if isValid, err := kptfileutil.ValidateInventory(inv); !isValid {
 		return nil, err
 	}
-	// Create and return ResourceGroup custom resource as inventory object.
-	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
-	var inventoryObj = &unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": groupVersion,
-			"kind":       ResourceGroupGVK.Kind,
-			"metadata": map[string]interface{}{
-				"name":      inv.Name,
-				"namespace": inv.Namespace,
-				"labels": map[string]interface{}{
-					common.InventoryLabel: inv.InventoryID,
-				},
-			},
-			"spec": map[string]interface{}{
-				"resources": []interface{}{},
-			},
-		},
+
+	// Lookup all files referenced by all subpackages.
+	fcPaths, err := pkg.FunctionConfigFilePaths(p.UniquePath, true)
+	if err != nil {
+		return nil, err
 	}
-	labels := inv.Labels
-	if labels == nil {
-		labels = make(map[string]string)
+
+	var objs []*unstructured.Unstructured
+	nodes, err := (&kio.LocalPackageReader{
+		PackagePath: r.PkgPath,
+	}).Read()
+	if err != nil {
+		return objs, err
 	}
-	labels[common.InventoryLabel] = inv.InventoryID
-	inventoryObj.SetLabels(labels)
-	inventoryObj.SetAnnotations(inv.Annotations)
-	return inventoryObj, nil
+
+	for _, n := range nodes {
+		relPath, _, err := kioutil.GetFileAnnotations(n)
+		if err != nil {
+			return objs, err
+		}
+		if fcPaths.Has(relPath) && !isExplicitNotLocalConfig(n) {
+			continue
+		}
+
+		if err := removeAnnotations(n, kioutil.IndexAnnotation); err != nil {
+			return objs, err
+		}
+
+		u, err := kyamlNodeToUnstructured(n)
+		if err != nil {
+			return objs, err
+		}
+		objs = append(objs, u)
+	}
+
+	objs = filterLocalConfig(objs)
+	err = manifestreader.SetNamespaces(r.Mapper, objs, r.Namespace, r.EnforceNamespace)
+	return objs, err
+}
+
+// removeAnnotations removes the specified kioutil annotations from the resource.
+func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) error {
+	for _, a := range annotations {
+		err := n.PipeE(yaml.ClearAnnotation(a))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// kyamlNodeToUnstructured take a resource represented as a kyaml RNode and
+// turns it into an Unstructured object.
+//nolint:interfacer
+func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
+	b, err := n.MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+
+	var m map[string]interface{}
+	err = json.Unmarshal(b, &m)
+	if err != nil {
+		return nil, err
+	}
+
+	return &unstructured.Unstructured{
+		Object: m,
+	}, nil
+}
+
+const NoLocalConfigAnnoVal = "false"
+
+// isExplicitNotLocalConfig checks whether the resource has been explicitly
+// label as NOT being local config. It checks for the config.kubernetes.io/local-config
+// annotation with a value of "false".
+func isExplicitNotLocalConfig(n *yaml.RNode) bool {
+	if val, found := n.GetAnnotations()[filters.LocalConfigAnnotation]; found {
+		if val == NoLocalConfigAnnoVal {
+			return true
+		}
+	}
+	return false
+}
+
+// filterLocalConfig returns a new slice of Unstructured where all resources
+// that are designated as local config have been filtered out. It does this
+// by looking at the config.kubernetes.io/local-config annotation. Any value
+// except "false" is considered to mean the resource is local config.
+func filterLocalConfig(objs []*unstructured.Unstructured) []*unstructured.Unstructured {
+	var filteredObjs []*unstructured.Unstructured
+	for _, obj := range objs {
+		annoVal, found := obj.GetAnnotations()[filters.LocalConfigAnnotation]
+		if found && annoVal != NoLocalConfigAnnoVal {
+			continue
+		}
+		filteredObjs = append(filteredObjs, obj)
+	}
+	return filteredObjs
 }

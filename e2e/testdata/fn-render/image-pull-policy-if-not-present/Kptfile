@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: pull gcr.io/kpt-fn-demo/foo:v0.1

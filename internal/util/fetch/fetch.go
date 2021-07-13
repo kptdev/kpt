@@ -30,7 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -69,7 +69,7 @@ func (c Command) Run(ctx context.Context) error {
 
 // validate makes sure the Kptfile has the necessary information to fetch
 // the package.
-func (c Command) validate(kf *kptfilev1alpha2.KptFile) error {
+func (c Command) validate(kf *kptfilev1.KptFile) error {
 	const op errors.Op = "validate"
 	if kf.Upstream == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile doesn't contain upstream information"))
@@ -140,9 +140,15 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 
 	// Check if we have a ref in the upstream that matches the package-specific
 	// reference. If we do, we use that reference.
-	packageRef := path.Join(strings.TrimLeft(repoSpec.Path, "/"), repoSpec.Ref)
-	if _, found := upstreamRepo.ResolveTag(packageRef); found {
-		repoSpec.Ref = packageRef
+	ps := strings.Split(repoSpec.Path, "/")
+	for len(ps) != 0 {
+		p := path.Join(ps...)
+		packageRef := path.Join(strings.TrimLeft(p, "/"), repoSpec.Ref)
+		if _, found := upstreamRepo.ResolveTag(packageRef); found {
+			repoSpec.Ref = packageRef
+			break
+		}
+		ps = ps[:len(ps)-1]
 	}
 
 	// Pull the required ref into the repo git cache.
@@ -191,6 +197,29 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	err = copyutil.CopyDir(dir, repoSpec.Dir)
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
+	}
+
+	// Verify that if a Kptfile exists in the package, it contains the correct
+	// version of the Kptfile.
+	pkgPath := filepath.Join(dir, repoSpec.Path)
+	_, err = pkg.ReadKptfile(pkgPath)
+	if err != nil {
+		// A Kptfile isn't required, so it is fine if there is no Kptfile.
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
+		// If the error is of type KptfileError, we replace it with a
+		// RemoteKptfileError. This allows us to provide information about the
+		// git source of the Kptfile instead of the path to some random
+		// temporary directory.
+		var kfError *pkg.KptfileError
+		if errors.As(err, &kfError) {
+			return &pkg.RemoteKptfileError{
+				RepoSpec: repoSpec,
+				Err:      kfError.Err,
+			}
+		}
 	}
 	return nil
 }

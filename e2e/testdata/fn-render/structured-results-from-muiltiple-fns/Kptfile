@@ -1,11 +1,11 @@
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: app
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/enforce-gatekeeper:unstable
-    - image: gcr.io/kpt-fn/kubeval:unstable
+    - image: gcr.io/kpt-fn/gatekeeper:0.1.0
+    - image: gcr.io/kpt-fn/kubeval:v0.1.1
       configMap:
-        strict: "true"
         ignore_missing_schemas: "true"
+        strict: "true"

@@ -6,14 +6,20 @@ package status
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
+	statusprinters "github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/cmd/util"
+	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -21,77 +27,102 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/provider"
 	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
-func GetStatusRunner(provider provider.Provider, loader manifestreader.ManifestLoader) *StatusRunner {
-	r := &StatusRunner{
+const (
+	Known   = "known"
+	Current = "current"
+	Deleted = "deleted"
+	Forever = "forever"
+)
+
+var (
+	PollUntilOptions = []string{Known, Current, Deleted, Forever}
+)
+
+func NewRunner(ctx context.Context, provider provider.Provider) *Runner {
+	r := &Runner{
+		ctx:               ctx,
 		provider:          provider,
-		loader:            loader,
 		pollerFactoryFunc: pollerFactoryFunc,
 	}
 	c := &cobra.Command{
-		Use:  "status [PKG_PATH | -]",
-		RunE: r.runE,
+		Use:     "status [PKG_PATH | -]",
+		PreRunE: r.preRunE,
+		RunE:    r.runE,
+		Short:   livedocs.StatusShort,
+		Long:    livedocs.StatusShort + "\n" + livedocs.StatusLong,
+		Example: livedocs.StatusExamples,
 	}
+	r.Command = c
 	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
 		"Polling period for resource statuses.")
 	c.Flags().StringVar(&r.pollUntil, "poll-until", "known",
-		"When to stop polling. Must be one of 'known', 'current', 'deleted', or 'forever'.")
+		fmt.Sprintf("When to stop polling. Must be one of %s", strings.JoinStringsWithQuotes(PollUntilOptions)))
 	c.Flags().StringVar(&r.output, "output", "events", "Output format.")
 	c.Flags().DurationVar(&r.timeout, "timeout", 0,
 		"How long to wait before exiting")
-
-	r.Command = c
 	return r
 }
 
-func StatusCommand(f cmdutil.Factory) *cobra.Command {
-	provider := provider.NewProvider(f)
-	loader := manifestreader.NewManifestLoader(f)
-	return GetStatusRunner(provider, loader).Command
+func NewCommand(ctx context.Context, provider provider.Provider) *cobra.Command {
+	return NewRunner(ctx, provider).Command
 }
 
-// StatusRunner captures the parameters for the command and contains
+// Runner captures the parameters for the command and contains
 // the run function.
-type StatusRunner struct {
+type Runner struct {
+	ctx      context.Context
 	Command  *cobra.Command
 	provider provider.Provider
-	loader   manifestreader.ManifestLoader
 
 	period    time.Duration
 	pollUntil string
 	timeout   time.Duration
 	output    string
 
-	pollerFactoryFunc func(cmdutil.Factory) (poller.Poller, error)
+	pollerFactoryFunc func(util.Factory) (poller.Poller, error)
+}
+
+func (r *Runner) preRunE(*cobra.Command, []string) error {
+	if !slice.ContainsString(PollUntilOptions, r.pollUntil, nil) {
+		return fmt.Errorf("pollUntil must be one of %s",
+			strings.JoinStringsWithQuotes(PollUntilOptions))
+	}
+
+	if found := printers.ValidatePrinterType(r.output); !found {
+		return fmt.Errorf("unknown output type %q", r.output)
+	}
+	return nil
 }
 
 // runE implements the logic of the command and will delegate to the
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
-func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
+func (r *Runner) runE(c *cobra.Command, args []string) error {
+	pr := printer.FromContextOrDie(r.ctx)
 	if len(args) == 0 {
 		// default to the current working directory
-		args = append(args, ".")
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		args = append(args, cwd)
 	}
+
 	_, err := common.DemandOneDirectory(args)
 	if err != nil {
 		return err
 	}
 
-	reader, err := r.loader.ManifestReader(cmd.InOrStdin(), flagutils.PathFromArgs(args))
-	if err != nil {
-		return err
-	}
-	objs, err := reader.Read()
+	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
 
-	inv, _, err := r.loader.InventoryInfo(objs)
+	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
 	}
@@ -103,14 +134,14 @@ func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
 
 	// Based on the inventory template manifest we look up the inventory
 	// from the live state using the inventory client.
-	identifiers, err := invClient.GetClusterObjs(inv)
+	identifiers, err := invClient.GetClusterObjs(invInfo)
 	if err != nil {
 		return err
 	}
 
 	// Exit here if the inventory is empty.
 	if len(identifiers) == 0 {
-		_, _ = fmt.Fprint(cmd.OutOrStdout(), "no resources found in the inventory\n")
+		pr.Printf("no resources found in the inventory\n")
 		return nil
 	}
 
@@ -121,10 +152,9 @@ func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
 
 	// Fetch a printer implementation based on the desired output format as
 	// specified in the output flag.
-	printer, err := printers.CreatePrinter(r.output, genericclioptions.IOStreams{
-		In:     cmd.InOrStdin(),
-		Out:    cmd.OutOrStdout(),
-		ErrOut: cmd.ErrOrStderr(),
+	printer, err := statusprinters.CreatePrinter(r.output, genericclioptions.IOStreams{
+		Out:    pr.OutStream(),
+		ErrOut: pr.ErrStream(),
 	})
 	if err != nil {
 		return errors.WrapPrefix(err, "error creating printer", 1)
@@ -132,12 +162,12 @@ func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
 
 	// If the user has specified a timeout, we create a context with timeout,
 	// otherwise we create a context with cancel.
-	ctx := context.Background()
+	var ctx context.Context
 	var cancel func()
 	if r.timeout != 0 {
-		ctx, cancel = context.WithTimeout(ctx, r.timeout)
+		ctx, cancel = context.WithTimeout(r.ctx, r.timeout)
 	} else {
-		ctx, cancel = context.WithCancel(ctx)
+		ctx, cancel = context.WithCancel(r.ctx)
 	}
 	defer cancel()
 
@@ -145,13 +175,13 @@ func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
 	// the command should exit.
 	var cancelFunc collector.ObserverFunc
 	switch r.pollUntil {
-	case "known":
+	case Known:
 		cancelFunc = allKnownNotifierFunc(cancel)
-	case "current":
+	case Current:
 		cancelFunc = desiredStatusNotifierFunc(cancel, status.CurrentStatus)
-	case "deleted":
+	case Deleted:
 		cancelFunc = desiredStatusNotifierFunc(cancel, status.NotFoundStatus)
-	case "forever":
+	case Forever:
 		cancelFunc = func(*collector.ResourceStatusCollector, event.Event) {}
 	default:
 		return fmt.Errorf("unknown value for pollUntil: %q", r.pollUntil)
@@ -162,8 +192,7 @@ func (r *StatusRunner) runE(cmd *cobra.Command, args []string) error {
 		UseCache:     true,
 	})
 
-	printer.Print(eventChannel, identifiers, cancelFunc)
-	return nil
+	return printer.Print(eventChannel, identifiers, cancelFunc)
 }
 
 // desiredStatusNotifierFunc returns an Observer function for the
@@ -197,6 +226,6 @@ func allKnownNotifierFunc(cancelFunc context.CancelFunc) collector.ObserverFunc 
 	}
 }
 
-func pollerFactoryFunc(f cmdutil.Factory) (poller.Poller, error) {
+func pollerFactoryFunc(f util.Factory) (poller.Poller, error) {
 	return factory.NewStatusPoller(f)
 }

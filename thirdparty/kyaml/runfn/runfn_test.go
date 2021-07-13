@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -26,12 +26,6 @@ import (
 const (
 	ValueReplacerYAMLData = `apiVersion: v1
 kind: ValueReplacer
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: gcr.io/example.com/image:version
-    config.kubernetes.io/local-config: "true"
 stringMatch: Deployment
 replace: StatefulSet
 `
@@ -44,7 +38,7 @@ stringMatch: Deployment
 replace: ReplicaSet
 `
 
-	KptfileData = `apiVersion: kpt.dev/v1alpha2
+	KptfileData = `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: kptfile
@@ -79,13 +73,13 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 		},
 		{
 			name:     "explicit functions -- no functions from input",
-			instance: RunFns{Functions: []*yaml.RNode{{}}},
-			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Functions: []*yaml.RNode{{}}},
+			instance: RunFns{Function: nil},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Function: nil},
 		},
 		{
 			name:     "explicit functions -- yes functions from input",
-			instance: RunFns{Functions: []*yaml.RNode{{}}},
-			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Functions: []*yaml.RNode{{}}},
+			instance: RunFns{Function: nil},
+			expected: RunFns{Output: os.Stdout, Input: os.Stdin, Function: nil},
 		},
 		{
 			name:     "explicit functions in paths -- no functions from input",
@@ -127,108 +121,26 @@ func TestRunFns_Execute__initDefault(t *testing.T) {
 	}
 }
 
-func TestRunFns_sortFns(t *testing.T) {
-	testCases := []struct {
-		name           string
-		nodes          []*yaml.RNode
-		expectedImages []string
-		expectedErrMsg string
-	}{
-		{
-			name: "multiple functions in the same file are ordered by index",
-			nodes: []*yaml.RNode{
-				yaml.MustParse(`
-metadata:
-  annotations:
-    config.kubernetes.io/path: functions.yaml
-    config.kubernetes.io/index: 1
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`),
-				yaml.MustParse(`
-metadata:
-  annotations:
-    config.kubernetes.io/path: functions.yaml
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`),
-			},
-			expectedImages: []string{"b", "a"},
-		},
-		{
-			name: "non-integer value in index annotation is an error",
-			nodes: []*yaml.RNode{
-				yaml.MustParse(`
-metadata:
-  annotations:
-    config.kubernetes.io/path: functions.yaml
-    config.kubernetes.io/index: 0
-    config.kubernetes.io/function: |
-      container:
-        image: a
-`),
-				yaml.MustParse(`
-metadata:
-  annotations:
-    config.kubernetes.io/path: functions.yaml
-    config.kubernetes.io/index: abc
-    config.kubernetes.io/function: |
-      container:
-        image: b
-`),
-			},
-			expectedErrMsg: "strconv.Atoi: parsing \"abc\": invalid syntax",
-		},
-	}
-
-	for i := range testCases {
-		test := testCases[i]
-		t.Run(test.name, func(t *testing.T) {
-			packageBuff := &kio.PackageBuffer{
-				Nodes: test.nodes,
-			}
-
-			err := sortFns(packageBuff)
-			if test.expectedErrMsg != "" {
-				if !assert.Error(t, err) {
-					t.FailNow()
-				}
-				assert.Equal(t, test.expectedErrMsg, err.Error())
-				return
-			}
-
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-
-			var images []string
-			for _, n := range packageBuff.Nodes {
-				spec := runtimeutil.GetFunctionSpec(n)
-				images = append(images, spec.Container.Image)
-			}
-
-			assert.Equal(t, test.expectedImages, images)
-		})
-	}
-}
-
 func TestCmd_Execute(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
 	if err != nil {
 		t.Fatal(err)
 	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
+	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithNilPrinter(),
+		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
-		Functions:              []*yaml.RNode{fn},
+		Function:               fn,
+		FnConfig:               fnConfig,
 		fnResults:              fnresult.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
@@ -246,30 +158,36 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
 	if err != nil {
 		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
 	}
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithNilPrinter(),
+		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		IncludeMetaResources:   true,
-		Functions:              []*yaml.RNode{fn},
+		Function:               fn,
+		FnConfig:               fnConfig,
 		fnResults:              fnresult.NewResultList(),
 	}
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
 	b, err := ioutil.ReadFile(
-		filepath.Join(dir, v1alpha2.KptFileName))
+		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -288,12 +206,12 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 
 	// write a Kptfile to the directory of configuration
 	if !assert.NoError(t, ioutil.WriteFile(
-		filepath.Join(dir, v1alpha2.KptFileName), []byte(KptfileData), 0600)) {
+		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithNilPrinter(),
+		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
 		fnResults:              fnresult.NewResultList(),
@@ -302,7 +220,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 		t.FailNow()
 	}
 	b, err := ioutil.ReadFile(
-		filepath.Join(dir, v1alpha2.KptFileName))
+		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -365,17 +283,23 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 		return
 	}
 
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
 	if err != nil {
 		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
 	}
 
 	// run the functions, providing the path to the directory of filters
 	instance := RunFns{
-		Ctx:          fake.CtxWithNilPrinter(),
+		Ctx:          fake.CtxWithDefaultPrinter(),
 		FnConfigPath: tmpF.Name(),
 		Path:         dir,
-		Functions:    []*yaml.RNode{fn},
+		Function:     fn,
+		FnConfig:     fnConfig,
 		fnResults:    fnresult.NewResultList(),
 	}
 	instance.functionFilterProvider = getFnConfigPathFilterProvider(t, &instance)
@@ -399,18 +323,24 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
 
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
 	if err != nil {
 		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
 	}
 
 	out := &bytes.Buffer{}
 	instance := RunFns{
-		Ctx:                    fake.CtxWithNilPrinter(),
+		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Output:                 out, // write to out
 		Path:                   dir,
 		functionFilterProvider: getFilterProvider(t),
-		Functions:              []*yaml.RNode{fn},
+		Function:               fn,
+		FnConfig:               fnConfig,
 		fnResults:              fnresult.NewResultList(),
 	}
 	// initialize the defaults
@@ -432,9 +362,14 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 func TestCmd_Execute_setInput(t *testing.T) {
 	dir := setupTest(t)
 	defer os.RemoveAll(dir)
-	fn, err := yaml.Parse(ValueReplacerYAMLData)
+	fnConfig, err := yaml.Parse(ValueReplacerYAMLData)
 	if err != nil {
 		t.Fatal(err)
+	}
+	fn := &runtimeutil.FunctionSpec{
+		Container: runtimeutil.ContainerSpec{
+			Image: "gcr.io/example.com/image:version",
+		},
 	}
 
 	read, err := kio.LocalPackageReader{PackagePath: dir}.Read()
@@ -457,11 +392,12 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 
 	instance := RunFns{
-		Ctx:                    fake.CtxWithNilPrinter(),
+		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Input:                  input, // read from input
 		Path:                   outDir,
 		functionFilterProvider: getFilterProvider(t),
-		Functions:              []*yaml.RNode{fn},
+		Function:               fn,
+		FnConfig:               fnConfig,
 		fnResults:              fnresult.NewResultList(),
 	}
 	// initialize the defaults
@@ -476,73 +412,6 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Contains(t, string(b), "kind: StatefulSet")
-}
-
-func getGeneratorFilterProvider(t *testing.T) func(runtimeutil.FunctionSpec, *yaml.RNode, currentUserFunc) (kio.Filter, error) {
-	return func(f runtimeutil.FunctionSpec, node *yaml.RNode, currentUser currentUserFunc) (kio.Filter, error) {
-		return kio.FilterFunc(func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-			if f.Container.Image == "generate" {
-				node, err := yaml.Parse("kind: generated")
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				return append(items, node), nil
-			}
-			return items, nil
-		}), nil
-	}
-}
-func TestRunFns_ContinueOnEmptyResult(t *testing.T) {
-	fn1, err := yaml.Parse(`
-kind: fakefn
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: pass
-`)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	fn2, err := yaml.Parse(`
-kind: fakefn
-metadata:
-  annotations:
-    config.kubernetes.io/function: |
-      container:
-        image: generate
-`)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-
-	var test = []struct {
-		ContinueOnEmptyResult bool
-		ExpectedOutput        string
-	}{
-		{
-			ContinueOnEmptyResult: false,
-			ExpectedOutput:        "",
-		},
-		{
-			ContinueOnEmptyResult: true,
-			ExpectedOutput:        "kind: generated\n",
-		},
-	}
-	for i := range test {
-		ouputBuffer := bytes.Buffer{}
-		instance := RunFns{
-			Input:                  bytes.NewReader([]byte{}),
-			Output:                 &ouputBuffer,
-			Functions:              []*yaml.RNode{fn1, fn2},
-			functionFilterProvider: getGeneratorFilterProvider(t),
-			ContinueOnEmptyResult:  test[i].ContinueOnEmptyResult,
-		}
-		if !assert.NoError(t, instance.Execute()) {
-			t.FailNow()
-		}
-		assert.Equal(t, test[i].ExpectedOutput, ouputBuffer.String())
-	}
 }
 
 // setupTest initializes a temp test directory containing test data

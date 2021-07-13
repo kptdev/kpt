@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +38,7 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
-	r := cmdinit.NewRunner("kpt")
+	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
@@ -45,7 +46,7 @@ func TestCmd(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
+	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: my-pkg
@@ -64,18 +65,18 @@ my description
 
 ### Fetch the package
 'kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] my-pkg'
-Details: https://kpt.dev/reference/pkg/get/
+Details: https://kpt.dev/reference/cli/pkg/get/
 
 ### View package content
 'kpt pkg tree my-pkg'
-Details: https://kpt.dev/reference/pkg/tree/
+Details: https://kpt.dev/reference/cli/pkg/tree/
 
 ### Apply the package
 '''
 kpt live init my-pkg
 kpt live apply my-pkg --reconcile-timeout=2m --output=table
 '''
-Details: https://kpt.dev/reference/live/
+Details: https://kpt.dev/reference/cli/live/
 `, "'", "`"), string(b))
 }
 
@@ -83,7 +84,6 @@ func TestCmd_currentDir(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
-
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -99,7 +99,7 @@ func TestCmd_currentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner("kpt")
+		r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 		r.Command.SetArgs([]string{".", "--description", "my description"})
 		return r.Command.Execute()
 	}()
@@ -108,7 +108,7 @@ func TestCmd_currentDir(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
+	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: my-pkg
@@ -121,7 +121,6 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
-
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
 	assert.NoError(t, err)
@@ -137,7 +136,7 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 			}
 		}()
 
-		r := cmdinit.NewRunner("kpt")
+		r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 		r.Command.SetArgs([]string{"--description", "my description"})
 		return r.Command.Execute()
 	}()
@@ -146,7 +145,7 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 	// verify the contents
 	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
-	assert.Equal(t, `apiVersion: kpt.dev/v1alpha2
+	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: my-pkg
@@ -159,8 +158,7 @@ info:
 func TestCmd_failNotExists(t *testing.T) {
 	d, err := ioutil.TempDir("", "kpt")
 	assert.NoError(t, err)
-
-	r := cmdinit.NewRunner("kpt")
+	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err = r.Command.Execute()
 	if assert.Error(t, err) {

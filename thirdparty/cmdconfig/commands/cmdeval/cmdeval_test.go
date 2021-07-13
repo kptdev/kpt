@@ -4,43 +4,50 @@
 package cmdeval
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"os"
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
 	tests := []struct {
-		name           string
-		args           []string
-		expected       string
-		expectedStruct *runfn.RunFns
-		err            string
-		path           string
-		input          io.Reader
-		output         io.Writer
-		fnConfigPath   string
-		network        bool
-		mount          []string
+		name             string
+		args             []string
+		expectedFnConfig string
+		expectedFn       *runtimeutil.FunctionSpec
+		expectedStruct   *runfn.RunFns
+		expectedExecArgs []string
+		err              string
+		path             string
+		input            io.Reader
+		output           io.Writer
+		fnConfigPath     string
+		network          bool
+		mount            []string
 	}{
 		{
 			name: "config map",
 			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: "dir",
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {a: b, c: d, e: f}
 kind: ConfigMap
 apiVersion: v1
@@ -50,13 +57,15 @@ apiVersion: v1
 			name:   "config map stdin / stdout",
 			args:   []string{"eval", "-", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			input:  os.Stdin,
-			output: os.Stdout,
-			expected: `
+			output: &bytes.Buffer{},
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {a: b, c: d, e: f}
 kind: ConfigMap
 apiVersion: v1
@@ -64,15 +73,17 @@ apiVersion: v1
 		},
 		{
 			name:   "config map dry-run",
-			args:   []string{"eval", "dir", "--image", "foo:bar", "--dry-run", "--", "a=b", "c=d", "e=f"},
-			output: os.Stdout,
+			args:   []string{"eval", "dir", "--image", "foo:bar", "-o", "stdout", "--", "a=b", "c=d", "e=f"},
+			output: &bytes.Buffer{},
 			path:   "dir",
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {a: b, c: d, e: f}
 kind: ConfigMap
 apiVersion: v1
@@ -82,12 +93,14 @@ apiVersion: v1
 			name: "config map no args",
 			args: []string{"eval", "dir", "--image", "foo:bar"},
 			path: "dir",
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -98,12 +111,14 @@ apiVersion: v1
 			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
 			path:    "dir",
 			network: true,
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar', network: true}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -114,12 +129,14 @@ apiVersion: v1
 			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
 			path:    "dir",
 			network: true,
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar', network: true}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -129,12 +146,14 @@ apiVersion: v1
 			name: "custom kind",
 			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h"},
 			path: "dir",
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {g: h}
 kind: Foo
 apiVersion: v1
@@ -144,12 +163,14 @@ apiVersion: v1
 			name: "custom kind '=' in data",
 			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path: "dir",
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {g: h, i: j=k}
 kind: Foo
 apiVersion: v1
@@ -164,12 +185,14 @@ apiVersion: v1
 				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
 			path:  "dir",
 			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {g: h, i: j=k}
 kind: Foo
 apiVersion: v1
@@ -182,16 +205,19 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				ResultsDir:            "foo/",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
 			},
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {a: b, c: d, e: f}
 kind: ConfigMap
 apiVersion: v1
@@ -218,16 +244,19 @@ apiVersion: v1
 			path: "dir",
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
 			},
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -240,16 +269,19 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  "dir",
 				AsCurrentUser:         true,
+				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
 			},
-			expected: `
+			expectedFn: &runtimeutil.FunctionSpec{
+				Container: runtimeutil.ContainerSpec{
+					Image: "gcr.io/kpt-fn/foo:bar",
+				},
+			},
+			expectedFnConfig: `
 metadata:
   name: function-input
-  annotations:
-    config.kubernetes.io/function: |
-      container: {image: 'foo:bar'}
 data: {}
 kind: ConfigMap
 apiVersion: v1
@@ -264,6 +296,24 @@ apiVersion: v1
 			name: "--fn-config with function arguments",
 			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "function arguments can only be specified without function config file",
+		},
+		{
+			name: "exec args",
+			args: []string{"eval", "dir", "--exec", "execPath arg1 'arg2 arg3'", "--", "a=b", "c=d", "e=f"},
+			path: "dir",
+			expectedFn: &runtimeutil.FunctionSpec{
+				Exec: runtimeutil.ExecSpec{
+					Path: "execPath",
+				},
+			},
+			expectedExecArgs: []string{"arg1", "arg2 arg3"},
+			expectedFnConfig: `
+metadata:
+  name: function-input
+data: {a: b, c: d, e: f}
+kind: ConfigMap
+apiVersion: v1
+`,
 		},
 	}
 
@@ -338,19 +388,34 @@ apiVersion: v1
 				t.FailNow()
 			}
 
-			// check if Functions were set
-			if tt.expected != "" {
-				if !assert.Len(t, r.RunFns.Functions, 1) {
+			// check if function config was set
+			if tt.expectedFnConfig != "" {
+				actual := strings.TrimSpace(r.RunFns.FnConfig.MustString())
+				if !assert.Equal(t, strings.TrimSpace(tt.expectedFnConfig), actual) {
 					t.FailNow()
 				}
-				actual := strings.TrimSpace(r.RunFns.Functions[0].MustString())
-				if !assert.Equal(t, strings.TrimSpace(tt.expected), actual) {
+			}
+
+			// check if function was set
+			if tt.expectedFn != nil {
+				if !assert.NotNil(t, r.RunFns.Function) {
+					t.FailNow()
+				}
+				if !assert.EqualValues(t, tt.expectedFn, r.RunFns.Function) {
+					t.FailNow()
+				}
+			}
+
+			// check if exec arguments were set
+			if len(tt.expectedExecArgs) != 0 {
+				if !assert.EqualValues(t, tt.expectedExecArgs, r.RunFns.ExecArgs) {
 					t.FailNow()
 				}
 			}
 
 			if tt.expectedStruct != nil {
-				r.RunFns.Functions = nil
+				r.RunFns.Function = nil
+				r.RunFns.FnConfig = nil
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
 					t.FailNow()

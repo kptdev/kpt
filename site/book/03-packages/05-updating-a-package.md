@@ -1,6 +1,6 @@
-An independent package records the exact commit where the local fork and the upstream package
-diverged. This enables kpt to fetch any update to the upstream package and merge it with local
-changes.
+An independent package records the exact commit where the local fork and the
+upstream package diverged. This enables kpt to fetch any update to the upstream
+package and merge it with local changes.
 
 ## Commit your local changes
 
@@ -20,13 +20,14 @@ $ git add .; git commit -m "My changes"
 
 ## Update the package
 
-For example, you can update to version `v0.4` of the `wordpress` package:
+For example, you can update to version `v0.8` of the `wordpress` package:
 
 ```shell
-$ kpt pkg update wordpress@v0.4
+$ kpt pkg update wordpress@v0.8
 ```
 
-This is a porcelain for manually updating the `upstream` section in the `Kptfile` :
+This is a porcelain for manually updating the `upstream` section in the
+`Kptfile` :
 
 ```yaml
 upstream:
@@ -34,8 +35,8 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    # Change this from v0.3 to v0.4
-    ref: v0.4
+    # Change this from v0.7 to v0.8
+    ref: v0.8
   updateStrategy: resource-merge
 ```
 
@@ -45,15 +46,16 @@ and then running:
 $ kpt pkg update wordpress
 ```
 
-The `update` command updates the local `wordpress` package and the dependent `mysql` package to the
-upstream version `v0.4` by doing a 3-way merge between:
+The `update` command updates the local `wordpress` package and the dependent
+`mysql` package to the upstream version `v0.8` by doing a 3-way merge between:
 
 1. Original upstream commit
 2. New upstream commit
 3. Local (edited) package
 
-Several different strategies are available to handle the merge. By default, the `resource-merge`
-strategy is used which performs a structural comparison of the resource using OpenAPI schema.
+Several different strategies are available to handle the merge. By default, the
+`resource-merge` strategy is used which performs a structural comparison of the
+resource using OpenAPI schema.
 
 ?> Refer to the [update command reference][update-doc] for usage.
 
@@ -62,7 +64,7 @@ strategy is used which performs a structural comparison of the resource using Op
 Once you have successfully updated the package, commit the changes:
 
 ```shell
-$ git add .; git commit -m "Updated wordpress to v0.4"
+$ git add .; git commit -m "Updated wordpress to v0.8"
 ```
 
-[update-doc]: /reference/pkg/update/
+[update-doc]: /reference/cli/pkg/update/

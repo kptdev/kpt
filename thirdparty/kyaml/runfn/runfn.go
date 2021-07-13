@@ -9,25 +9,21 @@ import (
 	"io"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
-	"sort"
-	"strconv"
-	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
-	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
 // RunFns runs the set of configuration functions in a local directory against
@@ -48,8 +44,11 @@ type RunFns struct {
 	// The exact format depends on the OS.
 	FnConfigPath string
 
-	// Functions is an explicit list of functions to run against the input.
-	Functions []*yaml.RNode
+	// Function is an function to run against the input.
+	Function *runtimeutil.FunctionSpec
+
+	// FnConfig is the configurations passed from command line
+	FnConfig *yaml.RNode
 
 	// Input can be set to read the Resources from Input rather than from a directory
 	Input io.Reader
@@ -88,6 +87,14 @@ type RunFns struct {
 	// IncludeMetaResources indicates will kpt add pkg meta resources such as
 	// Kptfile to the input resources to the function.
 	IncludeMetaResources bool
+
+	// ExecArgs are the arguments for exec commands
+	ExecArgs []string
+
+	// OriginalExec is the original exec commands
+	OriginalExec string
+
+	ImagePullPolicy fnruntime.ImagePullPolicy
 }
 
 // Execute runs the command
@@ -104,25 +111,6 @@ func (r RunFns) Execute() error {
 	return r.runFunctions(nodes, output, fltrs)
 }
 
-// functionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
-// invoked by kio.LocalPackageReader when it reads the package. The filter will return
-// true if the file should be skipped during reading. Skipped files will not be included
-// in all steps following.
-func (r RunFns) functionConfigFilterFunc() (kio.LocalPackageSkipFileFunc, error) {
-	fnConfigPaths, err := pkg.FunctionConfigFilePaths(r.uniquePath, true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get pipeline config file paths: %w", err)
-	}
-
-	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 || r.IncludeMetaResources {
-			return false
-		}
-		// relPath is cleaned so we can directly use it here
-		return fnConfigPaths.Has(relPath)
-	}, nil
-}
-
 func (r RunFns) getNodesAndFilters() (
 	*kio.PackageBuffer, []kio.Filter, *kio.LocalPackageReadWriter, error) {
 	// Read Resources from Directory or Input
@@ -133,10 +121,10 @@ func (r RunFns) getNodesAndFilters() (
 	var outputPkg *kio.LocalPackageReadWriter
 	matchFilesGlob := kio.MatchAll
 	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, v1alpha2.KptFileName)
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		functionConfigFilter, err := r.functionConfigFilterFunc()
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(r.uniquePath, r.IncludeMetaResources)
 		if err != nil {
 			return nil, nil, outputPkg, err
 		}
@@ -164,33 +152,22 @@ func (r RunFns) getNodesAndFilters() (
 }
 
 func (r RunFns) getFilters() ([]kio.Filter, error) {
-	fns := r.Functions
-	var fltrs []kio.Filter
-	for i := range fns {
-		api := fns[i]
-		spec := runtimeutil.GetFunctionSpec(api)
-		if spec == nil {
-			// resource doesn't have function spec
-			continue
-		}
-		if spec.Container.Network && !r.Network {
-			// TODO(eddiezane): Provide error info about which function needs the network
-			return fltrs, errors.Errorf("network required but not enabled with --network")
-		}
-		// merge envs from imperative and declarative
-		spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
-
-		c, err := r.functionFilterProvider(*spec, api, user.Current)
-		if err != nil {
-			return nil, err
-		}
-
-		if c == nil {
-			continue
-		}
-		fltrs = append(fltrs, c)
+	spec := r.Function
+	if spec == nil {
+		return nil, nil
 	}
-	return fltrs, nil
+	// merge envs from imperative and declarative
+	spec.Container.Env = r.mergeContainerEnv(spec.Container.Env)
+
+	c, err := r.functionFilterProvider(*spec, r.FnConfig, user.Current)
+	if err != nil {
+		return nil, err
+	}
+
+	if c == nil {
+		return nil, nil
+	}
+	return []kio.Filter{c}, nil
 }
 
 // runFunctions runs the fltrs against the input and writes to either r.Output or output
@@ -204,7 +181,12 @@ func (r RunFns) runFunctions(
 	} else {
 		// write to the output instead of the directory if r.Output is specified or
 		// the output is nil (reading from Input)
-		outputs = append(outputs, kio.ByteWriter{Writer: r.Output})
+		outputs = append(outputs, kio.ByteWriter{
+			Writer:                r.Output,
+			KeepReaderAnnotations: true,
+			WrappingKind:          kio.ResourceListKind,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		})
 	}
 
 	// add format filter at the end to consistently format output resources
@@ -221,6 +203,7 @@ func (r RunFns) runFunctions(
 	err = pipeline.Execute()
 	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
+		// function fails
 		if resultErr == nil {
 			r.printFnResultsStatus(resultsFile)
 		}
@@ -233,17 +216,14 @@ func (r RunFns) runFunctions(
 }
 
 func (r RunFns) printFnResultsStatus(resultsFile string) {
-	if r.isOutputDisabled() {
-		return
-	}
 	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config
 // file (declarative). If they have same key, the imperative value will be respected.
 func (r RunFns) mergeContainerEnv(envs []string) []string {
-	imperative := runtimeutil.NewContainerEnvFromStringSlice(r.Env)
-	declarative := runtimeutil.NewContainerEnvFromStringSlice(envs)
+	imperative := fnruntime.NewContainerEnvFromStringSlice(r.Env)
+	declarative := fnruntime.NewContainerEnvFromStringSlice(envs)
 	for key, value := range imperative.EnvVars {
 		declarative.AddKeyValue(key, value)
 	}
@@ -255,78 +235,12 @@ func (r RunFns) mergeContainerEnv(envs []string) []string {
 	return declarative.Raw()
 }
 
-// sortFns sorts functions so that functions with the longest paths come first
-func sortFns(buff *kio.PackageBuffer) error {
-	var outerErr error
-	// sort the nodes so that we traverse them depth first
-	// functions deeper in the file system tree should be run first
-	sort.Slice(buff.Nodes, func(i, j int) bool {
-		mi, _ := buff.Nodes[i].GetMeta()
-		pi := filepath.ToSlash(mi.Annotations[kioutil.PathAnnotation])
-
-		mj, _ := buff.Nodes[j].GetMeta()
-		pj := filepath.ToSlash(mj.Annotations[kioutil.PathAnnotation])
-
-		// If the path is the same, we decide the ordering based on the
-		// index annotation.
-		if pi == pj {
-			iIndex, err := strconv.Atoi(mi.Annotations[kioutil.IndexAnnotation])
-			if err != nil {
-				outerErr = err
-				return false
-			}
-			jIndex, err := strconv.Atoi(mj.Annotations[kioutil.IndexAnnotation])
-			if err != nil {
-				outerErr = err
-				return false
-			}
-			return iIndex < jIndex
-		}
-
-		if filepath.Base(path.Dir(pi)) == "functions" {
-			// don't count the functions dir, the functions are scoped 1 level above
-			pi = filepath.Dir(path.Dir(pi))
-		} else {
-			pi = filepath.Dir(pi)
-		}
-
-		if filepath.Base(path.Dir(pj)) == "functions" {
-			// don't count the functions dir, the functions are scoped 1 level above
-			pj = filepath.Dir(path.Dir(pj))
-		} else {
-			pj = filepath.Dir(pj)
-		}
-
-		// i is "less" than j (comes earlier) if its depth is greater -- e.g. run
-		// i before j if it is deeper in the directory structure
-		li := len(strings.Split(pi, "/"))
-		if pi == "." {
-			// local dir should have 0 path elements instead of 1
-			li = 0
-		}
-		lj := len(strings.Split(pj, "/"))
-		if pj == "." {
-			// local dir should have 0 path elements instead of 1
-			lj = 0
-		}
-		if li != lj {
-			// use greater-than because we want to sort with the longest
-			// paths FIRST rather than last
-			return li > lj
-		}
-
-		// sort by path names if depths are equal
-		return pi < pj
-	})
-	return outerErr
-}
-
 // init initializes the RunFns with a containerFilterProvider.
 func (r *RunFns) init() error {
 	// if no path is specified, default reading from stdin and writing to stdout
 	if r.Path == "" {
 		if r.Output == nil {
-			r.Output = os.Stdout
+			r.Output = printer.FromContextOrDie(r.Ctx).OutStream()
 		}
 		if r.Input == nil {
 			r.Input = os.Stdin
@@ -377,25 +291,10 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 	return fmt.Sprintf("%s:%s", u.Uid, u.Gid), nil
 }
 
-// etFunctionConfig returns yaml representation of functionConfig that can
+// getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	if r.FnConfigPath == "" {
-		return nil, fmt.Errorf("function config file path must not be empty")
-	}
-	f, err := os.Open(r.FnConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("missing function config '%s': %w", r.FnConfigPath, err)
-	}
-	reader := kio.ByteReader{Reader: f}
-	nodes, err := reader.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read function config '%s': %w", r.FnConfigPath, err)
-	}
-	if len(nodes) > 1 {
-		return nil, fmt.Errorf("function config file '%s' must not contain more than 1 config", r.FnConfigPath)
-	}
-	return nodes[0], nil
+	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
@@ -424,13 +323,15 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 		c := &fnruntime.ContainerFn{
-			Path:          r.uniquePath,
-			Image:         spec.Container.Image,
-			UIDGID:        uidgid,
-			StorageMounts: r.StorageMounts,
-			Env:           spec.Container.Env,
+			Path:            r.uniquePath,
+			Image:           spec.Container.Image,
+			ImagePullPolicy: r.ImagePullPolicy,
+			UIDGID:          uidgid,
+			StorageMounts:   r.StorageMounts,
+			Env:             spec.Container.Env,
+			FnResult:        fnResult,
 			Perm: fnruntime.ContainerFnPermission{
-				AllowNetwork: spec.Container.Network,
+				AllowNetwork: r.Network,
 				// mounts are always from CLI flags so we allow
 				// them by default for eval
 				AllowMount: true,
@@ -446,19 +347,17 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 
 	if spec.Exec.Path != "" {
 		e := &fnruntime.ExecFn{
-			Path: spec.Exec.Path,
+			Path:     spec.Exec.Path,
+			Args:     r.ExecArgs,
+			FnResult: fnResult,
 		}
 		fltr = &runtimeutil.FunctionFilter{
 			Run:            e.Run,
 			FunctionConfig: fnConfig,
 			DeferFailure:   spec.DeferFailure,
 		}
-		fnResult.ExecPath = spec.Exec.Path
-	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, r.isOutputDisabled(), fnResult, r.fnResults)
-}
+		fnResult.ExecPath = r.OriginalExec
 
-func (r RunFns) isOutputDisabled() bool {
-	// if output is not nil we will write the resources to stdout
-	return r.Output != nil
+	}
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false)
 }

@@ -58,8 +58,7 @@ func (*updateErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	if msg != "" {
 		return ResolvedResult{
-			Message:  msg,
-			ExitCode: 1,
+			Message: msg,
 		}, true
 	}
 	return ResolvedResult{}, false

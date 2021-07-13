@@ -35,10 +35,11 @@ type Runner struct {
 }
 
 func getKptBin() (string, error) {
-	if p := os.Getenv(kptBinEnv); p != "" {
-		return p, nil
+	p, err := exec.Command("which", "kpt").CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("cannot find command 'kpt' in $PATH: %w", err)
 	}
-	return "", fmt.Errorf("must specify env '%s' for kpt binary path", kptBinEnv)
+	return strings.TrimSpace(string(p)), nil
 }
 
 const (
@@ -46,12 +47,15 @@ const (
 	// expected diff and results if they already exist. If will not change
 	// config.yaml.
 	updateExpectedEnv string = "KPT_E2E_UPDATE_EXPECTED"
-	kptBinEnv         string = "KPT_E2E_BIN"
 
 	expectedDir         string = ".expected"
 	expectedResultsFile string = "results.yaml"
 	expectedDiffFile    string = "diff.patch"
 	expectedConfigFile  string = "config.yaml"
+	outDir              string = "out"
+	setupScript         string = "setup.sh"
+	teardownScript      string = "teardown.sh"
+	execScript          string = "exec.sh"
 	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
 )
@@ -91,24 +95,63 @@ func (r *Runner) Run() error {
 	}
 }
 
+// runSetupScript runs the setup script if the test has it
+func (r *Runner) runSetupScript(pkgPath string) error {
+	p, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, setupScript))
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return nil
+	}
+	cmd := getCommand(pkgPath, "bash", []string{p})
+	r.t.Logf("running setup script: %q", cmd.String())
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to run setup script %q.\nOutput: %q\n: %w", p, string(output), err)
+	}
+	return nil
+}
+
+// runTearDownScript runs the teardown script if the test has it
+func (r *Runner) runTearDownScript(pkgPath string) error {
+	p, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, teardownScript))
+	if err != nil {
+		return err
+	}
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		return nil
+	}
+	cmd := getCommand(pkgPath, "bash", []string{p})
+	r.t.Logf("running teardown script: %q", cmd.String())
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to run teardown script %q.\nOutput: %q\n: %w", p, string(output), err)
+	}
+	return nil
+}
+
 func (r *Runner) runFnEval() error {
 	r.t.Logf("Running test against package %s\n", r.pkgName)
 	tmpDir, err := ioutil.TempDir("", "kpt-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
 
-	var resultsDir string
+	if r.testCase.Config.Debug {
+		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, pkgPath)
+	}
+	if !r.testCase.Config.Debug {
+		// if debug is true, keep the test directory around for debugging
+		defer os.RemoveAll(tmpDir)
+	}
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -124,34 +167,57 @@ func (r *Runner) runFnEval() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "eval", pkgPath}
-
-	if resultsDir != "" {
-		kptArgs = append(kptArgs, "--results-dir", resultsDir)
-	}
-	if r.testCase.Config.EvalConfig.Network {
-		kptArgs = append(kptArgs, "--network")
-	}
-	if r.testCase.Config.EvalConfig.Image != "" {
-		kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
-	} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
-		kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
-	}
-	if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
-		kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
-	}
-	if r.testCase.Config.EvalConfig.IncludeMetaResources {
-		kptArgs = append(kptArgs, "--include-meta-resources")
-	}
-	// args must be appended last
-	if len(r.testCase.Config.EvalConfig.Args) > 0 {
-		kptArgs = append(kptArgs, "--")
-		for k, v := range r.testCase.Config.EvalConfig.Args {
-			kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
-		}
-	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
+		err = r.runSetupScript(pkgPath)
+		if err != nil {
+			return err
+		}
+
+		var cmd *exec.Cmd
+		execScriptPath, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, execScript))
+		if err != nil {
+			return err
+		}
+
+		if _, err := os.Stat(execScriptPath); err == nil {
+			cmd = getCommand(pkgPath, "bash", []string{execScriptPath})
+		} else {
+			kptArgs := []string{"fn", "eval", pkgPath}
+
+			if resultsDir != "" {
+				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
+			}
+			if r.testCase.Config.ImagePullPolicy != "" {
+				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+			}
+			if r.testCase.Config.EvalConfig.Network {
+				kptArgs = append(kptArgs, "--network")
+			}
+			if r.testCase.Config.EvalConfig.Image != "" {
+				kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
+				kptArgs = append(kptArgs, "--exec", string(r.testCase.Config.EvalConfig.execUniquePath))
+			}
+			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
+				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
+			}
+			if r.testCase.Config.EvalConfig.IncludeMetaResources {
+				kptArgs = append(kptArgs, "--include-meta-resources")
+			}
+			// args must be appended last
+			if len(r.testCase.Config.EvalConfig.Args) > 0 {
+				kptArgs = append(kptArgs, "--")
+				for k, v := range r.testCase.Config.EvalConfig.Args {
+					kptArgs = append(kptArgs, fmt.Sprintf("%s=%s", k, v))
+				}
+			}
+			cmd = getCommand("", r.kptBin, kptArgs)
+		}
+		r.t.Logf("running command %q", cmd.String())
+		stdout, stderr, fnErr := runCommand(cmd)
 		if fnErr != nil {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
@@ -161,7 +227,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -169,6 +235,11 @@ func (r *Runner) runFnEval() error {
 		// is expected
 		if fnErr != nil {
 			break
+		}
+
+		err = r.runTearDownScript(pkgPath)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -178,6 +249,12 @@ func (r *Runner) runFnEval() error {
 // IsFnResultExpected determines if function results are expected for this testcase.
 func (r *Runner) IsFnResultExpected() bool {
 	_, err := ioutil.ReadFile(filepath.Join(r.testCase.Path, expectedDir, expectedResultsFile))
+	return err == nil
+}
+
+// IsOutOfPlace determines if command output is saved in a different directory (out-of-place).
+func (r *Runner) IsOutOfPlace() bool {
+	_, err := ioutil.ReadDir(filepath.Join(r.testCase.Path, outDir))
 	return err == nil
 }
 
@@ -202,15 +279,14 @@ func (r *Runner) runFnRender() error {
 		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
 	}
 
-	var resultsDir string
+	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
-		// create result dir
 		resultsDir = filepath.Join(tmpDir, "results")
-		err = os.Mkdir(resultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("failed to create results dir %s: %w", resultsDir, err)
-		}
+	}
+
+	if r.IsOutOfPlace() {
+		destDir = filepath.Join(pkgPath, outDir)
 	}
 
 	// copy package to temp directory
@@ -230,17 +306,43 @@ func (r *Runner) runFnRender() error {
 	}
 
 	// run function
-	kptArgs := []string{"fn", "render", pkgPath}
-
-	if resultsDir != "" {
-		kptArgs = append(kptArgs, "--results-dir", resultsDir)
-	}
-
-	if r.testCase.Config.DisableOutputTruncate {
-		kptArgs = append(kptArgs, "--truncate-output=false")
-	}
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
-		stdout, stderr, fnErr := runCommand("", r.kptBin, kptArgs)
+		err = r.runSetupScript(pkgPath)
+		if err != nil {
+			return err
+		}
+
+		var cmd *exec.Cmd
+
+		execScriptPath, err := filepath.Abs(filepath.Join(r.testCase.Path, expectedDir, execScript))
+		if err != nil {
+			return err
+		}
+
+		if _, err := os.Stat(execScriptPath); err == nil {
+			cmd = getCommand(pkgPath, "bash", []string{execScriptPath})
+		} else {
+			kptArgs := []string{"fn", "render", pkgPath}
+
+			if resultsDir != "" {
+				kptArgs = append(kptArgs, "--results-dir", resultsDir)
+			}
+
+			if destDir != "" {
+				kptArgs = append(kptArgs, "-o", destDir)
+			}
+
+			if r.testCase.Config.ImagePullPolicy != "" {
+				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+			}
+
+			if r.testCase.Config.DisableOutputTruncate {
+				kptArgs = append(kptArgs, "--truncate-output=false")
+			}
+			cmd = getCommand("", r.kptBin, kptArgs)
+		}
+		r.t.Logf("running command %q", cmd.String())
+		stdout, stderr, fnErr := runCommand(cmd)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
 			return r.updateExpected(pkgPath, resultsDir, filepath.Join(r.testCase.Path, expectedDir))
@@ -250,15 +352,20 @@ func (r *Runner) runFnRender() error {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
-		err = r.compareResult(fnErr, stdout, stderr, pkgPath, resultsDir)
+		err = r.compareResult(i, fnErr, stdout, stderr, pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
-		// we passed result check, now we should break if the command error
-		// is expected
+		// we passed result check, now we should run teardown script and break
+		// if the command error is expected
+		err = r.runTearDownScript(pkgPath)
+		if err != nil {
+			return err
+		}
 		if fnErr != nil {
 			break
 		}
+
 	}
 	return nil
 }
@@ -283,7 +390,7 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
 	expected, err := newExpected(tmpPkgPath)
 	if err != nil {
 		return err
@@ -300,29 +407,31 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	if exitCode != 0 {
-		err := r.compareOutput(stdout, stderr)
+	// we only check output and results for the first iteration of running because
+	// idempotency is only applied to changes in file system.
+	if cnt == 0 {
+		err = r.compareOutput(stdout, stderr)
 		if err != nil {
 			return err
 		}
-	}
 
-	// compare results
-	actual, err := readActualResults(resultsPath)
-	if err != nil {
-		return fmt.Errorf("failed to read actual results: %w", err)
-	}
-	diffOfResult, err := diffStrings(actual, expected.Results)
-	if err != nil {
-		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-	}
-	if actual != expected.Results {
-		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-			actual, diffOfResult)
+		// compare results
+		actual, err := readActualResults(resultsPath)
+		if err != nil {
+			return fmt.Errorf("failed to read actual results: %w", err)
+		}
+		diffOfResult, err := diffStrings(actual, expected.Results)
+		if err != nil {
+			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+		}
+		if actual != expected.Results {
+			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+				actual, diffOfResult)
+		}
 	}
 
 	// compare diff
-	actual, err = readActualDiff(tmpPkgPath, r.initialCommit)
+	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
@@ -341,11 +450,11 @@ func (r *Runner) compareResult(exitErr error, stdout string, stderr string, tmpP
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
 	if !strings.Contains(stderr, expectedStderr) {
-		return fmt.Errorf("wanted stderr %s, got %s", expectedStderr, stderr)
+		return fmt.Errorf("wanted stderr %q, got %q", expectedStderr, stderr)
 	}
 	expectedStdout := r.testCase.Config.StdOut
 	if !strings.Contains(stdout, expectedStdout) {
-		return fmt.Errorf("wanted stdout %s, got %s", expectedStdout, stdout)
+		return fmt.Errorf("wanted stdout %q, got %q", expectedStdout, stdout)
 	}
 	return nil
 }

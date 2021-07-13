@@ -15,252 +15,77 @@
 package cmdrender
 
 import (
-	"bytes"
 	"fmt"
-	"strings"
 	"testing"
 
-	"sigs.k8s.io/kustomize/kyaml/kio"
+	"gotest.tools/assert"
 )
 
-func TestDetectPathConflicts(t *testing.T) {
-	tests := map[string]struct {
-		input       string // input
-		expectedErr string // expected result
+func TestPathRelToRoot(t *testing.T) {
+	tests := []struct {
+		name         string
+		rootPath     string
+		subPkgPath   string
+		resourcePath string
+		expected     string
+		errString    string
 	}{
-		"duplicate": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/custom.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/custom.yaml'
-    config.kubernetes.io/index: '0'
-`,
-			expectedErr: `resource at path "my/path/custom.yaml" and index "0" already exists`,
+		{
+			name:         "root package with non absolute path",
+			rootPath:     "tmp",
+			subPkgPath:   "/tmp/a",
+			resourcePath: "c.yaml",
+			expected:     "",
+			errString:    fmt.Sprintf("root package path %q must be absolute", "tmp"),
 		},
-		"duplicate with `./` prefix": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/custom.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: './my/path/custom.yaml'
-    config.kubernetes.io/index: '0'
-`,
-			expectedErr: `resource at path "my/path/custom.yaml" and index "0" already exists`,
+		{
+			name:         "subpackage with non absolute path",
+			rootPath:     "/tmp",
+			subPkgPath:   "tmp/a",
+			resourcePath: "c.yaml",
+			expected:     "",
+			errString:    fmt.Sprintf("subpackage path %q must be absolute", "tmp/a"),
 		},
-		"duplicate path, not index": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/custom.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/custom.yaml'
-    config.kubernetes.io/index: '1'
-`,
+		{
+			name:         "resource in a subpackage",
+			rootPath:     "/tmp",
+			subPkgPath:   "/tmp/a",
+			resourcePath: "c.yaml",
+			expected:     "a/c.yaml",
 		},
-		"duplicate index, not path": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/a.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '0'
-`,
+		{
+			name:         "resource exists in a deeply nested subpackage",
+			rootPath:     "/tmp",
+			subPkgPath:   "/tmp/a/b/c",
+			resourcePath: "c.yaml",
+			expected:     "a/b/c/c.yaml",
 		},
-		"larger number of resources with duplicate": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/a.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/a.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '2'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/c.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/c.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '1'
-`,
-			expectedErr: `resource at path "my/path/b.yaml" and index "1" already exists`,
+		{
+			name:         "resource exists in a sub dir with same name as sub package",
+			rootPath:     "/tmp",
+			subPkgPath:   "/tmp/a",
+			resourcePath: "a/c.yaml",
+			expected:     "a/a/c.yaml",
 		},
-		"larger number of resources without duplicates": {
-			input: `apiVersion: v1
-kind: Custom
-metadata:
-  name: a
-  annotations:
-    config.kubernetes.io/path: 'my/path/a.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/a.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '2'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/c.yaml'
-    config.kubernetes.io/index: '0'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/c.yaml'
-    config.kubernetes.io/index: '1'
----
-apiVersion: v1
-kind: Custom
-metadata:
-  name: b
-  annotations:
-    config.kubernetes.io/path: 'my/path/b.yaml'
-    config.kubernetes.io/index: '3'
-`,
+		{
+			name:         "subpackage is not a descendant of root package",
+			rootPath:     "/tmp",
+			subPkgPath:   "/a",
+			resourcePath: "c.yaml",
+			expected:     "",
+			errString:    fmt.Sprintf("subpackage %q is not a descendant of %q", "/a", "/tmp"),
 		},
 	}
-	for _, tc := range tests {
-		out := &bytes.Buffer{}
-		r := kio.ByteReadWriter{
-			Reader:                bytes.NewBufferString(tc.input),
-			Writer:                out,
-			KeepReaderAnnotations: true,
-			OmitReaderAnnotations: true,
-		}
-		n, err := r.Read()
-		if err != nil {
-			fmt.Println("1")
-			t.FailNow()
-		}
-		err = detectPathConflicts(n)
-		if err != nil && tc.expectedErr == "" {
-			t.Errorf("unexpected error %s", err.Error())
-			t.FailNow()
-		}
-		if tc.expectedErr != "" && err == nil {
-			t.Errorf("expected error %s", tc.expectedErr)
-			t.FailNow()
-		}
-		if tc.expectedErr != "" && !strings.Contains(err.Error(), tc.expectedErr) {
-			t.Errorf("wanted error %s, got %s", tc.expectedErr, err.Error())
-			t.FailNow()
-		}
+
+	for _, test := range tests {
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			newPath, err := pathRelToRoot(tc.rootPath,
+				tc.subPkgPath, tc.resourcePath)
+			assert.Equal(t, newPath, tc.expected)
+			if tc.errString != "" {
+				assert.ErrorContains(t, err, tc.errString)
+			}
+		})
 	}
 }

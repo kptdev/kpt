@@ -5,12 +5,15 @@ package cmdliveinit
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -23,7 +26,7 @@ var (
 )
 
 var kptFile = `
-apiVersion: kpt.dev/v1alph2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -38,7 +41,7 @@ upstreamLock:
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
 var kptFileWithInventory = `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -55,7 +58,7 @@ inventory:
 
 var testTime = time.Unix(5555555, 66666666)
 
-func TestKptInitOptions_generateID(t *testing.T) {
+func TestCmd_generateID(t *testing.T) {
 	testCases := map[string]struct {
 		namespace string
 		name      string
@@ -102,151 +105,169 @@ func TestKptInitOptions_generateID(t *testing.T) {
 	}
 }
 
-func TestKptInitOptions_updateKptfile(t *testing.T) {
+func TestCmd_Run_NoKptfile(t *testing.T) {
+	// Set up fake test factory
+	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	w, clean := testutil.SetupWorkspace(t)
+	defer clean()
+
+	revert := testutil.Chdir(t, w.WorkspaceDirectory)
+	defer revert()
+
+	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner.Command.SetArgs([]string{})
+	err := runner.Command.Execute()
+
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "error reading Kptfile at")
+}
+
+func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
-		kptfile     string
-		name        string
-		namespace   string
-		inventoryID string
-		force       bool
-		isError     bool
+		kptfile           string
+		name              string
+		namespace         string
+		inventoryID       string
+		force             bool
+		expectedErrorMsg  string
+		expectAutoGenID   bool
+		expectedInventory kptfilev1.Inventory
 	}{
-		"Empty inventory name is an error": {
-			kptfile:     kptFile,
-			name:        "",
-			namespace:   inventoryNamespace,
-			inventoryID: inventoryID,
-			force:       false,
-			isError:     true,
+		"Fields are defaulted if not provided": {
+			kptfile:         kptFile,
+			name:            "",
+			namespace:       "testns",
+			inventoryID:     "",
+			expectAutoGenID: true,
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   "testns",
+				Name:        "inventory-*",
+				InventoryID: "33ee4887f9638ef63efe71a9a9a632d3e9e2488e-*",
+			},
 		},
-		"Empty inventory namespace is an error": {
+		"Provided values are used": {
 			kptfile:     kptFile,
-			name:        inventoryName,
-			namespace:   "",
-			inventoryID: inventoryID,
-			force:       false,
-			isError:     true,
-		},
-		"Empty inventory id is an error": {
-			kptfile:     kptFile,
-			name:        inventoryName,
-			namespace:   inventoryNamespace,
-			inventoryID: "",
-			force:       false,
-			isError:     true,
+			name:        "my-pkg",
+			namespace:   "my-ns",
+			inventoryID: "my-inv-id",
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   "my-ns",
+				Name:        "my-pkg",
+				InventoryID: "my-inv-id",
+			},
 		},
 		"Kptfile with inventory already set is error": {
-			kptfile:     kptFileWithInventory,
-			name:        inventoryName,
-			namespace:   inventoryNamespace,
-			inventoryID: inventoryID,
-			force:       false,
-			isError:     true,
+			kptfile:          kptFileWithInventory,
+			name:             inventoryName,
+			namespace:        inventoryNamespace,
+			inventoryID:      inventoryID,
+			force:            false,
+			expectedErrorMsg: "inventory information already set for package",
 		},
-		"KptInitOptions default": {
-			kptfile:     kptFile,
-			name:        inventoryName,
-			namespace:   inventoryNamespace,
-			inventoryID: inventoryID,
-			force:       false,
-			isError:     false,
-		},
-		"KptInitOptions force sets inventory values when already set": {
+		"The force flag allows changing inventory information even if already set": {
 			kptfile:     kptFileWithInventory,
 			name:        inventoryName,
 			namespace:   inventoryNamespace,
 			inventoryID: inventoryID,
 			force:       true,
-			isError:     false,
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   inventoryNamespace,
+				Name:        inventoryName,
+				InventoryID: inventoryID,
+			},
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			// Set up fake test factory
-			tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+			tf := cmdtesting.NewTestFactory().WithNamespace(tc.namespace)
 			defer tf.Cleanup()
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
-			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-init-options-test")
-			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
-			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
-			assert.NoError(t, err)
+			w, clean := testutil.SetupWorkspace(t)
+			defer clean()
+			err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName),
+				[]byte(tc.kptfile), 0600)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
 
-			// Create KptInitOptions and call Run()
-			initOptions := NewKptInitOptions(tf, ioStreams)
-			initOptions.dir = dir
-			initOptions.Force = tc.force
-			initOptions.Name = tc.name
-			initOptions.namespace = tc.namespace
-			initOptions.InventoryID = tc.inventoryID
-			err = initOptions.updateKptfile()
+			revert := testutil.Chdir(t, w.WorkspaceDirectory)
+			defer revert()
+
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+			runner.namespace = tc.namespace
+			args := []string{
+				"--name", tc.name,
+				"--inventory-id", tc.inventoryID,
+			}
+			if tc.force {
+				args = append(args, "--force")
+			}
+			runner.Command.SetArgs(args)
+
+			err = runner.Command.Execute()
 
 			// Check if there should be an error
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
+			if tc.expectedErrorMsg != "" {
+				if !assert.Error(t, err) {
+					t.FailNow()
 				}
+				assert.Contains(t, err.Error(), tc.expectedErrorMsg)
 				return
 			}
 
 			// Otherwise, validate the kptfile values
 			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(initOptions.dir)
+			kf, err := pkg.ReadKptfile(w.WorkspaceDirectory)
 			assert.NoError(t, err)
-			assert.Equal(t, inventoryName, kf.Inventory.Name)
-			assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
-			assert.Equal(t, inventoryID, kf.Inventory.InventoryID)
+			if !assert.NotNil(t, kf.Inventory) {
+				t.FailNow()
+			}
+			actualInv := *kf.Inventory
+			expectedInv := tc.expectedInventory
+			assertInventoryName(t, expectedInv.Name, actualInv.Name)
+			assert.Equal(t, expectedInv.Namespace, actualInv.Namespace)
+			if tc.expectAutoGenID {
+				assertGenInvID(t, actualInv.Name, actualInv.Namespace, actualInv.InventoryID)
+			} else {
+				assert.Equal(t, expectedInv.InventoryID, actualInv.InventoryID)
+			}
 		})
 	}
 }
 
-func TestKptInit_noargs(t *testing.T) {
-	testCases := map[string]struct {
-		kptfile     string
-		name        string
-		namespace   string
-		inventoryID string
-	}{
-		"Empty inventory name is an error": {
-			kptfile:     kptFile,
-			name:        "",
-			namespace:   inventoryNamespace,
-			inventoryID: inventoryID,
-		},
+func assertInventoryName(t *testing.T, expected, actual string) bool {
+	re := regexp.MustCompile(`^inventory-[0-9]+$`)
+	if expected == "inventory-*" {
+		if re.MatchString(actual) {
+			return true
+		}
+		t.Errorf("expected value on the format 'inventory-[0-9]+', but found %q", actual)
 	}
+	return assert.Equal(t, expected, actual)
+}
 
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			// Set up fake test factory
-			tf := cmdtesting.NewTestFactory().WithNamespace("test-namespace")
-			defer tf.Cleanup()
-			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-
-			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-init-options-test")
-			assert.NoError(t, err)
-			defer os.RemoveAll(dir)
-			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
-			assert.NoError(t, err)
-			err = os.Chdir(dir)
-			assert.NoError(t, err)
-
-			// Create KptInitOptions and call Run()
-			cmd := NewCmdInit(tf, ioStreams)
-			cmd.SetArgs([]string{})
-			err = cmd.Execute()
-			assert.NoError(t, err)
-
-			// Otherwise, validate the kptfile values
-			assert.NoError(t, err)
-			kf, err := kptfileutil.ReadFile(dir)
-			assert.NoError(t, err)
-			assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
-		})
+func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
+	re := regexp.MustCompile(`^([a-z0-9]+)-[0-9]+$`)
+	match := re.FindStringSubmatch(actual)
+	if len(match) != 2 {
+		t.Errorf("unexpected format for autogenerated inventoryID")
+		return false
 	}
+	prefix, err := generateHash(namespace, name)
+	if err != nil {
+		panic(err)
+	}
+	if got, want := match[1], prefix; got != want {
+		t.Errorf("expected prefix %q, but found %q", want, got)
+		return false
+	}
+	return true
 }

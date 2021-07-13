@@ -17,8 +17,8 @@ package cmdrender
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -28,8 +28,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -39,10 +39,10 @@ import (
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath        string
-	ResultsDirPath string
-
-	Printer printer.Printer
+	PkgPath         string
+	ResultsDirPath  string
+	Output          io.Writer
+	ImagePullPolicy fnruntime.ImagePullPolicy
 }
 
 // Execute runs a pipeline.
@@ -58,47 +58,67 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:      root,
-		pkgs:      map[types.UniquePath]*pkgNode{},
-		fnResults: fnresult.NewResultList(),
+		root:            root,
+		pkgs:            map[types.UniquePath]*pkgNode{},
+		fnResults:       fnresult.NewResultList(),
+		imagePullPolicy: e.ImagePullPolicy,
 	}
 
-	resources, err := hydrate(ctx, root, hctx)
-	if err != nil {
+	if _, err = hydrate(ctx, root, hctx); err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
+		// don't disable the CLI output in case of error
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return errors.E(op, root.pkg.UniquePath, err)
+	}
+
+	// adjust the relative paths of the resources.
+	err = adjustRelPath(hctx)
+	if err != nil {
+		return err
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
 		return err
 	}
 
-	pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
-
 	// format resources before writing
-	_, err = filters.FormatFilter{UseSchema: true}.Filter(resources)
+	_, err = filters.FormatFilter{UseSchema: true}.Filter(hctx.root.resources)
 	if err != nil {
 		return err
 	}
 
-	err = pkgWriter.Write(resources)
-	if err != nil {
-		return fmt.Errorf("failed to save resources: %w", err)
-	}
+	if e.Output == nil {
+		// the intent of the user is to modify resources in-place
+		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
+		err = pkgWriter.Write(hctx.root.resources)
+		if err != nil {
+			return fmt.Errorf("failed to save resources: %w", err)
+		}
 
-	if err = pruneResources(hctx); err != nil {
-		return err
+		if err = pruneResources(hctx); err != nil {
+			return err
+		}
+		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+	} else {
+		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
+		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
+		writer := &kio.ByteWriter{
+			Writer:                e.Output,
+			KeepReaderAnnotations: true,
+			WrappingAPIVersion:    kio.ResourceListAPIVersion,
+			WrappingKind:          kio.ResourceListKind,
+		}
+		err = writer.Write(hctx.root.resources)
+		if err != nil {
+			return fmt.Errorf("failed to write resources: %w", err)
+		}
 	}
-
-	pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 
 	return e.saveFnResults(ctx, hctx.fnResults)
 }
 
 func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
-
 	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
@@ -134,6 +154,9 @@ type hydrationContext struct {
 	// fnResults stores function results gathered
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
+
+	// imagePullPolicy controls the image pulling behavior.
+	imagePullPolicy fnruntime.ImagePullPolicy
 }
 
 //
@@ -171,7 +194,7 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
-	if err := kf.Validate(); err != nil {
+	if err := kf.Validate(p.UniquePath); err != nil {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
@@ -256,13 +279,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
 
-	// ensure input resource's paths are relative to root pkg.
-	currPkgResources, err = adjustRelPath(currPkgResources, relPath)
-	if err != nil {
-		return nil, fmt.Errorf("adjust relative path: %w", err)
-	}
-
-	err = trackInputFiles(hctx, currPkgResources)
+	err = trackInputFiles(hctx, relPath, currPkgResources)
 	if err != nil {
 		return nil, err
 	}
@@ -273,12 +290,6 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
-	}
-
-	// ensure generated resource's file path are relative to root pkg.
-	output, err = adjustRelPath(output, relPath)
-	if err != nil {
-		return nil, fmt.Errorf("adjust relative path: %w", err)
 	}
 
 	// pkg is hydrated, mark the pkg as wet and update the resources
@@ -307,7 +318,15 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	if pl.IsEmpty() {
+		if err := kptfilev1.AreKRM(input); err != nil {
+			return nil, fmt.Errorf("input resource list must contain only KRM resources: %s", err.Error())
+		}
 		return input, nil
+	}
+
+	// perform runtime validation for pipeline
+	if err := pn.pkg.ValidatePipeline(); err != nil {
+		return nil, err
 	}
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
@@ -380,7 +399,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults)
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return err
 		}
@@ -402,39 +421,81 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 }
 
 // path (location) of a KRM resources is tracked in a special key in
-// metadata.annotation field. adjustRelPath updates that path annotation by prepending
-// the given relPath to the current path annotation if it doesn't exist already.
-// Resources are read from local filesystem or generated at a package level, so the
-// path annotation in each resource points to path relative to that package.
-// But the resources are written to the file system at the root package level, so
+// metadata.annotation field that is used to write the resources to the filesystem.
+// When resources are read from local filesystem or generated at a package level, the
+// path annotation in a resource points to path relative to that package. But the resources
+// are written to the file system at the root package level, so
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
-func adjustRelPath(resources []*yaml.RNode, relPath string) ([]*yaml.RNode, error) {
-	if relPath == "" {
-		return resources, nil
-	}
+// adjustRelPath updates the path annotation by prepending the path of the package
+// a resource relative to the root package.
+func adjustRelPath(hctx *hydrationContext) error {
+	resources := hctx.root.resources
 	for _, r := range resources {
+		pkgPath, err := pkg.GetPkgPathAnnotation(r)
+		if err != nil {
+			return err
+		}
+		// Note: kioutil.GetFileAnnotation returns OS specific
+		// paths today, https://github.com/kubernetes-sigs/kustomize/issues/3749
 		currPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
-			return resources, err
+			return err
 		}
-		// if currPath is relative to root pkg i.e. already has relPath, skip it
-		if !strings.HasPrefix(currPath, relPath+"/") {
-			newPath := path.Join(relPath, currPath)
-			err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath))
-			if err != nil {
-				return resources, err
-			}
+		newPath, err := pathRelToRoot(string(hctx.root.pkg.UniquePath), pkgPath, currPath)
+		if err != nil {
+			return err
+		}
+		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
+			return err
+		}
+		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
+			return err
 		}
 	}
-	return resources, nil
+	return nil
+}
+
+// pathRelToRoot computes resource's path relative to root package given:
+// rootPkgPath: absolute path to the root package
+// subpkgPath: absolute path to subpackage
+// resourcePath: resource's path relative to the subpackage
+// All the inputs paths are assumed to be OS specific.
+func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath string, err error) {
+	if !filepath.IsAbs(rootPkgPath) {
+		return "", fmt.Errorf("root package path %q must be absolute", rootPkgPath)
+	}
+
+	if !filepath.IsAbs(subPkgPath) {
+		return "", fmt.Errorf("subpackage path %q must be absolute", subPkgPath)
+	}
+
+	if subPkgPath == "" {
+		// empty subpackage path means resource belongs to the root package
+		return resourcePath, nil
+	}
+
+	// subpackage's path relative to the root package
+	subPkgRelPath, err := filepath.Rel(rootPkgPath, subPkgPath)
+	if err != nil {
+		return "", fmt.Errorf("subpackage %q must be relative to %q: %w",
+			rootPkgPath, subPkgPath, err)
+	}
+	// Note: Rel("/tmp", "/a") = "../", which isn't valid for our use-case.
+	dotdot := ".." + string(os.PathSeparator)
+	if strings.HasPrefix(subPkgRelPath, dotdot) || subPkgRelPath == ".." {
+		return "", fmt.Errorf("subpackage %q is not a descendant of %q", subPkgPath, rootPkgPath)
+	}
+	relativePath = filepath.Join(subPkgRelPath, filepath.Clean(resourcePath))
+	return relativePath, nil
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1alpha2.Function) ([]kio.Filter, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults)
+		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return nil, err
 		}
@@ -444,10 +505,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 }
 
 // trackInputFiles records file paths of input resources in the hydration context.
-func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
-	if err := detectPathConflicts(input); err != nil {
-		return err
-	}
+func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode) error {
 	if hctx.inputFiles == nil {
 		hctx.inputFiles = sets.String{}
 	}
@@ -456,6 +514,7 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 		if err != nil {
 			return fmt.Errorf("path annotation missing: %w", err)
 		}
+		path = filepath.Join(relPath, filepath.Clean(path))
 		hctx.inputFiles.Insert(path)
 	}
 	return nil
@@ -464,9 +523,6 @@ func trackInputFiles(hctx *hydrationContext, input []*yaml.RNode) error {
 // trackOutputfiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
-	if err := detectPathConflicts(hctx.root.resources); err != nil {
-		return err
-	}
 	outputSet := sets.String{}
 
 	for _, r := range hctx.root.resources {
@@ -477,28 +533,6 @@ func trackOutputFiles(hctx *hydrationContext) error {
 		outputSet.Insert(path)
 	}
 	hctx.outputFiles = outputSet
-	return nil
-}
-
-// detectPathConflicts returns an error if the same index/path is on multiple resources
-func detectPathConflicts(nodes []*yaml.RNode) error {
-	// map has structure path -> index -> bool
-	// to keep track of paths and indexes found
-	pathIndexes := make(map[string]map[string]bool)
-	for _, node := range nodes {
-		fp, index, err := kioutil.GetFileAnnotations(node)
-		if err != nil {
-			return err
-		}
-		fp = path.Clean(fp)
-		if pathIndexes[fp] == nil {
-			pathIndexes[fp] = make(map[string]bool)
-		}
-		if _, ok := pathIndexes[fp][index]; ok {
-			return fmt.Errorf("resource at path %q and index %q already exists", fp, index)
-		}
-		pathIndexes[fp][index] = true
-	}
 	return nil
 }
 

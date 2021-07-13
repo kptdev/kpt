@@ -16,8 +16,6 @@ package cmdutil
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
@@ -74,17 +72,4 @@ type NoResourceGroupCRDError struct{}
 
 func (*NoResourceGroupCRDError) Error() string {
 	return "type ResourceGroup not found"
-}
-
-// JoinStringsWithQuotes combines the elements in the string slice into
-// a string, with each element inside quotes.
-func JoinStringsWithQuotes(strs []string) string {
-	b := new(strings.Builder)
-	for i, s := range strs {
-		b.WriteString(fmt.Sprintf("%q", s))
-		if i < (len(s) - 2) {
-			b.WriteString(", ")
-		}
-	}
-	return b.String()
 }

@@ -1,0 +1,67 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+  namespace: my-space
+  labels:
+    env: dev
+    foo: bar
+spec:
+  # comment 1
+  replicas: 3
+  selector:
+    # comment 2
+    matchLabels: # comment 3
+      # comment 4
+      app: nginx # comment 5
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # comment 6
+      containers:
+        # comment 7
+        - name: nginx
+          image: nginx:1.14.2 # comment 8
+          ports:
+            # comment 9
+            - containerPort: 80 # comment 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  ports:
+    # comment 1
+    - name: etcd-server-ssl
+      port: 2380
+    # comment 2
+    - name: etcd-client-ssl
+      port: 2379
+---
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: EnforceFoo
+metadata:
+  name: enforce-foo
+spec:
+  parameters:
+    naming_rules:
+      - kind: Folder
+        patterns:
+          # comment 1
+          - ^(dev|prod|staging|qa|shared)$

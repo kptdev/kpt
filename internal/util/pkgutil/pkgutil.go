@@ -23,8 +23,11 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
 // WalkPackage walks the package defined at src and provides a callback for
@@ -50,7 +53,7 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 		}
 
 		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
+			_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
 			if err != nil && !os.IsNotExist(err) {
 				return c(path, info, err)
 			}
@@ -95,7 +98,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
 		}
 
-		if path == filepath.Join(src, kptfilev1alpha2.KptFileName) && !copyRootKptfile {
+		if path == filepath.Join(src, kptfilev1.KptFileName) && !copyRootKptfile {
 			return nil
 		}
 
@@ -188,7 +191,7 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 			return nil
 		}
 
-		if p == filepath.Join(path, kptfilev1alpha2.KptFileName) && !removeRootKptfile {
+		if p == filepath.Join(path, kptfilev1.KptFileName) && !removeRootKptfile {
 			return nil
 		}
 
@@ -236,9 +239,14 @@ func RootPkgFirstSorter(paths []string) func(i, j int) bool {
 		if jPath == "." {
 			return false
 		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
+		// First sort based on the number of segments.
+		iSegmentCount := len(filepath.SplitList(iPath))
+		jSegmentCount := len(filepath.SplitList(jPath))
+		if jSegmentCount != iSegmentCount {
+			return iSegmentCount < jSegmentCount
+		}
+		// If two paths are at the same depth, just sort lexicographically.
+		return iPath < jPath
 	}
 }
 
@@ -271,6 +279,63 @@ func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPat
 	}
 	sort.Slice(paths, RootPkgFirstSorter(paths))
 	return paths, nil
+}
+
+// FormatPackage formats resources and meta-resources in the package and all its subpackages
+func FormatPackage(pkgPath string) {
+	inout := &kio.LocalPackageReadWriter{
+		PackagePath:    pkgPath,
+		MatchFilesGlob: append(kio.DefaultMatch, kptfilev1.KptFileName),
+	}
+	f := &filters.FormatFilter{
+		UseSchema: true,
+	}
+	err := kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{f},
+		Outputs: []kio.Writer{inout},
+	}.Execute()
+	if err != nil {
+		// do not throw error if formatting fails
+		return
+	}
+	err = RoundTripKptfilesInPkg(pkgPath)
+	if err != nil {
+		// do not throw error if formatting fails
+		return
+	}
+}
+
+// RoundTripKptfilesInPkg reads and writes all Kptfiles in the package including
+// subpackages. This is used to format Kptfiles in the order of go structures
+// TODO: phanimarupaka remove this method after addressing https://github.com/GoogleContainerTools/kpt/issues/2052
+func RoundTripKptfilesInPkg(pkgPath string) error {
+	paths, err := pkg.Subpackages(pkgPath, pkg.All, true)
+	if err != nil {
+		return err
+	}
+
+	var pkgsPaths []string
+	for _, path := range paths {
+		// join pkgPath as the paths are relative to pkgPath
+		pkgsPaths = append(pkgsPaths, filepath.Join(pkgPath, path))
+	}
+	// include root package as well
+	pkgsPaths = append(pkgsPaths, pkgPath)
+
+	for _, pkgPath := range pkgsPaths {
+		kf, err := pkg.ReadKptfile(pkgPath)
+		if err != nil {
+			// do not throw error if formatting fails
+			return err
+		}
+		err = kptfileutil.WriteFile(pkgPath, kf)
+		if err != nil {
+			// do not throw error if formatting fails
+			return err
+		}
+	}
+	return nil
 }
 
 // Exists returns true if a file or directory exists on the provided path,

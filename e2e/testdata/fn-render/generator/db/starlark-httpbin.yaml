@@ -15,7 +15,7 @@ apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: httpbin-gen
-source: |
+source: |-
   httpbin_deployment = {
      "apiVersion": "apps/v1",
      "kind": "Deployment",

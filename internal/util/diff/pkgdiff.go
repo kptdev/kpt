@@ -20,9 +20,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -51,7 +51,7 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 		}
 
 		fileName := filepath.Base(f)
-		if fileName == kptfilev1alpha2.KptFileName {
+		if fileName == kptfilev1.KptFileName {
 			equal, err := kptfilesEqual(pkg1, pkg2, f)
 			if err != nil {
 				return diff, err
@@ -77,20 +77,20 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 }
 
 func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
-	pkg1Kf, err := kptfileutil.ReadFile(filepath.Join(pkg1, filepath.Dir(filePath)))
+	pkg1Kf, err := pkg.ReadKptfile(filepath.Join(pkg1, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
-	pkg2Kf, err := kptfileutil.ReadFile(filepath.Join(pkg2, filepath.Dir(filePath)))
+	pkg2Kf, err := pkg.ReadKptfile(filepath.Join(pkg2, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
 
 	// Diffs in Upstream and UpstreamLock should be ignored.
-	pkg1Kf.Upstream = &kptfilev1alpha2.Upstream{}
-	pkg1Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
-	pkg2Kf.Upstream = &kptfilev1alpha2.Upstream{}
-	pkg2Kf.UpstreamLock = &kptfilev1alpha2.UpstreamLock{}
+	pkg1Kf.Upstream = &kptfilev1.Upstream{}
+	pkg1Kf.UpstreamLock = &kptfilev1.UpstreamLock{}
+	pkg2Kf.Upstream = &kptfilev1.Upstream{}
+	pkg2Kf.UpstreamLock = &kptfilev1.UpstreamLock{}
 
 	pkg1Bytes, err := yaml.Marshal(pkg1Kf)
 	if err != nil {

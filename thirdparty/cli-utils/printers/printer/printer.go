@@ -9,5 +9,5 @@ import (
 )
 
 type Printer interface {
-	Print(ch <-chan event.Event, previewStrategy common.DryRunStrategy) error
+	Print(ch <-chan event.Event, dryRunStrategy common.DryRunStrategy) error
 }

@@ -15,16 +15,14 @@
 package kptfileutil
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // TestValidateInventory tests the ValidateInventory function.
@@ -35,13 +33,13 @@ func TestValidateInventory(t *testing.T) {
 		t.Errorf("nil inventory should not validate")
 	}
 	// Empty inventory should not validate
-	inv := &kptfilev1alpha2.Inventory{}
+	inv := &kptfilev1.Inventory{}
 	isValid, err = ValidateInventory(inv)
 	if isValid || err == nil {
 		t.Errorf("empty inventory should not validate")
 	}
 	// Empty inventory parameters strings should not validate
-	inv = &kptfilev1alpha2.Inventory{
+	inv = &kptfilev1.Inventory{
 		Namespace:   "",
 		Name:        "",
 		InventoryID: "",
@@ -51,7 +49,7 @@ func TestValidateInventory(t *testing.T) {
 		t.Errorf("empty inventory parameters strings should not validate")
 	}
 	// Inventory with non-empty namespace, name, and id should validate.
-	inv = &kptfilev1alpha2.Inventory{
+	inv = &kptfilev1.Inventory{
 		Namespace:   "test-namespace",
 		Name:        "test-name",
 		InventoryID: "test-id",
@@ -62,104 +60,13 @@ func TestValidateInventory(t *testing.T) {
 	}
 }
 
-// TestReadFile tests the ReadFile function.
-func TestReadFile(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamLock:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1alpha2.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: "cockroachdb",
-				},
-			},
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
-		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
-				Commit:    "dd7adeb5492cca4c24169cecee023dbe632e5167",
-				Directory: "staging/cockroachdb",
-				Ref:       "refs/heads/owners-update",
-				Repo:      "https://github.com/kubernetes/examples",
-			},
-		},
-	}, f)
-}
-
-// TestReadFile_failRead verifies an error is returned if the file cannot be read
-func TestReadFile_failRead(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, " KptFileError"), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstream:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "no such file or directory")
-	assert.Equal(t, kptfilev1alpha2.KptFile{}, f)
-}
-
-// TestReadFile_failUnmarshal verifies an error is returned if the file contains any unrecognized fields.
-func TestReadFile_failUnmarshal(t *testing.T) {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-pkgfile-read", "test-kpt"))
-	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(`apiVersion: kpt.dev/v1alpha2
-kind: Kptfile
-metadata:
-  name: cockroachdb
-upstreamBadField:
-  type: git
-  git:
-    commit: dd7adeb5492cca4c24169cecee023dbe632e5167
-    directory: staging/cockroachdb
-    ref: refs/heads/owners-update
-    repo: https://github.com/kubernetes/examples
-`), 0600)
-	assert.NoError(t, err)
-
-	f, err := ReadFile(dir)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "upstreamBadField not found")
-	assert.Equal(t, kptfilev1alpha2.KptFile{}, f)
-}
-
 func TestUpdateKptfile(t *testing.T) {
 	writeKptfileToTemp := func(name string, content string) string {
 		dir, err := ioutil.TempDir("", name)
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(content), 0600)
+		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -175,26 +82,26 @@ func TestUpdateKptfile(t *testing.T) {
 	}{
 		"no pipeline and no upstream info": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: base
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: base
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -203,7 +110,7 @@ metadata:
 
 		"upstream information is not copied from upstream unless updateUpstream is true": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -215,7 +122,7 @@ upstream:
     ref: v1
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -227,14 +134,14 @@ upstream:
     ref: v2
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -243,7 +150,7 @@ metadata:
 
 		"upstream information is copied from upstream when updateUpstream is true": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -255,7 +162,7 @@ upstream:
     ref: v1
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -274,14 +181,14 @@ upstreamLock:
     commit: abc123
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -303,7 +210,7 @@ upstreamLock:
 
 		"pipeline in upstream replaces local": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -312,7 +219,7 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -324,7 +231,7 @@ pipeline:
     - image: some:image
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -337,7 +244,7 @@ pipeline:
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -352,7 +259,7 @@ pipeline:
 
 		"pipeline in local remains if there are no changes in upstream": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -361,7 +268,7 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -370,53 +277,47 @@ pipeline:
     - image: foo:bar
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 pipeline:
   mutators:
     - image: my:image
-      config:
-        apiVersion: kpt.dev/v1alpha2
-        kind: Function
-        spec:
-          foo: bar
+      configMap:
+        foo: bar
     - image: foo:bar
 `,
 		},
 
 		"pipeline remains if it is only added locally": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -427,7 +328,7 @@ pipeline:
 `,
 			updateUpstream: true,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -440,7 +341,7 @@ pipeline:
 
 		"pipeline in local is emptied if it is gone from upstream": {
 			origin: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -449,13 +350,13 @@ pipeline:
     - image: foo:bar
 `,
 			updated: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
 `,
 			local: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -466,7 +367,7 @@ pipeline:
 `,
 			updateUpstream: false,
 			expected: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: foo
@@ -498,7 +399,7 @@ pipeline: {}
 				t.FailNow()
 			}
 
-			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1alpha2.KptFileName))
+			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -506,5 +407,4 @@ pipeline: {}
 			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
 		})
 	}
-
 }

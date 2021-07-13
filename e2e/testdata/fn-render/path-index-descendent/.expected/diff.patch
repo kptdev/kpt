@@ -17,14 +17,3 @@ index 0000000..fa83ef1
 +          image: kennethreitz/httpbin
 +          ports:
 +            - containerPort: 9876
-diff --git a/db/resources.yaml b/db/resources.yaml
-index 685f793..ac1fd96 100644
---- a/db/resources.yaml
-+++ b/db/resources.yaml
-@@ -16,4 +16,4 @@ kind: StatefulSet
- metadata:
-   name: db
- spec:
--  replicas: 3
-\ No newline at end of file
-+  replicas: 3

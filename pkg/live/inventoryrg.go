@@ -24,10 +24,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
-	"sigs.k8s.io/cli-utils/pkg/apply/task"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -270,13 +269,8 @@ func InstallResourceGroupCRD(factory cmdutil.Factory) error {
 		// Create the tasks to apply the ResourceGroup CRD.
 		tasks := []taskrunner.Task{
 			applyRGTask,
-			taskrunner.NewWaitTask(
-				objs,
-				taskrunner.AllCurrent,
-				applyCRDTimeout),
-			&task.ResetRESTMapperTask{
-				Mapper: mapper,
-			},
+			taskrunner.NewWaitTask("wait-rg-crd", objs, taskrunner.AllCurrent,
+				applyCRDTimeout, mapper),
 		}
 		// Create the task queue channel, and send tasks in order into the channel.
 		taskQueue := make(chan taskrunner.Task, len(tasks))

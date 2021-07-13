@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -93,4 +94,12 @@ func LookupCommit(repoPath string) (string, error) {
 	}
 	commit := strings.TrimSpace(string(b))
 	return commit, nil
+}
+
+func (rs *RepoSpec) RepoRef() string {
+	repoPath := path.Join(rs.CloneSpec(), rs.Path)
+	if rs.Ref != "" {
+		return repoPath + fmt.Sprintf("@%s", rs.Ref)
+	}
+	return repoPath
 }

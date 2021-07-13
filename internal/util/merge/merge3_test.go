@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -187,91 +188,99 @@ func createPkgMultipleMutators(packageMutators, subPackageMutators []yaml.Filter
 		)
 }
 
-var merge3Cases = []testCase{
-	{
-		description: `Most common: add namespace and name-prefix on local, merge upstream changes`,
-		origin: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3`,
-		update: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 4`,
-		local: `apiVersion: apps/v1
-kind: Deployment
-metadata: # kpt-merge: /nginx-deployment
-  name: dev-nginx-deployment
-  namespace: my-space
-spec:
-  replicas: 3
-`,
-		expected: `apiVersion: apps/v1
-kind: Deployment
-metadata: # kpt-merge: /nginx-deployment
-  name: dev-nginx-deployment
-  namespace: my-space
-spec:
-  replicas: 4
-`},
-
-	{
-		description: `Add namespace and name-prefix on local manually without adding annotations, adds new resource`,
-		origin: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3`,
-		update: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 4`,
-		local: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dev-nginx-deployment
-  namespace: my-space
-spec:
-  replicas: 3
-`,
-		expected: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: dev-nginx-deployment
-  namespace: my-space
-spec:
-  replicas: 3
----
+func TestMerge3_Merge_path(t *testing.T) {
+	testCases := map[string]struct {
+		origin   string
+		update   string
+		local    string
+		expected string
+		errMsg   string
+	}{
+		`Most common: add namespace and name-prefix on local, merge upstream changes`: {
+			origin: `
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
-  replicas: 4
-`},
-
-	{
-		description: `Conflict: User fetches package, copies a resource in same file, adds different name suffix`,
-		origin: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
   replicas: 3`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 4`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: /nginx-deployment
+  name: dev-nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 3
+`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata: # kpt-merge: /nginx-deployment
+  name: dev-nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 4
+`},
+
+		`Add namespace and name-prefix on local manually without adding annotations, adds new resource`: {
+			origin: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3`,
+			update: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 4`,
+			local: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 3
+`,
+			expected: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev-nginx-deployment
+  namespace: my-space
+spec:
+  replicas: 3
+`},
+
+		`Conflict: User fetches package, copies a resource in same file, adds different name suffix`: {
+			origin: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3`,
+			update: `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 4`,
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-1
@@ -287,30 +296,33 @@ metadata: # kpt-merge: default/nginx-deployment
 spec:
   replicas: 3
 `,
-		errMsg: `found duplicate "local" resources in file "f1.yaml"`},
+			errMsg: `found duplicate "local" resources in file "f1.yaml"`},
 
-	{
-		description: `Publisher changes name in upstream but want to maintain original identity, no local customizations, fetch upstream changes`,
-		origin: `apiVersion: apps/v1
+		`Publisher changes name in upstream but want to maintain original identity, no local customizations, fetch upstream changes`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3
 `,
-		expected: `apiVersion: apps/v1
+			expected: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment-new
@@ -318,22 +330,23 @@ spec:
   replicas: 4
 `},
 
-	{
-		description: `Publisher changes name in upstream but want to maintain original identity, consumer adds name-prefix 
-on local, fetch upstream changes`,
-		origin: `apiVersion: apps/v1
+		`Publisher changes name in upstream but want to maintain original identity, consumer adds name-prefix on local, fetch upstream changes`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: dev-nginx-deployment
@@ -341,7 +354,8 @@ metadata: # kpt-merge: default/nginx-deployment
 spec:
   replicas: 3
 `,
-		expected: `apiVersion: apps/v1
+			expected: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new
@@ -350,22 +364,24 @@ spec:
   replicas: 4
 `},
 
-	{
-		description: `Publisher changes name in upstream but don't want to maintain original identity which is equivalent 
-to delete existing resource and add new one, consumer adds name-prefix on local`,
-		origin: `apiVersion: apps/v1
+		`Publisher changes name in upstream but don't want to maintain original identity which is equivalent 
+to delete existing resource and add new one, consumer adds name-prefix on local`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-new
 spec:
   replicas: 4`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
@@ -373,38 +389,16 @@ metadata: # kpt-merge: /nginx-deployment
 spec:
   replicas: 3
 `,
-		expected: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment-new
-spec:
-  replicas: 4
-`},
-
-	{
-		description: `Publisher changes name in upstream but don't want to maintain original identity which is equivalent 
-to delete existing resource and add new one, consumer adds name-prefix on local`,
-		origin: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3`,
-		update: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment-new
-spec:
-  replicas: 4`,
-		local: `apiVersion: apps/v1
+			expected: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: /nginx-deployment
   name: dev-nginx-deployment
   namespace: my-space
 spec:
   replicas: 3
-`,
-		expected: `apiVersion: apps/v1
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-new
@@ -412,29 +406,32 @@ spec:
   replicas: 4
 `},
 
-	{
-		description: `Publisher changes name multiple times in upstream but maintains original identity, no local customizations,
-fetch upstream changes`,
-		origin: `apiVersion: apps/v1
+		`Publisher changes name multiple times in upstream but maintains original identity, no local customizations,
+fetch upstream changes`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new-again
 spec:
   replicas: 5`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 5
 `,
-		expected: `apiVersion: apps/v1
+			expected: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new-again
@@ -442,22 +439,24 @@ spec:
   replicas: 5
 `},
 
-	{
-		description: `Publisher changes name multiple times in upstream but maintains original identity, consumer adds name-prefix 
-on local, fetch upstream changes`,
-		origin: `apiVersion: apps/v1
+		`Publisher changes name multiple times in upstream but maintains original identity, consumer adds name-prefix 
+on local, fetch upstream changes`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new
 spec:
   replicas: 4`,
-		update: `apiVersion: apps/v1
+			update: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new-again
 spec:
   replicas: 5`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: dev-nginx-deployment
@@ -465,7 +464,8 @@ metadata: # kpt-merge: default/nginx-deployment
 spec:
   replicas: 5
 `,
-		expected: `apiVersion: apps/v1
+			expected: `
+apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment-new-again
@@ -474,118 +474,106 @@ spec:
   replicas: 5
 `},
 
-	{
-		description: `Version changes are just like any other changes`,
-		origin: `apiVersion: apps/v1
+		`Version changes are just like any other changes`: {
+			origin: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3`,
-		update: `apiVersion: apps/v2
+			update: `
+apiVersion: apps/v2
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 4`,
-		local: `apiVersion: apps/v1
+			local: `
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 3
 `,
-		expected: `apiVersion: apps/v2
+			expected: `
+apiVersion: apps/v2
 kind: Deployment
 metadata:
   name: nginx-deployment
 spec:
   replicas: 4
 `},
-}
-
-var testCases = [][]testCase{merge3Cases}
-
-func TestMerge3_Merge_path(t *testing.T) {
-	for i := range testCases {
-		for j := range testCases[i] {
-			tc := testCases[i][j]
-			t.Run(tc.description, func(t *testing.T) {
-
-				// setup the local directory
-				dir, err := ioutil.TempDir("", "merge3-test")
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				defer os.RemoveAll(dir)
-
-				err = os.MkdirAll(filepath.Join(dir, "localDir"), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = os.MkdirAll(filepath.Join(dir, "updatedDir"), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = os.MkdirAll(filepath.Join(dir, "originalDir"), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = ioutil.WriteFile(filepath.Join(dir, "originalDir", "f1.yaml"), []byte(tc.origin), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = ioutil.WriteFile(filepath.Join(dir, "updatedDir", "f1.yaml"), []byte(tc.update), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = ioutil.WriteFile(filepath.Join(dir, "localDir", "f1.yaml"), []byte(tc.local), 0700)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-
-				err = merge.Merge3{
-					OriginalPath: filepath.Join(dir, "originalDir"),
-					UpdatedPath:  filepath.Join(dir, "updatedDir"),
-					DestPath:     filepath.Join(dir, "localDir"),
-					MergeOnPath:  true,
-				}.Merge()
-				if tc.errMsg == "" {
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
-				} else {
-					if !assert.Error(t, err) {
-						t.FailNow()
-					}
-					if !assert.Contains(t, err.Error(), tc.errMsg) {
-						t.FailNow()
-					}
-					return
-				}
-
-				b, err := ioutil.ReadFile(filepath.Join(dir, "localDir", "f1.yaml"))
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				if !assert.Equal(t, tc.expected, string(b)) {
-					t.FailNow()
-				}
-			})
-		}
 	}
-}
 
-type testCase struct {
-	description string
-	origin      string
-	update      string
-	local       string
-	expected    string
-	errMsg      string
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+
+			// setup the local directory
+			dir, err := ioutil.TempDir("", "merge3-test")
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			defer os.RemoveAll(dir)
+
+			err = os.MkdirAll(filepath.Join(dir, "localDir"), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = os.MkdirAll(filepath.Join(dir, "updatedDir"), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = os.MkdirAll(filepath.Join(dir, "originalDir"), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = ioutil.WriteFile(filepath.Join(dir, "originalDir", "f1.yaml"), []byte(strings.TrimSpace(tc.origin)), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = ioutil.WriteFile(filepath.Join(dir, "updatedDir", "f1.yaml"), []byte(strings.TrimSpace(tc.update)), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = ioutil.WriteFile(filepath.Join(dir, "localDir", "f1.yaml"), []byte(strings.TrimSpace(tc.local)), 0700)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = merge.Merge3{
+				OriginalPath: filepath.Join(dir, "originalDir"),
+				UpdatedPath:  filepath.Join(dir, "updatedDir"),
+				DestPath:     filepath.Join(dir, "localDir"),
+				MergeOnPath:  true,
+			}.Merge()
+			if tc.errMsg == "" {
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+			} else {
+				if !assert.Error(t, err) {
+					t.FailNow()
+				}
+				if !assert.Contains(t, err.Error(), tc.errMsg) {
+					t.FailNow()
+				}
+				return
+			}
+
+			b, err := ioutil.ReadFile(filepath.Join(dir, "localDir", "f1.yaml"))
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			if !assert.Equal(t, strings.TrimSpace(tc.expected), strings.TrimSpace(string(b))) {
+				t.FailNow()
+			}
+		})
+	}
 }

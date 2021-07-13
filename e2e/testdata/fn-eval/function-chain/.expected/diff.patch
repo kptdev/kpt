@@ -1,0 +1,45 @@
+diff --git a/out/resources.yaml b/out/resources.yaml
+new file mode 100644
+index 0000000..0298ad0
+--- /dev/null
++++ b/out/resources.yaml
+@@ -0,0 +1,39 @@
++# Copyright 2021 Google LLC
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#      http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  name: nginx-deployment
++  namespace: staging
++  labels:
++    foo: bar
++spec:
++  replicas: 3
++  selector:
++    matchLabels:
++      foo: bar
++  template:
++    metadata:
++      labels:
++        foo: bar
++---
++apiVersion: custom.io/v1
++kind: Custom
++metadata:
++  name: custom
++  namespace: staging
++  labels:
++    foo: bar
++spec:
++  image: nginx:1.2.3

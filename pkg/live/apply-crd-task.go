@@ -19,7 +19,9 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util"
+	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
+	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
 // ApplyCRDTask encapsulates information necessary to apply a
@@ -28,6 +30,18 @@ import (
 type ApplyCRDTask struct {
 	factory cmdutil.Factory
 	crd     *unstructured.Unstructured
+}
+
+func (a *ApplyCRDTask) Name() string {
+	return "apply-rg-crd"
+}
+
+func (a *ApplyCRDTask) Action() event.ResourceAction {
+	return event.ApplyAction
+}
+
+func (a *ApplyCRDTask) Identifiers() []object.ObjMetadata {
+	return object.UnstructuredsToObjMetas([]*unstructured.Unstructured{a.crd})
 }
 
 // NewApplyCRDTask returns a pointer to an ApplyCRDTask struct,

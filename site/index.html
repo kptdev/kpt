@@ -2,13 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="robots" content="noindex" />
     <title>kpt - Home</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description" />
+    <meta name="description" content="A Git-native, schema-aware, extensible client-side tool for packaging, customizing, validating, and applying Kubernetes resources." />
     <meta
       name="viewport"
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
     />
     <link
       rel="stylesheet"
@@ -27,7 +30,10 @@
   <body>
     <div id="app"></div>
     <script src="/static/js/config.js"></script>
-    <script src="/static/js/plugins.js"></script>
+    <script src="/static/js/plugins/plugins.js"></script>
+    <script src="/static/js/plugins/copy_buttons.js"></script>
+    <script src="/static/js/plugins/book_page_title.js"></script>
+    <script src="/static/js/plugins/github_widget.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
@@ -39,6 +45,8 @@
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-go.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/prismjs@1.22/components/prism-typescript.min.js"></script>
     <script src="//cdn.jsdelivr.net/npm/@gouch/to-title-case@2.2.1/to-title-case.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <!--Fallback content on 404s can go here.-->
   </body>
 </html>

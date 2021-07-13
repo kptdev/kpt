@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -46,7 +46,7 @@ func TestCmd_execute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	// defaults LOCAL_DEST_DIR to current working directory
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := r.Command.Execute()
@@ -58,7 +58,7 @@ func TestCmd_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, dest, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -66,21 +66,21 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -107,7 +107,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 		t.FailNow()
 	}
 
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err = r.Command.Execute()
 
@@ -118,7 +118,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, dest, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -126,21 +126,21 @@ func TestCmdMainBranch_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "main",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "main",
@@ -153,7 +153,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process
 func TestCmd_fail(t *testing.T) {
-	r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+	r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
 	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
@@ -356,7 +356,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
 				assert.Equal(t, "master", r.Get.Git.Ref)
 				assert.Equal(t, filepath.Join(dir, "package"), r.Get.Destination)
-				assert.Equal(t, kptfilev1alpha2.FastForward, r.Get.UpdateStrategy)
+				assert.Equal(t, kptfilev1.FastForward, r.Get.UpdateStrategy)
 			},
 		},
 		"invalid strategy provided": {
@@ -379,7 +379,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			})
 			defer clean()
 
-			r := cmdget.NewRunner(fake.CtxWithNilPrinter(), "kpt")
+			r := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 			r.Command.SilenceErrors = true
 			r.Command.SilenceUsage = true
 			r.Command.RunE = tc.runE

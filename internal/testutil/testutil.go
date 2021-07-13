@@ -16,7 +16,6 @@ package testutil
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,9 +27,11 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	toposort "github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
@@ -74,7 +75,7 @@ type TestGitRepo struct {
 
 var AssertNoError = assertnow.NilError
 
-var KptfileSet = diffSet(kptfilev1alpha2.KptFileName)
+var KptfileSet = diffSet(kptfilev1.KptFileName)
 
 func diffSet(path string) sets.String {
 	s := sets.String{}
@@ -111,7 +112,7 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSou
 	// TODO(mortent): See if we can avoid this. We just need to make sure
 	// we can compare Kptfiles without any formatting issues.
 	for _, s := range diff.List() {
-		if !strings.HasSuffix(s, kptfilev1alpha2.KptFileName) {
+		if !strings.HasSuffix(s, kptfilev1.KptFileName) {
 			continue
 		}
 
@@ -127,11 +128,11 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSou
 
 		// Read the Kptfiles and set the Commit field to an empty
 		// string before we compare.
-		pkg1kf, err := kptfileutil.ReadFile(filepath.Dir(pkg1Path))
+		pkg1kf, err := pkg.ReadKptfile(filepath.Dir(pkg1Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg2kf, err := kptfileutil.ReadFile(filepath.Dir(pkg2Path))
+		pkg2kf, err := pkg.ReadKptfile(filepath.Dir(pkg2Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -264,9 +265,9 @@ const trimPrefix = `# Copyright 2019 Google LLC
 # limitations under the License.`
 
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
-func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1alpha2.KptFile) bool {
+func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1.KptFile) bool {
 	// read the actual generated KptFile
-	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfilev1alpha2.KptFileName))
+	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -438,7 +439,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 		t.FailNow()
 	}
 
-	rr, err := gr.Run(context.Background(), "init")
+	rr, err := gr.Run(fake.CtxWithDefaultPrinter(), "init")
 	if !assert.NoError(t, err) {
 		assert.FailNowf(t, "%s %s", rr.Stdout, rr.Stderr)
 	}
@@ -449,7 +450,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 
 // AddKptfileToWorkspace writes the provided Kptfile to the workspace
 // and makes a commit.
-func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.KptFile) {
+func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf *kptfilev1.KptFile) {
 	err := os.MkdirAll(w.FullPackagePath(), 0700)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -464,7 +465,7 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf kptfilev1alpha2.Kp
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	_, err = gitRunner.Run(context.Background(), "add", ".")
+	_, err = gitRunner.Run(fake.CtxWithDefaultPrinter(), "add", ".")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -639,21 +640,21 @@ func replaceData(repo, data string) error {
 		// For Kptfiles we want to keep the Upstream section if the Kptfile
 		// in the data directory doesn't already include one.
 		if filepath.Base(path) == "Kptfile" {
-			dataKptfile, err := kptfileutil.ReadFile(filepath.Dir(path))
+			dataKptfile, err := pkg.ReadKptfile(filepath.Dir(path))
 			if err != nil {
 				return err
 			}
 			repoKptfileDir := filepath.Dir(filepath.Join(repo, rel))
-			repoKptfile, err := kptfileutil.ReadFile(repoKptfileDir)
+			repoKptfile, err := pkg.ReadKptfile(repoKptfileDir)
 			if err != nil {
 				return err
 			}
 			// Only copy over the Upstream section from the existing
 			// Kptfile if other values hasn't been provided.
-			if dataKptfile.Upstream == nil || reflect.DeepEqual(dataKptfile.Upstream, kptfilev1alpha2.Upstream{}) {
+			if dataKptfile.Upstream == nil || reflect.DeepEqual(dataKptfile.Upstream, kptfilev1.Upstream{}) {
 				dataKptfile.Upstream = repoKptfile.Upstream
 			}
-			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1alpha2.UpstreamLock{}) {
+			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1.UpstreamLock{}) {
 				dataKptfile.UpstreamLock = repoKptfile.UpstreamLock
 			}
 			dataKptfile.Name = repoKptfile.Name
@@ -692,7 +693,7 @@ func replaceData(repo, data string) error {
 		}
 
 		// Never delete the Kptfile in the root package.
-		if rel == kptfilev1alpha2.KptFileName {
+		if rel == kptfilev1.KptFileName {
 			return nil
 		}
 

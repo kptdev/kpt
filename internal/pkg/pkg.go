@@ -16,7 +16,9 @@
 package pkg
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -24,7 +26,10 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -33,6 +38,19 @@ import (
 
 const CurDir = "."
 const ParentDir = ".."
+
+const (
+	pkgPathAnnotation = "internal.config.kubernetes.io/package-path"
+)
+
+var DeprecatedKptfileVersions = []string{
+	"v1alpha1",
+	"v1alpha2",
+}
+
+var SupportedKptfileVersions = []string{
+	kptfilev1.KptFileVersion,
+}
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
 type KptfileError struct {
@@ -46,6 +64,39 @@ func (k *KptfileError) Error() string {
 
 func (k *KptfileError) Unwrap() error {
 	return k.Err
+}
+
+// RemoteKptfileError records errors regarding reading or parsing of a Kptfile
+// in a remote repo.
+type RemoteKptfileError struct {
+	RepoSpec *git.RepoSpec
+	Err      error
+}
+
+func (e *RemoteKptfileError) Error() string {
+	return fmt.Sprintf("error reading Kptfile from %q: %v", e.RepoSpec.RepoRef(), e.Err)
+}
+
+func (e *RemoteKptfileError) Unwrap() error {
+	return e.Err
+}
+
+// DeprecatedKptfileError is an implementation of the error interface that is
+// returned whenever kpt encounters a Kptfile using the legacy format.
+type DeprecatedKptfileError struct {
+	Version string
+}
+
+func (e *DeprecatedKptfileError) Error() string {
+	return fmt.Sprintf("old resource version %q found in Kptfile", e.Version)
+}
+
+type UnknownKptfileResourceError struct {
+	GVK schema.GroupVersionKind
+}
+
+func (e *UnknownKptfileResourceError) Error() string {
+	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
@@ -67,7 +118,7 @@ type Pkg struct {
 
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
-	kptfile *kptfilev1alpha2.KptFile
+	kptfile *kptfilev1.KptFile
 }
 
 // New returns a pkg given an absolute or relative OS-defined path.
@@ -85,9 +136,6 @@ func New(path string) (*Pkg, error) {
 		// combining the current working directory with the path.
 		absPath = filepath.Join(cwd, path)
 	}
-	if err != nil {
-		return nil, err
-	}
 	pkg := &Pkg{
 		UniquePath: types.UniquePath(absPath),
 		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
@@ -100,9 +148,9 @@ func New(path string) (*Pkg, error) {
 
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
 // A nil value represents an implicit package.
-func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
+func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := readKptfile(p.UniquePath.String())
+		kf, err := ReadKptfile(p.UniquePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -111,28 +159,25 @@ func (p *Pkg) Kptfile() (*kptfilev1alpha2.KptFile, error) {
 	return p.kptfile, nil
 }
 
-// readKptfile reads the KptFile in the given pkg.
+// ReadKptfile reads the KptFile in the given pkg.
 // TODO(droot): This method exists for current version of Kptfile.
 // Need to reconcile with the team how we want to handle multiple versions
 // of Kptfile in code. One option is to follow Kubernetes approach to
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
-func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
-	kf := &kptfilev1alpha2.KptFile{}
-
-	f, err := os.Open(filepath.Join(p, kptfilev1alpha2.KptFileName))
+func ReadKptfile(p string) (*kptfilev1.KptFile, error) {
+	f, err := os.Open(filepath.Join(p, kptfilev1.KptFileName))
 	if err != nil {
-		return kf, &KptfileError{
+		return nil, &KptfileError{
 			Path: types.UniquePath(p),
 			Err:  err,
 		}
 	}
 	defer f.Close()
 
-	d := yaml.NewDecoder(f)
-	d.KnownFields(true)
-	if err = d.Decode(kf); err != nil {
-		return kf, &KptfileError{
+	kf, err := DecodeKptfile(f)
+	if err != nil {
+		return nil, &KptfileError{
 			Path: types.UniquePath(p),
 			Err:  err,
 		}
@@ -140,16 +185,87 @@ func readKptfile(p string) (*kptfilev1alpha2.KptFile, error) {
 	return kf, nil
 }
 
+func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
+	kf := &kptfilev1.KptFile{}
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return kf, err
+	}
+
+	if err := CheckKptfileVersion(c); err != nil {
+		return kf, err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
+	d.KnownFields(true)
+	if err := d.Decode(kf); err != nil {
+		return kf, err
+	}
+	return kf, nil
+}
+
+// CheckKptfileVersion verifies the apiVersion and kind of the resource
+// within the Kptfile. If the legacy version is found, the DeprecatedKptfileError
+// is returned. If the currently supported apiVersion and kind is found, no
+// error is returned.
+func CheckKptfileVersion(content []byte) error {
+	r, err := yaml.Parse(string(content))
+	if err != nil {
+		return err
+	}
+
+	m, err := r.GetMeta()
+	if err != nil {
+		return err
+	}
+
+	kind := m.Kind
+	gv, err := schema.ParseGroupVersion(m.APIVersion)
+	if err != nil {
+		return err
+	}
+
+	switch {
+	// If the resource type matches what we are looking for, just return nil.
+	case gv.Group == kptfilev1.KptFileGroup &&
+		kind == kptfilev1.KptFileKind &&
+		isSupportedKptfileVersion(gv.Version):
+		return nil
+	// If the kind and group is correct and the version is a known deprecated
+	// schema for the Kptfile, return DeprecatedKptfileError.
+	case gv.Group == kptfilev1.KptFileGroup &&
+		kind == kptfilev1.KptFileKind &&
+		isDeprecatedKptfileVersion(gv.Version):
+		return &DeprecatedKptfileError{
+			Version: gv.Version,
+		}
+	// If the combination of group, version and kind are unknown to us, return
+	// UnknownKptfileResourceError.
+	default:
+		return &UnknownKptfileResourceError{
+			GVK: gv.WithKind(kind),
+		}
+	}
+}
+
+func isDeprecatedKptfileVersion(version string) bool {
+	return slice.ContainsString(DeprecatedKptfileVersions, version, nil)
+}
+
+func isSupportedKptfileVersion(version string) bool {
+	return slice.ContainsString(SupportedKptfileVersions, version, nil)
+}
+
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
 // if pipeline is not specified in a Kptfile, it returns Zero value of the pipeline.
-func (p *Pkg) Pipeline() (*kptfilev1alpha2.Pipeline, error) {
+func (p *Pkg) Pipeline() (*kptfilev1.Pipeline, error) {
 	kf, err := p.Kptfile()
 	if err != nil {
 		return nil, err
 	}
 	pl := kf.Pipeline
 	if pl == nil {
-		return &kptfilev1alpha2.Pipeline{}, nil
+		return &kptfilev1.Pipeline{}, nil
 	}
 	return pl, nil
 }
@@ -280,7 +396,7 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				kf, err := readKptfile(path)
+				kf, err := ReadKptfile(path)
 				if err != nil {
 					return errors.E(op, types.UniquePath(path), err)
 				}
@@ -323,7 +439,7 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 // IsPackageDir checks if there exists a Kptfile on the provided path, i.e.
 // whether the provided path is the root of a package.
 func IsPackageDir(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
+	_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
 
 	// If we got an error that wasn't IsNotExist, something went wrong and
 	// we don't really know if the file exists or not.
@@ -343,7 +459,7 @@ func IsPackageDir(path string) (bool, error) {
 // information, it will always return false.
 // If a Kptfile is not found on the provided path, an error will be returned.
 func IsPackageUnfetched(path string) (bool, error) {
-	kf, err := readKptfile(path)
+	kf, err := ReadKptfile(path)
 	if err != nil {
 		return false, err
 	}
@@ -368,9 +484,12 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 
 	pkgReader := &kio.LocalPackageReader{
 		PackagePath:        string(p.UniquePath),
-		PackageFileName:    kptfilev1alpha2.KptFileName,
+		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
 		MatchFilesGlob:     kio.MatchAll,
+		SetAnnotations: map[string]string{
+			pkgPathAnnotation: string(p.UniquePath),
+		},
 	}
 	resources, err = pkgReader.Read()
 	if err != nil {
@@ -385,8 +504,56 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	return resources, err
 }
 
+// Validates the package pipeline.
+func (p *Pkg) ValidatePipeline() error {
+	pl, err := p.Pipeline()
+	if err != nil {
+		return err
+	}
+
+	if pl.IsEmpty() {
+		return nil
+	}
+
+	// read all resources including function pipeline.
+	resources, err := p.LocalResources(true)
+	if err != nil {
+		return err
+	}
+
+	resourcesByPath := sets.String{}
+
+	for _, r := range resources {
+		rPath, _, err := kioutil.GetFileAnnotations(r)
+		if err != nil {
+			return fmt.Errorf("resource missing path annotation err: %w", err)
+		}
+		resourcesByPath.Insert(filepath.Clean(rPath))
+	}
+
+	for i, fn := range pl.Mutators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "mutators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in the current package",
+			}
+		}
+	}
+	for i, fn := range pl.Validators {
+		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
+			return &kptfilev1.ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "validators", i),
+				Value:  fn.ConfigPath,
+				Reason: "functionConfig must exist in the current package",
+			}
+		}
+	}
+	return nil
+}
+
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.
-func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (output []*yaml.RNode, err error) {
+func filterMetaResources(input []*yaml.RNode, pl *kptfilev1.Pipeline) (output []*yaml.RNode, err error) {
 	pathsToExclude := fnConfigFilePaths(pl)
 	for _, r := range input {
 		meta, err := r.GetMeta()
@@ -412,7 +579,7 @@ func filterMetaResources(input []*yaml.RNode, pl *kptfilev1alpha2.Pipeline) (out
 
 // fnConfigFilePaths returns paths to function config files referred in the
 // given pipeline.
-func fnConfigFilePaths(pl *kptfilev1alpha2.Pipeline) (fnConfigPaths sets.String) {
+func fnConfigFilePaths(pl *kptfilev1.Pipeline) (fnConfigPaths sets.String) {
 	if pl == nil {
 		return nil
 	}
@@ -479,4 +646,50 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 		}
 	}
 	return fnConfigPaths, nil
+}
+
+// FunctionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
+// invoked by kio.LocalPackageReader when it reads the package. The filter will return
+// true if the file should be skipped during reading. Skipped files will not be included
+// in all steps following.
+func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
+	if includeMetaResources {
+		return func(relPath string) bool {
+			return false
+		}, nil
+	}
+
+	fnConfigPaths, err := FunctionConfigFilePaths(pkgPath, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(relPath string) bool {
+		if len(fnConfigPaths) == 0 {
+			return false
+		}
+		// relPath is cleaned so we can directly use it here
+		return fnConfigPaths.Has(relPath)
+	}, nil
+}
+
+// GetPkgPathAnnotation returns the package path annotation on
+// a given resource.
+func GetPkgPathAnnotation(rn *yaml.RNode) (string, error) {
+	meta, err := rn.GetMeta()
+	if err != nil {
+		return "", err
+	}
+	pkgPath := meta.Annotations[pkgPathAnnotation]
+	return pkgPath, nil
+}
+
+// SetPkgPathAnnotation sets package path on a given resource.
+func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath types.UniquePath) error {
+	return rn.PipeE(yaml.SetAnnotation(pkgPathAnnotation, string(pkgPath)))
+}
+
+// RemovePkgPathAnnotation removes the package path on a given resource.
+func RemovePkgPathAnnotation(rn *yaml.RNode) error {
+	return rn.PipeE(yaml.ClearAnnotation(pkgPathAnnotation))
 }

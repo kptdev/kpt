@@ -26,6 +26,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
@@ -33,11 +34,18 @@ import (
 type containerNetworkName string
 
 const (
-	networkNameNone containerNetworkName = "none"
-	networkNameHost containerNetworkName = "host"
-	defaultTimeout  time.Duration        = 5 * time.Minute
-	dockerBin       string               = "docker"
+	networkNameNone     containerNetworkName = "none"
+	networkNameHost     containerNetworkName = "host"
+	defaultLongTimeout  time.Duration        = 5 * time.Minute
+	defaultShortTimeout time.Duration        = 5 * time.Second
+	dockerBin           string               = "docker"
+
+	AlwaysPull       ImagePullPolicy = "always"
+	IfNotPresentPull ImagePullPolicy = "ifNotPresent"
+	NeverPull        ImagePullPolicy = "never"
 )
+
+type ImagePullPolicy string
 
 // ContainerFnPermission contains the permission of container
 // function such as network access.
@@ -53,6 +61,8 @@ type ContainerFn struct {
 	Path types.UniquePath
 	// Image is the container image to run
 	Image string
+	// ImagePullPolicy controls the image pulling behavior.
+	ImagePullPolicy ImagePullPolicy
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
@@ -66,6 +76,9 @@ type ContainerFn struct {
 	StorageMounts []runtimeutil.StorageMount
 	// Env is a slice of env string that will be exposed to container
 	Env []string
+	// FnResult is used to store the information about the result from
+	// the function.
+	FnResult *fnresult.Result
 }
 
 // Run runs the container function using docker runtime.
@@ -99,6 +112,9 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 		return fmt.Errorf("unexpected function error: %w", err)
 	}
 
+	if errSink.Len() > 0 {
+		f.FnResult.Stderr = errSink.String()
+	}
 	return nil
 }
 
@@ -119,14 +135,17 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
+	if f.ImagePullPolicy == NeverPull {
+		args = append(args, "--pull", "never")
+	}
 	for _, storageMount := range f.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
 	}
 	args = append(args,
-		newContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
+		NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
-	timeout := defaultTimeout
+	timeout := defaultLongTimeout
 	if f.Timeout != 0 {
 		timeout = f.Timeout
 	}
@@ -134,11 +153,11 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	return exec.CommandContext(ctx, dockerBin, args...), cancel
 }
 
-// newContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
+// NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
 // input envStr. envStr example: ["foo=bar", "baz"]
 // using this instead of runtimeutil.NewContainerEnvFromStringSlice() to avoid
 // default envs LOG_TO_STDERR
-func newContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
+func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	ce := &runtimeutil.ContainerEnv{
 		EnvVars: make(map[string]string),
 	}
@@ -157,29 +176,78 @@ func newContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 // prepareImage will check local images and pull it if it doesn't
 // exist.
 func (f *ContainerFn) prepareImage() error {
-	// check image existence
-	args := []string{"image", "ls", f.Image}
-	cmd := exec.Command(dockerBin, args...)
-	var output []byte
-	var err error
-	if output, err = cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to check local function image %q: %w", f.Image, err)
-	}
-	if strings.Contains(string(output), strings.Split(f.Image, ":")[0]) {
-		// image exists locally
+	// If ImagePullPolicy is set to "never", we don't need to do anything here.
+	if f.ImagePullPolicy == NeverPull {
 		return nil
 	}
-	args = []string{"image", "pull", f.Image}
+
+	// check image existence
+	foundImageInLocalCache := f.checkImageExistence()
+
+	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
+	// first. If there is a match, we just return. This can be useful for local
+	// development to prevent the remote image to accidentally override the
+	// local image when they use the same name and tag.
+	if f.ImagePullPolicy == IfNotPresentPull && foundImageInLocalCache {
+		return nil
+	}
+
+	// If ImagePullPolicy is set to always (which is the default), we will try
+	// to pull the image regardless if the tag has been seen in the local cache.
+	// This can help to ensure we have the latest release for "moving tags" like
+	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
+	// checks the SHA first and only pull the missing docker layer(s).
+	args := []string{"image", "pull", f.Image}
 	// setup timeout
-	timeout := defaultTimeout
+	timeout := defaultLongTimeout
 	if f.Timeout != 0 {
 		timeout = f.Timeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	cmd = exec.CommandContext(ctx, dockerBin, args...)
-	if _, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("function image %q doesn't exist", f.Image)
+	cmd := exec.CommandContext(ctx, dockerBin, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return &ContainerImageError{
+			Image:  f.Image,
+			Output: string(output),
+		}
 	}
 	return nil
+}
+
+// checkImageExistence returns true if the image does exist in
+// local cache
+func (f *ContainerFn) checkImageExistence() bool {
+	args := []string{"image", "inspect", f.Image}
+	ctx, cancel := context.WithTimeout(context.Background(), defaultShortTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, dockerBin, args...)
+	if _, err := cmd.CombinedOutput(); err == nil {
+		// image exists locally
+		return true
+	}
+	return false
+}
+
+// AddDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
+func AddDefaultImagePathPrefix(image string) string {
+	if !strings.Contains(image, "/") {
+		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
+	}
+	return image
+}
+
+// ContainerImageError is an error type which will be returned when
+// the container run time cannot verify docker image.
+type ContainerImageError struct {
+	Image  string
+	Output string
+}
+
+func (e *ContainerImageError) Error() string {
+	//nolint:lll
+	return fmt.Sprintf(
+		"Error: Function image %q doesn't exist remotely. If you are developing new functions locally, you can choose to set the image pull policy to ifNotPresent or never.\n%v",
+		e.Image, e.Output)
 }

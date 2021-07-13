@@ -25,7 +25,7 @@ import (
 	"testing"
 	"text/template"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -305,6 +305,7 @@ type Kptfile struct {
 	Upstream     *Upstream
 	UpstreamLock *UpstreamLock
 	Pipeline     *Pipeline
+	Inventory    *Inventory
 }
 
 func NewKptfile() *Kptfile {
@@ -382,6 +383,17 @@ type UpstreamLock struct {
 	Commit  string
 }
 
+func (k *Kptfile) WithInventory(inv Inventory) *Kptfile {
+	k.Inventory = &inv
+	return k
+}
+
+type Inventory struct {
+	Name      string
+	Namespace string
+	ID        string
+}
+
 func (k *Kptfile) WithPipeline(functions ...Function) *Kptfile {
 	k.Pipeline = &Pipeline{
 		Functions: functions,
@@ -457,7 +469,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 	if pkg.Kptfile != nil {
 		content := buildKptfile(pkg, pkgName, reposInfo)
 
-		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1alpha2.KptFileName),
+		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1.KptFileName),
 			[]byte(content), 0600)
 		if err != nil {
 			return err
@@ -499,28 +511,27 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 }
 
 // TODO: Consider using the Kptfile struct for this instead of a template.
-var kptfileTemplate = `
-apiVersion: kpt.dev/v1alpha2
+var kptfileTemplate = `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: {{.PkgName}}
 {{- if .Pkg.Kptfile.Upstream }}
 upstream:
   type: git
-  updateStrategy: {{.Pkg.Kptfile.Upstream.Strategy}}
   git:
+    repo: {{.Pkg.Kptfile.Upstream.Repo}}
     directory: {{.Pkg.Kptfile.Upstream.Dir}}
     ref: {{.Pkg.Kptfile.Upstream.Ref}}
-    repo: {{.Pkg.Kptfile.Upstream.Repo}}
+  updateStrategy: {{.Pkg.Kptfile.Upstream.Strategy}}
 {{- end }}
 {{- if .Pkg.Kptfile.UpstreamLock }}
 upstreamLock:
   type: git
   git:
-    commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
+    repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
     directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
     ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
-    repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
+    commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
 {{- end }}
 {{- if .Pkg.Kptfile.Pipeline }}
 pipeline:
@@ -530,6 +541,18 @@ pipeline:
 {{- if .ConfigPath }}
   - configPath: {{ .ConfigPath }}
 {{- end }}
+{{- end }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory }}
+inventory:
+{{- if .Pkg.Kptfile.Inventory.Name }}
+  name: {{ .Pkg.Kptfile.Inventory.Name }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.Namespace }}
+  namespace: {{ .Pkg.Kptfile.Inventory.Namespace }}
+{{- end }}
+{{- if .Pkg.Kptfile.Inventory.ID }}
+  inventoryID: {{ .Pkg.Kptfile.Inventory.ID }}
 {{- end }}
 {{- end }}
 `

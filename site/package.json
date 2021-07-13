@@ -1,15 +1,18 @@
 {
   "main": "none.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+  "scripts": {    
+    "test": "jest",
     "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules . ../scripts",
     "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules --fix . ../scripts"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@babel/plugin-proposal-optional-chaining": "^7.14.2",
+    "@gouch/to-title-case": "^2.2.1",
     "autoprefixer": "^9.7.4",
     "href-checker": "etefera/href-checker#docsify",
+    "jest": "^27.0.4",
     "markdownlint-cli": "^0.23.2",
-    "postcss-cli": "^5.0.1"
+    "postcss-cli": "^5.0.1",
+    "super-simple-sitemap-generator": "etefera/super-simple-sitemap-generator"
   }
 }

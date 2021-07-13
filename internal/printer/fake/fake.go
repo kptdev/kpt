@@ -16,23 +16,36 @@ package fake
 
 import (
 	"context"
+	"io"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 )
 
-// NilPrinter implements the printer.Printer interface and just ignores
+// Printer implements the printer.Printer interface and just ignores
 // all print calls.
-type NilPrinter struct{}
+type Printer struct {
+	outStream io.Writer
+	errStream io.Writer
+}
 
-func (np *NilPrinter) PrintPackage(*pkg.Pkg, bool) {}
+func (np *Printer) PrintPackage(*pkg.Pkg, bool) {}
 
-func (np *NilPrinter) OptPrintf(*printer.Options, string, ...interface{}) {}
+func (np *Printer) OptPrintf(*printer.Options, string, ...interface{}) {}
 
-func (np *NilPrinter) Printf(string, ...interface{}) {}
+func (np *Printer) Printf(string, ...interface{}) {}
 
-// CtxWithNilPrinter returns a new context with the NilPrinter added.
-func CtxWithNilPrinter() context.Context {
+func (np *Printer) OutStream() io.Writer { return np.outStream }
+
+func (np *Printer) ErrStream() io.Writer { return np.errStream }
+
+// CtxWithDefaultPrinter returns a new context with the printer which has os streams
+func CtxWithDefaultPrinter() context.Context {
+	return CtxWithPrinter(io.Discard, io.Discard)
+}
+
+// CtxWithPrinter returns a new context with Printer added.
+func CtxWithPrinter(outStream, errStream io.Writer) context.Context {
 	ctx := context.Background()
-	return printer.WithContext(ctx, &NilPrinter{})
+	return printer.WithContext(ctx, printer.New(outStream, errStream))
 }

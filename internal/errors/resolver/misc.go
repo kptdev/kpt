@@ -30,7 +30,7 @@ type alreadyHandledErrorResolver struct{}
 func (*alreadyHandledErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	kioErr := errors.UnwrapKioError(err)
 	if goerrors.Is(kioErr, errors.ErrAlreadyHandled) {
-		return ResolvedResult{ExitCode: 1}, true
+		return ResolvedResult{}, true
 	}
 	return ResolvedResult{}, false
 }

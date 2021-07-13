@@ -31,9 +31,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestCmdInvalidDiffType(t *testing.T) {
-	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
+	runner := cmddiff.NewRunner(fake.CtxWithDefaultPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-type", "invalid"})
-	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
@@ -41,9 +40,8 @@ func TestCmdInvalidDiffType(t *testing.T) {
 }
 
 func TestCmdInvalidDiffTool(t *testing.T) {
-	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
+	runner := cmddiff.NewRunner(fake.CtxWithDefaultPrinter(), "")
 	runner.C.SetArgs([]string{"--diff-tool", "nodiff"})
-	runner.C.SilenceErrors = true
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
@@ -61,14 +59,13 @@ func TestCmdExecute(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
-	getRunner := cmdget.NewRunner(fake.CtxWithNilPrinter(), "")
+	getRunner := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "")
 	getRunner.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
 	err := getRunner.Command.Execute()
 	assert.NoError(t, err)
 
-	runner := cmddiff.NewRunner(fake.CtxWithNilPrinter(), "")
+	runner := cmddiff.NewRunner(fake.CtxWithDefaultPrinter(), "")
 	runner.C.SetArgs([]string{dest, "--diff-type", "local"})
-	runner.C.SilenceErrors = true
 	err = runner.C.Execute()
 	assert.NoError(t, err)
 }

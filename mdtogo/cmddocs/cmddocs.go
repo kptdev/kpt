@@ -73,7 +73,7 @@ func parse(path, value string) []doc {
 
 		switch match[2] {
 		case "Short":
-			val := strings.TrimSpace(match[3])
+			val := strings.TrimSpace(cleanUpContent(match[3]))
 			docBuilder.Short = val
 		case "Long":
 			val := cleanUpContent(match[3])

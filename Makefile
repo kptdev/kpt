@@ -16,10 +16,18 @@
 
 GOBIN := $(shell go env GOPATH)/bin
 
+# T refers to an e2e test case matcher. This enables running e2e tests
+# selectively.  For example,
+# To invoke e2e tests related to fnconfig, run:
+# make test-fn-render T=fnconfig
+# make test-fn-eval T=fnconfig
+# By default, make test-fn-render/test-fn-eval will run all tests.
+T ?= ".*"
+
+all: generate license fix vet fmt lint test build buildall tidy
+
 build:
 	go build -o $(GOBIN)/kpt -v .
-
-all: license fix vet fmt lint test build buildall tidy
 
 buildall:
 	GOOS=windows go build -o /dev/null
@@ -50,13 +58,13 @@ license:
 	GOBIN=$(GOBIN) scripts/update-license.sh
 
 lint:
-	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
+	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
 	$(GOBIN)/golangci-lint run ./...
 
 # TODO: enable this as part of `all` target when it works for go-errors
 # https://github.com/google/go-licenses/issues/15
 license-check:
-	(which go-licensesscs || go get https://github.com/google/go-licenses)
+	(which go-licensesscs || go install https://github.com/google/go-licenses)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
@@ -65,22 +73,16 @@ test:
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
 test-docker: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -cover --tags=docker ./...
+	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 test-fn-render: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnRender ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
 test-fn-eval: build
-	KPT_E2E_BIN=$(GOBIN)/kpt go test -v --tags=docker --run=TestFnEval ./e2e/
-
-# target to flush kpt-fn cache
-flush-fn-cache:
-	for fn in set-namespace set-label set-annotation starlark; do \
-		docker image rm gcr.io/kpt-fn/$$fn:unstable ; \
-	done
+	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
 vet:
 	go vet ./...
@@ -94,6 +96,10 @@ lintdocs:
 site-generate:
 	go run ./scripts/generate_site_sidebar > site/sidebar.md
 	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
+
+site-map:
+	make site-run-server
+	./scripts/generate-sitemap.sh
 
 site-run-server:
 	make site-generate

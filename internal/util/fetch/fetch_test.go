@@ -20,10 +20,12 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	pkgtesting "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -47,22 +49,25 @@ func setupWorkspace(t *testing.T) (*testutil.TestGitRepo, *testutil.TestWorkspac
 	return g, w, clean
 }
 
-func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1alpha2.Git, strategy kptfilev1alpha2.UpdateStrategyType) error {
+func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1.Git, strategy kptfilev1.UpdateStrategyType) error {
 	kf := kptfileutil.DefaultKptfile(workspace.PackageDir)
-	kf.Upstream = &kptfilev1alpha2.Upstream{
-		Type:           kptfilev1alpha2.GitOrigin,
+	kf.Upstream = &kptfilev1.Upstream{
+		Type:           kptfilev1.GitOrigin,
 		Git:            git,
 		UpdateStrategy: strategy,
 	}
 	return kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
 }
 
-func createPackage(t *testing.T, pkgPath string) *pkg.Pkg {
-	p, err := pkg.New(pkgPath)
-	if !assert.NoError(t, err) {
-		t.FailNow()
+func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
+	kf, err := pkg.ReadKptfile(workspace.FullPackagePath())
+	if err != nil {
+		return err
 	}
-	return p
+
+	kf.Name = name
+	err = kptfileutil.WriteFile(workspace.FullPackagePath(), kf)
+	return err
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if no Kptfile
@@ -80,8 +85,8 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 	}
 
 	err = Command{
-		Pkg: createPackage(t, pkgPath),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -93,14 +98,14 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 	_, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, nil, kptfilev1alpha2.ResourceMerge)
+	err := createKptfile(w, nil, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -112,18 +117,18 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	_, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      "",
 		Directory: "/",
 		Ref:       "main",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -135,18 +140,18 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	g, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Directory: "/",
 		Ref:       "",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -161,19 +166,19 @@ func TestCommand_Run(t *testing.T) {
 	g, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Directory: "/",
 		Ref:       "master",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -182,7 +187,7 @@ func TestCommand_Run(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -190,21 +195,21 @@ func TestCommand_Run(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
+		Upstream: &kptfilev1.Upstream{
 			Type: "git",
-			Git: &kptfilev1alpha2.Git{
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
 			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
@@ -223,19 +228,19 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer clean()
 
 	subdir := "java"
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      g.RepoDirectory,
 		Directory: subdir,
 		Ref:       "refs/heads/master",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
@@ -244,7 +249,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -252,21 +257,21 @@ func TestCommand_Run_subdir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: subdir,
 				Ref:       "refs/heads/master",
 				Repo:      g.RepoDirectory,
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
@@ -302,25 +307,25 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEqual(t, commit, commit2)
 
-	err = createKptfile(w, &kptfilev1alpha2.Git{
+	err = createKptfile(w, &kptfilev1.Git{
 		Repo:      g.RepoDirectory,
 		Directory: "/",
 		Ref:       "refs/heads/exp",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath(), false)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -328,21 +333,21 @@ func TestCommand_Run_branch(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
@@ -383,25 +388,25 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NotEqual(t, commit, commit0)
 	assert.NotEqual(t, commit, commit2)
 
-	err = createKptfile(w, &kptfilev1alpha2.Git{
+	err = createKptfile(w, &kptfilev1.Git{
 		Repo:      g.RepoDirectory,
 		Directory: "/",
 		Ref:       "refs/tags/v2",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), w.FullPackagePath(), false)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, w.FullPackagePath(), kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -409,21 +414,21 @@ func TestCommand_Run_tag(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.KptFileAPIVersion,
-				Kind:       kptfilev1alpha2.KptFileName},
+				APIVersion: kptfilev1.KptFileAPIVersion,
+				Kind:       kptfilev1.KptFileName},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
+		Upstream: &kptfilev1.Upstream{
 			Type: "git",
-			Git: &kptfilev1alpha2.Git{
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
 			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
@@ -433,22 +438,203 @@ func TestCommand_Run_tag(t *testing.T) {
 	})
 }
 
+func TestCommand_Run_subdir_at_tag(t *testing.T) {
+	testCases := map[string]struct {
+		dir         string
+		tag         string
+		upstreamPkg *pkgbuilder.RootPkg
+	}{
+		"reads subdirectory": {
+			dir: "/java/expected",
+			tag: "java/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("expected").
+						WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+		},
+		"reads subdirectory with no leading slash": {
+			dir: "java/expected",
+			tag: "java/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("expected").
+						WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+		},
+		"reads specific subdirectory": {
+			dir: "/java/not_expected/java/expected",
+			tag: "java/expected/v2",
+			upstreamPkg: pkgbuilder.NewRootPkg().
+				WithSubPackages(pkgbuilder.NewSubPkg("java").
+					WithResource("deployment").
+					WithSubPackages(pkgbuilder.NewSubPkg("not_expected").
+						WithFile("not_actually_expected.txt", "I should not be present").
+						WithSubPackages(pkgbuilder.NewSubPkg("java").
+							WithSubPackages(pkgbuilder.NewSubPkg("expected").
+								WithFile("expected.txt", "My kptfile and I should be the only objects"))))),
+		},
+	}
+	for tn, tc := range testCases {
+
+		t.Run(tn, func(t *testing.T) {
+			expectedName := "expected"
+			repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg:    tc.upstreamPkg,
+						Branch: "main",
+						Tag:    tc.tag,
+					},
+				},
+			})
+
+			defer clean()
+
+			g := repos[testutil.Upstream]
+			err := createKptfile(rw, &kptfilev1.Git{
+				Repo:      g.RepoDirectory,
+				Directory: tc.dir,
+				Ref:       tc.tag,
+			}, kptfilev1.ResourceMerge)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			err = setKptfileName(rw, expectedName)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+			err = Command{
+				Pkg: actualPkg,
+			}.Run(fake.CtxWithDefaultPrinter())
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			if !g.AssertEqual(t, rw.WorkspaceDirectory, actualPkg.UniquePath.String(), false) {
+				t.FailNow()
+			}
+			expectedPkg := pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, tc.dir, tc.tag, "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, tc.dir, tc.tag, 0),
+				).WithFile("expected.txt", "My kptfile and I should be the only objects")
+			expectedPath := expectedPkg.ExpandPkgWithName(t, expectedName, testutil.ToReposInfo(repos))
+			testutil.KptfileAwarePkgEqual(t, actualPkg.UniquePath.String(), expectedPath, false)
+		})
+	}
+}
+
+func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
+	dir := "/java/expected"
+	tag := "java/v2"
+	expectedName := "expected_dir_is_not_here"
+	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithSubPackages(pkgbuilder.NewSubPkg("java").
+						WithResource("deployment").
+						WithSubPackages(pkgbuilder.NewSubPkg("not_expected").
+							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+				Branch: "main",
+				Tag:    tag,
+			},
+		},
+	})
+
+	defer clean()
+
+	g := repos[testutil.Upstream]
+	err := createKptfile(rw, &kptfilev1.Git{
+		Repo:      g.RepoDirectory,
+		Directory: dir,
+		Ref:       tag,
+	}, kptfilev1.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = setKptfileName(rw, expectedName)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	err = Command{
+		Pkg: actualPkg,
+	}.Run(fake.CtxWithDefaultPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "no such file or directory")
+}
+
+func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
+	dir := "/java/expected"
+	nonexistentTag := "notjava/v2"
+	expectedName := "expected_dir_is_here"
+	repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithSubPackages(pkgbuilder.NewSubPkg("java").
+						WithResource("deployment").
+						WithSubPackages(pkgbuilder.NewSubPkg(expectedName).
+							WithFile("expected.txt", "My kptfile and I should be the only objects"))),
+				Branch: "main",
+				Tag:    "java/v2",
+			},
+		},
+	})
+
+	defer clean()
+
+	g := repos[testutil.Upstream]
+	err := createKptfile(rw, &kptfilev1.Git{
+		Repo:      g.RepoDirectory,
+		Directory: dir,
+		Ref:       nonexistentTag,
+	}, kptfilev1.ResourceMerge)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = setKptfileName(rw, expectedName)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	err = Command{
+		Pkg: actualPkg,
+	}.Run(fake.CtxWithDefaultPrinter())
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "unknown revision")
+}
+
 func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	_, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      "foo",
 		Directory: "/",
 		Ref:       "refs/heads/master",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -461,18 +647,18 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	g, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      g.RepoDirectory,
 		Directory: "/",
 		Ref:       "refs/heads/foo",
-	}, kptfilev1alpha2.ResourceMerge)
+	}, kptfilev1.ResourceMerge)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -488,18 +674,18 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	g, w, clean := setupWorkspace(t)
 	defer clean()
 
-	err := createKptfile(w, &kptfilev1alpha2.Git{
+	err := createKptfile(w, &kptfilev1.Git{
 		Repo:      g.RepoDirectory,
 		Directory: "/",
 		Ref:       "refs/tags/foo",
-	}, kptfilev1alpha2.FastForward)
+	}, kptfilev1.FastForward)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
 	err = Command{
-		Pkg: createPackage(t, w.FullPackagePath()),
-	}.Run(fake.CtxWithNilPrinter())
+		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}

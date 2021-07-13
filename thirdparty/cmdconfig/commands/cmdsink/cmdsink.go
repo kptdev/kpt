@@ -4,41 +4,43 @@
 package cmdsink
 
 import (
+	"context"
+
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 // GetSinkRunner returns a command for Sink.
-func GetSinkRunner(name string) *SinkRunner {
-	r := &SinkRunner{}
+func GetSinkRunner(ctx context.Context, name string) *SinkRunner {
+	r := &SinkRunner{
+		Ctx: ctx,
+	}
 	c := &cobra.Command{
-		Use:     "sink [DIR]",
+		Use:     "sink DIR [flags]",
 		Short:   fndocs.SinkShort,
-		Long:    fndocs.SinkLong,
+		Long:    fndocs.SinkShort + "\n" + fndocs.SinkLong,
+		Args:    cobra.MinimumNArgs(1),
 		Example: fndocs.SinkExamples,
 		RunE:    r.runE,
-		Args:    cobra.MinimumNArgs(1),
 	}
 	r.Command = c
 	return r
 }
 
-func NewCommand(name string) *cobra.Command {
-	return GetSinkRunner(name).Command
+func NewCommand(ctx context.Context, name string) *cobra.Command {
+	return GetSinkRunner(ctx, name).Command
 }
 
 // SinkRunner contains the run function
 type SinkRunner struct {
 	Command *cobra.Command
+	Ctx     context.Context
 }
 
 func (r *SinkRunner) runE(c *cobra.Command, args []string) error {
-	outputs := []kio.Writer{&kio.LocalPackageWriter{PackagePath: args[0]}}
-
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.ByteReader{Reader: c.InOrStdin()}},
-		Outputs: outputs}.Execute()
-	return runner.HandleError(c, err)
+	if err := cmdutil.CheckDirectoryNotPresent(args[0]); err != nil {
+		return err
+	}
+	return cmdutil.WriteToOutput(c.InOrStdin(), nil, args[0])
 }

@@ -1,5 +1,5 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index e405a52..64ec0ee 100644
+index ac1fd96..64ec0ee 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -15,5 +15,6 @@ apiVersion: apps/v1
@@ -8,13 +8,12 @@ index e405a52..64ec0ee 100644
    name: db
 +  namespace: staging
  spec:
--    replicas: 3
-+  replicas: 3
+   replicas: 3
 diff --git a/resources.yaml b/resources.yaml
-index 71cb6e1..cb937aa 100644
+index 317f422..cb937aa 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,11 +15,12 @@ apiVersion: apps/v1
+@@ -15,6 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: nginx-deployment
@@ -22,18 +21,3 @@ index 71cb6e1..cb937aa 100644
  spec:
    replicas: 3
    selector:
--      matchLabels:
--        app: nginx
-+    matchLabels:
-+      app: nginx
-   template:
-     metadata:
-       labels:
-@@ -27,6 +28,6 @@ spec:
-     spec:
-       containers:
-         - name: nginx
-+          image: nginx:1.14.2
-           ports:
-             - containerPort: 80
--          image: nginx:1.14.2

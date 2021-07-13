@@ -33,7 +33,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
@@ -85,10 +85,10 @@ type Updater interface {
 	Update(options UpdateOptions) error
 }
 
-var strategies = map[kptfilev1alpha2.UpdateStrategyType]func() Updater{
-	kptfilev1alpha2.FastForward:        func() Updater { return FastForwardUpdater{} },
-	kptfilev1alpha2.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
-	kptfilev1alpha2.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
+var strategies = map[kptfilev1.UpdateStrategyType]func() Updater{
+	kptfilev1.FastForward:        func() Updater { return FastForwardUpdater{} },
+	kptfilev1.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
+	kptfilev1.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
 }
 
 // Command updates the contents of a local package to a different version.
@@ -100,7 +100,7 @@ type Command struct {
 	Ref string
 
 	// Strategy is the update strategy to use
-	Strategy kptfilev1alpha2.UpdateStrategyType
+	Strategy kptfilev1.UpdateStrategyType
 }
 
 // Run runs the Command.
@@ -132,7 +132,7 @@ func (u Command) Run(ctx context.Context) error {
 	if u.Strategy != "" {
 		rootKf.Upstream.UpdateStrategy = u.Strategy
 	}
-	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), *rootKf)
+	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
@@ -249,7 +249,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
-	pr.Printf("Fetching upstream from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 	if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -259,7 +259,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	if kf.UpstreamLock != nil {
 		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
-		pr.Printf("Fetching origin from %s@%s.\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
@@ -442,7 +442,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		// Both exists, so just go ahead as normal.
 	}
 
-	pkgKf, err := kptfileutil.ReadFile(localPath)
+	pkgKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}

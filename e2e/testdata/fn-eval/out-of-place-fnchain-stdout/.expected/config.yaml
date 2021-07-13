@@ -1,0 +1,59 @@
+stdErr: |
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1.3"
+  [PASS] "gcr.io/kpt-fn/set-annotations:v0.1.3"
+  [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.3"
+  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.3"
+stdOut: |
+  apiVersion: config.kubernetes.io/v1alpha1
+  kind: ResourceList
+  items:
+    # Copyright 2021 Google LLC
+    #
+    # Licensed under the Apache License, Version 2.0 (the "License");
+    # you may not use this file except in compliance with the License.
+    # You may obtain a copy of the License at
+    #
+    #      http://www.apache.org/licenses/LICENSE-2.0
+    #
+    # Unless required by applicable law or agreed to in writing, software
+    # distributed under the License is distributed on an "AS IS" BASIS,
+    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    # See the License for the specific language governing permissions and
+    # limitations under the License.
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: nginx-deployment
+        namespace: staging
+        labels:
+          tier: backend
+        annotations:
+          config.kubernetes.io/index: "0"
+          config.kubernetes.io/path: resources.yaml
+          foo: bar
+      spec:
+        replicas: 3
+        selector:
+          matchLabels:
+            tier: backend
+        template:
+          metadata:
+            labels:
+              tier: backend
+            annotations:
+              foo: bar
+    - apiVersion: custom.io/v1
+      kind: Custom
+      metadata:
+        name: custom
+        namespace: staging
+        labels:
+          tier: backend
+        annotations:
+          config.kubernetes.io/index: "1"
+          config.kubernetes.io/path: resources.yaml
+          foo: bar
+      spec:
+        image: nginx:1.2.3

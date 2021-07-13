@@ -1,12 +1,12 @@
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: FunctionResultList
 metadata:
-    name: fnresults
+  name: fnresults
 exitCode: 1
 items:
-    - image: gcr.io/kpt-fn/starlark:unstable
-      stderr: 'fail: could not find httpbin deployment'
-      exitCode: 1
-      results:
-        - message: 'fail: could not find httpbin deployment'
-          severity: error
+  - image: gcr.io/kpt-fn/starlark:v0.1.0
+    stderr: 'fail: could not find httpbin deployment'
+    exitCode: 1
+    results:
+      - message: 'fail: could not find httpbin deployment'
+        severity: error

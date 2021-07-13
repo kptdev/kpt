@@ -1,0 +1,69 @@
+diff --git a/Kptfile b/Kptfile
+index 1f982e2..d815cdb 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,16 +2,7 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: nginx
+-info:
+-  description: describe this package
+-  site: https://github.com/GoogleContainerTools/kpt
+-  emails:
+-    - foo@gmail.com
+-  license: license text
+-  keywords:
+-    - tag1
+-    - tag2
+-  man: nginx man text
++  namespace: staging
+ upstream:
+   type: git
+   git:
+@@ -26,6 +17,16 @@ upstreamLock:
+     directory: package-examples/nginx
+     ref: package-examples/nginx/v0.2
+     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
++info:
++  site: https://github.com/GoogleContainerTools/kpt
++  emails:
++    - foo@gmail.com
++  license: license text
++  description: describe this package
++  keywords:
++    - tag1
++    - tag2
++  man: nginx man text
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+diff --git a/resources.yaml b/resources.yaml
+index c0f48b0..9e31a48 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -14,9 +14,10 @@
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
++  name: my-nginx
++  namespace: staging
+   labels:
+     foo: bar
+-  name: my-nginx
+ spec:
+   replicas: 3
+   selector:
+@@ -28,8 +29,8 @@ spec:
+         app: nginx
+     spec:
+       containers:
+-      - image: 'nginx:1.14.2'
+-        name: nginx
+-        ports:
+-        - containerPort: 80
+-          protocol: TCP
++        - name: nginx
++          image: nginx:1.14.2
++          ports:
++            - protocol: TCP
++              containerPort: 80
