@@ -1,6 +1,6 @@
 {
   "main": "none.js",
-  "scripts": {    
+  "scripts": {
     "test": "jest",
     "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules . ../scripts",
     "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules --fix . ../scripts"
