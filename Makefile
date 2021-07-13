@@ -45,7 +45,7 @@ fmt:
 	go fmt ./...
 
 generate:
-	go install ./mdtogo go-swagger/go-swagger
+	go install ./mdtogo github.com/go-swagger/go-swagger/cmd/swagger
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) go generate ./...
