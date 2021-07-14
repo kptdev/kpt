@@ -571,7 +571,7 @@ file:
 		assert.NoError(t, err)
 		assert.NoError(t, populateResourceRef(yml, result))
 
-		out, err := yaml.MarshalWithOptions(result, &yaml.EncoderOptions{SeqIndent: yaml.WideSeqIndent})
+		out, err := yaml.MarshalWithOptions(result, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, string(out))
 	}
