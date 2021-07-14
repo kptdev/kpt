@@ -2,8 +2,8 @@
   "main": "none.js",
   "scripts": {
     "test": "jest",
-    "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json content",
-    "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json --fix content"
+    "lint-check": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules . ../scripts",
+    "lint-fix": "node node_modules/markdownlint-cli/markdownlint.js -c markdownlint.json -i node_modules --fix . ../scripts"
   },
   "devDependencies": {
     "@babel/plugin-proposal-optional-chaining": "^7.14.2",
