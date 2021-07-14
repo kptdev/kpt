@@ -99,8 +99,7 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 	if err := (&kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.ByteReader{
-				Reader:            in,
-				PreserveSeqIndent: true,
+				Reader: in,
 			},
 		},
 		Filters: []kio.Filter{

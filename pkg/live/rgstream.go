@@ -43,8 +43,7 @@ type ResourceGroupStreamManifestReader struct {
 func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured, error) {
 	var objs []*unstructured.Unstructured
 	nodes, err := (&kio.ByteReader{
-		Reader:            p.Reader,
-		PreserveSeqIndent: true,
+		Reader: p.Reader,
 	}).Read()
 	if err != nil {
 		return objs, err

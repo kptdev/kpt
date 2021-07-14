@@ -41,8 +41,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 
 	var objs []*unstructured.Unstructured
 	nodes, err := (&kio.LocalPackageReader{
-		PackagePath:       r.PkgPath,
-		PreserveSeqIndent: true,
+		PackagePath: r.PkgPath,
 	}).Read()
 	if err != nil {
 		return objs, err
