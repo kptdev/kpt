@@ -284,7 +284,8 @@ metadata:
 
 			// read the resources from output dir
 			in := &kio.LocalPackageReader{
-				PackagePath: baseDir,
+				PackagePath:       baseDir,
+				PreserveSeqIndent: true,
 			}
 			out := &bytes.Buffer{}
 

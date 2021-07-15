@@ -284,8 +284,9 @@ func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPat
 // FormatPackage formats resources and meta-resources in the package and all its subpackages
 func FormatPackage(pkgPath string) {
 	inout := &kio.LocalPackageReadWriter{
-		PackagePath:    pkgPath,
-		MatchFilesGlob: append(kio.DefaultMatch, kptfilev1.KptFileName),
+		PackagePath:       pkgPath,
+		MatchFilesGlob:    append(kio.DefaultMatch, kptfilev1.KptFileName),
+		PreserveSeqIndent: true,
 	}
 	f := &filters.FormatFilter{
 		UseSchema: true,

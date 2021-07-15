@@ -11,25 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    foo: bar
-  name: my-nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - image: 'nginx:1.14.2'
-        name: nginx
-        ports:
-        - containerPort: 80
-          protocol: TCP
+
+testType: eval
+image: gcr.io/kpt-functions/no-op

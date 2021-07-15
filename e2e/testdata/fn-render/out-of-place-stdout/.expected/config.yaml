@@ -6,36 +6,38 @@ stdOut: |
   apiVersion: config.kubernetes.io/v1alpha1
   kind: ResourceList
   items:
-    # Copyright 2021 Google LLC
-    #
-    # Licensed under the Apache License, Version 2.0 (the "License");
-    # you may not use this file except in compliance with the License.
-    # You may obtain a copy of the License at
-    #
-    #      http://www.apache.org/licenses/LICENSE-2.0
-    #
-    # Unless required by applicable law or agreed to in writing, software
-    # distributed under the License is distributed on an "AS IS" BASIS,
-    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    # See the License for the specific language governing permissions and
-    # limitations under the License.
-    - apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: nginx-deployment
-        namespace: staging
-        annotations:
-          config.kubernetes.io/index: "0"
-          config.kubernetes.io/path: resources.yaml
-      spec:
-        replicas: 3
-    - apiVersion: custom.io/v1
-      kind: Custom
-      metadata:
-        name: custom
-        namespace: staging
-        annotations:
-          config.kubernetes.io/index: "1"
-          config.kubernetes.io/path: resources.yaml
-      spec:
-        image: nginx:1.2.3
+  # Copyright 2021 Google LLC
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  #      http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: nginx-deployment
+      annotations:
+        config.kubernetes.io/index: "0"
+        config.kubernetes.io/path: resources.yaml
+        internal.config.kubernetes.io/seqindent: compact
+      namespace: staging
+    spec:
+      replicas: 3
+  - apiVersion: custom.io/v1
+    kind: Custom
+    metadata:
+      name: custom
+      annotations:
+        config.kubernetes.io/index: "1"
+        config.kubernetes.io/path: resources.yaml
+        internal.config.kubernetes.io/seqindent: compact
+      namespace: staging
+    spec:
+      image: nginx:1.2.3

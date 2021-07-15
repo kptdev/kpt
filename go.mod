@@ -13,7 +13,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apiextensions-apiserver v0.21.1
 	k8s.io/apimachinery v0.21.1
@@ -23,5 +22,5 @@ require (
 	k8s.io/kubectl v0.21.1
 	sigs.k8s.io/cli-utils v0.25.1-0.20210603052138-670dee18a123
 	sigs.k8s.io/kustomize/api v0.8.10 // indirect
-	sigs.k8s.io/kustomize/kyaml v0.10.22-0.20210614195535-7e8ba62e9fd9
+	sigs.k8s.io/kustomize/kyaml v0.11.1-0.20210715170645-339e33d2f33d
 )

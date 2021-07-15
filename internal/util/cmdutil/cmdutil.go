@@ -163,7 +163,7 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 	}
 
 	return kio.Pipeline{
-		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r}},
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: r, PreserveSeqIndent: true}},
 		Outputs: outputs}.Execute()
 }
 
