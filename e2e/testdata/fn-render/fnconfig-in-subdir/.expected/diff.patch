@@ -1,0 +1,28 @@
+diff --git a/resources.yaml b/resources.yaml
+index 7a494c9..d22aec8 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,12 +15,23 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  labels:
++    tier: db
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: db
++  template:
++    metadata:
++      labels:
++        tier: db
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+   name: custom
++  labels:
++    tier: db
+ spec:
+   image: nginx:1.2.3
