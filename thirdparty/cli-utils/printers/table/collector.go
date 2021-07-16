@@ -7,12 +7,12 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/table"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	pe "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
 
 func newResourceStateCollector(resourceGroups []event.ActionGroup) *ResourceStateCollector {

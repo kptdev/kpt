@@ -26,20 +26,20 @@ import (
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	"sigs.k8s.io/cli-utils/pkg/provider"
+	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
-func NewRunner(ctx context.Context, provider provider.Provider,
+func NewRunner(ctx context.Context, factory util.Factory,
 	ioStreams genericclioptions.IOStreams) *Runner {
 
 	r := &Runner{
 		ctx:           ctx,
-		Destroyer:     apply.NewDestroyer(provider),
-		provider:      provider,
 		ioStreams:     ioStreams,
+		factory:       factory,
 		destroyRunner: runDestroy,
 	}
 	c := &cobra.Command{
@@ -63,9 +63,9 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 }
 
 // NewCommand returns a cobra command.
-func NewCommand(ctx context.Context, provider provider.Provider,
+func NewCommand(ctx context.Context, factory util.Factory,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, ioStreams).Command
+	return NewRunner(ctx, factory, ioStreams).Command
 }
 
 // Runner contains the run function that contains the cli functionality for the
@@ -74,9 +74,8 @@ type Runner struct {
 	ctx        context.Context
 	Command    *cobra.Command
 	PreProcess func(info inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error)
-	Destroyer  *apply.Destroyer
-	provider   provider.Provider
 	ioStreams  genericclioptions.IOStreams
+	factory    util.Factory
 
 	output                string
 	inventoryPolicyString string
@@ -116,7 +115,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	_, inv, err := live.Load(r.factory, args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -145,15 +144,23 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	err := r.Destroyer.Initialize()
+	poller, err := status.NewStatusPoller(r.factory)
 	if err != nil {
 		return err
 	}
-	option := &apply.DestroyerOption{
+	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+	if err != nil {
+		return err
+	}
+	destroyer, err := apply.NewDestroyer(r.factory, invClient, poller)
+	if err != nil {
+		return err
+	}
+	options := apply.DestroyerOptions{
 		InventoryPolicy: r.inventoryPolicy,
 		DryRunStrategy:  dryRunStrategy,
 	}
-	ch := r.Destroyer.Run(inv, option)
+	ch := destroyer.Run(inv, options)
 
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.

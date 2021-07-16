@@ -20,12 +20,12 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/provider"
 )
 
 // MigrateRunner encapsulates fields for the kpt migrate command.
@@ -33,27 +33,30 @@ type MigrateRunner struct {
 	ctx       context.Context
 	Command   *cobra.Command
 	ioStreams genericclioptions.IOStreams
+	factory   util.Factory
 
-	dir        string
-	dryRun     bool
-	name       string
-	force      bool
-	cmProvider provider.Provider
-	rgProvider provider.Provider
-	cmLoader   manifestreader.ManifestLoader
+	dir             string
+	dryRun          bool
+	name            string
+	force           bool
+	rgInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
+	cmInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
+	cmLoader        manifestreader.ManifestLoader
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
-func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *MigrateRunner {
+func NewRunner(ctx context.Context, factory util.Factory, cmLoader manifestreader.ManifestLoader,
+	ioStreams genericclioptions.IOStreams) *MigrateRunner {
+
 	r := &MigrateRunner{
-		ctx:        ctx,
-		ioStreams:  ioStreams,
-		dryRun:     false,
-		cmProvider: cmProvider,
-		rgProvider: rgProvider,
-		cmLoader:   cmLoader,
-		dir:        "",
+		ctx:             ctx,
+		factory:         factory,
+		ioStreams:       ioStreams,
+		dryRun:          false,
+		cmLoader:        cmLoader,
+		rgInvClientFunc: rgInvClient,
+		cmInvClientFunc: cmInvClient,
+		dir:             "",
 	}
 	cmd := &cobra.Command{
 		Use:     "migrate [DIR | -]",
@@ -84,9 +87,9 @@ func NewRunner(ctx context.Context, cmProvider provider.Provider, rgProvider pro
 }
 
 // NewCommand returns the cobra command for the migrate command.
-func NewCommand(ctx context.Context, cmProvider provider.Provider, rgProvider provider.Provider,
-	cmLoader manifestreader.ManifestLoader, ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, cmProvider, rgProvider, cmLoader, ioStreams).Command
+func NewCommand(ctx context.Context, f util.Factory, cmLoader manifestreader.ManifestLoader,
+	ioStreams genericclioptions.IOStreams) *cobra.Command {
+	return NewRunner(ctx, f, cmLoader, ioStreams).Command
 }
 
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
@@ -116,6 +119,18 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 			return fmt.Errorf("no arguments means stdin has data; missing bytes on stdin")
 		}
 	}
+
+	// Create the inventory clients for reading inventories based on RG and
+	// ConfigMap.
+	rgInvClient, err := mr.rgInvClientFunc(mr.factory)
+	if err != nil {
+		return err
+	}
+	cmInvClient, err := mr.cmInvClientFunc(mr.factory)
+	if err != nil {
+		return err
+	}
+
 	// Apply the ResourceGroup CRD to the cluster, ignoring if it already exists.
 	if err := mr.applyCRD(); err != nil {
 		return err
@@ -137,17 +152,17 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	if err := mr.updateKptfile(mr.ctx, args, cmInventoryID); err != nil {
 		return err
 	}
-	cmObjs, err := mr.retrieveInvObjs(cmInvObj)
+	cmObjs, err := mr.retrieveInvObjs(cmInvClient, cmInvObj)
 	if err != nil {
 		return err
 	}
 	if len(cmObjs) > 0 {
 		// Migrate the ConfigMap inventory objects to a ResourceGroup custom resource.
-		if err = mr.migrateObjs(cmObjs, bytes.NewReader(stdinBytes), args); err != nil {
+		if err = mr.migrateObjs(rgInvClient, cmObjs, bytes.NewReader(stdinBytes), args); err != nil {
 			return err
 		}
 		// Delete the old ConfigMap inventory object.
-		if err = mr.deleteConfigMapInv(cmInvObj); err != nil {
+		if err = mr.deleteConfigMapInv(cmInvClient, cmInvObj); err != nil {
 			return err
 		}
 	}
@@ -165,7 +180,7 @@ func (mr *MigrateRunner) applyCRD() error {
 		return nil
 	}
 	// Install the ResourceGroup CRD to the cluster.
-	err := live.InstallResourceGroupCRD(mr.cmProvider.Factory())
+	err := live.InstallResourceGroupCRD(mr.factory)
 	if err == nil {
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 	} else {
@@ -184,7 +199,7 @@ func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevI
 		}
 		err = (&cmdliveinit.ConfigureInventoryInfo{
 			Pkg:         p,
-			Factory:     mr.rgProvider.Factory(),
+			Factory:     mr.factory,
 			Quiet:       true,
 			InventoryID: prevID,
 			Force:       mr.force,
@@ -230,12 +245,9 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 // retrieveInvObjs returns the object references from the passed
 // inventory object by querying the inventory object in the cluster,
 // or an error if one occurred.
-func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
+func (mr *MigrateRunner) retrieveInvObjs(cmInvClient inventory.InventoryClient,
+	invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve ConfigMap inventory objs...")
-	cmInvClient, err := mr.cmProvider.InventoryClient()
-	if err != nil {
-		return nil, err
-	}
 	cmObjs, err := cmInvClient.GetClusterObjs(invObj)
 	if err != nil {
 		return nil, err
@@ -247,7 +259,8 @@ func (mr *MigrateRunner) retrieveInvObjs(invObj inventory.InventoryInfo) ([]obje
 // migrateObjs stores the passed objects in the ResourceGroup inventory
 // object and applies the inventory object to the cluster. Returns
 // an error if one occurred.
-func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
+func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
+	cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
 	if err := validateParams(reader, args); err != nil {
 		return err
 	}
@@ -261,7 +274,7 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		return nil
 	}
 
-	_, inv, err := live.Load(mr.rgProvider.Factory(), args[0], reader)
+	_, inv, err := live.Load(mr.factory, args[0], reader)
 	if err != nil {
 		return err
 	}
@@ -271,10 +284,6 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 		return err
 	}
 
-	rgInvClient, err := mr.rgProvider.InventoryClient()
-	if err != nil {
-		return err
-	}
 	_, err = rgInvClient.Merge(invInfo, cmObjs)
 	if err != nil {
 		return err
@@ -285,16 +294,13 @@ func (mr *MigrateRunner) migrateObjs(cmObjs []object.ObjMetadata, reader io.Read
 
 // deleteConfigMapInv removes the passed inventory object from the
 // cluster. Returns an error if one occurred.
-func (mr *MigrateRunner) deleteConfigMapInv(invObj inventory.InventoryInfo) error {
+func (mr *MigrateRunner) deleteConfigMapInv(cmInvClient inventory.InventoryClient,
+	invObj inventory.InventoryInfo) error {
 	fmt.Fprint(mr.ioStreams.Out, "  deleting old ConfigMap inventory object...")
-	cmInvClient, err := mr.cmProvider.InventoryClient()
-	if err != nil {
-		return err
-	}
 	if mr.dryRun {
 		cmInvClient.SetDryRunStrategy(common.DryRunClient)
 	}
-	if err = cmInvClient.DeleteInventoryObj(invObj); err != nil {
+	if err := cmInvClient.DeleteInventoryObj(invObj); err != nil {
 		return err
 	}
 	fmt.Fprint(mr.ioStreams.Out, "success\n")
@@ -352,4 +358,12 @@ func validateParams(reader io.Reader, args []string) error {
 		return fmt.Errorf("expected one directory argument allowed; got (%s)", args)
 	}
 	return nil
+}
+
+func rgInvClient(factory util.Factory) (inventory.InventoryClient, error) {
+	return inventory.NewInventoryClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+}
+
+func cmInvClient(factory util.Factory) (inventory.InventoryClient, error) {
+	return inventory.NewInventoryClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap)
 }
