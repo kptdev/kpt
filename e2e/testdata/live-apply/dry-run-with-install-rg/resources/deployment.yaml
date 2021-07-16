@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx-deployment
+spec:
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx-deployment
+  template:
+    metadata:
+      labels:
+        app: nginx-deployment
+        pdb: mypdb
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.10
+        ports:
+        - containerPort: 80
+          protocol: TCP
