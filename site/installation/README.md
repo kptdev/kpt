@@ -70,7 +70,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.1 version
+$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.2 version
 ```
 
 ### `kpt-gcloud`
@@ -78,7 +78,7 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.1 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.1 version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.2 version
 ```
 
 ## Source
