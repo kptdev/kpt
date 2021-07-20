@@ -1,5 +1,3 @@
-<asciinema-player src="/static/casts/quickstart.cast" cols="160" rows="32" speed="2"></asciinema-player>
-
 <h2 id="overview"><span class="material-icons-outlined">download</span> Install</h2>
 
 Get started by [installing](/installation/) kpt.
