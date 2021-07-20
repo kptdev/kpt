@@ -1,0 +1,3 @@
+# kustomization.yaml contents
+resources:
+- resources.yaml

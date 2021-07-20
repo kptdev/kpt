@@ -27,6 +27,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	// constants related to kustomize
+	kustomizationKind     = "Kustomization"
+	kustomizationApiGroup = "kustomize.config.k8s.io"
+	kustomizationFile     = "kustomization.yaml"
+)
+
 func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
 	if err := kf.Pipeline.validate(pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
@@ -169,7 +176,22 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	return nodes[0], nil
 }
 
+func AreKRM(nodes []*yaml.RNode) error {
+	for i := range nodes {
+		if err := IsKRM(nodes[i]); err != nil {
+			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
+			return fmt.Errorf("%s: %s", path, err.Error())
+		}
+	}
+	return nil
+}
+
 func IsKRM(n *yaml.RNode) error {
+	if isKustomization(n) {
+		// exclude kustomization files from KRM check
+		// https://github.com/GoogleContainerTools/kpt/issues/2388
+		return nil
+	}
 	meta, err := n.GetMeta()
 	if err != nil {
 		return fmt.Errorf("resource must have `apiVersion`, `kind`, and `name`")
@@ -186,14 +208,32 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
-func AreKRM(nodes []*yaml.RNode) error {
-	for i := range nodes {
-		if err := IsKRM(nodes[i]); err != nil {
-			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
-			return fmt.Errorf("%s: %s", path, err.Error())
+// isKustomization determines if given YAML is a kustomization file
+// or a kustomization resource.
+func isKustomization(n *yaml.RNode) bool {
+	resourcePath, _, err := kioutil.GetFileAnnotations(n)
+	if err == nil {
+		// perform the check only if we are able to reliably
+		// read the file path of the resource
+		resourceFile := filepath.Base(resourcePath)
+		if resourceFile == kustomizationFile {
+			return true
 		}
 	}
-	return nil
+	meta, err := n.GetMeta()
+	if err != nil {
+		return false
+	}
+
+	if strings.HasPrefix(meta.APIVersion, kustomizationApiGroup) {
+		return true
+	}
+
+	if meta.APIVersion == "" && meta.Kind == kustomizationKind {
+		return true
+	}
+
+	return false
 }
 
 // ValidateError is the error returned when validation fails.
