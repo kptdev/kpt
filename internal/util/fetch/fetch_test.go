@@ -571,7 +571,7 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "no such file or directory")
+	assert.Contains(t, err.Error(), "does not exist in")
 	assert.Contains(t, err.Error(), g.RepoDirectory)
 	assert.Contains(t, err.Error(), dir)
 }

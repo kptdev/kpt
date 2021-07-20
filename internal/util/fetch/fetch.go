@@ -17,7 +17,6 @@ package fetch
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path"
@@ -109,9 +108,6 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 	sourcePath := filepath.Join(r.Dir, r.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
 	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
-		if _, isPathError := err.(*fs.PathError); isPathError {
-			return errors.E(op, "Missing path at package", errors.Repo(r.RepoRef()), err)
-		}
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
@@ -203,9 +199,14 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
 	}
 
+	// Verify that the requested path exists in the repo.
+	pkgPath := filepath.Join(dir, repoSpec.Path)
+	if _, err = os.Stat(pkgPath); os.IsNotExist(err) {
+		return errors.E(op, errors.Internal, err, fmt.Errorf("path %q does not exist in repo %q", repoSpec.Path, repoSpec.OrgRepo))
+	}
+
 	// Verify that if a Kptfile exists in the package, it contains the correct
 	// version of the Kptfile.
-	pkgPath := filepath.Join(dir, repoSpec.Path)
 	_, err = pkg.ReadKptfile(pkgPath)
 	if err != nil {
 		// A Kptfile isn't required, so it is fine if there is no Kptfile.
