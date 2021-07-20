@@ -97,6 +97,32 @@ func TestPathManifestReader_Read(t *testing.T) {
 				},
 			},
 		},
+		"Function config resources which are marked as not being local config remains": {
+			manifests: map[string]string{
+				"Kptfile":           kptFileWithPipeline,
+				"deployment-a.yaml": deploymentA,
+				"cm.yaml":           notLocalConfig,
+			},
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "test-namespace",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "test-namespace",
+				},
+			},
+		},
 		"CR and CRD in the same set is ok": {
 			manifests: map[string]string{
 				"crd.yaml": crd,
@@ -126,6 +152,23 @@ func TestPathManifestReader_Read(t *testing.T) {
 			},
 			namespace:      "test-namespace",
 			expectedErrMsg: "unknown resource types: Custom.custom.io",
+		},
+		"local-config is filtered out": {
+			manifests: map[string]string{
+				"deployment-a.yaml": deploymentA,
+				"lc.yaml":           localConfig,
+			},
+			namespace: "test-namespace",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "test-namespace",
+				},
+			},
 		},
 	}
 
@@ -168,7 +211,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			readObjMetas := object.UnstructuredsToObjMetas(readObjs)
+			readObjMetas := object.UnstructuredsToObjMetasOrDie(readObjs)
 
 			sort.Slice(readObjMetas, func(i, j int) bool {
 				return readObjMetas[i].String() < readObjMetas[j].String()

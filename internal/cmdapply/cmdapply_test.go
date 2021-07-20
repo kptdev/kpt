@@ -20,9 +20,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -35,7 +34,7 @@ func TestCmd(t *testing.T) {
 	testCases := map[string]struct {
 		args              []string
 		namespace         string
-		inventory         *kptfilev1alpha2.Inventory
+		inventory         *kptfilev1.Inventory
 		applyCallbackFunc func(*testing.T, *Runner, inventory.InventoryInfo)
 		expectedErrorMsg  string
 	}{
@@ -64,7 +63,7 @@ func TestCmd(t *testing.T) {
 				"--inventory-policy", "adopt",
 				"--output", "events",
 			},
-			inventory: &kptfilev1alpha2.Inventory{
+			inventory: &kptfilev1.Inventory{
 				Namespace:   "my-ns",
 				Name:        "my-name",
 				InventoryID: "my-inv-id",
@@ -78,7 +77,7 @@ func TestCmd(t *testing.T) {
 		},
 		"install-resource-group flag defaults to true": {
 			args: []string{},
-			inventory: &kptfilev1alpha2.Inventory{
+			inventory: &kptfilev1.Inventory{
 				Namespace:   "my-ns",
 				Name:        "my-name",
 				InventoryID: "my-inv-id",
@@ -92,7 +91,7 @@ func TestCmd(t *testing.T) {
 			args: []string{
 				"--dry-run",
 			},
-			inventory: &kptfilev1alpha2.Inventory{
+			inventory: &kptfilev1.Inventory{
 				Namespace:   "my-ns",
 				Name:        "my-name",
 				InventoryID: "my-inv-id",
@@ -109,7 +108,7 @@ func TestCmd(t *testing.T) {
 				"--dry-run",
 				"--install-resource-group",
 			},
-			inventory: &kptfilev1alpha2.Inventory{
+			inventory: &kptfilev1.Inventory{
 				Namespace:   "my-ns",
 				Name:        "my-name",
 				InventoryID: "my-inv-id",
@@ -137,9 +136,7 @@ func TestCmd(t *testing.T) {
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
-			rgProvider := live.NewResourceGroupProvider(tf)
-
-			runner := NewRunner(fake.CtxWithDefaultPrinter(), rgProvider, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
 			runner.applyRunner = func(_ *Runner, inv inventory.InventoryInfo,
 				_ []*unstructured.Unstructured, _ common.DryRunStrategy) error {

@@ -18,13 +18,13 @@ pipeline:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: wordpress
   validators:
@@ -49,13 +49,13 @@ The `mysql` subpackage declares only a mutator function:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         tier: mysql
 ```
@@ -66,11 +66,11 @@ Now, let's render the package hierarchy:
 $ kpt fn render wordpress
 Package "wordpress/mysql":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 
 Package "wordpress":
 
-[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-labels:v0.1"
 [PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 3 function(s) in 2 package(s).
@@ -110,6 +110,13 @@ The end result is that:
 If any of the functions in the pipeline fails for whatever reason, then the
 entire pipeline is aborted and the local filesystem is left intact.
 
+## Specifying `image`
+
+The `image` field specifies the container image for the function. You can specify
+an image from any container registry. If the registry is omitted, the default
+container registry for functions catalog (`gcr.io/kpt-fn`) is prepended automatically.
+For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-labels:v0.1`.
+
 ## Specifying `functionConfig`
 
 In [Chapter 2], we saw this conceptual representation of a function invocation:
@@ -130,13 +137,13 @@ For example:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: set-labels:v0.1
       configPath: labels.yaml
 ```
 
@@ -160,13 +167,13 @@ The following is equivalent to what we showed before:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: set-labels:v0.1
       configMap:
         tier: mysql
 ```

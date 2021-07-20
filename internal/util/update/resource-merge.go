@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -280,7 +280,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	return dirs, files, nil
 }
 
-var krmFilesGlob = append([]string{kptfilev1alpha2.KptFileName}, kio.DefaultMatch...)
+var krmFilesGlob = append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...)
 
 // isKrmFile checks if the file pointed to by the path is a yaml file (including
 // the Kptfile).

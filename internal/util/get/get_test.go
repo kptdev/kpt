@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -54,7 +54,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo: "foo",
 		},
 		Destination: w.WorkspaceDirectory,
@@ -79,7 +79,7 @@ func TestCommand_Run(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{Git: &kptfilev1alpha2.Git{
+	err := Command{Git: &kptfilev1.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
@@ -93,7 +93,7 @@ func TestCommand_Run(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -101,26 +101,26 @@ func TestCommand_Run(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -140,7 +140,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Git: &kptfilev1alpha2.Git{
+	err := Command{Git: &kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
@@ -152,7 +152,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -160,26 +160,26 @@ func TestCommand_Run_subdir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
 			Type: "git",
-			Git: &kptfilev1alpha2.GitLock{
+			Git: &kptfilev1.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "refs/heads/master",
 				Repo:      g.RepoDirectory,
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
+		Upstream: &kptfilev1.Upstream{
 			Type: "git",
-			Git: &kptfilev1alpha2.Git{
+			Git: &kptfilev1.Git{
 				Directory: subdir,
 				Ref:       "refs/heads/master",
 				Repo:      g.RepoDirectory,
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -198,7 +198,7 @@ func TestCommand_Run_destination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -213,7 +213,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -221,26 +221,26 @@ func TestCommand_Run_destination(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit,
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -262,7 +262,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: subdir,
@@ -277,7 +277,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
 	assert.NoError(t, err)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -285,26 +285,26 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Commit:    commit,
 				Directory: subdir,
 				Ref:       "master",
 				Repo:      g.RepoDirectory,
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: subdir,
 				Ref:       "master",
 				Repo:      g.RepoDirectory,
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -342,7 +342,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/heads/exp",
 			Directory: "/",
@@ -355,7 +355,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -363,26 +363,26 @@ func TestCommand_Run_branch(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
 				Commit:    commit,
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/heads/exp",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -425,7 +425,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/tags/v2",
 			Directory: "/",
@@ -438,7 +438,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), absPath, true)
 
 	// verify the KptFile contains the expected values
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -446,26 +446,26 @@ func TestCommand_Run_tag(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
 				Commit:    commit,
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "refs/tags/v2",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -566,7 +566,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 			absPath := filepath.Join(w.WorkspaceDirectory, repos[testutil.Upstream].RepoName)
 			err = Command{
-				Git: &kptfilev1alpha2.Git{
+				Git: &kptfilev1.Git{
 					Repo:      repos[testutil.Upstream].RepoDirectory,
 					Ref:       ref,
 					Directory: tc.directory,
@@ -595,7 +595,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -610,7 +610,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -618,26 +618,26 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 
@@ -649,7 +649,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -663,7 +663,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// verify files are unchanged
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), absPath, true)
-	g.AssertKptfile(t, absPath, kptfilev1alpha2.KptFile{
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -671,26 +671,26 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 				Commit:    commit, // verify the commit matches the repo
 			},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Directory: "/",
 				Repo:      g.RepoDirectory,
 				Ref:       "master",
 			},
-			UpdateStrategy: kptfilev1alpha2.ResourceMerge,
+			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
 	})
 }
@@ -706,7 +706,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "more", "dirs", g.RepoName)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -726,7 +726,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      "foo",
 			Directory: "/",
 			Ref:       "refs/heads/master",
@@ -750,7 +750,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/heads/foo",
@@ -776,7 +776,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/tags/foo",
@@ -798,7 +798,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 	testCases := map[string]struct {
 		directory      string
 		ref            string
-		updateStrategy kptfilev1alpha2.UpdateStrategyType
+		updateStrategy kptfilev1.UpdateStrategyType
 		reposContent   map[string][]testutil.Content
 		expectedResult *pkgbuilder.RootPkg
 		expectedErrMsg string
@@ -898,7 +898,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 		"basic package with explicit update strategy": {
 			directory:      "/",
 			ref:            "master",
-			updateStrategy: kptfilev1alpha2.FastForward,
+			updateStrategy: kptfilev1.FastForward,
 			reposContent: map[string][]testutil.Content{
 				testutil.Upstream: {
 					{
@@ -1295,7 +1295,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
 
 			err = Command{
-				Git: &kptfilev1alpha2.Git{
+				Git: &kptfilev1.Git{
 					Repo:      upstreamRepo.RepoDirectory,
 					Directory: tc.directory,
 					Ref:       tc.ref,
@@ -1319,9 +1319,10 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			// Format the Kptfiles so we can diff the output without
 			// formatting issues.
 			rw := &kio.LocalPackageReadWriter{
-				NoDeleteFiles:  true,
-				PackagePath:    w.FullPackagePath(),
-				MatchFilesGlob: []string{kptfilev1alpha2.KptFileName},
+				NoDeleteFiles:     true,
+				PackagePath:       w.FullPackagePath(),
+				MatchFilesGlob:    []string{kptfilev1.KptFileName},
+				PreserveSeqIndent: true,
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},
@@ -1364,7 +1365,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 
 	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
 	err := Command{
-		Git: &kptfilev1alpha2.Git{
+		Git: &kptfilev1.Git{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: "/",
 			Ref:       "master",

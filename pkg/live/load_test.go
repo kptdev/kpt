@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -184,7 +184,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetas(objs)
+			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})
@@ -342,7 +342,7 @@ func TestLoad_StdIn(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetas(objs)
+			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})

@@ -42,6 +42,11 @@ DIR:
   If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
   in the output of the command. By default it is disabled.
 
+--output, o:
+  If specified, the output resources are written to stdout in provided format.
+  Allowed values:
+  1. stdout(default): output resources are wrapped in ResourceList and written to stdout.
+  2. unwrap: output resources are written to stdout, in multi-object yaml format.
 ```
 
 <!--mdtogo-->

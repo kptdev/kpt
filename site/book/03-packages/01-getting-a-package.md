@@ -4,11 +4,11 @@ committing them to a Git repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit
-SHA. In this case, we are specifying tag `v0.3`.
+SHA. In this case, we are specifying tag `v0.7`.
 
 ?> Refer to the [get command reference][get-doc] for usage.
 
@@ -17,7 +17,7 @@ look at the content of the `Kptfile` on your local filesystem:
 
 ```yaml
 # wordpress/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: wordpress
@@ -26,24 +26,26 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: v0.3
+    ref: v0.7
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.3
-    commit: e0e0b3642969c2d14fe1d38d9698a73f18aa848f
+    ref: package-examples/wordpress/v0.7
+    commit: cbd342d350b88677e522bf0d9faa0675edb8bbc1
 info:
   emails:
     - kpt-team@google.com
-  description: This is an example wordpress package with mysql subpackage
+  description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: wordpress
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -63,13 +65,17 @@ Now, let's look at the `Kptfile` for the `mysql` subpackage:
 
 ```yaml
 # wordpress/mysql/Kptfile
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mysql
+info:
+  emails:
+    - kpt-team@google.com
+  description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-label:v0.1
+    - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         tier: mysql
 ```
@@ -95,7 +101,7 @@ For example, the following fetches the packages to a directory named
 `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.3 mywordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a

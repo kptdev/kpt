@@ -15,18 +15,23 @@
 package cmdupdate_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdupdate"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -94,7 +99,7 @@ func TestCmd_execute(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	if !g.AssertKptfile(t, dest, kptfilev1alpha2.KptFile{
+	if !g.AssertKptfile(t, dest, kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -102,21 +107,21 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind},
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		Upstream: &kptfilev1alpha2.Upstream{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.Git{
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
 			},
-			UpdateStrategy: kptfilev1alpha2.FastForward,
+			UpdateStrategy: kptfilev1.FastForward,
 		},
-		UpstreamLock: &kptfilev1alpha2.UpstreamLock{
-			Type: kptfilev1alpha2.GitOrigin,
-			Git: &kptfilev1alpha2.GitLock{
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "master",
 				Directory: "/",
@@ -199,7 +204,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err := r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 
 	// verify an error is thrown if multiple paths are specified
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -209,7 +214,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.EqualError(t, err, "accepts at most 1 arg(s), received 2")
 	assert.Equal(t, "", r.Update.Ref)
-	assert.Equal(t, kptfilev1alpha2.UpdateStrategyType(""), r.Update.Strategy)
+	assert.Equal(t, kptfilev1.UpdateStrategyType(""), r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -218,7 +223,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
-	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -226,7 +231,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1alpha2.ForceDeleteReplace, r.Update.Strategy)
+	assert.Equal(t, kptfilev1.ForceDeleteReplace, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -234,7 +239,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, kptfilev1alpha2.ResourceMerge, r.Update.Strategy)
+	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 	assert.Equal(t, "", r.Update.Ref)
 }
 
@@ -329,4 +334,364 @@ func TestCmd_path(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCmd_output(t *testing.T) {
+	testCases := map[string]struct {
+		reposChanges   map[string][]testutil.Content
+		updatedLocal   testutil.Content
+		expectedLocal  *pkgbuilder.RootPkg
+		expectedOutput string
+	}{
+		"basic package": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource),
+					},
+				},
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource),
+			expectedOutput: `
+Package "{{ .PKG_NAME }}":
+Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
+
+Updated 1 package(s).
+`,
+		},
+		"nested packages": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "fast-forward").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "fast-forward").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "fast-forward").
+								WithUpstreamLockRef("foo", "/", "master", 1),
+						).
+						WithResource(pkgbuilder.ConfigMapResource),
+				),
+			expectedOutput: `
+Package "{{ .PKG_NAME }}":
+Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
+Updating package "subpkg" with strategy "fast-forward".
+
+Package "{{ .PKG_NAME }}/subpkg":
+Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
+<git_output>
+Updating package "subpkg" with strategy "fast-forward".
+
+Updated 2 package(s).
+`,
+		},
+		"subpackage deleted from upstream": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg1").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.DeploymentResource),
+								pkgbuilder.NewSubPkg("subpkg2").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "master", "resource-merge").
+											WithUpstreamLockRef("foo", "/", "master", 0),
+									).
+									WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+					},
+
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource).
+							WithResource(pkgbuilder.ConfigMapResource),
+					},
+				},
+			},
+			updatedLocal: testutil.Content{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithKptfile(
+						pkgbuilder.NewKptfile().
+							WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+							WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+					).
+					WithResource(pkgbuilder.DeploymentResource).
+					WithSubPackages(
+						pkgbuilder.NewSubPkg("subpkg1").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+						pkgbuilder.NewSubPkg("subpkg2").
+							WithKptfile(
+								pkgbuilder.NewKptfile().
+									WithUpstreamRef("foo", "/", "master", "resource-merge").
+									WithUpstreamLockRef("foo", "/", "master", 0),
+							).
+							WithResource(pkgbuilder.DeploymentResource),
+					),
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg1").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "master", "resource-merge").
+								WithUpstreamLockRef("foo", "/", "master", 1),
+						).
+						WithResource(pkgbuilder.ConfigMapResource).
+						WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
+				),
+			expectedOutput: `
+Package "{{ .PKG_NAME }}":
+Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
+Deleting package "subpkg2" from local since it is removed in upstream.
+Package "subpkg1" deleted from upstream, but keeping local since it has changes.
+
+Package "{{ .PKG_NAME }}/subpkg1":
+Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
+<git_output>
+Updating package "subpkg1" with strategy "resource-merge".
+
+Updated 2 package(s).
+`,
+		},
+		"Adding package in upstream": {
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.SecretResource).
+							WithSubPackages(
+								pkgbuilder.NewSubPkg("subpkg").
+									WithKptfile(
+										pkgbuilder.NewKptfile().
+											WithUpstreamRef("foo", "/", "v1", "force-delete-replace"),
+									),
+							),
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile().
+							WithResource(pkgbuilder.DeploymentResource),
+						Branch: "master",
+						Tag:    "v1",
+					},
+				},
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 1),
+				).
+				WithResource(pkgbuilder.SecretResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/", "v1", "force-delete-replace").
+								WithUpstreamLockRef("foo", "/", "v1", 0),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+			expectedOutput: `
+Package "{{ .PKG_NAME }}":
+Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
+<git_output>
+Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
+Adding package "subpkg" from upstream.
+
+Package "{{ .PKG_NAME }}/subpkg":
+Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@v1
+<git_output>
+Updating package "subpkg" with strategy "force-delete-replace".
+
+Updated 2 package(s).
+`,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			g := &testutil.TestSetupManager{
+				T:            t,
+				ReposChanges: tc.reposChanges,
+			}
+			defer g.Clean()
+			if tc.updatedLocal.Pkg != nil {
+				g.LocalChanges = []testutil.Content{
+					tc.updatedLocal,
+				}
+			}
+			if !g.Init() {
+				return
+			}
+
+			clean := testutil.Chdir(t, g.LocalWorkspace.FullPackagePath())
+			defer clean()
+
+			var outBuf bytes.Buffer
+			var errBuf bytes.Buffer
+
+			ctx := fake.CtxWithPrinter(&outBuf, &errBuf)
+			r := cmdupdate.NewRunner(ctx, "kpt")
+			r.Command.SetArgs([]string{})
+			err := r.Command.Execute()
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			assert.Empty(t, outBuf.String())
+
+			tmpl := template.Must(template.New("test").Parse(tc.expectedOutput))
+			var expected bytes.Buffer
+			err = tmpl.Execute(&expected, map[string]interface{}{
+				"PKG_PATH": g.LocalWorkspace.FullPackagePath(),
+				"PKG_NAME": g.LocalWorkspace.PackageDir,
+				"REPOS":    g.Repos,
+			})
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			actual := scrubGitOutput(errBuf.String())
+
+			assert.Equal(t, strings.TrimSpace(expected.String()), strings.TrimSpace(actual))
+
+			expectedPath := tc.expectedLocal.ExpandPkgWithName(t, g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
+			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
+		})
+	}
+}
+
+const (
+	gitOutputPattern = `From \/.*(\r\n|\r|\n)( * .*(\r\n|\r|\n))+`
+)
+
+func scrubGitOutput(output string) string {
+	re := regexp.MustCompile(gitOutputPattern)
+	return re.ReplaceAllString(output, "<git_output>\n")
 }

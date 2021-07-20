@@ -19,7 +19,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1alpha2"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -32,7 +32,7 @@ func SaveResults(resultsDir string, fnResults *fnresult.ResultList) (string, err
 	out := &bytes.Buffer{}
 
 	// use kyaml encoder to ensure consistent indentation
-	e := yaml.NewEncoder(out)
+	e := yaml.NewEncoderWithOptions(out, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	err := e.Encode(fnResults)
 	if err != nil {
 		return "", err

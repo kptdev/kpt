@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -53,7 +53,7 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 		}
 
 		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfilev1alpha2.KptFileName))
+			_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
 			if err != nil && !os.IsNotExist(err) {
 				return c(path, info, err)
 			}
@@ -98,7 +98,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
 		}
 
-		if path == filepath.Join(src, kptfilev1alpha2.KptFileName) && !copyRootKptfile {
+		if path == filepath.Join(src, kptfilev1.KptFileName) && !copyRootKptfile {
 			return nil
 		}
 
@@ -191,7 +191,7 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 			return nil
 		}
 
-		if p == filepath.Join(path, kptfilev1alpha2.KptFileName) && !removeRootKptfile {
+		if p == filepath.Join(path, kptfilev1.KptFileName) && !removeRootKptfile {
 			return nil
 		}
 
@@ -239,9 +239,14 @@ func RootPkgFirstSorter(paths []string) func(i, j int) bool {
 		if jPath == "." {
 			return false
 		}
-		iSegmentCount := len(strings.Split(iPath, "/"))
-		jSegmentCount := len(strings.Split(jPath, "/"))
-		return iSegmentCount < jSegmentCount
+		// First sort based on the number of segments.
+		iSegmentCount := len(filepath.SplitList(iPath))
+		jSegmentCount := len(filepath.SplitList(jPath))
+		if jSegmentCount != iSegmentCount {
+			return iSegmentCount < jSegmentCount
+		}
+		// If two paths are at the same depth, just sort lexicographically.
+		return iPath < jPath
 	}
 }
 
@@ -279,8 +284,9 @@ func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPat
 // FormatPackage formats resources and meta-resources in the package and all its subpackages
 func FormatPackage(pkgPath string) {
 	inout := &kio.LocalPackageReadWriter{
-		PackagePath:    pkgPath,
-		MatchFilesGlob: append(kio.DefaultMatch, kptfilev1alpha2.KptFileName),
+		PackagePath:       pkgPath,
+		MatchFilesGlob:    append(kio.DefaultMatch, kptfilev1.KptFileName),
+		PreserveSeqIndent: true,
 	}
 	f := &filters.FormatFilter{
 		UseSchema: true,

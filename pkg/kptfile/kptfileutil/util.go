@@ -27,35 +27,23 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
-func WriteFile(dir string, k *kptfilev1alpha2.KptFile) error {
+func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	const op errors.Op = "kptfileutil.WriteFile"
-	b, err := yaml.Marshal(k)
+	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Join(dir, kptfilev1alpha2.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 
-	// convert to rNode and back to string to make indentation consistent
-	// with rest of the yaml serialization to avoid unwanted diffs
-	rNode, err := yaml.Parse(string(b))
-	if err != nil {
-		return errors.E(op, errors.YAML, types.UniquePath(dir), err)
-	}
-
-	kptFileStr, err := rNode.String()
-	if err != nil {
-		return errors.E(op, errors.YAML, types.UniquePath(dir), err)
-	}
-
 	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1alpha2.KptFileName), []byte(kptFileStr), 0600)
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
@@ -66,7 +54,7 @@ func WriteFile(dir string, k *kptfilev1alpha2.KptFile) error {
 // is valid; otherwiste, false and the reason the inventory is not valid
 // is returned. A valid inventory must have a non-empty namespace, name,
 // and id.
-func ValidateInventory(inv *kptfilev1alpha2.Inventory) (bool, error) {
+func ValidateInventory(inv *kptfilev1.Inventory) (bool, error) {
 	const op errors.Op = "kptfileutil.ValidateInventory"
 	if inv == nil {
 		return false, errors.E(op, errors.MissingParam,
@@ -88,7 +76,7 @@ func ValidateInventory(inv *kptfilev1alpha2.Inventory) (bool, error) {
 	return true, nil
 }
 
-func Equal(kf1, kf2 *kptfilev1alpha2.KptFile) (bool, error) {
+func Equal(kf1, kf2 *kptfilev1.KptFile) (bool, error) {
 	const op errors.Op = "kptfileutil.Equal"
 	kf1Bytes, err := yaml.Marshal(kf1)
 	if err != nil {
@@ -104,12 +92,12 @@ func Equal(kf1, kf2 *kptfilev1alpha2.KptFile) (bool, error) {
 }
 
 // DefaultKptfile returns a new minimal Kptfile.
-func DefaultKptfile(name string) *kptfilev1alpha2.KptFile {
-	return &kptfilev1alpha2.KptFile{
+func DefaultKptfile(name string) *kptfilev1.KptFile {
+	return &kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1alpha2.TypeMeta.APIVersion,
-				Kind:       kptfilev1alpha2.TypeMeta.Kind,
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind,
 			},
 			ObjectMeta: yaml.ObjectMeta{
 				NameMeta: yaml.NameMeta{
@@ -132,7 +120,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
-		localKf = &kptfilev1alpha2.KptFile{}
+		localKf = &kptfilev1.KptFile{}
 	}
 
 	updatedKf, err := pkg.ReadKptfile(updatedPath)
@@ -140,10 +128,10 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(updatedPath), err)
 		}
-		updatedKf = &kptfilev1alpha2.KptFile{}
+		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	err = merge(localKf, updatedKf, &kptfilev1alpha2.KptFile{})
+	err = merge(localKf, updatedKf, &kptfilev1.KptFile{})
 	if err != nil {
 		return err
 	}
@@ -171,7 +159,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
-		localKf = &kptfilev1alpha2.KptFile{}
+		localKf = &kptfilev1.KptFile{}
 	}
 
 	updatedKf, err := pkg.ReadKptfile(updatedPath)
@@ -179,7 +167,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
-		updatedKf = &kptfilev1alpha2.KptFile{}
+		updatedKf = &kptfilev1.KptFile{}
 	}
 
 	originKf, err := pkg.ReadKptfile(originPath)
@@ -187,7 +175,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
-		originKf = &kptfilev1alpha2.KptFile{}
+		originKf = &kptfilev1.KptFile{}
 	}
 
 	err = merge(localKf, updatedKf, originKf)
@@ -219,9 +207,9 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = &kptfilev1alpha2.UpstreamLock{
-		Type: kptfilev1alpha2.GitOrigin,
-		Git: &kptfilev1alpha2.GitLock{
+	kpgfile.UpstreamLock = &kptfilev1.UpstreamLock{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.GitLock{
 			Repo:      spec.OrgRepo,
 			Directory: spec.Path,
 			Ref:       spec.Ref,
@@ -235,7 +223,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	return nil
 }
 
-func merge(localKf, updatedKf, originalKf *kptfilev1alpha2.KptFile) error {
+func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	localBytes, err := yaml.Marshal(localKf)
 	if err != nil {
 		return err
@@ -256,7 +244,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1alpha2.KptFile) error {
 		return err
 	}
 
-	var mergedKf kptfilev1alpha2.KptFile
+	var mergedKf kptfilev1.KptFile
 	err = yaml.Unmarshal([]byte(mergedBytes), &mergedKf)
 	if err != nil {
 		return err
@@ -273,7 +261,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1alpha2.KptFile) error {
 	return nil
 }
 
-func updateUpstreamAndUpstreamLock(localKf, updatedKf *kptfilev1alpha2.KptFile) {
+func updateUpstreamAndUpstreamLock(localKf, updatedKf *kptfilev1.KptFile) {
 	if updatedKf.Upstream != nil {
 		localKf.Upstream = updatedKf.Upstream
 	}

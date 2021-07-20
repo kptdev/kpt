@@ -150,19 +150,11 @@ runtime.
 
 ### Steps
 
-1. Use the pkg CLI to create an executable from your function's distributable
-   file. For a `my_fn` function built using the typescript SDK, this is
-   `dist/my_fn_run.js`.
-
-   ```shell
-   $ npx pkg dist/my_func_run.js
-   ```
-
 1. Pass the path to the appropriate executable for your OS when running kpt
    using the exec runtime.
 
    ```shell
-   $ kpt fn eval DIR --exec-path ./my_func_run-macos
+   $ kpt fn eval DIR --exec "node dist/my_func_run.js"
    ```
 
 ## Build and push container images

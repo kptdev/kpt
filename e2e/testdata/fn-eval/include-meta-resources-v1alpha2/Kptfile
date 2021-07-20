@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+      configPath: labelconfig.yaml

@@ -265,7 +265,7 @@ func InstallResourceGroupCRD(factory cmdutil.Factory) error {
 		}
 		// Create the task to apply the ResourceGroup CRD.
 		applyRGTask := NewApplyCRDTask(factory, crd)
-		objs := object.UnstructuredsToObjMetas([]*unstructured.Unstructured{crd})
+		objs := object.UnstructuredsToObjMetasOrDie([]*unstructured.Unstructured{crd})
 		// Create the tasks to apply the ResourceGroup CRD.
 		tasks := []taskrunner.Task{
 			applyRGTask,

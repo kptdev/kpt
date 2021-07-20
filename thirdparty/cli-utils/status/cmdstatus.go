@@ -10,9 +10,11 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
+	statusprinters "github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -20,13 +22,13 @@ import (
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	"sigs.k8s.io/cli-utils/pkg/provider"
-	"sigs.k8s.io/cli-utils/pkg/util/factory"
+	kstatus "sigs.k8s.io/cli-utils/pkg/kstatus/status"
+	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 const (
@@ -40,13 +42,12 @@ var (
 	PollUntilOptions = []string{Known, Current, Deleted, Forever}
 )
 
-func NewRunner(ctx context.Context, provider provider.Provider,
-	ioStreams genericclioptions.IOStreams) *Runner {
+func NewRunner(ctx context.Context, factory util.Factory) *Runner {
 	r := &Runner{
 		ctx:               ctx,
-		provider:          provider,
 		pollerFactoryFunc: pollerFactoryFunc,
-		ioStreams:         ioStreams,
+		invClientFunc:     invClient,
+		factory:           factory,
 	}
 	c := &cobra.Command{
 		Use:     "status [PKG_PATH | -]",
@@ -67,18 +68,17 @@ func NewRunner(ctx context.Context, provider provider.Provider,
 	return r
 }
 
-func NewCommand(ctx context.Context, provider provider.Provider,
-	ioStreams genericclioptions.IOStreams) *cobra.Command {
-	return NewRunner(ctx, provider, ioStreams).Command
+func NewCommand(ctx context.Context, factory util.Factory) *cobra.Command {
+	return NewRunner(ctx, factory).Command
 }
 
 // Runner captures the parameters for the command and contains
 // the run function.
 type Runner struct {
-	ctx       context.Context
-	Command   *cobra.Command
-	ioStreams genericclioptions.IOStreams
-	provider  provider.Provider
+	ctx           context.Context
+	Command       *cobra.Command
+	factory       util.Factory
+	invClientFunc func(util.Factory) (inventory.InventoryClient, error)
 
 	period    time.Duration
 	pollUntil string
@@ -93,6 +93,10 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 		return fmt.Errorf("pollUntil must be one of %s",
 			strings.JoinStringsWithQuotes(PollUntilOptions))
 	}
+
+	if found := printers.ValidatePrinterType(r.output); !found {
+		return fmt.Errorf("unknown output type %q", r.output)
+	}
 	return nil
 }
 
@@ -100,6 +104,7 @@ func (r *Runner) preRunE(*cobra.Command, []string) error {
 // poller to compute status for each of the resources. One of the printer
 // implementations takes care of printing the output.
 func (r *Runner) runE(c *cobra.Command, args []string) error {
+	pr := printer.FromContextOrDie(r.ctx)
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
@@ -114,7 +119,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, inv, err := live.Load(r.provider.Factory(), args[0], c.InOrStdin())
+	_, inv, err := live.Load(r.factory, args[0], c.InOrStdin())
 	if err != nil {
 		return err
 	}
@@ -124,7 +129,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
-	invClient, err := r.provider.InventoryClient()
+	invClient, err := r.invClientFunc(r.factory)
 	if err != nil {
 		return err
 	}
@@ -138,18 +143,21 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// Exit here if the inventory is empty.
 	if len(identifiers) == 0 {
-		_, _ = fmt.Fprint(r.ioStreams.Out, "no resources found in the inventory\n")
+		pr.Printf("no resources found in the inventory\n")
 		return nil
 	}
 
-	statusPoller, err := r.pollerFactoryFunc(r.provider.Factory())
+	statusPoller, err := r.pollerFactoryFunc(r.factory)
 	if err != nil {
 		return err
 	}
 
 	// Fetch a printer implementation based on the desired output format as
 	// specified in the output flag.
-	printer, err := printers.CreatePrinter(r.output, r.ioStreams)
+	printer, err := statusprinters.CreatePrinter(r.output, genericclioptions.IOStreams{
+		Out:    pr.OutStream(),
+		ErrOut: pr.ErrStream(),
+	})
 	if err != nil {
 		return errors.WrapPrefix(err, "error creating printer", 1)
 	}
@@ -172,9 +180,9 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	case Known:
 		cancelFunc = allKnownNotifierFunc(cancel)
 	case Current:
-		cancelFunc = desiredStatusNotifierFunc(cancel, status.CurrentStatus)
+		cancelFunc = desiredStatusNotifierFunc(cancel, kstatus.CurrentStatus)
 	case Deleted:
-		cancelFunc = desiredStatusNotifierFunc(cancel, status.NotFoundStatus)
+		cancelFunc = desiredStatusNotifierFunc(cancel, kstatus.NotFoundStatus)
 	case Forever:
 		cancelFunc = func(*collector.ResourceStatusCollector, event.Event) {}
 	default:
@@ -186,15 +194,14 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		UseCache:     true,
 	})
 
-	printer.Print(eventChannel, identifiers, cancelFunc)
-	return nil
+	return printer.Print(eventChannel, identifiers, cancelFunc)
 }
 
 // desiredStatusNotifierFunc returns an Observer function for the
 // ResourceStatusCollector that will cancel the context (using the cancelFunc)
 // when all resources have reached the desired status.
 func desiredStatusNotifierFunc(cancelFunc context.CancelFunc,
-	desired status.Status) collector.ObserverFunc {
+	desired kstatus.Status) collector.ObserverFunc {
 	return func(rsc *collector.ResourceStatusCollector, _ event.Event) {
 		var rss []*event.ResourceStatus
 		for _, rs := range rsc.ResourceStatuses {
@@ -213,7 +220,7 @@ func desiredStatusNotifierFunc(cancelFunc context.CancelFunc,
 func allKnownNotifierFunc(cancelFunc context.CancelFunc) collector.ObserverFunc {
 	return func(rsc *collector.ResourceStatusCollector, _ event.Event) {
 		for _, rs := range rsc.ResourceStatuses {
-			if rs.Status == status.UnknownStatus {
+			if rs.Status == kstatus.UnknownStatus {
 				return
 			}
 		}
@@ -222,5 +229,9 @@ func allKnownNotifierFunc(cancelFunc context.CancelFunc) collector.ObserverFunc 
 }
 
 func pollerFactoryFunc(f util.Factory) (poller.Poller, error) {
-	return factory.NewStatusPoller(f)
+	return status.NewStatusPoller(f)
+}
+
+func invClient(f util.Factory) (inventory.InventoryClient, error) {
+	return inventory.NewInventoryClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 }

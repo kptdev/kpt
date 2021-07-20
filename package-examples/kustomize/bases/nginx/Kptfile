@@ -1,0 +1,21 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: nginx
+upstream:
+  type: git
+  git:
+    repo: https://github.com/GoogleContainerTools/kpt
+    directory: package-examples/nginx
+    ref: v0.2
+  updateStrategy: resource-merge
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/GoogleContainerTools/kpt
+    directory: package-examples/nginx
+    ref: package-examples/nginx/v0.2
+    commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
+pipeline:
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1

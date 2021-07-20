@@ -33,7 +33,7 @@ type AddMergeComment struct{}
 // Process invokes AddMergeComment kyaml filter on the resources in input packages paths
 func Process(paths ...string) error {
 	for _, path := range paths {
-		inout := &kio.LocalPackageReadWriter{PackagePath: path}
+		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true}
 		amc := &AddMergeComment{}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},

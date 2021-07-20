@@ -24,10 +24,10 @@ GOBIN := $(shell go env GOPATH)/bin
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
+all: generate license fix vet fmt lint test build buildall tidy
+
 build:
 	go build -o $(GOBIN)/kpt -v .
-
-all: license fix vet fmt lint test build buildall tidy
 
 buildall:
 	GOOS=windows go build -o /dev/null
@@ -58,13 +58,13 @@ license:
 	GOBIN=$(GOBIN) scripts/update-license.sh
 
 lint:
-	(which golangci-lint || go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
+	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
 	$(GOBIN)/golangci-lint run ./...
 
 # TODO: enable this as part of `all` target when it works for go-errors
 # https://github.com/google/go-licenses/issues/15
 license-check:
-	(which go-licensesscs || go get https://github.com/google/go-licenses)
+	(which go-licensesscs || go install https://github.com/google/go-licenses)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
@@ -96,6 +96,10 @@ lintdocs:
 site-generate:
 	go run ./scripts/generate_site_sidebar > site/sidebar.md
 	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
+
+site-map:
+	make site-run-server
+	./scripts/generate-sitemap.sh
 
 site-run-server:
 	make site-generate

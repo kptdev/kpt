@@ -135,9 +135,15 @@ func (r *Runner) runFnEval() error {
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
 	pkgPath := filepath.Join(tmpDir, r.pkgName)
 
+	if r.testCase.Config.Debug {
+		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, pkgPath)
+	}
+	if !r.testCase.Config.Debug {
+		// if debug is true, keep the test directory around for debugging
+		defer os.RemoveAll(tmpDir)
+	}
 	var resultsDir, destDir string
 
 	if r.IsFnResultExpected() {
@@ -193,7 +199,7 @@ func (r *Runner) runFnEval() error {
 			if r.testCase.Config.EvalConfig.Image != "" {
 				kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
 			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
-				kptArgs = append(kptArgs, "--exec-path", string(r.testCase.Config.EvalConfig.execUniquePath))
+				kptArgs = append(kptArgs, "--exec", string(r.testCase.Config.EvalConfig.execUniquePath))
 			}
 			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))

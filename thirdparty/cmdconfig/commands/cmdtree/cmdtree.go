@@ -9,7 +9,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -50,7 +50,11 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		args = append(args, root)
 	}
 	root = filepath.Clean(args[0])
-	input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
+	input = kio.LocalPackageReader{
+		PackagePath:       args[0],
+		MatchFilesGlob:    r.getMatchFilesGlob(),
+		PreserveSeqIndent: true,
+	}
 	fltrs := []kio.Filter{&filters.IsLocalConfig{
 		IncludeLocalConfig: true,
 	}}
@@ -66,5 +70,5 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 }
 
 func (r *TreeRunner) getMatchFilesGlob() []string {
-	return append([]string{kptfilev1alpha2.KptFileName}, kio.DefaultMatch...)
+	return append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...)
 }

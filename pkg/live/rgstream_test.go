@@ -137,7 +137,7 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			readObjMetas := object.UnstructuredsToObjMetas(readObjs)
+			readObjMetas := object.UnstructuredsToObjMetasOrDie(readObjs)
 
 			sort.Slice(readObjMetas, func(i, j int) bool {
 				return readObjMetas[i].String() < readObjMetas[j].String()
@@ -176,7 +176,7 @@ metadata:
 		},
 		"Kptfile with wrong kind is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: foo
 metadata:
   name: test1
@@ -196,7 +196,7 @@ spec:
 		},
 		"Wrong fields (foo/bar) in kptfile is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 foo: bar
 `,
@@ -204,7 +204,7 @@ foo: bar
 		},
 		"Kptfile with deployment/replicas fields is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test-deployment
@@ -215,7 +215,7 @@ spec:
 		},
 		"Wrong fields (foo/bar) in kptfile inventory is invalid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1
@@ -232,14 +232,14 @@ inventory:
 		},
 		"Kptfile with only GVK is valid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 `,
 			expected: true,
 		},
 		"Kptfile missing optional inventory is still valid": {
 			kptfile: `
-apiVersion: kpt.dev/v1alpha2
+apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: test1

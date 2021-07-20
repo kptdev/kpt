@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/table"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
-	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
 
 var (

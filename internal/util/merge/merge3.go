@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	kptfilev1alpha2 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1alpha2"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -68,7 +68,8 @@ func (m Merge3) Merge() error {
 		MatchFilesGlob:     m.MatchFilesGlob,
 		SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceDest},
 		IncludeSubpackages: m.IncludeSubPackages,
-		PackageFileName:    kptfilev1alpha2.KptFileName,
+		PackageFileName:    kptfilev1.KptFileName,
+		PreserveSeqIndent:  true,
 	}
 	inputs = append(inputs, dest)
 
@@ -79,7 +80,8 @@ func (m Merge3) Merge() error {
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceOriginal},
 			IncludeSubpackages: m.IncludeSubPackages,
-			PackageFileName:    kptfilev1alpha2.KptFileName,
+			PackageFileName:    kptfilev1.KptFileName,
+			PreserveSeqIndent:  true,
 		},
 		Exclusions: relPaths,
 	})
@@ -91,13 +93,18 @@ func (m Merge3) Merge() error {
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceUpdated},
 			IncludeSubpackages: m.IncludeSubPackages,
-			PackageFileName:    kptfilev1alpha2.KptFileName,
+			PackageFileName:    kptfilev1.KptFileName,
+			PreserveSeqIndent:  true,
 		},
 		Exclusions: relPaths,
 	})
 
 	rmMatcher := ResourceMergeMatcher{MergeOnPath: m.MergeOnPath}
-	kyamlMerge := filters.Merge3{Matcher: &rmMatcher}
+	resourceHandler := resourceHandler{}
+	kyamlMerge := filters.Merge3{
+		Matcher: &rmMatcher,
+		Handler: &resourceHandler,
+	}
 
 	return kio.Pipeline{
 		Inputs:  inputs,
@@ -108,7 +115,7 @@ func (m Merge3) Merge() error {
 
 func (m Merge3) findExclusions() ([]string, error) {
 	var relPaths []string
-	paths, err := pathutil.DirsWithFile(m.DestPath, kptfilev1alpha2.KptFileName, true)
+	paths, err := pathutil.DirsWithFile(m.DestPath, kptfilev1.KptFileName, true)
 	if err != nil {
 		return relPaths, err
 	}
@@ -267,4 +274,80 @@ func metadataComment(node *yaml.RNode) string {
 		return ""
 	}
 	return mf.Key.YNode().LineComment
+}
+
+// resourceHandler is an implementation of the ResourceHandler interface from
+// kyaml. It is used to decide how a resource should be handled during the
+// 3-way merge. This differs from the default implementation in that if a
+// resource is deleted from upstream, it will only be deleted from local if
+// there is no diff between origin and local.
+type resourceHandler struct {
+	keptResources []*yaml.RNode
+}
+
+func (r *resourceHandler) Handle(origin, upstream, local *yaml.RNode) (filters.ResourceMergeStrategy, error) {
+	var strategy filters.ResourceMergeStrategy
+	switch {
+	// Keep the resource if added locally.
+	case origin == nil && upstream == nil && local != nil:
+		strategy = filters.KeepDest
+	// Add the resource if added in upstream.
+	case origin == nil && upstream != nil && local == nil:
+		strategy = filters.KeepUpdated
+	// Do not re-add the resource if deleted from both upstream and local
+	case upstream == nil && local == nil:
+		strategy = filters.Skip
+	// If deleted from upstream, only delete if local fork does not have changes.
+	case origin != nil && upstream == nil:
+		equal, err := r.equals(origin, local)
+		if err != nil {
+			return strategy, err
+		}
+		if equal {
+			strategy = filters.Skip
+		} else {
+			r.keptResources = append(r.keptResources, local)
+			strategy = filters.KeepDest
+		}
+	// Do not re-add if deleted from local.
+	case origin != nil && local == nil:
+		strategy = filters.Skip
+	default:
+		strategy = filters.Merge
+	}
+	return strategy, nil
+}
+
+func (*resourceHandler) equals(r1, r2 *yaml.RNode) (bool, error) {
+	// We need to create new copies of the resources since we need to
+	// mutate them before comparing them.
+	r1Clone, err := yaml.Parse(r1.MustString())
+	if err != nil {
+		return false, err
+	}
+	r2Clone, err := yaml.Parse(r2.MustString())
+	if err != nil {
+		return false, err
+	}
+
+	// The resources include annotations with information used during the merge
+	// process. We need to remove those before comparing the resources.
+	if err := stripKyamlAnnos(r1Clone); err != nil {
+		return false, err
+	}
+	if err := stripKyamlAnnos(r2Clone); err != nil {
+		return false, err
+	}
+
+	return r1Clone.MustString() == r2Clone.MustString(), nil
+}
+
+func stripKyamlAnnos(n *yaml.RNode) error {
+	for _, a := range []string{mergeSourceAnnotation, kioutil.PathAnnotation, kioutil.IndexAnnotation} {
+		err := n.PipeE(yaml.ClearAnnotation(a))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -181,7 +181,7 @@ var InitExamples = `
   # initialize a package in the current directory.
   $ kpt live init
 
-  # initialize a package with a specific name for the group of resources.
+  # initialize a package with explicit namespace for the ResourceGroup.
   $ kpt live init --namespace=test my-dir
 `
 

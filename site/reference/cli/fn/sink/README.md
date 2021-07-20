@@ -26,11 +26,10 @@ to [Chaining functions].
 <!--mdtogo:Long-->
 
 ```
-kpt fn sink [DIR] [flags]
+kpt fn sink DIR [flags]
 
 DIR:
-  Path to a local directory to write resources to. Defaults to the current
-  working directory. Directory must exist.
+  Path to a local directory to write resources to. The directory must not already exist.
 ```
 
 <!--mdtogo-->
@@ -43,8 +42,8 @@ DIR:
 # read resources from DIR directory, execute my-fn on them and write the
 # output to DIR directory.
 $ kpt fn source DIR |
-  kpt fn eval - --image gcr.io/example.com/my-fn - |
-  kpt fn sink DIR
+  kpt fn eval - --image gcr.io/example.com/my-fn |
+  kpt fn sink NEW_DIR
 ```
 
 <!--mdtogo-->
