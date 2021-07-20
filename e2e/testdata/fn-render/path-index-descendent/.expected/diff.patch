@@ -1,6 +1,6 @@
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
-index 0000000..fa83ef1
+index 0000000..6d9fb79
 --- /dev/null
 +++ b/db/deployment_httpbin.yaml
 @@ -0,0 +1,13 @@
@@ -13,7 +13,7 @@ index 0000000..fa83ef1
 +  template:
 +    spec:
 +      containers:
-+        - name: httpbin
-+          image: kennethreitz/httpbin
-+          ports:
-+            - containerPort: 9876
++      - name: httpbin
++        image: kennethreitz/httpbin
++        ports:
++        - containerPort: 9876

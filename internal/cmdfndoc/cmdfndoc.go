@@ -23,6 +23,7 @@ import (
 	"os/exec"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 	}
 	r.Command = c
-	c.Flags().StringVar(&r.Image, "image", "", "kpt function image name")
+	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -60,6 +61,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
+	r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",

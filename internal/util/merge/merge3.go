@@ -69,6 +69,7 @@ func (m Merge3) Merge() error {
 		SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceDest},
 		IncludeSubpackages: m.IncludeSubPackages,
 		PackageFileName:    kptfilev1.KptFileName,
+		PreserveSeqIndent:  true,
 	}
 	inputs = append(inputs, dest)
 
@@ -80,6 +81,7 @@ func (m Merge3) Merge() error {
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceOriginal},
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
+			PreserveSeqIndent:  true,
 		},
 		Exclusions: relPaths,
 	})
@@ -92,6 +94,7 @@ func (m Merge3) Merge() error {
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceUpdated},
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
+			PreserveSeqIndent:  true,
 		},
 		Exclusions: relPaths,
 	})

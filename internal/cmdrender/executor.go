@@ -31,7 +31,6 @@ import (
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -82,15 +81,9 @@ func (e *Executor) Execute(ctx context.Context) error {
 		return err
 	}
 
-	// format resources before writing
-	_, err = filters.FormatFilter{UseSchema: true}.Filter(hctx.root.resources)
-	if err != nil {
-		return err
-	}
-
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place
-		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath)}
+		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath), PreserveSeqIndent: true}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
 			return fmt.Errorf("failed to save resources: %w", err)
@@ -494,6 +487,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	var runners []kio.Filter
 	for i := range fns {
 		fn := fns[i]
+		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
 		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return nil, err

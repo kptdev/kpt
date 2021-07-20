@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -92,9 +91,7 @@ func TestCmd(t *testing.T) {
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
-			rgProvider := live.NewResourceGroupProvider(tf)
-
-			runner := NewRunner(fake.CtxWithDefaultPrinter(), rgProvider, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
 			runner.destroyRunner = func(_ *Runner, inv inventory.InventoryInfo, _ common.DryRunStrategy) error {
 				tc.destroyCallbackFunc(t, inv)

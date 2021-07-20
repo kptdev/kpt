@@ -8,6 +8,12 @@ hierarchy:
 $ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
 ```
 
+Alternatively, for convenience, you can use the short-hand form of the above command:
+
+```shell
+$ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
+```
+
 ?> Refer to the [eval command reference][eval-doc] for usage.
 
 This changes the resources in the `wordpress` package and the `mysql`
@@ -62,7 +68,7 @@ EOF
 ```
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 --fn-config /tmp/fn-config.yaml
+$ kpt fn eval wordpress -i set-namespace:v0.1 --fn-config /tmp/fn-config.yaml
 ```
 
 ### CLI arguments
@@ -73,7 +79,7 @@ the key/value pairs as command line arguments. The following is equivalent to
 what we showed previously:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress
+$ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
 ```
 
 Note that the arguments must come after the separator `--`.
@@ -102,7 +108,7 @@ using the `--network` flag.
 For example, `kubeval` function can download a JSON schema file:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/kubeval:v0.1 --network -- schema_location="https://kubernetesjsonschema.dev"
+$ kpt fn eval wordpress -i kubeval:v0.1 --network -- schema_location="https://kubernetesjsonschema.dev"
 ```
 
 ### Mounting Directories
@@ -114,7 +120,7 @@ specified on the [Docker Volumes] page.
 For example, `kubeval` function can consume a JSON schema file:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
+$ kpt fn eval -i kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
 Note that the `--as-current-user` flag may be required to run the function as
@@ -144,7 +150,7 @@ For instance, the following will set the labels on all resources in the
 `wordpress` package, including the `Kptfile`:
 
 ```shell
-$ kpt fn eval wordpress --image gcr.io/kpt-fn/set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
+$ kpt fn eval wordpress -i set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe

@@ -110,6 +110,13 @@ The end result is that:
 If any of the functions in the pipeline fails for whatever reason, then the
 entire pipeline is aborted and the local filesystem is left intact.
 
+## Specifying `image`
+
+The `image` field specifies the container image for the function. You can specify
+an image from any container registry. If the registry is omitted, the default
+container registry for functions catalog (`gcr.io/kpt-fn`) is prepended automatically.
+For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-labels:v0.1`.
+
 ## Specifying `functionConfig`
 
 In [Chapter 2], we saw this conceptual representation of a function invocation:
@@ -136,7 +143,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: set-labels:v0.1
       configPath: labels.yaml
 ```
 
@@ -166,7 +173,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: set-labels:v0.1
       configMap:
         tier: mysql
 ```

@@ -10,16 +10,21 @@ using containerized functions.
 var DocShort = `Display the documentation for a function`
 var DocLong = `
 ` + "`" + `kpt fn doc` + "`" + ` invokes the function container with ` + "`" + `--help` + "`" + ` flag.
+If the function supports ` + "`" + `--help` + "`" + `, it will print the documentation to STDOUT.
+Otherwise, it will exit with non-zero exit code and print the error message to STDERR.
 
   kpt fn doc --image=IMAGE
 
---image is a required flag. If the function supports --help, it will print the
-documentation to STDOUT. Otherwise, it will exit with non-zero exit code and
-print the error message to STDERR.
+Flags:
+
+  --image, i: (required flag)
+    Container image of the function e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
+    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
 `
 var DocExamples = `
-  # diplay the documentation for image gcr.io/kpt-fn/set-namespace:v0.1.1
-  $ kpt fn doc --image gcr.io/kpt-fn/set-namespace:v0.1.1
+  # display the documentation for image set-namespace:v0.1.1
+  kpt fn doc -i set-namespace:v0.1.1
 `
 
 var EvalShort = `Execute function on resources`
@@ -71,7 +76,9 @@ Flags:
   
   --image, i:
     Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
-    ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec` + "`" + ` flag with this flag.
+    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
+    ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec-path` + "`" + ` flag with this flag.
   
   --image-pull-policy:
     If the image should be pulled before rendering the package(s). It can be set
@@ -83,7 +90,7 @@ Flags:
     the local cache.
     If using never, kpt will only use images from the local cache.
   
-  --include-meta-resources:
+  --include-meta-resources, m:
     If enabled, meta resources (i.e. ` + "`" + `Kptfile` + "`" + ` and ` + "`" + `functionConfig` + "`" + `) are included
     in the input to the function. By default it is disabled.
   

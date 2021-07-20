@@ -1,5 +1,5 @@
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index 173c2e1..1fecfa4 100644
+index 173c2e1..11cfcb0 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
 @@ -18,8 +18,10 @@ metadata:
@@ -8,10 +8,10 @@ index 173c2e1..1fecfa4 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
-+    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    foo: bar
++    abc: def
  spec:
    selector:
      app: wordpress
@@ -21,10 +21,10 @@ index 173c2e1..1fecfa4 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
-+    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    foo: bar
++    abc: def
  spec:
    resources:
      requests:
@@ -34,10 +34,10 @@ index 173c2e1..1fecfa4 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
-+    foo: bar
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    foo: bar
++    abc: def
  spec:
    selector:
      matchLabels:
@@ -46,13 +46,13 @@ index 173c2e1..1fecfa4 100644
          app: wordpress
          tier: mysql
 +      annotations:
-+        abc: def
 +        foo: bar
++        abc: def
      spec:
        containers:
          - name: mysql
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index f7bdc2a..3cbda32 100644
+index f7bdc2a..f555993 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
 @@ -16,8 +16,9 @@ metadata:
@@ -61,9 +61,9 @@ index f7bdc2a..3cbda32 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    abc: def
  spec:
    type: LoadBalancer
    selector:
@@ -73,9 +73,9 @@ index f7bdc2a..3cbda32 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    abc: def
  spec:
    resources:
      requests:
@@ -85,9 +85,9 @@ index f7bdc2a..3cbda32 100644
    annotations:
 -    projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
 -    teamname: 'YOURTEAM' # kpt-set: ${teamname}
-+    abc: def
 +    projectId: PROJECT_ID # kpt-set: ${gcloud.core.project}
 +    teamname: YOURTEAM # kpt-set: ${teamname}
++    abc: def
  spec:
    selector:
      matchLabels:

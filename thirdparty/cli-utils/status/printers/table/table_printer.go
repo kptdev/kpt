@@ -6,11 +6,11 @@ package table
 import (
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/table"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
 
 const (
@@ -35,7 +35,7 @@ func NewTablePrinter(ioStreams genericclioptions.IOStreams) *tablePrinter {
 // until the channel is closed .
 //nolint:interfacer
 func (t *tablePrinter) Print(ch <-chan event.Event, identifiers []object.ObjMetadata,
-	cancelFunc collector.ObserverFunc) {
+	cancelFunc collector.ObserverFunc) error {
 	coll := collector.NewResourceStatusCollector(identifiers)
 	stop := make(chan struct{})
 
@@ -51,6 +51,10 @@ func (t *tablePrinter) Print(ch <-chan event.Event, identifiers []object.ObjMeta
 	// Block until all the collector has shut down. This means the
 	// eventChannel has been closed and all events have been processed.
 	<-done
+	var err error
+	if o := coll.LatestObservation(); o.Error != nil {
+		err = o.Error
+	}
 
 	// Close the stop channel to notify the print goroutine that it should
 	// shut down.
@@ -60,6 +64,7 @@ func (t *tablePrinter) Print(ch <-chan event.Event, identifiers []object.ObjMeta
 	// the printer has updated the UI with the latest state and
 	// exited from the goroutine.
 	<-printCompleted
+	return err
 }
 
 var columns = []table.ColumnDefinition{

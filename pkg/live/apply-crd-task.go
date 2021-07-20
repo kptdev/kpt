@@ -41,7 +41,7 @@ func (a *ApplyCRDTask) Action() event.ResourceAction {
 }
 
 func (a *ApplyCRDTask) Identifiers() []object.ObjMetadata {
-	return object.UnstructuredsToObjMetas([]*unstructured.Unstructured{a.crd})
+	return object.UnstructuredsToObjMetasOrDie([]*unstructured.Unstructured{a.crd})
 }
 
 // NewApplyCRDTask returns a pointer to an ApplyCRDTask struct,

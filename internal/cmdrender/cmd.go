@@ -25,7 +25,6 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +38,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		Example: docs.RenderExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
-		PostRun: r.postRun,
 	}
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
@@ -116,12 +114,4 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	}
 
 	return cmdutil.WriteFnOutput(r.dest, outContent.String(), false, printer.FromContextOrDie(r.ctx).OutStream())
-}
-
-func (r *Runner) postRun(_ *cobra.Command, _ []string) {
-	if r.dest != "" {
-		// do not format/modify resources in package if output should be written to other dest
-		return
-	}
-	pkgutil.FormatPackage(r.pkgPath)
 }

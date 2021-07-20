@@ -76,7 +76,9 @@ fn-args:
 
 --image, i:
   Container image of the function to execute e.g. `gcr.io/kpt-fn/set-namespace:v0.1`.
-  `eval` executes only one function, so do not use `--exec` flag with this flag.
+  For convenience, if full image path is not specified, `gcr.io/kpt-fn/` is added as default prefix.
+  e.g. instead of passing `gcr.io/kpt-fn/set-namespace:v0.1` you can pass `set-namespace:v0.1`.
+  `eval` executes only one function, so do not use `--exec-path` flag with this flag.
 
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
@@ -88,7 +90,7 @@ fn-args:
   the local cache.
   If using never, kpt will only use images from the local cache.
 
---include-meta-resources:
+--include-meta-resources, m:
   If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
   in the input to the function. By default it is disabled.
 

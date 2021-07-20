@@ -17,7 +17,6 @@ package commands
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdexport"
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrender"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -51,7 +50,6 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 		cmdfndoc.NewCommand(ctx, name),
 		cmdsource.NewCommand(ctx, name),
 		cmdsink.NewCommand(ctx, name),
-		cmdexport.ExportCommand(),
 	)
 	return functions
 }

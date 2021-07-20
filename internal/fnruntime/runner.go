@@ -108,7 +108,6 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
-
 	if !fr.disableCLIOutput {
 		pr.Printf("[RUNNING] %q\n", fr.name)
 	}

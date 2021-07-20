@@ -1,14 +1,14 @@
 diff --git a/db/resources.yaml b/db/resources.yaml
-index ac1fd96..2fa6e44 100644
+index ac1fd96..0c25e84 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -15,5 +15,15 @@ apiVersion: apps/v1
  kind: StatefulSet
  metadata:
    name: db
-+  namespace: staging
 +  labels:
 +    tier: db
++  namespace: staging
  spec:
    replicas: 3
 +  selector:

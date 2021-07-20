@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app-with-db
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configPath: db/labelconfig.yaml
