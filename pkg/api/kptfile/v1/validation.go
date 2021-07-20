@@ -30,7 +30,7 @@ import (
 const (
 	// constants related to kustomize
 	kustomizationKind     = "Kustomization"
-	kustomizationApiGroup = "kustomize.config.k8s.io"
+	kustomizationAPIGroup = "kustomize.config.k8s.io"
 	kustomizationFile     = "kustomization.yaml"
 )
 
@@ -225,7 +225,7 @@ func isKustomization(n *yaml.RNode) bool {
 		return false
 	}
 
-	if strings.HasPrefix(meta.APIVersion, kustomizationApiGroup) {
+	if strings.HasPrefix(meta.APIVersion, kustomizationAPIGroup) {
 		return true
 	}
 
