@@ -5,4 +5,4 @@ metadata:
 inventory:
   namespace: dry-run-without-rg
   name: dry-run-without-rg
-  inventoryID: 5cf4af92d274655efb054c17f6cd83759c3d56f6-1626113873211986000
+  inventoryID: dry-run-without-rg

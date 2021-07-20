@@ -26,8 +26,7 @@ type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `yaml:"exitCode,omitempty"`
 
-	// StdErr is the expected standard error output and should be checked
-	// when a nonzero exit code is expected. Default: ""
+	// StdErr is the expected standard error output. Default: ""
 	StdErr string `yaml:"stdErr,omitempty"`
 
 	// StdOut is the expected standard output from running the command.

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment
-  namespace: dry-run-with-install-rg
+  namespace: install-rg-on-apply
   labels:
     app: nginx-deployment
 spec:
