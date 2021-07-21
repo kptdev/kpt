@@ -114,16 +114,18 @@ definitions:
   ObjectMeta:
     description: ObjectMeta contains metadata about a Resource
     properties:
-      Annotations:
+      annotations:
         additionalProperties:
           type: string
         description: Annotations is the metadata.annotations field of a Resource.
         type: object
-      Labels:
+        x-go-name: Annotations
+      labels:
         additionalProperties:
           type: string
         description: Labels is the metadata.labels field of a Resource
         type: object
+        x-go-name: Labels
       name:
         description: Name is the metadata.name field of a Resource
         type: string
@@ -192,16 +194,12 @@ definitions:
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
   ResourceMeta:
     properties:
-      Annotations:
+      annotations:
         additionalProperties:
           type: string
         description: Annotations is the metadata.annotations field of a Resource.
         type: object
-      Labels:
-        additionalProperties:
-          type: string
-        description: Labels is the metadata.labels field of a Resource
-        type: object
+        x-go-name: Annotations
       apiVersion:
         description: APIVersion is the apiVersion field of a Resource
         type: string
@@ -210,6 +208,12 @@ definitions:
         description: Kind is the kind field of a Resource
         type: string
         x-go-name: Kind
+      labels:
+        additionalProperties:
+          type: string
+        description: Labels is the metadata.labels field of a Resource
+        type: object
+        x-go-name: Labels
       name:
         description: Name is the metadata.name field of a Resource
         type: string
@@ -262,26 +266,22 @@ definitions:
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
   kptfile:
     properties:
-      Annotations:
-        additionalProperties:
-          type: string
-        description: Annotations is the metadata.annotations field of a Resource.
-        type: object
       Info:
         $ref: '#/definitions/PackageInfo'
       Inventory:
         $ref: '#/definitions/Inventory'
-      Labels:
-        additionalProperties:
-          type: string
-        description: Labels is the metadata.labels field of a Resource
-        type: object
       Pipeline:
         $ref: '#/definitions/Pipeline'
       Upstream:
         $ref: '#/definitions/Upstream'
       UpstreamLock:
         $ref: '#/definitions/UpstreamLock'
+      annotations:
+        additionalProperties:
+          type: string
+        description: Annotations is the metadata.annotations field of a Resource.
+        type: object
+        x-go-name: Annotations
       apiVersion:
         description: APIVersion is the apiVersion field of a Resource
         type: string
@@ -290,6 +290,12 @@ definitions:
         description: Kind is the kind field of a Resource
         type: string
         x-go-name: Kind
+      labels:
+        additionalProperties:
+          type: string
+        description: Labels is the metadata.labels field of a Resource
+        type: object
+        x-go-name: Labels
       name:
         description: Name is the metadata.name field of a Resource
         type: string

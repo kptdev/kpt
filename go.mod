@@ -3,10 +3,8 @@ module github.com/GoogleContainerTools/kpt
 go 1.16
 
 require (
-	github.com/Azure/go-autorest/autorest/adal v0.9.5 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
-	github.com/go-swagger/go-swagger v0.27.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
