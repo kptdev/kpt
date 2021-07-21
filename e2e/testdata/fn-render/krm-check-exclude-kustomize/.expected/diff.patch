@@ -1,8 +1,12 @@
 diff --git a/kustomization.yaml b/kustomization.yaml
-index 6a096af..c3ccc6d 100644
+index f91c46a..94769e0 100644
 --- a/kustomization.yaml
 +++ b/kustomization.yaml
-@@ -1,3 +1,6 @@
+@@ -11,7 +11,9 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
  # kustomization.yaml contents
  resources:
  - resources.yaml
