@@ -61,13 +61,15 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, err)
 	}
 
+	// Verify final destination does not yet exist.
 	if _, err := os.Stat(c.Destination); !goerrors.Is(err, os.ErrNotExist) {
 		return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
 	}
 
-	err := os.MkdirAll(c.Destination, 0700)
+	// Prepare temporary directory to fetch packages.
+	tempPath, err := os.MkdirTemp("", "")
 	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+		return errors.E(op, types.UniquePath(tempPath), err)
 	}
 
 	// normalize path to a filepath
@@ -84,18 +86,30 @@ func (c Command) Run(ctx context.Context) error {
 		UpdateStrategy: c.UpdateStrategy,
 	}
 
-	err = kptfileutil.WriteFile(c.Destination, kf)
+	err = kptfileutil.WriteFile(tempPath, kf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return errors.E(op, types.UniquePath(tempPath), err)
 	}
 
-	p, err := pkg.New(c.Destination)
+	p, err := pkg.New(tempPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return errors.E(op, types.UniquePath(tempPath), err)
 	}
+	p.DisplayPath = types.DisplayPath(filepath.Base(c.Destination))
 
 	if err = c.fetchPackages(ctx, p); err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return errors.E(op, types.UniquePath(tempPath), err)
+	}
+
+	// Move temporary directory into final destination.
+	err = os.MkdirAll(filepath.Dir(c.Destination), 0700)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+	}
+
+	err = os.Rename(tempPath, c.Destination)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
 	if err := addmergecomment.Process(c.Destination); err != nil {
