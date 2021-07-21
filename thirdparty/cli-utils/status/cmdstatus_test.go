@@ -15,12 +15,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	pollevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
@@ -250,8 +250,10 @@ deployment.apps/foo is InProgress: inProgress
 			defer revert()
 
 			var outBuf bytes.Buffer
-			provider := live.NewFakeResourceGroupProvider(tf, tc.inventory)
-			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), provider)
+			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), tf)
+			runner.invClientFunc = func(f cmdutil.Factory) (inventory.InventoryClient, error) {
+				return inventory.NewFakeInventoryClient(tc.inventory), nil
+			}
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}

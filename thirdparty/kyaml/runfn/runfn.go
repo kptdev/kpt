@@ -15,7 +15,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -129,16 +128,17 @@ func (r RunFns) getNodesAndFilters() (
 			return nil, nil, outputPkg, err
 		}
 		outputPkg = &kio.LocalPackageReadWriter{
-			PackagePath:    string(r.uniquePath),
-			MatchFilesGlob: matchFilesGlob,
-			FileSkipFunc:   functionConfigFilter,
+			PackagePath:       string(r.uniquePath),
+			MatchFilesGlob:    matchFilesGlob,
+			FileSkipFunc:      functionConfigFilter,
+			PreserveSeqIndent: true,
 		}
 	}
 
 	if r.Input == nil {
 		p.Inputs = []kio.Reader{outputPkg}
 	} else {
-		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input}}
+		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, PreserveSeqIndent: true}}
 	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err
@@ -188,10 +188,6 @@ func (r RunFns) runFunctions(
 			WrappingAPIVersion:    kio.ResourceListAPIVersion,
 		})
 	}
-
-	// add format filter at the end to consistently format output resources
-	fmtfltr := filters.FormatFilter{UseSchema: true}
-	fltrs = append(fltrs, fmtfltr)
 
 	var err error
 	pipeline := kio.Pipeline{

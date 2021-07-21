@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/list"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	"sigs.k8s.io/cli-utils/pkg/print/list"
 )
 
 func NewFormatter(ioStreams genericclioptions.IOStreams,

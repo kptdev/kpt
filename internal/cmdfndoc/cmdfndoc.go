@@ -23,8 +23,8 @@ import (
 	"os/exec"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )

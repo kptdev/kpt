@@ -50,7 +50,11 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		args = append(args, root)
 	}
 	root = filepath.Clean(args[0])
-	input = kio.LocalPackageReader{PackagePath: args[0], MatchFilesGlob: r.getMatchFilesGlob()}
+	input = kio.LocalPackageReader{
+		PackagePath:       args[0],
+		MatchFilesGlob:    r.getMatchFilesGlob(),
+		PreserveSeqIndent: true,
+	}
 	fltrs := []kio.Filter{&filters.IsLocalConfig{
 		IncludeLocalConfig: true,
 	}}

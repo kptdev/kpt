@@ -443,24 +443,24 @@ func TestGetResourceRefMetadata(t *testing.T) {
 message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 			expected: `message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 		},
 		"new format with namespace": {
@@ -468,26 +468,26 @@ file:
 message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
-    namespace: my-namespace
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
+  namespace: my-namespace
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 			expected: `message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
-    namespace: my-namespace
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
+  namespace: my-namespace
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 		},
 		"old format with name": {
@@ -495,25 +495,25 @@ file:
 message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: nginx-deployment
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 			expected: `message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 		},
 		"old format with namespace": {
@@ -521,27 +521,27 @@ file:
 message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: nginx-deployment
-      namespace: my-namespace
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: nginx-deployment
+    namespace: my-namespace
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 			expected: `message: selector is required
 severity: error
 resourceRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: nginx-deployment
-    namespace: my-namespace
+  apiVersion: apps/v1
+  kind: Deployment
+  name: nginx-deployment
+  namespace: my-namespace
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 		},
 		"no resourceRef": {
@@ -549,16 +549,16 @@ file:
 message: selector is required
 severity: error
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 			expected: `message: selector is required
 severity: error
 field:
-    path: selector
+  path: selector
 file:
-    path: resources.yaml
+  path: resources.yaml
 `,
 		},
 	}

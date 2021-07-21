@@ -155,7 +155,7 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	if err != nil {
 		return nil, fmt.Errorf("functionConfig must exist in the current package")
 	}
-	reader := kio.ByteReader{Reader: file}
+	reader := kio.ByteReader{Reader: file, PreserveSeqIndent: true}
 	nodes, err := reader.Read()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read functionConfig %q: %w", configPath, err)

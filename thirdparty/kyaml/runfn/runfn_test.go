@@ -372,7 +372,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		},
 	}
 
-	read, err := kio.LocalPackageReader{PackagePath: dir}.Read()
+	read, err := kio.LocalPackageReader{PackagePath: dir, PreserveSeqIndent: true}.Read()
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
