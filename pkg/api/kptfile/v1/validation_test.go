@@ -350,6 +350,15 @@ metadata:
 			true,
 		},
 		{
+			"resource in a kustomization file with .yml extn is a kustomization",
+			`
+metadata:
+  annotations:
+    config.kubernetes.io/path: kustomization.yml
+`,
+			true,
+		},
+		{
 			"resource in a kustomization file in a subdir is a kustomization",
 			`
 metadata:

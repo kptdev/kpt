@@ -22,6 +22,8 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"sigs.k8s.io/kustomize/api/konfig"
+	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -29,9 +31,7 @@ import (
 
 const (
 	// constants related to kustomize
-	kustomizationKind     = "Kustomization"
 	kustomizationAPIGroup = "kustomize.config.k8s.io"
-	kustomizationFile     = "kustomization.yaml"
 )
 
 func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
@@ -216,8 +216,11 @@ func isKustomization(n *yaml.RNode) bool {
 		// perform the check only if we are able to reliably
 		// read the file path of the resource
 		resourceFile := filepath.Base(resourcePath)
-		if resourceFile == kustomizationFile {
-			return true
+
+		for _, kustomizationFileName := range konfig.RecognizedKustomizationFileNames() {
+			if resourceFile == kustomizationFileName {
+				return true
+			}
 		}
 	}
 	meta, err := n.GetMeta()
@@ -229,7 +232,7 @@ func isKustomization(n *yaml.RNode) bool {
 		return true
 	}
 
-	if meta.APIVersion == "" && meta.Kind == kustomizationKind {
+	if meta.APIVersion == "" && meta.Kind == kustomizetypes.KustomizationKind {
 		return true
 	}
 
