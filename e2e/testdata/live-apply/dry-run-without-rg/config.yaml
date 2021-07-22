@@ -1,0 +1,6 @@
+requiresCleanCluster: true
+kptArgs:
+  - "--dry-run"
+stdErr: |
+  Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
+exitCode: 1

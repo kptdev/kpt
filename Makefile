@@ -84,6 +84,10 @@ test-fn-render: build
 test-fn-eval: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
+# target to run e2e tests for "kpt fn eval" command
+test-live-apply: build
+	PATH=$(GOBIN):$(PATH) go test -v --tags=kind --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
+
 vet:
 	go vet ./...
 
