@@ -39,9 +39,9 @@ function addGitHubWidget() {
 
 // Load plugins into Docsify.
 window.$docsify = window.$docsify || {};
-window.$docsify.plugins = [
-  (hook, _vm) => hook.doneEach(addGitHubWidget),
-].concat(window.$docsify.plugins || []);
+window.$docsify.plugins = [].concat(function (hook, _vm) {
+  hook.doneEach(addGitHubWidget);
+}, window.$docsify.plugins);
 
 // Export functions for testing.
 if (typeof module !== "undefined") {

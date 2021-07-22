@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package defines the schema for Kptfile version v1.
+// Package defines Kptfile schema.
+// Version: v1
+// swagger:meta
 package v1
 
 import (
@@ -38,6 +40,7 @@ var TypeMeta = yaml.ResourceMeta{
 }
 
 // KptFile contains information about a package managed with kpt.
+// swagger:model kptfile
 type KptFile struct {
 	yaml.ResourceMeta `yaml:",inline"`
 
