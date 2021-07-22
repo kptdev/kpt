@@ -176,6 +176,7 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	return nodes[0], nil
 }
 
+// AreKRM validates if given resources are valid KRM resources.
 func AreKRM(nodes []*yaml.RNode) error {
 	for i := range nodes {
 		if err := IsKRM(nodes[i]); err != nil {
@@ -186,6 +187,9 @@ func AreKRM(nodes []*yaml.RNode) error {
 	return nil
 }
 
+// IsKRM validates if given resource is a valid KRM resource by ensuring
+// that resource has a valid apiVersion, kind and metadata.name field.
+// It excludes kustomization resource from KRM check.
 func IsKRM(n *yaml.RNode) error {
 	if isKustomization(n) {
 		// exclude kustomization files from KRM check
