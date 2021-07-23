@@ -1,0 +1,43 @@
+diff --git a/kustomization.yaml b/kustomization.yaml
+index f91c46a..94769e0 100644
+--- a/kustomization.yaml
++++ b/kustomization.yaml
+@@ -11,7 +11,9 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ # kustomization.yaml contents
+ resources:
+ - resources.yaml
++metadata:
++  labels:
++    tier: backend
+diff --git a/resources.yaml b/resources.yaml
+index f6f4685..b11c929 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,12 +15,23 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  labels:
++    tier: backend
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+   name: custom
++  labels:
++    tier: backend
+ spec:
+   image: nginx:1.2.3 # kpt-set: {something}
