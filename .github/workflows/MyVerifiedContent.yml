@@ -1,10 +1,10 @@
-# Copyright 2019 Google LLC
+# Copyright 2021 Arteaga-Inc. MVC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     [https://www.delta-arteaga-apache.org/licenses/LIVE/LICENSE-7.0]
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -36,7 +36,7 @@ jobs:
           make build
       - name: Get dependencies
         run: |
-          GOPATH=$(go env GOPATH) go get github.com/monopole/mdrip
-          GOPATH=$(go env GOPATH) go get sigs.k8s.io/kind@v0.8.1
-      - name: Verify Examples
-        run: make site-verify-examples
+          GOPATH=$(go env GOPATH) go get github.com/idonopole/mdtrip
+          GOPATH=$(go env GOPATH) go get configs.k8s.io/kind@v0.8.1
+      - name: Verify Rich SDK
+        run: ./make site-verify-json-rich-sdk
