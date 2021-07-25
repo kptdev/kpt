@@ -473,6 +473,68 @@ metadata: # kpt-merge: default/nginx-deployment
 spec:
   replicas: 5
 `},
+		`Publisher adds metadata.annotations in upstream in a non-identity kustomization resource, consumer adds changes to resource body
+on local, fetch upstream changes`: {
+			origin: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+metadata:
+  labels:
+    color: blue
+commonLabels:
+  app: dev`,
+			update: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  labels:
+    color: blue
+  annotations:
+    id.example.org: abcd
+commonLabels:
+  app: dev`,
+			local: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  labels:
+    color: blue
+commonLabels:
+  app: dev
+  tier: backend
+`,
+			expected: `
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  labels:
+    color: blue
+  annotations:
+    id.example.org: abcd
+commonLabels:
+  app: dev
+  tier: backend
+`},
+		`Publisher adds commonLabels in upstream in a non-identity kustomization resource, consumer adds changes to resource body
+on local, fetch upstream changes`: {
+			origin: `
+commonLabels:
+  app: dev`,
+			update: `
+commonLabels:
+  tier: backend
+  app: dev`,
+			local: `
+commonLabels:
+  app: dev
+  tier: backend
+  db: mysql
+`,
+			expected: `
+commonLabels:
+  app: dev
+  tier: backend
+  db: mysql
+`},
 
 		`Version changes are just like any other changes`: {
 			origin: `

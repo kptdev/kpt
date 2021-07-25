@@ -22,9 +22,16 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"sigs.k8s.io/kustomize/api/konfig"
+	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+const (
+	// constants related to kustomize
+	kustomizationAPIGroup = "kustomize.config.k8s.io"
 )
 
 func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
@@ -169,7 +176,26 @@ func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (
 	return nodes[0], nil
 }
 
+// AreKRM validates if given resources are valid KRM resources.
+func AreKRM(nodes []*yaml.RNode) error {
+	for i := range nodes {
+		if err := IsKRM(nodes[i]); err != nil {
+			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
+			return fmt.Errorf("%s: %s", path, err.Error())
+		}
+	}
+	return nil
+}
+
+// IsKRM validates if given resource is a valid KRM resource by ensuring
+// that resource has a valid apiVersion, kind and metadata.name field.
+// It excludes kustomization resource from KRM check.
 func IsKRM(n *yaml.RNode) error {
+	if isKustomization(n) {
+		// exclude kustomization files from KRM check
+		// https://github.com/GoogleContainerTools/kpt/issues/2388
+		return nil
+	}
 	meta, err := n.GetMeta()
 	if err != nil {
 		return fmt.Errorf("resource must have `apiVersion`, `kind`, and `name`")
@@ -186,14 +212,35 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
-func AreKRM(nodes []*yaml.RNode) error {
-	for i := range nodes {
-		if err := IsKRM(nodes[i]); err != nil {
-			path, _, _ := kioutil.GetFileAnnotations(nodes[i])
-			return fmt.Errorf("%s: %s", path, err.Error())
+// isKustomization determines if given YAML is a kustomization file
+// or a kustomization resource.
+func isKustomization(n *yaml.RNode) bool {
+	resourcePath, _, err := kioutil.GetFileAnnotations(n)
+	if err == nil {
+		// perform the check only if we are able to reliably
+		// read the file path of the resource
+		resourceFile := filepath.Base(resourcePath)
+
+		for _, kustomizationFileName := range konfig.RecognizedKustomizationFileNames() {
+			if resourceFile == kustomizationFileName {
+				return true
+			}
 		}
 	}
-	return nil
+	meta, err := n.GetMeta()
+	if err != nil {
+		return false
+	}
+
+	if strings.HasPrefix(meta.APIVersion, kustomizationAPIGroup) {
+		return true
+	}
+
+	if meta.APIVersion == "" && meta.Kind == kustomizetypes.KustomizationKind {
+		return true
+	}
+
+	return false
 }
 
 // ValidateError is the error returned when validation fails.

@@ -15,6 +15,8 @@ package v1
 
 import (
 	"testing"
+
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestKptfileValidate(t *testing.T) {
@@ -329,5 +331,69 @@ func TestValidatePath(t *testing.T) {
 			t.Fatalf("returned value for path %q should be %t, got %t",
 				c.Path, c.Valid, (ret == nil))
 		}
+	}
+}
+
+func TestIsKustomization(t *testing.T) {
+	testcases := []struct {
+		name  string
+		input string
+		exp   bool
+	}{
+		{
+			"resource in a kustomization file is a kustomization",
+			`
+metadata:
+  annotations:
+    config.kubernetes.io/path: kustomization.yaml
+`,
+			true,
+		},
+		{
+			"resource in a kustomization file with .yml extn is a kustomization",
+			`
+metadata:
+  annotations:
+    config.kubernetes.io/path: kustomization.yml
+`,
+			true,
+		},
+		{
+			"resource in a kustomization file in a subdir is a kustomization",
+			`
+metadata:
+  annotations:
+    config.kubernetes.io/path: subdir/kustomization.yaml
+`,
+			true,
+		},
+		{
+			"resource in a non-kustomization file, with empty apigroup and Kustomization kind is a kustomization",
+			`apiVersion:
+kind: Kustomization
+`,
+			true,
+		},
+		{
+			"resource in a non-kustomization file with Kustomization APIGroup is a kustomization",
+			`apiVersion: kustomize.config.k8s.io/v1beta1
+`,
+			true,
+		},
+		{
+			"resource in a non-kustomization file with non-kustomize apigroup is not a kustomization",
+			`apiVersion: non.kubernetes.io/v1
+`,
+			false,
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			got := isKustomization(yaml.MustParse(tc.input))
+			if got != tc.exp {
+				t.Fatalf("got %v expected %v", got, tc.exp)
+			}
+		})
 	}
 }
