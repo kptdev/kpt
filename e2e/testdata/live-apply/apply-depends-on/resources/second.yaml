@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-nginx
+  namespace: apply-depends-on
+  annotations:
+    config.kubernetes.io/depends-on: apps/namespaces/apply-depends-on/Deployment/first-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: second-nginx
+  template:
+    metadata:
+      labels:
+        app: second-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
+      initContainers:
+        - name: init
+          image: busybox:1.28
+          command: ['sh', '-c', 'sleep 10']

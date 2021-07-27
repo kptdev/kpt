@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-nginx
+  namespace: prune-depends-on
+  annotations:
+    config.k8s.io/owning-inventory: prune-depends-on
+    config.kubernetes.io/depends-on: apps/namespaces/prune-depends-on/Deployment/first-nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: second-nginx
+  template:
+    metadata:
+      labels:
+        app: second-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
