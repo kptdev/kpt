@@ -636,11 +636,36 @@ assertPodNotExists "pod-c" "rg-test-namespace"
 assertPodNotExists "pod-d" "rg-test-namespace"
 printResult
 
+# Test: Basic kpt live apply/status/destroy from stdin
+# 
+echo "Testing apply/status/destroy from stdin"
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - > $OUTPUT_DIR/status 2>&1
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "3 resource(s) applied. 3 created, 0 unchanged, 0 configured, 0 failed"
+printResult
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live status -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live status - > $OUTPUT_DIR/status 2>&1
+assertContains "namespace/stdin-test-namespace is Current: Resource is current"
+assertContains "pod/pod-a is Current: Pod is Ready"
+assertContains "pod/pod-b is Current: Pod is Ready"
+assertContains "pod/pod-c is Current: Pod is Ready"
+printResult
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - > $OUTPUT_DIR/status 2>&1
+assertContains "pod/pod-a deleted"
+assertContains "pod/pod-b deleted"
+assertContains "pod/pod-c deleted"
+assertContains "3 resource(s) deleted, 0 skipped"
+printResult
+
 # Test: kpt live apply continue-on-error
 echo "[ResourceGroup] Testing continue-on-error"
 echo "kpt live apply e2e/live/testdata/continue-on-error"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error
-${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status 2>&1
 diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/Kptfile > $OUTPUT_DIR/status 2>&1
 assertContains "namespace: continue-err-namespace"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
