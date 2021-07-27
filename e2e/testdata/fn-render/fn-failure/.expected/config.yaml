@@ -16,8 +16,8 @@
 # non-zero exit code and no changes in the resources.
 exitCode: 1
 stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/starlark:v0.1.0"
-  [FAIL] "gcr.io/kpt-fn/starlark:v0.1.0"
+  [RUNNING] "gcr.io/kpt-fn/starlark:v0.2.0"
+  [FAIL] "gcr.io/kpt-fn/starlark:v0.2.0"
     Results:
       [ERROR] httpbin-gen:4:1: got newline, want primary expression
     Stderr:

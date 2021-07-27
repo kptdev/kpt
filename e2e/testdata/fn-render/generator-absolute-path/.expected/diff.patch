@@ -1,6 +1,6 @@
 diff --git a/another/file/out.yaml b/another/file/out.yaml
 new file mode 100644
-index 0000000..6d9fb79
+index 0000000..f36c98e
 --- /dev/null
 +++ b/another/file/out.yaml
 @@ -0,0 +1,13 @@
@@ -13,7 +13,7 @@ index 0000000..6d9fb79
 +  template:
 +    spec:
 +      containers:
-+      - name: httpbin
-+        image: kennethreitz/httpbin
++      - image: kennethreitz/httpbin
++        name: httpbin
 +        ports:
 +        - containerPort: 9876

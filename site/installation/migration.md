@@ -356,7 +356,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
 [v1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1/types.go
-[starlark function]: https://catalog.kpt.dev/starlark/v0.1/
+[starlark function]: https://catalog.kpt.dev/starlark/v0.2/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
 [setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
 [openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations

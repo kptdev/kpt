@@ -13,7 +13,7 @@ provide your business logic.
 The following is an example package with a `starlark` function declaration:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark-set-namespace@starlark/v0.1
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/starlark-set-namespace@starlark/v0.2
 ```
 
 It contains the following `functionConfig`:
@@ -42,7 +42,7 @@ $ kpt fn render set-namespace
 
 You should now see that resources have `namespace` set to `prod`.
 
-?> Refer to the [Functions Catalog](https://catalog.kpt.dev/starlark/v0.1/) for
+?> Refer to the [Functions Catalog](https://catalog.kpt.dev/starlark/v0.2/) for
 details on how use this function.
 
 ## `gatekeeper` function

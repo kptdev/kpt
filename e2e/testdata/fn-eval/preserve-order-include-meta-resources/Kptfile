@@ -37,7 +37,7 @@ pipeline:
         tag: 1.14.1
     - image: gcr.io/kpt-fn/set-labels:v0.1.4
       configPath: ./fn-config.yaml
-    - image: gcr.io/kpt-fn/starlark:v0.1.0
+    - image: gcr.io/kpt-fn/starlark:v0.2.0
       configPath: path/to/foo-star.yaml
 inventory:
   namespace: some-space

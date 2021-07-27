@@ -5,7 +5,7 @@ metadata:
 pipeline:
   mutators:
 # invalid starlark input results in failure of first fn
-  - image: gcr.io/kpt-fn/starlark:v0.1.0
+  - image: gcr.io/kpt-fn/starlark:v0.2.0
     configPath: starlark-failure-fn.yaml
   - image: gcr.io/kpt-fn/set-namespace:v0.1.3
     configMap:

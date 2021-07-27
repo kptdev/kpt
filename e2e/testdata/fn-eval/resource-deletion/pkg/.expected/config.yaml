@@ -13,5 +13,5 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn/starlark:v0.1.0
+image: gcr.io/kpt-fn/starlark:v0.2.0
 fnConfig: ../../starlark-delete-resource.yaml
