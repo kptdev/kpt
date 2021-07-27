@@ -15,5 +15,3 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
-# Skip for now because gatekeeper function output is not stable
-skip: true
