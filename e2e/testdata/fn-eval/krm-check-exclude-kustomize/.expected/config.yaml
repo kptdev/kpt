@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# One of the functions in the pipeline fails resulting in
-# non-zero exit code and no changes in the resources.
-exitCode: 1
+testType: eval
+image: gcr.io/kpt-fn/set-labels:v0.1
+args:
+  tier: backend

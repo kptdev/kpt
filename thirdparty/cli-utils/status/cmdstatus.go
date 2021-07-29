@@ -21,7 +21,6 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
@@ -112,11 +111,6 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 		args = append(args, cwd)
-	}
-
-	_, err := common.DemandOneDirectory(args)
-	if err != nil {
-		return err
 	}
 
 	_, inv, err := live.Load(r.factory, args[0], c.InOrStdin())
