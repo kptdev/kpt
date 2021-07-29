@@ -70,7 +70,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.2 version
+$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.3 version
 ```
 
 ### `kpt-gcloud`
@@ -78,7 +78,7 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.2 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.2 version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.3 version
 ```
 
 ## Source
@@ -101,7 +101,7 @@ $ kpt version
   https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.2/kpt_linux_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.3/kpt_linux_amd64
 [darwin]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.2/kpt_darwin_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.3/kpt_darwin_amd64
 [migration guide]: /installation/migration
