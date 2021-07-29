@@ -86,24 +86,20 @@ func (c Command) Run(ctx context.Context) error {
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return cleanUpDirAndError(op, c.Destination, err)
 	}
 
 	p, err := pkg.New(c.Destination)
 	if err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return cleanUpDirAndError(op, c.Destination, err)
 	}
 
 	if err = c.fetchPackages(ctx, p); err != nil {
-		rmErr := os.RemoveAll(c.Destination)
-		if rmErr != nil {
-			return errors.E(op, types.UniquePath(c.Destination), err, rmErr)
-		}
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return cleanUpDirAndError(op, c.Destination, err)
 	}
 
 	if err := addmergecomment.Process(c.Destination); err != nil {
-		return errors.E(op, types.UniquePath(c.Destination), err)
+		return cleanUpDirAndError(op, c.Destination, err)
 	}
 	return nil
 }
@@ -186,4 +182,12 @@ func (c *Command) DefaultValues() error {
 	}
 
 	return nil
+}
+
+func cleanUpDirAndError(op errors.Op, destination string, err error) error {
+	rmErr := os.RemoveAll(destination)
+	if rmErr != nil {
+		return errors.E(op, types.UniquePath(destination), err, rmErr)
+	}
+	return errors.E(op, types.UniquePath(destination), err)
 }
