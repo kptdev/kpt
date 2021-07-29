@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
@@ -73,12 +74,30 @@ func (r *Runner) Run(t *testing.T) {
 	r.CreateNamespace(t, testName)
 	defer r.RemoveNamespace(t, testName)
 
+	r.RunPreApply(t)
+
 	stdout, stderr, err := r.RunApply()
 	r.VerifyExitCode(t, err)
 	r.VerifyStdout(t, stdout)
 	r.VerifyStderr(t, stderr)
 	if len(r.Config.Inventory) != 0 {
 		r.VerifyInventory(t, testName, testName)
+	}
+}
+
+func (r *Runner) RunPreApply(t *testing.T) {
+	preApplyDir := filepath.Join(r.Path, "pre-apply")
+	fi, err := os.Stat(preApplyDir)
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatalf("error checking for pre-apply dir: %v", err)
+	}
+	if os.IsNotExist(err) || !fi.IsDir() {
+		return
+	}
+	t.Log("Applying resources in pre-apply directory")
+	cmd := exec.Command("kubectl", "apply", "-f", preApplyDir)
+	if err := cmd.Run(); err != nil {
+		t.Fatalf("error applying pre-apply dir: %v", err)
 	}
 }
 

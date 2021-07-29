@@ -1,0 +1,12 @@
+preinstallResourceGroup: true
+stdOut: |
+  configmap/cm created
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  deployment.apps/second-nginx pruned
+  1 resource(s) pruned, 0 skipped, 0 failed
+  deployment.apps/first-nginx pruned
+  1 resource(s) pruned, 0 skipped, 0 failed
+inventory:
+  - kind: ConfigMap
+    name: cm
+    namespace: prune-depends-on

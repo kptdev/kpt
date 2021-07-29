@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: first-nginx
+  namespace: prune-depends-on
+  annotations:
+    config.k8s.io/owning-inventory: prune-depends-on
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: first-nginx
+  template:
+    metadata:
+      labels:
+        app: first-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80

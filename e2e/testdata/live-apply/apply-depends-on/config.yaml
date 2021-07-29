@@ -1,0 +1,15 @@
+preinstallResourceGroup: true
+stdOut: |
+  deployment.apps/first-nginx created
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  deployment.apps/second-nginx created
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+inventory:
+  - group: apps
+    kind: Deployment
+    name: first-nginx
+    namespace: apply-depends-on
+  - group: apps
+    kind: Deployment
+    name: second-nginx
+    namespace: apply-depends-on

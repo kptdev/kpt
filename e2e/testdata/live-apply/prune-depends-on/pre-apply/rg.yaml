@@ -1,0 +1,17 @@
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: prune-depends-on
+  name: prune-depends-on
+  namespace: prune-depends-on
+spec:
+  resources:
+    - group: apps
+      kind: Deployment
+      name: first-nginx
+      namespace: prune-depends-on
+    - group: apps
+      kind: Deployment
+      name: second-nginx
+      namespace: prune-depends-on
