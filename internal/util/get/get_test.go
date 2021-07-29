@@ -739,6 +739,12 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	if !assert.Contains(t, err.Error(), "'foo' does not appear to be a git repository") {
 		t.FailNow()
 	}
+
+	// Confirm destination directory no longer exists.
+	_, err = os.Stat(absPath)
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
 }
 
 func TestCommand_Run_failInvalidBranch(t *testing.T) {
@@ -766,6 +772,12 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	if !assert.Contains(t, err.Error(), "exit status 128") {
 		t.FailNow()
 	}
+
+	// Confirm destination directory no longer exists.
+	_, err = os.Stat(absPath)
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
 }
 
 func TestCommand_Run_failInvalidTag(t *testing.T) {
@@ -775,13 +787,14 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	})
 	defer clean()
 
+	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/tags/foo",
 		},
-		Destination: filepath.Join(w.WorkspaceDirectory, g.RepoDirectory),
+		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -790,6 +803,12 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 		t.FailNow()
 	}
 	if !assert.Contains(t, err.Error(), "exit status 128") {
+		t.FailNow()
+	}
+
+	// Confirm destination directory no longer exists.
+	_, err = os.Stat(absPath)
+	if !assert.Error(t, err) {
 		t.FailNow()
 	}
 }
