@@ -740,7 +740,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Confirm destintion directory no longer exists.
+	// Confirm destination directory no longer exists.
 	_, err = os.Stat(absPath)
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -773,7 +773,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Confirm destintion directory no longer exists.
+	// Confirm destination directory no longer exists.
 	_, err = os.Stat(absPath)
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -806,7 +806,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 		t.FailNow()
 	}
 
-	// Confirm destintion directory no longer exists.
+	// Confirm destination directory no longer exists.
 	_, err = os.Stat(absPath)
 	if !assert.Error(t, err) {
 		t.FailNow()
