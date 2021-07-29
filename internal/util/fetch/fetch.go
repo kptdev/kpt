@@ -199,9 +199,14 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
 	}
 
+	// Verify that the requested path exists in the repo.
+	pkgPath := filepath.Join(dir, repoSpec.Path)
+	if _, err = os.Stat(pkgPath); os.IsNotExist(err) {
+		return errors.E(op, errors.Internal, err, fmt.Errorf("path %q does not exist in repo %q", repoSpec.Path, repoSpec.OrgRepo))
+	}
+
 	// Verify that if a Kptfile exists in the package, it contains the correct
 	// version of the Kptfile.
-	pkgPath := filepath.Join(dir, repoSpec.Path)
 	_, err = pkg.ReadKptfile(pkgPath)
 	if err != nil {
 		// A Kptfile isn't required, so it is fine if there is no Kptfile.
