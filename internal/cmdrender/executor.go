@@ -158,12 +158,15 @@ type hydrationContext struct {
 type pkgNode struct {
 	pkg *pkg.Pkg
 
-	// state indicates if the pkg is being hydrated or done.
-	state hydrationState
-
 	// KRM resources that we have gathered post hydration for this package.
 	// These inludes resources at this pkg as well all it's children.
 	resources []*yaml.RNode
+
+	// localResources are resources that belong the package excluding resources from subpackages
+	localResources []*yaml.RNode
+
+	// directSubpkgs are the subpackages excluding the ones that are nested inside other subpackages
+	directSubpkgs []*pkgNode
 }
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
@@ -192,50 +195,60 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 	}
 
 	pn = &pkgNode{
-		pkg:   p,
-		state: Dry, // package starts in dry state
+		pkg: p,
 	}
 	return pn, nil
 }
 
-// hydrationState represent hydration state of a pkg.
-type hydrationState int
-
-// constants for all the hydration states
-const (
-	Dry hydrationState = iota
-	Hydrating
-	Wet
-)
-
-func (s hydrationState) String() string {
-	return []string{"Dry", "Hydrating", "Wet"}[s]
-}
-
 // hydrate hydrates given pkg and returns wet resources.
 func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
+	// gather resources present at the current package
+	err = pn.populate()
+	if err != nil {
+		return nil, err
+	}
+	err = preHydrate(ctx, pn, hctx)
+	if err != nil {
+		return nil, err
+	}
+	hctx.pkgs = map[types.UniquePath]*pkgNode{}
+	return postHydrate(ctx, pn, hctx)
+}
+
+// preHydrate hydrates given pkg and returns wet resources.
+func preHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) error {
 	const op errors.Op = "pkg.render"
 
-	curr, found := hctx.pkgs[pn.pkg.UniquePath]
-	if found {
-		switch curr.state {
-		case Hydrating:
-			// we detected a cycle
-			err = fmt.Errorf("cycle detected in pkg dependencies")
-			return output, errors.E(op, curr.pkg.UniquePath, err)
-		case Wet:
-			output = curr.resources
-			return output, nil
-		default:
-			return output, errors.E(op, curr.pkg.UniquePath,
-				fmt.Errorf("package found in invalid state %v", curr.state))
+	curr := pn
+
+	// gather resources present at the current package
+	currPkgResources := curr.allResources()
+
+	output, err := curr.runPipeline(ctx, hctx, currPkgResources, true)
+	if err != nil {
+		return errors.E(op, curr.pkg.UniquePath, err)
+	}
+
+	curr.distributeResources(output)
+
+	// determine sub packages to be hydrated
+	subpkgs := curr.directSubpkgs
+	// hydrate recursively and gather hydated transitive resources.
+	for _, subPkgNode := range subpkgs {
+		err = preHydrate(ctx, subPkgNode, hctx)
+		if err != nil {
+			return errors.E(op, subPkgNode.pkg.UniquePath, err)
 		}
 	}
-	// add it to the discovered package list
+	curr.resources = curr.allResources()
+	return nil
+}
+
+// postHydrate hydrates given pkg and returns wet resources.
+func postHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
+	const op errors.Op = "pkg.render"
 	hctx.pkgs[pn.pkg.UniquePath] = pn
-	curr = pn
-	// mark the pkg in hydrating
-	curr.state = Hydrating
+	curr := pn
 
 	relPath, err := curr.pkg.RelativePathTo(hctx.root.pkg)
 	if err != nil {
@@ -245,32 +258,23 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	var input []*yaml.RNode
 
 	// determine sub packages to be hydrated
-	subpkgs, err := curr.pkg.DirectSubpackages()
+	subPkgsNodes := curr.directSubpkgs
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
 	// hydrate recursively and gather hydated transitive resources.
-	for _, subpkg := range subpkgs {
-		var transitiveResources []*yaml.RNode
-		var subPkgNode *pkgNode
+	for _, subPkgNode := range subPkgsNodes {
 
-		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
-			return output, errors.E(op, subpkg.UniquePath, err)
-		}
-
-		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
+		transitiveResources, err := postHydrate(ctx, subPkgNode, hctx)
 		if err != nil {
-			return output, errors.E(op, subpkg.UniquePath, err)
+			return output, errors.E(op, subPkgNode.pkg.UniquePath, err)
 		}
 
 		input = append(input, transitiveResources...)
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(false)
-	if err != nil {
-		return output, errors.E(op, curr.pkg.UniquePath, err)
-	}
+	currPkgResources := curr.localResources
 
 	err = trackInputFiles(hctx, relPath, currPkgResources)
 	if err != nil {
@@ -280,20 +284,18 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
 
-	output, err = curr.runPipeline(ctx, hctx, input)
+	output, err = curr.runPipeline(ctx, hctx, input, false)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
 
-	// pkg is hydrated, mark the pkg as wet and update the resources
-	curr.state = Wet
 	curr.resources = output
 
 	return output, err
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
-func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode, early bool) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
 	pr := printer.FromContextOrDie(ctx)
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
@@ -322,12 +324,12 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
-	mutatedResources, err := pn.runMutators(ctx, hctx, input)
+	mutatedResources, err := pn.runMutators(ctx, hctx, input, early)
 	if err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 
-	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
+	if err = pn.runValidators(ctx, hctx, mutatedResources, early); err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 	// print a new line after a pipeline running
@@ -336,7 +338,7 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 }
 
 // runMutators runs a set of mutators functions on given input resources.
-func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode, early bool) ([]*yaml.RNode, error) {
 	if len(input) == 0 {
 		return input, nil
 	}
@@ -346,13 +348,24 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
-	if len(pl.Mutators) == 0 {
-		return input, nil
-	}
+	var mutators []kio.Filter
 
-	mutators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
-	if err != nil {
-		return nil, err
+	if early {
+		if len(pl.EarlyMutators) == 0 {
+			return input, nil
+		}
+		mutators, err = fnChain(ctx, hctx, pn.pkg.UniquePath, pl.EarlyMutators)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		if len(pl.Mutators) == 0 {
+			return input, nil
+		}
+		mutators, err = fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	output := &kio.PackageBuffer{}
@@ -376,7 +389,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 // We bail out on first validation failure today, but the logic can be
 // improved to report multiple failures. Reporting multiple failures
 // will require changes to the way we print errors
-func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
+func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode, early bool) error {
 	if len(input) == 0 {
 		return nil
 	}
@@ -386,12 +399,16 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		return err
 	}
 
-	if len(pl.Validators) == 0 {
+	validators := pl.Validators
+	if early {
+		validators = pl.EarlyValidators
+	}
+	if len(validators) == 0 {
 		return nil
 	}
 
-	for i := range pl.Validators {
-		fn := pl.Validators[i]
+	for i := range validators {
+		fn := validators[i]
 		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
 		if err != nil {
 			return err
@@ -537,6 +554,58 @@ func pruneResources(hctx *hydrationContext) error {
 		if err := os.Remove(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
 		}
+	}
+	return nil
+}
+
+// allResources returns all the resources in the directory tree of the package in the pkgNode
+func (pn *pkgNode) allResources() []*yaml.RNode {
+	var output []*yaml.RNode
+	output = append(output, pn.localResources...)
+	for _, subpkgNode := range pn.directSubpkgs {
+		output = append(output, subpkgNode.allResources()...)
+	}
+	return output
+}
+
+// distributeResources replaces the localResources of each package with the hydrated input resources
+// based on the package-path annotation
+func (pn *pkgNode) distributeResources(nodes []*yaml.RNode) {
+	pn.localResources = []*yaml.RNode{}
+	for _, node := range nodes {
+		if node.GetAnnotations()["internal.config.kubernetes.io/package-path"] == pn.pkg.UniquePath.String() {
+			pn.localResources = append(pn.localResources, node)
+		}
+	}
+	for _, subpkgNode := range pn.directSubpkgs {
+		subpkgNode.distributeResources(nodes)
+	}
+}
+
+// populate is a one-time step in order to load all the package resources into in-memory
+// pkgNode tree
+func (pn *pkgNode) populate() error {
+	var err error
+	pn.localResources, err = pn.pkg.LocalResources(false)
+	if err != nil {
+		return err
+	}
+
+	dps, err := pn.pkg.DirectSubpackages()
+	if err != nil {
+		return err
+	}
+
+	for _, subpkg := range dps {
+		var subPkgNode *pkgNode
+		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
+			return err
+		}
+		err = subPkgNode.populate()
+		if err != nil {
+			return err
+		}
+		pn.directSubpkgs = append(pn.directSubpkgs, subPkgNode)
 	}
 	return nil
 }

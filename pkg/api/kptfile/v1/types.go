@@ -227,12 +227,19 @@ type Pipeline struct {
 	// Input of the second function is the output of the first function, and so on.
 	// Order of operation: mutators, validators
 
-	// Mutators defines a list of of KRM functions that mutate resources.
+	// Mutators defines a list of of KRM functions that mutate resources in bottom-up order.
 	Mutators []Function `yaml:"mutators,omitempty"`
 
-	// Validators defines a list of KRM functions that validate resources.
+	// EarlyMutators defines a list of of KRM functions that mutate resources in top-down order.
+	EarlyMutators []Function `yaml:"early-mutators,omitempty"`
+
+	// Validators defines a list of KRM functions that validate resources in bottom-up order.
 	// Validators are not permitted to mutate resources.
 	Validators []Function `yaml:"validators,omitempty"`
+
+	// EarlyValidators defines a list of of KRM functions that mutate resources in top-down order.
+	// EarlyValidators are not permitted to mutate resources.
+	EarlyValidators []Function `yaml:"early-validators,omitempty"`
 }
 
 // String returns the string representation of Pipeline struct
@@ -247,7 +254,7 @@ func (p *Pipeline) IsEmpty() bool {
 	if p == nil {
 		return true
 	}
-	if len(p.Mutators) == 0 && len(p.Validators) == 0 {
+	if len(p.Mutators) == 0 && len(p.Validators) == 0 && len(p.EarlyMutators) == 0 && len(p.EarlyValidators) == 0 {
 		return true
 	}
 	return false
