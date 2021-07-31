@@ -21,4 +21,4 @@ stdErr: |
     Results:
       [ERROR] httpbin-gen:4:1: got newline, want primary expression
     Stderr:
-      "httpbin-gen:4:1: got newline, want primary expression"
+      "[error] : httpbin-gen:4:1: got newline, want primary expression"
