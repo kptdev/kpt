@@ -4,7 +4,7 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/starlark:v0.2.0
+  - image: gcr.io/kpt-fn/starlark:v0.2.1
     stderr: '[error] : fail: could not find httpbin deployment'
     exitCode: 1
     results:
