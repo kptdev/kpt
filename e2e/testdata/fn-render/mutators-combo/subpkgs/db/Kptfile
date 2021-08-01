@@ -4,9 +4,7 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: gcr.io/kpt-fn/search-replace:v0.2.0
       configMap:
-        namespace: db
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
-      configMap:
-        app: backend
+        by-value: staging
+        put-value: db-staging
