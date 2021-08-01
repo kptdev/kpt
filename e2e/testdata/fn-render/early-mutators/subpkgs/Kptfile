@@ -3,7 +3,7 @@ kind: Kptfile
 metadata:
   name: app-with-db
 pipeline:
-  mutators:
+  early-mutators:
     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
       configMap:
         namespace: staging
