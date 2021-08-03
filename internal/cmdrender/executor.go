@@ -203,7 +203,7 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 // hydrate hydrates given pkg and returns wet resources.
 func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
 	// gather resources present at the current package
-	err = pn.populate()
+	err = pn.populate(hctx)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,6 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	if err != nil {
 		return nil, err
 	}
-	hctx.pkgs = map[types.UniquePath]*pkgNode{}
 	return postHydrate(ctx, pn, hctx)
 }
 
@@ -220,7 +219,6 @@ func preHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) error 
 	const op errors.Op = "pkg.render"
 
 	curr := pn
-
 	// gather resources present at the current package
 	currPkgResources := curr.allResources()
 
@@ -247,13 +245,7 @@ func preHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) error 
 // postHydrate hydrates given pkg and returns wet resources.
 func postHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.render"
-	hctx.pkgs[pn.pkg.UniquePath] = pn
 	curr := pn
-
-	relPath, err := curr.pkg.RelativePathTo(hctx.root.pkg)
-	if err != nil {
-		return nil, errors.E(op, curr.pkg.UniquePath, err)
-	}
 
 	var input []*yaml.RNode
 
@@ -264,7 +256,6 @@ func postHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (outp
 	}
 	// hydrate recursively and gather hydated transitive resources.
 	for _, subPkgNode := range subPkgsNodes {
-
 		transitiveResources, err := postHydrate(ctx, subPkgNode, hctx)
 		if err != nil {
 			return output, errors.E(op, subPkgNode.pkg.UniquePath, err)
@@ -275,11 +266,6 @@ func postHydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (outp
 
 	// gather resources present at the current package
 	currPkgResources := curr.localResources
-
-	err = trackInputFiles(hctx, relPath, currPkgResources)
-	if err != nil {
-		return nil, err
-	}
 
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
@@ -534,7 +520,6 @@ func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
 	outputSet := sets.String{}
-
 	for _, r := range hctx.root.resources {
 		path, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
@@ -584,9 +569,21 @@ func (pn *pkgNode) distributeResources(nodes []*yaml.RNode) {
 
 // populate is a one-time step in order to load all the package resources into in-memory
 // pkgNode tree
-func (pn *pkgNode) populate() error {
+func (pn *pkgNode) populate(hctx *hydrationContext) error {
 	var err error
 	pn.localResources, err = pn.pkg.LocalResources(false)
+	if err != nil {
+		return err
+	}
+
+	hctx.pkgs[pn.pkg.UniquePath] = pn
+
+	relPath, err := pn.pkg.RelativePathTo(hctx.root.pkg)
+	if err != nil {
+		return err
+	}
+
+	err = trackInputFiles(hctx, relPath, pn.localResources)
 	if err != nil {
 		return err
 	}
@@ -601,7 +598,7 @@ func (pn *pkgNode) populate() error {
 		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
 			return err
 		}
-		err = subPkgNode.populate()
+		err = subPkgNode.populate(hctx)
 		if err != nil {
 			return err
 		}
