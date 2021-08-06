@@ -1,12 +1,12 @@
 # Docs need to have a single approver to maintain consistency.
-/site @droot @frankfarzan
+/site @droot @frankfarzan @phanimarupaka @mengqiy
 # These packages are referenced in docs.
-/package-examples/nginx/ @droot @mortent
-/package-examples/wordpress/ @droot @mortent
+/package-examples/nginx/ @droot @mortent @phanimarupaka @mengqiy
+/package-examples/wordpress/ @droot @mortent @phanimarupaka @mengqiy
 
 # Schemas changes additional scrutiny.
-/pkg/api @droot @mortent
+/pkg/api @droot @mortent @phanimarupaka @mengqiy
 
 # These tests enforce the behavior for fn
-kpt/e2e/testdata/fn-render @droot
-kpt/e2e/testdata/fn-eval @droot
+kpt/e2e/testdata/fn-render @droot @phanimarupaka @mengqiy
+kpt/e2e/testdata/fn-eval @droot @phanimarupaka @mengqiy
