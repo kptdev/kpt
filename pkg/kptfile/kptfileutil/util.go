@@ -50,6 +50,22 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	return nil
 }
 
+// ReadKptfile reads a KptFile from a yaml.RNode.
+func ReadKptfile(node *yaml.RNode) (*kptfilev1.KptFile, error) {
+	kpgfile := &kptfilev1.KptFile{}
+	s, err := node.String()
+	if err != nil {
+		return &kptfilev1.KptFile{}, err
+	}
+	f := strings.NewReader(s)
+	d := yaml.NewDecoder(f)
+	d.KnownFields(true)
+	if err = d.Decode(&kpgfile); err != nil {
+		return &kptfilev1.KptFile{}, fmt.Errorf("please make sure the package has a valid 'v1' Kptfile: %w", err)
+	}
+	return kpgfile, nil
+}
+
 // ValidateInventory returns true and a nil error if the passed inventory
 // is valid; otherwiste, false and the reason the inventory is not valid
 // is returned. A valid inventory must have a non-empty namespace, name,
