@@ -212,8 +212,7 @@ func IsKRM(n *yaml.RNode) error {
 	return nil
 }
 
-// isKustomization determines if given YAML is a kustomization file
-// or a kustomization resource.
+// isKustomization determines if given YAML is a kustomization file or resource.
 func isKustomization(n *yaml.RNode) bool {
 	resourcePath, _, err := kioutil.GetFileAnnotations(n)
 	if err == nil {
