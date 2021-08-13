@@ -298,7 +298,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	return output, err
 }
 
-const ResourceIdAnnotation = "internal.config.k8s.io/resource-id"
+const resourceIDAnnotation = "internal.config.k8s.io/resource-id"
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
@@ -565,7 +565,7 @@ func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector) []*yaml.RN
 		for _, node := range input {
 			if (selector.Name == "" || selector.Name == node.GetName()) &&
 				(selector.Namespace == "" || selector.Namespace == node.GetNamespace()) &&
-				(selector.ApiVersion == "" || selector.ApiVersion == node.GetApiVersion()) &&
+				(selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()) &&
 				(selector.Kind == "" || selector.Kind == node.GetKind()) {
 				filteredInput = append(filteredInput, node)
 			}
@@ -579,7 +579,7 @@ func setResourceIds(input []*yaml.RNode) error {
 	id := 0
 	for i := range input {
 		idStr := fmt.Sprintf("%v", id)
-		err := input[i].PipeE(yaml.SetAnnotation(ResourceIdAnnotation, idStr))
+		err := input[i].PipeE(yaml.SetAnnotation(resourceIDAnnotation, idStr))
 		if err != nil {
 			return err
 		}
@@ -600,18 +600,23 @@ func mergeWithInput(output, selectedInput, input []*yaml.RNode) []*yaml.RNode {
 		if !presentIn(input[i], selectedInput) {
 			// this resource is untouched
 			result = append(result, input[i])
-		} else if presentIn(input[i], selectedInput) && !presentIn(input[i], output) {
+			continue
+		}
+
+		if presentIn(input[i], selectedInput) && !presentIn(input[i], output) {
 			// this resource is deleted
 			continue
-		} else if presentIn(input[i], selectedInput) && presentIn(input[i], output) {
+		}
+
+		if presentIn(input[i], selectedInput) && presentIn(input[i], output) {
 			// this resource modified by function, so replace it from the output
-			result = append(result, nodeWithResourceId(input[i].GetAnnotations()[ResourceIdAnnotation], output))
+			result = append(result, nodeWithResourceID(input[i].GetAnnotations()[resourceIDAnnotation], output))
 		}
 	}
 
 	// add function generated resources to the result
 	for i := range output {
-		if output[i].GetAnnotations()[ResourceIdAnnotation] == "" {
+		if output[i].GetAnnotations()[resourceIDAnnotation] == "" {
 			result = append(result, output[i])
 		}
 	}
@@ -619,10 +624,10 @@ func mergeWithInput(output, selectedInput, input []*yaml.RNode) []*yaml.RNode {
 	return result
 }
 
-// nodeWithResourceId returns the node with the input resourceId
-func nodeWithResourceId(resourceId string, input []*yaml.RNode) *yaml.RNode {
+// nodeWithResourceID returns the node with the input resourceId
+func nodeWithResourceID(resourceID string, input []*yaml.RNode) *yaml.RNode {
 	for _, node := range input {
-		if node.GetAnnotations()[ResourceIdAnnotation] == resourceId {
+		if node.GetAnnotations()[resourceIDAnnotation] == resourceID {
 			return node
 		}
 	}
@@ -632,9 +637,9 @@ func nodeWithResourceId(resourceId string, input []*yaml.RNode) *yaml.RNode {
 // presentIn returns true if the targetNode identified by resource-id annotation
 // is present in the input list of resources
 func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
-	id := targetNode.GetAnnotations()[ResourceIdAnnotation]
+	id := targetNode.GetAnnotations()[resourceIDAnnotation]
 	for _, node := range input {
-		if node.GetAnnotations()[ResourceIdAnnotation] == id {
+		if node.GetAnnotations()[resourceIDAnnotation] == id {
 			return true
 		}
 	}
@@ -644,7 +649,7 @@ func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
 // deleteResourceIds removes the resource-id annotation from all resources
 func deleteResourceIds(input []*yaml.RNode) error {
 	for i := range input {
-		err := input[i].PipeE(yaml.ClearAnnotation(ResourceIdAnnotation))
+		err := input[i].PipeE(yaml.ClearAnnotation(resourceIDAnnotation))
 		if err != nil {
 			return err
 		}

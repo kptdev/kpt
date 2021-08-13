@@ -284,8 +284,8 @@ type Function struct {
 
 // Selector specifies the selection criteria
 type Selector struct {
-	// ApiVersion of the target resources
-	ApiVersion string `yaml:"apiVersion,omitempty"`
+	// APIVersion of the target resources
+	APIVersion string `yaml:"apiVersion,omitempty"`
 	// Kind of the target resources
 	Kind string `yaml:"kind,omitempty"`
 	// Name of the target resources

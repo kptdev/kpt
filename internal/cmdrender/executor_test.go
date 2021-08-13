@@ -210,19 +210,19 @@ metadata:
 		},
 	}
 
-	for _, test := range tests {
-		tc := test
+	for i := range tests {
+		tc := tests[i]
 		t.Run(tc.name, func(t *testing.T) {
-			output, err := kio.ParseAll(test.output)
+			output, err := kio.ParseAll(tc.output)
 			assert.NoError(t, err)
-			selectedInput, err := kio.ParseAll(test.selectedInput)
+			selectedInput, err := kio.ParseAll(tc.selectedInput)
 			assert.NoError(t, err)
-			input, err := kio.ParseAll(test.input)
+			input, err := kio.ParseAll(tc.input)
 			assert.NoError(t, err)
 			result := mergeWithInput(output, selectedInput, input)
 			actual, err := kio.StringAll(result)
 			assert.NoError(t, err)
-			assert.Equal(t, test.expected, actual)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
