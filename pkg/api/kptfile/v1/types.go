@@ -276,6 +276,22 @@ type Function struct {
 
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
 	ConfigMap map[string]string `yaml:"configMap,omitempty"`
+
+	// `Selectors` are used to specify resources on which the function should be executed
+	// if not specified, all resources are selected
+	Selectors []Selector `yaml:"selectors,omitempty"`
+}
+
+// Selector specifies the selection criteria
+type Selector struct {
+	// ApiVersion of the target resources
+	ApiVersion string `yaml:"apiVersion,omitempty"`
+	// Kind of the target resources
+	Kind string `yaml:"kind,omitempty"`
+	// Name of the target resources
+	Name string `yaml:"name,omitempty"`
+	// Namespace of the target resources
+	Namespace string `yaml:"namespace,omitempty"`
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.

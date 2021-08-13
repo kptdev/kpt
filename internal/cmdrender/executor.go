@@ -298,6 +298,8 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	return output, err
 }
 
+const ResourceIdAnnotation = "internal.config.k8s.io/resource-id"
+
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
@@ -353,21 +355,39 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
-	output := &kio.PackageBuffer{}
-	// create a kio pipeline from kyaml library to execute the function chains
-	mutation := kio.Pipeline{
-		Inputs: []kio.Reader{
-			&kio.PackageBuffer{Nodes: input},
-		},
-		Filters: mutators,
-		Outputs: []kio.Writer{output},
+	for i, mutator := range mutators {
+		// set resource-id annotation on each resource before mutation
+		err = setResourceIds(input)
+		if err != nil {
+			return nil, err
+		}
+
+		// select the resources on which function should be applied
+		selectedInput := selectInput(input, pl.Mutators[i].Selectors)
+		output := &kio.PackageBuffer{}
+		// create a kio pipeline from kyaml library to execute the function chains
+		mutation := kio.Pipeline{
+			Inputs: []kio.Reader{
+				&kio.PackageBuffer{Nodes: selectedInput},
+			},
+			Filters: []kio.Filter{mutator},
+			Outputs: []kio.Writer{output},
+		}
+		err = mutation.Execute()
+		if err != nil {
+			return nil, err
+		}
+		hctx.executedFunctionCnt += 1
+		// merge the output resources with input resources
+		input = mergeWithInput(output.Nodes, selectedInput, input)
+
+		// delete the resource-id annotation on each resource
+		err = deleteResourceIds(input)
+		if err != nil {
+			return nil, err
+		}
 	}
-	err = mutation.Execute()
-	if err != nil {
-		return nil, err
-	}
-	hctx.executedFunctionCnt += len(mutators)
-	return output.Nodes, nil
+	return input, nil
 }
 
 // runValidators runs a set of validator functions on input resources.
@@ -392,7 +412,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		}
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		if _, err = validator.Filter(cloneResources(input)); err != nil {
+		if _, err = validator.Filter(selectInput(cloneResources(input), fn.Selectors)); err != nil {
 			return err
 		}
 		hctx.executedFunctionCnt++
@@ -530,6 +550,103 @@ func pruneResources(hctx *hydrationContext) error {
 	for f := range filesToBeDeleted {
 		if err := os.Remove(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
+		}
+	}
+	return nil
+}
+
+// selectInput returns the selected resources based on selection criteria in selectors
+func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector) []*yaml.RNode {
+	if len(selectors) == 0 {
+		return input
+	}
+	var filteredInput []*yaml.RNode
+	for _, selector := range selectors {
+		for _, node := range input {
+			if (selector.Name == "" || selector.Name == node.GetName()) &&
+				(selector.Namespace == "" || selector.Namespace == node.GetNamespace()) &&
+				(selector.ApiVersion == "" || selector.ApiVersion == node.GetApiVersion()) &&
+				(selector.Kind == "" || selector.Kind == node.GetKind()) {
+				filteredInput = append(filteredInput, node)
+			}
+		}
+	}
+	return filteredInput
+}
+
+// setResourceIds adds resource-id annotation to each input resource
+func setResourceIds(input []*yaml.RNode) error {
+	id := 0
+	for i := range input {
+		idStr := fmt.Sprintf("%v", id)
+		err := input[i].PipeE(yaml.SetAnnotation(ResourceIdAnnotation, idStr))
+		if err != nil {
+			return err
+		}
+		id++
+	}
+	return nil
+}
+
+// mergeWithInput merges the transformed output with input resources
+// input: all input resources, selectedInput: selected input resources
+// output: output resources as the result of function on selectedInput resources
+// for input: A,B,C,D; selectedInput: A,B; output: A,E(A transformed, B Deleted, E Added)
+// the result should be A,C,D,E
+// resources are identified by resource-id annotation
+func mergeWithInput(output, selectedInput, input []*yaml.RNode) []*yaml.RNode {
+	var result []*yaml.RNode
+	for i := range input {
+		if !presentIn(input[i], selectedInput) {
+			// this resource is untouched
+			result = append(result, input[i])
+		} else if presentIn(input[i], selectedInput) && !presentIn(input[i], output) {
+			// this resource is deleted
+			continue
+		} else if presentIn(input[i], selectedInput) && presentIn(input[i], output) {
+			// this resource modified by function, so replace it from the output
+			result = append(result, nodeWithResourceId(input[i].GetAnnotations()[ResourceIdAnnotation], output))
+		}
+	}
+
+	// add function generated resources to the result
+	for i := range output {
+		if output[i].GetAnnotations()[ResourceIdAnnotation] == "" {
+			result = append(result, output[i])
+		}
+	}
+
+	return result
+}
+
+// nodeWithResourceId returns the node with the input resourceId
+func nodeWithResourceId(resourceId string, input []*yaml.RNode) *yaml.RNode {
+	for _, node := range input {
+		if node.GetAnnotations()[ResourceIdAnnotation] == resourceId {
+			return node
+		}
+	}
+	return nil
+}
+
+// presentIn returns true if the targetNode identified by resource-id annotation
+// is present in the input list of resources
+func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
+	id := targetNode.GetAnnotations()[ResourceIdAnnotation]
+	for _, node := range input {
+		if node.GetAnnotations()[ResourceIdAnnotation] == id {
+			return true
+		}
+	}
+	return false
+}
+
+// deleteResourceIds removes the resource-id annotation from all resources
+func deleteResourceIds(input []*yaml.RNode) error {
+	for i := range input {
+		err := input[i].PipeE(yaml.ClearAnnotation(ResourceIdAnnotation))
+		if err != nil {
+			return err
 		}
 	}
 	return nil
