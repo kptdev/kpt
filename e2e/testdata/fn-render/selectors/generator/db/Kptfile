@@ -9,6 +9,10 @@ pipeline:
     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
       configMap:
         namespace: db
+      selectors:
+        - name: httpbin
     - image: gcr.io/kpt-fn/set-labels:v0.1.4
       configMap:
         app: backend
+      selectors:
+        - name: httpbin
