@@ -555,7 +555,7 @@ func pruneResources(hctx *hydrationContext) error {
 	return nil
 }
 
-// selectInput returns the selected resources based on selection criteria in selectors
+// selectInput returns the selected resources based on criteria in selectors
 func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector) []*yaml.RNode {
 	if len(selectors) == 0 {
 		return input
