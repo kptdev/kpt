@@ -42,7 +42,7 @@ import (
 func NewContainerRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy, network bool) (kio.Filter, error) {
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -55,6 +55,7 @@ func NewContainerRunner(
 		// Pkg: string(pkgPath),
 	}
 	cfn := &ContainerFn{
+		Perm:            ContainerFnPermission{AllowNetwork: network},
 		Path:            pkgPath,
 		Image:           f.Image,
 		ImagePullPolicy: imagePullPolicy,

@@ -42,6 +42,7 @@ type Executor struct {
 	ResultsDirPath  string
 	Output          io.Writer
 	ImagePullPolicy fnruntime.ImagePullPolicy
+	Network         bool
 }
 
 // Execute runs a pipeline.
@@ -61,6 +62,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		pkgs:            map[types.UniquePath]*pkgNode{},
 		fnResults:       fnresult.NewResultList(),
 		imagePullPolicy: e.ImagePullPolicy,
+		network:         e.Network,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -150,6 +152,9 @@ type hydrationContext struct {
 
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// network controls if the network is available
+	network bool
 }
 
 //
@@ -392,7 +397,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, hctx.network)
 		if err != nil {
 			return err
 		}
@@ -488,7 +493,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		fn := fns[i]
 		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, hctx.network)
 		if err != nil {
 			return nil, err
 		}

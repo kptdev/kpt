@@ -43,6 +43,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
+	c.Flags().BoolVar(&r.Network, "network", false, "enable network access for functions that declare it")
 	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	cmdutil.FixDocs("kpt", parent, c)
@@ -62,6 +63,7 @@ type Runner struct {
 	dest            string
 	Command         *cobra.Command
 	ctx             context.Context
+	Network         bool
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -107,6 +109,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
+		Network:         r.Network,
 	}
 	err = executor.Execute(r.ctx)
 	if err != nil {
