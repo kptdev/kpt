@@ -23,6 +23,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -111,10 +112,11 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	if !fr.disableCLIOutput {
 		pr.Printf("[RUNNING] %q\n", fr.name)
 	}
+	t0 := time.Now()
 	output, err = fr.do(input)
 	if err != nil {
 		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q\n", fr.name)
+		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
 		if goerrors.As(err, &fnErr) {
@@ -124,7 +126,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q\n", fr.name)
+		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
 	}
 	return output, err
