@@ -18,6 +18,7 @@ package cmdcomplete
 import (
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/posener/complete/v2"
 	"github.com/posener/complete/v2/predict"
@@ -65,6 +66,12 @@ func Complete(cmd *cobra.Command, skipHelp bool, visitFlags VisitFlags) *complet
 		}
 		if flag.Name == "pattern" {
 			cc.Flags[flag.Name] = predict.Options(predict.OptValues("%k_%n.yaml"))
+			return
+		}
+		if flag.Name == "image" || flag.Shorthand == "i" {
+			fnImages := cmdutil.FetchFunctionImages()
+			cc.Flags[flag.Name] = predict.Options(predict.OptValues(fnImages...))
+			cc.Flags[flag.Shorthand] = predict.Options(predict.OptValues(fnImages...))
 			return
 		}
 		cc.Flags[flag.Name] = predict.Nothing

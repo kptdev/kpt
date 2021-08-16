@@ -17,6 +17,7 @@ package cmdutil
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -37,6 +39,7 @@ const (
 	Stdout                             = "stdout"
 	Unwrap                             = "unwrap"
 	dockerVersionTimeout time.Duration = 5 * time.Second
+	FunctionsCatalogURL                = "https://catalog.kpt.dev/catalog.json"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -177,4 +180,34 @@ func CheckDirectoryNotPresent(outDir string) error {
 		return err
 	}
 	return nil
+}
+
+// FetchFunctionImages returns the list of latest function images from catalog.kpt.dev
+func FetchFunctionImages() []string {
+	content, err := httputil.FetchContent(FunctionsCatalogURL)
+	if err != nil {
+		return nil
+	}
+
+	return listImages(content)
+}
+
+// listImages returns the list of latest images from the input catalog content
+func listImages(content string) []string {
+	var result []string
+	jsonData := map[string]map[string]interface{}{}
+	err := json.Unmarshal([]byte(content), &jsonData)
+	if err != nil {
+		return result
+	}
+	for fnName, fnInfo := range jsonData {
+		var latestVersion string
+		for version := range fnInfo {
+			if latestVersion < version {
+				latestVersion = version
+			}
+		}
+		result = append(result, fmt.Sprintf("%s:%s", fnName, latestVersion))
+	}
+	return result
 }

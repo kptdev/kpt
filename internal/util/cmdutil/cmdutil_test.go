@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -304,4 +305,36 @@ metadata:
 			}
 		})
 	}
+}
+
+func TestListImages(t *testing.T) {
+	result := listImages(`{
+  "apply-setters": {
+    "v0.1": {
+      "apply-setters-simple": {
+        "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
+        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
+        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+      }
+    }
+  },
+  "gatekeeper": {
+    "v0.1": {
+      "gatekeeper-warning-only": {
+        "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
+        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
+        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+      }
+    },
+    "v0.2": {
+      "gatekeeper-warning-only": {
+        "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
+        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
+        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+      }
+    }
+  }
+}`)
+	sort.Strings(result)
+	assert.Equal(t, []string{"apply-setters:v0.1", "gatekeeper:v0.2"}, result)
 }
