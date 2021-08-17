@@ -527,7 +527,7 @@ func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode
 	return nil
 }
 
-// trackOutputfiles records the file paths of output resources in the hydration
+// trackOutputFiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
 	outputSet := sets.String{}
@@ -563,15 +563,39 @@ func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector) []*yaml.RN
 	var filteredInput []*yaml.RNode
 	for _, selector := range selectors {
 		for _, node := range input {
-			if (selector.Name == "" || selector.Name == node.GetName()) &&
-				(selector.Namespace == "" || selector.Namespace == node.GetNamespace()) &&
-				(selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()) &&
-				(selector.Kind == "" || selector.Kind == node.GetKind()) {
+			if isMatch(node, selector) {
 				filteredInput = append(filteredInput, node)
 			}
 		}
 	}
 	return filteredInput
+}
+
+// isMatch returns true if the resource matches input selection criteria
+func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	// keep expanding with new selectors
+	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
+		kindMatch(node, selector) && apiVersionMatch(node, selector)
+}
+
+// nameMatch returns true if the resource name matches input selection criteria
+func nameMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Name == "" || selector.Name == node.GetName()
+}
+
+// namespaceMatch returns true if the resource namespace matches input selection criteria
+func namespaceMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Namespace == "" || selector.Namespace == node.GetNamespace()
+}
+
+// kindMatch returns true if the resource kind matches input selection criteria
+func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.Kind == "" || selector.Kind == node.GetKind()
+}
+
+// apiVersionMatch returns true if the resource apiVersion matches input selection criteria
+func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
 }
 
 // setResourceIds adds resource-id annotation to each input resource
