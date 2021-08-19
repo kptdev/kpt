@@ -292,6 +292,8 @@ type Selector struct {
 	Name string `yaml:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty"`
+	// PackagePath of the target resources
+	PackagePath string `yaml:"packagePath,omitempty"`
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.

@@ -335,6 +335,22 @@ spec:
 			},
 			expected: false,
 		},
+		{
+			name: "packagePath match",
+			input: `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  annotations:
+    internal.config.k8s.io/resource-id: "0"
+    internal.config.kubernetes.io/package-path: "/path/to/root/pkg/db"
+spec:
+  replicas: 3`,
+			selector: v1.Selector{
+				PackagePath: "./db",
+			},
+			expected: true,
+		},
 	}
 
 	for i := range tests {
@@ -342,7 +358,13 @@ spec:
 		t.Run(tc.name, func(t *testing.T) {
 			node, err := yaml.Parse(tc.input)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expected, isMatch(node, tc.selector))
+			var rootPackagePath string
+			if tc.selector.PackagePath != "" {
+				rootPackagePath = "/path/to/root/pkg"
+			}
+			actual, err := isMatch(node, tc.selector, &selectionContext{rootPackagePath: rootPackagePath})
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

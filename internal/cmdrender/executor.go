@@ -363,7 +363,10 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		}
 
 		// select the resources on which function should be applied
-		selectedInput := selectInput(input, pl.Mutators[i].Selectors)
+		selectedInput, err := selectInput(input, pl.Mutators[i].Selectors, &selectionContext{rootPackagePath: hctx.root.pkg.UniquePath.String()})
+		if err != nil {
+			return nil, err
+		}
 		output := &kio.PackageBuffer{}
 		// create a kio pipeline from kyaml library to execute the function chains
 		mutation := kio.Pipeline{
@@ -412,7 +415,11 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		}
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		if _, err = validator.Filter(selectInput(cloneResources(input), fn.Selectors)); err != nil {
+		selectedResources, err := selectInput(input, fn.Selectors, &selectionContext{rootPackagePath: hctx.root.pkg.UniquePath.String()})
+		if err != nil {
+			return err
+		}
+		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			return err
 		}
 		hctx.executedFunctionCnt++
@@ -555,27 +562,39 @@ func pruneResources(hctx *hydrationContext) error {
 	return nil
 }
 
+type selectionContext struct {
+	rootPackagePath string
+}
+
 // selectInput returns the selected resources based on criteria in selectors
-func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector) []*yaml.RNode {
+func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, ctx *selectionContext) ([]*yaml.RNode, error) {
 	if len(selectors) == 0 {
-		return input
+		return input, nil
 	}
 	var filteredInput []*yaml.RNode
 	for _, selector := range selectors {
 		for _, node := range input {
-			if isMatch(node, selector) {
+			match, err := isMatch(node, selector, ctx)
+			if err != nil {
+				return nil, err
+			}
+			if match {
 				filteredInput = append(filteredInput, node)
 			}
 		}
 	}
-	return filteredInput
+	return filteredInput, nil
 }
 
 // isMatch returns true if the resource matches input selection criteria
-func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+func isMatch(node *yaml.RNode, selector kptfilev1.Selector, ctx *selectionContext) (bool, error) {
+	pkgPathMatch, err := packagePathMatch(node, selector, ctx.rootPackagePath)
+	if err != nil {
+		return false, err
+	}
 	// keep expanding with new selectors
 	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector)
+		kindMatch(node, selector) && apiVersionMatch(node, selector) && pkgPathMatch, nil
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
@@ -596,6 +615,15 @@ func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 // apiVersionMatch returns true if the resource apiVersion matches input selection criteria
 func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
+}
+
+// packagePathMatch returns true if the package path of resource matches input selection criteria
+func packagePathMatch(node *yaml.RNode, selector kptfilev1.Selector, rootPackagePath string) (bool, error) {
+	resourcePkgPath, err := pkg.GetPkgPathAnnotation(node)
+	if err != nil {
+		return false, err
+	}
+	return selector.PackagePath == "" || filepath.Join(rootPackagePath, selector.PackagePath) == resourcePkgPath, nil
 }
 
 // setResourceIds adds resource-id annotation to each input resource
