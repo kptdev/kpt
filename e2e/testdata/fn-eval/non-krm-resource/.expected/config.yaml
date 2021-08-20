@@ -18,5 +18,5 @@ args:
   namespace: staging
 exitCode: 1
 stdErr: |
-  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
   error: input resource list must contain only KRM resources: nonkrm.yaml: resource must have `apiVersion`
