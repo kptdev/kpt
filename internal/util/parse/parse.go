@@ -45,7 +45,7 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 
 	// GitHub parsing if contains github.com
 	if strings.Contains(args[0], "github.com") {
-		ghPkgURL, err := pkgURLFromGHURL(args[0])
+		ghPkgURL, err := pkgURLFromGHURL(ctx, args[0], getRepoBranches)
 		if err != nil {
 			return g, err
 		}
@@ -126,7 +126,7 @@ func getTargetFromPkgURL(ctx context.Context, pkgUrl, dest string) (Target, erro
 
 // pkgURLFromGHURL converts a GitHub URL into a well formed pkg url
 // by adding a .git suffix after repo URI and version info if available
-func pkgURLFromGHURL(v string) (string, error) {
+func pkgURLFromGHURL(ctx context.Context, v string, findRepoBranches func(context.Context, string) ([]string, error)) (string, error) {
 	v = strings.TrimSuffix(v, "/")
 	// url should have scheme and host separated by ://
 	parts := strings.SplitN(v, "://", 2)
@@ -155,6 +155,18 @@ func pkgURLFromGHURL(v string) (string, error) {
 		repo := parts[0] + "://" + path.Join(ghRepoParts[:3]...)
 		version := ghRepoParts[4]
 		dir := path.Join(ghRepoParts[5:]...)
+		// For an input like github.com/owner/repo/tree/feature/foo-feat where feature/foo-feat is the branch name
+		// we will extract version as feature which is invalid.
+		// To identify potential mismatch, we find all branches in the upstream repo
+		// and check for potential matches, returning an error if any matched.
+		branches, err := findRepoBranches(ctx, repo)
+		if err != nil {
+			return "", err
+		}
+		if isAmbiguousBranch(version, branches) {
+			return "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument: %s", v)
+		}
+
 		if dir != "" {
 			// return scheme://github.com/owner/repo.git/path@ref
 			return fmt.Sprintf("%s.git/%s@%s", repo, dir, version), nil
@@ -168,6 +180,31 @@ func pkgURLFromGHURL(v string) (string, error) {
 	dir := path.Join(ghRepoParts[3:]...)
 	// return scheme://github.com/owner/repo.git/path
 	return repo + path.Join(".git", dir), nil
+}
+
+// getRepoBranches returns a slice of branches in upstream repo
+func getRepoBranches(ctx context.Context, repo string) ([]string, error) {
+	gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+	if err != nil {
+		return nil, err
+	}
+	branches := make([]string, 0, len(gur.Heads))
+	for head := range gur.Heads {
+		branches = append(branches, head)
+	}
+	return branches, nil
+}
+
+// isAmbiguousBranch checks if a given branch name is similar to other branch names.
+// If a branch with an appended slash matches other branches, then it is ambiguous.
+func isAmbiguousBranch(branch string, branches []string) bool {
+	branch = branch + "/"
+	for _, b := range branches {
+		if strings.Contains(b, branch) {
+			return true
+		}
+	}
+	return false
 }
 
 // getURIAndVersion parses the repo+pkgURI and the version from v
