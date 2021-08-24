@@ -1,4 +1,4 @@
 # Kptfile
 
 Grab the OpenAPI
-[schema here](https://kpt.dev/reference/schema/kptfile/kptfile.yaml)
+[schema here](https://raw.githubusercontent.com/GoogleContainerTools/kpt/main/site/reference/schema/kptfile/kptfile.yaml).
