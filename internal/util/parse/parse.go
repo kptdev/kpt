@@ -84,10 +84,10 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 }
 
 // getTargetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func getTargetFromPkgURL(ctx context.Context, pkgUrl, dest string) (Target, error) {
+func getTargetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
 	g := Target{}
 	var repo, dir, version string
-	parts := strings.Split(pkgUrl, ".git")
+	parts := strings.Split(pkgURL, ".git")
 	repo = strings.TrimSuffix(parts[0], "/")
 	switch {
 	case len(parts) == 1:
@@ -198,7 +198,7 @@ func getRepoBranches(ctx context.Context, repo string) ([]string, error) {
 // isAmbiguousBranch checks if a given branch name is similar to other branch names.
 // If a branch with an appended slash matches other branches, then it is ambiguous.
 func isAmbiguousBranch(branch string, branches []string) bool {
-	branch = branch + "/"
+	branch += "/"
 	for _, b := range branches {
 		if strings.Contains(b, branch) {
 			return true
