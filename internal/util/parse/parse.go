@@ -40,7 +40,7 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 
 	// Simple parsing if contains .git
 	if strings.Contains(args[0], ".git") {
-		return getTargetFromPkgURL(ctx, args[0], args[1])
+		return targetFromPkgURL(ctx, args[0], args[1])
 	}
 
 	// GitHub parsing if contains github.com
@@ -49,7 +49,7 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		if err != nil {
 			return g, err
 		}
-		return getTargetFromPkgURL(ctx, ghPkgURL, args[1])
+		return targetFromPkgURL(ctx, ghPkgURL, args[1])
 	}
 
 	uri, version, err := getURIAndVersion(args[0])
@@ -83,8 +83,8 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 	return g, nil
 }
 
-// getTargetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func getTargetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
+// targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
+func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
 	g := Target{}
 	var repo, dir, version string
 	parts := strings.Split(pkgURL, ".git")
@@ -176,7 +176,7 @@ func pkgURLFromGHURL(ctx context.Context, v string, findRepoBranches func(contex
 	}
 	// if no tree, version info is unavailable in url
 	// url of form github.com/owner/repo/<path>
-	repo := parts[0] + "://" + path.Join(ghRepoParts[:3]...)
+	repo := fmt.Sprintf("%s://%s", parts[0], path.Join(ghRepoParts[:3]...))
 	dir := path.Join(ghRepoParts[3:]...)
 	// return scheme://github.com/owner/repo.git/path
 	return repo + path.Join(".git", dir), nil
