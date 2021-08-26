@@ -16,6 +16,7 @@ package parse
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -39,42 +40,16 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 
 	// Simple parsing if contains .git
 	if strings.Contains(args[0], ".git") {
-		var repo, dir, version string
-		parts := strings.Split(args[0], ".git")
-		repo = strings.TrimSuffix(parts[0], "/")
-		switch {
-		case len(parts) == 1:
-			// do nothing
-		case strings.Contains(parts[1], "@"):
-			parts := strings.Split(parts[1], "@")
-			version = strings.TrimSuffix(parts[1], "/")
-			dir = parts[0]
-		default:
-			dir = parts[1]
-		}
-		if version == "" {
-			gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
-			if err != nil {
-				return g, err
-			}
-			defaultRef, err := gur.GetDefaultBranch(ctx)
-			if err != nil {
-				return g, err
-			}
-			version = defaultRef
-		}
-		if dir == "" {
-			dir = "/"
-		}
-		destination, err := getDest(args[1], repo, dir)
+		return targetFromPkgURL(ctx, args[0], args[1])
+	}
+
+	// GitHub parsing if contains github.com
+	if strings.Contains(args[0], "github.com") {
+		ghPkgURL, err := pkgURLFromGHURL(ctx, args[0], getRepoBranches)
 		if err != nil {
 			return g, err
 		}
-		g.Ref = version
-		g.Directory = path.Clean(dir)
-		g.Repo = repo
-		g.Destination = filepath.Clean(destination)
-		return g, nil
+		return targetFromPkgURL(ctx, ghPkgURL, args[1])
 	}
 
 	uri, version, err := getURIAndVersion(args[0])
@@ -108,6 +83,130 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 	return g, nil
 }
 
+// targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
+func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
+	g := Target{}
+	var repo, dir, version string
+	parts := strings.Split(pkgURL, ".git")
+	repo = strings.TrimSuffix(parts[0], "/")
+	switch {
+	case len(parts) == 1:
+		// do nothing
+	case strings.Contains(parts[1], "@"):
+		parts := strings.Split(parts[1], "@")
+		version = strings.TrimSuffix(parts[1], "/")
+		dir = parts[0]
+	default:
+		dir = parts[1]
+	}
+	if version == "" {
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		if err != nil {
+			return g, err
+		}
+		defaultRef, err := gur.GetDefaultBranch(ctx)
+		if err != nil {
+			return g, err
+		}
+		version = defaultRef
+	}
+	if dir == "" {
+		dir = "/"
+	}
+	destination, err := getDest(dest, repo, dir)
+	if err != nil {
+		return g, err
+	}
+	g.Ref = version
+	g.Directory = path.Clean(dir)
+	g.Repo = repo
+	g.Destination = filepath.Clean(destination)
+	return g, nil
+}
+
+// pkgURLFromGHURL converts a GitHub URL into a well formed pkg url
+// by adding a .git suffix after repo URI and version info if available
+func pkgURLFromGHURL(ctx context.Context, v string, findRepoBranches func(context.Context, string) ([]string, error)) (string, error) {
+	v = strings.TrimSuffix(v, "/")
+	// url should have scheme and host separated by ://
+	parts := strings.SplitN(v, "://", 2)
+	if len(parts) != 2 {
+		return "", errors.Errorf("invalid GitHub url: %s", v)
+	}
+	// host should be github.com
+	if !strings.HasPrefix(parts[1], "github.com") {
+		return "", errors.Errorf("invalid GitHub url: %s", v)
+	}
+
+	ghRepoParts := strings.Split(parts[1], "/")
+	// expect at least github.com/owner/repo
+	if len(ghRepoParts) < 3 {
+		return "", errors.Errorf("invalid GitHub pkg url: %s", v)
+	}
+	// url of form github.com/owner/repo
+	if len(ghRepoParts) == 3 {
+		repoWithPath := path.Join(ghRepoParts...)
+		// return scheme://github.com/owner/repo.git
+		return parts[0] + "://" + path.Join(repoWithPath) + ".git", nil
+	}
+
+	// url of form github.com/owner/repo/tree/ref/<path>
+	if ghRepoParts[3] == "tree" && len(ghRepoParts) > 4 {
+		repo := parts[0] + "://" + path.Join(ghRepoParts[:3]...)
+		version := ghRepoParts[4]
+		dir := path.Join(ghRepoParts[5:]...)
+		// For an input like github.com/owner/repo/tree/feature/foo-feat where feature/foo-feat is the branch name
+		// we will extract version as feature which is invalid.
+		// To identify potential mismatch, we find all branches in the upstream repo
+		// and check for potential matches, returning an error if any matched.
+		branches, err := findRepoBranches(ctx, repo)
+		if err != nil {
+			return "", err
+		}
+		if isAmbiguousBranch(version, branches) {
+			return "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument: %s", v)
+		}
+
+		if dir != "" {
+			// return scheme://github.com/owner/repo.git/path@ref
+			return fmt.Sprintf("%s.git/%s@%s", repo, dir, version), nil
+		}
+		// return scheme://github.com/owner/repo.git@ref
+		return fmt.Sprintf("%s.git@%s", repo, version), nil
+	}
+	// if no tree, version info is unavailable in url
+	// url of form github.com/owner/repo/<path>
+	repo := fmt.Sprintf("%s://%s", parts[0], path.Join(ghRepoParts[:3]...))
+	dir := path.Join(ghRepoParts[3:]...)
+	// return scheme://github.com/owner/repo.git/path
+	return repo + path.Join(".git", dir), nil
+}
+
+// getRepoBranches returns a slice of branches in upstream repo
+func getRepoBranches(ctx context.Context, repo string) ([]string, error) {
+	gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+	if err != nil {
+		return nil, err
+	}
+	branches := make([]string, 0, len(gur.Heads))
+	for head := range gur.Heads {
+		branches = append(branches, head)
+	}
+	return branches, nil
+}
+
+// isAmbiguousBranch checks if a given branch name is similar to other branch names.
+// If a branch with an appended slash matches other branches, then it is ambiguous.
+func isAmbiguousBranch(branch string, branches []string) bool {
+	branch += "/"
+	for _, b := range branches {
+		if strings.Contains(b, branch) {
+			return true
+		}
+	}
+	return false
+}
+
 // getURIAndVersion parses the repo+pkgURI and the version from v
 func getURIAndVersion(v string) (string, string, error) {
 	if strings.Count(v, "://") > 1 {
@@ -128,16 +227,6 @@ func getRepoAndPkg(v string) (string, string, error) {
 	parts := strings.SplitN(v, "://", 2)
 	if len(parts) != 2 {
 		return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-	}
-
-	if strings.HasPrefix(parts[1], "github.com") {
-		repoSubdir := append(strings.Split(parts[1], "/"), "/")
-		if len(repoSubdir) < 4 {
-			return "", "", errors.Errorf("ambiguous repo/dir@version specify '.git' in argument")
-		}
-		repo := parts[0] + "://" + path.Join(repoSubdir[:3]...)
-		dir := path.Join(repoSubdir[3:]...)
-		return repo, dir, nil
 	}
 
 	if strings.Count(v, ".git/") != 1 && !strings.HasSuffix(v, ".git") {
