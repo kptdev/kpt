@@ -197,11 +197,22 @@ func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
 func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
+	dir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	defer testutil.Chdir(t, filepath.Dir(dir))()
+
 	// verify the current working directory is used if no path is specified
 	r := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
-	err := r.Command.Execute()
+	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
@@ -219,7 +230,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"foo@refs/heads/foo"})
+	r.Command.SetArgs([]string{dir + "@refs/heads/foo"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
@@ -228,7 +239,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	// verify the branch ref is set to the correct value
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"foo", "--strategy", "force-delete-replace"})
+	r.Command.SetArgs([]string{dir, "--strategy", "force-delete-replace"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, kptfilev1.ForceDeleteReplace, r.Update.Strategy)
@@ -236,7 +247,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 
 	r = cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
-	r.Command.SetArgs([]string{"foo", "--strategy", "resource-merge"})
+	r.Command.SetArgs([]string{dir, "--strategy", "resource-merge"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
@@ -301,7 +312,7 @@ func TestCmd_path(t *testing.T) {
 		{
 			name:           "package must exist as a subdirectory of cwd",
 			currentWD:      filepath.Dir(dir),
-			path:           "/var/user/temp",
+			path:           filepath.Dir(filepath.Dir(dir)),
 			expectedErrMsg: "package path must be under current working directory",
 		},
 	}
@@ -318,6 +329,7 @@ func TestCmd_path(t *testing.T) {
 				}
 				return nil
 			}
+
 			r.Command.SetArgs([]string{test.path})
 			err = r.Command.Execute()
 

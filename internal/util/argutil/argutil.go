@@ -16,9 +16,12 @@
 package argutil
 
 import (
+	"context"
 	"fmt"
+	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
@@ -84,4 +87,16 @@ func ParseFieldPath(path string) ([]string, error) {
 		newParts = append(newParts, p[0], p[1])
 	}
 	return newParts, nil
+}
+
+// ResolveSymlink returns the resolved symlink path for the input path
+func ResolveSymlink(ctx context.Context, path string) (string, error) {
+	rp, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", err
+	}
+	if rp != path {
+		fmt.Fprintf(printer.FromContextOrDie(ctx).ErrStream(), "[WARN] resolved symlink %q to %q, please note that the symlinks within the package are ignored\n", path, rp)
+	}
+	return rp, nil
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -86,7 +87,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return errors.E(op, errors.InvalidParam, fmt.Errorf("at most 1 version permitted"))
 	}
 
-	p, err := pkg.New(parts[0])
+	resolvedPath, err := argutil.ResolveSymlink(r.ctx, parts[0])
+	if err != nil {
+		return err
+	}
+
+	p, err := pkg.New(resolvedPath)
 	if err != nil {
 		return errors.E(op, err)
 	}

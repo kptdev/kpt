@@ -12,6 +12,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
@@ -93,12 +94,16 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("cannot convert input path %q to absolute path: %w", a, err)
 		}
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(types.UniquePath(pkgPath), r.IncludeMetaResources)
+		resolvedPath, err := argutil.ResolveSymlink(r.Ctx, pkgPath)
+		if err != nil {
+			return err
+		}
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(types.UniquePath(resolvedPath), r.IncludeMetaResources)
 		if err != nil {
 			return err
 		}
 		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath:       a,
+			PackagePath:       resolvedPath,
 			MatchFilesGlob:    matchFilesGlob,
 			FileSkipFunc:      functionConfigFilter,
 			PreserveSeqIndent: true,

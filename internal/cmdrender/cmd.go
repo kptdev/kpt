@@ -24,6 +24,7 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
@@ -75,6 +76,11 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	} else {
 		// resolve and validate the provided path
 		r.pkgPath = args[0]
+	}
+	var err error
+	r.pkgPath, err = argutil.ResolveSymlink(r.ctx, r.pkgPath)
+	if err != nil {
+		return err
 	}
 	if r.dest != "" && r.dest != cmdutil.Stdout && r.dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.dest); err != nil {
