@@ -127,9 +127,7 @@ func TestResolveSymlink(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
+	defer os.RemoveAll(dir)
 	defer testutil.Chdir(t, dir)()
 	err = os.MkdirAll(filepath.Join(dir, "foo"), 0700)
 	assert.NoError(t, err)

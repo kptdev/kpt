@@ -201,11 +201,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
-
+	defer os.RemoveAll(dir)
 	defer testutil.Chdir(t, filepath.Dir(dir))()
 
 	// verify the current working directory is used if no path is specified
@@ -254,6 +250,32 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	assert.Equal(t, "", r.Update.Ref)
 }
 
+func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer os.RemoveAll(dir)
+	defer testutil.Chdir(t, dir)()
+
+	err = os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
+	assert.NoError(t, err)
+	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
+	assert.NoError(t, err)
+
+	// verify the branch ref is set to the correct value
+	r := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{"foo" + "@refs/heads/foo"})
+	err = r.Command.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, "refs/heads/foo", r.Update.Ref)
+	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
+	cwd, err := os.Getwd()
+	assert.NoError(t, err)
+	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Update.Pkg.UniquePath.String())
+}
+
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process
 func TestCmd_fail(t *testing.T) {
 	r := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -276,9 +298,7 @@ func TestCmd_path(t *testing.T) {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
+	defer os.RemoveAll(dir)
 
 	testCases := []struct {
 		name                    string
