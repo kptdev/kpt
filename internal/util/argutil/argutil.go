@@ -18,6 +18,7 @@ package argutil
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -91,11 +92,16 @@ func ParseFieldPath(path string) ([]string, error) {
 
 // ResolveSymlink returns the resolved symlink path for the input path
 func ResolveSymlink(ctx context.Context, path string) (string, error) {
+	isSymlink := false
+	f, err := os.Lstat(path)
+	if err == nil && f.Mode().Type() == os.ModeSymlink {
+		isSymlink = true
+	}
 	rp, err := filepath.EvalSymlinks(path)
 	if err != nil {
 		return "", err
 	}
-	if rp != path {
+	if isSymlink {
 		fmt.Fprintf(printer.FromContextOrDie(ctx).ErrStream(), "[WARN] resolved symlink %q to %q, please note that the symlinks within the package are ignored\n", path, rp)
 	}
 	return rp, nil
