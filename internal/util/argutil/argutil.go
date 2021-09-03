@@ -96,6 +96,8 @@ func ResolveSymlink(ctx context.Context, path string) (string, error) {
 	f, err := os.Lstat(path)
 	if err == nil && f.Mode().Type() == os.ModeSymlink {
 		isSymlink = true
+	} else if err != nil {
+		return "", err
 	}
 	rp, err := filepath.EvalSymlinks(path)
 	if err != nil {
