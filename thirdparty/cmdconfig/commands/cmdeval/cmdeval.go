@@ -14,6 +14,7 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
@@ -280,6 +281,13 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 	if r.FnConfigPath != "" {
 		err = checkFnConfigPathExistence(r.FnConfigPath)
+		if err != nil {
+			return err
+		}
+	}
+
+	if path != "" {
+		path, err = argutil.ResolveSymlink(r.Ctx, path)
 		if err != nil {
 			return err
 		}

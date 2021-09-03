@@ -556,6 +556,46 @@ wait 2
 assertRGInventory "rg-test-namespace" "4"
 printResult
 
+# Test: Basic kpt live apply on symlink
+# Apply run for "rg-test-case-1a" directory
+echo "[ResourceGroup] Testing basic apply on symlink"
+ln -s e2e/live/testdata/rg-test-case-1a/ link-to-rg-test-case-1a
+echo "kpt live apply link-to-rg-test-case-1a"
+${BIN_DIR}/kpt live apply link-to-rg-test-case-1a > $OUTPUT_DIR/status
+# The ResourceGroup CRD is already installed.
+assertNotContains "installing inventory ResourceGroup CRD"
+assertContains "namespace/rg-test-namespace unchanged"
+assertContains "1 resource(s) applied. 0 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "pod/pod-a unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+assertContains "3 resource(s) applied. 0 created, 3 unchanged, 0 configured, 0 failed"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertRGInventory "rg-test-namespace" "4"
+printResult
+
+# Test: Basic kpt live status on symlink
+# Apply run for "rg-test-case-1a" directory
+echo "[ResourceGroup] Testing basic status on symlink"
+ln -s e2e/live/testdata/rg-test-case-1a/ link-to-rg-test-case-1a
+echo "kpt live apply link-to-rg-test-case-1a"
+${BIN_DIR}/kpt live status link-to-rg-test-case-1a > $OUTPUT_DIR/status
+# The ResourceGroup CRD is already installed.
+assertNotContains "installing inventory ResourceGroup CRD"
+assertContains "namespace/rg-test-namespace is Current: Resource is current"
+assertContains "pod/pod-a is Current: Pod is Ready"
+assertContains "pod/pod-b is Current: Pod is Ready"
+assertContains "pod/pod-c is Current: Pod is Ready"
+wait 2
+# Validate resources in the cluster
+# ConfigMap inventory with four inventory items.
+assertRGInventory "rg-test-namespace" "4"
+printResult
+
+rm -rf link-to-rg-test-case-1a
+
 # Test: kpt live apply dry-run of with prune
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "[ResourceGroup] Testing basic apply dry-run"

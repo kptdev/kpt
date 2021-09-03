@@ -11,6 +11,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
@@ -113,7 +114,16 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		args = append(args, cwd)
 	}
 
-	_, inv, err := live.Load(r.factory, args[0], c.InOrStdin())
+	path := args[0]
+	var err error
+	if args[0] != "-" {
+		path, err = argutil.ResolveSymlink(r.ctx, path)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

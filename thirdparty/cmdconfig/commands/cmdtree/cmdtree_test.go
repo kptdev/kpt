@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,10 +22,8 @@ func TestTreeCommandDefaultCurDir_files(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = os.Chdir(d)
-	if !assert.NoError(t, err) {
-		return
-	}
+	revert := testutil.Chdir(t, d)
+	defer revert()
 
 	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
@@ -331,10 +330,8 @@ func TestTreeCommand_CurDirInput(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = os.Chdir(filepath.Join(d, "Mainpkg"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	revert := testutil.Chdir(t, filepath.Join(d, "Mainpkg"))
+	defer revert()
 
 	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "f1.yaml"), []byte(`
 kind: Deployment
@@ -399,4 +396,88 @@ metadata:
 `, b.String()) {
 		return
 	}
+}
+
+func TestTreeCommand_symlink(t *testing.T) {
+	d, err := ioutil.TempDir("", "tree-test")
+	if !assert.NoError(t, err) {
+		return
+	}
+	revert := testutil.Chdir(t, d)
+	defer revert()
+	err = os.MkdirAll(filepath.Join(d, "foo"), 0700)
+	assert.NoError(t, err)
+	err = os.Symlink("foo", "foo-link")
+	if !assert.NoError(t, err) {
+		return
+	}
+	defer os.RemoveAll(d)
+	err = ioutil.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`
+apiVersion: v1
+kind: Abstraction
+metadata:
+  name: foo
+  configFn:
+    container:
+      image: gcr.io/example/reconciler:v1
+  annotations:
+    config.kubernetes.io/local-config: "true"
+spec:
+  replicas: 1
+---
+kind: Deployment
+metadata:
+  labels:
+    app: nginx2
+  name: foo
+  annotations:
+    app: nginx2
+spec:
+  replicas: 1
+---
+kind: Service
+metadata:
+  name: foo
+  annotations:
+    app: nginx
+spec:
+  selector:
+    app: nginx
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = ioutil.WriteFile(filepath.Join(d, "foo", "f2.yaml"), []byte(`kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: bar
+  annotations:
+    app: nginx
+spec:
+  replicas: 3
+`), 0600)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// fmt the files
+	b := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, stderr), "")
+	r.Command.SetArgs([]string{filepath.Join(d, "foo-link")})
+	r.Command.SetOut(b)
+	if !assert.NoError(t, r.Command.Execute()) {
+		return
+	}
+
+	if !assert.Equal(t, `foo-link
+├── [f1.yaml]  Abstraction foo
+├── [f1.yaml]  Deployment foo
+├── [f1.yaml]  Service foo
+└── [f2.yaml]  Deployment bar
+`, b.String()) {
+		return
+	}
+	assert.Contains(t, stderr.String(), "please note that the symlinks within the package are ignored")
 }

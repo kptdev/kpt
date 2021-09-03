@@ -17,12 +17,14 @@ package cmdget
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -69,6 +71,15 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	const op errors.Op = "cmdget.preRunE"
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
+	} else {
+		_, err := os.Lstat(args[1])
+		if err == nil || os.IsExist(err) {
+			resolvedPath, err := argutil.ResolveSymlink(r.ctx, args[1])
+			if err != nil {
+				return errors.E(op, err)
+			}
+			args[1] = resolvedPath
+		}
 	}
 	t, err := parse.GitParseArgs(r.ctx, args)
 	if err != nil {

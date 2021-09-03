@@ -9,6 +9,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
@@ -50,8 +51,12 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		args = append(args, root)
 	}
 	root = filepath.Clean(args[0])
+	resolvedPath, err := argutil.ResolveSymlink(r.Ctx, args[0])
+	if err != nil {
+		return err
+	}
 	input = kio.LocalPackageReader{
-		PackagePath:       args[0],
+		PackagePath:       resolvedPath,
 		MatchFilesGlob:    r.getMatchFilesGlob(),
 		PreserveSeqIndent: true,
 	}

@@ -7,11 +7,15 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -21,6 +25,16 @@ import (
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
+	tempDir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer func() {
+		_ = os.RemoveAll(tempDir)
+	}()
+	defer testutil.Chdir(t, filepath.Dir(tempDir))()
+	dir := filepath.Base(tempDir)
+
 	tests := []struct {
 		name             string
 		args             []string
@@ -38,8 +52,8 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 	}{
 		{
 			name: "config map",
-			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
-			path: "dir",
+			args: []string{"eval", dir, "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
 					Image: "gcr.io/kpt-fn/foo:bar",
@@ -73,9 +87,9 @@ apiVersion: v1
 		},
 		{
 			name:   "config map dry-run",
-			args:   []string{"eval", "dir", "--image", "foo:bar", "-o", "stdout", "--", "a=b", "c=d", "e=f"},
+			args:   []string{"eval", dir, "--image", "foo:bar", "-o", "stdout", "--", "a=b", "c=d", "e=f"},
 			output: &bytes.Buffer{},
-			path:   "dir",
+			path:   dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
 					Image: "gcr.io/kpt-fn/foo:bar",
@@ -91,8 +105,8 @@ apiVersion: v1
 		},
 		{
 			name: "config map no args",
-			args: []string{"eval", "dir", "--image", "foo:bar"},
-			path: "dir",
+			args: []string{"eval", dir, "--image", "foo:bar"},
+			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
 					Image: "gcr.io/kpt-fn/foo:bar",
@@ -108,8 +122,8 @@ apiVersion: v1
 		},
 		{
 			name:    "network enabled",
-			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
-			path:    "dir",
+			args:    []string{"eval", dir, "--image", "foo:bar", "--network"},
+			path:    dir,
 			network: true,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
@@ -126,8 +140,8 @@ apiVersion: v1
 		},
 		{
 			name:    "with network name",
-			args:    []string{"eval", "dir", "--image", "foo:bar", "--network"},
-			path:    "dir",
+			args:    []string{"eval", dir, "--image", "foo:bar", "--network"},
+			path:    dir,
 			network: true,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
@@ -144,8 +158,8 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind",
-			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h"},
-			path: "dir",
+			args: []string{"eval", dir, "--image", "foo:bar", "--", "Foo", "g=h"},
+			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
 					Image: "gcr.io/kpt-fn/foo:bar",
@@ -161,8 +175,8 @@ apiVersion: v1
 		},
 		{
 			name: "custom kind '=' in data",
-			args: []string{"eval", "dir", "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
-			path: "dir",
+			args: []string{"eval", dir, "--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
+			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
 					Image: "gcr.io/kpt-fn/foo:bar",
@@ -179,11 +193,11 @@ apiVersion: v1
 		{
 			name: "custom kind with storage mounts",
 			args: []string{
-				"eval", "dir", "--mount", "type=bind,src=/mount/path,dst=/local/",
+				"eval", dir, "--mount", "type=bind,src=/mount/path,dst=/local/",
 				"--mount", "type=volume,src=myvol,dst=/local/",
 				"--mount", "type=tmpfs,dst=/local/",
 				"--image", "foo:bar", "--", "Foo", "g=h", "i=j=k"},
-			path:  "dir",
+			path:  dir,
 			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
@@ -200,10 +214,10 @@ apiVersion: v1
 		},
 		{
 			name: "results_dir",
-			args: []string{"eval", "dir", "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
-			path: "dir",
+			args: []string{"eval", dir, "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
+				Path:                  dir,
 				ResultsDir:            "foo/",
 				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
@@ -225,25 +239,25 @@ apiVersion: v1
 		},
 		{
 			name: "config map multi args",
-			args: []string{"eval", "dir", "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", dir, "dir2", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "0 or 1 arguments supported",
 		},
 		{
 			name: "config map not image",
-			args: []string{"eval", "dir", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", dir, "--", "a=b", "c=d", "e=f"},
 			err:  "must specify --image",
 		},
 		{
 			name: "config map bad data",
-			args: []string{"eval", "dir", "--image", "foo:bar", "--", "a=b", "c", "e=f"},
+			args: []string{"eval", dir, "--image", "foo:bar", "--", "a=b", "c", "e=f"},
 			err:  "must have keys and values separated by",
 		},
 		{
 			name: "envs",
-			args: []string{"eval", "dir", "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
-			path: "dir",
+			args: []string{"eval", dir, "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
+			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
+				Path:                  dir,
 				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
@@ -264,10 +278,10 @@ apiVersion: v1
 		},
 		{
 			name: "as current user",
-			args: []string{"eval", "dir", "--as-current-user", "--image", "foo:bar"},
-			path: "dir",
+			args: []string{"eval", dir, "--as-current-user", "--image", "foo:bar"},
+			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  "dir",
+				Path:                  dir,
 				AsCurrentUser:         true,
 				ImagePullPolicy:       fnruntime.AlwaysPull,
 				Env:                   []string{},
@@ -289,18 +303,18 @@ apiVersion: v1
 		},
 		{
 			name: "--fn-config flag",
-			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar"},
+			args: []string{"eval", dir, "--fn-config", "a/b/c", "--image", "foo:bar"},
 			err:  "missing function config file: a/b/c",
 		},
 		{
 			name: "--fn-config with function arguments",
-			args: []string{"eval", "dir", "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
+			args: []string{"eval", dir, "--fn-config", "a/b/c", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			err:  "function arguments can only be specified without function config file",
 		},
 		{
 			name: "exec args",
-			args: []string{"eval", "dir", "--exec", "execPath arg1 'arg2 arg3'", "--", "a=b", "c=d", "e=f"},
-			path: "dir",
+			args: []string{"eval", dir, "--exec", "execPath arg1 'arg2 arg3'", "--", "a=b", "c=d", "e=f"},
+			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Exec: runtimeutil.ExecSpec{
 					Path: "execPath",
@@ -425,3 +439,28 @@ apiVersion: v1
 		})
 	}
 }
+
+func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer os.RemoveAll(dir)
+	defer testutil.Chdir(t, dir)()
+
+	err = os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
+	assert.NoError(t, err)
+	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
+	assert.NoError(t, err)
+
+	// verify the branch ref is set to the correct value
+	r := GetEvalFnRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	r.Command.RunE = NoOpRunE
+	r.Command.SetArgs([]string{"foo", "-i", "bar:v0.1"})
+	err = r.Command.Execute()
+	assert.NoError(t, err)
+	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.RunFns.Path)
+}
+
+// NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
+var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }

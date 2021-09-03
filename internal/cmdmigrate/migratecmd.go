@@ -15,6 +15,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -274,7 +275,16 @@ func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
 		return nil
 	}
 
-	_, inv, err := live.Load(mr.factory, args[0], reader)
+	path := args[0]
+	var err error
+	if args[0] != "-" {
+		path, err = argutil.ResolveSymlink(mr.ctx, path)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, inv, err := live.Load(mr.factory, path, reader)
 	if err != nil {
 		return err
 	}

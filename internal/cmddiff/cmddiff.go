@@ -95,7 +95,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		r.DiffType = diff.DiffType(r.diffType)
 	}
 
-	p, err := pkg.New(dir)
+	resolvedPath, err := argutil.ResolveSymlink(r.ctx, dir)
+	if err != nil {
+		return err
+	}
+
+	p, err := pkg.New(resolvedPath)
 	if err != nil {
 		return err
 	}

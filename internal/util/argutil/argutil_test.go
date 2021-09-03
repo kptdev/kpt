@@ -15,8 +15,13 @@
 package argutil_test
 
 import (
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	. "github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -115,4 +120,31 @@ func TestParseDirVersionWithDefaults(t *testing.T) {
 		assert.Equal(t, gotDir, test.expDir)
 		assert.Equal(t, gotVer, test.expVer)
 	}
+}
+
+func TestResolveSymlink(t *testing.T) {
+	dir, err := ioutil.TempDir("", "")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	defer os.RemoveAll(dir)
+	defer testutil.Chdir(t, dir)()
+	err = os.MkdirAll(filepath.Join(dir, "foo"), 0700)
+	assert.NoError(t, err)
+	err = os.Symlink("foo", "foo-link")
+	assert.NoError(t, err)
+	err = os.Symlink("foo-link", "link-to-foo-link")
+	assert.NoError(t, err)
+
+	actual1, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), "foo-link")
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", actual1)
+
+	actual2, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), "link-to-foo-link")
+	assert.NoError(t, err)
+	assert.Equal(t, "foo", actual2)
+
+	_, err = ResolveSymlink(fake.CtxWithDefaultPrinter(), "baz")
+	assert.Error(t, err)
+	assert.Equal(t, "lstat baz: no such file or directory", err.Error())
 }
