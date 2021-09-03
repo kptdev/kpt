@@ -94,10 +94,11 @@ func ParseFieldPath(path string) ([]string, error) {
 func ResolveSymlink(ctx context.Context, path string) (string, error) {
 	isSymlink := false
 	f, err := os.Lstat(path)
-	if err == nil && f.Mode().Type() == os.ModeSymlink {
-		isSymlink = true
-	} else if err != nil {
+	if err != nil {
 		return "", err
+	}
+	if f.Mode().Type() == os.ModeSymlink {
+		isSymlink = true
 	}
 	rp, err := filepath.EvalSymlinks(path)
 	if err != nil {
