@@ -37,6 +37,11 @@ DIR:
 ```shell
 # Show resources in the current directory.
 $ kpt pkg tree
+
+Package "nginx"
+├── [Kptfile]  Kptfile nginx
+├── [deployment.yaml]  Deployment my-nginx
+└── [svc.yaml]  Service my-nginx-svc
 ```
 
 <!--mdtogo-->
