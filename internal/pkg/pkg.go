@@ -196,8 +196,12 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 		return kf, err
 	}
 
+	kf.Data = yaml.MustParse(string(c))
+
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
-	d.KnownFields(true)
+	// Note(droot): To ensure that kpt is forward compatible with schema changes to Kptfile
+	// it should be able to read unknown fields.
+	// d.KnownFields(true)
 	if err := d.Decode(kf); err != nil {
 		return kf, err
 	}

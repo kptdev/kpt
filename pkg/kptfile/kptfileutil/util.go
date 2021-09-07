@@ -32,18 +32,89 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
+// reconcileChanges reconciles changes done in the types with the
+// rawYAML content of the kptfile. (section by section).
+func reconcileChanges(k *kptfilev1.KptFile) (err error) {
+	// reconcile upstream section
+	if k.Upstream != nil {
+		// Upstream is a tagged union, so full replacement makes more sense
+		rn, err := getRNode(k.Upstream)
+		if err != nil {
+			return err
+		}
+		err = k.Data.SetMapField(rn, "upstream")
+		if err != nil {
+			return err
+		}
+	}
+
+	// reconcile upstreamLock section
+	if k.UpstreamLock != nil {
+		// UpstreamLock is a tagged union, so full replacement makes more sense
+		rn, err := getRNode(k.UpstreamLock)
+		if err != nil {
+			return err
+		}
+		err = k.Data.SetMapField(rn, "upstreamLock")
+		if err != nil {
+			return err
+		}
+	}
+
+	// reconcile inventory section
+	if k.Inventory != nil {
+		// TODO(droot): following can be written in generic form
+		if k.Inventory.Name != "" {
+			err = k.Data.SetMapField(yaml.NewStringRNode(k.Inventory.Name), "inventory", "name")
+		}
+		if k.Inventory.Namespace != "" {
+			err = k.Data.SetMapField(yaml.NewStringRNode(k.Inventory.Namespace), "inventory", "namespace")
+		}
+		if k.Inventory.InventoryID != "" {
+			err = k.Data.SetMapField(yaml.NewStringRNode(k.Inventory.InventoryID), "inventory", "inventoryID")
+		}
+		// TODO(droot): labels/annotations
+		return err
+	}
+
+	// TODO(droot): Implement reconcile function for Annotations, Labels, Info
+	// and pipeline section
+	return err
+}
+
+func getRNode(in interface{}) (*yaml.RNode, error) {
+	c, err := yaml.Marshal(in)
+	if err != nil {
+		return nil, err
+	}
+	return yaml.Parse(string(c))
+}
+
 func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	const op errors.Op = "kptfileutil.WriteFile"
-	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	err := reconcileChanges(k)
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+
+	// TODO(droot): figure out how to indent with WideSequenceStyle a rawYAML using go-yaml
+	/*
+		b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+		if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		}
+	*/
+	// fyi: perm is ignored if the file already exists
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(k.Data.MustString()), 0600)
+	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 
-	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
+	tmpkptFile, err := ioutil.TempFile(dir, "kf")
+	if err != nil {
+		return err
+	}
+	err = yaml.WriteFile(k.Data, tmpkptFile.Name())
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
@@ -93,7 +164,7 @@ func Equal(kf1, kf2 *kptfilev1.KptFile) (bool, error) {
 
 // DefaultKptfile returns a new minimal Kptfile.
 func DefaultKptfile(name string) *kptfilev1.KptFile {
-	return &kptfilev1.KptFile{
+	kf := &kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			TypeMeta: yaml.TypeMeta{
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
@@ -106,6 +177,12 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 			},
 		},
 	}
+	b, err := yaml.MarshalWithOptions(kf, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		return nil
+	}
+	kf.Data = yaml.MustParse(string(b))
+	return kf
 }
 
 // UpdateKptfileWithoutOrigin updates the Kptfile in the package specified by
@@ -131,7 +208,8 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	err = merge(localKf, updatedKf, &kptfilev1.KptFile{})
+	origKf := DefaultKptfile("default")
+	err = merge(localKf, updatedKf, origKf)
 	if err != nil {
 		return err
 	}
@@ -224,22 +302,24 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 }
 
 func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
-	localBytes, err := yaml.Marshal(localKf)
-	if err != nil {
-		return err
-	}
+	/*
+		localBytes, err := yaml.Marshal(localKf)
+		if err != nil {
+			return err
+		}
 
-	updatedBytes, err := yaml.Marshal(updatedKf)
-	if err != nil {
-		return err
-	}
+		updatedBytes, err := yaml.Marshal(updatedKf)
+		if err != nil {
+			return err
+		}
 
-	originalBytes, err := yaml.Marshal(originalKf)
-	if err != nil {
-		return err
-	}
+		originalBytes, err := yaml.Marshal(originalKf)
+		if err != nil {
+			return err
+		} */
 
-	mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), false)
+	// mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), false)
+	mergedBytes, err := merge3.MergeStrings(localKf.Data.MustString(), originalKf.Data.MustString(), updatedKf.Data.MustString(), false)
 	if err != nil {
 		return err
 	}
@@ -249,6 +329,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	if err != nil {
 		return err
 	}
+	mergedKf.Data = yaml.MustParse(string(mergedBytes))
 
 	// Copy the merged content into the local Kptfile struct. We don't copy
 	// name, namespace, Upstream or UpstreamLock, since we don't want those

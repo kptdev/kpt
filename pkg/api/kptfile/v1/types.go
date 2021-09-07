@@ -57,6 +57,9 @@ type KptFile struct {
 
 	// Inventory contains parameters for the inventory object used in apply.
 	Inventory *Inventory `yaml:"inventory,omitempty"`
+
+	// data contains the raw YAML representation of Kptfile content.
+	Data *yaml.RNode `yaml:"-"`
 }
 
 // OriginType defines the type of origin for a package.
