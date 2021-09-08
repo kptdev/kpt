@@ -32,6 +32,38 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
+func WriteFile(dir string, k *kptfilev1.KptFile) error {
+	const op errors.Op = "kptfileutil.WriteFile"
+	err := reconcileChanges(k)
+	if err != nil {
+		return err
+	}
+
+	// TODO(droot): figure out how to indent with WideSequenceStyle a rawYAML using go-yaml
+	/*
+		b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+		if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		}
+	*/
+
+	// fyi: perm is ignored if the file already exists
+	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(k.Data.MustString()), 0600)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+
+	tmpkptFile, err := ioutil.TempFile(dir, "kf")
+	if err != nil {
+		return err
+	}
+	err = yaml.WriteFile(k.Data, tmpkptFile.Name())
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+	return nil
+}
+
 // reconcileChanges reconciles changes done in the types with the
 // rawYAML content of the kptfile. (section by section).
 func reconcileChanges(k *kptfilev1.KptFile) (err error) {
@@ -88,37 +120,6 @@ func getRNode(in interface{}) (*yaml.RNode, error) {
 		return nil, err
 	}
 	return yaml.Parse(string(c))
-}
-
-func WriteFile(dir string, k *kptfilev1.KptFile) error {
-	const op errors.Op = "kptfileutil.WriteFile"
-	err := reconcileChanges(k)
-	if err != nil {
-		return err
-	}
-
-	// TODO(droot): figure out how to indent with WideSequenceStyle a rawYAML using go-yaml
-	/*
-		b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
-		if _, err := os.Stat(filepath.Join(dir, kptfilev1.KptFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
-		}
-	*/
-	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(k.Data.MustString()), 0600)
-	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
-	}
-
-	tmpkptFile, err := ioutil.TempFile(dir, "kf")
-	if err != nil {
-		return err
-	}
-	err = yaml.WriteFile(k.Data, tmpkptFile.Name())
-	if err != nil {
-		return errors.E(op, errors.IO, types.UniquePath(dir), err)
-	}
-	return nil
 }
 
 // ValidateInventory returns true and a nil error if the passed inventory
@@ -179,7 +180,7 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 	}
 	b, err := yaml.MarshalWithOptions(kf, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
-		return nil
+		panic(err)
 	}
 	kf.Data = yaml.MustParse(string(b))
 	return kf
@@ -197,7 +198,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
-		localKf = &kptfilev1.KptFile{}
+		localKf = DefaultKptfile("local")
 	}
 
 	updatedKf, err := pkg.ReadKptfile(updatedPath)
@@ -205,11 +206,10 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(updatedPath), err)
 		}
-		updatedKf = &kptfilev1.KptFile{}
+		updatedKf = DefaultKptfile("updated")
 	}
 
-	origKf := DefaultKptfile("default")
-	err = merge(localKf, updatedKf, origKf)
+	err = merge(localKf, updatedKf, DefaultKptfile("original"))
 	if err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	if err != nil {
 		return err
 	}
-	mergedKf.Data = yaml.MustParse(string(mergedBytes))
+	mergedKf.Data = yaml.MustParse(mergedBytes)
 
 	// Copy the merged content into the local Kptfile struct. We don't copy
 	// name, namespace, Upstream or UpstreamLock, since we don't want those

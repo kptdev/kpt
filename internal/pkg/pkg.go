@@ -175,7 +175,9 @@ func ReadKptfile(p string) (*kptfilev1.KptFile, error) {
 	}
 	defer f.Close()
 
-	kf, err := DecodeKptfile(f)
+	// Note(droot): To ensure that kpt is forward compatible with schema changes in Kptfile
+	// strict is set to false.
+	kf, err := DecodeKptfile(f, false)
 	if err != nil {
 		return nil, &KptfileError{
 			Path: types.UniquePath(p),
@@ -185,7 +187,10 @@ func ReadKptfile(p string) (*kptfilev1.KptFile, error) {
 	return kf, nil
 }
 
-func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
+// DecodeKptfile decodes the content read from the given reader into
+// a Kptfile struct. It ignores the unrecognized fields in the Kptfile
+// file by default unless strict is specified to be true.
+func DecodeKptfile(in io.Reader, strict bool) (*kptfilev1.KptFile, error) {
 	kf := &kptfilev1.KptFile{}
 	c, err := io.ReadAll(in)
 	if err != nil {
@@ -199,10 +204,11 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	kf.Data = yaml.MustParse(string(c))
 
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
-	// Note(droot): To ensure that kpt is forward compatible with schema changes to Kptfile
-	// it should be able to read unknown fields.
-	// d.KnownFields(true)
+	d.KnownFields(strict)
 	if err := d.Decode(kf); err != nil {
+		// TODO(droot): intercept error and return better error for
+		// unrecognized error so that we can give better error message
+		// to the end user.
 		return kf, err
 	}
 	return kf, nil

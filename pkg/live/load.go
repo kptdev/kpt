@@ -182,7 +182,7 @@ func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if err != nil {
 		return object, err
 	}
-	kf, err := pkg.DecodeKptfile(bytes.NewBufferString(s))
+	kf, err := pkg.DecodeKptfile(bytes.NewBufferString(s), false)
 	if err != nil {
 		return nil, err
 	}
