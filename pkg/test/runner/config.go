@@ -82,7 +82,7 @@ type TestCaseConfig struct {
 	Debug bool `json:"debug,omitempty" yaml:"debug,omitempty"`
 
 	// TestType is the type of the test case. Possible value: ['render', 'eval']
-	// Default: 'eval'
+	// Default: 'render'
 	TestType string `json:"testType,omitempty" yaml:"testType,omitempty"`
 
 	// DisableOutputTruncate indicates should error output be truncated
