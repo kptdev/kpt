@@ -292,7 +292,7 @@ type Selector struct {
 	Name string `yaml:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty"`
-	// PackagePath of the target resources
+	// PackagePath of the target resources relative to the root package directory
 	PackagePath string `yaml:"packagePath,omitempty"`
 }
 

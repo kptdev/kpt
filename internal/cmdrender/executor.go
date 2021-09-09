@@ -298,6 +298,9 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	return output, err
 }
 
+// resourceIDAnnotation is used to uniquely identify the resource during round trip
+// to and from a function execution. This annotation is meant to be consumed by
+// kpt during round trip and should be deleted after that
 const resourceIDAnnotation = "internal.config.k8s.io/resource-id"
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
@@ -649,21 +652,19 @@ func setResourceIds(input []*yaml.RNode) error {
 func mergeWithInput(output, selectedInput, input []*yaml.RNode) []*yaml.RNode {
 	var result []*yaml.RNode
 	for i := range input {
-		if !presentIn(input[i], selectedInput) {
+		presentInSelectedInput := presentIn(input[i], selectedInput)
+		presentInOutput := presentIn(input[i], output)
+		if !presentInSelectedInput {
 			// this resource is untouched
 			result = append(result, input[i])
 			continue
 		}
 
-		if presentIn(input[i], selectedInput) && !presentIn(input[i], output) {
-			// this resource is deleted
-			continue
-		}
-
-		if presentIn(input[i], selectedInput) && presentIn(input[i], output) {
+		if presentInOutput {
 			// this resource modified by function, so replace it from the output
 			result = append(result, nodeWithResourceID(input[i].GetAnnotations()[resourceIDAnnotation], output))
 		}
+		// if presentInSelectedInput and !presentInOutput the resource is deleted, so ignore it
 	}
 
 	// add function generated resources to the result
