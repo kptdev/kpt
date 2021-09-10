@@ -1,0 +1,380 @@
+{
+  "$schema": "http://json-schema.org/draft/2019-09/schema#",
+  "type": "object",
+  "anyOf": ["#/definitions/Kptfile"],
+  "definitions": {
+    "function": {
+      "properties": {
+        "configMap": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "`ConfigMap` is a convenient way to specify a function config of kind ConfigMap.",
+          "type": "object"
+        },
+        "configPath": {
+          "description": "`ConfigPath` specifies a slash-delimited relative path to a file in the current directory\ncontaining a KRM resource used as the function config. This resource is\nexcluded when resolving 'sources', and as a result cannot be operated on\nby the pipeline.",
+          "type": "string"
+        },
+        "image": {
+          "description": "`Image` specifies the function container image.\nIt can either be fully qualified, e.g.:\n\nimage: gcr.io/kpt-fn/set-labels\n\nOptionally, kpt can be configured to use a image\nregistry host-path that will be used to resolve the image path in case\nthe image path is missing (Defaults to gcr.io/kpt-fn).\ne.g. The following resolves to gcr.io/kpt-fn/set-labels:\n\nimage: set-labels",
+          "type": "string"
+        }
+      },
+      "title": "Function specifies a KRM function.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "git": {
+      "properties": {
+        "directory": {
+          "description": "Directory is the sub directory of the git repository.\ne.g. 'staging/cockroachdb'",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Ref can be a git branch, tag, or a commit SHA-1.",
+          "type": "string"
+        },
+        "repo": {
+          "description": "Repo is the git repository the package.\ne.g. 'https://github.com/kubernetes/examples.git'",
+          "type": "string"
+        }
+      },
+      "title": "Git is the user-specified locator for a package on Git.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "gitLock": {
+      "properties": {
+        "commit": {
+          "description": "Commit is the SHA-1 for the last fetch of the package.\nThis is set by kpt for bookkeeping purposes.",
+          "type": "string"
+        },
+        "directory": {
+          "description": "Directory is the sub directory of the git repository that was fetched.\ne.g. 'staging/cockroachdb'",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Ref can be a git branch, tag, or a commit SHA-1 that was fetched.\ne.g. 'master'",
+          "type": "string"
+        },
+        "repo": {
+          "description": "Repo is the git repository that was fetched.\ne.g. 'https://github.com/kubernetes/examples.git'",
+          "type": "string"
+        }
+      },
+      "title": "GitLock is the resolved locator for a package on git.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "inventory": {
+      "description": "All of the the parameters are required if any are set.",
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "inventoryID": {
+          "description": "Unique label to identify inventory resource in cluster.",
+          "type": "string"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "name": {
+          "description": "Name of the inventory resource.",
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Namespace for the inventory resource.",
+          "type": "string"
+        }
+      },
+      "title": "Inventory encapsulates the parameters for the inventory resource applied to a cluster.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "nameMeta": {
+      "properties": {
+        "name": {
+          "description": "Name is the metadata.name field of a Resource",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace is the metadata.namespace field of a Resource",
+          "type": "string",
+          "x-go-name": "Namespace"
+        }
+      },
+      "title": "NameMeta contains name information.",
+      "type": "object",
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
+    },
+    "objectMeta": {
+      "description": "ObjectMeta contains metadata about a Resource",
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Annotations is the metadata.annotations field of a Resource.",
+          "type": "object",
+          "x-go-name": "Annotations"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels is the metadata.labels field of a Resource",
+          "type": "object",
+          "x-go-name": "Labels"
+        },
+        "name": {
+          "description": "Name is the metadata.name field of a Resource",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace is the metadata.namespace field of a Resource",
+          "type": "string",
+          "x-go-name": "Namespace"
+        }
+      },
+      "type": "object",
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
+    },
+    "originType": {
+      "title": "OriginType defines the type of origin for a package.",
+      "type": "string",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "packageInfo": {
+      "description": "These fields are not consumed by any functionality in kpt and are simply passed through.\nNote that like any other KRM resource, humans and automation can also use `metadata.labels` and\n`metadata.annotations` as the extension mechanism.",
+      "properties": {
+        "description": {
+          "description": "Description contains a short description of the package.",
+          "type": "string"
+        },
+        "emails": {
+          "description": "Email is the list of emails for the package authors.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "keywords": {
+          "description": "Keywords is a list of keywords for this package.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "license": {
+          "description": "SPDX license identifier (e.g. \"Apache-2.0\"). See: https://spdx.org/licenses/",
+          "type": "string"
+        },
+        "licenseFile": {
+          "description": "Relative slash-delimited path to the license file (e.g. LICENSE.txt)",
+          "type": "string"
+        },
+        "man": {
+          "description": "Man is the path to documentation about the package",
+          "type": "string"
+        },
+        "site": {
+          "description": "Site is the URL for package web page.",
+          "type": "string"
+        }
+      },
+      "title": "PackageInfo contains optional information about the package such as license, documentation, etc.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "pipeline": {
+      "properties": {
+        "mutators": {
+          "description": "Mutators defines a list of of KRM functions that mutate resources.",
+          "items": {
+            "$ref": "#/definitions/function"
+          },
+          "type": "array"
+        },
+        "validators": {
+          "description": "Validators defines a list of KRM functions that validate resources.\nValidators are not permitted to mutate resources.",
+          "items": {
+            "$ref": "#/definitions/function"
+          },
+          "type": "array"
+        }
+      },
+      "title": "Pipeline declares a pipeline of functions used to mutate or validate resources.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "resourceMeta": {
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Annotations is the metadata.annotations field of a Resource.",
+          "type": "object",
+          "x-go-name": "Annotations"
+        },
+        "apiVersion": {
+          "description": "APIVersion is the apiVersion field of a Resource",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind is the kind field of a Resource",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels is the metadata.labels field of a Resource",
+          "type": "object",
+          "x-go-name": "Labels"
+        },
+        "name": {
+          "description": "Name is the metadata.name field of a Resource",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace is the metadata.namespace field of a Resource",
+          "type": "string",
+          "x-go-name": "Namespace"
+        }
+      },
+      "title": "ResourceMeta contains the metadata for a both Resource Type and Resource.",
+      "type": "object",
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
+    },
+    "typeMeta": {
+      "description": "TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta\nNo need for a direct dependence; the fields are stable.",
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion is the apiVersion field of a Resource",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind is the kind field of a Resource",
+          "type": "string",
+          "x-go-name": "Kind"
+        }
+      },
+      "type": "object",
+      "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
+    },
+    "updateStrategyType": {
+      "title": "UpdateStrategyType defines the strategy for updating a package from upstream.",
+      "type": "string",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "upstream": {
+      "properties": {
+        "git": {
+          "$ref": "#/definitions/git"
+        },
+        "type": {
+          "$ref": "#/definitions/originType"
+        },
+        "updateStrategy": {
+          "$ref": "#/definitions/updateStrategyType"
+        }
+      },
+      "title": "Upstream is a user-specified upstream locator for a package.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "upstreamLock": {
+      "properties": {
+        "git": {
+          "$ref": "#/definitions/gitLock"
+        },
+        "type": {
+          "$ref": "#/definitions/originType"
+        }
+      },
+      "title": "UpstreamLock is a resolved locator for the last fetch of the package.",
+      "type": "object",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "Kptfile": {
+      "properties": {
+        "info": {
+          "$ref": "#/definitions/packageInfo"
+        },
+        "inventory": {
+          "$ref": "#/definitions/inventory"
+        },
+        "pipeline": {
+          "$ref": "#/definitions/pipeline"
+        },
+        "upstream": {
+          "$ref": "#/definitions/upstream"
+        },
+        "upstreamLock": {
+          "$ref": "#/definitions/upstreamLock"
+        },
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Annotations is the metadata.annotations field of a Resource.",
+          "type": "object",
+          "x-go-name": "Annotations"
+        },
+        "apiVersion": {
+          "description": "APIVersion is the apiVersion field of a Resource",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind is the kind field of a Resource",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "labels": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels is the metadata.labels field of a Resource",
+          "type": "object",
+          "x-go-name": "Labels"
+        },
+        "name": {
+          "description": "Name is the metadata.name field of a Resource",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace is the metadata.namespace field of a Resource",
+          "type": "string",
+          "x-go-name": "Namespace"
+        }
+      },
+      "title": "KptFile contains information about a package managed with kpt.",
+      "type": "object",
+      "x-go-name": "KptFile",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    }
+  },
+  "info": {
+    "title": "Kptfile schema.",
+    "version": "v1"
+  },
+  "paths": {},
+  "swagger": "2.0"
+}
