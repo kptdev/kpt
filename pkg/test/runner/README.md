@@ -19,7 +19,7 @@ in `.expected`:
 - `config.yaml`: This is the file which contains the configurations for the
   test case. It can have following fields:
   - `testType`: `eval` or `render`. It controls which `kpt fn` command will be
-    used to run the test. Default: `eval`.
+    used to run the test. Default: `render`.
   - `exitCode`: The expected exit code for the command. Default: 0.
   - `skip`: Runner will skip the test if `skip` is set to true. Default: false.
   - `sequential`: This test case should be run sequentially. Default: false.
