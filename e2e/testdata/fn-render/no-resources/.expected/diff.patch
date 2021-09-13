@@ -1,0 +1,19 @@
+diff --git a/another/file/out.yaml b/another/file/out.yaml
+new file mode 100644
+index 0000000..f36c98e
+--- /dev/null
++++ b/another/file/out.yaml
+@@ -0,0 +1,13 @@
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  name: httpbin
++spec:
++  replicas: 4
++  template:
++    spec:
++      containers:
++      - image: kennethreitz/httpbin
++        name: httpbin
++        ports:
++        - containerPort: 9876

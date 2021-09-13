@@ -301,10 +301,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// path here.
 	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
 
-	if len(input) == 0 {
-		return nil, nil
-	}
-
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return nil, err
@@ -337,10 +333,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 // runMutators runs a set of mutators functions on given input resources.
 func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
-	if len(input) == 0 {
-		return input, nil
-	}
-
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return nil, err
@@ -377,10 +369,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 // improved to report multiple failures. Reporting multiple failures
 // will require changes to the way we print errors
 func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) error {
-	if len(input) == 0 {
-		return nil
-	}
-
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
 		return err
