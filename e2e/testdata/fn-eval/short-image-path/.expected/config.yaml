@@ -18,4 +18,4 @@ args:
   namespace: staging
 stdErr: |
   [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
