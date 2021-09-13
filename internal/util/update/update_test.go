@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -585,6 +586,356 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 				strategy) {
 				return
 			}
+		})
+	}
+}
+
+func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
+	testCases := map[string]struct {
+		strategy      kptfilev1.UpdateStrategyType
+		updateRef     string
+		reposChanges  map[string][]testutil.Content
+		updateFunc    func(g *testutil.TestSetupManager)
+		updateSubPkg  string
+		expectedLocal *pkgbuilder.RootPkg
+	}{
+		"update with single subpkg from same repo": {
+			strategy:  kptfilev1.ResourceMerge,
+			updateRef: "subpkg-update",
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource,
+									pkgbuilder.SetFieldPath("42", "spec", "replicas"),
+								),
+							),
+						Branch: "subpkg-update", CreateBranch: true,
+					},
+				},
+			},
+			updateFunc: func(g *testutil.TestSetupManager) {
+				g.GetSubPkg("test", testutil.Upstream, "subpkg")
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstreamRef(testutil.Upstream, "/", "subpkg-update", "resource-merge").
+					WithUpstreamLockRef(testutil.Upstream, "/", "subpkg-update", 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+					pkgbuilder.NewSubPkg("test").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef(testutil.Upstream, "/subpkg", "subpkg-update", "resource-merge").
+								WithUpstreamLockRef(testutil.Upstream, "/subpkg", "subpkg-update", 1),
+						).
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+				),
+		},
+		"update strat with single subpkg from same repo": {
+			strategy:  kptfilev1.FastForward,
+			updateRef: "subpkg-update",
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource,
+									pkgbuilder.SetFieldPath("42", "spec", "replicas"),
+								),
+							),
+						Branch: "subpkg-update", CreateBranch: true,
+					},
+				},
+			},
+			updateFunc: func(g *testutil.TestSetupManager) {
+				g.GetSubPkg("test", testutil.Upstream, "subpkg")
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstreamRef(testutil.Upstream, "/", "subpkg-update", "fast-forward").
+					WithUpstreamLockRef(testutil.Upstream, "/", "subpkg-update", 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+					pkgbuilder.NewSubPkg("test").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef(testutil.Upstream, "/subpkg", "subpkg-update", "fast-forward").
+								WithUpstreamLockRef(testutil.Upstream, "/subpkg", "subpkg-update", 1),
+						).
+						WithResource(pkgbuilder.DeploymentResource,
+							pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+				),
+		},
+		"update with single subpkg from different repo": {
+			strategy:  kptfilev1.ResourceMerge,
+			updateRef: "subpkg-update",
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.SecretResource),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.ConfigMapResource),
+							),
+						Branch: "subpkg-update", CreateBranch: true,
+					},
+				},
+				"foo": {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource,
+									pkgbuilder.SetFieldPath("42", "spec", "replicas"),
+								),
+							),
+						Branch: "subpkg-update", CreateBranch: true,
+					}},
+			},
+			updateFunc: func(g *testutil.TestSetupManager) {
+				g.GetSubPkg("fooSubPkg", "foo", "subpkg")
+			},
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(pkgbuilder.NewKptfile().
+					WithUpstreamRef(testutil.Upstream, "/", "subpkg-update", "resource-merge").
+					WithUpstreamLockRef(testutil.Upstream, "/", "subpkg-update", 1),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg").
+						WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.ConfigMapResource),
+					pkgbuilder.NewSubPkg("fooSubPkg").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef("foo", "/subpkg", "master", "resource-merge").
+								WithUpstreamLockRef("foo", "/subpkg", "master", 0),
+						).
+						WithResource(pkgbuilder.DeploymentResource),
+				),
+		},
+		"update with multiple subpkgs from same repo": {
+			strategy:  kptfilev1.ResourceMerge,
+			updateRef: "subpkg-update",
+			reposChanges: map[string][]testutil.Content{
+				testutil.Upstream: {
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg1").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.SecretResource).
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("nestedOne").
+										WithKptfile(pkgbuilder.NewKptfile()).
+										WithResource(pkgbuilder.DeploymentResource),
+									pkgbuilder.NewSubPkg("nestedTwo").
+										WithKptfile(pkgbuilder.NewKptfile()).
+										WithResource(pkgbuilder.DeploymentResource),
+								),
+								pkgbuilder.NewSubPkg("subpkg2").WithKptfile(pkgbuilder.NewKptfile()).
+									WithResource(pkgbuilder.SecretResource).
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("nestedThree").
+											WithKptfile(pkgbuilder.NewKptfile()).
+											WithResource(pkgbuilder.DeploymentResource),
+										pkgbuilder.NewSubPkg("nestedFour").
+											WithKptfile(pkgbuilder.NewKptfile()).
+											WithResource(pkgbuilder.DeploymentResource),
+									),
+							),
+						Branch: masterBranch,
+					},
+					{
+						Pkg: pkgbuilder.NewRootPkg().
+							WithKptfile(pkgbuilder.NewKptfile()).
+							WithResource(pkgbuilder.ConfigMapResource).
+							WithSubPackages(pkgbuilder.NewSubPkg("subpkg1").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.SecretResource).
+								WithSubPackages(
+									pkgbuilder.NewSubPkg("nestedOne").
+										WithKptfile(pkgbuilder.NewKptfile()).
+										WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+									pkgbuilder.NewSubPkg("nestedTwo").
+										WithKptfile(pkgbuilder.NewKptfile()).
+										WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("43", "spec", "replicas")),
+								),
+								pkgbuilder.NewSubPkg("subpkg2").WithKptfile(pkgbuilder.NewKptfile()).
+									WithResource(pkgbuilder.SecretResource).
+									WithSubPackages(
+										pkgbuilder.NewSubPkg("nestedThree").
+											WithKptfile(pkgbuilder.NewKptfile()).
+											WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("44", "spec", "replicas")),
+										pkgbuilder.NewSubPkg("nestedFour").
+											WithKptfile(pkgbuilder.NewKptfile()).
+											WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("45", "spec", "replicas")),
+									),
+							),
+						Branch: "subpkg-update", CreateBranch: true,
+					},
+				},
+			},
+			updateFunc: func(g *testutil.TestSetupManager) {
+				g.GetSubPkg("subpkgvariant", testutil.Upstream, "subpkg1")
+				g.GetSubPkg("subpkgvariant/nestedTwoVariant", testutil.Upstream, "subpkg1/nestedTwo")
+				g.GetSubPkg("subpkgvariant/nestedThreeVariant", testutil.Upstream, "subpkg2/nestedThree")
+			},
+			updateSubPkg: "subpkgvariant",
+			expectedLocal: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
+						WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
+				).
+				WithResource(pkgbuilder.ConfigMapResource).
+				WithSubPackages(
+					pkgbuilder.NewSubPkg("subpkg1").
+						WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.SecretResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("nestedOne").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+							pkgbuilder.NewSubPkg("nestedTwo").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+						),
+					pkgbuilder.NewSubPkg("subpkg2").WithKptfile(pkgbuilder.NewKptfile()).
+						WithResource(pkgbuilder.SecretResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("nestedThree").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+							pkgbuilder.NewSubPkg("nestedFour").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource),
+						),
+					pkgbuilder.NewSubPkg("subpkgvariant").
+						WithKptfile(
+							pkgbuilder.NewKptfile().
+								WithUpstreamRef(testutil.Upstream, "/subpkg1", "subpkg-update", "resource-merge").
+								WithUpstreamLockRef(testutil.Upstream, "/subpkg1", "subpkg-update", 1),
+						).
+						WithResource(pkgbuilder.SecretResource).
+						WithSubPackages(
+							pkgbuilder.NewSubPkg("nestedOne").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("42", "spec", "replicas")),
+							pkgbuilder.NewSubPkg("nestedTwo").
+								WithKptfile(pkgbuilder.NewKptfile()).
+								WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("43", "spec", "replicas")),
+							pkgbuilder.NewSubPkg("nestedTwoVariant").
+								WithKptfile(
+									pkgbuilder.NewKptfile().
+										WithUpstreamRef(testutil.Upstream, "/subpkg1/nestedTwo", "subpkg-update", "resource-merge").
+										WithUpstreamLockRef(testutil.Upstream, "/subpkg1/nestedTwo", "subpkg-update", 1),
+								).
+								WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("43", "spec", "replicas")),
+							pkgbuilder.NewSubPkg("nestedThreeVariant").
+								WithKptfile(
+									pkgbuilder.NewKptfile().
+										WithUpstreamRef(testutil.Upstream, "/subpkg2/nestedThree", "master", "resource-merge").
+										WithUpstreamLockRef(testutil.Upstream, "/subpkg2/nestedThree", "master", 0),
+								).
+								WithResource(pkgbuilder.DeploymentResource),
+						),
+				),
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Setup the test upstream and local packages
+			g := &testutil.TestSetupManager{
+				T:            t,
+				ReposChanges: tc.reposChanges,
+			}
+			defer g.Clean()
+
+			if !g.Init() {
+				return
+			}
+
+			// perform any additional updates to local pkg
+			if tc.updateFunc != nil {
+				tc.updateFunc(g)
+			}
+
+			// Update the local package
+			if !assert.NoError(t, Command{
+				Pkg:      pkgtest.CreatePkgOrFail(t, path.Join(g.LocalWorkspace.FullPackagePath(), tc.updateSubPkg)),
+				Strategy: tc.strategy,
+				Ref:      tc.updateRef,
+			}.Run(fake.CtxWithDefaultPrinter())) {
+				return
+			}
+			expectedPath := tc.expectedLocal.ExpandPkgWithName(t,
+				g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
+			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 		})
 	}
 }

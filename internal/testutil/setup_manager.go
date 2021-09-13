@@ -17,6 +17,7 @@ package testutil
 import (
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -195,6 +196,24 @@ func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Cont
 		}
 	}
 	return nil
+}
+
+// GetSubPkg gets a subpkg specified by repo/upstreamDir to destination in the local workspace
+func (g *TestSetupManager) GetSubPkg(dest, repo, upstreamDir string) {
+	assert.NoError(g.T, get.Command{
+		Destination: path.Join(g.LocalWorkspace.FullPackagePath(), dest),
+		Git: &kptfilev1.Git{
+			Repo:      g.Repos[repo].RepoDirectory,
+			Ref:       g.GetRef,
+			Directory: path.Join(g.GetSubDirectory, upstreamDir),
+		}}.Run(fake.CtxWithDefaultPrinter()))
+
+	localGit, err := gitutil.NewLocalGitRunner(g.LocalWorkspace.WorkspaceDirectory)
+	assert.NoError(g.T, err)
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "add", ".")
+	assert.NoError(g.T, err)
+	_, err = localGit.Run(fake.CtxWithDefaultPrinter(), "commit", "-m", "add files")
+	assert.NoError(g.T, err)
 }
 
 func (g *TestSetupManager) AssertKptfile(name, commit, ref string, strategy kptfilev1.UpdateStrategyType) bool {

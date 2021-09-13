@@ -126,6 +126,7 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath,
 			fmt.Errorf("package must have an upstream reference"))
 	}
+	originalRootKfRef := rootKf.Upstream.Git.Ref
 	if u.Ref != "" {
 		rootKf.Upstream.Git.Ref = u.Ref
 	}
@@ -163,6 +164,15 @@ func (u Command) Run(ctx context.Context) error {
 			}
 
 			if subKf.Upstream != nil && subKf.Upstream.Git != nil {
+				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
+				// and if original root pkg ref matches the subpkg ref
+				if isPkgInRootPkg(subKf, rootKf) && subKf.Upstream.Git.Ref == originalRootKfRef {
+					updateSubKf(subKf, u.Ref, u.Strategy)
+					err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf)
+					if err != nil {
+						return errors.E(op, subPkg.UniquePath, err)
+					}
+				}
 				s.Push(subPkg)
 			}
 		}
@@ -174,6 +184,23 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	return nil
+}
+
+// updateSubKf updates subpackage with given ref and update strategy
+func updateSubKf(subKf *kptfilev1.KptFile, ref string, strat kptfilev1.UpdateStrategyType) {
+	// check if explicit ref provided
+	if ref != "" {
+		subKf.Upstream.Git.Ref = ref
+	}
+	if strat != "" {
+		subKf.Upstream.UpdateStrategy = strat
+	}
+}
+
+// isPkgInRootPkg checks if a pkg is a subpkg of root pkg or is root pkg.
+// This is true if pkg has the same upstream repo and upstream directory is within or equal to root pkg directory
+func isPkgInRootPkg(subKf, rootKf *kptfilev1.KptFile) bool {
+	return subKf.Upstream.Git.Repo == rootKf.Upstream.Git.Repo && strings.HasPrefix(subKf.Upstream.Git.Directory, rootKf.Upstream.Git.Directory)
 }
 
 func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
