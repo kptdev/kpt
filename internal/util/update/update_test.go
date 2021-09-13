@@ -652,7 +652,7 @@ func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
 							pkgbuilder.SetFieldPath("42", "spec", "replicas")),
 				),
 		},
-		"update strat with single subpkg from same repo": {
+		"update strategy with single subpkg from same repo": {
 			strategy:  kptfilev1.FastForward,
 			updateRef: "subpkg-update",
 			reposChanges: map[string][]testutil.Content{

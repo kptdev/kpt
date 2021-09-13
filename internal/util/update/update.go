@@ -187,13 +187,13 @@ func (u Command) Run(ctx context.Context) error {
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, ref string, strat kptfilev1.UpdateStrategyType) {
+func updateSubKf(subKf *kptfilev1.KptFile, ref string, strategy kptfilev1.UpdateStrategyType) {
 	// check if explicit ref provided
 	if ref != "" {
 		subKf.Upstream.Git.Ref = ref
 	}
-	if strat != "" {
-		subKf.Upstream.UpdateStrategy = strat
+	if strategy != "" {
+		subKf.Upstream.UpdateStrategy = strategy
 	}
 }
 
