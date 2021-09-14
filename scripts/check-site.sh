@@ -23,8 +23,8 @@ echo "Starting check."
 # Convert them to valid URLs
 # Check each link for Docsify 404s
 
-find . -name README.md -printf "%P\n" | grep -v node_modules | grep -v themes |
+find . -name README.md -printf "%P\n" | grep -v node_modules |
     sed "s/README.md//" | sed "s/^/http:\/\/localhost:3000\//" |
-    xargs -n1 sh -c '! (npx href-checker $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255'
+    xargs -n1 sh -c '! (echo Checking $0 && npx href-checker $0 --bad-content="404 - Not found" --silent --no-off-site -c=15 | grep .) || exit 255'
 
 echo "Success."
