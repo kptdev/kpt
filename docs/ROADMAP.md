@@ -54,7 +54,7 @@ examples and help. Please visit the [function catalog] for further information.
 
 ## In Progress
 
-### 7. Resource filtering in `kpt fn` commands
+### 7. Targeting resources in `kpt fn` commands
 
 Users want to invoke a kpt function (imperatively and declaratively) on a subset of 
 resources in the package by selecting them on the basis of GVKNN, package-path, 
@@ -96,7 +96,9 @@ package is assumed to be ready. e.g. Introduce validation for functionConfig.
 We need a rich ecosystem of third party functions. Users should be able to write 
 functions with custom logic very quickly using the tools they are familiar with. 
 So we are investing on making function authoring experience very easy. This is an
-ongoing effort. **Estimated completion date:** End of December 2021.
+ongoing effort. [Starlark enhancements](https://github.com/GoogleContainerTools/kpt/issues/2504) 
+(and docs improvement) will be delivered by the end of September 2021. 
+**Estimated completion date:** End of December 2021.
 
 ## Ongoing work
 Since this is a draft of the release notes you should be aware of the
