@@ -59,8 +59,10 @@ type ContainerFnPermission struct {
 type ContainerFn struct {
 	Ctx  context.Context
 	Path types.UniquePath
-	// Image is the container image to run
+	// Image is the container image to run.
 	Image string
+	// Entrypoint is the executable to run when container starts.
+	Entrypoint string
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy ImagePullPolicy
 	// Container function will be killed after this timeour.
@@ -134,6 +136,9 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--network", string(network),
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
+	}
+	if f.Entrypoint != "" {
+		args = append(args, "--entrypoint", f.Entrypoint)
 	}
 	if f.ImagePullPolicy == NeverPull {
 		args = append(args, "--pull", "never")

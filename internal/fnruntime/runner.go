@@ -44,13 +44,15 @@ func NewContainerRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy) (kio.Filter, error) {
+
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 
 	fnResult := &fnresult.Result{
-		Image: f.Image,
+		Image:      f.Image,
+		Entrypoint: f.Entrypoint,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
@@ -58,6 +60,7 @@ func NewContainerRunner(
 	cfn := &ContainerFn{
 		Path:            pkgPath,
 		Image:           f.Image,
+		Entrypoint:      f.Entrypoint,
 		ImagePullPolicy: imagePullPolicy,
 		Ctx:             ctx,
 		FnResult:        fnResult,
@@ -66,24 +69,25 @@ func NewContainerRunner(
 		Run:            cfn.Run,
 		FunctionConfig: config,
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true)
+	fnDisplayName := f.Image
+	if f.Entrypoint != "" {
+		fnDisplayName += fmt.Sprintf("[%s]", f.Entrypoint)
+	}
+	return NewFunctionRunner(ctx, fltr, fnDisplayName, pkgPath, fnResult, fnResults, true)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
+	fnDisplayName string,
 	pkgPath types.UniquePath,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	setPkgPathAnnotation bool) (kio.Filter, error) {
-	name := fnResult.Image
-	if name == "" {
-		name = fnResult.ExecPath
-	}
 	return &FunctionRunner{
 		ctx:                  ctx,
-		name:                 name,
+		name:                 fnDisplayName,
 		pkgPath:              pkgPath,
 		filter:               fltr,
 		fnResult:             fnResult,

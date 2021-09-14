@@ -79,7 +79,7 @@ test-docker: build
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 test-fn-render: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -count=1 -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
 test-fn-eval: build

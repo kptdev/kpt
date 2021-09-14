@@ -268,6 +268,11 @@ type Function struct {
 	//	image: set-labels
 	Image string `yaml:"image,omitempty"`
 
+	// `Entrypoint` specifies the executable to run when the container starts.
+	// For more details, refer to:
+	// https://docs.docker.com/engine/reference/run/#entrypoint-default-command-to-execute-at-runtime
+	Entrypoint string `yaml:"entrypoint,omitempty"`
+
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a KRM resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on

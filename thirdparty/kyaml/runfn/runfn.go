@@ -310,6 +310,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 	var fltr *runtimeutil.FunctionFilter
+	var fnDisplayName string
 	fnResult := &fnresult.Result{
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
@@ -342,6 +343,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			DeferFailure:   spec.DeferFailure,
 		}
 		fnResult.Image = spec.Container.Image
+		fnDisplayName = spec.Container.Image
 	}
 
 	if spec.Exec.Path != "" {
@@ -356,7 +358,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			DeferFailure:   spec.DeferFailure,
 		}
 		fnResult.ExecPath = r.OriginalExec
-
+		fnDisplayName = r.OriginalExec
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, fnDisplayName, "", fnResult, r.fnResults, false)
 }

@@ -25,6 +25,8 @@ type Result struct {
 	// Image is the full name of the image that generates this result
 	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
+	// Entrypoint is the executable that was used to run the function
+	Entrypoint string `yaml:"entrypoint,omitempty"`
 	// ExecPath is the the absolute os-specific path to the executable file
 	// If user provides an executable file with commands, ExecPath should
 	// contain the entire input string.
