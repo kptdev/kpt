@@ -33,12 +33,12 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '16'
+      - name: Lint site content
+        run: npm i && npm run lint-check
+        working-directory: site
       - name: Install Site Checker
         run: yarn install
         working-directory: href-checker
-#      - name: Lint site content
-#        run: npm i && npm run lint-check
-#        working-directory: site
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Run Site Checker
