@@ -32,7 +32,7 @@ jobs:
           path: href-checker
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
       - name: Lint site content
         run: npm i && npm run lint-check
         working-directory: site
