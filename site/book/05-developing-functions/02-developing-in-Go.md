@@ -18,7 +18,7 @@ the following features:
 ### Create the go module
 
 ```shell
-$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.10.6
+$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.11.1
 ```
 
 ### Create the `main.go`
@@ -31,31 +31,36 @@ provided value:
 package main
 
 import (
-	"os"
+  "fmt"
+  "os"
 
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+  "sigs.k8s.io/kustomize/kyaml/fn/framework"
+  "sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+  "sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var value string
 
 func main() {
-	resourceList := &framework.ResourceList{}
-	cmd := framework.Command(resourceList, func() error {
-		// cmd.Execute() will parse the ResourceList.functionConfig into
-		// cmd.Flags from the ResourceList.functionConfig.data field.
-		for i := range resourceList.Items {
-			// modify the resources using the kyaml/yaml library:
-			if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("myannotation", value)); err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	cmd.Flags().StringVar(&value, "value", "", "annotation value")
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+  mp := MyProcessor{}
+  cmd := command.Build(&mp, command.StandaloneEnabled, false)
+  cmd.Flags().StringVar(&value, "value", "", "annotation value")
+  if err := cmd.Execute(); err != nil {
+    fmt.Fprintln(os.Stderr, err)
+    os.Exit(1)
+  }
+}
+
+type MyProcessor struct{}
+
+func (mp *MyProcessor) Process(resourceList *framework.ResourceList) error {
+  for i := range resourceList.Items {
+    // modify the resources using the kyaml/yaml library:
+    if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("myannotation", value)); err != nil {
+      return err
+    }
+  }
+  return nil
 }
 ```
 
@@ -64,13 +69,13 @@ func main() {
 Build the go binary:
 
 ```shell
-$ go build -o my-fn .
+$ go mod tidy; go build -o my-fn .
 ```
 
 Fetch the wordpress package:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.8
 ```
 
 Test it by running the function imperatively:
@@ -122,6 +127,6 @@ $ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- value=foo
 - Take a look at the source code for [functions in the catalog] to better
   understand how to develop functions in Go
 
-[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/fn/framework#pkg-index
-[sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.10.16/yaml
+[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/fn/framework#pkg-index
+[sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/yaml
 [functions in the catalog]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go
