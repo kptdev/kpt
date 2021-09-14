@@ -16,8 +16,8 @@ stdErr: |-
   [WARN] resolved symlink "new-link" to ".", please note that the symlinks within the package are ignored
   Package "basicpipeline-symlink": 
   [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
   [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.4"
-  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.4"
+  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.4" in 0s
   
   Successfully executed 2 function(s) in 1 package(s).

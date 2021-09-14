@@ -59,7 +59,9 @@ examples and help. Please visit the [function catalog] for further information.
 Users want to invoke a kpt function (imperatively and declaratively) on a subset of 
 resources in the package by selecting them on the basis of GVKNN, package-path, 
 file path etc. For example, set work-load identity annotation on all Kubernetes 
-Service Account resources in this package. [Tracker](https://github.com/GoogleContainerTools/kpt/issues/2015)
+Service Account resources in this package [Tracker](https://github.com/GoogleContainerTools/kpt/issues/2015).
+**Estimated release date:** Last week of September 2021.
+
 
 ### 8. Integrate kpt with Cloud Code
 
@@ -67,28 +69,34 @@ One of the major areas of investment is to integrate Cloud Code with kpt to prov
 package authoring assistance. Users can author Kptfile and functionConfig files with
 features like auto-complete and error detection. This significantly improves the 
 discoverability of Kptfile schema, catalog functions and their functionConfigs.
+**Estimated release date:** Last week of September 2021 for Kptfile schema integration,
+function catalog integration will be released by mid of November 2021.
 
 ### 9. Pre/Post processing step in `kpt fn render`
 
 We need a way to pre(/post) process inputs(/outputs) involved in customizing the 
 package or any of its sub-packages before(/after) invoking the function pipeline [Tracker](https://github.com/GoogleContainerTools/kpt/issues/2419).
 e.g. Use-case to propagate common setters values in the package hierarchy before
-rendering the package resources. 
+rendering the package resources.
+**Estimated release date:** Mid of November 2021.
 
 ### 10. Improve functionConfig UX
 
 Package publishers want to provide command driven instructions (semi-automated)
 to configure a package that makes the user-guide/examples easy to follow.
-e.g. Porcelain to set values in functionConfig or generate functionConfig
+e.g. Porcelain to set values in functionConfig or generate functionConfig.
+**Estimated release date:** End of October 2021.
 
 Package consumers should be able to detect configuration errors early before the
 package is assumed to be ready. e.g. Introduce validation for functionConfig.
+**Estimated release date:** End of November 2021.
 
 ### 11. Improve Function Authoring Experience
 
 We need a rich ecosystem of third party functions. Users should be able to write 
 functions with custom logic very quickly using the tools they are familiar with. 
-So we are investing on making function authoring experience very easy.
+So we are investing on making function authoring experience very easy. This is an
+ongoing effort. **Estimated completion date:** End of December 2021.
 
 ## Ongoing work
 Since this is a draft of the release notes you should be aware of the
