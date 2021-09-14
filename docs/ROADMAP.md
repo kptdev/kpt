@@ -65,7 +65,7 @@ Service Account resources in this package [Tracker](https://github.com/GoogleCon
 
 ### 8. Integrate kpt with Cloud Code
 
-One of the major areas of investment is to integrate Cloud Code with kpt to provide 
+One of the major areas of investment is to integrate [Cloud Code](https://cloud.google.com/code) with kpt to provide 
 package authoring assistance. Users can author Kptfile and functionConfig files with
 features like auto-complete and error detection. This significantly improves the 
 discoverability of Kptfile schema, catalog functions and their functionConfigs.
