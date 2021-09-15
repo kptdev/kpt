@@ -80,6 +80,9 @@ fn-args:
   e.g. instead of passing `gcr.io/kpt-fn/set-namespace:v0.1` you can pass `set-namespace:v0.1`.
   `eval` executes only one function, so do not use `--exec-path` flag with this flag.
 
+--entrypoint:
+  Executable in the container image to run.
+
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
   to one of always, ifNotPresent, never. If unspecified, always will be the
@@ -141,6 +144,11 @@ $ kpt fn eval DIR -i gcr.io/example.com/my-fn --fn-config my-fn-config
 ```shell
 # execute container my-fn with an input ConfigMap containing `data: {foo: bar}`
 $ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+```
+
+```shell
+# execute /fn-bin executable in container my-fn
+$ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 --entrypoint /fn-bin
 ```
 
 ```shell
