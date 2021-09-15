@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -108,7 +109,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selectedInput: `apiVersion: apps/v1
@@ -116,7 +117,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			output: `apiVersion: apps/v1
@@ -125,7 +126,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			expected: `apiVersion: apps/v1
@@ -134,7 +135,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3
 `,
@@ -146,35 +147,35 @@ kind: Deployment
 metadata:
   name: nginx-deployment-0
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
-    internal.config.k8s.io/resource-id: "1"
+    internal.config.k8s.io/kpt-resource-id: "1"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
   annotations:
-    internal.config.k8s.io/resource-id: "2"
+    internal.config.k8s.io/kpt-resource-id: "2"
 `,
 			selectedInput: `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-0
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-1
   annotations:
-    internal.config.k8s.io/resource-id: "1"
+    internal.config.k8s.io/kpt-resource-id: "1"
 `,
 			output: `apiVersion: apps/v1
 kind: Deployment
@@ -182,7 +183,7 @@ metadata:
   name: nginx-deployment-0
   namespace: staging # transformed
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1 # generated resource
 kind: Deployment
@@ -195,14 +196,14 @@ metadata:
   name: nginx-deployment-0
   namespace: staging # transformed
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-deployment-2
   annotations:
-    internal.config.k8s.io/resource-id: "2"
+    internal.config.k8s.io/kpt-resource-id: "2"
 ---
 apiVersion: apps/v1 # generated resource
 kind: Deployment
@@ -243,7 +244,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -258,7 +259,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -274,7 +275,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -289,7 +290,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -305,7 +306,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -324,7 +325,7 @@ metadata:
   name: nginx-deployment
   namespace: staging
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
 			selector: v1.Selector{
@@ -342,7 +343,7 @@ kind: Deployment
 metadata:
   name: nginx-deployment
   annotations:
-    internal.config.k8s.io/resource-id: "0"
+    internal.config.k8s.io/kpt-resource-id: "0"
     internal.config.kubernetes.io/package-path: "/path/to/root/pkg/db"
 spec:
   replicas: 3`,
@@ -362,7 +363,7 @@ spec:
 			if tc.selector.PackagePath != "" {
 				rootPackagePath = "/path/to/root/pkg"
 			}
-			actual, err := isMatch(node, tc.selector, &selectionContext{rootPackagePath: rootPackagePath})
+			actual, err := isMatch(node, tc.selector, &selectionContext{rootPackagePath: types.UniquePath(rootPackagePath)})
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
