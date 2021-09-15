@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -166,7 +167,7 @@ func (u Command) Run(ctx context.Context) error {
 			if subKf.Upstream != nil && subKf.Upstream.Git != nil {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
-				if isPkgInRootPkg(subKf, rootKf) && subKf.Upstream.Git.Ref == originalRootKfRef {
+				if shouldUpdateSubPkgRef(subKf, rootKf, originalRootKfRef) {
 					updateSubKf(subKf, u.Ref, u.Strategy)
 					err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf)
 					if err != nil {
@@ -197,10 +198,12 @@ func updateSubKf(subKf *kptfilev1.KptFile, ref string, strategy kptfilev1.Update
 	}
 }
 
-// isPkgInRootPkg checks if a pkg is a subpkg of root pkg or is root pkg.
-// This is true if pkg has the same upstream repo and upstream directory is within or equal to root pkg directory
-func isPkgInRootPkg(subKf, rootKf *kptfilev1.KptFile) bool {
-	return subKf.Upstream.Git.Repo == rootKf.Upstream.Git.Repo && strings.HasPrefix(subKf.Upstream.Git.Directory, rootKf.Upstream.Git.Directory)
+// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
+// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
+func shouldUpdateSubPkgRef(subKf, rootKf *kptfilev1.KptFile, originalRootKfRef string) bool {
+	return subKf.Upstream.Git.Repo == rootKf.Upstream.Git.Repo &&
+		subKf.Upstream.Git.Ref == originalRootKfRef &&
+		strings.HasPrefix(path.Clean(subKf.Upstream.Git.Directory), path.Clean(rootKf.Upstream.Git.Directory))
 }
 
 func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
