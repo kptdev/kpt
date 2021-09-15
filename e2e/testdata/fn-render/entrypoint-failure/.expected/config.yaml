@@ -16,9 +16,6 @@
 # non-zero exit code and no changes in the resources.
 exitCode: 1
 stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
-  [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.4[function1]"
   [FAIL] "gcr.io/kpt-fn/set-labels:v0.1.4[function1]" in 0s
     Stderr:
       "docker: Error response from daemon: OCI runtime create failed: container_linux.go:370: starting container process caused: exec: \"function1\": executable file not found in $PATH: unknown."
