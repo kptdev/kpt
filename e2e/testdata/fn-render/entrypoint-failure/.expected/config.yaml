@@ -15,7 +15,3 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
-stdErr: |
-  [FAIL] "gcr.io/kpt-fn/set-labels:v0.1.4[function1]" in 0s
-    Stderr:
-      "docker: Error response from daemon: OCI runtime create failed: container_linux.go:370: starting container process caused: exec: \"function1\": executable file not found in $PATH: unknown."
