@@ -46,6 +46,9 @@ type RunFns struct {
 	// Function is an function to run against the input.
 	Function *runtimeutil.FunctionSpec
 
+	// Executable to run when the function containers start.
+	Entrypoint string
+
 	// FnConfig is the configurations passed from command line
 	FnConfig *yaml.RNode
 
@@ -325,6 +328,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		c := &fnruntime.ContainerFn{
 			Path:            r.uniquePath,
 			Image:           spec.Container.Image,
+			Entrypoint:      r.Entrypoint,
 			ImagePullPolicy: r.ImagePullPolicy,
 			UIDGID:          uidgid,
 			StorageMounts:   r.StorageMounts,
@@ -344,6 +348,9 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 		fnResult.Image = spec.Container.Image
 		fnDisplayName = spec.Container.Image
+		if r.Entrypoint != "" {
+			fnDisplayName += fmt.Sprintf("[%s]", r.Entrypoint)
+		}
 	}
 
 	if spec.Exec.Path != "" {

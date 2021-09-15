@@ -43,6 +43,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
+	r.Command.Flags().StringVarP(
+		&r.Entrypoint, "entrypoint", "", "", "executable in the image to run as a function")
 	r.Command.Flags().StringVar(
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
@@ -78,6 +80,7 @@ type EvalFnRunner struct {
 	OutContent           bytes.Buffer
 	FromStdin            bool
 	Image                string
+	Entrypoint           string
 	Exec                 string
 	FnConfigPath         string
 	RunFns               runfn.RunFns
@@ -220,6 +223,9 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 	}
+	if r.Exec != "" && r.Entrypoint != "" {
+		return errors.Errorf("--entrypoint must be used with --image")
+	}
 	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
 		return err
 	}
@@ -296,6 +302,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	r.RunFns = runfn.RunFns{
 		Ctx:                  r.Ctx,
 		Function:             fnSpec,
+		Entrypoint:           r.Entrypoint,
 		ExecArgs:             execArgs,
 		OriginalExec:         r.Exec,
 		Output:               output,

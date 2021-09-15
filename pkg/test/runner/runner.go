@@ -199,6 +199,9 @@ func (r *Runner) runFnEval() error {
 			}
 			if r.testCase.Config.EvalConfig.Image != "" {
 				kptArgs = append(kptArgs, "--image", r.testCase.Config.EvalConfig.Image)
+				if r.testCase.Config.EvalConfig.Entrypoint != "" {
+					kptArgs = append(kptArgs, "--entrypoint", r.testCase.Config.EvalConfig.Entrypoint)
+				}
 			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--exec", string(r.testCase.Config.EvalConfig.execUniquePath))
 			}
