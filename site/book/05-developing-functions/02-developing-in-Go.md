@@ -42,7 +42,7 @@ import (
 var value string
 
 func main() {
-  mp := MyProcessor{}
+  mp := Annotator{}
   cmd := command.Build(&mp, command.StandaloneEnabled, false)
   cmd.Flags().StringVar(&value, "value", "", "annotation value")
   if err := cmd.Execute(); err != nil {
@@ -51,9 +51,12 @@ func main() {
   }
 }
 
-type MyProcessor struct{}
+// Annotator implements the ResourceListProcessor interface.
+type Annotator struct{}
 
-func (mp *MyProcessor) Process(resourceList *framework.ResourceList) error {
+var _ framework.ResourceListProcessor = &Annotator{}
+
+func (mp *Annotator) Process(resourceList *framework.ResourceList) error {
   for i := range resourceList.Items {
     // modify the resources using the kyaml/yaml library:
     if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("myannotation", value)); err != nil {
