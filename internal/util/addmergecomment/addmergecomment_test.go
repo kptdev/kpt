@@ -28,7 +28,6 @@ func TestAddMetadataComment(t *testing.T) {
 		name     string
 		input    string
 		expected string
-		errMsg   string
 	}{
 		{
 			name: "Add kpt merge annotation with name and namespace",
@@ -111,7 +110,7 @@ spec:
  `,
 		},
 		{
-			name: "Skip adding kpt merge comment if already present",
+			name: "Skip adding kpt merge comment if no metadata field",
 			input: `
 apiVersion: apps/v1
 kind: MyKind
@@ -123,6 +122,19 @@ apiVersion: apps/v1
 kind: MyKind
 spec:
   replicas: 3
+ `,
+		},
+		{
+			name: "Skip adding kpt merge comment if non-KRM resource",
+			input: `- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+ `,
+			expected: `- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
  `,
 		},
 	}
@@ -144,19 +156,7 @@ spec:
 				t.FailNow()
 			}
 
-			err = Process(baseDir)
-			if test.errMsg != "" {
-				if !assert.NotNil(t, err) {
-					t.FailNow()
-				}
-				if !assert.Contains(t, err.Error(), test.errMsg) {
-					t.FailNow()
-				}
-			}
-
-			if test.errMsg == "" && !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			Process(baseDir)
 
 			actualResources, err := ioutil.ReadFile(r.Name())
 			if !assert.NoError(t, err) {

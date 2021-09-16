@@ -31,7 +31,7 @@ import (
 type AddMergeComment struct{}
 
 // Process invokes AddMergeComment kyaml filter on the resources in input packages paths
-func Process(paths ...string) error {
+func Process(paths ...string) {
 	for _, path := range paths {
 		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true}
 		amc := &AddMergeComment{}
@@ -41,10 +41,12 @@ func Process(paths ...string) error {
 			Outputs: []kio.Writer{inout},
 		}.Execute()
 		if err != nil {
-			return err
+			// we should do best effort to add merge comment, core Filter method doesn't
+			// return any error, reading resources might throw an error but we should not
+			// error out as we don't need to add merge comments for non-KRM resources
+			return
 		}
 	}
-	return nil
 }
 
 // Filter implements kyaml.Filter
@@ -83,10 +85,7 @@ func ProcessWithCleanup(path string) (string, func(), error) {
 		return "", nil, err
 	}
 
-	err = Process(expected)
-	if err != nil {
-		return "", nil, err
-	}
+	Process(expected)
 
 	clean := func() {
 		os.RemoveAll(expected)

@@ -271,9 +271,7 @@ type defaultPkgDiffer struct {
 
 func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 	// add merge comments before comparing so that there are no unwanted diffs
-	if err := addmergecomment.Process(pkgs...); err != nil {
-		return err
-	}
+	addmergecomment.Process(pkgs...)
 	for _, pkg := range pkgs {
 		if err := d.prepareForDiff(pkg); err != nil {
 			return err

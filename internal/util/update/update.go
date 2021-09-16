@@ -170,9 +170,7 @@ func (u Command) Run(ctx context.Context) error {
 	pr.Printf("\nUpdated %d package(s).\n", packageCount)
 
 	// finally, make sure that the merge comments are added to all resources in the updated package
-	if err := addmergecomment.Process(string(u.Pkg.UniquePath)); err != nil {
-		return errors.E(op, u.Pkg.UniquePath, err)
-	}
+	addmergecomment.Process(string(u.Pkg.UniquePath))
 	return nil
 }
 
@@ -400,10 +398,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 	pr := printer.FromContextOrDie(ctx)
 	// at this point, the localPath, updatedPath and originPath exists and are about to be merged
 	// make sure that the merge comments are added to all of them so that they are merged accurately
-	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
-		return errors.E(op, types.UniquePath(localPath),
-			fmt.Errorf("failed to add merge comments %q", err.Error()))
-	}
+	addmergecomment.Process(localPath, updatedPath, originPath)
 	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {

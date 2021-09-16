@@ -98,9 +98,7 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	if err := addmergecomment.Process(c.Destination); err != nil {
-		return cleanUpDirAndError(c.Destination, err)
-	}
+	addmergecomment.Process(c.Destination)
 	return nil
 }
 
