@@ -103,10 +103,12 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 			return err
 		}
 		inputs = append(inputs, kio.LocalPackageReader{
-			PackagePath:       resolvedPath,
-			MatchFilesGlob:    matchFilesGlob,
-			FileSkipFunc:      functionConfigFilter,
-			PreserveSeqIndent: true,
+			PackagePath:        resolvedPath,
+			MatchFilesGlob:     matchFilesGlob,
+			FileSkipFunc:       functionConfigFilter,
+			PreserveSeqIndent:  true,
+			PackageFileName:    kptfile.KptFileName,
+			IncludeSubpackages: true,
 		})
 	}
 
