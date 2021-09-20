@@ -2150,6 +2150,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					PackagePath:       g.LocalWorkspace.FullPackagePath(),
 					MatchFilesGlob:    []string{kptfilev1.KptFileName},
 					PreserveSeqIndent: true,
+					WrapBareSeqNode:   true,
 				}
 				err = kio.Pipeline{
 					Inputs:  []kio.Reader{rw},
@@ -3683,6 +3684,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 				PackagePath:       g.LocalWorkspace.FullPackagePath(),
 				MatchFilesGlob:    []string{kptfilev1.KptFileName},
 				PreserveSeqIndent: true,
+				WrapBareSeqNode:   true,
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},

@@ -125,6 +125,19 @@ spec:
   replicas: 3
  `,
 		},
+		{
+			name: "Skip adding kpt merge comment if non-KRM resource",
+			input: `- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+ `,
+			expected: `- op: replace
+  path: /spec
+  value:
+    group: kubeflow.org
+ `,
+		},
 	}
 	for i := range tests {
 		test := tests[i]

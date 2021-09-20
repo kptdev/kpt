@@ -1342,6 +1342,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 				PackagePath:       w.FullPackagePath(),
 				MatchFilesGlob:    []string{kptfilev1.KptFileName},
 				PreserveSeqIndent: true,
+				WrapBareSeqNode:   true,
 			}
 			err = kio.Pipeline{
 				Inputs:  []kio.Reader{rw},

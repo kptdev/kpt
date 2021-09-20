@@ -287,6 +287,7 @@ metadata:
 			in := &kio.LocalPackageReader{
 				PackagePath:       baseDir,
 				PreserveSeqIndent: true,
+				WrapBareSeqNode:   true,
 			}
 			out := &bytes.Buffer{}
 

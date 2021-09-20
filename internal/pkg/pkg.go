@@ -491,6 +491,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 		SetAnnotations: map[string]string{
 			pkgPathAnnotation: string(p.UniquePath),
 		},
+		WrapBareSeqNode: true,
 	}
 	resources, err = pkgReader.Read()
 	if err != nil {

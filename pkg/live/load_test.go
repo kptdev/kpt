@@ -319,6 +319,7 @@ func TestLoad_StdIn(t *testing.T) {
 						OmitReaderAnnotations: true,
 						MatchFilesGlob:        append([]string{kptfile.KptFileName}, kio.DefaultMatch...),
 						IncludeSubpackages:    true,
+						WrapBareSeqNode:       true,
 					},
 				},
 				Outputs: []kio.Writer{

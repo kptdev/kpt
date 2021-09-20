@@ -70,6 +70,7 @@ func (m Merge3) Merge() error {
 		IncludeSubpackages: m.IncludeSubPackages,
 		PackageFileName:    kptfilev1.KptFileName,
 		PreserveSeqIndent:  true,
+		WrapBareSeqNode:    true,
 	}
 	inputs = append(inputs, dest)
 
@@ -82,6 +83,7 @@ func (m Merge3) Merge() error {
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
 			PreserveSeqIndent:  true,
+			WrapBareSeqNode:    true,
 		},
 		Exclusions: relPaths,
 	})
@@ -95,6 +97,7 @@ func (m Merge3) Merge() error {
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
 			PreserveSeqIndent:  true,
+			WrapBareSeqNode:    true,
 		},
 		Exclusions: relPaths,
 	})
