@@ -15,6 +15,7 @@
 package get_test
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -145,6 +146,145 @@ func TestCommand_Run_subdir(t *testing.T) {
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
+
+	// verify the cloned contents matches the repository
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
+
+	// verify the KptFile contains the expected values
+	commit, err := g.GetCommit()
+	assert.NoError(t, err)
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: subdir,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: "git",
+			Git: &kptfilev1.GitLock{
+				Commit:    commit,
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: "git",
+			Git: &kptfilev1.Git{
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+			UpdateStrategy: kptfilev1.ResourceMerge,
+		},
+	})
+}
+
+// TestCommand_Run_subdir_repo_has_symlinks verifies that Command will
+// clone a subdirectory of a repo containing symlinks outside the subdirectory.
+//
+// - destination dir should match the name of the subdirectory
+// - KptFile should have the subdir listed
+// - files/symlinks outside the subdirectory should be ignored
+func TestCommand_Run_subdir_symlinks_outside(t *testing.T) {
+	subdir := "java"
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	// create a symlink
+	otherSubdir := filepath.Join(g.RepoDirectory, "mysql")
+	otherSubdirLink := filepath.Join(g.RepoDirectory, "mysql-symlink")
+	err := os.Symlink(otherSubdir, otherSubdirLink)
+	t.Logf("created symlink: %s for dir: %s", otherSubdirLink, otherSubdir)
+	assert.NoError(t, err)
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
+	err = Command{Git: &kptfilev1.Git{
+		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
+		Destination: absPath,
+	}.Run(fake.CtxWithDefaultPrinter())
+	assert.NoError(t, err)
+
+	// verify the cloned contents matches the repository
+	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
+
+	// verify the KptFile contains the expected values
+	commit, err := g.GetCommit()
+	assert.NoError(t, err)
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: subdir,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: "git",
+			Git: &kptfilev1.GitLock{
+				Commit:    commit,
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: "git",
+			Git: &kptfilev1.Git{
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+			UpdateStrategy: kptfilev1.ResourceMerge,
+		},
+	})
+}
+
+// TestCommand_Run_subdir_symlinks_inside verifies that Command will
+// clone a subdirectory of a repo containing symlinks inside the subdirectory.
+//
+// - destination dir should match the name of the subdirectory
+// - KptFile should have the subdir listed
+// - files/symlinks inside the subdirectory should be ignored
+func TestCommand_Run_subdir_symlinks_inside(t *testing.T) {
+	subdir := "java"
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	// create a symlink for a resource file inside java subdirectory in the repo
+	resourceFile := filepath.Join(g.RepoDirectory, "java")
+	resourceFileLink := filepath.Join(g.RepoDirectory, "java", "java-symlink")
+	err := os.Symlink(resourceFile, resourceFileLink)
+	t.Logf("created symlink %s for %s", resourceFileLink, resourceFile)
+	assert.NoError(t, err)
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	var b bytes.Buffer
+
+	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
+	err = Command{Git: &kptfilev1.Git{
+		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
+		Destination: absPath,
+	}.Run(fake.CtxWithPrinter(&b, &b))
+	assert.NoError(t, err)
+
+	t.Logf("got %s", string(b.Bytes()))
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)

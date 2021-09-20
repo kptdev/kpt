@@ -23,6 +23,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/otiai10/copy"
+
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -32,7 +34,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 )
 
 // Command takes the upstream information in the Kptfile at the path for the
@@ -191,18 +192,21 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	}
 	repoSpec.Commit = commit
 
-	// Copy the content of the repo into the temp directory.
-	// TODO: See if we can avoid copying everything in the repo if the
-	// repoSpec.Path property is a subdirectory of the repo.
-	err = copyutil.CopyDir(dir, repoSpec.Dir)
-	if err != nil {
-		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
+	pkgPath := filepath.Join(dir, repoSpec.Path)
+	// Verify that the requested path exists in the repo.
+	_, err = os.Stat(pkgPath)
+	if os.IsNotExist(err) {
+		return errors.E(op,
+			errors.Internal,
+			err,
+			fmt.Errorf("path %q does not exist in repo %q", repoSpec.Path, repoSpec.OrgRepo))
 	}
 
-	// Verify that the requested path exists in the repo.
-	pkgPath := filepath.Join(dir, repoSpec.Path)
-	if _, err = os.Stat(pkgPath); os.IsNotExist(err) {
-		return errors.E(op, errors.Internal, err, fmt.Errorf("path %q does not exist in repo %q", repoSpec.Path, repoSpec.OrgRepo))
+	// Copy the content of the pkg into the temp directory.
+	// Note that we skip the content outside the package directory.
+	err = copyDir(ctx, pkgPath, repoSpec.AbsPath())
+	if err != nil {
+		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
 	}
 
 	// Verify that if a Kptfile exists in the package, it contains the correct
@@ -227,4 +231,21 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		}
 	}
 	return nil
+}
+
+// copyDir copies a src directory to a dst directory.
+// copyDir skips copying the .git directory from the src and ignores symlinks.
+func copyDir(ctx context.Context, srcDir string, dstDir string) error {
+	pr := printer.FromContextOrDie(ctx)
+	opts := copy.Options{
+		Skip: func(src string) (bool, error) {
+			return strings.HasSuffix(src, ".git"), nil
+		},
+		OnSymlink: func(src string) copy.SymlinkAction {
+			// TODO(droot): make the src relative to the repo or subdir
+			pr.Printf("Ignoring symlink %s \n", src)
+			return copy.Skip
+		},
+	}
+	return copy.Copy(srcDir, dstDir, opts)
 }
