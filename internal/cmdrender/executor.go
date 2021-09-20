@@ -83,7 +83,12 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place
-		pkgWriter := &kio.LocalPackageReadWriter{PackagePath: string(root.pkg.UniquePath), PreserveSeqIndent: true}
+		pkgWriter := &kio.LocalPackageReadWriter{
+			PackagePath:        string(root.pkg.UniquePath),
+			PreserveSeqIndent:  true,
+			PackageFileName:    kptfilev1.KptFileName,
+			IncludeSubpackages: true,
+		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
 			return fmt.Errorf("failed to save resources: %w", err)

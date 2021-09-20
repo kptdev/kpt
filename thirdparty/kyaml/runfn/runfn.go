@@ -128,10 +128,12 @@ func (r RunFns) getNodesAndFilters() (
 			return nil, nil, outputPkg, err
 		}
 		outputPkg = &kio.LocalPackageReadWriter{
-			PackagePath:       string(r.uniquePath),
-			MatchFilesGlob:    matchFilesGlob,
-			FileSkipFunc:      functionConfigFilter,
-			PreserveSeqIndent: true,
+			PackagePath:        string(r.uniquePath),
+			MatchFilesGlob:     matchFilesGlob,
+			FileSkipFunc:       functionConfigFilter,
+			PreserveSeqIndent:  true,
+			PackageFileName:    kptfile.KptFileName,
+			IncludeSubpackages: true,
 		}
 	}
 
