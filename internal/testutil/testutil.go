@@ -618,26 +618,18 @@ func replaceData(repo, data string) error {
 		// If the file/directory doesn't exist in the repo folder, we just
 		// copy it over.
 		if os.IsNotExist(err) {
-			if info.Mode()&os.ModeSymlink != 0 {
-				// found a symlink
+			switch {
+			case info.Mode()&os.ModeSymlink != 0:
 				path, err := os.Readlink(path)
 				if err != nil {
 					return err
 				}
 				return os.Symlink(path, filepath.Join(repo, rel))
-
-			} else if info.IsDir() {
-				err := os.Mkdir(filepath.Join(repo, rel), 0700)
-				if err != nil {
-					return err
-				}
-			} else {
-				err := copyutil.SyncFile(path, filepath.Join(repo, rel))
-				if err != nil {
-					return err
-				}
+			case info.IsDir():
+				return os.Mkdir(filepath.Join(repo, rel), 0700)
+			default:
+				return copyutil.SyncFile(path, filepath.Join(repo, rel))
 			}
-			return nil
 		}
 
 		// If it is a directory and we know it already exists, we don't need
