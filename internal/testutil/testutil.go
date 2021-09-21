@@ -50,6 +50,7 @@ const (
 	Dataset3            = "dataset3"
 	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
 	Dataset5            = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
+	Dataset6            = "dataset6" // Dataset6 contains symlinks
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
 	UpdateMergeConflict = "updateMergeConflict"
@@ -617,7 +618,15 @@ func replaceData(repo, data string) error {
 		// If the file/directory doesn't exist in the repo folder, we just
 		// copy it over.
 		if os.IsNotExist(err) {
-			if info.IsDir() {
+			if info.Mode()&os.ModeSymlink != 0 {
+				// found a symlink
+				path, err := os.Readlink(path)
+				if err != nil {
+					return err
+				}
+				return os.Symlink(path, filepath.Join(repo, rel))
+
+			} else if info.IsDir() {
 				err := os.Mkdir(filepath.Join(repo, rel), 0700)
 				if err != nil {
 					return err
