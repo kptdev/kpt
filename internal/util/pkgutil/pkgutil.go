@@ -287,6 +287,7 @@ func FormatPackage(pkgPath string) {
 		PackagePath:       pkgPath,
 		MatchFilesGlob:    append(kio.DefaultMatch, kptfilev1.KptFileName),
 		PreserveSeqIndent: true,
+		WrapBareSeqNode:   true,
 	}
 	f := &filters.FormatFilter{
 		UseSchema: true,

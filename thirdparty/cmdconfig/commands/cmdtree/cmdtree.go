@@ -59,6 +59,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		PackagePath:       resolvedPath,
 		MatchFilesGlob:    r.getMatchFilesGlob(),
 		PreserveSeqIndent: true,
+		WrapBareSeqNode:   true,
 	}
 	fltrs := []kio.Filter{&filters.IsLocalConfig{
 		IncludeLocalConfig: true,

@@ -412,6 +412,7 @@ spec:
 			Writer:                out,
 			KeepReaderAnnotations: true,
 			OmitReaderAnnotations: true,
+			WrapBareSeqNode:       true,
 		}
 		n, err := r.Read()
 		if err != nil {

@@ -134,13 +134,14 @@ func (r RunFns) getNodesAndFilters() (
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,
+			WrapBareSeqNode:    true,
 		}
 	}
 
 	if r.Input == nil {
 		p.Inputs = []kio.Reader{outputPkg}
 	} else {
-		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, PreserveSeqIndent: true}}
+		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, PreserveSeqIndent: true, WrapBareSeqNode: true}}
 	}
 	if err := p.Execute(); err != nil {
 		return nil, nil, outputPkg, err

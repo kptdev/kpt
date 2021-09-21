@@ -88,6 +88,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
+			WrapBareSeqNode:    true,
 		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
