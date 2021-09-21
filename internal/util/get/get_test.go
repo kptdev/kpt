@@ -265,22 +265,21 @@ func TestCommand_Run_subdir_symlinks_inside(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
+		UpdateFunc: func(path string) error {
+			// create a symlink for a resource file inside java subdirectory in the repo
+			javaDir := filepath.Join(path, subdir)
+			javaDirLink := filepath.Join(path, subdir, "java-symlink")
+			return os.Symlink(javaDir, javaDirLink)
+		},
 	})
 	defer clean()
-
-	// create a symlink for a resource file inside java subdirectory in the repo
-	resourceFile := filepath.Join(g.RepoDirectory, subdir)
-	resourceFileLink := filepath.Join(g.RepoDirectory, subdir, "java-symlink")
-	err := os.Symlink(resourceFile, resourceFileLink)
-	t.Logf("created symlink %s for %s", resourceFileLink, resourceFile)
-	assert.NoError(t, err)
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	var b bytes.Buffer
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err = Command{Git: &kptfilev1.Git{
+	err := Command{Git: &kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
 	}.Run(fake.CtxWithPrinter(&b, &b))
