@@ -258,64 +258,6 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	})
 }
 
-func TestCommand_Run_symlinks_insidepkg(t *testing.T) {
-	repos, w, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{
-		testutil.Upstream: {
-			{
-				Branch: "master",
-				Pkg: pkgbuilder.NewRootPkg().
-					WithKptfile().
-					WithResource(pkgbuilder.DeploymentResource).
-					WithSubPackages(
-						pkgbuilder.NewSubPkg("subpkg").
-							WithKptfile().
-							WithResource(pkgbuilder.ConfigMapResource),
-					),
-				UpdateFunc: func(path string) error {
-					// Create symlink in the upstream repo.
-					return os.Symlink(filepath.Join(path, "subpkg"),
-						filepath.Join(path, "subpkg-sym"))
-				},
-			},
-		},
-	})
-	defer clean()
-	upstreamRepo := repos[testutil.Upstream]
-
-	var b bytes.Buffer
-
-	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
-	err := Command{
-		Git: &kptfilev1.Git{
-			Repo:      upstreamRepo.RepoDirectory,
-			Directory: "/",
-			Ref:       "master",
-		},
-		Destination: destinationDir,
-	}.Run(fake.CtxWithPrinter(&b, &b))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	t.Logf("got %s", b.String())
-	w.PackageDir = upstreamRepo.RepoName
-
-	expectedPkg := pkgbuilder.NewRootPkg().
-		WithKptfile(
-			pkgbuilder.NewKptfile().
-				WithUpstreamRef(testutil.Upstream, "/", "master", "resource-merge").
-				WithUpstreamLockRef(testutil.Upstream, "/", "master", 0),
-		).
-		WithResource(pkgbuilder.DeploymentResource).
-		WithSubPackages(
-			pkgbuilder.NewSubPkg("subpkg").
-				WithKptfile().
-				WithResource(pkgbuilder.ConfigMapResource),
-		)
-	expectedPath := expectedPkg.ExpandPkgWithName(t, upstreamRepo.RepoName, testutil.ToReposInfo(repos))
-
-	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
-}
-
 // TestCommand_Run_destination verifies Command clones the repo to a destination with a specific name rather
 // than using the name of the source repo.
 func TestCommand_Run_destination(t *testing.T) {
