@@ -15,6 +15,7 @@
 package get_test
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,6 +30,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+const JavaSubdir = "java"
 
 func TestMain(m *testing.M) {
 	os.Exit(testutil.ConfigureTestKptCache(m))
@@ -130,7 +133,7 @@ func TestCommand_Run(t *testing.T) {
 // - destination dir should match the name of the subdirectory
 // - KptFile should have the subdir listed
 func TestCommand_Run_subdir(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -148,6 +151,77 @@ func TestCommand_Run_subdir(t *testing.T) {
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
+
+	// verify the KptFile contains the expected values
+	commit, err := g.GetCommit()
+	assert.NoError(t, err)
+	g.AssertKptfile(t, absPath, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: subdir,
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: "git",
+			Git: &kptfilev1.GitLock{
+				Commit:    commit,
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: "git",
+			Git: &kptfilev1.Git{
+				Directory: subdir,
+				Ref:       "refs/heads/master",
+				Repo:      g.RepoDirectory,
+			},
+			UpdateStrategy: kptfilev1.ResourceMerge,
+		},
+	})
+}
+
+// TestCommand_Run_subdir_symlinks verifies Command will
+// clone a subdirectory of a repo inside the subdirectory.
+//
+// - destination dir should match the name of the subdirectory
+// - KptFile should have the subdir listed
+// - Content outside the subdirectory should be ignored
+// - symlinks inside the subdirectory should be ignored
+func TestCommand_Run_subdir_symlinks(t *testing.T) {
+	subdir := JavaSubdir
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset6,
+		Branch: "master",
+	})
+	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	cliOutput := &bytes.Buffer{}
+
+	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
+	err := Command{Git: &kptfilev1.Git{
+		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
+		Destination: absPath,
+	}.Run(fake.CtxWithPrinter(cliOutput, cliOutput))
+	assert.NoError(t, err)
+
+	// ensure warning for symlink is printed on the CLI
+	assert.Contains(t, cliOutput.String(), `[Warn] Ignoring symlink "config-symlink"`)
+
+	// verify the cloned contents do not contains symlinks
+	diff, err := testutil.Diff(filepath.Join(g.DatasetDirectory, testutil.Dataset6, subdir), absPath, true)
+	assert.NoError(t, err)
+	diff = diff.Difference(testutil.KptfileSet)
+	// original repo contains symlink and cloned doesn't, so the difference
+	assert.Contains(t, diff.List(), "config-symlink")
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()
@@ -250,7 +324,7 @@ func TestCommand_Run_destination(t *testing.T) {
 //
 // - name of the destination is used over the name of the subdir in the KptFile
 func TestCommand_Run_subdirAndDestination(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	dest := "new-java"
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
