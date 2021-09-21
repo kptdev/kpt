@@ -267,8 +267,8 @@ func TestCommand_Run_subdir_symlinks_inside(t *testing.T) {
 	defer clean()
 
 	// create a symlink for a resource file inside java subdirectory in the repo
-	resourceFile := filepath.Join(g.RepoDirectory, "java")
-	resourceFileLink := filepath.Join(g.RepoDirectory, "java", "java-symlink")
+	resourceFile := filepath.Join(g.RepoDirectory, subdir)
+	resourceFileLink := filepath.Join(g.RepoDirectory, subdir, "java-symlink")
 	err := os.Symlink(resourceFile, resourceFileLink)
 	t.Logf("created symlink %s for %s", resourceFileLink, resourceFile)
 	assert.NoError(t, err)
@@ -284,7 +284,7 @@ func TestCommand_Run_subdir_symlinks_inside(t *testing.T) {
 	}.Run(fake.CtxWithPrinter(&b, &b))
 	assert.NoError(t, err)
 
-	t.Logf("got %s", string(b.Bytes()))
+	t.Logf("got %s", b.String())
 
 	// verify the cloned contents matches the repository
 	g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, subdir), absPath, true)
