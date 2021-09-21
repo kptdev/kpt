@@ -242,8 +242,14 @@ func copyDir(ctx context.Context, srcDir string, dstDir string) error {
 			return strings.HasSuffix(src, ".git"), nil
 		},
 		OnSymlink: func(src string) copy.SymlinkAction {
-			// TODO(droot): make the src relative to the repo or subdir
-			pr.Printf("Ignoring symlink %s \n", src)
+			// try to print relative path of symlink
+			// if we can, else absolute path which is not
+			// pretty because it contains path to temporary repo dir
+			displayPath, err := filepath.Rel(srcDir, src)
+			if err != nil {
+				displayPath = src
+			}
+			pr.Printf("[Warn] Ignoring symlink %q \n", displayPath)
 			return copy.Skip
 		},
 	}
