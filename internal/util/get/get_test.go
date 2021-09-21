@@ -31,6 +31,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const JavaSubdir = "java"
+
 func TestMain(m *testing.M) {
 	os.Exit(testutil.ConfigureTestKptCache(m))
 }
@@ -131,7 +133,7 @@ func TestCommand_Run(t *testing.T) {
 // - destination dir should match the name of the subdirectory
 // - KptFile should have the subdir listed
 func TestCommand_Run_subdir(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -192,7 +194,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 // - KptFile should have the subdir listed
 // - files/symlinks outside the subdirectory should be ignored
 func TestCommand_Run_subdir_symlinks_outside(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -259,7 +261,7 @@ func TestCommand_Run_subdir_symlinks_outside(t *testing.T) {
 // - KptFile should have the subdir listed
 // - files/symlinks inside the subdirectory should be ignored
 func TestCommand_Run_subdir_symlinks_inside(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -390,7 +392,7 @@ func TestCommand_Run_destination(t *testing.T) {
 //
 // - name of the destination is used over the name of the subdir in the KptFile
 func TestCommand_Run_subdirAndDestination(t *testing.T) {
-	subdir := "java"
+	subdir := JavaSubdir
 	dest := "new-java"
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
