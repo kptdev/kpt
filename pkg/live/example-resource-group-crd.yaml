@@ -38,12 +38,14 @@ spec:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
             of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            internal value, and may reject unrecognized values.
+	    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
           type: string
         kind:
           description: 'Kind is a string value representing the REST resource this
             object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            submits requests to. Cannot be updated. In CamelCase.
+            More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
           type: string
         metadata:
           type: object
@@ -150,6 +152,8 @@ spec:
                 description: ResourceStatus contains the status of a given resource
                   uniquely identified by its group, kind, name and namespace.
                 properties:
+                  sourceHash:
+                    type: string
                   conditions:
                     items:
                       properties:
@@ -200,11 +204,14 @@ spec:
           - observedGeneration
           type: object
       type: object
-  version: v1alpha1
+  version: v1beta1
   versions:
-  - name: v1alpha1
+  - name: v1beta1
     served: true
     storage: true
+  - name: v1alpha1
+    served: true
+    storage: false
 status:
   acceptedNames:
     kind: ""
