@@ -81,7 +81,7 @@ fn-args:
   `eval` executes only one function, so do not use `--exec-path` flag with this flag.
 
 --entrypoint:
-  Executable in the container image to run.
+  Overwrite the default entrypoint set by the function image.
 
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
