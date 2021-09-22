@@ -13,10 +13,10 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn/set-namespace:v0.1.3
-entrypoint: function
+image: gcr.io/kpt-fn-demo/all_fns:v0.0.1
+entrypoint: set-namespace
 args:
   namespace: staging
 stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3[function]"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3[function]" in 0s
+  [RUNNING] "gcr.io/kpt-fn-demo/all_fns:v0.0.1[set-namespace]"
+  [PASS] "gcr.io/kpt-fn-demo/all_fns:v0.0.1[set-namespace]" in 0s
