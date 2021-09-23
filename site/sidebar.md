@@ -55,5 +55,7 @@
     - [ResourceList](reference/schema/resource-list/)
     - [CRD Status Convention](reference/schema/crd-status-convention/)
 - [Functions Catalog](https://catalog.kpt.dev/ ":target=_self")
+  - [Curated](https://catalog.kpt.dev/ ":target=_self")
+  - [Contrib](https://catalog.kpt.dev/contrib/ ":target=_self")
 - [FAQ](faq/)
 - [Contact](contact/)
