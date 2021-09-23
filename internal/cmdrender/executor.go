@@ -298,11 +298,6 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	return output, err
 }
 
-// resourceIDAnnotation is used to uniquely identify the resource during round trip
-// to and from a function execution. This annotation is meant to be consumed by
-// kpt during round trip and should be deleted after that
-const resourceIDAnnotation = "internal.config.k8s.io/kpt-resource-id"
-
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
@@ -363,14 +358,14 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 		if len(selectors) > 0 {
 			// set kpt-resource-id annotation on each resource before mutation
-			err = setResourceIds(input)
+			err = fnruntime.SetResourceIds(input)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// select the resources on which function should be applied
-		selectedInput, err := selectInput(input, selectors, &selectionContext{rootPackagePath: hctx.root.pkg.UniquePath})
+		selectedInput, err := fnruntime.SelectInput(input, selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return nil, err
 		}
@@ -391,9 +386,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 		if len(selectors) > 0 {
 			// merge the output resources with input resources
-			input = mergeWithInput(output.Nodes, selectedInput, input)
+			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
 			// delete the kpt-resource-id annotation on each resource
-			err = deleteResourceIds(input)
+			err = fnruntime.DeleteResourceIds(input)
 			if err != nil {
 				return nil, err
 			}
@@ -426,7 +421,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		}
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		selectedResources, err := selectInput(input, fn.Selectors, &selectionContext{rootPackagePath: hctx.root.pkg.UniquePath})
+		selectedResources, err := fnruntime.SelectInput(input, fn.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return err
 		}
@@ -568,152 +563,6 @@ func pruneResources(hctx *hydrationContext) error {
 	for f := range filesToBeDeleted {
 		if err := os.Remove(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
-		}
-	}
-	return nil
-}
-
-type selectionContext struct {
-	rootPackagePath types.UniquePath
-}
-
-// selectInput returns the selected resources based on criteria in selectors
-func selectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, ctx *selectionContext) ([]*yaml.RNode, error) {
-	if len(selectors) == 0 {
-		return input, nil
-	}
-	var filteredInput []*yaml.RNode
-	for _, node := range input {
-		for _, selector := range selectors {
-			match, err := isMatch(node, selector, ctx)
-			if err != nil {
-				return nil, err
-			}
-			if match {
-				filteredInput = append(filteredInput, node)
-			}
-		}
-	}
-	return filteredInput, nil
-}
-
-// isMatch returns true if the resource matches input selection criteria
-func isMatch(node *yaml.RNode, selector kptfilev1.Selector, ctx *selectionContext) (bool, error) {
-	pkgPathMatch, err := packagePathMatch(node, selector, ctx.rootPackagePath.String())
-	if err != nil {
-		return false, err
-	}
-	// keep expanding with new selectors
-	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector) && pkgPathMatch, nil
-}
-
-// nameMatch returns true if the resource name matches input selection criteria
-func nameMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
-	return selector.Name == "" || selector.Name == node.GetName()
-}
-
-// namespaceMatch returns true if the resource namespace matches input selection criteria
-func namespaceMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
-	return selector.Namespace == "" || selector.Namespace == node.GetNamespace()
-}
-
-// kindMatch returns true if the resource kind matches input selection criteria
-func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
-	return selector.Kind == "" || selector.Kind == node.GetKind()
-}
-
-// apiVersionMatch returns true if the resource apiVersion matches input selection criteria
-func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
-	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
-}
-
-// packagePathMatch returns true if the package path of resource matches input selection criteria
-func packagePathMatch(node *yaml.RNode, selector kptfilev1.Selector, rootPackagePath string) (bool, error) {
-	resourcePkgPath, err := pkg.GetPkgPathAnnotation(node)
-	if err != nil {
-		return false, err
-	}
-	// TODO: pmarupaka Make this logic work for WINDOWS
-	return selector.PackagePath == "" || filepath.Join(rootPackagePath, selector.PackagePath) == resourcePkgPath, nil
-}
-
-// setResourceIds adds kpt-resource-id annotation to each input resource
-func setResourceIds(input []*yaml.RNode) error {
-	id := 0
-	for i := range input {
-		idStr := fmt.Sprintf("%v", id)
-		err := input[i].PipeE(yaml.SetAnnotation(resourceIDAnnotation, idStr))
-		if err != nil {
-			return err
-		}
-		id++
-	}
-	return nil
-}
-
-// mergeWithInput merges the transformed output with input resources
-// input: all input resources, selectedInput: selected input resources
-// output: output resources as the result of function on selectedInput resources
-// for input: A,B,C,D; selectedInput: A,B; output: A,E(A transformed, B Deleted, E Added)
-// the result should be A,C,D,E
-// resources are identified by kpt-resource-id annotation
-func mergeWithInput(output, selectedInput, input []*yaml.RNode) []*yaml.RNode {
-	var result []*yaml.RNode
-	for i := range input {
-		presentInSelectedInput := presentIn(input[i], selectedInput)
-		presentInOutput := presentIn(input[i], output)
-		if !presentInSelectedInput {
-			// this resource is untouched
-			result = append(result, input[i])
-			continue
-		}
-
-		if presentInOutput {
-			// this resource modified by function, so replace it from the output
-			result = append(result, nodeWithResourceID(input[i].GetAnnotations()[resourceIDAnnotation], output))
-		}
-		// if presentInSelectedInput and !presentInOutput the resource is deleted, so ignore it
-	}
-
-	// add function generated resources to the result
-	for i := range output {
-		if output[i].GetAnnotations()[resourceIDAnnotation] == "" {
-			result = append(result, output[i])
-		}
-	}
-
-	return result
-}
-
-// nodeWithResourceID returns the node with the input resourceId
-func nodeWithResourceID(resourceID string, input []*yaml.RNode) *yaml.RNode {
-	for _, node := range input {
-		if node.GetAnnotations()[resourceIDAnnotation] == resourceID {
-			return node
-		}
-	}
-	return nil
-}
-
-// presentIn returns true if the targetNode identified by kpt-resource-id annotation
-// is present in the input list of resources
-func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
-	id := targetNode.GetAnnotations()[resourceIDAnnotation]
-	for _, node := range input {
-		if node.GetAnnotations()[resourceIDAnnotation] == id {
-			return true
-		}
-	}
-	return false
-}
-
-// deleteResourceIds removes the kpt-resource-id annotation from all resources
-func deleteResourceIds(input []*yaml.RNode) error {
-	for i := range input {
-		err := input[i].PipeE(yaml.ClearAnnotation(resourceIDAnnotation))
-		if err != nil {
-			return err
 		}
 	}
 	return nil
