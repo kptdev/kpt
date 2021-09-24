@@ -283,6 +283,7 @@ type Function struct {
 }
 
 // Selector specifies the selection criteria
+// please update IsEmpty method if more properties are added
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty"`
@@ -294,6 +295,15 @@ type Selector struct {
 	Namespace string `yaml:"namespace,omitempty"`
 	// PackagePath of the target resources relative to the root package directory
 	PackagePath string `yaml:"packagePath,omitempty"`
+}
+
+// IsEmpty returns true of none of the selection criteria is specified
+func (s Selector) IsEmpty() bool {
+	return s.APIVersion == "" &&
+		s.Namespace == "" &&
+		s.Name == "" &&
+		s.Kind == "" &&
+		s.PackagePath == ""
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.

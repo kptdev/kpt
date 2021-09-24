@@ -198,15 +198,19 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		return err
 	}
 
-	err = fnruntime.SetResourceIds(inputResources)
-	if err != nil {
-		return err
-	}
+	selectedInput := inputResources
 
-	// select the resources on which function should be applied
-	selectedInput, err := fnruntime.SelectInput(inputResources, []kptfile.Selector{r.Selector}, &fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
-	if err != nil {
-		return err
+	if !r.Selector.IsEmpty() {
+		err = fnruntime.SetResourceIds(inputResources)
+		if err != nil {
+			return err
+		}
+
+		// select the resources on which function should be applied
+		selectedInput, err = fnruntime.SelectInput(inputResources, []kptfile.Selector{r.Selector}, &fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
+		if err != nil {
+			return err
+		}
 	}
 
 	pb := &kio.PackageBuffer{}
@@ -217,13 +221,18 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	err = pipeline.Execute()
-	mergedOutput := fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
-	deleteAnnoErr := fnruntime.DeleteResourceIds(mergedOutput)
-	if deleteAnnoErr != nil {
-		return deleteAnnoErr
+	outputResources := pb.Nodes
+
+	if !r.Selector.IsEmpty() {
+		outputResources = fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
+		deleteAnnoErr := fnruntime.DeleteResourceIds(outputResources)
+		if deleteAnnoErr != nil {
+			return deleteAnnoErr
+		}
 	}
+
 	if err == nil {
-		writeErr := outputs[0].Write(mergedOutput)
+		writeErr := outputs[0].Write(outputResources)
 		if writeErr != nil {
 			return writeErr
 		}
