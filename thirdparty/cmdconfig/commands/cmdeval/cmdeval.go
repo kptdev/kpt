@@ -64,13 +64,13 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	r.Command.Flags().StringVar(
-		&r.Selector.APIVersion, "apiVersion", "", "run an executable as a function")
+		&r.Selector.APIVersion, "apiVersion", "", "select the resources with apiVersion to run the function on")
 	r.Command.Flags().StringVar(
-		&r.Selector.Kind, "kind", "", "run an executable as a function")
+		&r.Selector.Kind, "kind", "", "select the resources with kind to run the function on")
 	r.Command.Flags().StringVar(
-		&r.Selector.Name, "name", "", "run an executable as a function")
+		&r.Selector.Name, "name", "", "select the resources with name to run the function on")
 	r.Command.Flags().StringVar(
-		&r.Selector.Namespace, "namespace", "", "run an executable as a function")
+		&r.Selector.Namespace, "namespace", "", "select the resources with namespace to run the function on")
 
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
