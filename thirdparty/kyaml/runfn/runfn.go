@@ -207,7 +207,10 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		}
 
 		// select the resources on which function should be applied
-		selectedInput, err = fnruntime.SelectInput(inputResources, []kptfile.Selector{r.Selector}, &fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
+		selectedInput, err = fnruntime.SelectInput(
+			inputResources,
+			[]kptfile.Selector{r.Selector},
+			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
 		if err != nil {
 			return err
 		}

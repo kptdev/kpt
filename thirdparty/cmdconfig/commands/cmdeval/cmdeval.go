@@ -64,7 +64,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	r.Command.Flags().StringVar(
-		&r.Selector.APIVersion, "apiVersion", "", "select the resources with apiVersion to run the function on")
+		&r.Selector.APIVersion, "api-version", "", "select the resources with apiVersion to run the function on")
 	r.Command.Flags().StringVar(
 		&r.Selector.Kind, "kind", "", "select the resources with kind to run the function on")
 	r.Command.Flags().StringVar(
