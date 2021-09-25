@@ -213,7 +213,7 @@ func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
 		return err
 	}
 
-	rr, err := g.Run(ctx, "status", "-s")
+	rr, err := g.Run(ctx, "status", "-s", p.UniquePath.String())
 	if err != nil {
 		var gitExecErr *gitutil.GitExecError
 		if errors.As(err, &gitExecErr) {
