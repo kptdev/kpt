@@ -17,6 +17,7 @@
 //go:generate $GOBIN/mdtogo site/reference/cli/fn internal/docs/generated/fndocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 //go:generate $GOBIN/swagger generate spec -m -w pkg/api/kptfile/v1 -o site/reference/schema/kptfile/kptfile.yaml
+//go:generate $GOBIN/swagger generate spec -m -w pkg/api/kptfile/v1 -o site/reference/schema/kptfile/kptfile.json
 package main
 
 import (
