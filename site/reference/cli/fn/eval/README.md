@@ -53,6 +53,9 @@ fn-args:
 #### Flags
 
 ```
+--api-version:
+  Select the resources with apiVersion to run the function on.
+
 --as-current-user:
   Use the `uid` and `gid` of the kpt process for container function execution.
   By default, container function is executed as `nobody` user. You may want to use
@@ -94,11 +97,20 @@ fn-args:
   If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
   in the input to the function. By default it is disabled.
 
+--kind
+  Select the resources with kind to run the function on.
+
 --mount:
   List of storage options to enable reading from the local filesytem. By default,
   container functions can not access the local filesystem. It accepts the same options
   as specified on the [Docker Volumes] for `docker run`. All volumes are mounted
   readonly by default. Specify `rw=true` to mount volumes in read-write mode.
+
+--name:
+  Select the resources with name to run the function on.
+  
+--namespace:
+  Select the resources with namespace to run the function on.
 
 --network:
   If enabled, container functions are allowed to access network.
@@ -208,6 +220,12 @@ $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordp
 # and the output resources after setting namespace and annotation is written to another directory
 $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
 | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+```
+
+```shell
+# execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
+# in current directory
+kpt fn eval -i set-namespace:v0.1 --kind Deployment --name foo -- namespace=staging
 ```
 
 <!--mdtogo-->
