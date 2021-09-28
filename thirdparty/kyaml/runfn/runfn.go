@@ -94,6 +94,8 @@ type RunFns struct {
 	OriginalExec string
 
 	ImagePullPolicy fnruntime.ImagePullPolicy
+
+	Selector kptfile.Selector
 }
 
 // Execute runs the command
@@ -174,8 +176,7 @@ func (r RunFns) getFilters() ([]kio.Filter, error) {
 }
 
 // runFunctions runs the fltrs against the input and writes to either r.Output or output
-func (r RunFns) runFunctions(
-	input kio.Reader, output kio.Writer, fltrs []kio.Filter) error {
+func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Filter) error {
 	// use the previously read Resources as input
 	var outputs []kio.Writer
 	if r.Output == nil {
@@ -192,14 +193,53 @@ func (r RunFns) runFunctions(
 		})
 	}
 
-	var err error
+	inputResources, err := input.Read()
+	if err != nil {
+		return err
+	}
+
+	selectedInput := inputResources
+
+	if !r.Selector.IsEmpty() {
+		err = fnruntime.SetResourceIds(inputResources)
+		if err != nil {
+			return err
+		}
+
+		// select the resources on which function should be applied
+		selectedInput, err = fnruntime.SelectInput(
+			inputResources,
+			[]kptfile.Selector{r.Selector},
+			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
+		if err != nil {
+			return err
+		}
+	}
+
+	pb := &kio.PackageBuffer{}
 	pipeline := kio.Pipeline{
-		Inputs:                []kio.Reader{input},
+		Inputs:                []kio.Reader{&kio.PackageBuffer{Nodes: selectedInput}},
 		Filters:               fltrs,
-		Outputs:               outputs,
+		Outputs:               []kio.Writer{pb},
 		ContinueOnEmptyResult: r.ContinueOnEmptyResult,
 	}
 	err = pipeline.Execute()
+	outputResources := pb.Nodes
+
+	if !r.Selector.IsEmpty() {
+		outputResources = fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
+		deleteAnnoErr := fnruntime.DeleteResourceIds(outputResources)
+		if deleteAnnoErr != nil {
+			return deleteAnnoErr
+		}
+	}
+
+	if err == nil {
+		writeErr := outputs[0].Write(outputResources)
+		if writeErr != nil {
+			return writeErr
+		}
+	}
 	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
 	if err != nil {
 		// function fails
