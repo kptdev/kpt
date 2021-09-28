@@ -126,7 +126,8 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		outputs = append(outputs, kio.ByteWriter{
 			Writer:           printer.FromContextOrDie(r.Ctx).OutStream(),
 			FunctionConfig:   functionConfig,
-			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation},
+			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation,
+				kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation},
 		})
 	}
 

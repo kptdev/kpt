@@ -59,6 +59,10 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured
 		if err != nil {
 			return objs, err
 		}
+		err = removeAnnotations(n, kioutil.LegacyIndexAnnotation)
+		if err != nil {
+			return objs, err
+		}
 		u, err := kyamlNodeToUnstructured(n)
 		if err != nil {
 			return objs, err

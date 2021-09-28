@@ -60,6 +60,9 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		if err := removeAnnotations(n, kioutil.IndexAnnotation); err != nil {
 			return objs, err
 		}
+		if err := removeAnnotations(n, kioutil.LegacyIndexAnnotation); err != nil {
+			return objs, err
+		}
 
 		u, err := kyamlNodeToUnstructured(n)
 		if err != nil {
