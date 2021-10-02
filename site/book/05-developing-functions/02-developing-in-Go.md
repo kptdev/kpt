@@ -31,7 +31,6 @@ provided value:
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -61,7 +60,6 @@ func main() {
   command.AddGenerateDockerfile(cmd)
 
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
