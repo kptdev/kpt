@@ -178,5 +178,31 @@ pipeline:
         tier: mysql
 ```
 
+### `selectors`
+
+Selectors can be used to target specific resources for function execution. Selectors 
+follow OR of AND(s) approach where, within each selector, the filters are ANDed 
+and the selected resources are UNIONed with other selected resources. Please go through 
+[resource selector guide] and [Kptfile schema] for more information.
+
+```yaml
+# wordpress/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: set-annotations:v0.1
+      configMap:
+        tier: mysql
+      selectors:
+        - packagePath: ./mysql
+        - kind: Deployment
+          name: wordpress
+```
+
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
+[Kptfile schema]: https://kpt.dev/reference/schema/kptfile/
+[resource selector guide]: /guides/resource-selectors
