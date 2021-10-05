@@ -162,6 +162,21 @@ runtime.
 With your working function in-hand, it's time to package your function into an
 executable container image.
 
+**Note:** If you are using **npm v7+**, when you run `npm run kpt:docker-build`
+or `npm run kpt:docker-push`, you need to set environment variable
+`npm_package_kpt_docker_repo_base` to point to your container registry. More
+details can be found [here](https://github.com/GoogleContainerTools/kpt/issues/1394). 
+For example, if your container image is `gcr.io/my-org/foo:v1`, then
+`npm_package_kpt_docker_repo_base` should be `gcr.io/my-org`.
+
+```shell
+$ npm_package_kpt_docker_repo_base=gcr.io/my-org npm run kpt:docker-build
+```
+
+```shell
+$ npm_package_kpt_docker_repo_base=gcr.io/my-org npm run kpt:docker-push
+```
+
 To build the docker image:
 
 ```shell
@@ -191,6 +206,9 @@ using`--tag` flag:
 
 ```shell
 $ npm run kpt:docker-build -- --tag=latest
+```
+
+```shell
 $ npm run kpt:docker-push -- --tag=latest
 ```
 
