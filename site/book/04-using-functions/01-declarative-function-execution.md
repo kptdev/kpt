@@ -183,7 +183,20 @@ pipeline:
 Selectors can be used to target specific resources for function execution. Selectors 
 follow OR of AND(s) approach where, within each selector, the filters are ANDed 
 and the selected resources are UNIONed with other selected resources. Please go through 
-[resource selector guide] and [Kptfile schema] for more information.
+[resource selector guide] for more information.
+
+Here are the list of available selector properties:
+
+1. `apiVersion`: `apiVersion` field value of resources to be selected.
+2. `kind`: `kind` field value of resources to be selected.
+3. `name`: `metadata.name` field value of resources to be selected.
+4. `namespace`: `metadata.namespace` field of resources to be selected.
+5. `packagePath`: PackagePath of resources to be selected. The path must be 
+   OS-agnostic Slash-separated relative to the package directory. Examples
+   - `packagePath: ./mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
+   - `packagePath: ./` - selects resources in current package excluding resources in subpackages of current package.
+   
+For example:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -204,5 +217,4 @@ pipeline:
 
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
-[Kptfile schema]: https://kpt.dev/reference/schema/kptfile/
 [resource selector guide]: /guides/resource-selectors
