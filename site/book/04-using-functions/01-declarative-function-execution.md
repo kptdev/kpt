@@ -178,25 +178,19 @@ pipeline:
         tier: mysql
 ```
 
-### `selectors`
+## Specifying `selectors`
 
-Selectors can be used to target specific resources for function execution. Selectors 
-follow OR of AND(s) approach where, within each selector, the filters are ANDed 
-and the selected resources are UNIONed with other selected resources. Please go through 
-[resource selector guide] for more information.
+Selectors can be used to target specific resources for a function execution. 
+Some of the example use-cases are:
+1. Run a function on all deployments in `mysql` subpackage.
+2. Run a function on all deployments and services in the `wordpress` package.
+3. Run a function on all GCS bucket resources with namespace `my-ns`.
 
-Here are the list of available selector properties:
+Selectors follow OR of AND(s) approach where, within each selector, the selection 
+properties are ANDed and the selected resources are UNIONed with other selected resources.
 
-1. `apiVersion`: `apiVersion` field value of resources to be selected.
-2. `kind`: `kind` field value of resources to be selected.
-3. `name`: `metadata.name` field value of resources to be selected.
-4. `namespace`: `metadata.namespace` field of resources to be selected.
-5. `packagePath`: PackagePath of resources to be selected. The path must be 
-   OS-agnostic Slash-separated relative to the package directory. Examples
-   - `packagePath: ./mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
-   - `packagePath: ./` - selects resources in current package excluding resources in subpackages of current package.
-   
-For example:
+Example 1: Add annotations only to the `mysql` subpackage resources but add labels to all resources
+in `wordpress` package:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -206,15 +200,99 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: set-annotations:v0.1
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
       configMap:
         tier: mysql
       selectors:
-        - packagePath: ./mysql
+        - packagePath: mysql
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+         app: wordpress
+```
+
+When you invoke the render command, the `mysql` package is hydrated first, and `set-annotations`
+function is invoked only on the resources from `mysql` package. Then, `set-label`
+function is invoked on all the resources in the directory tree of `wordpress` package.
+
+```shell
+$ kpt fn render wordpress
+Package "wordpress/mysql": 
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 4.8s
+
+Package "wordpress": 
+[RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1" in 3.1s
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 3s
+[RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1" in 3.2s
+
+Successfully executed 4 function(s) in 2 package(s).
+```
+
+Example 2: Add another function to pipeline to set name-prefix to only `Deployment` 
+resources with specific `name` OR `Service` resources with specific `name`
+
+```yaml
+# wordpress/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      selectors:
+        - packagePath: mysql
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: wordpress
+    - image: gcr.io/kpt-fn/ensure-name-substring:v0.1
+      configMap:
+        prepend: dev-
+      selectors:
         - kind: Deployment
+          name: wordpress
+        - kind: Service
           name: wordpress
 ```
 
+Now, let's render the package hierarchy:
+
+```shell
+kpt fn render wordpress
+Package "wordpress/mysql": 
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 4.3s
+
+Package "wordpress": 
+[RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1" in 3s
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 2.9s
+[RUNNING] "gcr.io/kpt-fn/ensure-name-substring:v0.1" on 2 resource(s)
+[PASS] "gcr.io/kpt-fn/ensure-name-substring:v0.1" in 2.9s
+[RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1" in 3.4s
+
+Successfully executed 5 function(s) in 2 package(s).
+```
+Note that the `ensure-name-substring` function is applied only to the 
+resources matching the input selection criteria .
+
+Here are the list of available selector properties:
+
+1. `apiVersion`: `apiVersion` field value of resources to be selected.
+2. `kind`: `kind` field value of resources to be selected.
+3. `name`: `metadata.name` field value of resources to be selected.
+4. `namespace`: `metadata.namespace` field of resources to be selected.
+5. `packagePath`: PackagePath of resources to be selected. The path must be
+   OS-agnostic Slash-separated relative to the package directory. Examples
+   - `packagePath: mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
+   - `packagePath: .` - selects resources in current package excluding resources in subpackages of current package.
+
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
-[resource selector guide]: /guides/resource-selectors
