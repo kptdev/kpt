@@ -396,7 +396,11 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			DeferFailure:   spec.DeferFailure,
 		}
 		fnResult.ExecPath = r.OriginalExec
-
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false)
+
+	displayResourceCount := false
+	if !r.Selector.IsEmpty() {
+		displayResourceCount = true
+	}
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false, displayResourceCount)
 }
