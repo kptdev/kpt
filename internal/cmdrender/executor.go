@@ -363,7 +363,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				return nil, err
 			}
 		}
-
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
@@ -415,13 +414,17 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
-		if err != nil {
-			return err
-		}
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
 		selectedResources, err := fnruntime.SelectInput(input, fn.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		if err != nil {
+			return err
+		}
+		displayResourceCount := false
+		if len(fn.Selectors) > 0 {
+			displayResourceCount = true
+		}
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
 			return err
 		}
@@ -515,7 +518,11 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		fn := fns[i]
 		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
+		displayResourceCount := false
+		if len(fn.Selectors) > 0 {
+			displayResourceCount = true
+		}
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
 			return nil, err
 		}
