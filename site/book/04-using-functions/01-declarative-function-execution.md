@@ -186,11 +186,14 @@ Some of the example use-cases are:
 2. Run a function on all deployments and services in the `wordpress` package.
 3. Run a function on all GCS bucket resources with namespace `my-ns`.
 
-Selectors follow OR of AND(s) approach where, within each selector, the selection 
-properties are ANDed and the selected resources are UNIONed with other selected resources.
+Multiple selectors can be declared for a function in pipeline. Each selector has matchers 
+(e.g. `kind`, `packagePath`). When multiple matchers are provided, they are AND'ed 
+together. The selected resources from all selectors are UNION'ed and passed 
+as input for the function.
 
 Example 1: Add annotations only to the `mysql` subpackage resources but add labels to all resources
-in `wordpress` package:
+in `wordpress` package. To achieve this, add `set-annotations` function to list of mutators in 
+`wordpress/Kptfile` as depicted:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -210,7 +213,7 @@ pipeline:
          app: wordpress
 ```
 
-When you invoke the render command, the `mysql` package is hydrated first, and `set-annotations`
+When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
 function is invoked only on the resources from `mysql` package. Then, `set-label`
 function is invoked on all the resources in the directory tree of `wordpress` package.
 
@@ -218,21 +221,23 @@ function is invoked on all the resources in the directory tree of `wordpress` pa
 $ kpt fn render wordpress
 Package "wordpress/mysql": 
 [RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
-[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 4.8s
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 
 Package "wordpress": 
 [RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
-[PASS] "gcr.io/kpt-fn/set-annotations:v0.1" in 3.1s
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1"
 [RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
-[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 3s
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
-[PASS] "gcr.io/kpt-fn/kubeval:v0.1" in 3.2s
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 4 function(s) in 2 package(s).
 ```
 
 Example 2: Add another function to pipeline to set name-prefix to only `Deployment` 
-resources with specific `name` OR `Service` resources with specific `name`
+resources with name `wordpress` and `Service` resources with name `wordpress`.
+To achieve this, add `ensure-name-substring` function to list of mutators in
+`wordpress/Kptfile` as depicted:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -266,33 +271,34 @@ Now, let's render the package hierarchy:
 kpt fn render wordpress
 Package "wordpress/mysql": 
 [RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
-[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 4.3s
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 
 Package "wordpress": 
 [RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
-[PASS] "gcr.io/kpt-fn/set-annotations:v0.1" in 3s
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1"
 [RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
-[PASS] "gcr.io/kpt-fn/set-label:v0.1" in 2.9s
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
 [RUNNING] "gcr.io/kpt-fn/ensure-name-substring:v0.1" on 2 resource(s)
-[PASS] "gcr.io/kpt-fn/ensure-name-substring:v0.1" in 2.9s
+[PASS] "gcr.io/kpt-fn/ensure-name-substring:v0.1"
 [RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
-[PASS] "gcr.io/kpt-fn/kubeval:v0.1" in 3.4s
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1"
 
 Successfully executed 5 function(s) in 2 package(s).
 ```
 Note that the `ensure-name-substring` function is applied only to the 
 resources matching the input selection criteria .
 
-Here are the list of available selector properties:
+Here are the list of available selector matchers:
 
 1. `apiVersion`: `apiVersion` field value of resources to be selected.
 2. `kind`: `kind` field value of resources to be selected.
 3. `name`: `metadata.name` field value of resources to be selected.
 4. `namespace`: `metadata.namespace` field of resources to be selected.
-5. `packagePath`: PackagePath of resources to be selected. The path must be
-   OS-agnostic Slash-separated relative to the package directory. Examples
-   - `packagePath: mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
+5. `packagePath`: [Package identifier] of resources to be selected. Examples
    - `packagePath: .` - selects resources in current package excluding resources in subpackages of current package.
+   - `packagePath: mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
+   - `packagePath: mysql/storage` - selects resources in the `mysql/storage` subpackage excluding resources of nested subpackages of `mysql/storage`.
 
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
+[Package identifier]: book/03-packages/01-getting-a-package?id=package-name-and-identifier
