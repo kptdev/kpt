@@ -64,13 +64,13 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
 		"pull image before running the container. It should be one of always, ifNotPresent and never.")
 	r.Command.Flags().StringVar(
-		&r.Selector.APIVersion, "by-api-version", "", "select resources matching the given apiVersion")
+		&r.Selector.APIVersion, "match-api-version", "", "select resources matching the given apiVersion")
 	r.Command.Flags().StringVar(
-		&r.Selector.Kind, "by-kind", "", "select resources matching the given kind")
+		&r.Selector.Kind, "match-kind", "", "select resources matching the given kind")
 	r.Command.Flags().StringVar(
-		&r.Selector.Name, "by-name", "", "select resources matching the given name")
+		&r.Selector.Name, "match-name", "", "select resources matching the given name")
 	r.Command.Flags().StringVar(
-		&r.Selector.Namespace, "by-namespace", "", "select resources matching the given namespace")
+		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
 
 	cmdutil.FixDocs("kpt", parent, c)
 	return r

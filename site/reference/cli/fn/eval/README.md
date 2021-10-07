@@ -58,16 +58,16 @@ fn-args:
   By default, container function is executed as `nobody` user. You may want to use
   this flag to run higher privilege operations such as mounting the local filesystem.
 
---by-api-version:
+--match-api-version:
   Select resources matching the given apiVersion.
 
---by-kind
+--match-kind
   Select resources matching the given kind.
 
---by-name:
+--match-name:
   Select resources matching the given name.
   
---by-namespace:
+--match-namespace:
   Select resources matching the given namespace.
 
 --env, e:

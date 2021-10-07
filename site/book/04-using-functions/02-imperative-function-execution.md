@@ -92,7 +92,7 @@ For example, you can selectively add an annotation to the resources if it has ki
 `Deployment` AND name `wordpress`
 
 ```shell
-$ kpt fn eval wordpress -i set-annotations:v0.1 --by-kind Deployment --by-name wordpress -- foo=bar
+$ kpt fn eval wordpress -i set-annotations:v0.1 --match-kind Deployment --match-name wordpress -- foo=bar
 ```
 
 ## Privileged Execution
