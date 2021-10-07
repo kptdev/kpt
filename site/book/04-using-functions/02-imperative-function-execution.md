@@ -89,7 +89,7 @@ Note that the arguments must come after the separator `--`.
 Selectors can be used to target specific resources for a function execution.
 
 For example, you can selectively add an annotation to the resources if it has kind
-`Deployment` AND name `wordpress`
+`Deployment` AND name `wordpress`:
 
 ```shell
 $ kpt fn eval wordpress -i set-annotations:v0.1 --match-kind Deployment --match-name wordpress -- foo=bar
