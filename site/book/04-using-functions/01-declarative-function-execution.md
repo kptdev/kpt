@@ -186,14 +186,8 @@ Some of the example use-cases are:
 2. Run a function on all deployments and services in the `wordpress` package.
 3. Run a function on all GCS bucket resources with namespace `my-ns`.
 
-Multiple selectors can be declared for a function in pipeline. Each selector has matchers 
-(e.g. `kind`, `packagePath`). When multiple matchers are provided, they are AND'ed 
-together. The selected resources from all selectors are UNION'ed and passed 
-as input for the function.
-
-Example 1: Add annotations only to the `mysql` subpackage resources but add labels to all resources
-in `wordpress` package. To achieve this, add `set-annotations` function to list of mutators in 
-`wordpress/Kptfile` as depicted:
+Example 1: Let's add a function to the pipeline that adds an annotation to 
+resources of `mysql` subpackage only.
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -234,10 +228,10 @@ Package "wordpress":
 Successfully executed 4 function(s) in 2 package(s).
 ```
 
-Example 2: Add another function to pipeline to set name-prefix to only `Deployment` 
-resources with name `wordpress` and `Service` resources with name `wordpress`.
-To achieve this, add `ensure-name-substring` function to list of mutators in
-`wordpress/Kptfile` as depicted:
+Example 2: Let's add another function to the pipeline that adds a name-prefix to a resource if:
+- it has kind `Deployment` AND name `wordpress`
+  OR
+- it has kind `Service` AND name `wordpress`
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -286,7 +280,14 @@ Package "wordpress":
 Successfully executed 5 function(s) in 2 package(s).
 ```
 Note that the `ensure-name-substring` function is applied only to the 
-resources matching the input selection criteria .
+resources matching the input selection criteria.
+
+As depicted in the example, multiple selectors can be declared for a function in pipeline. 
+Each selector has matchers (e.g. `kind`, `name`, `packagePath`). When multiple matchers 
+are provided, they are AND'ed together. The selected resources from all selectors 
+are UNION'ed and passed as input for the function.
+
+![img](/static/images/func-target.svg)
 
 Here are the list of available selector matchers:
 
