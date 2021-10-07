@@ -54,7 +54,7 @@ fn-args:
 
 ```
 --api-version:
-  Select the resources with apiVersion to run the function on.
+  Select resources matching the given apiVersion.
 
 --as-current-user:
   Use the `uid` and `gid` of the kpt process for container function execution.
@@ -98,7 +98,7 @@ fn-args:
   in the input to the function. By default it is disabled.
 
 --kind
-  Select the resources with kind to run the function on.
+  Select resources matching the given kind.
 
 --mount:
   List of storage options to enable reading from the local filesytem. By default,
@@ -107,10 +107,10 @@ fn-args:
   readonly by default. Specify `rw=true` to mount volumes in read-write mode.
 
 --name:
-  Select the resources with name to run the function on.
+  Select resources matching the given name.
   
 --namespace:
-  Select the resources with namespace to run the function on.
+  Select resources matching the given namespace.
 
 --network:
   If enabled, container functions are allowed to access network.

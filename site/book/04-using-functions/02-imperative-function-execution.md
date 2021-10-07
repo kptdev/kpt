@@ -192,6 +192,17 @@ mutating the directory in-place. You can also pipe to other programs (e.g.
 flexibility is not having benefits provided by functions: scalability,
 reusability, and encapsulation.
 
+## Specifying `selectors`
+
+Selectors can be used to target specific resources for a function execution.
+
+For example, you can selectively add an annotation to the resources if it has kind 
+`Deployment` AND name `wordpress`
+
+```shell
+$ kpt fn eval wordpress -i set-annotations:v0.1 --kind Deployment --name wordpress -- foo=bar
+```
+
 [eval-doc]: /reference/cli/fn/eval/
 [source-doc]: /reference/cli/fn/source/
 [sink-doc]: /reference/cli/fn/sink/

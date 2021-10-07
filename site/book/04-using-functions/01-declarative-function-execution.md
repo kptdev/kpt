@@ -186,6 +186,8 @@ Some of the example use-cases are:
 2. Run a function on all deployments and services in the `wordpress` package.
 3. Run a function on all GCS bucket resources with namespace `my-ns`.
 
+![img](/static/images/func-target.svg)
+
 Example 1: Let's add a function to the pipeline that adds an annotation to 
 resources of `mysql` subpackage only.
 
@@ -205,6 +207,8 @@ pipeline:
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
          app: wordpress
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
@@ -228,7 +232,7 @@ Package "wordpress":
 Successfully executed 4 function(s) in 2 package(s).
 ```
 
-Example 2: Let's add another function to the pipeline that adds a name-prefix to a resource if:
+Example 2: Let's add another function to the pipeline that adds a prefix to name the resource if:
 - it has kind `Deployment` AND name `wordpress`
   OR
 - it has kind `Service` AND name `wordpress`
@@ -257,6 +261,8 @@ pipeline:
           name: wordpress
         - kind: Service
           name: wordpress
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
 Now, let's render the package hierarchy:
@@ -286,8 +292,6 @@ As depicted in the example, multiple selectors can be declared for a function in
 Each selector has matchers (e.g. `kind`, `name`, `packagePath`). When multiple matchers 
 are provided, they are AND'ed together. The selected resources from all selectors 
 are UNION'ed and passed as input for the function.
-
-![img](/static/images/func-target.svg)
 
 Here are the list of available selector matchers:
 
