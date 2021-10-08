@@ -180,16 +180,17 @@ pipeline:
 
 ## Specifying `selectors`
 
-Selectors can be used to target specific resources for a function execution. 
-Some of the example use-cases are:
-1. Run a function on all deployments in `mysql` subpackage.
-2. Run a function on all deployments and services in the `wordpress` package.
-3. Run a function on all GCS bucket resources with namespace `my-ns`.
+In some cases, you want to invoke the function only on a subset of resources based on a
+selection criteria. This can be accomplished using selectors. At a high level, selectors
+work as follows:
 
 ![img](/static/images/func-target.svg)
 
-Example 1: Let's add a function to the pipeline that adds an annotation to 
-resources of `mysql` subpackage only.
+Resources that are selected are passed as input to the function.
+Resources that are not selected are passed through unchanged.
+
+For example, let's add a function to the pipeline that adds an annotation to 
+resources of `mysql` subpackage only:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -232,9 +233,9 @@ Package "wordpress":
 Successfully executed 4 function(s) in 2 package(s).
 ```
 
-Example 2: Let's add another function to the pipeline that adds a prefix to name the resource if:
+As another example, let's add another function to the pipeline that adds a prefix to the name of a resource if:
 - it has kind `Deployment` AND name `wordpress`
-  OR
+  **OR**
 - it has kind `Service` AND name `wordpress`
 
 ```yaml
@@ -265,7 +266,7 @@ pipeline:
     - image: gcr.io/kpt-fn/kubeval:v0.1
 ```
 
-Now, let's render the package hierarchy:
+Now, let's render the package:
 
 ```shell
 kpt fn render wordpress
@@ -285,24 +286,20 @@ Package "wordpress":
 
 Successfully executed 5 function(s) in 2 package(s).
 ```
+
 Note that the `ensure-name-substring` function is applied only to the 
-resources matching the input selection criteria.
+resources matching the selection criteria.
 
-As depicted in the example, multiple selectors can be declared for a function in pipeline. 
-Each selector has matchers (e.g. `kind`, `name`, `packagePath`). When multiple matchers 
-are provided, they are AND'ed together. The selected resources from all selectors 
-are UNION'ed and passed as input for the function.
-
-Here are the list of available selector matchers:
+The following are the matchers you can specify in a selector:
 
 1. `apiVersion`: `apiVersion` field value of resources to be selected.
 2. `kind`: `kind` field value of resources to be selected.
 3. `name`: `metadata.name` field value of resources to be selected.
 4. `namespace`: `metadata.namespace` field of resources to be selected.
-5. `packagePath`: [Package identifier] of resources to be selected. Examples
-   - `packagePath: .` - selects resources in current package excluding resources in subpackages of current package.
-   - `packagePath: mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
-   - `packagePath: mysql/storage` - selects resources in the `mysql/storage` subpackage excluding resources of nested subpackages of `mysql/storage`.
+5. `packagePath`: [Package identifier] of resources to be selected. Examples values:
+   - `.` - selects resources in current package excluding resources in subpackages of current package.
+   - `mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
+   - `mysql/storage` - selects resources in the `mysql/storage` subpackage excluding resources of nested subpackages of `mysql/storage`.
 
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
