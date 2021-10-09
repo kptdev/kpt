@@ -43,10 +43,12 @@ fix:
 
 fmt:
 	go fmt ./...
+	
+schema:
+	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate:
 	go install ./mdtogo 
-	(which swagger || go install github.com/go-swagger/go-swagger/cmd/swagger@v0.27.0)
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) go generate ./...

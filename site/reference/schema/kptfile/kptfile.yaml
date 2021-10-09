@@ -31,6 +31,14 @@ definitions:
           image: set-labels
         type: string
         x-go-name: Image
+      selectors:
+        description: |-
+          `Selectors` are used to specify resources on which the function should be executed
+          if not specified, all resources are selected
+        items:
+          $ref: '#/definitions/Selector'
+        type: array
+        x-go-name: Selectors
     title: Function specifies a KRM function.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
@@ -249,6 +257,34 @@ definitions:
     title: ResourceMeta contains the metadata for a both Resource Type and Resource.
     type: object
     x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
+  Selector:
+    description: |-
+      Selector specifies the selection criteria
+      please update IsEmpty method if more properties are added
+    properties:
+      apiVersion:
+        description: APIVersion of the target resources
+        type: string
+        x-go-name: APIVersion
+      kind:
+        description: Kind of the target resources
+        type: string
+        x-go-name: Kind
+      name:
+        description: Name of the target resources
+        type: string
+        x-go-name: Name
+      namespace:
+        description: Namespace of the target resources
+        type: string
+        x-go-name: Namespace
+      packagePath:
+        description: PackagePath of the target resources relative to the root package
+          directory
+        type: string
+        x-go-name: PackagePath
+    type: object
+    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
   TypeMeta:
     description: |-
       TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta

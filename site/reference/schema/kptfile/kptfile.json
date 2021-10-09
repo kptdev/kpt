@@ -1,4 +1,9 @@
 {
+  "$schema": "http://json-schema.org/draft/2019-09/schema#",
+  "type": "object",
+  "anyOf": [
+    "#/definitions/kptfile"
+  ],
   "swagger": "2.0",
   "info": {
     "title": "Kptfile schema.",
@@ -27,6 +32,14 @@
           "description": "`Image` specifies the function container image.\nIt can either be fully qualified, e.g.:\n\nimage: gcr.io/kpt-fn/set-labels\n\nOptionally, kpt can be configured to use a image\nregistry host-path that will be used to resolve the image path in case\nthe image path is missing (Defaults to gcr.io/kpt-fn).\ne.g. The following resolves to gcr.io/kpt-fn/set-labels:\n\nimage: set-labels",
           "type": "string",
           "x-go-name": "Image"
+        },
+        "selectors": {
+          "description": "`Selectors` are used to specify resources on which the function should be executed\nif not specified, all resources are selected",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Selector"
+          },
+          "x-go-name": "Selectors"
         }
       },
       "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -286,6 +299,38 @@
         }
       },
       "x-go-package": "sigs.k8s.io/kustomize/kyaml/yaml"
+    },
+    "Selector": {
+      "description": "Selector specifies the selection criteria\nplease update IsEmpty method if more properties are added",
+      "type": "object",
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion of the target resources",
+          "type": "string",
+          "x-go-name": "APIVersion"
+        },
+        "kind": {
+          "description": "Kind of the target resources",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "name": {
+          "description": "Name of the target resources",
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "namespace": {
+          "description": "Namespace of the target resources",
+          "type": "string",
+          "x-go-name": "Namespace"
+        },
+        "packagePath": {
+          "description": "PackagePath of the target resources relative to the root package directory",
+          "type": "string",
+          "x-go-name": "PackagePath"
+        }
+      },
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
     },
     "TypeMeta": {
       "description": "TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta\nNo need for a direct dependence; the fields are stable.",
