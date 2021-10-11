@@ -214,7 +214,7 @@ pipeline:
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
 function is invoked only on the resources from `mysql` package. Then, `set-label`
-function is invoked on all the resources in the directory tree of `wordpress` package.
+function is invoked on all the resources in the package hierarchy of `wordpress` package.
 
 ```shell
 $ kpt fn render wordpress
