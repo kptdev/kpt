@@ -22,6 +22,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
+	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
@@ -140,7 +141,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// Based on the inventory template manifest we look up the inventory
 	// from the live state using the inventory client.
-	identifiers, err := invClient.GetClusterObjs(invInfo)
+	identifiers, err := invClient.GetClusterObjs(invInfo, common.DryRunNone)
 	if err != nil {
 		return err
 	}

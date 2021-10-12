@@ -321,7 +321,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			// Retrieve the objects stored by the inventory client and validate.
-			migratedObjs, err := rgInvClient.GetClusterObjs(nil)
+			migratedObjs, err := rgInvClient.GetClusterObjs(nil, common.DryRunNone)
 			assert.NoError(t, err)
 			if len(tc.objs) != len(migratedObjs) {
 				t.Errorf("expected num migrated objs (%d), got (%d)", len(tc.objs), len(migratedObjs))
