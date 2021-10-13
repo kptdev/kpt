@@ -190,7 +190,7 @@ Resources that are selected are passed as input to the function.
 Resources that are not selected are passed through unchanged.
 
 For example, let's add a function to the pipeline that adds an annotation to 
-resources of `mysql` subpackage only:
+resources with name `mysql` only:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
@@ -204,7 +204,7 @@ pipeline:
       configMap:
         tier: mysql
       selectors:
-        - packagePath: mysql
+        - name: wordpress-mysql
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
          app: wordpress
@@ -213,7 +213,7 @@ pipeline:
 ```
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
-function is invoked only on the resources from `mysql` package. Then, `set-label`
+function is invoked only on the resources with name `wordpress-mysql`. Then, `set-label`
 function is invoked on all the resources in the package hierarchy of `wordpress` package.
 
 ```shell
@@ -250,7 +250,7 @@ pipeline:
       configMap:
         tier: mysql
       selectors:
-        - packagePath: mysql
+        - name: wordpress-mysql
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: wordpress
@@ -296,10 +296,6 @@ The following are the matchers you can specify in a selector:
 2. `kind`: `kind` field value of resources to be selected.
 3. `name`: `metadata.name` field value of resources to be selected.
 4. `namespace`: `metadata.namespace` field of resources to be selected.
-5. `packagePath`: [Package identifier] of resources to be selected. Examples values:
-   - `.` - selects resources in current package excluding resources in subpackages of current package.
-   - `mysql` - selects resources in the `mysql` subpackage excluding resources of nested subpackages of `mysql`.
-   - `mysql/storage` - selects resources in the `mysql/storage` subpackage excluding resources of nested subpackages of `mysql/storage`.
 
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/

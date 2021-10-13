@@ -293,8 +293,6 @@ type Selector struct {
 	Name string `yaml:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty"`
-	// PackagePath of the target resources relative to the root package directory
-	PackagePath string `yaml:"packagePath,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
@@ -302,8 +300,7 @@ func (s Selector) IsEmpty() bool {
 	return s.APIVersion == "" &&
 		s.Namespace == "" &&
 		s.Name == "" &&
-		s.Kind == "" &&
-		s.PackagePath == ""
+		s.Kind == ""
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.
