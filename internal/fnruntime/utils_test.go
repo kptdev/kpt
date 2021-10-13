@@ -3,7 +3,6 @@ package fnruntime
 import (
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -115,22 +114,6 @@ spec:
 			},
 			expected: false,
 		},
-		{
-			name: "packagePath match",
-			input: `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-  annotations:
-    internal.config.k8s.io/kpt-resource-id: "0"
-    internal.config.kubernetes.io/package-path: "/path/to/root/pkg/db"
-spec:
-  replicas: 3`,
-			selector: kptfile.Selector{
-				PackagePath: "./db",
-			},
-			expected: true,
-		},
 	}
 
 	for i := range tests {
@@ -138,12 +121,7 @@ spec:
 		t.Run(tc.name, func(t *testing.T) {
 			node, err := yaml.Parse(tc.input)
 			assert.NoError(t, err)
-			var rootPackagePath string
-			if tc.selector.PackagePath != "" {
-				rootPackagePath = "/path/to/root/pkg"
-			}
-			actual, err := isMatch(node, tc.selector, &SelectionContext{RootPackagePath: types.UniquePath(rootPackagePath)})
-			assert.NoError(t, err)
+			actual := isMatch(node, tc.selector)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

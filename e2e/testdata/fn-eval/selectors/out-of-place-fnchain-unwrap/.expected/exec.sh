@@ -17,6 +17,6 @@
 set -eo pipefail
 
 kpt fn source \
-| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1.3 --kind Deployment -o stdout -- namespace=staging \
-| kpt fn eval - --image gcr.io/kpt-fn/set-annotations:v0.1.3 --name custom -- foo=bar \
+| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1.3 --match-kind Deployment -o stdout -- namespace=staging \
+| kpt fn eval - --image gcr.io/kpt-fn/set-annotations:v0.1.3 --match-name custom -- foo=bar \
 | kpt fn eval - --image gcr.io/kpt-fn/set-labels:v0.1.3 -o unwrap -- tier=backend

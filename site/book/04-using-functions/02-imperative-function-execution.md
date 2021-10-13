@@ -84,6 +84,24 @@ $ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
 
 Note that the arguments must come after the separator `--`.
 
+## Specifying `selectors`
+
+Selectors can be used to target specific resources for a function execution.
+
+For example, you can selectively add an annotation to the resources if it has kind
+`Deployment` AND name `wordpress`:
+
+```shell
+$ kpt fn eval wordpress -i set-annotations:v0.1 --match-kind Deployment --match-name wordpress -- foo=bar
+```
+
+Here is the list of available selector matcher flags:
+
+1. `match-api-version`
+2. `match-kind`
+3. `match-name`
+4. `match-namespace`
+
 ## Privileged Execution
 
 Since the function is provided explicitly by the user, `eval` can be more

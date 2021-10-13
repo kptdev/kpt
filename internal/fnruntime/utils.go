@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -141,18 +140,14 @@ type SelectionContext struct {
 }
 
 // SelectInput returns the selected resources based on criteria in selectors
-func SelectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, ctx *SelectionContext) ([]*yaml.RNode, error) {
+func SelectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, _ *SelectionContext) ([]*yaml.RNode, error) {
 	if len(selectors) == 0 {
 		return input, nil
 	}
 	var filteredInput []*yaml.RNode
 	for _, node := range input {
 		for _, selector := range selectors {
-			match, err := isMatch(node, selector, ctx)
-			if err != nil {
-				return nil, err
-			}
-			if match {
+			if isMatch(node, selector) {
 				filteredInput = append(filteredInput, node)
 			}
 		}
@@ -161,14 +156,10 @@ func SelectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, ctx *Selec
 }
 
 // isMatch returns true if the resource matches input selection criteria
-func isMatch(node *yaml.RNode, selector kptfilev1.Selector, ctx *SelectionContext) (bool, error) {
-	pkgPathMatch, err := packagePathMatch(node, selector, ctx.RootPackagePath.String())
-	if err != nil {
-		return false, err
-	}
+func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	// keep expanding with new selectors
 	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector) && pkgPathMatch, nil
+		kindMatch(node, selector) && apiVersionMatch(node, selector)
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
@@ -189,14 +180,4 @@ func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 // apiVersionMatch returns true if the resource apiVersion matches input selection criteria
 func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
-}
-
-// packagePathMatch returns true if the package path of resource matches input selection criteria
-func packagePathMatch(node *yaml.RNode, selector kptfilev1.Selector, rootPackagePath string) (bool, error) {
-	resourcePkgPath, err := pkg.GetPkgPathAnnotation(node)
-	if err != nil {
-		return false, err
-	}
-	// TODO: pmarupaka Make this logic work for WINDOWS
-	return selector.PackagePath == "" || filepath.Join(rootPackagePath, selector.PackagePath) == resourcePkgPath, nil
 }
