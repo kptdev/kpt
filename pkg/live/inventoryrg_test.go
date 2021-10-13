@@ -125,7 +125,7 @@ func TestLoadStore(t *testing.T) {
 				t.Fatalf("unexpected error %v received", err)
 				return
 			}
-			if !object.SetEquals(tc.objs, objs) {
+			if !objs.Equal(tc.objs) {
 				t.Fatalf("expected inventory objs (%v), got (%v)", tc.objs, objs)
 			}
 		})

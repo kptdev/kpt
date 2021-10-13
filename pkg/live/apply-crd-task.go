@@ -40,7 +40,7 @@ func (a *ApplyCRDTask) Action() event.ResourceAction {
 	return event.ApplyAction
 }
 
-func (a *ApplyCRDTask) Identifiers() []object.ObjMetadata {
+func (a *ApplyCRDTask) Identifiers() object.ObjMetadataSet {
 	return object.UnstructuredsToObjMetasOrDie([]*unstructured.Unstructured{a.crd})
 }
 

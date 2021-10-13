@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/pkg/apply/cache"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -109,8 +110,8 @@ func (icm *InventoryResourceGroup) ID() string {
 
 // Load is an Inventory interface function returning the set of
 // object metadata from the wrapped ResourceGroup, or an error.
-func (icm *InventoryResourceGroup) Load() ([]object.ObjMetadata, error) {
-	objs := []object.ObjMetadata{}
+func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
+	objs := object.ObjMetadataSet{}
 	if icm.inv == nil {
 		return objs, fmt.Errorf("inventory info is nil")
 	}
@@ -160,7 +161,7 @@ func (icm *InventoryResourceGroup) Load() ([]object.ObjMetadata, error) {
 // Store is an Inventory interface function implemented to store
 // the object metadata in the wrapped ResourceGroup. Actual storing
 // happens in "GetObject".
-func (icm *InventoryResourceGroup) Store(objMetas []object.ObjMetadata) error {
+func (icm *InventoryResourceGroup) Store(objMetas object.ObjMetadataSet) error {
 	icm.objMetas = objMetas
 	return nil
 }
@@ -282,8 +283,10 @@ func InstallResourceGroupCRD(factory cmdutil.Factory) error {
 			handleError(eventChannel, err)
 			return
 		}
+		// Create a new cache map to hold the last known resource state & status
+		resourceCache := cache.NewResourceCacheMap()
 		// Run the task queue.
-		runner := taskrunner.NewTaskStatusRunner(objs, statusPoller)
+		runner := taskrunner.NewTaskStatusRunner(objs, statusPoller, resourceCache)
 		err = runner.Run(context.Background(), taskQueue, eventChannel, taskrunner.Options{
 			PollInterval:     applyCRDPollInterval,
 			UseCache:         true,
