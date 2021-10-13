@@ -20,7 +20,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -68,9 +67,9 @@ type TestCaseConfig struct {
 	Sequential bool `json:"sequential,omitempty" yaml:"sequential,omitempty"`
 
 	// ImagePullPolicy controls the image pulling behavior. It can be set to one
-	// of always, ifNotPresent and never. If unspecified, the default will be
-	// the same as the CLI flag.
-	ImagePullPolicy fnruntime.ImagePullPolicy `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
+	// of `Always`, `IfNotPresent` and `Never`. If unspecified, the default will
+	// be the same as the CLI flag.
+	ImagePullPolicy string `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
 
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`

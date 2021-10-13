@@ -15,6 +15,6 @@
 testType: eval
 image: gcr.io/kpt-fn-demo/bar:v0.1
 sequential: true
-imagePullPolicy: ifNotPresent
+imagePullPolicy: IfNotPresent
 exitCode: 1
 stdErr: foo

@@ -107,17 +107,20 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 }
 
 func ValidateImagePullPolicyValue(v string) error {
-	if v != string(fnruntime.AlwaysPull) && v != string(fnruntime.IfNotPresentPull) && v != string(fnruntime.NeverPull) {
+	v = strings.ToLower(v)
+	if v != strings.ToLower(string(fnruntime.AlwaysPull)) &&
+		v != strings.ToLower(string(fnruntime.IfNotPresentPull)) &&
+		v != strings.ToLower(string(fnruntime.NeverPull)) {
 		return fmt.Errorf("image pull policy must be one of %s, %s and %s", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull)
 	}
 	return nil
 }
 
 func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
-	switch v {
-	case string(fnruntime.NeverPull):
+	switch strings.ToLower(v) {
+	case strings.ToLower(string(fnruntime.NeverPull)):
 		return fnruntime.NeverPull
-	case string(fnruntime.IfNotPresentPull):
+	case strings.ToLower(string(fnruntime.IfNotPresentPull)):
 		return fnruntime.IfNotPresentPull
 	default:
 		return fnruntime.AlwaysPull

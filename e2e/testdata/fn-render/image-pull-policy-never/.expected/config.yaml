@@ -12,6 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-imagePullPolicy: never
+imagePullPolicy: Never
 exitCode: 1
 stdErr: "No such image"
