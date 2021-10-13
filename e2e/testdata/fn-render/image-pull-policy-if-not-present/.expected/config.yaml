@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-imagePullPolicy: ifNotPresent
+imagePullPolicy: IfNotPresent
 sequential: true
 exitCode: 1
 stdErr: foo

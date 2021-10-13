@@ -40,9 +40,9 @@ const (
 	defaultShortTimeout time.Duration        = 5 * time.Second
 	dockerBin           string               = "docker"
 
-	AlwaysPull       ImagePullPolicy = "always"
-	IfNotPresentPull ImagePullPolicy = "ifNotPresent"
-	NeverPull        ImagePullPolicy = "never"
+	AlwaysPull       ImagePullPolicy = "Always"
+	IfNotPresentPull ImagePullPolicy = "IfNotPresent"
+	NeverPull        ImagePullPolicy = "Never"
 )
 
 type ImagePullPolicy string

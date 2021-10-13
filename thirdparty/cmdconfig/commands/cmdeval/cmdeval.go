@@ -61,8 +61,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
-	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
-		"pull image before running the container. It should be one of always, ifNotPresent and never.")
+	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", string(fnruntime.AlwaysPull),
+		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
 	r.Command.Flags().StringVar(
 		&r.Selector.APIVersion, "match-api-version", "", "select resources matching the given apiVersion")
 	r.Command.Flags().StringVar(

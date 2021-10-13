@@ -24,7 +24,7 @@ in `.expected`:
   - `skip`: Runner will skip the test if `skip` is set to true. Default: false.
   - `sequential`: This test case should be run sequentially. Default: false.
   - `imagePullPolicy`: The image pull policy to be used. It can be set to one of
-    `always`, `ifNotPresent` and `never`. Default value is inherited from the
+    `Always`, `IfNotPresent` and `Never`. Default value is inherited from the
     CLI flag.
   - `notIdempotent`: The functions and commands should be idempotent, but in
     some cases it's not doable. The runner will not run the command twice to

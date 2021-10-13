@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-imagePullPolicy: always
+imagePullPolicy: Always
 sequential: true
 exitCode: 1
 stdErr: foo
