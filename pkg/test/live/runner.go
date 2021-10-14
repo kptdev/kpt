@@ -32,6 +32,7 @@ import (
 
 const (
 	KindClusterName = "live-e2e-test"
+	K8sVersionEnvName = "K8S_VERSION"
 )
 
 // Runner uses the provided Config to run a test.
@@ -154,7 +155,12 @@ func (r *Runner) CheckKindClusterAvailable(t *testing.T) bool {
 }
 
 func (r *Runner) CreateKindCluster(t *testing.T) {
-	cmd := exec.Command("kind", "create", "cluster", fmt.Sprintf("--name=%s", KindClusterName))
+	args := []string{"create", "cluster", fmt.Sprintf("--name=%s", KindClusterName)}
+	if k8sVersion := os.Getenv(K8sVersionEnvName); k8sVersion != "" {
+		t.Logf("Using version %s", k8sVersion)
+		args = append(args, fmt.Sprintf("--image=kindest/node:v%s", k8sVersion))
+	}
+	cmd := exec.Command("kind", args...)
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("failed to create new kind cluster: %v", err)
 	}
