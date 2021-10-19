@@ -278,11 +278,6 @@ definitions:
         description: Namespace of the target resources
         type: string
         x-go-name: Namespace
-      packagePath:
-        description: PackagePath of the target resources relative to the root package
-          directory
-        type: string
-        x-go-name: PackagePath
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
   TypeMeta:
