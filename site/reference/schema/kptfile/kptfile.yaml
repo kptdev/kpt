@@ -1,5 +1,5 @@
 definitions:
-  function:
+  Function:
     properties:
       configMap:
         additionalProperties:
@@ -7,6 +7,7 @@ definitions:
         description: '`ConfigMap` is a convenient way to specify a function config
           of kind ConfigMap.'
         type: object
+        x-go-name: ConfigMap
       configPath:
         description: |-
           `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
@@ -14,6 +15,7 @@ definitions:
           excluded when resolving 'sources', and as a result cannot be operated on
           by the pipeline.
         type: string
+        x-go-name: ConfigPath
       image:
         description: |-
           `Image` specifies the function container image.
@@ -28,77 +30,98 @@ definitions:
 
           image: set-labels
         type: string
+        x-go-name: Image
+      selectors:
+        description: |-
+          `Selectors` are used to specify resources on which the function should be executed
+          if not specified, all resources are selected
+        items:
+          $ref: '#/definitions/Selector'
+        type: array
+        x-go-name: Selectors
     title: Function specifies a KRM function.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  git:
+  Git:
     properties:
       directory:
         description: |-
           Directory is the sub directory of the git repository.
           e.g. 'staging/cockroachdb'
         type: string
+        x-go-name: Directory
       ref:
         description: Ref can be a Git branch, tag, or a commit SHA-1.
         type: string
+        x-go-name: Ref
       repo:
         description: |-
           Repo is the git repository the package.
           e.g. 'https://github.com/kubernetes/examples.git'
         type: string
+        x-go-name: Repo
     title: Git is the user-specified locator for a package on Git.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  gitLock:
+  GitLock:
     properties:
       commit:
         description: |-
           Commit is the SHA-1 for the last fetch of the package.
           This is set by kpt for bookkeeping purposes.
         type: string
+        x-go-name: Commit
       directory:
         description: |-
           Directory is the sub directory of the git repository that was fetched.
           e.g. 'staging/cockroachdb'
         type: string
+        x-go-name: Directory
       ref:
         description: |-
           Ref can be a Git branch, tag, or a commit SHA-1 that was fetched.
           e.g. 'master'
         type: string
+        x-go-name: Ref
       repo:
         description: |-
           Repo is the git repository that was fetched.
           e.g. 'https://github.com/kubernetes/examples.git'
         type: string
+        x-go-name: Repo
     title: GitLock is the resolved locator for a package on Git.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  inventory:
+  Inventory:
     description: All of the the parameters are required if any are set.
     properties:
       annotations:
         additionalProperties:
           type: string
         type: object
+        x-go-name: Annotations
       inventoryID:
         description: Unique label to identify inventory resource in cluster.
         type: string
+        x-go-name: InventoryID
       labels:
         additionalProperties:
           type: string
         type: object
+        x-go-name: Labels
       name:
         description: Name of the inventory resource.
         type: string
+        x-go-name: Name
       namespace:
         description: Namespace for the inventory resource.
         type: string
+        x-go-name: Namespace
     title: Inventory encapsulates the parameters for the inventory resource applied
       to a cluster.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  nameMeta:
+  NameMeta:
     properties:
       name:
         description: Name is the metadata.name field of a Resource
@@ -111,7 +134,7 @@ definitions:
     title: NameMeta contains name information.
     type: object
     x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
-  objectMeta:
+  ObjectMeta:
     description: ObjectMeta contains metadata about a Resource
     properties:
       annotations:
@@ -136,11 +159,11 @@ definitions:
         x-go-name: Namespace
     type: object
     x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
-  originType:
+  OriginType:
     title: OriginType defines the type of origin for a package.
     type: string
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  packageInfo:
+  PackageInfo:
     description: |-
       These fields are not consumed by any functionality in kpt and are simply passed through.
       Note that like any other KRM resource, humans and automation can also use `metadata.labels` and
@@ -149,50 +172,59 @@ definitions:
       description:
         description: Description contains a short description of the package.
         type: string
+        x-go-name: Description
       emails:
         description: Email is the list of emails for the package authors.
         items:
           type: string
         type: array
+        x-go-name: Emails
       keywords:
         description: Keywords is a list of keywords for this package.
         items:
           type: string
         type: array
+        x-go-name: Keywords
       license:
         description: 'SPDX license identifier (e.g. "Apache-2.0"). See: https://spdx.org/licenses/'
         type: string
+        x-go-name: License
       licenseFile:
         description: Relative slash-delimited path to the license file (e.g. LICENSE.txt)
         type: string
+        x-go-name: LicenseFile
       man:
         description: Man is the path to documentation about the package
         type: string
+        x-go-name: Man
       site:
         description: Site is the URL for package web page.
         type: string
+        x-go-name: Site
     title: PackageInfo contains optional information about the package such as license,
       documentation, etc.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  pipeline:
+  Pipeline:
     properties:
       mutators:
         description: Mutators defines a list of of KRM functions that mutate resources.
         items:
-          $ref: '#/definitions/function'
+          $ref: '#/definitions/Function'
         type: array
+        x-go-name: Mutators
       validators:
         description: |-
           Validators defines a list of KRM functions that validate resources.
           Validators are not permitted to mutate resources.
         items:
-          $ref: '#/definitions/function'
+          $ref: '#/definitions/Function'
         type: array
+        x-go-name: Validators
     title: Pipeline declares a pipeline of functions used to mutate or validate resources.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  resourceMeta:
+  ResourceMeta:
     properties:
       annotations:
         additionalProperties:
@@ -225,7 +257,30 @@ definitions:
     title: ResourceMeta contains the metadata for a both Resource Type and Resource.
     type: object
     x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
-  typeMeta:
+  Selector:
+    description: |-
+      Selector specifies the selection criteria
+      please update IsEmpty method if more properties are added
+    properties:
+      apiVersion:
+        description: APIVersion of the target resources
+        type: string
+        x-go-name: APIVersion
+      kind:
+        description: Kind of the target resources
+        type: string
+        x-go-name: Kind
+      name:
+        description: Name of the target resources
+        type: string
+        x-go-name: Name
+      namespace:
+        description: Namespace of the target resources
+        type: string
+        x-go-name: Namespace
+    type: object
+    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+  TypeMeta:
     description: |-
       TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
       No need for a direct dependence; the fields are stable.
@@ -240,42 +295,32 @@ definitions:
         x-go-name: Kind
     type: object
     x-go-package: sigs.k8s.io/kustomize/kyaml/yaml
-  updateStrategyType:
+  UpdateStrategyType:
     title: UpdateStrategyType defines the strategy for updating a package from upstream.
     type: string
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  upstream:
+  Upstream:
     properties:
       git:
-        $ref: '#/definitions/git'
+        $ref: '#/definitions/Git'
       type:
-        $ref: '#/definitions/originType'
+        $ref: '#/definitions/OriginType'
       updateStrategy:
-        $ref: '#/definitions/updateStrategyType'
+        $ref: '#/definitions/UpdateStrategyType'
     title: Upstream is a user-specified upstream locator for a package.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
-  upstreamLock:
+  UpstreamLock:
     properties:
       git:
-        $ref: '#/definitions/gitLock'
+        $ref: '#/definitions/GitLock'
       type:
-        $ref: '#/definitions/originType'
+        $ref: '#/definitions/OriginType'
     title: UpstreamLock is a resolved locator for the last fetch of the package.
     type: object
     x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
   kptfile:
     properties:
-      info:
-        $ref: '#/definitions/packageInfo'
-      inventory:
-        $ref: '#/definitions/inventory'
-      pipeline:
-        $ref: '#/definitions/pipeline'
-      upstream:
-        $ref: '#/definitions/upstream'
-      upstreamLock:
-        $ref: '#/definitions/upstreamLock'
       annotations:
         additionalProperties:
           type: string
@@ -286,6 +331,10 @@ definitions:
         description: APIVersion is the apiVersion field of a Resource
         type: string
         x-go-name: APIVersion
+      info:
+        $ref: '#/definitions/PackageInfo'
+      inventory:
+        $ref: '#/definitions/Inventory'
       kind:
         description: Kind is the kind field of a Resource
         type: string
@@ -304,6 +353,12 @@ definitions:
         description: Namespace is the metadata.namespace field of a Resource
         type: string
         x-go-name: Namespace
+      pipeline:
+        $ref: '#/definitions/Pipeline'
+      upstream:
+        $ref: '#/definitions/Upstream'
+      upstreamLock:
+        $ref: '#/definitions/UpstreamLock'
     title: KptFile contains information about a package managed with kpt.
     type: object
     x-go-name: KptFile
