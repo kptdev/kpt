@@ -828,7 +828,12 @@ echo "Testing apply/prune after migrate"
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
 cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
+assertContains "namespace/test-rg-namespace unchanged"
+assertContains "1 resource(s) applied. 0 created, 1 unchanged, 0 configured, 0 failed"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
 assertContains "pod/pod-d created"
+assertContains "3 resource(s) applied. 1 created, 2 unchanged, 0 configured, 0 failed"
 assertContains "pod/pod-a pruned"
 assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
 wait 2
