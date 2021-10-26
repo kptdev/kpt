@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -43,6 +44,9 @@ type Runner struct {
 
 	// Path provides the path to the test files.
 	Path string
+
+	// Format provides the output format that should be used.
+	Format string
 }
 
 // Run executes the test.
@@ -77,7 +81,7 @@ func (r *Runner) Run(t *testing.T) {
 
 	r.RunPreApply(t)
 
-	stdout, stderr, err := r.RunApply()
+	stdout, stderr, err := r.RunApply(t)
 	r.VerifyExitCode(t, err)
 	r.VerifyStdout(t, stdout)
 	r.VerifyStderr(t, stderr)
@@ -102,8 +106,12 @@ func (r *Runner) RunPreApply(t *testing.T) {
 	}
 }
 
-func (r *Runner) RunApply() (string, string, error) {
+func (r *Runner) RunApply(t *testing.T) (string, string, error) {
 	args := append([]string{"live", "apply"}, r.Config.KptArgs...)
+	if r.Format != "" {
+		args = append(args, "--output", r.Format)
+	}
+	t.Logf("Running command: kpt %s", strings.Join(args, " "))
 	cmd := exec.Command("kpt", args...)
 	cmd.Dir = filepath.Join(r.Path, "resources")
 
@@ -220,11 +228,11 @@ func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 }
 
 func (r *Runner) VerifyStdout(t *testing.T, stdout string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), strings.TrimSpace(stdout))
+	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdOut), strings.TrimSpace(substituteTimestamps(stdout)))
 }
 
 func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), strings.TrimSpace(stderr))
+	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdErr), strings.TrimSpace(substituteTimestamps(stderr)))
 }
 
 func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
@@ -290,4 +298,10 @@ func inventorySortFunc(inv []InventoryEntry) func(i, j int) bool {
 		}
 		return iInv.Namespace < jInv.Namespace
 	}
+}
+
+var timestampRegexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)
+
+func substituteTimestamps(text string) string {
+	return timestampRegexp.ReplaceAllString(text, "<TIMESTAMP>")
 }

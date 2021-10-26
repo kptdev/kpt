@@ -26,12 +26,7 @@ type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `yaml:"exitCode,omitempty"`
 
-	// StdErr is the expected standard error output. Default: ""
-	StdErr string `yaml:"stdErr,omitempty"`
-
-	// StdOut is the expected standard output from running the command.
-	// Default: ""
-	StdOut string `yaml:"stdOut,omitempty"`
+	Output map[string]Output `yaml:"output,omitempty"`
 
 	// Inventory is the expected list of resource present in the inventory.
 	Inventory []InventoryEntry `yaml:"inventory,omitempty"`
@@ -47,6 +42,15 @@ type TestCaseConfig struct {
 	// KptArgs is a list of args that will be provided to the kpt command
 	// when running the test.
 	KptArgs []string `yaml:"kptArgs,omitempty"`
+}
+
+type Output struct {
+	// StdErr is the expected standard error output. Default: ""
+	StdErr string `yaml:"stdErr,omitempty"`
+
+	// StdOut is the expected standard output from running the command.
+	// Default: ""
+	StdOut string `yaml:"stdOut,omitempty"`
 }
 
 // InventoryEntry defines an entry in an inventory list.
