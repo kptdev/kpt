@@ -1,6 +1,6 @@
 # Title
 
-* Author(s): \<your name\>
+* Author(s): \<your name\>, \<your github alias\>
 * Approver: \<kpt-maintainer\>
 
 >    Every feature will need design sign off an PR approval from a core
@@ -57,7 +57,7 @@ afterthought.
 
 Please list any open questions here in the following format:
 
-**\<Question\>**
+### \<Question\>
 
 Resolution: Please list the resolution if resolved during the design process or
 specify __Not Yet Resolved__
@@ -67,7 +67,7 @@ specify __Not Yet Resolved__
 If there is an industry precedent or alternative approaches please list them 
 here as well as citing *why* you decided not to pursue those paths.
 
-### Approach 1
+### \<Approach\>
 
 Links and description of the approach, the pros and cons identified during the 
 design. 
