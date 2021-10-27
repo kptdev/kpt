@@ -19,6 +19,11 @@ pruning and reconciling status.
 The best place to get started and learn about specific features of kpt is 
 to visit the [kpt website](https://kpt.dev/).
 
+### Install kpt
+
+kpt installation instructions can be found on 
+[kpt.dev/installation](https://kpt.dev/installation/)
+
 ## Roadmap
 
 You can read about the big upcoming features in the 
