@@ -23,6 +23,11 @@ a prototype in your private fork but if you intend for your feature to be
 shipped in kpt please create a design document with this 
 [design template](/docs/design-docs/00-template.md).
 
+You should create a copy of the template and submit a PR for comments and 
+review by maintainers.  Once the PR is merged the design is considered approved.
+The actual code change PRs should link to the design documents, even though it
+is well understood that the design can drift during implementation.
+
 ## Code reviews
 
 All submissions, including submissions by project members, require review. We
