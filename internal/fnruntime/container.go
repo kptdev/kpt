@@ -181,15 +181,14 @@ func (f *ContainerFn) prepareImage() error {
 		return nil
 	}
 
-	// check image existence
-	foundImageInLocalCache := f.checkImageExistence()
-
 	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
 	// first. If there is a match, we just return. This can be useful for local
 	// development to prevent the remote image to accidentally override the
 	// local image when they use the same name and tag.
-	if f.ImagePullPolicy == IfNotPresentPull && foundImageInLocalCache {
-		return nil
+	if f.ImagePullPolicy == IfNotPresentPull {
+		if foundInLocalCache := f.checkImageExistence(); foundInLocalCache {
+			return nil
+		}
 	}
 
 	// If ImagePullPolicy is set to always (which is the default), we will try
