@@ -15,6 +15,14 @@ You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
 
+## Contributing large features
+
+Larger features and all the features that affect the interface (CLI or API) of
+kpt need to have a reviewed and merged design document.  It is OK to start with
+a prototype in your private fork but if you intend for your feature to be
+shipped in kpt please create a design document with this 
+[design template](/docs/design-docs/00-template.md).
+
 ## Code reviews
 
 All submissions, including submissions by project members, require review. We
