@@ -55,11 +55,7 @@ func (p *ResourceGroupStreamManifestReader) Read() ([]*unstructured.Unstructured
 			continue
 		}
 
-		err = removeAnnotations(n, kioutil.IndexAnnotation)
-		if err != nil {
-			return objs, err
-		}
-		err = removeAnnotations(n, kioutil.LegacyIndexAnnotation)
+		err = removeAnnotations(n, kioutil.IndexAnnotation, kioutil.LegacyIndexAnnotation)
 		if err != nil {
 			return objs, err
 		}
