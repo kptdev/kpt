@@ -18,7 +18,7 @@ local directory.
 <!--mdtogo:Long-->
 
 ```
-kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
+kpt pkg get {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY] [flags]
 ```
 
 #### Args
@@ -42,6 +42,13 @@ VERSION:
   A git tag, branch, ref or commit for the remote version of the package
   to fetch. Defaults to the default branch of the repository.
 
+IMAGE:
+  Reference to an OCI image containing a package in the root directory.
+
+TAG:
+  An image tag or @sha256 digest for the remote version of the image
+  to fetch. Defaults to the 'latest' tag on the image.
+  
 LOCAL_DEST_DIRECTORY:
   The local directory to write the package to. Defaults to a subdirectory of the
   current working directory named after the upstream package.
