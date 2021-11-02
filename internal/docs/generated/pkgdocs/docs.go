@@ -125,7 +125,7 @@ Args:
   TAG:
     An image tag or @sha256 digest for the remote version of the image
     to fetch. Defaults to the 'latest' tag on the image.
-  
+    
   LOCAL_DEST_DIRECTORY:
     The local directory to write the package to. Defaults to a subdirectory of the
     current working directory named after the upstream package.

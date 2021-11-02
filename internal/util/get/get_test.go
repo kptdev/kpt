@@ -48,7 +48,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "must specify git repo information")
+	assert.Contains(t, err.Error(), "must specify git repo or image reference information")
 }
 
 // TestCommand_Run_failEmptyRepo verifies that Command fail if not repo is provided.

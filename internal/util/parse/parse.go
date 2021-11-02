@@ -35,11 +35,17 @@ type OciTarget struct {
 
 func OciParseArgs(ctx context.Context, args []string) (OciTarget, error) {
 	oci := OciTarget{}
-	if args[0] == "-" {
+	if args[0] == "-"  {
 		return oci, nil
 	}
 
-	return targetFromImageReference(args[0], args[1])
+	// The prefix must occur, and must not have other characters before it
+	arg0parts := strings.SplitN(args[0], "oci://", 2)
+	if len(arg0parts) != 2 || len(arg0parts[0]) != 0 {
+		return oci, errors.Errorf("ambiguous image:tag specify 'oci://' before argument: %s", args[0])
+	}
+
+	return targetFromImageReference(arg0parts[1], args[1])
 }
 
 func targetFromImageReference(image, dest string) (OciTarget, error) {
@@ -56,7 +62,7 @@ func targetFromImageReference(image, dest string) (OciTarget, error) {
 	}
 
 	return OciTarget{
-		Oci:         kptfilev1.Oci{
+		Oci: kptfilev1.Oci{
 			Image: ref.Name(),
 		},
 		Destination: destination,

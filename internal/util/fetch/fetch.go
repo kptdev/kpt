@@ -90,12 +90,12 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	if kf.Upstream == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile doesn't contain upstream information"))
 	}
-	switch kf.Upstream.Type{
+	switch kf.Upstream.Type {
 	case kptfilev1.GitOrigin:
 		if kf.Upstream.Git == nil {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream doesn't have git information"))
 		}
-	
+
 		g := kf.Upstream.Git
 		if len(g.Repo) == 0 {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
@@ -284,7 +284,6 @@ func copyDir(ctx context.Context, srcDir string, dstDir string) error {
 	}
 	return copy.Copy(srcDir, dstDir, opts)
 }
-
 
 func pullAndCopy(ctx context.Context, imageName string, dest string, options ...remote.Option) error {
 	const op errors.Op = "fetch.pullAndCopy"

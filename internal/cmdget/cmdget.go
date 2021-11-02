@@ -17,6 +17,7 @@ package cmdget
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -115,7 +116,7 @@ func (r *Runner) parseArgs(args []string) (string, error) {
 		return t2.Destination, nil
 	}
 
-	return "", errors.E(op, err1, err2)
+	return "", errors.E(op, fmt.Errorf("%v %v", err1, err2))
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
