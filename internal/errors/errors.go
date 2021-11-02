@@ -142,6 +142,7 @@ const (
 	InvalidParam              // Value is not valid.
 	MissingParam              // Required value is missing or empty.
 	Git                       // Errors from Git
+	OCI                       // Errors from OCI
 	IO                        // Error doing IO operations
 	YAML                      // yaml document can't be parsed
 )
@@ -160,6 +161,8 @@ func (c Class) String() string {
 		return "missing parameter value"
 	case Git:
 		return "git error"
+	case OCI:
+		return "OCI error"
 	case IO:
 		return "IO error"
 	case YAML:
