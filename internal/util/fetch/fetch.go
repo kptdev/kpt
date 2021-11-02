@@ -75,21 +75,35 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	if kf.Upstream == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile doesn't contain upstream information"))
 	}
+	switch kf.Upstream.Type{
+	case kptfilev1.GitOrigin:
+		if kf.Upstream.Git == nil {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream doesn't have git information"))
+		}
+	
+		g := kf.Upstream.Git
+		if len(g.Repo) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+		}
+		if len(g.Ref) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+		}
+		if len(g.Directory) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
+		}
 
-	if kf.Upstream.Git == nil {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream doesn't have git information"))
+	case kptfilev1.OciOrigin:
+		if kf.Upstream.Oci == nil {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream doesn't have oci information"))
+		}
+		if len(kf.Upstream.Oci.Image) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+		}
+
+	default:
+		return errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream type must be one of: %s,%s", kptfilev1.GitOrigin, kptfilev1.OciOrigin))
 	}
 
-	g := kf.Upstream.Git
-	if len(g.Repo) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
-	}
-	if len(g.Ref) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
-	}
-	if len(g.Directory) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-	}
 	return nil
 }
 

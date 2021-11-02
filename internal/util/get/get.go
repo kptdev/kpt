@@ -73,18 +73,27 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
-	// normalize path to a filepath
-	repoDir := c.Git.Directory
-	if !strings.HasSuffix(repoDir, "file://") {
-		repoDir = filepath.Join(path.Split(repoDir))
-	}
-	c.Git.Directory = repoDir
-
 	kf := kptfileutil.DefaultKptfile(c.Name)
-	kf.Upstream = &kptfilev1.Upstream{
-		Type:           kptfilev1.GitOrigin,
-		Git:            c.Git,
-		UpdateStrategy: c.UpdateStrategy,
+	if c.Git != nil {
+		// normalize path to a filepath
+		repoDir := c.Git.Directory
+		if !strings.HasSuffix(repoDir, "file://") {
+			repoDir = filepath.Join(path.Split(repoDir))
+		}
+		c.Git.Directory = repoDir
+
+		kf.Upstream = &kptfilev1.Upstream{
+			Type:           kptfilev1.GitOrigin,
+			Git:            c.Git,
+			UpdateStrategy: c.UpdateStrategy,
+		}
+	}
+	if c.Oci != nil {
+		kf.Upstream = &kptfilev1.Upstream{
+			Type:           kptfilev1.OciOrigin,
+			Oci:            c.Oci,
+			UpdateStrategy: c.UpdateStrategy,
+		}
 	}
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
@@ -129,7 +138,12 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
-			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+			switch(kf.Upstream.Type){
+			case kptfilev1.GitOrigin:
+				pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+			case kptfilev1.OciOrigin:
+				pr.Printf("Fetching %s\n", kf.Upstream.Oci.Image)
+			}
 			err := (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)
@@ -153,23 +167,29 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
 	const op errors.Op = "get.DefaultValues"
-	if c.Git == nil {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo information"))
+	if c.Git == nil && c.Oci == nil {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo or image reference information"))
 	}
-	g := c.Git
-	if len(g.Repo) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+	if c.Git != nil {
+		g := c.Git
+		if len(g.Repo) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+		}
+		if len(g.Ref) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+		}
+		if len(c.Destination) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify destination"))
+		}
+		if len(g.Directory) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
+		}
 	}
-	if len(g.Ref) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+	if c.Oci != nil {
+		if len(c.Oci.Image) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+		}
 	}
-	if len(c.Destination) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify destination"))
-	}
-	if len(g.Directory) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-	}
-
 	if !filepath.IsAbs(c.Destination) {
 		return errors.E(op, errors.InvalidParam, fmt.Errorf("destination must be an absolute path"))
 	}
