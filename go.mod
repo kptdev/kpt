@@ -5,12 +5,13 @@ go 1.16
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
+	github.com/google/go-containerregistry v0.6.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/otiai10/copy v1.6.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/posener/complete/v2 v2.0.1-alpha.12
-	github.com/spf13/cobra v1.1.3
+	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca

@@ -24,16 +24,52 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-type Target struct {
+type OciTarget struct {
+	kptfilev1.Oci
+	Destination string
+}
+
+func OciParseArgs(ctx context.Context, args []string) (OciTarget, error) {
+	oci := OciTarget{}
+	if args[0] == "-" {
+		return oci, nil
+	}
+
+	return targetFromImageReference(args[0], args[1])
+}
+
+func targetFromImageReference(image, dest string) (OciTarget, error) {
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return OciTarget{}, err
+	}
+
+	registry := ref.Context().RegistryStr()
+	repository := ref.Context().RepositoryStr()
+	destination, err := getDest(dest, registry, repository)
+	if err != nil {
+		return OciTarget{}, err
+	}
+
+	return OciTarget{
+		Oci:         kptfilev1.Oci{
+			Image: ref.Name(),
+		},
+		Destination: destination,
+	}, nil
+}
+
+type GitTarget struct {
 	kptfilev1.Git
 	Destination string
 }
 
-func GitParseArgs(ctx context.Context, args []string) (Target, error) {
-	g := Target{}
+func GitParseArgs(ctx context.Context, args []string) (GitTarget, error) {
+	g := GitTarget{}
 	if args[0] == "-" {
 		return g, nil
 	}
@@ -84,8 +120,8 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
-	g := Target{}
+func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (GitTarget, error) {
+	g := GitTarget{}
 	var repo, dir, version string
 	parts := strings.Split(pkgURL, ".git")
 	repo = strings.TrimSuffix(parts[0], "/")

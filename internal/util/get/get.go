@@ -41,6 +41,9 @@ type Command struct {
 	// Git contains information about the git repo to fetch
 	Git *kptfilev1.Git
 
+	// Oci contains information about the OCI image to fetch
+	Oci *kptfilev1.Oci
+
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
 	Destination string

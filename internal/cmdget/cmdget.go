@@ -38,7 +38,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
+		Use:        "get {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY]",
 		Args:       cobra.MinimumNArgs(1),
 		Short:      docs.GetShort,
 		Long:       docs.GetShort + "\n" + docs.GetLong,
@@ -81,15 +81,14 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	t, err := parse.GitParseArgs(r.ctx, args)
+	destination, err := r.parseArgs(args)
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 
-	r.Get.Git = &t.Git
-	p, err := pkg.New(t.Destination)
+	p, err := pkg.New(destination)
 	if err != nil {
-		return errors.E(op, types.UniquePath(t.Destination), err)
+		return errors.E(op, types.UniquePath(destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 
@@ -99,6 +98,24 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Get.UpdateStrategy = strategy
 	return nil
+}
+
+func (r *Runner) parseArgs(args []string) (string, error) {
+	const op errors.Op = "cmdget.preRunE"
+
+	t1, err1 := parse.GitParseArgs(r.ctx, args)
+	if err1 == nil {
+		r.Get.Git = &t1.Git
+		return t1.Destination, nil
+	}
+
+	t2, err2 := parse.OciParseArgs(r.ctx, args)
+	if err2 == nil {
+		r.Get.Oci = &t2.Oci
+		return t2.Destination, nil
+	}
+
+	return "", errors.E(op, err1, err2)
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
