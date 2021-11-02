@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
@@ -214,6 +215,31 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 			Directory: spec.Path,
 			Ref:       spec.Ref,
 			Commit:    spec.Commit,
+		},
+	}
+	err = WriteFile(path, kpgfile)
+	if err != nil {
+		return errors.E(op, types.UniquePath(path), err)
+	}
+	return nil
+}
+
+// UpdateUpstreamLockFromOCI updates the upstreamLock of the package specified
+// by path by using the values from spec. The image reference provided must
+// be the image sha256 digest in order for later updates to work correctly.
+func UpdateUpstreamLockFromOCI(path string, image name.Reference) error {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLockFromOCI"
+	// read KptFile cloned with the package if it exists
+	kpgfile, err := pkg.ReadKptfile(path)
+	if err != nil {
+		return errors.E(op, types.UniquePath(path), err)
+	}
+
+	// populate the cloneFrom values so we know where the package came from
+	kpgfile.UpstreamLock = &kptfilev1.UpstreamLock{
+		Type: kptfilev1.OciOrigin,
+		Oci: &kptfilev1.OciLock{
+			Image: image.Name(),
 		},
 	}
 	err = WriteFile(path, kpgfile)

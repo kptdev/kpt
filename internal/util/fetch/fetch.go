@@ -15,14 +15,20 @@
 package fetch
 
 import (
+	"archive/tar"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/google/go-containerregistry/pkg/gcrane"
+	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/otiai10/copy"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -55,15 +61,24 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	g := kf.Upstream.Git
-	repoSpec := &git.RepoSpec{
-		OrgRepo: g.Repo,
-		Path:    g.Directory,
-		Ref:     g.Ref,
-	}
-	err = cloneAndCopy(ctx, repoSpec, c.Pkg.UniquePath.String())
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
+	switch kf.Upstream.Type {
+	case kptfilev1.GitOrigin:
+		g := kf.Upstream.Git
+		repoSpec := &git.RepoSpec{
+			OrgRepo: g.Repo,
+			Path:    g.Directory,
+			Ref:     g.Ref,
+		}
+		err = cloneAndCopy(ctx, repoSpec, c.Pkg.UniquePath.String())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, err)
+		}
+	case kptfilev1.OciOrigin:
+		// TODO(dejardin) more research into remote options?
+		err = pullAndCopy(ctx, kf.Upstream.Oci.Image, c.Pkg.UniquePath.String(), remote.WithAuthFromKeychain(gcrane.Keychain))
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, err)
+		}
 	}
 	return nil
 }
@@ -268,4 +283,111 @@ func copyDir(ctx context.Context, srcDir string, dstDir string) error {
 		},
 	}
 	return copy.Copy(srcDir, dstDir, opts)
+}
+
+
+func pullAndCopy(ctx context.Context, imageName string, dest string, options ...remote.Option) error {
+	const op errors.Op = "fetch.pullAndCopy"
+	// pr := printer.FromContextOrDie(ctx)
+
+	// We need to create a temp directory where we can copy the content of the repo.
+	// During update, we need to checkout multiple versions of the same repo, so
+	// we can't do merges directly from the cache.
+	dir, err := ioutil.TempDir("", "kpt-get-")
+	if err != nil {
+		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
+	}
+	defer os.RemoveAll(dir)
+
+	imageDigest, err := OciPullAndExtract(ctx, imageName, dir, options...)
+	if err != nil {
+		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
+	}
+
+	sourcePath := dir
+	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
+		return errors.E(op, types.UniquePath(dest), err)
+	}
+
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
+		return errors.E(op, types.UniquePath(dest), err)
+	}
+
+	if err := kptfileutil.UpdateUpstreamLockFromOCI(dest, imageDigest); err != nil {
+		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
+	}
+
+	return nil
+}
+
+// OciPullAndExtract uses current credentials (gcloud auth) to pull and
+// extract (untar) image files to target directory. The desired version or digest must
+// be in the imageName, and the resolved image sha256 digest is returned.
+func OciPullAndExtract(ctx context.Context, imageName string, dir string, options ...remote.Option) (name.Reference, error) {
+	const op errors.Op = "fetch.OciPullAndExtract"
+
+	ref, err := name.ParseReference(imageName)
+	if err != nil {
+		return nil, fmt.Errorf("parsing reference %q: %v", imageName, err)
+	}
+
+	// Pull image from source using provided options for auth credentials
+	image, err := remote.Image(ref, options...)
+	if err != nil {
+		return nil, fmt.Errorf("pulling image %s: %v", imageName, err)
+	}
+
+	// Stream image files as if single tar (merged layers)
+	ioReader := mutate.Extract(image)
+	defer ioReader.Close()
+
+	// Write contents to target dir
+	// TODO look for a more robust example of an untar loop
+	tarReader := tar.NewReader(ioReader)
+	for {
+		hdr, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		path := filepath.Join(dir, hdr.Name)
+		switch {
+		case hdr.FileInfo().IsDir():
+			if err := os.MkdirAll(path, hdr.FileInfo().Mode()); err != nil {
+				return nil, err
+			}
+		case hdr.Linkname != "":
+			if err := os.Symlink(hdr.Linkname, path); err != nil {
+				// just warn for now
+				fmt.Fprintln(os.Stderr, err)
+				// return err
+			}
+		default:
+			file, err := os.OpenFile(path,
+				os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+				os.FileMode(hdr.Mode),
+			)
+			if err != nil {
+				return nil, err
+			}
+			defer file.Close()
+
+			_, err = io.Copy(file, tarReader)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Determine the digest of the image that was extracted
+	imageDigestHash, err := image.Digest()
+	if err != nil {
+		return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
+	}
+	imageDigest := ref.Context().Digest("sha256:" + imageDigestHash.Hex)
+
+	// Return the image with digest when successful, needed for upstreamLock
+	return imageDigest, nil
 }
