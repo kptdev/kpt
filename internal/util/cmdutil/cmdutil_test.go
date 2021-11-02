@@ -48,15 +48,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
@@ -66,15 +66,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 		},
 		{
@@ -89,15 +89,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: apps/v1
 kind: Deployment
@@ -121,15 +121,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedPkg: `apiVersion: apps/v1
 kind: Deployment
@@ -137,6 +137,7 @@ metadata:
   name: nginx-deployment
   annotations:
     config.kubernetes.io/path: 'foo/bar/deployment.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/deployment.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -144,6 +145,7 @@ metadata:
   name: nginx-svc
   annotations:
     config.kubernetes.io/path: 'foo/bar/svc.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/svc.yaml'
 `,
 		},
 		{
@@ -158,15 +160,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
 kind: ResourceList
@@ -176,15 +178,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 		},
 		{
@@ -200,15 +202,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: apps/v1
 kind: Deployment
@@ -233,15 +235,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedPkg: `apiVersion: apps/v1
 kind: Deployment
@@ -249,6 +251,7 @@ metadata:
   name: nginx-deployment
   annotations:
     config.kubernetes.io/path: 'foo/bar/deployment.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/deployment.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -256,6 +259,7 @@ metadata:
   name: nginx-svc
   annotations:
     config.kubernetes.io/path: 'foo/bar/svc.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/svc.yaml'
 `,
 		},
 	}

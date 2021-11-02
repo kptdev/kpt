@@ -468,7 +468,12 @@ func adjustRelPath(hctx *hydrationContext) error {
 		if err != nil {
 			return err
 		}
+		// in kyaml v0.12.0, we are supporting both the new path annotation key
+		// internal.config.kubernetes.io/path, as well as the legacy one config.kubernetes.io/path
 		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
+			return err
+		}
+		if err = r.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, newPath)); err != nil {
 			return err
 		}
 		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
