@@ -65,6 +65,9 @@ type OriginType string
 const (
 	// GitOrigin specifies a package as having been cloned from a git repository.
 	GitOrigin OriginType = "git"
+
+	// OciOrigin specifies a package as having been pulled from an OCI image repository.
+	OciOrigin OriginType = "oci"
 )
 
 // UpdateStrategyType defines the strategy for updating a package from upstream.
@@ -121,6 +124,9 @@ type Upstream struct {
 	// Git is the locator for a package stored on Git.
 	Git *Git `yaml:"git,omitempty" json:"git,omitempty"`
 
+	// Oci is the locator for a package stored in an OCI image registry.
+	Oci *Oci `yaml:"oci,omitempty" json:"oci,omitempty"`
+
 	// UpdateStrategy declares how a package will be updated from upstream.
 	UpdateStrategy UpdateStrategyType `yaml:"updateStrategy,omitempty" json:"updateStrategy,omitempty"`
 }
@@ -139,6 +145,13 @@ type Git struct {
 	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
+// Oci is the user-specified locator for a package in an OCI image registry.
+type Oci struct {
+	// Image is the OCI image repository for the package.
+	// e.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend:latest'
+	Image string `yaml:"image,omitempty" json:"image,omitempty"`
+}
+
 // UpstreamLock is a resolved locator for the last fetch of the package.
 type UpstreamLock struct {
 	// Type is the type of origin.
@@ -146,6 +159,9 @@ type UpstreamLock struct {
 
 	// Git is the resolved locator for a package on Git.
 	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+
+	// Oci is the resolved locator for a package in an OCI image registry.
+	Oci *OciLock `yaml:"oci,omitempty" json:"oci,omitempty"`
 }
 
 // GitLock is the resolved locator for a package on Git.
@@ -165,6 +181,13 @@ type GitLock struct {
 	// Commit is the SHA-1 for the last fetch of the package.
 	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
+}
+
+// OciLock is the resolved locator for a package in an OCI image registry.
+type OciLock struct {
+	// Image is the OCI image repository for the package.
+	// e.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend@sha256:b0c94f11d856e59673daca566857a7ead126ef8e2b6915ed662804f858d7eaea'
+	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 }
 
 // PackageInfo contains optional information about the package such as license, documentation, etc.
