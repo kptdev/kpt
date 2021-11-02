@@ -212,6 +212,96 @@ func TestCommand_Run_noChanges(t *testing.T) {
 	}
 }
 
+func TestCommand_Run_noCommit(t *testing.T) {
+	for i := range kptfilev1.UpdateStrategies {
+		strategy := kptfilev1.UpdateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
+			// Setup the test upstream and local packages
+			g := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: masterBranch,
+						},
+					},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+			upstreamRepo := g.Repos[testutil.Upstream]
+
+			// don't commit the data
+			err := copyutil.CopyDir(
+				filepath.Join(upstreamRepo.DatasetDirectory, testutil.Dataset3),
+				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			// Update the local package
+			err = Command{
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
+			}.Run(fake.CtxWithDefaultPrinter())
+			if !assert.Error(t, err) {
+				return
+			}
+			assert.Contains(t, err.Error(), "contains uncommitted changes")
+
+			if !g.AssertLocalDataEquals(testutil.Dataset3, false) {
+				return
+			}
+		})
+	}
+}
+
+func TestCommand_Run_noAdd(t *testing.T) {
+	for i := range kptfilev1.UpdateStrategies {
+		strategy := kptfilev1.UpdateStrategies[i]
+		t.Run(string(strategy), func(t *testing.T) {
+			// Setup the test upstream and local packages
+			g := &testutil.TestSetupManager{
+				T: t,
+				ReposChanges: map[string][]testutil.Content{
+					testutil.Upstream: {
+						{
+							Data:   testutil.Dataset1,
+							Branch: masterBranch,
+						},
+					},
+				},
+			}
+			defer g.Clean()
+			if !g.Init() {
+				return
+			}
+			upstreamRepo := g.Repos[testutil.Upstream]
+
+			// don't add the data
+			err := ioutil.WriteFile(
+				filepath.Join(g.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName, "java", "added-file"), []byte(`hello`),
+				0600)
+			if !assert.NoError(t, err) {
+				return
+			}
+
+			// Update the local package
+			err = Command{
+				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Strategy: strategy,
+			}.Run(fake.CtxWithDefaultPrinter())
+			if !assert.Error(t, err) {
+				return
+			}
+			assert.Contains(t, err.Error(), "contains uncommitted changes")
+		})
+	}
+}
+
 func TestCommand_Run_localPackageChanges(t *testing.T) {
 	testCases := map[string]struct {
 		strategy        kptfilev1.UpdateStrategyType

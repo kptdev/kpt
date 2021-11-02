@@ -24,16 +24,58 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-type Target struct {
+type OciTarget struct {
+	kptfilev1.Oci
+	Destination string
+}
+
+func OciParseArgs(ctx context.Context, args []string) (OciTarget, error) {
+	oci := OciTarget{}
+	if args[0] == "-" {
+		return oci, nil
+	}
+
+	// The prefix must occur, and must not have other characters before it
+	arg0parts := strings.SplitN(args[0], "oci://", 2)
+	if len(arg0parts) != 2 || len(arg0parts[0]) != 0 {
+		return oci, errors.Errorf("ambiguous image:tag specify 'oci://' before argument: %s", args[0])
+	}
+
+	return targetFromImageReference(arg0parts[1], args[1])
+}
+
+func targetFromImageReference(image, dest string) (OciTarget, error) {
+	ref, err := name.ParseReference(image)
+	if err != nil {
+		return OciTarget{}, err
+	}
+
+	registry := ref.Context().RegistryStr()
+	repository := ref.Context().RepositoryStr()
+	destination, err := getDest(dest, registry, repository)
+	if err != nil {
+		return OciTarget{}, err
+	}
+
+	return OciTarget{
+		Oci: kptfilev1.Oci{
+			Image: ref.Name(),
+		},
+		Destination: destination,
+	}, nil
+}
+
+type GitTarget struct {
 	kptfilev1.Git
 	Destination string
 }
 
-func GitParseArgs(ctx context.Context, args []string) (Target, error) {
-	g := Target{}
+func GitParseArgs(ctx context.Context, args []string) (GitTarget, error) {
+	g := GitTarget{}
 	if args[0] == "-" {
 		return g, nil
 	}
@@ -72,20 +114,23 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		version = defaultRef
 	}
 
-	destination, err := getDest(args[1], repo, remoteDir)
-	if err != nil {
-		return g, err
-	}
 	g.Ref = version
 	g.Directory = path.Clean(remoteDir)
 	g.Repo = repo
-	g.Destination = filepath.Clean(destination)
+
+	if len(args) >= 2 {
+		destination, err := getDest(args[1], repo, remoteDir)
+		if err != nil {
+			return g, err
+		}
+		g.Destination = filepath.Clean(destination)
+	}
 	return g, nil
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
-	g := Target{}
+func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (GitTarget, error) {
+	g := GitTarget{}
 	var repo, dir, version string
 	parts := strings.Split(pkgURL, ".git")
 	repo = strings.TrimSuffix(parts[0], "/")
@@ -244,6 +289,11 @@ func getRepoAndPkg(v string) (string, string, error) {
 }
 
 func getDest(v, repo, subdir string) (string, error) {
+	// v is "" for commands that do not require an output path
+	if v == "" {
+		return "", nil
+	}
+
 	v = filepath.Clean(v)
 
 	f, err := os.Stat(v)

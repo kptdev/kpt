@@ -345,6 +345,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "specify '.git'")
+				assert.Contains(t, err.Error(), "specify 'oci://'")
 			},
 		},
 		"valid strategy provided": {
