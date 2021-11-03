@@ -247,12 +247,12 @@ func TestCommand_Run_noCommit(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 			}.Run(fake.CtxWithDefaultPrinter())
-			if !assert.Error(t, err) {
-				return
-			}
-			assert.Contains(t, err.Error(), "contains uncommitted changes")
-
-			if !g.AssertLocalDataEquals(testutil.Dataset3, false) {
+			if strategy == kptfilev1.FastForward {
+				if !assert.Error(t, err) {
+					return
+				}
+				assert.Contains(t, err.Error(), "local package files have been modified")
+			} else if !assert.NoError(t, err) {
 				return
 			}
 		})
@@ -294,10 +294,14 @@ func TestCommand_Run_noAdd(t *testing.T) {
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 			}.Run(fake.CtxWithDefaultPrinter())
-			if !assert.Error(t, err) {
+			if strategy == kptfilev1.FastForward {
+				if !assert.Error(t, err) {
+					return
+				}
+				assert.Contains(t, err.Error(), "local package files have been modified")
+			} else if !assert.NoError(t, err) {
 				return
 			}
-			assert.Contains(t, err.Error(), "contains uncommitted changes")
 		})
 	}
 }
@@ -328,6 +332,10 @@ func TestCommand_Run_noGitRepo(t *testing.T) {
 			Commit:    "abc123",
 		},
 	}
+	err = kptfileutil.WriteFile(d, kf)
+	if !assert.NoError(t, err) {
+		return
+	}
 
 	err = Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, d),
@@ -335,7 +343,7 @@ func TestCommand_Run_noGitRepo(t *testing.T) {
 	if !assert.Error(t, err) {
 		return
 	}
-	assert.Contains(t, err.Error(), "is not a git repository")
+	assert.Contains(t, err.Error(), "ambiguous argument 'abc123'")
 }
 
 func TestCommand_Run_localPackageChanges(t *testing.T) {

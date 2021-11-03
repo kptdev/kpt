@@ -133,7 +133,7 @@ func TestCmd_execute(t *testing.T) {
 	}
 }
 
-func TestCmd_failUnCommitted(t *testing.T) {
+func TestCmd_successUnCommitted(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -169,12 +169,11 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	updateCmd := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	updateCmd.Command.SetArgs([]string{g.RepoName})
 	err = updateCmd.Command.Execute()
-	if !assert.Error(t, err) {
-		return
+	if !assert.NoError(t, err) {
+		t.FailNow()
 	}
-	assert.Contains(t, err.Error(), "contains uncommitted changes")
 
-	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest, true) {
 		return
 	}
 }
