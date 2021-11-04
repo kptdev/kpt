@@ -58,19 +58,19 @@ Users want to invoke a kpt function (imperatively and declaratively) on a subset
 resources in the package by selecting them on the basis of GVKNN, package-path,
 file path etc. For example, set work-load identity annotation on all Kubernetes
 Service Account resources in this package [Tracker](https://github.com/GoogleContainerTools/kpt/issues/2015).
-**Estimated release date:** Last week of September 2021.
 
 ## In Progress
 
-### 8. Metrics for kpt
+### 10. Improve Function Authoring Experience
 
-We need a way to measure the adoption of kpt. This will help us understand the current
-impact of kpt and help us identify the areas where we can improve. Measuring KCC resources under
-management(RUM) is the primary goal of this work. **Estimated completion date:** End of November 2021.
-This will be an ongoing effort and other metrics about GKE cluster resources, site visits etc. will
-be implemented in the near future.
+We need a rich ecosystem of third party functions. Users should be able to write
+functions with custom logic very quickly using the tools they are familiar with.
+So we are investing on making function authoring experience very easy. This is an
+ongoing effort. [Starlark enhancements](https://github.com/GoogleContainerTools/kpt/issues/2504)
+(and docs improvement) will be delivered by the end of September 2021.
+For Golang SDK, **Estimated release date:** End of November 2021.
 
-### 9. Merging pipeline section during `kpt pkg update`
+### 11. Merging pipeline section during `kpt pkg update`
 
 Currently, `kpt pkg update` doesn't merge pipeline section in the Kptfile as expected.
 The fact that pipeline section is non-associative list with defined ordering makes it 
@@ -80,7 +80,7 @@ deleted during `kpt pkg update`. Merging pipeline correctly will reduce
 huge amount of friction in declaring new functions which in turn helps to avoid
 excessive parameterization. **Estimated completion date:** End of December 2021.
 
-### 10. Best practices for kpt with idiomatic package examples
+### 12. Best practices for kpt with idiomatic package examples
 
 We need to publish best practices to use kpt inorder to create and use kpt packages.
 This will help users to understand the right way of using kpt. These best practice
@@ -89,23 +89,14 @@ be designed reflecting the best practices, easily discoverable and simple to und
 This is an ongoing effort. For best practices guide **Estimated completion date:** End of November 2021.
 Idiomatic package examples **Estimated completion date:** End of December 2021.
 
-### 11. Improve Function Authoring Experience
-
-We need a rich ecosystem of third party functions. Users should be able to write 
-functions with custom logic very quickly using the tools they are familiar with. 
-So we are investing on making function authoring experience very easy. This is an
-ongoing effort. [Starlark enhancements](https://github.com/GoogleContainerTools/kpt/issues/2504) 
-(and docs improvement) will be delivered by the end of September 2021.
-For Golang SDK, **Estimated release date:** End of November 2021.
-
-### 12. Explore various options for function runtime
+### 13. Explore various options for function runtime
 
 Currently, `kpt fn render` has dependency on docker to execute functions in pipeline.
 There are performance and docker dependency issues reported by customers. We will
 be exploring different function runtimes in order to address those issues. This is
 just an exploratory step and actual implementation if any, will be taken up after December 2021.
 
-### 13. Integrate kpt with Cloud Code
+### 14. Integrate kpt with Cloud Code
 
 One of the major areas of investment is to integrate [Cloud Code](https://cloud.google.com/code) with kpt to provide
 package authoring assistance. Users can author Kptfile and functionConfig files with
