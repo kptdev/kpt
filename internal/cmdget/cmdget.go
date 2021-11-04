@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 )
@@ -107,12 +108,13 @@ func (r *Runner) parseArgs(args []string) (string, error) {
 	t1, err1 := parse.GitParseArgs(r.ctx, args)
 	if err1 == nil {
 		r.Get.Git = &t1.Git
+		r.Get.Upstream = upstream.NewGitUpstream(&t1.Git)
 		return t1.Destination, nil
 	}
 
 	t2, err2 := parse.OciParseArgs(r.ctx, args)
 	if err2 == nil {
-		r.Get.Oci = &t2.Oci
+		r.Get.Upstream = upstream.NewOciUpstream(&t2.Oci)
 		return t2.Destination, nil
 	}
 

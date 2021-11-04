@@ -20,9 +20,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -31,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
+	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
@@ -41,8 +40,8 @@ type Command struct {
 	// Git contains information about the git repo to fetch
 	Git *kptfilev1.Git
 
-	// Oci contains information about the OCI image to fetch
-	Oci *kptfilev1.Oci
+	// Contains information about the upstraem package to fetch
+	Upstream upstream.Fetcher
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -74,27 +73,9 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	kf := kptfileutil.DefaultKptfile(c.Name)
-	if c.Git != nil {
-		// normalize path to a filepath
-		repoDir := c.Git.Directory
-		if !strings.HasSuffix(repoDir, "file://") {
-			repoDir = filepath.Join(path.Split(repoDir))
-		}
-		c.Git.Directory = repoDir
 
-		kf.Upstream = &kptfilev1.Upstream{
-			Type:           kptfilev1.GitOrigin,
-			Git:            c.Git,
-			UpdateStrategy: c.UpdateStrategy,
-		}
-	}
-	if c.Oci != nil {
-		kf.Upstream = &kptfilev1.Upstream{
-			Type:           kptfilev1.OciOrigin,
-			Oci:            c.Oci,
-			UpdateStrategy: c.UpdateStrategy,
-		}
-	}
+	c.Upstream.ApplyUpstream(kf)
+	kf.Upstream.UpdateStrategy = c.UpdateStrategy
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
@@ -138,13 +119,14 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
-			switch kf.Upstream.Type {
-			case kptfilev1.GitOrigin:
-				pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-			case kptfilev1.OciOrigin:
-				pr.Printf("Fetching %s\n", kf.Upstream.Oci.Image)
+
+			upstream, err := upstream.NewUpstream(kf)
+			if err != nil {
+				return errors.E(op, p.UniquePath, err)
 			}
-			err := (&fetch.Command{
+			pr.Printf("Fetching %s\n", upstream.String())
+			
+			err = (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)
 			if err != nil {
@@ -167,28 +149,11 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
 	const op errors.Op = "get.DefaultValues"
-	if c.Git == nil && c.Oci == nil {
+	if c.Upstream == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo or image reference information"))
 	}
-	if c.Git != nil {
-		g := c.Git
-		if len(g.Repo) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
-		}
-		if len(g.Ref) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
-		}
-		if len(c.Destination) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify destination"))
-		}
-		if len(g.Directory) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-		}
-	}
-	if c.Oci != nil {
-		if len(c.Oci.Image) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
-		}
+	if err := c.Upstream.Validate(); err != nil {
+		return errors.E(op, err)
 	}
 	if !filepath.IsAbs(c.Destination) {
 		return errors.E(op, errors.InvalidParam, fmt.Errorf("destination must be an absolute path"))

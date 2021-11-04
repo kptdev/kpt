@@ -30,10 +30,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
-	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
+	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -280,7 +280,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-	if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
+	if err := upstream.ClonerUsingGitExec(ctx, updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	defer os.RemoveAll(updated.AbsPath())
@@ -290,7 +290,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
+		if err := upstream.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 		origin = originRepoSpec
