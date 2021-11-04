@@ -133,7 +133,7 @@ func TestCmd_execute(t *testing.T) {
 	}
 }
 
-func TestCmd_failUnCommitted(t *testing.T) {
+func TestCmd_successUnCommitted(t *testing.T) {
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
 		Data:   testutil.Dataset1,
 		Branch: "master",
@@ -160,6 +160,7 @@ func TestCmd_failUnCommitted(t *testing.T) {
 		return
 	}
 
+	// commit the upstream but not the local
 	_, err = g.Commit("new dataset")
 	if !assert.NoError(t, err) {
 		return
@@ -169,12 +170,61 @@ func TestCmd_failUnCommitted(t *testing.T) {
 	updateCmd := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	updateCmd.Command.SetArgs([]string{g.RepoName})
 	err = updateCmd.Command.Execute()
-	if !assert.Error(t, err) {
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest, true) {
 		return
 	}
-	assert.Contains(t, err.Error(), "contains uncommitted changes")
+}
 
+func TestCmd_successNoGit(t *testing.T) {
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	err := os.RemoveAll(".git")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
+
+	// clone the repo
+	getCmd := cmdget.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git", w.WorkspaceDirectory})
+	err = getCmd.Command.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
 	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1), dest, true) {
+		return
+	}
+
+	// update the master branch
+	if !assert.NoError(t, g.ReplaceData(testutil.Dataset2)) {
+		return
+	}
+
+	// commit the upstream but not the local
+	_, err = g.Commit("new dataset")
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// update the cloned package
+	updateCmd := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	updateCmd.Command.SetArgs([]string{g.RepoName})
+	err = updateCmd.Command.Execute()
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2), dest, true) {
 		return
 	}
 }

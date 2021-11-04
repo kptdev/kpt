@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	KindClusterName = "live-e2e-test"
+	KindClusterName   = "live-e2e-test"
 	K8sVersionEnvName = "K8S_VERSION"
 )
 
