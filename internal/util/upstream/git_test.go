@@ -21,6 +21,7 @@ import (
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
+//nolint:scopelint
 func TestNewGitFetcher(t *testing.T) {
 	type args struct {
 		git *v1.Git
@@ -41,6 +42,7 @@ func TestNewGitFetcher(t *testing.T) {
 	}
 }
 
+//nolint:scopelint
 func Test_gitUpstream_String(t *testing.T) {
 	type fields struct {
 		git *v1.Git
@@ -73,6 +75,7 @@ func Test_gitUpstream_String(t *testing.T) {
 	}
 }
 
+//nolint:scopelint
 func Test_gitUpstream_ApplyUpstream(t *testing.T) {
 	type fields struct {
 		git *v1.Git

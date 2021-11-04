@@ -21,6 +21,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
+//nolint:scopelint
 func TestNewUpstream(t *testing.T) {
 	type args struct {
 		kf *kptfilev1.KptFile
