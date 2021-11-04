@@ -125,7 +125,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 				return errors.E(op, p.UniquePath, err)
 			}
 			pr.Printf("Fetching %s\n", upstream.String())
-			
+
 			err = (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)

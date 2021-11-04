@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package upstream
 
 import (
@@ -37,14 +51,14 @@ func Test_gitUpstream_String(t *testing.T) {
 		want   string
 	}{
 		{
-			name:   "Returns repo ref string",
+			name: "Returns repo ref string",
 			fields: fields{
 				git: &v1.Git{
-					Repo:      "https://hostname/repo.git",
-					Ref:       "main",
+					Repo: "https://hostname/repo.git",
+					Ref:  "main",
 				},
 			},
-			want:   "https://hostname/repo.git@main",
+			want: "https://hostname/repo.git@main",
 		},
 	}
 	for _, tt := range tests {
@@ -72,7 +86,7 @@ func Test_gitUpstream_ApplyUpstream(t *testing.T) {
 		args   args
 	}{
 		{
-			name:   "Sets upstream to git",
+			name: "Sets upstream to git",
 			fields: fields{
 				git: &v1.Git{
 					Repo:      "https://hostname/repo.git",
@@ -80,7 +94,7 @@ func Test_gitUpstream_ApplyUpstream(t *testing.T) {
 					Ref:       "main",
 				},
 			},
-			args:   args{
+			args: args{
 				kf: &v1.KptFile{},
 			},
 		},

@@ -35,7 +35,7 @@ type OciTarget struct {
 
 func OciParseArgs(ctx context.Context, args []string) (OciTarget, error) {
 	oci := OciTarget{}
-	if args[0] == "-"  {
+	if args[0] == "-" {
 		return oci, nil
 	}
 

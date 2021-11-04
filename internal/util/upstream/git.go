@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package upstream
 
 import (
@@ -28,16 +42,16 @@ type gitUpstream struct {
 var _ Fetcher = &gitUpstream{}
 
 func NewGitUpstream(git *v1.Git) Fetcher {
-	return &gitUpstream{	
+	return &gitUpstream{
 		git: git,
 	}
 }
 
-func (u* gitUpstream) String() string {	
+func (u *gitUpstream) String() string {
 	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
 }
 
-func (u* gitUpstream) Validate() error {	
+func (u *gitUpstream) Validate() error {
 	const op errors.Op = "upstream.Validate"
 	g := u.git
 	if len(g.Repo) == 0 {
@@ -52,7 +66,7 @@ func (u* gitUpstream) Validate() error {
 	return nil
 }
 
-func (u* gitUpstream) ApplyUpstream(kf *v1.KptFile) {	
+func (u *gitUpstream) ApplyUpstream(kf *v1.KptFile) {
 	repoDir := u.git.Directory
 	if !strings.HasSuffix(repoDir, "file://") {
 		repoDir = filepath.Join(path.Split(repoDir))
@@ -60,12 +74,12 @@ func (u* gitUpstream) ApplyUpstream(kf *v1.KptFile) {
 	u.git.Directory = repoDir
 
 	kf.Upstream = &v1.Upstream{
-		Type:           v1.GitOrigin,
-		Git:            u.git,
+		Type: v1.GitOrigin,
+		Git:  u.git,
 	}
 }
 
-func (u* gitUpstream) FetchUpstream(ctx context.Context, dest string) error {
+func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) error {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.git.Repo,
 		Path:    u.git.Directory,
@@ -73,7 +87,6 @@ func (u* gitUpstream) FetchUpstream(ctx context.Context, dest string) error {
 	}
 	return cloneAndCopy(ctx, repoSpec, dest)
 }
-
 
 // cloneAndCopy fetches the provided repo and copies the content into the
 // directory specified by dest. The provided name is set as `metadata.name`

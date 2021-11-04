@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package upstream
 
 import (
@@ -27,27 +41,27 @@ type ociUpstream struct {
 
 var _ Fetcher = &ociUpstream{}
 
-func NewOciUpstream(oci * v1.Oci) Fetcher {
+func NewOciUpstream(oci *v1.Oci) Fetcher {
 	return &ociUpstream{
 		image: oci.Image,
 	}
 }
 
-func (u* ociUpstream) String() string {	
-	return u.image	
+func (u *ociUpstream) String() string {
+	return u.image
 }
 
 func (u *ociUpstream) ApplyUpstream(kf *v1.KptFile) {
-	
+
 	kf.Upstream = &v1.Upstream{
-		Type:           v1.OciOrigin,
+		Type: v1.OciOrigin,
 		Oci: &v1.Oci{
 			Image: u.image,
 		},
 	}
 }
 
-func (u* ociUpstream) Validate() error {	
+func (u *ociUpstream) Validate() error {
 	const op errors.Op = "upstream.Validate"
 	if len(u.image) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
@@ -68,7 +82,7 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) error {
 	}
 	defer os.RemoveAll(dir)
 
-	imageDigest, err := pullAndExtract(ctx, u.image, dir, remote.WithAuthFromKeychain(gcrane.Keychain))
+	imageDigest, err := pullAndExtract(u.image, dir, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
@@ -92,7 +106,7 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) error {
 // pullAndExtract uses current credentials (gcloud auth) to pull and
 // extract (untar) image files to target directory. The desired version or digest must
 // be in the imageName, and the resolved image sha256 digest is returned.
-func pullAndExtract(ctx context.Context, imageName string, dir string, options ...remote.Option) (name.Reference, error) {
+func pullAndExtract(imageName string, dir string, options ...remote.Option) (name.Reference, error) {
 	const op errors.Op = "upstream.pullAndExtract"
 
 	ref, err := name.ParseReference(imageName)

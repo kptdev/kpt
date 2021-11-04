@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package upstream
 
 import (
@@ -18,20 +32,20 @@ func TestNewUpstream(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "returns git upstream",
-			args:    args{
+			name: "returns git upstream",
+			args: args{
 				kf: &kptfilev1.KptFile{
-					Upstream:     &kptfilev1.Upstream{
-						Type:           kptfilev1.GitOrigin,
-						Git:            &kptfilev1.Git{
+					Upstream: &kptfilev1.Upstream{
+						Type: kptfilev1.GitOrigin,
+						Git: &kptfilev1.Git{
 							Repo:      "repo-name",
 							Directory: "dir-name",
 							Ref:       "ref-name",
-						},						
+						},
 					},
 				},
 			},
-			want:    &gitUpstream{
+			want: &gitUpstream{
 				git: &kptfilev1.Git{
 					Repo:      "repo-name",
 					Directory: "dir-name",
@@ -41,63 +55,62 @@ func TestNewUpstream(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "returns oci upstream",
-			args:    args{
+			name: "returns oci upstream",
+			args: args{
 				kf: &kptfilev1.KptFile{
-					Upstream:     &kptfilev1.Upstream{
-						Type:           kptfilev1.OciOrigin,
-						Oci:            &kptfilev1.Oci{
+					Upstream: &kptfilev1.Upstream{
+						Type: kptfilev1.OciOrigin,
+						Oci: &kptfilev1.Oci{
 							Image: "image-name",
-						},						
+						},
 					},
 				},
 			},
-			want:    &ociUpstream{
+			want: &ociUpstream{
 				image: "image-name",
 			},
 			wantErr: false,
 		},
 		{
-			name:    "empty type fails",
-			args:    args{
+			name: "empty type fails",
+			args: args{
 				kf: &kptfilev1.KptFile{
-					Upstream:     &kptfilev1.Upstream{
-					},
+					Upstream: &kptfilev1.Upstream{},
 				},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 		{
-			name:    "nil upstream fails",
-			args:    args{
+			name: "nil upstream fails",
+			args: args{
 				kf: &kptfilev1.KptFile{},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 		{
-			name:    "nil git fails",
-			args:    args{
+			name: "nil git fails",
+			args: args{
 				kf: &kptfilev1.KptFile{
-					Upstream:     &kptfilev1.Upstream{
-						Type:           kptfilev1.GitOrigin,
+					Upstream: &kptfilev1.Upstream{
+						Type: kptfilev1.GitOrigin,
 					},
 				},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 		{
-			name:    "nil oci fails",
-			args:    args{
+			name: "nil oci fails",
+			args: args{
 				kf: &kptfilev1.KptFile{
-					Upstream:     &kptfilev1.Upstream{
-						Type:           kptfilev1.OciOrigin,
+					Upstream: &kptfilev1.Upstream{
+						Type: kptfilev1.OciOrigin,
 					},
 				},
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}

@@ -107,7 +107,7 @@ func (g *TestSetupManager) Init() bool {
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		Upstream:    upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
