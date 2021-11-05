@@ -74,7 +74,7 @@ func (c Command) Run(ctx context.Context) error {
 
 	kf := kptfileutil.DefaultKptfile(c.Name)
 
-	c.Upstream.ApplyUpstream(kf)
+	kf.Upstream = c.Upstream.BuildUpstream()
 	kf.Upstream.UpdateStrategy = c.UpdateStrategy
 
 	err = kptfileutil.WriteFile(c.Destination, kf)

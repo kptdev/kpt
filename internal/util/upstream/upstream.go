@@ -24,9 +24,20 @@ import (
 
 type Fetcher interface {
 	fmt.Stringer
+	LockedString() string
+
 	Validate() error
-	ApplyUpstream(kf *kptfilev1.KptFile)
-	FetchUpstream(ctx context.Context, dest string) error
+	BuildUpstream() *kptfilev1.Upstream
+	BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock
+
+	FetchUpstream(ctx context.Context, dest string) (string, error)
+	FetchUpstreamLock(ctx context.Context, dest string) error
+
+	CloneUpstream(ctx context.Context, dest string) error
+
+	Ref() (string, error)
+	SetRef(ref string) error
+	ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootRef string) bool
 }
 
 func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
@@ -34,18 +45,34 @@ func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
 	if kf != nil && kf.Upstream != nil {
 		switch kf.Upstream.Type {
 		case kptfilev1.GitOrigin:
-			if kf.Upstream.Git != nil {
-				return &gitUpstream{
-					git: kf.Upstream.Git,
-				}, nil
+			u := &gitUpstream{
+				git:     &kptfilev1.Git{},
+				gitLock: &kptfilev1.GitLock{},
 			}
+			if kf.Upstream != nil && kf.Upstream.Git != nil {
+				u.git = kf.Upstream.Git				
+			}
+			if kf.UpstreamLock != nil && kf.UpstreamLock.Git != nil {
+				u.gitLock = kf.UpstreamLock.Git
+			}
+			return u, nil
 		case kptfilev1.OciOrigin:
-			if kf.Upstream.Oci != nil {
-				return &ociUpstream{
-					image: kf.Upstream.Oci.Image,
-				}, nil
+			u := &ociUpstream{
+				oci:     &kptfilev1.Oci{},
+				ociLock: &kptfilev1.OciLock{},
 			}
+			if kf.Upstream != nil && kf.Upstream.Oci != nil {
+				u.oci = kf.Upstream.Oci
+			}
+			if kf.UpstreamLock != nil && kf.UpstreamLock.Oci != nil {
+				u.ociLock = kf.UpstreamLock.Oci
+			}
+			return u, nil
 		}
 	}
 	return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream type must be one of: %s,%s", kptfilev1.GitOrigin, kptfilev1.OciOrigin))
+}
+
+func ShouldUpdateSubPkgRef(subUpstream Fetcher, rootUpstream Fetcher, originalRootRef string) bool {
+	return subUpstream.ShouldUpdateSubPkgRef(rootUpstream, originalRootRef)
 }

@@ -68,7 +68,9 @@ func TestNewUpstream(t *testing.T) {
 				},
 			},
 			want: &ociUpstream{
-				image: "image-name",
+				oci: &kptfilev1.Oci{
+					Image: "image-name",
+				},				
 			},
 			wantErr: false,
 		},

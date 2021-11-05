@@ -37,6 +37,7 @@ import (
 
 type gitUpstream struct {
 	git *v1.Git
+	gitLock *v1.GitLock
 }
 
 var _ Fetcher = &gitUpstream{}
@@ -49,6 +50,10 @@ func NewGitUpstream(git *v1.Git) Fetcher {
 
 func (u *gitUpstream) String() string {
 	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
+}
+
+func (u *gitUpstream) LockedString() string {
+	return fmt.Sprintf("%s@%s", u.gitLock.Repo, u.gitLock.Commit)
 }
 
 func (u *gitUpstream) Validate() error {
@@ -66,20 +71,56 @@ func (u *gitUpstream) Validate() error {
 	return nil
 }
 
-func (u *gitUpstream) ApplyUpstream(kf *v1.KptFile) {
+func (u *gitUpstream) BuildUpstream() *v1.Upstream {
 	repoDir := u.git.Directory
 	if !strings.HasSuffix(repoDir, "file://") {
 		repoDir = filepath.Join(path.Split(repoDir))
 	}
 	u.git.Directory = repoDir
 
-	kf.Upstream = &v1.Upstream{
+	return &v1.Upstream{
 		Type: v1.GitOrigin,
 		Git:  u.git,
 	}
 }
 
-func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) error {
+func (u *gitUpstream) BuildUpstreamLock(digest string) *v1.UpstreamLock {
+	u.gitLock = &v1.GitLock{
+		Repo:      u.git.Repo,
+		Directory: u.git.Directory,
+		Ref:       u.git.Ref,
+		Commit:    digest,
+	}
+	return &v1.UpstreamLock{
+		Type: v1.GitOrigin,
+		Git:  u.gitLock,
+	}
+}
+
+func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, error) {
+	repoSpec := &git.RepoSpec{
+		OrgRepo: u.git.Repo,
+		Path:    u.git.Directory,
+		Ref:     u.git.Ref,
+		Dir: dest,
+	}
+	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
+		return "", err
+	}
+	return repoSpec.Commit, nil
+}
+
+func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) error {
+	repoSpec := &git.RepoSpec{
+		OrgRepo: u.gitLock.Repo,
+		Path:    u.gitLock.Directory,
+		Ref:     u.gitLock.Commit,
+		Dir: dest,
+	}
+	return ClonerUsingGitExec(ctx, repoSpec)
+}
+
+func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.git.Repo,
 		Path:    u.git.Directory,
@@ -87,6 +128,26 @@ func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) error {
 	}
 	return cloneAndCopy(ctx, repoSpec, dest)
 }
+
+func (u *gitUpstream) Ref() (string, error) {
+	return u.git.Ref, nil
+}
+
+func (u *gitUpstream) SetRef(ref string) error {
+	u.git.Ref = ref
+	return nil
+}
+
+// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
+// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
+func (u *gitUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKfRef string) bool {
+	root, ok := rootUpstream.(*gitUpstream)
+	return ok && 
+		u.git.Repo == root.git.Repo &&
+		u.git.Ref == originalRootKfRef &&
+		strings.HasPrefix(path.Clean(u.git.Directory), path.Clean(root.git.Directory))
+}
+
 
 // cloneAndCopy fetches the provided repo and copies the content into the
 // directory specified by dest. The provided name is set as `metadata.name`
@@ -178,12 +239,14 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
 	}
 
-	// We need to create a temp directory where we can copy the content of the repo.
-	// During update, we need to checkout multiple versions of the same repo, so
-	// we can't do merges directly from the cache.
-	repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
-	if err != nil {
-		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
+	if repoSpec.Dir == "" {
+		// We need to create a temp directory where we can copy the content of the repo.
+		// During update, we need to checkout multiple versions of the same repo, so
+		// we can't do merges directly from the cache.
+		repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
+		if err != nil {
+			return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
+		}
 	}
 	repoSpec.Commit = commit
 

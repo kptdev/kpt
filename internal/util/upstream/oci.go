@@ -22,12 +22,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -36,41 +37,70 @@ import (
 )
 
 type ociUpstream struct {
-	image string
+	oci *kptfilev1.Oci
+	ociLock *kptfilev1.OciLock
 }
 
 var _ Fetcher = &ociUpstream{}
 
-func NewOciUpstream(oci *v1.Oci) Fetcher {
+func NewOciUpstream(oci *kptfilev1.Oci) Fetcher {
 	return &ociUpstream{
-		image: oci.Image,
+		oci: oci,
 	}
 }
 
 func (u *ociUpstream) String() string {
-	return u.image
+	return u.oci.Image
 }
 
-func (u *ociUpstream) ApplyUpstream(kf *v1.KptFile) {
+func (u *ociUpstream) LockedString() string {
+	return u.ociLock.Image
+}
 
-	kf.Upstream = &v1.Upstream{
-		Type: v1.OciOrigin,
-		Oci: &v1.Oci{
-			Image: u.image,
-		},
+func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
+	return &kptfilev1.Upstream{
+		Type: kptfilev1.OciOrigin,
+		Oci: u.oci,
+	}
+}
+
+func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
+	u.ociLock.Image = digest
+
+	return &kptfilev1.UpstreamLock{
+		Type: kptfilev1.OciOrigin,
+		Oci: u.ociLock,
 	}
 }
 
 func (u *ociUpstream) Validate() error {
 	const op errors.Op = "upstream.Validate"
-	if len(u.image) == 0 {
+	if len(u.oci.Image) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
 	}
 	return nil
 }
 
-func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) error {
+func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, error) {
 	const op errors.Op = "upstream.FetchUpstream"
+	imageDigest, err := pullAndExtract(u.oci.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	if err != nil {
+		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
+	}
+	return imageDigest.Name(), nil
+}
+
+func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) error {
+	const op errors.Op = "upstream.FetchUpstreamLock"
+	_, err := pullAndExtract(u.ociLock.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	if err != nil {
+		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
+	}
+	return nil
+}
+
+func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
+	const op errors.Op = "upstream.FetchUpstreamClone"
 	// pr := printer.FromContextOrDie(ctx)
 
 	// We need to create a temp directory where we can copy the content of the repo.
@@ -82,7 +112,7 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) error {
 	}
 	defer os.RemoveAll(dir)
 
-	imageDigest, err := pullAndExtract(u.image, dir, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	imageDigest, err := pullAndExtract(u.oci.Image, dir, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
@@ -96,11 +126,55 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) error {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateUpstreamLockFromOCI(dest, imageDigest); err != nil {
+	if err := kptfileutil.UpdateUpstreamLock(dest, u.BuildUpstreamLock(imageDigest.String())); err != nil {
 		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
 
 	return nil
+}
+
+func (u *ociUpstream) Ref() (string, error) {
+	const op errors.Op = "upstream.Ref"
+	r, err := name.ParseReference(u.oci.Image)
+	if err != nil {
+		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
+	}
+	return r.Identifier(), nil
+}
+
+func (u *ociUpstream) SetRef(ref string) error {
+	const op errors.Op = "upstream.SetRef"
+	r, err := name.ParseReference(u.oci.Image)
+	if err != nil {
+		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
+	}
+
+	if len(strings.SplitN(ref, "sha256:", 2)[0]) == 0 {
+		u.oci.Image = r.Context().Digest(ref).Name()
+	} else {
+		u.oci.Image = r.Context().Tag(ref).Name()
+	}
+	
+	return nil
+}
+
+// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
+// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
+func (u *ociUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKfRef string) bool {
+	root, ok := rootUpstream.(*ociUpstream)
+	if !ok {
+		return false
+	}
+	subName, err := name.ParseReference(u.oci.Image)
+	if err != nil {
+		return false
+	}
+	rootName, err := name.ParseReference(root.oci.Image)
+	if err != nil {
+		return false
+	}
+	return subName.Context().String() == rootName.Context().String() &&
+		subName.Identifier() == originalRootKfRef
 }
 
 // pullAndExtract uses current credentials (gcloud auth) to pull and

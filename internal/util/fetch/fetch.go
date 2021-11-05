@@ -43,12 +43,12 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	upstream, err := upstream.NewUpstream(kf)
+	ups, err := upstream.NewUpstream(kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := upstream.FetchUpstream(ctx, c.Pkg.UniquePath.String()); err != nil {
+	if err := ups.CloneUpstream(ctx, c.Pkg.UniquePath.String()); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
