@@ -302,42 +302,6 @@ func TestCommand_Run_noAdd(t *testing.T) {
 	}
 }
 
-func TestCommand_Run_noGitRepo(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt-noGitRepo-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(d)
-
-	kf := kptfileutil.DefaultKptfile(filepath.Base(d))
-	kf.Upstream = &kptfilev1.Upstream{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.Git{
-			Repo:      "https://github.com/GoogleContainerTools/kpt",
-			Directory: "/",
-			Ref:       "main",
-		},
-		UpdateStrategy: kptfilev1.ResourceMerge,
-	}
-	kf.UpstreamLock = &kptfilev1.UpstreamLock{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.GitLock{
-			Repo:      "https://github.com/GoogleContainerTools/kpt",
-			Directory: "/",
-			Ref:       "main",
-			Commit:    "abc123",
-		},
-	}
-
-	err = Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, d),
-	}.Run(fake.CtxWithDefaultPrinter())
-	if !assert.Error(t, err) {
-		return
-	}
-	assert.Contains(t, err.Error(), "is not a git repository")
-}
-
 func TestCommand_Run_localPackageChanges(t *testing.T) {
 	testCases := map[string]struct {
 		strategy        kptfilev1.UpdateStrategyType
