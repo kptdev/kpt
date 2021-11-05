@@ -30,8 +30,8 @@ type Fetcher interface {
 	BuildUpstream() *kptfilev1.Upstream
 	BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock
 
-	FetchUpstream(ctx context.Context, dest string) (string, error)
-	FetchUpstreamLock(ctx context.Context, dest string) error
+	FetchUpstream(ctx context.Context, dest string) (absPath string, digest string, err error)
+	FetchUpstreamLock(ctx context.Context, dest string) (absPath string, err error)
 
 	CloneUpstream(ctx context.Context, dest string) error
 

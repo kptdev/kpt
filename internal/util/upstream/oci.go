@@ -81,22 +81,22 @@ func (u *ociUpstream) Validate() error {
 	return nil
 }
 
-func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, error) {
+func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, string, error) {
 	const op errors.Op = "upstream.FetchUpstream"
 	imageDigest, err := pullAndExtract(u.oci.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
-		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
+		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
-	return imageDigest.Name(), nil
+	return dest, imageDigest.Name(), nil
 }
 
-func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) error {
+func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (string, error) {
 	const op errors.Op = "upstream.FetchUpstreamLock"
 	_, err := pullAndExtract(u.ociLock.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
-		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
+		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
-	return nil
+	return dest, nil
 }
 
 func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {

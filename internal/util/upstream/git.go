@@ -97,7 +97,7 @@ func (u *gitUpstream) BuildUpstreamLock(digest string) *v1.UpstreamLock {
 	}
 }
 
-func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, error) {
+func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, string, error) {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.git.Repo,
 		Path:    u.git.Directory,
@@ -105,19 +105,22 @@ func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, e
 		Dir:     dest,
 	}
 	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
-		return "", err
+		return "", "", err
 	}
-	return repoSpec.Commit, nil
+	return path.Join(repoSpec.Dir, repoSpec.Path), repoSpec.Commit, nil
 }
 
-func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) error {
+func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) (string, error) {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.gitLock.Repo,
 		Path:    u.gitLock.Directory,
 		Ref:     u.gitLock.Commit,
 		Dir:     dest,
 	}
-	return ClonerUsingGitExec(ctx, repoSpec)
+	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
+		return "", err
+	}
+	return path.Join(repoSpec.Dir, repoSpec.Path), nil
 }
 
 func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {

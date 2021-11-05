@@ -250,27 +250,28 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		return errors.E(op, p.UniquePath, err)
 	}
 
-	updatedAbsPath, err := os.MkdirTemp("", "kpt-updated-")
+	updatedTmpPath, err := os.MkdirTemp("", "kpt-updated-")
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-	defer os.RemoveAll(updatedAbsPath)
+	defer os.RemoveAll(updatedTmpPath)
 
 	pr.Printf("Fetching upstream from %s\n", upstream.String())
-	commit, err := upstream.FetchUpstream(ctx, updatedAbsPath)
+	updatedAbsPath, commit, err := upstream.FetchUpstream(ctx, updatedTmpPath)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 
-	originAbsPath, err := os.MkdirTemp("", "kpt-origin-")
+	originTmpPath, err := os.MkdirTemp("", "kpt-origin-")
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-	defer os.RemoveAll(originAbsPath)
+	defer os.RemoveAll(originTmpPath)
+	originAbsPath := originTmpPath
 
 	if kf.UpstreamLock != nil {
 		pr.Printf("Fetching origin from %s\n", upstream.LockedString())
-		if err := upstream.FetchUpstreamLock(ctx, originAbsPath); err != nil {
+		if originAbsPath, err = upstream.FetchUpstreamLock(ctx, originTmpPath); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 	}
