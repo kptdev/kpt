@@ -2,9 +2,9 @@
 
 Last updated: November 5th, 2021
 
-Please follow the [installation](https://kpt.dev/installation/) guide for installing latest version of kpt.
+Please follow the [installation](https://kpt.dev/installation/) guide for installing the latest version of kpt.
 
-## Released features
+## Latest releases
 
 ### Targeting resources in `kpt fn` commands
 
@@ -14,6 +14,9 @@ file path etc. For example, set work-load identity annotation on all Kubernetes
 Service Account resources in this package. Here is the documentation for list of
 available selectors for [render] and [eval]. Available in [v1.0.0-beta.7]+ versions of kpt.
 More selectors will be added incrementally.
+
+## Detailed release notes
+Please refer to the [release notes] page for more information about the latest features.
 
 ## Upcoming features
 
@@ -34,8 +37,8 @@ This will help users to understand the right way of using kpt. These best practi
 guidelines should be backed by idiomatic kpt package examples. These packages should
 be designed reflecting the best practices, easily discoverable and simple to understand.
 This is an ongoing effort. [Tracking issue](https://github.com/GoogleContainerTools/kpt/issues/2541)
-- Best practices guide, **Estimated completion date:** End of November 2021.
-- Idiomatic package examples, **Estimated completion date:** End of December 2021.
+- Best practices guide, **Estimated release date:** End of November 2021.
+- Idiomatic package examples, **Estimated release date:** End of December 2021.
 
 ### Merging pipeline section during `kpt pkg update`
 
@@ -45,7 +48,8 @@ very difficult to merge with upstream counterpart. This is forcing users to use 
 and discouraging them from declaring other functions in the pipeline as they will be
 deleted during `kpt pkg update`. Merging pipeline correctly will reduce
 huge amount of friction in declaring new functions which in turn helps to avoid
-excessive parameterization. [Tracking issue](https://github.com/GoogleContainerTools/kpt/issues/2529). **Estimated completion date:** End of December 2021.
+excessive parameterization. [Tracking issue](https://github.com/GoogleContainerTools/kpt/issues/2529). 
+**Estimated release date:** End of December 2021.
 
 ### Explore various options for function runtime
 
@@ -62,7 +66,7 @@ package authoring assistance. Users can author Kptfile and functionConfig files 
 features like auto-complete and error detection. This significantly improves the
 discoverability of Kptfile schema, catalog functions and their functionConfigs.
 - Cloud code integration with Kptfile schema has been [released](https://github.com/GoogleCloudPlatform/cloud-code-intellij/blob/main/CHANGELOG.md) and available from 21.10.1+ versions of Cloud Code.
-- Function catalog integration will be released by end of December 2021.
+- Function catalog integration, **Estimated release date:** End of December 2021.
 
 ### Additional storage beyond Git
 
@@ -70,18 +74,9 @@ Currently, `kpt pkg` workflows only support Git repositories. There is some incr
 demand from users to support other storage options beyond git(e.g., OCI). We will
 be spending time understanding the use-cases and need for this project. [Tracking issue](https://github.com/GoogleContainerTools/kpt/issues/2300).
 
-## Release notes
-Please refer to the [release notes] page for more information about the latest features.
-
-## Upgrading from previous version of kpt.
-There are a number of breaking changes that had to be done to clean up the
-CLI and the data format for kpt.  Please visit the [migration guide] for migrating
-your existing kpt content if you are using v0.X.Y versions of kpt.
-
 ## Feedback channels:
 1. File a [new issue] on Github, but please search first. 
 1. kpt-users@googlegroups.com
-
 
 [new issue]: https://github.com/GoogleContainerTools/kpt/issues/new/choose
 [declarative function execution]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
