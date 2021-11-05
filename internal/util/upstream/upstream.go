@@ -41,28 +41,28 @@ type Fetcher interface {
 }
 
 func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
-	const op errors.Op = "upstream.NewUpstreamFetcher"
+	const op errors.Op = "upstream.NewUpstream"
 	if kf != nil && kf.Upstream != nil {
 		switch kf.Upstream.Type {
 		case kptfilev1.GitOrigin:
-			u := &gitUpstream{
-				git:     &kptfilev1.Git{},
-				gitLock: &kptfilev1.GitLock{},
+			if kf.Upstream.Git == nil {
+				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream must have git information"))
 			}
-			if kf.Upstream != nil && kf.Upstream.Git != nil {
-				u.git = kf.Upstream.Git				
+			u := &gitUpstream{
+				git:     kf.Upstream.Git,
+				gitLock: &kptfilev1.GitLock{},
 			}
 			if kf.UpstreamLock != nil && kf.UpstreamLock.Git != nil {
 				u.gitLock = kf.UpstreamLock.Git
 			}
 			return u, nil
 		case kptfilev1.OciOrigin:
-			u := &ociUpstream{
-				oci:     &kptfilev1.Oci{},
-				ociLock: &kptfilev1.OciLock{},
+			if kf.Upstream.Oci == nil {
+				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream must have oci information"))
 			}
-			if kf.Upstream != nil && kf.Upstream.Oci != nil {
-				u.oci = kf.Upstream.Oci
+			u := &ociUpstream{
+				oci:     kf.Upstream.Oci,
+				ociLock: &kptfilev1.OciLock{},
 			}
 			if kf.UpstreamLock != nil && kf.UpstreamLock.Oci != nil {
 				u.ociLock = kf.UpstreamLock.Oci

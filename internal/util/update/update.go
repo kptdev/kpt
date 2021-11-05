@@ -18,7 +18,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -128,7 +127,7 @@ func (u Command) Run(ctx context.Context) error {
 		}
 	}
 
-	originalRootKfRef,err := rootUps.Ref()
+	originalRootKfRef, err := rootUps.Ref()
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
@@ -174,9 +173,10 @@ func (u Command) Run(ctx context.Context) error {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
 				if upstream.ShouldUpdateSubPkgRef(subUps, rootUps, originalRootKfRef) {
-					updateSubKf(subKf, subUps, u.Ref, u.Strategy)
-					err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf)
-					if err != nil {
+					if err := updateSubKf(subKf, subUps, u.Ref, u.Strategy); err != nil {
+						return errors.E(op, subPkg.UniquePath, err)
+					}
+					if err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf); err != nil {
 						return errors.E(op, subPkg.UniquePath, err)
 					}
 				}
@@ -194,14 +194,17 @@ func (u Command) Run(ctx context.Context) error {
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUps upstream.Fetcher, ref string, strategy kptfilev1.UpdateStrategyType) {
+func updateSubKf(subKf *kptfilev1.KptFile, subUps upstream.Fetcher, ref string, strategy kptfilev1.UpdateStrategyType) error {
 	// check if explicit ref provided
 	if ref != "" {
-		subUps.SetRef(ref)
+		if err := subUps.SetRef(ref); err != nil {
+			return err
+		}
 	}
 	if strategy != "" {
 		subKf.Upstream.UpdateStrategy = strategy
 	}
+	return nil
 }
 
 func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
@@ -229,39 +232,6 @@ func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
 	return nil
 }
 
-// repoClone is an interface that represents a clone of a repo on the local
-// disk.
-type repoClone interface {
-	AbsPath() string
-}
-
-// newNilRepoClone creates a new nilRepoClone that implements the repoClone
-// interface
-func newNilRepoClone() (*nilRepoClone, error) {
-	const op errors.Op = "update.newNilRepoClone"
-	dir, err := ioutil.TempDir("", "kpt-empty-")
-	if err != nil {
-		return nil, errors.E(op, errors.IO, fmt.Errorf("errors creating a temporary directory: %w", err))
-	}
-	return &nilRepoClone{
-		dir: dir,
-	}, nil
-}
-
-// nilRepoClone is an implementation of the repoClone interface, but that
-// just represents an empty directory. This simplifies the logic for update
-// since we don't have to special case situations where we don't have
-// upstream and/or origin.
-type nilRepoClone struct {
-	dir string
-}
-
-// AbsPath returns the absolute path to the local directory for the repo. For
-// the nilRepoClone, this will always be an empty directory.
-func (nrc *nilRepoClone) AbsPath() string {
-	return nrc.dir
-}
-
 // updateRootPackage updates a local package. It will use the information
 // about upstream in the Kptfile to fetch upstream and origin, and then
 // recursively traverse the hierarchy to add/update/delete packages.
@@ -277,33 +247,33 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 
 	upstream, err := upstream.NewUpstream(kf)
 	if err != nil {
-		return errors.E(op, p.UniquePath, err) 
+		return errors.E(op, p.UniquePath, err)
 	}
 
 	updatedAbsPath, err := os.MkdirTemp("", "kpt-updated-")
-	if err!=nil {
+	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	defer os.RemoveAll(updatedAbsPath)
-	
+
 	pr.Printf("Fetching upstream from %s\n", upstream.String())
 	commit, err := upstream.FetchUpstream(ctx, updatedAbsPath)
-	if err!=nil {
+	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 
 	originAbsPath, err := os.MkdirTemp("", "kpt-origin-")
-	if err!=nil {
+	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-	defer os.RemoveAll(originAbsPath)	
+	defer os.RemoveAll(originAbsPath)
 
 	if kf.UpstreamLock != nil {
 		pr.Printf("Fetching origin from %s\n", upstream.LockedString())
 		if err := upstream.FetchUpstreamLock(ctx, originAbsPath); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
-	} 
+	}
 
 	s := stack.New()
 	s.Push(".")

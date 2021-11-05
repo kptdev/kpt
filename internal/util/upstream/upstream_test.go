@@ -52,6 +52,7 @@ func TestNewUpstream(t *testing.T) {
 					Directory: "dir-name",
 					Ref:       "ref-name",
 				},
+				gitLock: &kptfilev1.GitLock{},
 			},
 			wantErr: false,
 		},
@@ -70,7 +71,8 @@ func TestNewUpstream(t *testing.T) {
 			want: &ociUpstream{
 				oci: &kptfilev1.Oci{
 					Image: "image-name",
-				},				
+				},
+				ociLock: &kptfilev1.OciLock{},
 			},
 			wantErr: false,
 		},

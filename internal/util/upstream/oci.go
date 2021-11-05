@@ -37,7 +37,7 @@ import (
 )
 
 type ociUpstream struct {
-	oci *kptfilev1.Oci
+	oci     *kptfilev1.Oci
 	ociLock *kptfilev1.OciLock
 }
 
@@ -60,7 +60,7 @@ func (u *ociUpstream) LockedString() string {
 func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
 	return &kptfilev1.Upstream{
 		Type: kptfilev1.OciOrigin,
-		Oci: u.oci,
+		Oci:  u.oci,
 	}
 }
 
@@ -69,7 +69,7 @@ func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 
 	return &kptfilev1.UpstreamLock{
 		Type: kptfilev1.OciOrigin,
-		Oci: u.ociLock,
+		Oci:  u.ociLock,
 	}
 }
 
@@ -154,7 +154,7 @@ func (u *ociUpstream) SetRef(ref string) error {
 	} else {
 		u.oci.Image = r.Context().Tag(ref).Name()
 	}
-	
+
 	return nil
 }
 

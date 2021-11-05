@@ -36,7 +36,7 @@ import (
 )
 
 type gitUpstream struct {
-	git *v1.Git
+	git     *v1.Git
 	gitLock *v1.GitLock
 }
 
@@ -53,7 +53,7 @@ func (u *gitUpstream) String() string {
 }
 
 func (u *gitUpstream) LockedString() string {
-	return fmt.Sprintf("%s@%s", u.gitLock.Repo, u.gitLock.Commit)
+	return fmt.Sprintf("%s@%s", u.gitLock.Repo, u.gitLock.Ref)
 }
 
 func (u *gitUpstream) Validate() error {
@@ -102,7 +102,7 @@ func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, e
 		OrgRepo: u.git.Repo,
 		Path:    u.git.Directory,
 		Ref:     u.git.Ref,
-		Dir: dest,
+		Dir:     dest,
 	}
 	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
 		return "", err
@@ -115,7 +115,7 @@ func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) error 
 		OrgRepo: u.gitLock.Repo,
 		Path:    u.gitLock.Directory,
 		Ref:     u.gitLock.Commit,
-		Dir: dest,
+		Dir:     dest,
 	}
 	return ClonerUsingGitExec(ctx, repoSpec)
 }
@@ -142,12 +142,11 @@ func (u *gitUpstream) SetRef(ref string) error {
 // This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
 func (u *gitUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKfRef string) bool {
 	root, ok := rootUpstream.(*gitUpstream)
-	return ok && 
+	return ok &&
 		u.git.Repo == root.git.Repo &&
 		u.git.Ref == originalRootKfRef &&
 		strings.HasPrefix(path.Clean(u.git.Directory), path.Clean(root.git.Directory))
 }
-
 
 // cloneAndCopy fetches the provided repo and copies the content into the
 // directory specified by dest. The provided name is set as `metadata.name`
