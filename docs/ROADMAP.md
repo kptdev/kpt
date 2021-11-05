@@ -1,6 +1,6 @@
 # kpt roadmap for 2021
 
-Last updated: September 14th, 2021
+Last updated: November 5th, 2021
 
 Draft of *v1* is released. Please follow the [installation](https://kpt.dev/installation/) guide.
 
@@ -11,6 +11,7 @@ This allows you to run several mutation and validation
 functions in a pipeline alleviating the need to create shell scripts that do 
 the same thing.  Further information can be found in the 
 [declarative function execution]  section of the [The Kpt Book].
+Available in v1.0.0-beta.1+ versions of kpt.
 
 ### Setters
 
@@ -23,9 +24,10 @@ default.  For further information on the setter function please visit:
 
 ### Resource-merge
 
-kpt package updates now default to the resource-merge strategy 
+kpt package updates now default to the [resource-merge](https://kpt.dev/book/03-packages/05-updating-a-package) strategy 
 which allows you to edit configuration with an text editor of your choice 
-and still be able to get updates with upstream changes. 
+and still be able to get updates with upstream changes.
+Available in v1.0.0-beta.1+ versions of kpt.
 
 ### Live apply
 
@@ -35,6 +37,7 @@ of the GroupKind, name and namespace, and it didn't allow us to easily add
 additional metadata about a package, such as the package version. This is
 is now migrated to use ResourceGroup CRD.  You can learn more about in the
 [The Kpt Book](https://kpt.dev/book/06-deploying-packages/).
+Available in v1.0.0-beta.1+ versions of kpt.
 
 ### Updated documentation
 
@@ -58,7 +61,8 @@ Users want to invoke a kpt function (imperatively and declaratively) on a subset
 resources in the package by selecting them on the basis of GVKNN(Group, Version, Kind, Name, Namespace), package-path,
 file path etc. For example, set work-load identity annotation on all Kubernetes
 Service Account resources in this package. Here is the documentation for list of
-available selectors for [render] and [eval]. More selectors will be added incrementally.
+available selectors for [render] and [eval]. Available in [v1.0.0-beta.7]+ versions of kpt.
+More selectors will be added incrementally.
 
 ## In Progress
 
@@ -135,3 +139,4 @@ your existing kpt content.
 [migration guide]: https://kpt.dev/installation/migration
 [render]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=specifying-selectors
 [eval]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution?id=specifying-selectors
+[v1.0.0-beta.7]: https://github.com/GoogleContainerTools/kpt/releases/tag/v1.0.0-beta.7
