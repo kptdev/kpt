@@ -29,6 +29,7 @@
 	- [6 Deploying Packages](book/06-deploying-packages/)
 		- [6.1 Initializing a Package for Apply](book/06-deploying-packages/01-initializing-a-package-for-apply.md)
 		- [6.2 Applying a Package](book/06-deploying-packages/02-applying-a-package.md)
+		- [6.3 Handling Dependencies](book/06-deploying-packages/03-handling-dependencies.md)
 - [Reference](reference/)
   - [CLI](reference/cli/)
     - [pkg](reference/cli/pkg/)

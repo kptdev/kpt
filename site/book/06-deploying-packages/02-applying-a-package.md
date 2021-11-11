@@ -7,7 +7,7 @@ Let's create that first:
 $ kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
 ```
 
-!> You can also declare the `Secret` resource, but make sure it is not commited to
+!> You can also declare the `Secret` resource, but make sure it is not committed to
 Git as part of the package.
 
 Then deploy the package and wait for the resources to be reconciled:
@@ -50,7 +50,7 @@ resource to the server for the update.
 
 ## Dry-run
 
-You can uses the `--dry-run` flag to get break down of operations that will be
+You can use the `--dry-run` flag to get break down of operations that will be
 performed when applying the package.
 
 For example, before applying the `wordpresss` package for the first time, you
