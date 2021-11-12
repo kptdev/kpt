@@ -24,7 +24,7 @@ GOBIN := $(shell go env GOPATH)/bin
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: generate license fix vet fmt lint test build buildall tidy
+all: generate license fix vet fmt lint license-check test build buildall tidy
 
 build:
 	go build -o $(GOBIN)/kpt -v .
@@ -64,10 +64,8 @@ lint:
 	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
 	$(GOBIN)/golangci-lint run ./...
 
-# TODO: enable this as part of `all` target when it works for go-errors
-# https://github.com/google/go-licenses/issues/15
 license-check:
-	(which go-licensesscs || go install https://github.com/google/go-licenses)
+	(which go-licenses || go install github.com/google/go-licenses@latest)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
