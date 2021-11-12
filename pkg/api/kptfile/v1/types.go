@@ -35,7 +35,7 @@ const (
 var TypeMeta = yaml.ResourceMeta{
 	TypeMeta: yaml.TypeMeta{
 		APIVersion: KptFileAPIVersion,
-		Kind:       KptFileName,
+		Kind:       KptFileKind,
 	},
 }
 
