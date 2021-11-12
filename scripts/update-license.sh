@@ -14,7 +14,7 @@
 
 # don't add licenses to the site directory, it will break the docs
 # and will add them to the theme which is a submodule (bad)
-which addlicense || go get github.com/google/addlicense
+which addlicense || go install github.com/google/addlicense@latest
 find . -type f \
 ! -path "./site/*" \
 ! -path "./docs/*" \
