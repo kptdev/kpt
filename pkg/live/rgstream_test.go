@@ -99,7 +99,7 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 				"cr.yaml": cr,
 			},
 			namespace:      "test-namespace",
-			expectedErrMsg: "unknown resource types: Custom.custom.io",
+			expectedErrMsg: "unknown resource types: custom.io/v1, Kind=Custom",
 		},
 	}
 

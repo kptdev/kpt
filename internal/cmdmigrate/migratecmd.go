@@ -231,16 +231,18 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 	if err != nil {
 		return nil, err
 	}
-	cmInv, _, err := mr.cmLoader.InventoryInfo(objs)
+	cmInvObj, _, err := inventory.SplitUnstructureds(objs)
 	if err != nil {
-		// No ConfigMap inventory means the migration has already run before.
-		if _, ok := err.(inventory.NoInventoryObjError); ok { //nolint
-			fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
-		}
-	} else {
-		fmt.Fprintf(mr.ioStreams.Out, "success (inventory-id: %s)\n", cmInv.ID())
+		return nil, err
 	}
-	return cmInv, err
+	if cmInvObj == nil {
+		// No ConfigMap inventory means the migration has already run before.
+		fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
+		return nil, inventory.NoInventoryObjError{}
+	}
+	cmInv := inventory.WrapInventoryInfoObj(cmInvObj)
+	fmt.Fprintf(mr.ioStreams.Out, "success (inventory-id: %s)\n", cmInv.ID())
+	return cmInv, nil
 }
 
 // retrieveInvObjs returns the object references from the passed

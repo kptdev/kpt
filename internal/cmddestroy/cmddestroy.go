@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 func NewRunner(ctx context.Context, factory util.Factory,
@@ -154,15 +153,11 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	poller, err := status.NewStatusPoller(r.factory)
-	if err != nil {
-		return err
-	}
 	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 	if err != nil {
 		return err
 	}
-	destroyer, err := apply.NewDestroyer(r.factory, invClient, poller)
+	destroyer, err := apply.NewDestroyer(r.factory, invClient)
 	if err != nil {
 		return err
 	}

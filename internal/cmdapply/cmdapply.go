@@ -35,7 +35,6 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 // NewRunner returns a command runner
@@ -208,15 +207,11 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	poller, err := status.NewStatusPoller(r.factory)
-	if err != nil {
-		return err
-	}
 	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 	if err != nil {
 		return err
 	}
-	applier, err := apply.NewApplier(r.factory, invClient, poller)
+	applier, err := apply.NewApplier(r.factory, invClient)
 	if err != nil {
 		return err
 	}

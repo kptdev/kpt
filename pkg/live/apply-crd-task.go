@@ -89,4 +89,6 @@ func (a *ApplyCRDTask) Start(taskContext *taskrunner.TaskContext) {
 	}()
 }
 
-func (a *ApplyCRDTask) ClearTimeout() {}
+func (a *ApplyCRDTask) Cancel(_ *taskrunner.TaskContext) {}
+
+func (a *ApplyCRDTask) StatusUpdate(_ *taskrunner.TaskContext, _ object.ObjMetadata) {}
