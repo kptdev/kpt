@@ -246,7 +246,7 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *framework.ResultItem) error {
+func populateResourceRef(item *yaml.RNode, resultItem *framework.Result) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -403,7 +403,7 @@ func (ri *multiLineFormatter) String() string {
 }
 
 // resultToString converts given structured result item to string format.
-func resultToString(result framework.ResultItem) string {
+func resultToString(result framework.Result) string {
 	// TODO: Go SDK should implement Stringer method
 	// for framework.ResultItem. This is a temporary
 	// wrapper that will eventually be moved to Go SDK.
@@ -436,7 +436,10 @@ func resultToString(result framework.ResultItem) string {
 	return s.String()
 }
 
-func resourceRefToString(ref yaml.ResourceIdentifier) string {
+func resourceRefToString(ref *yaml.ResourceIdentifier) string {
+	if ref == nil {
+		return ""
+	}
 	s := strings.Builder{}
 	if ref.APIVersion != "" {
 		s.WriteString(fmt.Sprintf("%s/", ref.APIVersion))
