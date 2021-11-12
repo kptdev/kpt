@@ -426,6 +426,7 @@ metadata:
   name: myService
   annotations:
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/seqindent: 'compact'
 spec:
   selector:
@@ -462,6 +463,7 @@ metadata:
   name: upsert-multiple-resources-config
   annotations:
     config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
     internal.config.kubernetes.io/seqindent: 'compact'
 items:
 - apiVersion: v1
