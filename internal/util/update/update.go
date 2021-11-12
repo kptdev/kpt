@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -111,11 +110,6 @@ func (u Command) Run(ctx context.Context) error {
 
 	if u.Pkg == nil {
 		return errors.E(op, errors.MissingParam, "pkg must be provided")
-	}
-
-	// require package is checked into git before trying to update it
-	if err := checkIfCommitted(ctx, u.Pkg); err != nil {
-		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 
 	rootKf, err := u.Pkg.Kptfile()
@@ -204,31 +198,6 @@ func shouldUpdateSubPkgRef(subKf, rootKf *kptfilev1.KptFile, originalRootKfRef s
 	return subKf.Upstream.Git.Repo == rootKf.Upstream.Git.Repo &&
 		subKf.Upstream.Git.Ref == originalRootKfRef &&
 		strings.HasPrefix(path.Clean(subKf.Upstream.Git.Directory), path.Clean(rootKf.Upstream.Git.Directory))
-}
-
-func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
-	const op errors.Op = "update.checkIfCommitted"
-	g, err := gitutil.NewLocalGitRunner(p.UniquePath.String())
-	if err != nil {
-		return err
-	}
-
-	rr, err := g.Run(ctx, "status", "-s", p.UniquePath.String())
-	if err != nil {
-		var gitExecErr *gitutil.GitExecError
-		if errors.As(err, &gitExecErr) {
-			if strings.Contains(gitExecErr.StdErr, "not a git repository") {
-				return &PkgNotGitRepoError{Path: p.UniquePath}
-			}
-		}
-		return errors.E(op, p.UniquePath, err)
-	}
-	if strings.TrimSpace(rr.Stdout) != "" {
-		return errors.E(op, p.UniquePath, &PkgRepoDirtyError{
-			Path: p.UniquePath,
-		})
-	}
-	return nil
 }
 
 // repoClone is an interface that represents a clone of a repo on the local

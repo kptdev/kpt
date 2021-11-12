@@ -17,6 +17,7 @@
 package e2e
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,12 +34,16 @@ func runTests(t *testing.T, path string) {
 
 	for p := range testCases {
 		c := testCases[p]
-		t.Run(p, func(t *testing.T) {
-			(&livetest.Runner{
-				Config: c,
-				Path: p,
-			}).Run(t)
-		})
+		for format := range c.Output {
+			testName := fmt.Sprintf("%s#%s", p, format)
+			t.Run(testName, func(t *testing.T) {
+				(&livetest.Runner{
+					Config: c,
+					Path: p,
+					Format: format,
+				}).Run(t)
+			})
+		}
 	}
 }
 

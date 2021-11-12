@@ -115,7 +115,7 @@ func (ef *formatter) FormatActionGroupEvent(age event.ActionGroupEvent, ags []ev
 		for id, se := range c.LatestStatus() {
 			// Only print information about objects that we actually care about
 			// for this wait task.
-			if found := object.ObjMetas(ag.Identifiers).Contains(id); found {
+			if found := ag.Identifiers.Contains(id); found {
 				ef.printResourceStatus(id, se)
 			}
 		}

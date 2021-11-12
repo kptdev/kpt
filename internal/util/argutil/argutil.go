@@ -94,11 +94,13 @@ func ParseFieldPath(path string) ([]string, error) {
 func ResolveSymlink(ctx context.Context, path string) (string, error) {
 	isSymlink := false
 	f, err := os.Lstat(path)
-	if err != nil {
-		return "", err
-	}
-	if f.Mode().Type() == os.ModeSymlink {
-		isSymlink = true
+	if err == nil {
+		// this step only helps with printing WARN message by checking if the input
+		// path has symlink, so do not error out at this phase and let
+		// filepath.EvalSymlinks(path) handle the cases
+		if f.Mode().Type() == os.ModeSymlink {
+			isSymlink = true
+		}
 	}
 	rp, err := filepath.EvalSymlinks(path)
 	if err != nil {

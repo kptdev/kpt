@@ -23,6 +23,7 @@ import (
 	"os"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -44,8 +45,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
-	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", "always",
-		"pull image before running the container. It should be one of always, ifNotPresent and never.")
+	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", string(fnruntime.AlwaysPull),
+		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r

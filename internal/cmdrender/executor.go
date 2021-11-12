@@ -353,21 +353,49 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, err
 	}
 
-	output := &kio.PackageBuffer{}
-	// create a kio pipeline from kyaml library to execute the function chains
-	mutation := kio.Pipeline{
-		Inputs: []kio.Reader{
-			&kio.PackageBuffer{Nodes: input},
-		},
-		Filters: mutators,
-		Outputs: []kio.Writer{output},
+	for i, mutator := range mutators {
+		selectors := pl.Mutators[i].Selectors
+
+		if len(selectors) > 0 {
+			// set kpt-resource-id annotation on each resource before mutation
+			err = fnruntime.SetResourceIds(input)
+			if err != nil {
+				return nil, err
+			}
+		}
+		// select the resources on which function should be applied
+		selectedInput, err := fnruntime.SelectInput(input, selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		if err != nil {
+			return nil, err
+		}
+		output := &kio.PackageBuffer{}
+		// create a kio pipeline from kyaml library to execute the function chains
+		mutation := kio.Pipeline{
+			Inputs: []kio.Reader{
+				&kio.PackageBuffer{Nodes: selectedInput},
+			},
+			Filters: []kio.Filter{mutator},
+			Outputs: []kio.Writer{output},
+		}
+		err = mutation.Execute()
+		if err != nil {
+			return nil, err
+		}
+		hctx.executedFunctionCnt += 1
+
+		if len(selectors) > 0 {
+			// merge the output resources with input resources
+			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
+			// delete the kpt-resource-id annotation on each resource
+			err = fnruntime.DeleteResourceIds(input)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			input = output.Nodes
+		}
 	}
-	err = mutation.Execute()
-	if err != nil {
-		return nil, err
-	}
-	hctx.executedFunctionCnt += len(mutators)
-	return output.Nodes, nil
+	return input, nil
 }
 
 // runValidators runs a set of validator functions on input resources.
@@ -386,13 +414,21 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		fn := pl.Validators[i]
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy)
+		// validators are run on a copy of mutated resources to ensure
+		// resources are not mutated.
+		selectedResources, err := fnruntime.SelectInput(input, fn.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return err
 		}
-		// validators are run on a copy of mutated resources to ensure
-		// resources are not mutated.
-		if _, err = validator.Filter(cloneResources(input)); err != nil {
+		displayResourceCount := false
+		if len(fn.Selectors) > 0 {
+			displayResourceCount = true
+		}
+		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if err != nil {
+			return err
+		}
+		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			return err
 		}
 		hctx.executedFunctionCnt++
@@ -432,7 +468,12 @@ func adjustRelPath(hctx *hydrationContext) error {
 		if err != nil {
 			return err
 		}
+		// in kyaml v0.12.0, we are supporting both the new path annotation key
+		// internal.config.kubernetes.io/path, as well as the legacy one config.kubernetes.io/path
 		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
+			return err
+		}
+		if err = r.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, newPath)); err != nil {
 			return err
 		}
 		if err = pkg.RemovePkgPathAnnotation(r); err != nil {
@@ -482,7 +523,11 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		fn := fns[i]
 		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy)
+		displayResourceCount := false
+		if len(fn.Selectors) > 0 {
+			displayResourceCount = true
+		}
+		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
 			return nil, err
 		}
@@ -507,7 +552,7 @@ func trackInputFiles(hctx *hydrationContext, relPath string, input []*yaml.RNode
 	return nil
 }
 
-// trackOutputfiles records the file paths of output resources in the hydration
+// trackOutputFiles records the file paths of output resources in the hydration
 // context. It should be invoked post hydration.
 func trackOutputFiles(hctx *hydrationContext) error {
 	outputSet := sets.String{}

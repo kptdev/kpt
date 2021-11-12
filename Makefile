@@ -43,10 +43,12 @@ fix:
 
 fmt:
 	go fmt ./...
+	
+schema:
+	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate:
 	go install ./mdtogo 
-	(which swagger || go install github.com/go-swagger/go-swagger/cmd/swagger@v0.27.0)
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) go generate ./...
@@ -87,7 +89,7 @@ test-fn-eval: build
 
 # target to run e2e tests for "kpt fn eval" command
 test-live-apply: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=kind --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
 vet:
 	go vet ./...

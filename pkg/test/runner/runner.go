@@ -192,7 +192,7 @@ func (r *Runner) runFnEval() error {
 				kptArgs = append(kptArgs, "-o", destDir)
 			}
 			if r.testCase.Config.ImagePullPolicy != "" {
-				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+				kptArgs = append(kptArgs, "--image-pull-policy", r.testCase.Config.ImagePullPolicy)
 			}
 			if r.testCase.Config.EvalConfig.Network {
 				kptArgs = append(kptArgs, "--network")
@@ -346,7 +346,7 @@ func (r *Runner) runFnRender() error {
 			}
 
 			if r.testCase.Config.ImagePullPolicy != "" {
-				kptArgs = append(kptArgs, "--image-pull-policy", string(r.testCase.Config.ImagePullPolicy))
+				kptArgs = append(kptArgs, "--image-pull-policy", r.testCase.Config.ImagePullPolicy)
 			}
 
 			if r.testCase.Config.DisableOutputTruncate {

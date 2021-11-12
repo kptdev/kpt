@@ -18,7 +18,7 @@ the following features:
 ### Create the go module
 
 ```shell
-$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.11.1
+$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.12.0
 ```
 
 ### Create the `main.go`
@@ -31,39 +31,37 @@ provided value:
 package main
 
 import (
-  "fmt"
-  "os"
+	"os"
 
-  "sigs.k8s.io/kustomize/kyaml/fn/framework"
-  "sigs.k8s.io/kustomize/kyaml/fn/framework/command"
-  "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var value string
-
 func main() {
-  mp := Annotator{}
-  cmd := command.Build(&mp, command.StandaloneEnabled, false)
-  cmd.Flags().StringVar(&value, "value", "", "annotation value")
-  if err := cmd.Execute(); err != nil {
-    fmt.Fprintln(os.Stderr, err)
-    os.Exit(1)
-  }
-}
+	// create a struct matching the structure of ResourceList.FunctionConfig to hold its data
+	var config struct {
+		Data map[string]string `yaml:"data"`
+	}
+	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
+		for i := range items {
+			// set the annotation on each resource item
+			err := items[i].PipeE(yaml.SetAnnotation("myannotation", config.Data["myannotation"]))
+			if err != nil {
+				return nil, err
+			}
+		}
+		return items, nil
+	}
+	p := framework.SimpleProcessor{Filter: kio.FilterFunc(fn), Config: &config}
+	cmd := command.Build(p, command.StandaloneDisabled, false)
+  // Adds a "gen" subcommand to create a Dockerfile for building the function into a container image.
+  command.AddGenerateDockerfile(cmd)
 
-// Annotator implements the ResourceListProcessor interface.
-type Annotator struct{}
-
-var _ framework.ResourceListProcessor = &Annotator{}
-
-func (mp *Annotator) Process(resourceList *framework.ResourceList) error {
-  for i := range resourceList.Items {
-    // modify the resources using the kyaml/yaml library:
-    if err := resourceList.Items[i].PipeE(yaml.SetAnnotation("myannotation", value)); err != nil {
-      return err
-    }
-  }
-  return nil
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
 ```
 
@@ -84,7 +82,7 @@ $ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/w
 Test it by running the function imperatively:
 
 ```shell
-$ kpt fn eval wordpress --exec ./my-fn -- value=foo
+$ kpt fn eval wordpress --exec ./my-fn -- myannotation=foo
 ```
 
 During iterative development, `--exec` flag can be used to execute the
@@ -115,7 +113,7 @@ $ docker push gcr.io/project/fn-name:tag
 Run the function imperatively as a container function:
 
 ```shell
-$ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- value=foo
+$ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- myannotation=foo
 ```
 
 ## Next Steps

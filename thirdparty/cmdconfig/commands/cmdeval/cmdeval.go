@@ -61,8 +61,17 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
-	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", "always",
-		"pull image before running the container. It should be one of always, ifNotPresent and never.")
+	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", string(fnruntime.AlwaysPull),
+		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+	r.Command.Flags().StringVar(
+		&r.Selector.APIVersion, "match-api-version", "", "select resources matching the given apiVersion")
+	r.Command.Flags().StringVar(
+		&r.Selector.Kind, "match-kind", "", "select resources matching the given kind")
+	r.Command.Flags().StringVar(
+		&r.Selector.Name, "match-name", "", "select resources matching the given name")
+	r.Command.Flags().StringVar(
+		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
+
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -89,6 +98,7 @@ type EvalFnRunner struct {
 	AsCurrentUser        bool
 	IncludeMetaResources bool
 	Ctx                  context.Context
+	Selector             kptfile.Selector
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -313,6 +323,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,
+		Selector:              r.Selector,
 	}
 
 	return nil

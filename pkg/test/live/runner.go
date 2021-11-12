@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -31,7 +32,8 @@ import (
 )
 
 const (
-	KindClusterName = "live-e2e-test"
+	KindClusterName   = "live-e2e-test"
+	K8sVersionEnvName = "K8S_VERSION"
 )
 
 // Runner uses the provided Config to run a test.
@@ -42,6 +44,9 @@ type Runner struct {
 
 	// Path provides the path to the test files.
 	Path string
+
+	// Format provides the output format that should be used.
+	Format string
 }
 
 // Run executes the test.
@@ -76,7 +81,7 @@ func (r *Runner) Run(t *testing.T) {
 
 	r.RunPreApply(t)
 
-	stdout, stderr, err := r.RunApply()
+	stdout, stderr, err := r.RunApply(t)
 	r.VerifyExitCode(t, err)
 	r.VerifyStdout(t, stdout)
 	r.VerifyStderr(t, stderr)
@@ -101,8 +106,12 @@ func (r *Runner) RunPreApply(t *testing.T) {
 	}
 }
 
-func (r *Runner) RunApply() (string, string, error) {
+func (r *Runner) RunApply(t *testing.T) (string, string, error) {
 	args := append([]string{"live", "apply"}, r.Config.KptArgs...)
+	if r.Format != "" {
+		args = append(args, "--output", r.Format)
+	}
+	t.Logf("Running command: kpt %s", strings.Join(args, " "))
 	cmd := exec.Command("kpt", args...)
 	cmd.Dir = filepath.Join(r.Path, "resources")
 
@@ -154,7 +163,12 @@ func (r *Runner) CheckKindClusterAvailable(t *testing.T) bool {
 }
 
 func (r *Runner) CreateKindCluster(t *testing.T) {
-	cmd := exec.Command("kind", "create", "cluster", fmt.Sprintf("--name=%s", KindClusterName))
+	args := []string{"create", "cluster", fmt.Sprintf("--name=%s", KindClusterName)}
+	if k8sVersion := os.Getenv(K8sVersionEnvName); k8sVersion != "" {
+		t.Logf("Using version %s", k8sVersion)
+		args = append(args, fmt.Sprintf("--image=kindest/node:v%s", k8sVersion))
+	}
+	cmd := exec.Command("kind", args...)
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("failed to create new kind cluster: %v", err)
 	}
@@ -214,11 +228,11 @@ func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 }
 
 func (r *Runner) VerifyStdout(t *testing.T, stdout string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), strings.TrimSpace(stdout))
+	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdOut), strings.TrimSpace(substituteTimestamps(stdout)))
 }
 
 func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), strings.TrimSpace(stderr))
+	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdErr), strings.TrimSpace(substituteTimestamps(stderr)))
 }
 
 func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
@@ -284,4 +298,10 @@ func inventorySortFunc(inv []InventoryEntry) func(i, j int) bool {
 		}
 		return iInv.Namespace < jInv.Namespace
 	}
+}
+
+var timestampRegexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)
+
+func substituteTimestamps(text string) string {
+	return timestampRegexp.ReplaceAllString(text, "<TIMESTAMP>")
 }

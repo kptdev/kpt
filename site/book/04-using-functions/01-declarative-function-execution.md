@@ -178,5 +178,125 @@ pipeline:
         tier: mysql
 ```
 
+## Specifying `selectors`
+
+In some cases, you want to invoke the function only on a subset of resources based on a
+selection criteria. This can be accomplished using selectors. At a high level, selectors
+work as follows:
+
+![img](/static/images/func-target.svg)
+
+Resources that are selected are passed as input to the function.
+Resources that are not selected are passed through unchanged.
+
+For example, let's add a function to the pipeline that adds an annotation to 
+resources with name `mysql` only:
+
+```yaml
+# wordpress/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      selectors:
+        - name: wordpress-mysql
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+         app: wordpress
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
+When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
+function is invoked only on the resources with name `wordpress-mysql`. Then, `set-label`
+function is invoked on all the resources in the package hierarchy of `wordpress` package.
+
+```shell
+$ kpt fn render wordpress
+Package "wordpress/mysql": 
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+
+Package "wordpress": 
+[RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1"
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1"
+
+Successfully executed 4 function(s) in 2 package(s).
+```
+
+As another example, let's add another function to the pipeline that adds a prefix to the name of a resource if:
+- it has kind `Deployment` AND name `wordpress`
+  **OR**
+- it has kind `Service` AND name `wordpress`
+
+```yaml
+# wordpress/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      selectors:
+        - name: wordpress-mysql
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: wordpress
+    - image: gcr.io/kpt-fn/ensure-name-substring:v0.1
+      configMap:
+        prepend: dev-
+      selectors:
+        - kind: Deployment
+          name: wordpress
+        - kind: Service
+          name: wordpress
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
+Now, let's render the package:
+
+```shell
+kpt fn render wordpress
+Package "wordpress/mysql": 
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+
+Package "wordpress": 
+[RUNNING] "gcr.io/kpt-fn/set-annotations:v0.1" on 3 resource(s)
+[PASS] "gcr.io/kpt-fn/set-annotations:v0.1"
+[RUNNING] "gcr.io/kpt-fn/set-label:v0.1"
+[PASS] "gcr.io/kpt-fn/set-label:v0.1"
+[RUNNING] "gcr.io/kpt-fn/ensure-name-substring:v0.1" on 2 resource(s)
+[PASS] "gcr.io/kpt-fn/ensure-name-substring:v0.1"
+[RUNNING] "gcr.io/kpt-fn/kubeval:v0.1"
+[PASS] "gcr.io/kpt-fn/kubeval:v0.1"
+
+Successfully executed 5 function(s) in 2 package(s).
+```
+
+Note that the `ensure-name-substring` function is applied only to the 
+resources matching the selection criteria.
+
+The following are the matchers you can specify in a selector:
+
+1. `apiVersion`: `apiVersion` field value of resources to be selected.
+2. `kind`: `kind` field value of resources to be selected.
+3. `name`: `metadata.name` field value of resources to be selected.
+4. `namespace`: `metadata.namespace` field of resources to be selected.
+
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
+[Package identifier]: book/03-packages/01-getting-a-package?id=package-name-and-identifier

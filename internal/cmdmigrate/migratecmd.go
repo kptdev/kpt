@@ -249,7 +249,7 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 func (mr *MigrateRunner) retrieveInvObjs(cmInvClient inventory.InventoryClient,
 	invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve ConfigMap inventory objs...")
-	cmObjs, err := cmInvClient.GetClusterObjs(invObj)
+	cmObjs, err := cmInvClient.GetClusterObjs(invObj, mr.dryRunStrategy())
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
 		return err
 	}
 
-	_, err = rgInvClient.Merge(invInfo, cmObjs)
+	_, err = rgInvClient.Merge(invInfo, cmObjs, mr.dryRunStrategy())
 	if err != nil {
 		return err
 	}
@@ -307,10 +307,7 @@ func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
 func (mr *MigrateRunner) deleteConfigMapInv(cmInvClient inventory.InventoryClient,
 	invObj inventory.InventoryInfo) error {
 	fmt.Fprint(mr.ioStreams.Out, "  deleting old ConfigMap inventory object...")
-	if mr.dryRun {
-		cmInvClient.SetDryRunStrategy(common.DryRunClient)
-	}
-	if err := cmInvClient.DeleteInventoryObj(invObj); err != nil {
+	if err := cmInvClient.DeleteInventoryObj(invObj, mr.dryRunStrategy()); err != nil {
 		return err
 	}
 	fmt.Fprint(mr.ioStreams.Out, "success\n")
@@ -342,6 +339,14 @@ func (mr *MigrateRunner) deleteConfigMapFile() error {
 		}
 	}
 	return nil
+}
+
+// dryRunStrategy returns the strategy to use based on user config
+func (mr *MigrateRunner) dryRunStrategy() common.DryRunStrategy {
+	if mr.dryRun {
+		return common.DryRunClient
+	}
+	return common.DryRunNone
 }
 
 // findResourceGroupInv returns the ResourceGroup inventory object from the

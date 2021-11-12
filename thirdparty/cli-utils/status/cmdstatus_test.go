@@ -290,7 +290,7 @@ type fakePoller struct {
 	events []pollevent.Event
 }
 
-func (f *fakePoller) Poll(ctx context.Context, _ []object.ObjMetadata,
+func (f *fakePoller) Poll(ctx context.Context, _ object.ObjMetadataSet,
 	_ polling.Options) <-chan pollevent.Event {
 	eventChannel := make(chan pollevent.Event)
 	go func() {

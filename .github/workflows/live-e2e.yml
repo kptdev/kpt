@@ -1,0 +1,49 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: "Kpt Live - e2e Tests"
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "site/**"
+  push:
+    paths-ignore:
+      - "docs/**"
+      - "site/**"
+
+jobs:
+  kind:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [1.20.7]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - uses: actions/checkout@master
+      # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
+      # If you upgrade this version confirm the changes match your expectations
+      - name: Install KinD
+        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        with:
+          version: "v0.11.1"
+          skipClusterCreation: true
+      - name: Run Tests
+        env:
+          K8S_VERSION: ${{ matrix.version }}
+        run: |
+          K8S_VERSION=$K8S_VERSION make test-live-apply

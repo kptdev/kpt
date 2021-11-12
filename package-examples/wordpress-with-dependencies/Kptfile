@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress-with-dependencies
+info:
+  emails:
+    - kpt-team@google.com
+  description: This is an example package that uses the depends-on annotation

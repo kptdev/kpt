@@ -1,0 +1,29 @@
+diff --git a/x.yaml b/y.yaml
+similarity index 100%
+rename from x.yaml
+rename to y.yaml
+index 7a494c9..e284e52 100644
+--- a/x.yaml
++++ b/y.yaml
+@@ -1,3 +1,10 @@
++apiVersion: custom.io/v1
++kind: Custom
++metadata:
++  name: custom
++spec:
++  image: nginx:1.2.3
++---
+ # Copyright 2021 Google LLC
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+@@ -17,10 +24,3 @@ metadata:
+   name: nginx-deployment
+ spec:
+   replicas: 3
+----
+-apiVersion: custom.io/v1
+-kind: Custom
+-metadata:
+-  name: custom
+-spec:
+-  image: nginx:1.2.3

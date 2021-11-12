@@ -22,6 +22,8 @@ stdOut: |-
       annotations:
         config.kubernetes.io/index: '0'
         config.kubernetes.io/path: 'db/resources.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'db/resources.yaml'
         internal.config.kubernetes.io/seqindent: 'compact'
     spec:
       replicas: 3
@@ -45,6 +47,8 @@ stdOut: |-
       annotations:
         config.kubernetes.io/index: '0'
         config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'resources.yaml'
         internal.config.kubernetes.io/seqindent: 'compact'
     spec:
       replicas: 3
@@ -55,6 +59,8 @@ stdOut: |-
       annotations:
         config.kubernetes.io/index: '1'
         config.kubernetes.io/path: 'resources.yaml'
+        internal.config.kubernetes.io/index: '1'
+        internal.config.kubernetes.io/path: 'resources.yaml'
         internal.config.kubernetes.io/seqindent: 'compact'
     spec:
       image: nginx:1.2.3

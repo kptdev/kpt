@@ -1,0 +1,16 @@
+stdErr: |
+  Package "generator/db": 
+  [RUNNING] "gcr.io/kpt-fn/starlark:v0.2.1"
+  [PASS] "gcr.io/kpt-fn/starlark:v0.2.1" in 0s
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3" on 1 resource(s)
+  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
+  [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.4" on 1 resource(s)
+  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.4" in 0s
+
+  Package "generator": 
+  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3" on 1 resource(s)
+  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
+  [RUNNING] "gcr.io/kpt-fn/set-labels:v0.1.4" on 1 resource(s)
+  [PASS] "gcr.io/kpt-fn/set-labels:v0.1.4" in 0s
+
+  Successfully executed 5 function(s) in 2 package(s).

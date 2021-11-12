@@ -58,6 +58,18 @@ fn-args:
   By default, container function is executed as `nobody` user. You may want to use
   this flag to run higher privilege operations such as mounting the local filesystem.
 
+--match-api-version:
+  Select resources matching the given apiVersion.
+
+--match-kind
+  Select resources matching the given kind.
+
+--match-name:
+  Select resources matching the given name.
+  
+--match-namespace:
+  Select resources matching the given namespace.
+
 --env, e:
   List of local environment variables to be exported to the container function.
   By default, none of local environment variables are made available to the
@@ -208,6 +220,12 @@ $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordp
 # and the output resources after setting namespace and annotation is written to another directory
 $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
 | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+```
+
+```shell
+# execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
+# in current directory
+kpt fn eval -i set-namespace:v0.1 --by-kind Deployment --by-name foo -- namespace=staging
 ```
 
 <!--mdtogo-->

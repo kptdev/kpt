@@ -1,9 +1,17 @@
 preinstallResourceGroup: true
-stdOut: |
-  deployment.apps/first-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-  deployment.apps/second-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+output:
+  events:
+    stdOut: |
+      deployment.apps/first-nginx created
+      1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+      deployment.apps/second-nginx created
+      1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  json:
+    stdOut: |
+      {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"apply-depends-on","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
+      {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
+      {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"apply-depends-on","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
+      {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
 inventory:
   - group: apps
     kind: Deployment

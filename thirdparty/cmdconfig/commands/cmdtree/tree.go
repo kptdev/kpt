@@ -169,6 +169,10 @@ func (p TreeWriter) index(nodes []*yaml.RNode) map[string][]*yaml.RNode {
 	// index the ResourceNodes by package
 	indexByPackage := map[string][]*yaml.RNode{}
 	for i := range nodes {
+		err := kioutil.CopyLegacyAnnotations(nodes[i])
+		if err != nil {
+			continue
+		}
 		meta, err := nodes[i].GetMeta()
 		if err != nil || meta.Kind == "" {
 			// not a resource
@@ -181,6 +185,9 @@ func (p TreeWriter) index(nodes []*yaml.RNode) map[string][]*yaml.RNode {
 }
 
 func compareNodes(i, j *yaml.RNode) bool {
+	_ = kioutil.CopyLegacyAnnotations(i)
+	_ = kioutil.CopyLegacyAnnotations(j)
+
 	metai, _ := i.GetMeta()
 	metaj, _ := j.GetMeta()
 	pi := metai.Annotations[kioutil.PathAnnotation]
@@ -232,6 +239,10 @@ func (p TreeWriter) sort(indexByPackage map[string][]*yaml.RNode) []string {
 }
 
 func (p TreeWriter) doResource(leaf *yaml.RNode, metaString string, branch treeprint.Tree) (treeprint.Tree, error) {
+	err := kioutil.CopyLegacyAnnotations(leaf)
+	if err != nil {
+		return nil, err
+	}
 	meta, _ := leaf.GetMeta()
 	if metaString == "" {
 		path := meta.Annotations[kioutil.PathAnnotation]
