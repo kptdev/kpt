@@ -9,13 +9,13 @@
 
 ## Why
 
-Please provide a reason to have this feature.  For best results a feature should
-be addressing a problem that is described in a github issue.  Link the issues
-in this section.  The more user requests are linked here the more likely this
-design is going to get prioritized on the roadmap.
-
-It's good to include some background about the problem, but do not use that as a
-substitute for real user feedback.
+> Please provide a reason to have this feature.  For best results a feature should
+> be addressing a problem that is described in a github issue.  Link the issues
+> in this section.  The more user requests are linked here the more likely this
+> design is going to get prioritized on the roadmap.
+> 
+> It's good to include some background about the problem, but do not use that as a
+> substitute for real user feedback.
 
 
 
@@ -24,30 +24,56 @@ https://github.com/GoogleContainerTools/kpt/issues/2300
 
 ## Design
 
-Please describe your solution. Please list any:
+> Please describe your solution. Please list any:
+> 
+> * new config changes
+> * interface changes
+> * design assumptions
+> 
+> For a new config change, please mention:
+> 
+> * Is it backwards compatible? If not, what is the migration and deprecation 
+>   plan?
 
-* new config changes
-* interface changes
-* design assumptions
+### Design Assumptions
 
-For a new config change, please mention:
+The first stage of OCI support comes from adding support for `oci` in the places
+where `git` appears today.
 
-* Is it backwards compatible? If not, what is the migration and deprecation 
-  plan?
+An image tag is used in the same way a git branch or tag would be used.
+
+An image digest is used in the same way a git commit would be used.
+
+The scope of a single image is one root package, with any number of optional sub-packages.
+
+The structure of the image is a single tar layer. The root `Kptfile` is in the base directory from the tar layer's point of view. It contains only the Kpt package files, no entrypoint or executables.
+
+A package image should not be confused with a container image. Container images are executable by software, like `Docker`, and package images are purely configuration data.
 
 ### Config chages
 
-The `Kptfile` properties `upstream` and `upstreamLock` have `oci` properties added alongside the `git` properties. The `type` property also has the string `oci` added as an accepted value.
+The `Kptfile` structures for `upstream` and `upstreamLock` have `oci` in addition to `git` properties. The `type` property also has the string `oci` added as an accepted value.
 
-Old `Kptfile` will `git` upstream be compatible with new verions of `kpt`, the file structure and git functionality is unchanged.
+```yaml
+upstream:
+  type: oci
+  oci:
+    image: 'IMAGE:TAG'
+upstreamLock:
+  type: oci
+  oci:
+    image: 'IMAGE:DIGEST'
+```
 
-New `Kptfile` with `git` upstream will be compatible with old versions of `kpt`.
+New verions of `kpt` will support existing `Kptfile`. The file structures and `git` functionality is unchanged.
 
-New `Kptfile` with `oci` upstream will not be compatible with old versions of `kpt`. The `kpt` command being used will need to be updated.  
+Existing versions of `kpt` will support `Kptfile` with `upstream` based on `git` for the same reason. The structure and meaning of existing fields is not changed.
+
+Existing versions of `kpt` will not support `Kptfile` with `upstream` based on `oci`. The `type` value, and missing `git` information will fail validation. The `kpt` binary used will need to be upgraded.
 
 ### Command changes
 
-* `kpt pkg get`
+### `kpt pkg get`
 
 The argument that determines upstream today is parsed into `repo`, `ref`, and `path`, and is implicitly a `git` location.
 
@@ -55,41 +81,65 @@ To support `oci`, it will be necessary to extract different values in a way that
 
 To solve this, using [Helm](https://helm.sh/docs/topics/registries/#other-subcommands) as an example, the prefix `oci://` can be used. This ensures that selecting `oci` protocol isn't accidental, and it won't collide with other location formats that may be added.
 
-```
-$ kpt pkg get oci://us-docker.pkg.dev/my-project-id/my-repo/flowers:v3
+```shell
+# clone package as new folder
+kpt pkg get oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package:v3 my-package
 ```
 
 Because OCI image reference already has a convention for `image:tag` references, using `:v3` should be used instead of `@v3` for version. It will be more intuitive how it relates to the registry, and easier to cut and paste values.
 
-Sub-Packages
+### `kpt pkg get` sub-packages
 
+It is possible to use `kpt pkg get` to add sub-packages to a target location.
 
+Syntax for a sub-package target location is unchanged, it's a normal filesystem path.
+
+Syntax for an OCI sub-package source location requires the ability to tell when an image name ends and a sub-package path inside that image begins. In `git` this requires an explicit `.git` extension at the transition, and in `.oci` this requires double slash.
+
+```shell
+# clone sub-package as new sub-folder
+kpt pkg get oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package//simple/example:v3 my-package/simple/my-example
+```
 
 * `kpt pkg update`
+
+The command for update is not changed, but when the `upstream` is `oci` then the `@VERSION` is used to change the `upstream` image's `tag` or `digest` value.
+
+`kpt pkg update @v14` and `kpt pkg update DIR@v14` will assign `:v14` as the new upstream image tag.
+
+`kpt pkg update @sha256:xxxxx` and `kpt pkg update DIR@sha256:xxxxx` will assign `@sha256:xxxxx` as the new upstream image digest.
+
+`kpt pkg update` and `kpt pkg update DIR` use the currently defined `upstream` image tag or digest unchanged.
+
+At that point, if the `upstream` is an `image:tag` that is to discover the current `image:digest` for tag, otherwise the `upstream` value for `image:digest` is used. In either case, the `upstreamLock` is changed to point at that new `image:digest`. 
+
+The package contents of the old and new `upstreamLock` image digest are fetched to temp folders, and are the basis of the 3-way merge to update the target package.
+
 * `kpt pkg diff`
+
 
 
 ## User Guide
 
-This section should be written in the form of a detailed user guide describing 
-the user journey. It should start from a reasonable initial state, often from 
-scratch (Instead of starting midway through a convoluted scenario) in order 
-to provide enough context for the reader and demonstrate possible workflows. 
-This is a form of DDD (Documentation-Driven-Development), which is an effective 
-technique to empathize with the user early in the process (As opposed to 
-late-stage user-empathy sessions).
-
-This section should be as detailed as possible. For example if proposing a CLI 
-change, provide the exact commands the user needs to run, along with flag 
-descriptions, and success and failure messages (Failure messages are an 
-important part of a good UX). This level of detail serves two functions:
-
-It forces the author and the readers to explicitly think about possible friction
-points, pitfalls, failure scenarios, and corner cases (“A measure of a good 
-engineer is not how clever they are, but whether they think about all the 
-corner cases”). Makes it easier to author the user-facing docs as part of the 
-development process (Ideally as part of the same PR) as opposed to it being an 
-afterthought.
+> This section should be written in the form of a detailed user guide describing 
+> the user journey. It should start from a reasonable initial state, often from 
+> scratch (Instead of starting midway through a convoluted scenario) in order 
+> to provide enough context for the reader and demonstrate possible workflows. 
+> This is a form of DDD (Documentation-Driven-Development), which is an effective 
+> technique to empathize with the user early in the process (As opposed to 
+> late-stage user-empathy sessions).
+> 
+> This section should be as detailed as possible. For example if proposing a CLI 
+> change, provide the exact commands the user needs to run, along with flag 
+> descriptions, and success and failure messages (Failure messages are an 
+> important part of a good UX). This level of detail serves two functions:
+> 
+> It forces the author and the readers to explicitly think about possible friction
+> points, pitfalls, failure scenarios, and corner cases (“A measure of a good 
+> engineer is not how clever they are, but whether they think about all the 
+> corner cases”). Makes it easier to author the user-facing docs as part of the 
+> development process (Ideally as part of the same PR) as opposed to it being an 
+> afterthought.
 
 ### Creating a package respository
 
@@ -280,6 +330,17 @@ Please list any open questions here in the following format:
 
 Resolution: Please list the resolution if resolved during the design process or
 specify __Not Yet Resolved__
+
+### What additional container registries should be supported?
+
+The protocol and information is the same. It would mainly be a question
+of how the credentials for the call are provided.
+
+### What commands on exising kpt binary will work on Kptfile with `oci`
+
+It may be possible `kpt` commands that to not process `upstream` structures
+may not require update to work correctly. `kpt fn` and `kpt live` commands
+should be tested to see how they behave.
 
 ## Alternatives Considered
 
