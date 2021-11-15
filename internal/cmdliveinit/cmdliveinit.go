@@ -16,6 +16,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmetricsannotation"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
@@ -174,6 +175,9 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
+	// add metrics annotation to package resources to track the usage as the resources
+	// will be applied using kpt live group
+	_ = addmetricsannotation.Process("live", c.Pkg.UniquePath.String())
 	return nil
 }
 

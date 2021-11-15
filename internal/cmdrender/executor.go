@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmetricsannotation"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -79,6 +80,14 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	if err = trackOutputFiles(hctx); err != nil {
 		return err
+	}
+
+	// add metrics annotation to output resources to track the usage as the resources
+	// are rendered by kpt fn group
+	ama := addmetricsannotation.AddMetricsAnnotation{Group: "fn"}
+	for i := range hctx.root.resources {
+		// this is best effort, so never error if the annotation can't be added
+		hctx.root.resources[i], _ = ama.Filter(hctx.root.resources[i])
 	}
 
 	if e.Output == nil {

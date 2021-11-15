@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/addmetricsannotation"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -98,9 +99,8 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	if err := addmergecomment.Process(c.Destination); err != nil {
-		return cleanUpDirAndError(c.Destination, err)
-	}
+	_ = addmergecomment.Process(c.Destination)
+	_ = addmetricsannotation.Process("pkg", c.Destination)
 	return nil
 }
 
