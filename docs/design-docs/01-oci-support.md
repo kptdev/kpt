@@ -10,7 +10,7 @@
 ## Why
 
 Systems that deal with packaging software or bundling configuration often have
-an atomic, versionable artifact for the package. This artifact can exist as a source of
+an atomic, versionable artifact. This artifact can exist as a source of
 truth independant from the source controlled content from which it was built.
 
 It is also very common for those packages to have an associated feed or repository
