@@ -1,6 +1,6 @@
 # Title
 
-* Author(s): \<your name\>, \<your github alias\>
+* Author(s): Louis Dejardin, @loudej
 * Approver: \<kpt-maintainer\>
 
 >    Every feature will need design sign off an PR approval from a core
@@ -16,8 +16,6 @@
 > 
 > It's good to include some background about the problem, but do not use that as a
 > substitute for real user feedback.
-
-
 
 https://github.com/GoogleContainerTools/kpt/issues/2300
 
@@ -101,7 +99,7 @@ Syntax for an OCI sub-package source location requires the ability to tell when 
 kpt pkg get oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package//simple/example:v3 my-package/simple/my-example
 ```
 
-* `kpt pkg update`
+### `kpt pkg update`
 
 The command for update is not changed, but when the `upstream` is `oci` then the `@VERSION` is used to change the `upstream` image's `tag` or `digest` value.
 
@@ -115,9 +113,9 @@ At that point, if the `upstream` is an `image:tag` that is to discover the curre
 
 The package contents of the old and new `upstreamLock` image digest are fetched to temp folders, and are the basis of the 3-way merge to update the target package.
 
-* `kpt pkg diff`
+### `kpt pkg diff`
 
-
+The `kpt pkf diff` command is identical to `kpt pkg update` in the way that `[PKG_PATH@VERSION]` argument is mapped to OCI concepts.
 
 ## User Guide
 
@@ -324,12 +322,12 @@ upstreamLock:
 
 ## Open Issues/Questions
 
-Please list any open questions here in the following format:
-
-### \<Question\>
-
-Resolution: Please list the resolution if resolved during the design process or
-specify __Not Yet Resolved__
+> Please list any open questions here in the following format:
+> 
+> ### \<Question\>
+> 
+> Resolution: Please list the resolution if resolved during the design process or
+> specify __Not Yet Resolved__
 
 ### What additional container registries should be supported?
 
