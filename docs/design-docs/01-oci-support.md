@@ -112,7 +112,7 @@ The package contents of the old and new `upstreamLock` image digest are fetched 
 
 ### `kpt pkg diff`
 
-The `kpt pkf diff` command is identical to `kpt pkg update` in the way that `[PKG_PATH@VERSION]` argument is mapped to OCI concepts.
+The `kpt pkg diff` command is identical to `kpt pkg update` in the way that `[PKG_PATH@VERSION]` argument is mapped to OCI concepts.
 
 ### Command additions
 
