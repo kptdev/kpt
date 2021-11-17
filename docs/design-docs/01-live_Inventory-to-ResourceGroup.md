@@ -28,19 +28,25 @@ to use  ResourceGroup only.
 
 ### Read standard input resources
 
-We will add a reserved keyword “-” as a special kpt directory. This "-" accepts resources
-from the standard input. For example,  `kustomize build | kpt live apply -`
+We will change the existing `kpt live apply` from STDIN to not require the existence of Kptfile (
+to be more specific, the `inventory` file from Kptfile). As long as the STDIN contains
+one and only one valid ResourceGroup, `kpt live apply` should be able to create/match the
+ResourceGroup in cluster.
 
 ### Initialize a `ResourceGroup` object
 
-`kpt live init` will create a ResourceGroup CR in resourcegroup.yaml. Only three fields
-should be given to the CR.
+`kpt live init` will create a ResourceGroup CR in resourcegroup.yaml. 
+
+By default, the ResoureGroup will have name and namespace assigned as below. And users can
+override via existing flags "--name" and "--namespace".
 
 - metadata.name: A client-provided valid RFC 1123 DNS subdomain name. Default value has prefix “inventory-” with
-  8 digit numbers. E.g. “inventory-02014045”
-- metadata.namespace: a valid namespace. default to value “default”
-- metadata.labels.cli-utils.sigs.k8s.io/inventory-id: A client-provided valid label.
-  Default value is a UUID e.g. 7c5af957-a3e2-4d68-8c0f-6c1864a66050
+  8 digit numbers. E.g. "inventory-02014045"
+- metadata.namespace: a valid namespace. default to value "default"
+
+If users want to reuse an existing inventory (from Kptfile) or ResourceGroup (which has been deployed to the cluster),
+they shall provide the value of the inventory's inventory-id or the ResourceGroup's "metadata.labels[0].cli-utils.sigs.k8s.io/inventory-id"
+via "--inventory-id" flag.
 
 ### Convert Inventory to ResourceGroup
 
@@ -50,12 +56,12 @@ the ResourceGroup is unique. This requires Kptfile to exist to use `kpt live app
 
 To split the Inventory from Kptfile to resourcegroup.yaml and convert the Inventory to
 ResourceGroup, `kpt live migrate` should be extended to map the inventory.name,
-inventory.namespace, inventory.inventoryID to  ResourceGroup CR metadata.name,
+inventory.namespace, inventory.inventoryID to ResourceGroup CR metadata.name,
 metadata.namespace, metadata.labels.cli-utils.sigs.k8s.io/inventory-id correspondingly.
 
 Inventory in Kptfile
 ```yaml
-apiVersion: kpt.dev/v1betaX
+apiVersion: kpt.dev/v1
 kind: Kptfile
 inventory:
   name: <INVENTORY_NAME>
@@ -73,9 +79,20 @@ metadata
     cli-utils.sigs.k8s.io/inventory-id: <INVENTORY_ID>
 ```
 
+### Simplify the Inventory
+
+Current inventory contains inventory-id which is required to match the label `cli-utils.sigs.k8s.io/inventory-id`.
+
+For new users, they should no longer need to be exposed to the inventory-id, but kpt will
+build one composed by `name-namespace` on the fly. 
+
+For existing users, the inventory-id is still
+required in the standalone ResourceGroup file to guarantee the adoption matches, unless they use "--inventory-policy=adopt"
+to override the label. This flag is only required as a one-off via `kpt live apply -` to override the label to `name-namespace`.
+
 ### ResourceGroup as a singleton object
 
-`kpt live apply [--resourcegroup-path] -` from STDIN accepts and only accepts a single
+`kpt live apply [--rg-file] -` from STDIN accepts and only accepts a single
 ResourceGroup, including the ResourceGroup provided by the flag. It detects
 1. If more than one ResourceGroup is found, raise errors and display all the ResourceGroup objects.
 2. If no ResourceGroup is found in STDIN and and Kptfile inventory does not exists, raise errors and suggest users to
@@ -83,45 +100,75 @@ ResourceGroup, including the ResourceGroup provided by the flag. It detects
 3. If no ResourceGroup is found in STDIN and Kptfile inventory exists, raise errors and
    suggest users to run kpt live migrate
 
+### New flags
+
+#### `--rg-file` 
+
+- description: The file path to the ResourceGroup CR, default to `resourcegroup.yaml`
+- short form `--rg`
+- This flag will be added to `kpt live init`, `kpt live migrate` and `kpt live apply`
+
+#### `--name` for inventory
+
+- description: The name for the ResourceGroup
+- This flag will continue to be used by `kpt live init`. Rather than overriding the
+  inventory.name in Kptfile, it will override the default metadata.name in the standalone ResourceGroup file.
+
+#### `--namespace` for inventory
+
+- description: The namespace for the ResourceGroup
+- This flag will continue to be used by `kpt live init`, Rather than overriding the
+  inventory.namespace in Kptfile, it will override the default metadata.namespace in the standalone ResourceGroup file.
+
+#### `--inventory-id` for inventory
+
+- description: Inventory identifier. This is used to detect overlap between
+  two sets of ResourceGroup managed resources that might use the same name and namespace.
+- This flag will continue to be accepted by `kpt live init` for backward compatibility reasons. 
+  If given, ResourceGroup will store the inventory-id value in "metadata.labels[0].cli-utils.sigs.k8s.io/inventory-id"
+  of the ResourceGroup. 
+  If not given, the ResourceGroup labels will be empty and the value of "<name>-<namespace>" will be
+  used as the "cli-utils.sigs.k8s.io/inventory-id" label in `kpt live apply` from STD.
+
 ## User Guide
 
 ### To hydrate via kustomize and deploy via kpt
 
 #### Day 1
 
-<b>For new users to start from scratch (no Kptfile)</b>
-User can run `kpt live init [--resourcegroup-file=CUSTOM_RG.yaml]` to create a
+##### For new users to start from scratch (no Kptfile)
+User can run `kpt live init [--rg-file=resourcegroup.yaml]` to create a
 ResourceGroup object and store it in a resourcegroup.yaml file.
-Users can customize the file path with the flag “--resourcegroup-file”.
+Users can customize the file path with the flag “--rg-file”.
 
-<b>For existing kpt users to migrate from Kptfile</b>
-Users run `kpt live migrate [--resourcegroup-file=CUSTOM_RG.yaml]` to convert the
+##### For existing kpt users to migrate from Kptfile
+Users run `kpt live migrate [--rg-file=resourcegroup.yaml]` to convert the
 Inventory object from Kptfile to a standalone resourcegroup.yaml file.
-Users can customize the file path with the flag “--resourcegroup-file”.
+Users can customize the file path with the flag “--rg-file”.
 
-<b>[optional]: Add shareable ResourceGroup to kustomize resources</b>
+##### [optional]: Add shareable ResourceGroup to kustomize resources
 If the ResourceGroup is expected to be shared in the Gitops workflow, users can add
 the resourcegroup.yaml  file path to the .resources field in kustomization.yaml.
-This simplifies the Day N deployment by omitting the “–resourcegroup-file“ flag.
+This simplifies the Day N deployment by omitting the “–rg-file“ flag.
 
 #### Day N
 
 - Users can configure the hydration rules in kustomization.yaml
 - Users can run `kustomize build <DIR> | kpt live apply -` to hydrate and deploy
   the kustomize-managed configurations. If resourcegroup.yaml is not added to
-  kustomize .resources field, users should provide the “–resourcegroup-file“ flag.  
-  `kustomize build <DIR> | kpt live apply –resourcegroup-file <CUSTOM_RG.yaml> -`
+  kustomize .resources field, users should provide the “–rg-file“ flag.  
+  `kustomize build <DIR> | kpt live apply –rg-file <resourcegroup.yaml> -`
 
 ### To hydrate via helm and deploy via kpt
 
 #### Day 1
 
-<b>For new users to start from scratch (no Kptfile)</b>
-User can run `kpt live init --resourcegroup-file=<DIR>/resourcegroup.yaml` to create
+##### For new users to start from scratch (no Kptfile)
+User can run `kpt live init --rg-file=<DIR>/resourcegroup.yaml` to create
 a ResourceGroup object and store it in the helm template <DIR>.
 
-<b>For existing kpt users to migrate from Kptfile</b>
-Users run `kpt live migrate --resourcegroup-file=<DIR>/resourcegroup.yaml` to convert
+##### For existing kpt users to migrate from Kptfile
+Users run `kpt live migrate --rg-file=<DIR>/resourcegroup.yaml` to convert
 the Inventory object from Kptfile to  a standalone resourcegroup.yaml file.
 
 #### Day N
@@ -136,7 +183,7 @@ See kpt issue #2399 for expected Inventory usage in package publisher/consumer.
 ### Will Inventory be deprecated from Kptfile?
 
 Kpt still supports inventory in Kptfile and it is not required to migrate to the
-standalone resourcegroup-path. In fact, users who do not use STDIN in `kpt live apply`
+standalone rg-path. In fact, users who do not use STDIN in `kpt live apply`
 will still have inventory read from Kptfile by default unless the –inventory-path flag
 is given.
 
@@ -180,7 +227,7 @@ the ResourceGroup unintentionally (e.g. via kubectl apply).
 
 inventory.yaml
 ```yaml
-apiVersion: kpt.dev/v1betaX
+apiVersion: kpt.dev/v1
 kind: Inventory
 metadata:
   name: <INVENTORY_NAME>
@@ -205,7 +252,7 @@ inventoryID: <INVENTORY_ID>
 
 inventory.yaml
 ```yaml
-apiVersion: kpt.dev/v1betaX
+apiVersion: kpt.dev/v1
 kind: Inventory
 spec:
   resourceGroup:
