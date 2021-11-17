@@ -130,13 +130,79 @@ The `kpt pkg diff` command is identical to `kpt pkg update` in the way that `[PK
 
 ### Command additions
 
+Although it is possible to create and push an OCI image using a combination of commands like `tar` and `gcrane`, that
+doesn't provide a very complete end to end experience. Because kpt would already be built with the same OCI go module used 
+by `gcrane`, it is not difficult to support additional commands to move pull and push package contents from local folders
+to remote images and back.
+
 ### ` kpt pkg push`
 
-Summary TBD
+```
+Usage: kpt pkg push [DIR] --image={IMAGE[:TAG]}
+  DIR           Folder containing package root Kptfile. Default is current directory.
+  IMAGE[:TAG]   Name of image to push contents onto, with optional TAG to assign to resulting commit. Default TAG is `Latest`
+```
+
+This command will `tar` the contents of the package into a single image layer, and push it into the OCI repository. For
+Google Artifact Registry and Google Container Registry, the current `gcloud auth` SSO credentials are used.
 
 ### ` kpt pkg pull`
 
-Summary TBD
+```
+Usage: kpt pkg pull [DIR] --image={IMAGE[:TAG|@sha256:DIGEST]}
+  DIR                         Destination folder for image contents. Default folder name is the last part of the IMAGE path.
+  IMAGE[:TAG|@sha256:DIGEST]  Name of image to pull contents from, with optional TAG or DIGEST. Default TAG is `Latest`
+```
+
+This command is the reverse of push. An image can be pulled from a repository to a local folder, modified, and pushed
+back to the same location, same location with different TAG, or entirely different location.
+
+### Alternatives to push/pull
+
+There are several ways that pull and push could appear as commands. Those two names are very conventional, but 
+alternatives to consider could be:
+
+### `kpt pkg copy`
+
+```
+Usage: kpt pkg copy {SOURCE} {DEST}
+  SOURCE  Package source location: a local DIR, or `oci://` image, or git repo and path
+  DEST    Package destination: a local DIR, or `oci://` image.
+```
+
+Puts a copy of the SOURCE package at the DEST location. The package contents would be entirely unchanged by this operation (unlike `kpt pkg get`).
+
+To pull from remote image to local folder:
+
+```
+kpt pkg copy \
+  oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package:v14 \
+  the-package
+```
+
+To push from local folder to new remote image tag:
+
+```
+kpt pkg copy \
+  the-package \
+  oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package:v15
+```
+ 
+To copy a package image from one OCI repo to another:
+
+```
+kpt pkg copy \
+  oci://us-docker.pkg.dev/the-project-id/dev-blueprints/the-package:v25 \
+  oci://us-docker.pkg.dev/the-project-id/prod-blueprints/the-package:v25
+```
+
+To copy a package from a git location to an OCI repo:
+
+```
+kpt pkg copy \
+  https://github.com/GoogleCloudPlatform/blueprints.git/catalog/gke@main \
+  oci://us-docker.pkg.dev/the-project-id/gcp-catalog/gke:latest
+```
 
 ## User Guide
 
