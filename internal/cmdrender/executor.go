@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -426,13 +427,43 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if err != nil {
 			return err
 		}
+		var validator kio.Filter
 		displayResourceCount := false
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-		if err != nil {
-			return err
+		if fn.Image != "" {
+			fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
+			validator, err = fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+			if err != nil {
+				return err
+			}
+		} else {
+			fnResult := &fnresult.Result{
+				// TODO(droot): This is required for making structured results subpackage aware.
+				// Enable this once test harness supports filepath based assertions.
+				// Pkg: string(r.uniquePath),
+				ExecPath: fn.Exec,
+			}
+			fnConfig, err := fnruntime.FnConfig(&fn, pn.pkg.UniquePath)
+			if err != nil {
+				return err
+			}
+			// assuming exec here
+			e := &fnruntime.ExecFn{
+				Path:     fn.Exec,
+				FnResult: fnResult,
+			}
+			fltr := &runtimeutil.FunctionFilter{
+				Run:            e.Run,
+				FunctionConfig: fnConfig,
+				// DeferFailure:   spec.DeferFailure,
+			}
+
+			validator, err = fnruntime.NewFunctionRunner(ctx, fltr, "", fnResult, hctx.fnResults, false, displayResourceCount)
+			if err != nil {
+				return err
+			}
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			return err
@@ -527,17 +558,47 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
+		var err error
+		var runner kio.Filter
 		fn := fns[i]
-		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
 		displayResourceCount := false
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-		if err != nil {
-			return nil, err
+		if fn.Image != "" {
+			fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
+			runner, err = fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			fnResult := &fnresult.Result{
+				// TODO(droot): This is required for making structured results subpackage aware.
+				// Enable this once test harness supports filepath based assertions.
+				// Pkg: string(r.uniquePath),
+				ExecPath: fn.Exec,
+			}
+			fnConfig, err := fnruntime.FnConfig(&fn, pkgPath)
+			if err != nil {
+				return nil, err
+			}
+			// assuming exec here
+			e := &fnruntime.ExecFn{
+				Path:     fn.Exec,
+				FnResult: fnResult,
+			}
+			fltr := &runtimeutil.FunctionFilter{
+				Run:            e.Run,
+				FunctionConfig: fnConfig,
+				// DeferFailure:   spec.DeferFailure,
+			}
+
+			runner, err = fnruntime.NewFunctionRunner(ctx, fltr, "", fnResult, hctx.fnResults, false, displayResourceCount)
+			if err != nil {
+				return nil, err
+			}
 		}
-		runners = append(runners, r)
+		runners = append(runners, runner)
 	}
 	return runners, nil
 }

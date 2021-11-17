@@ -67,6 +67,7 @@ func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 }
 
 func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
+	return nil
 	err := ValidateFunctionImageURL(f.Image)
 	if err != nil {
 		return &ValidateError{

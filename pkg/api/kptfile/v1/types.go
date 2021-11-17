@@ -268,6 +268,10 @@ type Function struct {
 	//	image: set-labels
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
+	// Exec specifies the function binary executable.
+	// The executable needs to be in the $PATH.
+	Exec string `yaml:"exec,omitempty" json:"exec,omitempty"`
+
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a KRM resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on
