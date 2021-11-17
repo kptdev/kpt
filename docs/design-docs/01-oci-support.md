@@ -100,11 +100,25 @@ kpt pkg get oci://us-docker.pkg.dev/the-project-id/the-repo-name/the-package//si
 
 The command for update is not changed, but when the `upstream` is `oci` then the `@VERSION` is used to change the `upstream` image's `tag` or `digest` value.
 
-`kpt pkg update @v14` and `kpt pkg update DIR@v14` will assign `:v14` as the new upstream image tag.
+To update to an image tag, `kpt pkg update @v14` and `kpt pkg update DIR@v14` will assign the `:v14` tag onto the upstream image.
 
-`kpt pkg update @sha256:xxxxx` and `kpt pkg update DIR@sha256:xxxxx` will assign `@sha256:xxxxx` as the new upstream image digest.
+```yaml
+upstream:
+  type: oci
+  oci:
+    image: us-docker.pkg.dev/the-project-id/the-repo-name/the-package:v14
+```
 
-`kpt pkg update` and `kpt pkg update DIR` use the currently defined `upstream` image tag or digest unchanged.
+To update to an upstream digest, `kpt pkg update @sha256:{SHA256_HEX}` and `kpt pkg update DIR@sha256:{SHA256_HEX}` will assign `@sha256:{SHA256_HEX}` as the new upstream image digest.
+
+```yaml
+upstream:
+  type: oci
+  oci:
+    image: us-docker.pkg.dev/the-project-id/the-repo-name/the-package@sha256:8815143a333cb9d2cb341f10b984b22f3b8a99fe
+```
+
+Calling `kpt pkg update` and `kpt pkg update DIR` will perform an update without changing the upstream image name.
 
 At that point, if the `upstream` is an `image:tag` that is to discover the current `image:digest` for tag, otherwise the `upstream` value for `image:digest` is used. In either case, the `upstreamLock` is changed to point at that new `image:digest`. 
 
