@@ -70,4 +70,17 @@ here as well as citing *why* you decided not to pursue those paths.
 ### \<Approach\>
 
 Links and description of the approach, the pros and cons identified during the 
-design. 
+design.
+
+# Review Process
+
+Design doc creators should raise the pull request similar to [this](https://github.com/GoogleContainerTools/kpt/pull/2576).
+Reviewers are auto-assigned to review the PR. Optionally, doc owner can mention any
+specific reviewers on the PR description. The turn around time for each review cycle
+on the PR from kpt maintainers is 1-2 days. After maintainers add comments to the PR,
+doc owner should respond to each of those comments and hit `Resolve conversation` button on the 
+comment thread. Once all the comments are resolved, design doc creator should hit `Re-request review`
+icon next to each reviewers' avatar in reviewers section. Reviewers will then be notified and, they will go through the
+resolved comments and might reopen the comment threads, and the cycle continues.
+Once all the reviewers approve the PR, it will be merged by the maintainers.
+Any design doc PRs which are not attended by the doc creators for more than 2 weeks will be closed.
