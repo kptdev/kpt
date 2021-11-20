@@ -132,7 +132,7 @@ func nonKptfileEquals(s1, s2 string) bool {
 	out2 := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s1)}},
-		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: addmetricsannotation.CNRMMetricsAnnotation})},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: usage.CNRMMetricsAnnotation})},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out1}},
 	}.Execute()
 	if err != nil {
@@ -140,7 +140,7 @@ func nonKptfileEquals(s1, s2 string) bool {
 	}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s2)}},
-		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: addmetricsannotation.CNRMMetricsAnnotation})},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: usage.CNRMMetricsAnnotation})},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out2}},
 	}.Execute()
 	if err != nil {

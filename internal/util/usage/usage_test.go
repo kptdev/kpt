@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package addmetricsannotation
+package usage
 
 import (
 	"io/ioutil"
@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddMetadataComment(t *testing.T) {
+func TestUsageProcess(t *testing.T) {
 	var tests = []struct {
 		name     string
 		input    string

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package addmetricsannotation
+package usage
 
 import (
 	"fmt"
@@ -28,17 +28,17 @@ const (
 	DisableKptMetricsEnvVariable = "DISABLE_KPT_METRICS"
 )
 
-// AddMetricsAnnotation adds metrics annotation to track the usage the of kpt
-type AddMetricsAnnotation struct {
+// Tracker is used to track the usage the of kpt
+type Tracker struct {
 	// Group is the command group e.g., pkg, fn, live
 	Group string
 }
 
-// Process invokes AddMetricsAnnotation kyaml filter on the resources in input packages paths
+// Process invokes Tracker kyaml filter on the resources in input packages paths
 func Process(group string, paths ...string) error {
 	for _, path := range paths {
 		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
-		ama := &AddMetricsAnnotation{Group: group}
+		ama := &Tracker{Group: group}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},
 			Filters: []kio.Filter{kio.FilterAll(ama)},
@@ -57,7 +57,7 @@ func Process(group string, paths ...string) error {
 // this filter adds "cnrm.cloud.google.com/blueprint" annotation to the resource
 // if the annotation is already present, it appends kpt-<group> suffix
 // it uses "default" namespace
-func (ama *AddMetricsAnnotation) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
+func (ama *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 	// users can opt-out by setting the "DISABLE_KPT_METRICS" environment variable
 	if os.Getenv(DisableKptMetricsEnvVariable) != "" {
 		return object, nil

@@ -177,7 +177,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	// add metrics annotation to package resources to track the usage as the resources
 	// will be applied using kpt live group
-	_ = addmetricsannotation.Process("live", c.Pkg.UniquePath.String())
+	_ = usage.Process("live", c.Pkg.UniquePath.String())
 	return nil
 }
 

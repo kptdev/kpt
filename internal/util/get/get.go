@@ -100,7 +100,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	_ = addmergecomment.Process(c.Destination)
-	_ = addmetricsannotation.Process("pkg", c.Destination)
+	_ = usage.Process("pkg", c.Destination)
 	return nil
 }
 
