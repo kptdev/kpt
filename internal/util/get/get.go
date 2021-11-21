@@ -29,9 +29,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmetricsannotation"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
+	"github.com/GoogleContainerTools/kpt/internal/util/usage"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
@@ -100,7 +100,8 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	_ = addmergecomment.Process(c.Destination)
-	_ = usage.Process("pkg", c.Destination)
+	t := usage.Tracker{PackagePaths: []string{"c.Destination"}}
+	t.TrackAction("pkg")
 	return nil
 }
 

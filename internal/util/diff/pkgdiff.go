@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmetricsannotation"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/usage"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"

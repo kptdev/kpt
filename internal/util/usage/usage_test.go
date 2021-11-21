@@ -220,26 +220,15 @@ metadata:
 			}
 
 			if test.disable {
-				err = os.Setenv("DISABLE_KPT_METRICS", "true")
+				err = os.Setenv("KPT_DISABLE_USAGE_TRACKING", "true")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				defer os.Setenv("DISABLE_KPT_METRICS", "")
+				defer os.Setenv("KPT_DISABLE_USAGE_TRACKING", "")
 			}
 
-			err = Process(test.group, baseDir)
-			if test.errMsg != "" {
-				if !assert.NotNil(t, err) {
-					t.FailNow()
-				}
-				if !assert.Contains(t, err.Error(), test.errMsg) {
-					t.FailNow()
-				}
-			}
-
-			if test.errMsg == "" && !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			tr := Tracker{PackagePaths: []string{baseDir}}
+			tr.TrackAction(test.group)
 
 			actualResources, err := ioutil.ReadFile(r.Name())
 			if !assert.NoError(t, err) {

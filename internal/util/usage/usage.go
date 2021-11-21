@@ -24,45 +24,52 @@ import (
 )
 
 const (
-	CNRMMetricsAnnotation        = "cnrm.cloud.google.com/blueprint"
-	DisableKptMetricsEnvVariable = "DISABLE_KPT_METRICS"
+	CNRMMetricsAnnotation              = "cnrm.cloud.google.com/blueprint"
+	DisableKptUsageTrackingEnvVariable = "KPT_DISABLE_USAGE_TRACKING"
 )
 
 // Tracker is used to track the usage the of kpt
 type Tracker struct {
-	// Group is the command group e.g., pkg, fn, live
-	Group string
+	// PackagePaths is the package paths to be tracked for usage
+	PackagePaths []string
+
+	Resources []*kyaml.RNode
+
+	cmdGroup string
 }
 
-// Process invokes Tracker kyaml filter on the resources in input packages paths
-func Process(group string, paths ...string) error {
-	for _, path := range paths {
+// TrackAction invokes Tracker kyaml filter on the resources in input packages paths
+func (t *Tracker) TrackAction(cmdGroup string) {
+	// users can opt-out by setting the "KPT_DISABLE_USAGE_TRACKING" environment variable
+	if os.Getenv(DisableKptUsageTrackingEnvVariable) != "" {
+		return
+	}
+
+	t.cmdGroup = cmdGroup
+	for _, path := range t.PackagePaths {
 		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
-		ama := &Tracker{Group: group}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},
-			Filters: []kio.Filter{kio.FilterAll(ama)},
+			Filters: []kio.Filter{kio.FilterAll(t)},
 			Outputs: []kio.Writer{inout},
 		}.Execute()
 		if err != nil {
 			// this should be a best effort, do not error if this step fails
 			// https://github.com/GoogleContainerTools/kpt/issues/2559
-			return nil
+			return
 		}
 	}
-	return nil
+
+	for _, resource := range t.Resources {
+		_, _ = t.Filter(resource)
+	}
 }
 
 // Filter implements kyaml.Filter
 // this filter adds "cnrm.cloud.google.com/blueprint" annotation to the resource
 // if the annotation is already present, it appends kpt-<group> suffix
 // it uses "default" namespace
-func (ama *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
-	// users can opt-out by setting the "DISABLE_KPT_METRICS" environment variable
-	if os.Getenv(DisableKptMetricsEnvVariable) != "" {
-		return object, nil
-	}
-
+func (t *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 	// add this annotation to only KCC resource types
 	if !strings.Contains(object.GetApiVersion(), ".cnrm.") {
 		return object, nil
@@ -74,15 +81,15 @@ func (ama *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 		// skip adding merge comment if empty metadata
 		return object, nil
 	}
-	if _, err := object.Pipe(kyaml.SetAnnotation(CNRMMetricsAnnotation, appendGroup(curAnnoVal, ama.Group))); err != nil {
+	if _, err := object.Pipe(kyaml.SetAnnotation(CNRMMetricsAnnotation, recordAction(curAnnoVal, t.cmdGroup))); err != nil {
 		return object, nil
 	}
 	return object, nil
 }
 
-// appendGroup appends the input group to the annotation to track the usage
+// recordAction appends the input group to the annotation to track the usage
 // if the group is already present, then it is no-op
-func appendGroup(curAnnoVal, group string) string {
+func recordAction(curAnnoVal, group string) string {
 	if curAnnoVal == "" {
 		return fmt.Sprintf("kpt-%s", group)
 	}
@@ -90,21 +97,28 @@ func appendGroup(curAnnoVal, group string) string {
 		// just append the value
 		return fmt.Sprintf("%s,kpt-%s", curAnnoVal, group)
 	}
-	parts := strings.Split(curAnnoVal, ",")
-	val := "kpt"
-	for i, part := range parts {
-		if strings.Contains(part, "kpt") {
-			if strings.Contains(part, "pkg") || group == "pkg" {
-				val += "-pkg"
+	// we want to extract the current kpt part from the annotation
+	// value and make sure that the input group is added
+	// e.g. curAnnoVal: cnrm/landing-zone:networking/v0.4.0,kpt-pkg,blueprints_controller
+	curAnnoParts := strings.Split(curAnnoVal, ",")
+
+	// form the new kpt part value
+	newKptPart := "kpt"
+
+	for i, curAnnoPart := range curAnnoParts {
+		if strings.Contains(curAnnoPart, "kpt") {
+			if strings.Contains(curAnnoPart, "pkg") || group == "pkg" {
+				newKptPart += "-pkg"
 			}
-			if strings.Contains(part, "fn") || group == "fn" {
-				val += "-fn"
+			if strings.Contains(curAnnoPart, "fn") || group == "fn" {
+				newKptPart += "-fn"
 			}
-			if strings.Contains(part, "live") || group == "live" {
-				val += "-live"
+			if strings.Contains(curAnnoPart, "live") || group == "live" {
+				newKptPart += "-live"
 			}
-			parts[i] = val
+			// replace the kpt part with the newly formed part
+			curAnnoParts[i] = newKptPart
 		}
 	}
-	return strings.Join(parts, ",")
+	return strings.Join(curAnnoParts, ",")
 }
