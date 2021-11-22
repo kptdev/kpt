@@ -49,6 +49,9 @@ func NewRunner(
 	if err != nil {
 		return nil, err
 	}
+	if f.Image != "" {
+		f.Image = AddDefaultImagePathPrefix(f.Image)
+	}
 
 	fnResult := &fnresult.Result{
 		Image:    f.Image,
@@ -60,9 +63,7 @@ func NewRunner(
 
 	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
 	switch {
-
 	case f.Image != "":
-		f.Image = AddDefaultImagePathPrefix(f.Image)
 		cfn := &ContainerFn{
 			Path:            pkgPath,
 			Image:           f.Image,
