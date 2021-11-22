@@ -38,7 +38,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
+var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
 // Executor hydrates a given pkg.
 type Executor struct {
