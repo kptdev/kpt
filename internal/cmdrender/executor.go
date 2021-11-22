@@ -31,7 +31,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -44,6 +43,7 @@ type Executor struct {
 	ResultsDirPath  string
 	Output          io.Writer
 	ImagePullPolicy fnruntime.ImagePullPolicy
+	AllowExec       bool
 }
 
 // Execute runs a pipeline.
@@ -63,6 +63,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		pkgs:            map[types.UniquePath]*pkgNode{},
 		fnResults:       fnresult.NewResultList(),
 		imagePullPolicy: e.ImagePullPolicy,
+		allowExec:       e.AllowExec,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -163,6 +164,11 @@ type hydrationContext struct {
 
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// allowExec determines if function binary executable are allowed
+	// to be run during pipeline execution. Running function binaries is a
+	// privileged operation, so explicit permission is required.
+	allowExec bool
 }
 
 //
@@ -439,28 +445,10 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 				return err
 			}
 		} else {
-			fnResult := &fnresult.Result{
-				// TODO(droot): This is required for making structured results subpackage aware.
-				// Enable this once test harness supports filepath based assertions.
-				// Pkg: string(r.uniquePath),
-				ExecPath: fn.Exec,
+			if !hctx.allowExec {
+				return fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
 			}
-			fnConfig, err := fnruntime.FnConfig(&fn, pn.pkg.UniquePath)
-			if err != nil {
-				return err
-			}
-			// assuming exec here
-			e := &fnruntime.ExecFn{
-				Path:     fn.Exec,
-				FnResult: fnResult,
-			}
-			fltr := &runtimeutil.FunctionFilter{
-				Run:            e.Run,
-				FunctionConfig: fnConfig,
-				// DeferFailure:   spec.DeferFailure,
-			}
-
-			validator, err = fnruntime.NewFunctionRunner(ctx, fltr, "", fnResult, hctx.fnResults, false, displayResourceCount)
+			validator, err = fnruntime.NewExecRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 			if err != nil {
 				return err
 			}
@@ -572,28 +560,10 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 				return nil, err
 			}
 		} else {
-			fnResult := &fnresult.Result{
-				// TODO(droot): This is required for making structured results subpackage aware.
-				// Enable this once test harness supports filepath based assertions.
-				// Pkg: string(r.uniquePath),
-				ExecPath: fn.Exec,
+			if !hctx.allowExec {
+				return nil, fmt.Errorf("must run with `--allow-exec` to allow running function binaries.")
 			}
-			fnConfig, err := fnruntime.FnConfig(&fn, pkgPath)
-			if err != nil {
-				return nil, err
-			}
-			// assuming exec here
-			e := &fnruntime.ExecFn{
-				Path:     fn.Exec,
-				FnResult: fnResult,
-			}
-			fltr := &runtimeutil.FunctionFilter{
-				Run:            e.Run,
-				FunctionConfig: fnConfig,
-				// DeferFailure:   spec.DeferFailure,
-			}
-
-			runner, err = fnruntime.NewFunctionRunner(ctx, fltr, "", fnResult, hctx.fnResults, false, displayResourceCount)
+			runner, err = fnruntime.NewExecRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 			if err != nil {
 				return nil, err
 			}

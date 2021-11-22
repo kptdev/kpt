@@ -269,7 +269,10 @@ type Function struct {
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
 	// Exec specifies the function binary executable.
-	// The executable needs to be in the $PATH.
+	// The executable can be fully qualified or it must exists in the $PATH e.g:
+	//
+	// 	 exec: set-namespace
+	// 	 exec: /usr/local/bin/my-custom-fn
 	Exec string `yaml:"exec,omitempty" json:"exec,omitempty"`
 
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
