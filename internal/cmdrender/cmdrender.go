@@ -101,12 +101,6 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
-	// TODO(droot): check for docker availability only if the pipeline
-	// uses container functions.
-	err := cmdutil.DockerCmdAvailable()
-	if err != nil {
-		return err
-	}
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {
@@ -121,8 +115,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
 		AllowExec:       r.allowExec,
 	}
-	err = executor.Execute(r.ctx)
-	if err != nil {
+	if err := executor.Execute(r.ctx); err != nil {
 		return err
 	}
 

@@ -70,13 +70,13 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: "must specifiy a functon (`image` or `exec`) to execute",
+			Reason: "must specify a functon (`image` or `exec`) to execute",
 		}
 	}
 	if f.Image != "" && f.Exec != "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
-			Reason: "must not specifiy both `image` and `exec` at the same time",
+			Reason: "must not specify both `image` and `exec` at the same time",
 		}
 	}
 	if f.Image != "" {

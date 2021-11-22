@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -37,7 +38,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var execNotAllowedErr error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
+var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
 
 // Executor hydrates a given pkg.
 type Executor struct {
@@ -171,6 +172,10 @@ type hydrationContext struct {
 	// to be run during pipeline execution. Running function binaries is a
 	// privileged operation, so explicit permission is required.
 	allowExec bool
+
+	// bookkeeping to ensure docker command availability check is done once
+	// during rendering
+	dockerCheckDone bool
 }
 
 //
@@ -441,7 +446,14 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			displayResourceCount = true
 		}
 		if fn.Exec != "" && !hctx.allowExec {
-			return execNotAllowedErr
+			return errAllowedExecNotSpecified
+		}
+		if fn.Image != "" && !hctx.dockerCheckDone {
+			err := cmdutil.DockerCmdAvailable()
+			if err != nil {
+				return err
+			}
+			hctx.dockerCheckDone = true
 		}
 		validator, err = fnruntime.NewRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
@@ -548,7 +560,14 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			displayResourceCount = true
 		}
 		if fn.Exec != "" && !hctx.allowExec {
-			return nil, execNotAllowedErr
+			return nil, errAllowedExecNotSpecified
+		}
+		if fn.Image != "" && !hctx.dockerCheckDone {
+			err := cmdutil.DockerCmdAvailable()
+			if err != nil {
+				return nil, err
+			}
+			hctx.dockerCheckDone = true
 		}
 		runner, err = fnruntime.NewRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {

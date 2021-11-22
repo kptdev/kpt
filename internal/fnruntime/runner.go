@@ -59,7 +59,9 @@ func NewRunner(
 	}
 
 	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
-	if f.Image != "" {
+	switch {
+
+	case f.Image != "":
 		f.Image = AddDefaultImagePathPrefix(f.Image)
 		cfn := &ContainerFn{
 			Path:            pkgPath,
@@ -69,14 +71,14 @@ func NewRunner(
 			FnResult:        fnResult,
 		}
 		fltr.Run = cfn.Run
-	} else if f.Exec != "" {
+	case f.Exec != "":
 		// assuming exec here
 		eFn := &ExecFn{
 			Path:     f.Exec,
 			FnResult: fnResult,
 		}
 		fltr.Run = eFn.Run
-	} else {
+	default:
 		return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 	}
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
