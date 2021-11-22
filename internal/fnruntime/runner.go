@@ -38,64 +38,48 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// NewContainerRunner returns a kio.Filter given a specification of a container function
+// NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func NewContainerRunner(
+func NewRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy, displayResourceCount bool) (kio.Filter, error) {
+
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
 
 	fnResult := &fnresult.Result{
-		Image: f.Image,
+		Image:    f.Image,
+		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	cfn := &ContainerFn{
-		Path:            pkgPath,
-		Image:           f.Image,
-		ImagePullPolicy: imagePullPolicy,
-		Ctx:             ctx,
-		FnResult:        fnResult,
-	}
-	fltr := &runtimeutil.FunctionFilter{
-		Run:            cfn.Run,
-		FunctionConfig: config,
+
+	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
+	if f.Image != "" {
+		f.Image = AddDefaultImagePathPrefix(f.Image)
+		cfn := &ContainerFn{
+			Path:            pkgPath,
+			Image:           f.Image,
+			ImagePullPolicy: imagePullPolicy,
+			Ctx:             ctx,
+			FnResult:        fnResult,
+		}
+		fltr.Run = cfn.Run
+	} else if f.Exec != "" {
+		// assuming exec here
+		eFn := &ExecFn{
+			Path:     f.Exec,
+			FnResult: fnResult,
+		}
+		fltr.Run = eFn.Run
+	} else {
+		return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 	}
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
-}
-
-// NewExecRunner returns a kio.Filter given a specification of a exec function and it's config.
-func NewExecRunner(
-	ctx context.Context, f *kptfilev1.Function,
-	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, displayResourceCount bool) (kio.Filter, error) {
-
-	fnResult := &fnresult.Result{
-		// TODO(droot): This is required for making structured results subpackage aware.
-		// Enable this once test harness supports filepath based assertions.
-		// Pkg: string(r.uniquePath),
-		ExecPath: f.Exec,
-	}
-	fnConfig, err := newFnConfig(f, pkgPath)
-	if err != nil {
-		return nil, err
-	}
-	// assuming exec here
-	e := &ExecFn{
-		Path:     f.Exec,
-		FnResult: fnResult,
-	}
-	fltr := &runtimeutil.FunctionFilter{
-		Run:            e.Run,
-		FunctionConfig: fnConfig,
-		// DeferFailure:   spec.DeferFailure,
-	}
-	return NewFunctionRunner(ctx, fltr, "", fnResult, fnResults, false, displayResourceCount)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function

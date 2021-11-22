@@ -37,6 +37,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var execNotAllowedErr error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
+
 // Executor hydrates a given pkg.
 type Executor struct {
 	PkgPath         string
@@ -438,20 +440,12 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		if fn.Image != "" {
-			fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
-			validator, err = fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-			if err != nil {
-				return err
-			}
-		} else {
-			if !hctx.allowExec {
-				return fmt.Errorf("must run with `--allow-exec` option to allow running function binaries.")
-			}
-			validator, err = fnruntime.NewExecRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-			if err != nil {
-				return err
-			}
+		if fn.Exec != "" && !hctx.allowExec {
+			return execNotAllowedErr
+		}
+		validator, err = fnruntime.NewRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if err != nil {
+			return err
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
 			return err
@@ -553,20 +547,12 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		if fn.Image != "" {
-			fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
-			runner, err = fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			if !hctx.allowExec {
-				return nil, fmt.Errorf("must run with `--allow-exec` to allow running function binaries.")
-			}
-			runner, err = fnruntime.NewExecRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
-			if err != nil {
-				return nil, err
-			}
+		if fn.Exec != "" && !hctx.allowExec {
+			return nil, execNotAllowedErr
+		}
+		runner, err = fnruntime.NewRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if err != nil {
+			return nil, err
 		}
 		runners = append(runners, runner)
 	}
