@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/shlex"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -51,6 +52,15 @@ func NewRunner(
 	}
 	if f.Image != "" {
 		f.Image = AddDefaultImagePathPrefix(f.Image)
+	} else {
+		s, err := shlex.Split(f.Exec)
+		if err != nil {
+			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+		}
+		if len(s) > 0 {
+			f.Exec = s[0]
+			f.ExecArgs = s[1:]
+		}
 	}
 
 	fnResult := &fnresult.Result{
@@ -76,6 +86,7 @@ func NewRunner(
 		// assuming exec here
 		eFn := &ExecFn{
 			Path:     f.Exec,
+			Args:     f.ExecArgs,
 			FnResult: fnResult,
 		}
 		fltr.Run = eFn.Run
