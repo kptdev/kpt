@@ -42,7 +42,7 @@ var TypeMeta = yaml.ResourceMeta{
 // KptFile contains information about a package managed with kpt.
 // swagger:model kptfile
 type KptFile struct {
-	yaml.ResourceMeta `yaml:",inline"`
+	yaml.ResourceMeta `yaml:",inline" json:",inline"`
 
 	Upstream *Upstream `yaml:"upstream,omitempty" json:"upstream,omitempty"`
 
