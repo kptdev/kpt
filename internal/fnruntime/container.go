@@ -209,7 +209,7 @@ func (e *ContainerImageError) Error() string {
 
 // filterDockerCLIOutput filters out docker CLI messages
 // from the given buffer.
-func filterDockerCLIOutput(in *bytes.Buffer) string {
+func filterDockerCLIOutput(in io.Reader) string {
 	out := strings.Builder{}
 
 	s := bufio.NewScanner(in)
