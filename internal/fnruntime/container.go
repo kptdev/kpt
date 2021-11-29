@@ -15,6 +15,7 @@
 package fnruntime
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	goerrors "errors"
@@ -34,11 +35,10 @@ import (
 type containerNetworkName string
 
 const (
-	networkNameNone     containerNetworkName = "none"
-	networkNameHost     containerNetworkName = "host"
-	defaultLongTimeout  time.Duration        = 5 * time.Minute
-	defaultShortTimeout time.Duration        = 5 * time.Second
-	dockerBin           string               = "docker"
+	networkNameNone    containerNetworkName = "none"
+	networkNameHost    containerNetworkName = "host"
+	defaultLongTimeout time.Duration        = 5 * time.Minute
+	dockerBin          string               = "docker"
 
 	AlwaysPull       ImagePullPolicy = "Always"
 	IfNotPresentPull ImagePullPolicy = "IfNotPresent"
@@ -98,7 +98,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
-				Stderr:         filteredString(errSink),
+				Stderr:         filterDockerCLIOutput(&errSink),
 				TruncateOutput: printer.TruncateOutput,
 			}
 		}
@@ -207,19 +207,26 @@ func (e *ContainerImageError) Error() string {
     "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
 */
 
-func filteredString(b bytes.Buffer) string {
-	origStr := b.String()
-	bb := strings.Builder{}
+// filterDockerCLIOutput filters out docker CLI messages
+// from the given buffer.
+func filterDockerCLIOutput(in *bytes.Buffer) string {
+	out := strings.Builder{}
 
-	for _, s := range strings.Split(origStr, "\n") {
-		if !isDockerProgressMsg(s) {
-			bb.WriteString(s)
-			bb.WriteString("\n")
+	s := bufio.NewScanner(in)
+
+	for s.Scan() {
+		txt := s.Text()
+		if !isdockerCLIoutput(txt) {
+			out.WriteString(txt)
+			out.WriteString("\n")
 		}
 	}
-	return bb.String()
+	return out.String()
 }
-func isDockerProgressMsg(s string) bool {
+
+// isdockerCLIoutput is helper method to determine if
+// the given string is a docker CLI output message.
+func isdockerCLIoutput(s string) bool {
 	if strings.Contains(s, "Already exists") ||
 		strings.Contains(s, "Pulling fs layer") ||
 		strings.Contains(s, "Verifying Checksum") ||
