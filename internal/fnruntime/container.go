@@ -85,13 +85,6 @@ type ContainerFn struct {
 // It reads the input from the given reader and writes the output
 // to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
-	// check and pull image before running to avoid polluting CLI
-	// output
-	err := f.prepareImage()
-	if err != nil {
-		return err
-	}
-
 	errSink := bytes.Buffer{}
 	cmd, cancel := f.getDockerCmd()
 	defer cancel()
@@ -105,7 +98,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
-				Stderr:         errSink.String(),
+				Stderr:         filteredString(errSink),
 				TruncateOutput: printer.TruncateOutput,
 			}
 		}
@@ -135,8 +128,15 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
-	if f.ImagePullPolicy == NeverPull {
+	switch f.ImagePullPolicy {
+	case NeverPull:
 		args = append(args, "--pull", "never")
+	case AlwaysPull:
+		args = append(args, "--pull", "pull")
+	case IfNotPresentPull:
+		args = append(args, "--pull", "missing")
+	default:
+		args = append(args, "--pull", "missing")
 	}
 	for _, storageMount := range f.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
@@ -173,62 +173,6 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	return ce
 }
 
-// prepareImage will check local images and pull it if it doesn't
-// exist.
-func (f *ContainerFn) prepareImage() error {
-	// If ImagePullPolicy is set to "never", we don't need to do anything here.
-	if f.ImagePullPolicy == NeverPull {
-		return nil
-	}
-
-	// If ImagePullPolicy is set to "ifNotPresent", we scan the local images
-	// first. If there is a match, we just return. This can be useful for local
-	// development to prevent the remote image to accidentally override the
-	// local image when they use the same name and tag.
-	if f.ImagePullPolicy == IfNotPresentPull {
-		if foundInLocalCache := f.checkImageExistence(); foundInLocalCache {
-			return nil
-		}
-	}
-
-	// If ImagePullPolicy is set to always (which is the default), we will try
-	// to pull the image regardless if the tag has been seen in the local cache.
-	// This can help to ensure we have the latest release for "moving tags" like
-	// v1 and v1.2. The performance cost is very minimal, since `docker pull`
-	// checks the SHA first and only pull the missing docker layer(s).
-	args := []string{"image", "pull", f.Image}
-	// setup timeout
-	timeout := defaultLongTimeout
-	if f.Timeout != 0 {
-		timeout = f.Timeout
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, dockerBin, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return &ContainerImageError{
-			Image:  f.Image,
-			Output: string(output),
-		}
-	}
-	return nil
-}
-
-// checkImageExistence returns true if the image does exist in
-// local cache
-func (f *ContainerFn) checkImageExistence() bool {
-	args := []string{"image", "inspect", f.Image}
-	ctx, cancel := context.WithTimeout(context.Background(), defaultShortTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, dockerBin, args...)
-	if _, err := cmd.CombinedOutput(); err == nil {
-		// image exists locally
-		return true
-	}
-	return false
-}
-
 // AddDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
 func AddDefaultImagePathPrefix(image string) string {
 	if !strings.Contains(image, "/") {
@@ -249,4 +193,43 @@ func (e *ContainerImageError) Error() string {
 	return fmt.Sprintf(
 		"Error: Function image %q doesn't exist remotely. If you are developing new functions locally, you can choose to set the image pull policy to ifNotPresent or never.\n%v",
 		e.Image, e.Output)
+}
+
+/*
+	"Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally"
+    "v0.3: Pulling from kpt-fn/starlark"
+    "4e9f2cdf4387: Already exists"
+    "aafbf7df3ddf: Pulling fs layer"
+    "aafbf7df3ddf: Verifying Checksum"
+    "aafbf7df3ddf: Download complete"
+    "aafbf7df3ddf: Pull complete"
+    "Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a"
+    "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
+*/
+
+func filteredString(b bytes.Buffer) string {
+	origStr := b.String()
+	bb := strings.Builder{}
+
+	for _, s := range strings.Split(origStr, "\n") {
+		if !isDockerProgressMsg(s) {
+			bb.WriteString(s)
+			bb.WriteString("\n")
+		}
+	}
+	return bb.String()
+}
+func isDockerProgressMsg(s string) bool {
+	if strings.Contains(s, "Already exists") ||
+		strings.Contains(s, "Pulling fs layer") ||
+		strings.Contains(s, "Verifying Checksum") ||
+		strings.Contains(s, "Download complete") ||
+		strings.Contains(s, "Pulling from") ||
+		strings.Contains(s, "Pull complete") ||
+		strings.Contains(s, "Digest: sha256") ||
+		strings.Contains(s, "Status: Downloaded newer image") ||
+		strings.Contains(s, "Unable to find image") {
+		return true
+	}
+	return false
 }
