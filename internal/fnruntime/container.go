@@ -106,7 +106,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	}
 
 	if errSink.Len() > 0 {
-		f.FnResult.Stderr = errSink.String()
+		f.FnResult.Stderr = filterDockerCLIOutput(&errSink)
 	}
 	return nil
 }
