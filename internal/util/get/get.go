@@ -29,11 +29,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	"github.com/GoogleContainerTools/kpt/internal/util/usage"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 // Command fetches a package from a git repository, copies it to a local
@@ -99,9 +100,16 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	_ = addmergecomment.Process(c.Destination)
-	t := usage.Tracker{PackagePaths: []string{"c.Destination"}}
-	t.TrackAction("pkg")
+	inout := &kio.LocalPackageReadWriter{PackagePath: c.Destination, PreserveSeqIndent: true, WrapBareSeqNode: true}
+	amc := &addmergecomment.AddMergeComment{}
+	at := &attribution.Attribution{PackagePaths: []string{c.Destination}, CmdGroup: "pkg"}
+	// do not error out as this is best effort
+	_ = kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{kio.FilterAll(amc), kio.FilterAll(at)},
+		Outputs: []kio.Writer{inout},
+	}.Execute()
+
 	return nil
 }
 

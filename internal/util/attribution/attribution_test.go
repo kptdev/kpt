@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package usage
+package attribution
 
 import (
 	"io/ioutil"
@@ -220,16 +220,15 @@ metadata:
 			}
 
 			if test.disable {
-				err = os.Setenv("KPT_DISABLE_USAGE_TRACKING", "true")
+				err = os.Setenv("KPT_DISABLE_ATTRIBUTION", "true")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				defer os.Setenv("KPT_DISABLE_USAGE_TRACKING", "")
+				defer os.Setenv("KPT_DISABLE_ATTRIBUTION", "")
 			}
 
-			tr := Tracker{PackagePaths: []string{baseDir}}
-			tr.TrackAction(test.group)
-
+			a := Attribution{PackagePaths: []string{baseDir}, CmdGroup: test.group}
+			a.Process()
 			actualResources, err := ioutil.ReadFile(r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()

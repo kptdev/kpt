@@ -27,8 +27,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/usage"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -84,8 +84,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// add metrics annotation to output resources to track the usage as the resources
 	// are rendered by kpt fn group
-	t := usage.Tracker{Resources: hctx.root.resources}
-	t.TrackAction("fn")
+	at := attribution.Attribution{Resources: hctx.root.resources, CmdGroup: "fn"}
+	at.Process()
 
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place

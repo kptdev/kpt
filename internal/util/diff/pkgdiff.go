@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/usage"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -132,7 +132,7 @@ func nonKptfileEquals(s1, s2 string) bool {
 	out2 := &bytes.Buffer{}
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s1)}},
-		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: usage.CNRMMetricsAnnotation})},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: attribution.CNRMMetricsAnnotation})},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out1}},
 	}.Execute()
 	if err != nil {
@@ -140,7 +140,7 @@ func nonKptfileEquals(s1, s2 string) bool {
 	}
 	err = kio.Pipeline{
 		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s2)}},
-		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: usage.CNRMMetricsAnnotation})},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: attribution.CNRMMetricsAnnotation})},
 		Outputs: []kio.Writer{kio.ByteWriter{Writer: out2}},
 	}.Execute()
 	if err != nil {

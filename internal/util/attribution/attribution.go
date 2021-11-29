@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package usage
+package attribution
 
 import (
 	"fmt"
@@ -24,33 +24,38 @@ import (
 )
 
 const (
-	CNRMMetricsAnnotation              = "cnrm.cloud.google.com/blueprint"
-	DisableKptUsageTrackingEnvVariable = "KPT_DISABLE_USAGE_TRACKING"
+	CNRMMetricsAnnotation            = "cnrm.cloud.google.com/blueprint"
+	DisableKptAttributionEnvVariable = "KPT_DISABLE_ATTRIBUTION"
 )
 
-// Tracker is used to track the usage the of kpt
-type Tracker struct {
-	// PackagePaths is the package paths to be tracked for usage
+// Attribution is used to attribute the kpt action on resources
+type Attribution struct {
+	// PackagePaths is the package paths to add the attribution annotation
 	PackagePaths []string
 
+	// Resources to add the attribution annotation
 	Resources []*kyaml.RNode
 
-	cmdGroup string
+	// CmdGroup is the command groups in kpt, e.g., pkg, fn, live
+	CmdGroup string
 }
 
-// TrackAction invokes Tracker kyaml filter on the resources in input packages paths
-func (t *Tracker) TrackAction(cmdGroup string) {
-	// users can opt-out by setting the "KPT_DISABLE_USAGE_TRACKING" environment variable
-	if os.Getenv(DisableKptUsageTrackingEnvVariable) != "" {
+// Process invokes Attribution kyaml filter on the resources in input packages paths
+func (a *Attribution) Process() {
+	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
+	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
 		return
 	}
 
-	t.cmdGroup = cmdGroup
-	for _, path := range t.PackagePaths {
+	if a.CmdGroup == "" {
+		return
+	}
+
+	for _, path := range a.PackagePaths {
 		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},
-			Filters: []kio.Filter{kio.FilterAll(t)},
+			Filters: []kio.Filter{kio.FilterAll(a)},
 			Outputs: []kio.Writer{inout},
 		}.Execute()
 		if err != nil {
@@ -60,16 +65,21 @@ func (t *Tracker) TrackAction(cmdGroup string) {
 		}
 	}
 
-	for _, resource := range t.Resources {
-		_, _ = t.Filter(resource)
+	for _, resource := range a.Resources {
+		_, _ = a.Filter(resource)
 	}
 }
 
 // Filter implements kyaml.Filter
 // this filter adds "cnrm.cloud.google.com/blueprint" annotation to the resource
-// if the annotation is already present, it appends kpt-<group> suffix
+// if the annotation is already present, it appends kpt-<cmdGroup> suffix
 // it uses "default" namespace
-func (t *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
+func (a *Attribution) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
+	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
+	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
+		return object, nil
+	}
+
 	// add this annotation to only KCC resource types
 	if !strings.Contains(object.GetApiVersion(), ".cnrm.") {
 		return object, nil
@@ -81,43 +91,43 @@ func (t *Tracker) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 		// skip adding merge comment if empty metadata
 		return object, nil
 	}
-	if _, err := object.Pipe(kyaml.SetAnnotation(CNRMMetricsAnnotation, recordAction(curAnnoVal, t.cmdGroup))); err != nil {
+	if _, err := object.Pipe(kyaml.SetAnnotation(CNRMMetricsAnnotation, recordAction(curAnnoVal, a.CmdGroup))); err != nil {
 		return object, nil
 	}
 	return object, nil
 }
 
-// recordAction appends the input group to the annotation to track the usage
-// if the group is already present, then it is no-op
-func recordAction(curAnnoVal, group string) string {
+// recordAction appends the input cmdGroup to the annotation to attribute the usage
+// if the cmdGroup is already present, then it is no-op
+func recordAction(curAnnoVal, cmdGroup string) string {
 	if curAnnoVal == "" {
-		return fmt.Sprintf("kpt-%s", group)
+		return fmt.Sprintf("kpt-%s", cmdGroup)
 	}
 	if !strings.Contains(curAnnoVal, "kpt-") {
 		// just append the value
-		return fmt.Sprintf("%s,kpt-%s", curAnnoVal, group)
+		return fmt.Sprintf("%s,kpt-%s", curAnnoVal, cmdGroup)
 	}
 	// we want to extract the current kpt part from the annotation
-	// value and make sure that the input group is added
+	// value and make sure that the input cmdGroup is added
 	// e.g. curAnnoVal: cnrm/landing-zone:networking/v0.4.0,kpt-pkg,blueprints_controller
 	curAnnoParts := strings.Split(curAnnoVal, ",")
 
 	// form the new kpt part value
-	newKptPart := "kpt"
+	newKptPart := []string{"kpt"}
 
 	for i, curAnnoPart := range curAnnoParts {
 		if strings.Contains(curAnnoPart, "kpt") {
-			if strings.Contains(curAnnoPart, "pkg") || group == "pkg" {
-				newKptPart += "-pkg"
+			if strings.Contains(curAnnoPart, "pkg") || cmdGroup == "pkg" {
+				newKptPart = append(newKptPart, "pkg")
 			}
-			if strings.Contains(curAnnoPart, "fn") || group == "fn" {
-				newKptPart += "-fn"
+			if strings.Contains(curAnnoPart, "fn") || cmdGroup == "fn" {
+				newKptPart = append(newKptPart, "fn")
 			}
-			if strings.Contains(curAnnoPart, "live") || group == "live" {
-				newKptPart += "-live"
+			if strings.Contains(curAnnoPart, "live") || cmdGroup == "live" {
+				newKptPart = append(newKptPart, "live")
 			}
 			// replace the kpt part with the newly formed part
-			curAnnoParts[i] = newKptPart
+			curAnnoParts[i] = strings.Join(newKptPart, "-")
 		}
 	}
 	return strings.Join(curAnnoParts, ",")
