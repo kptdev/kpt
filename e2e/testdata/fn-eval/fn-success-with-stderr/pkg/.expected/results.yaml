@@ -5,6 +5,5 @@ metadata:
 exitCode: 0
 items:
   - image: gcr.io/kpt-fn/starlark:v0.2
-    stderr: |
-      function succeeded, reporting it on stderr
+    stderr: function succeeded, reporting it on stderr
     exitCode: 0
