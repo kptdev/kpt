@@ -195,18 +195,6 @@ func (e *ContainerImageError) Error() string {
 		e.Image, e.Output)
 }
 
-/*
-	"Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally"
-    "v0.3: Pulling from kpt-fn/starlark"
-    "4e9f2cdf4387: Already exists"
-    "aafbf7df3ddf: Pulling fs layer"
-    "aafbf7df3ddf: Verifying Checksum"
-    "aafbf7df3ddf: Download complete"
-    "aafbf7df3ddf: Pull complete"
-    "Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a"
-    "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
-*/
-
 // filterDockerCLIOutput filters out docker CLI messages
 // from the given buffer.
 func filterDockerCLIOutput(in io.Reader) string {
@@ -224,12 +212,25 @@ func filterDockerCLIOutput(in io.Reader) string {
 
 // isdockerCLIoutput is helper method to determine if
 // the given string is a docker CLI output message.
+// Example docker output:
+//	"Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally"
+//  "v0.3: Pulling from kpt-fn/starlark"
+//  "4e9f2cdf4387: Already exists"
+//  "aafbf7df3ddf: Pulling fs layer"
+//  "aafbf7df3ddf: Verifying Checksum"
+//  "aafbf7df3ddf: Download complete"
+//  "6b759ab96cb2: Waiting"
+//  "aafbf7df3ddf: Pull complete"
+//  "Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a"
+//  "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
+//
 func isdockerCLIoutput(s string) bool {
 	if strings.Contains(s, "Already exists") ||
 		strings.Contains(s, "Pulling fs layer") ||
 		strings.Contains(s, "Verifying Checksum") ||
 		strings.Contains(s, "Download complete") ||
 		strings.Contains(s, "Pulling from") ||
+		strings.Contains(s, "Waiting") ||
 		strings.Contains(s, "Pull complete") ||
 		strings.Contains(s, "Digest: sha256") ||
 		strings.Contains(s, "Status: Downloaded newer image") ||

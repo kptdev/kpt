@@ -15,6 +15,7 @@
 package fnruntime
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -135,6 +136,39 @@ error message`,
 			tc.fnExecError.TruncateOutput = tc.truncate
 			s := tc.fnExecError.String()
 			assert.EqualValues(t, tc.expected, s)
+		})
+	}
+}
+
+func TestDockerCLIOutputFilter(t *testing.T) {
+
+	testcases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "should filter docker CLI output successfully",
+			input: `Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally
+v0.3: Pulling from kpt-fn/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3
+`,
+			expected: "",
+		},
+	}
+
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			s := filterDockerCLIOutput(bytes.NewBufferString(tc.input))
+			assert.Equal(t, tc.expected, s)
 		})
 	}
 }
