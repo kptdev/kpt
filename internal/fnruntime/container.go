@@ -210,17 +210,16 @@ func (e *ContainerImageError) Error() string {
 // filterDockerCLIOutput filters out docker CLI messages
 // from the given buffer.
 func filterDockerCLIOutput(in io.Reader) string {
-	out := strings.Builder{}
-
 	s := bufio.NewScanner(in)
+	var lines []string
 
 	for s.Scan() {
 		txt := s.Text()
 		if !isdockerCLIoutput(txt) {
-			out.WriteString(txt)
+			lines = append(lines, txt)
 		}
 	}
-	return out.String()
+	return strings.Join(lines, "\n")
 }
 
 // isdockerCLIoutput is helper method to determine if
