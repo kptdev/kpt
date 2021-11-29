@@ -218,7 +218,6 @@ func filterDockerCLIOutput(in io.Reader) string {
 		txt := s.Text()
 		if !isdockerCLIoutput(txt) {
 			out.WriteString(txt)
-			out.WriteString("\n")
 		}
 	}
 	return out.String()
