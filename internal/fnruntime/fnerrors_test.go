@@ -162,6 +162,46 @@ Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3
 `,
 			expected: "",
 		},
+		{
+			name: "should filter docker messages and shouldn't truncate trailing lines",
+			input: `Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally
+v0.3: Pulling from kpt-fn/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3
+line before last line
+lastline
+
+`,
+			expected: `line before last line
+lastline
+`,
+		},
+		{
+			name: "should filter interleaved docker messages",
+			input: `firstline
+Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally
+v0.3: Pulling from kpt-fn/starlark
+4e9f2cdf4387: Already exists
+aafbf7df3ddf: Pulling fs layer
+aafbf7df3ddf: Verifying Checksum
+line in the middle
+aafbf7df3ddf: Download complete
+aafbf7df3ddf: Pull complete
+6b759ab96cb2: Waiting
+Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3
+lastline
+`,
+			expected: `firstline
+line in the middle
+lastline`,
+		},
 	}
 
 	for _, tc := range testcases {
