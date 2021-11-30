@@ -21,8 +21,10 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -68,7 +70,7 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 			if err != nil {
 				return diff, err
 			}
-			if !bytes.Equal(b1, b2) {
+			if !nonKptfileEquals(string(b1), string(b2)) {
 				diff.Insert(f)
 			}
 		}
@@ -119,4 +121,30 @@ func pkgSet(pkgPath string) (sets.String, error) {
 		return sets.String{}, err
 	}
 	return pkgFiles, nil
+}
+
+// nonKptfileEquals returns true if contents of two non-Kptfiles are equal
+// since the changes to addmetricsannotation.CNRMMetricsAnnotation is made
+// by kpt, we should not treat it as changes made by user, so delete the annotation
+// before comparing
+func nonKptfileEquals(s1, s2 string) bool {
+	out1 := &bytes.Buffer{}
+	out2 := &bytes.Buffer{}
+	err := kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s1)}},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: attribution.CNRMMetricsAnnotation})},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: out1}},
+	}.Execute()
+	if err != nil {
+		return bytes.Equal([]byte(s1), []byte(s2))
+	}
+	err = kio.Pipeline{
+		Inputs:  []kio.Reader{&kio.ByteReader{Reader: bytes.NewBufferString(s2)}},
+		Filters: []kio.Filter{kio.FilterAll(yaml.AnnotationClearer{Key: attribution.CNRMMetricsAnnotation})},
+		Outputs: []kio.Writer{kio.ByteWriter{Writer: out2}},
+	}.Execute()
+	if err != nil {
+		return bytes.Equal([]byte(s1), []byte(s2))
+	}
+	return out1.String() == out2.String()
 }
