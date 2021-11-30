@@ -28,8 +28,8 @@ const (
 	DisableKptAttributionEnvVariable = "KPT_DISABLE_ATTRIBUTION"
 )
 
-// Attribution is used to attribute the kpt action on resources
-type Attribution struct {
+// Attributor is used to attribute the kpt action on resources
+type Attributor struct {
 	// PackagePaths is the package paths to add the attribution annotation
 	PackagePaths []string
 
@@ -41,7 +41,7 @@ type Attribution struct {
 }
 
 // Process invokes Attribution kyaml filter on the resources in input packages paths
-func (a *Attribution) Process() {
+func (a *Attributor) Process() {
 	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
 	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
 		return
@@ -74,7 +74,7 @@ func (a *Attribution) Process() {
 // this filter adds "cnrm.cloud.google.com/blueprint" annotation to the resource
 // if the annotation is already present, it appends kpt-<cmdGroup> suffix
 // it uses "default" namespace
-func (a *Attribution) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
+func (a *Attributor) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
 	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
 		return object, nil

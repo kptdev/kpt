@@ -227,7 +227,7 @@ metadata:
 				defer os.Setenv("KPT_DISABLE_ATTRIBUTION", "")
 			}
 
-			a := Attribution{PackagePaths: []string{baseDir}, CmdGroup: test.group}
+			a := Attributor{PackagePaths: []string{baseDir}, CmdGroup: test.group}
 			a.Process()
 			actualResources, err := ioutil.ReadFile(r.Name())
 			if !assert.NoError(t, err) {

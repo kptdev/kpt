@@ -84,7 +84,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// add metrics annotation to output resources to track the usage as the resources
 	// are rendered by kpt fn group
-	at := attribution.Attribution{Resources: hctx.root.resources, CmdGroup: "fn"}
+	at := attribution.Attributor{Resources: hctx.root.resources, CmdGroup: "fn"}
 	at.Process()
 
 	if e.Output == nil {

@@ -102,7 +102,7 @@ func (c Command) Run(ctx context.Context) error {
 
 	inout := &kio.LocalPackageReadWriter{PackagePath: c.Destination, PreserveSeqIndent: true, WrapBareSeqNode: true}
 	amc := &addmergecomment.AddMergeComment{}
-	at := &attribution.Attribution{PackagePaths: []string{c.Destination}, CmdGroup: "pkg"}
+	at := &attribution.Attributor{PackagePaths: []string{c.Destination}, CmdGroup: "pkg"}
 	// do not error out as this is best effort
 	_ = kio.Pipeline{
 		Inputs:  []kio.Reader{inout},
