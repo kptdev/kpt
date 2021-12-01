@@ -358,7 +358,8 @@ func (*resourceHandler) equals(r1, r2 *yaml.RNode) (bool, error) {
 
 func stripKyamlAnnos(n *yaml.RNode) error {
 	for _, a := range []string{mergeSourceAnnotation, kioutil.PathAnnotation, kioutil.IndexAnnotation,
-		kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation, attribution.CNRMMetricsAnnotation} {
+		kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation, // nolint:staticcheck
+		kioutil.InternalAnnotationsMigrationResourceIDAnnotation, attribution.CNRMMetricsAnnotation} {
 		err := n.PipeE(yaml.ClearAnnotation(a))
 		if err != nil {
 			return err

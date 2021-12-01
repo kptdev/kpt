@@ -19,6 +19,6 @@ stdErr: |
   [RUNNING] "gcr.io/kpt-fn/starlark:v0.2.1"
   [FAIL] "gcr.io/kpt-fn/starlark:v0.2.1" in 0s
     Results:
-      [ERROR] httpbin-gen:4:1: got newline, want primary expression
+      [error]: httpbin-gen:4:1: got newline, want primary expression
     Stderr:
       "[error] : httpbin-gen:4:1: got newline, want primary expression"
