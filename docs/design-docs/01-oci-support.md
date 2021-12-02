@@ -157,6 +157,40 @@ Usage: kpt pkg pull [DIR] --image={IMAGE[:TAG|@sha256:DIGEST]}
 This command is the reverse of push. An image can be pulled from a repository to a local folder, modified, and pushed
 back to the same location, same location with different TAG, or entirely different location.
 
+#### Comparison of `pkg get` and `pkg pull`
+
+Starting with a simple root package, and an orange variant with root as the upstream:
+
+```
+-- root
+  \-- orange {upstream: root}
+```
+
+The purpose of `kpt get` is to create a new leaf node. This is done by creating the initial copy of the new leaf package in a
+local folder. This has the side-effects of altering the kptfile name, the upstream values to point at the source, and makes appropriate 
+changes to sub-package metadata.
+
+As an example, after running `kpt pkg get scheme://repo/root green` and `kpt pkg get scheme://repo/orange blue` the `green` and 
+`blue` local folder packages are appended to the inheritance tree like this:
+
+```
+-- root
+  \-- orange {upstream: root}
+  | `-- blue {upstream: orange}  ** working copy in ./blue **
+  \-- green {upstream: root}     ** working copy in ./green **
+```
+
+By comparison, `kpt pkg pull` does not create a new package node or identity - it only extracts a copy of existing package
+contents to a working directory. In this example, if the user additionally ran `kpt pkg pull scheme://repo/root root` and 
+`kpt pkg pull scheme://repo/orange orange` the overall state would be this:
+
+```
+-- root                          ** working copy in ./root **
+  \-- orange {upstream: root}    ** working copy in ./orange **
+  | `-- blue {upstream: orange}  ** working copy in ./blue **
+  \-- green {upstream: root}     ** working copy in ./green **
+```
+
 ### Alternatives to push/pull
 
 There are several ways that pull and push could appear as commands. Those two names are very conventional, but 
