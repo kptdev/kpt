@@ -130,6 +130,14 @@ ResourceGroup, including the ResourceGroup provided by the flag. It detects
   If not given, the ResourceGroup labels will be empty and the value of "<name>-<namespace>" will be
   used as the "cli-utils.sigs.k8s.io/inventory-id" label in `kpt live apply` from STD.
 
+### `resoucegroup.yaml` interaction with `kpt fn` commands
+
+All `kpt fn` commands should treat `resoucegroup.yaml` as a special resource 
+and not modify it in any scenario. It should not be considered as a meta resource and 
+`include-meta-resources` flag should not include the `ResourceGroup` resource in 
+the `ResourceList`. In the future, we can add a new flag `--include-rg` if there are
+valid use-cases to modify or include `ResourceGroup` resource in `ResourceList`.
+
 ## User Guide
 
 ### To hydrate via kustomize and deploy via kpt
