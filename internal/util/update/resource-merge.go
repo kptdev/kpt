@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	pkgdiff "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -125,7 +126,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 	// Package deleted from upstream
 	case originalExists && localExists && !updatedExists:
 		// Check the diff. If there are local changes, we keep the subpackage.
-		diff, err := copyutil.Diff(originalPath, localPath)
+		diff, err := pkgdiff.PkgDiff(originalPath, localPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
