@@ -20,7 +20,7 @@ $ git tag v0.1
 Push the commit which requires you to have access to the repo:
 
 ```shell
-$ git push v0.1
+$ git push origin v0.1
 ```
 
 You can then fetch the published package:
@@ -46,7 +46,7 @@ $ git tag packages/wordpress/v0.1
 Push the commit:
 
 ```shell
-$ git push packages/wordpress/v0.1
+$ git push origin packages/wordpress/v0.1
 ```
 
 You can then fetch the published package:
