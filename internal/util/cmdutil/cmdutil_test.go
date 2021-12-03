@@ -40,7 +40,7 @@ func TestWriteFnOutput(t *testing.T) {
 			name:   "wrapped output to stdout",
 			dest:   "stdout",
 			writer: bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -58,7 +58,7 @@ items:
         internal.config.kubernetes.io/index: '0'
         internal.config.kubernetes.io/path: 'svc.yaml'
 `,
-			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedStdout: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -81,7 +81,7 @@ items:
 			name:   "unwrapped output to stdout",
 			dest:   "unwrap",
 			writer: bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -113,7 +113,7 @@ metadata:
 		{
 			name: "output to another directory",
 			dest: "foo/bar",
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -152,7 +152,7 @@ metadata:
 			name:      "wrapped output to stdout by default if input is from stdin",
 			fromStdin: true,
 			writer:    bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -170,7 +170,7 @@ items:
         internal.config.kubernetes.io/index: '0'
         internal.config.kubernetes.io/path: 'svc.yaml'
 `,
-			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedStdout: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -194,7 +194,7 @@ items:
 			fromStdin: true,
 			dest:      "unwrap",
 			writer:    bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -227,7 +227,7 @@ metadata:
 			name:      "output to directory for input from stdin",
 			fromStdin: true,
 			dest:      "foo/bar",
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1

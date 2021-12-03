@@ -20,4 +20,4 @@ testType: eval
 image: gcr.io/kpt-fn/search-replace:v0.1
 fnConfig: ../search-replace-conf.yaml
 # Non-error messages should be printed to stderr
-stdErr: "[INFO]"
+stdErr: "[info]"

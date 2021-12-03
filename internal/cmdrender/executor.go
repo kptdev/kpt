@@ -479,7 +479,7 @@ func adjustRelPath(hctx *hydrationContext) error {
 		if err = r.PipeE(yaml.SetAnnotation(kioutil.PathAnnotation, newPath)); err != nil {
 			return err
 		}
-		if err = r.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, newPath)); err != nil {
+		if err = r.PipeE(yaml.SetAnnotation(kioutil.LegacyPathAnnotation, newPath)); err != nil { // nolint:staticcheck
 			return err
 		}
 		if err = pkg.RemovePkgPathAnnotation(r); err != nil {

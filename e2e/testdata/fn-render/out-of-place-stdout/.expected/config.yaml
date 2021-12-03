@@ -3,7 +3,7 @@ stdErr: |
   [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
 
 stdOut: |
-  apiVersion: config.kubernetes.io/v1alpha1
+  apiVersion: config.kubernetes.io/v1
   kind: ResourceList
   items:
   # Copyright 2021 Google LLC

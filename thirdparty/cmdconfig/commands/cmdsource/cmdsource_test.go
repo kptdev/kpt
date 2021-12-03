@@ -81,7 +81,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -353,7 +353,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -476,7 +476,7 @@ func TestSourceCommandJSON(t *testing.T) {
 	}
 
 	//nolint:lll
-	expected := `apiVersion: config.kubernetes.io/v1alpha1
+	expected := `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'f1.json', internal.config.kubernetes.io/seqindent: 'compact'}}, "spec": {"replicas": 1}}
@@ -562,7 +562,7 @@ spec:
 		return
 	}
 
-	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1alpha1
+	if !assert.Equal(t, `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
