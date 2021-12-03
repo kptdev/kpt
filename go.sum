@@ -1039,6 +1039,8 @@ sigs.k8s.io/kustomize/kyaml v0.11.0/go.mod h1:GNMwjim4Ypgp/MueD3zXHLRJEjz7RvtPae
 sigs.k8s.io/kustomize/kyaml v0.12.0/go.mod h1:FTJxEZ86ScK184NpGSAQcfEqee0nul8oLCK30D47m4E=
 sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211122190718-01420768c8ef h1:+S4oQAuqVk4Nmy28fALpv93AgW0UKQWjmqUwSNmIWpE=
 sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211122190718-01420768c8ef/go.mod h1:FTJxEZ86ScK184NpGSAQcfEqee0nul8oLCK30D47m4E=
+sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117 h1:4ePwpEnROoPqjaY6WC98EiRpYrmJjDHV6KA7PGDmpdQ=
+sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117/go.mod h1:FTJxEZ86ScK184NpGSAQcfEqee0nul8oLCK30D47m4E=
 sigs.k8s.io/structured-merge-diff/v4 v4.0.2/go.mod h1:bJZC9H9iH24zzfZ/41RGcq60oK1F7G282QMXDPYydCw=
 sigs.k8s.io/structured-merge-diff/v4 v4.1.2 h1:Hr/htKFmJEbtMgS/UD0N+gtgctAqz81t3nu+sPzynno=
 sigs.k8s.io/structured-merge-diff/v4 v4.1.2/go.mod h1:j/nl6xW8vLS49O8YvXW1ocPhZawJtm+Yrr7PPRQ0Vg4=
