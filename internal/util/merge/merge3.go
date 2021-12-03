@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -357,7 +358,7 @@ func (*resourceHandler) equals(r1, r2 *yaml.RNode) (bool, error) {
 
 func stripKyamlAnnos(n *yaml.RNode) error {
 	for _, a := range []string{mergeSourceAnnotation, kioutil.PathAnnotation, kioutil.IndexAnnotation,
-		kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation} {
+		kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation, attribution.CNRMMetricsAnnotation} {
 		err := n.PipeE(yaml.ClearAnnotation(a))
 		if err != nil {
 			return err
