@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,6 +55,9 @@ func TestContainerFn(t *testing.T) {
 			instance := fnruntime.ContainerFn{
 				Ctx:   printer.WithContext(ctx, printer.New(nil, errBuff)),
 				Image: tt.image,
+				FnResult: &fnresult.Result{
+					Image: tt.image,
+				},
 			}
 			input := bytes.NewBufferString(tt.input)
 			output := &bytes.Buffer{}

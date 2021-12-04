@@ -225,15 +225,15 @@ func filterDockerCLIOutput(in io.Reader) string {
 //  "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
 //
 func isdockerCLIoutput(s string) bool {
-	if strings.Contains(s, "Already exists") ||
-		strings.Contains(s, "Pulling fs layer") ||
-		strings.Contains(s, "Verifying Checksum") ||
-		strings.Contains(s, "Download complete") ||
-		strings.Contains(s, "Pulling from") ||
-		strings.Contains(s, "Waiting") ||
-		strings.Contains(s, "Pull complete") ||
-		strings.Contains(s, "Digest: sha256") ||
-		strings.Contains(s, "Status: Downloaded newer image") ||
+	if strings.Contains(s, ": Already exists") ||
+		strings.Contains(s, ": Pulling fs layer") ||
+		strings.Contains(s, ": Verifying Checksum") ||
+		strings.Contains(s, ": Download complete") ||
+		strings.Contains(s, ": Pulling from") ||
+		strings.Contains(s, ": Waiting") ||
+		strings.Contains(s, ": Pull complete") ||
+		strings.Contains(s, ": Digest: sha256") ||
+		strings.Contains(s, ": Status: Downloaded newer image") ||
 		strings.Contains(s, "Unable to find image") {
 		return true
 	}
