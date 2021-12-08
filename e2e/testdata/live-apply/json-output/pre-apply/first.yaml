@@ -12,20 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: true
-
-stdOut: |
-  deployment.apps/first-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-  deployment.apps/second-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-
-inventory:
-  - group: apps
-    kind: Deployment
-    name: first-nginx
-    namespace: apply-depends-on
-  - group: apps
-    kind: Deployment
-    name: second-nginx
-    namespace: apply-depends-on
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: first-nginx
+  namespace: json-output
+  annotations:
+    config.k8s.io/owning-inventory: json-output
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: first-nginx
+  template:
+    metadata:
+      labels:
+        app: first-nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80

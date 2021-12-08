@@ -15,10 +15,8 @@
 package live
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,11 +29,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	KindClusterName   = "live-e2e-test"
-	K8sVersionEnvName = "K8S_VERSION"
-)
-
 // Runner uses the provided Config to run a test.
 type Runner struct {
 	// Config provides the configuration for how this test should be
@@ -44,41 +37,11 @@ type Runner struct {
 
 	// Path provides the path to the test files.
 	Path string
-
-	// Format provides the output format that should be used.
-	Format string
 }
 
 // Run executes the test.
 func (r *Runner) Run(t *testing.T) {
 	testName := filepath.Base(r.Path)
-	isAvailable := r.CheckKindClusterAvailable(t)
-	if r.Config.RequiresCleanCluster {
-		t.Log("Test requires clean cluster")
-		if isAvailable {
-			t.Log("Removing existing cluster")
-			r.RemoveKindCluster(t)
-		}
-		t.Log("Creating new cluster")
-		r.CreateKindCluster(t)
-	} else {
-		if !isAvailable {
-			t.Log("Creating new cluster")
-			r.CreateKindCluster(t)
-		} else if r.CheckForNamespace(t, testName) {
-			t.Log("Namespace already exist, creating new cluster")
-			r.RemoveKindCluster(t)
-			r.CreateKindCluster(t)
-		}
-	}
-
-	if r.Config.PreinstallResourceGroup {
-		r.InstallResourceGroup(t)
-	}
-
-	r.CreateNamespace(t, testName)
-	defer r.RemoveNamespace(t, testName)
-
 	r.RunPreApply(t)
 
 	stdout, stderr, err := r.RunApply(t)
@@ -108,9 +71,6 @@ func (r *Runner) RunPreApply(t *testing.T) {
 
 func (r *Runner) RunApply(t *testing.T) (string, string, error) {
 	args := append([]string{"live", "apply"}, r.Config.KptArgs...)
-	if r.Format != "" {
-		args = append(args, "--output", r.Format)
-	}
 	t.Logf("Running command: kpt %s", strings.Join(args, " "))
 	cmd := exec.Command("kpt", args...)
 	cmd.Dir = filepath.Join(r.Path, "resources")
@@ -122,98 +82,6 @@ func (r *Runner) RunApply(t *testing.T) (string, string, error) {
 
 	err := cmd.Run()
 	return outBuf.String(), errBuf.String(), err
-}
-
-func (r *Runner) InstallResourceGroup(t *testing.T) {
-	cmd := exec.Command("kpt", "live", "install-resource-group")
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("error installing ResourceGroup CRD: %v", err)
-	}
-}
-
-func (r *Runner) CheckIfResourceGroupInstalled(t *testing.T) bool {
-	cmd := exec.Command("kubectl", "get", "resourcegroups.kpt.dev")
-	output, err := cmd.CombinedOutput()
-	if strings.Contains(string(output), "the server doesn't have a resource type") {
-		return false
-	}
-	if err != nil {
-		t.Fatalf("error checking for ResourceGroup CRD: %v", err)
-	}
-	return true
-}
-
-func (r *Runner) CheckKindClusterAvailable(t *testing.T) bool {
-	cmd := exec.Command("kind", "get", "clusters")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Fatalf("failed to check for kind cluster: %v", err)
-	}
-
-	sc := bufio.NewScanner(bytes.NewReader(output))
-	for sc.Scan() {
-		if strings.TrimSpace(sc.Text()) == KindClusterName {
-			return true
-		}
-	}
-	if err := sc.Err(); err != nil {
-		t.Fatalf("error parsing output from 'kind get cluster': %v", err)
-	}
-	return false
-}
-
-func (r *Runner) CreateKindCluster(t *testing.T) {
-	args := []string{"create", "cluster", fmt.Sprintf("--name=%s", KindClusterName)}
-	if k8sVersion := os.Getenv(K8sVersionEnvName); k8sVersion != "" {
-		t.Logf("Using version %s", k8sVersion)
-		args = append(args, fmt.Sprintf("--image=kindest/node:v%s", k8sVersion))
-	}
-	cmd := exec.Command("kind", args...)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to create new kind cluster: %v", err)
-	}
-}
-
-func (r *Runner) RemoveKindCluster(t *testing.T) {
-	cmd := exec.Command("kind", "delete", "cluster", fmt.Sprintf("--name=%s", KindClusterName))
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to remove existing cluster: %v", err)
-	}
-}
-
-func (r *Runner) CheckForNamespace(t *testing.T, namespace string) bool {
-	cmd := exec.Command("kubectl", "get", "ns", namespace, "--no-headers", "--output=name")
-	output, err := cmd.CombinedOutput()
-	if strings.Contains(string(output), "NotFound") {
-		return false
-	}
-	if err != nil {
-		t.Fatalf("error listing namespaces with kubectl: %v", err)
-	}
-	sc := bufio.NewScanner(bytes.NewReader(output))
-	for sc.Scan() {
-		if strings.TrimSpace(sc.Text()) == fmt.Sprintf("namespace/%s", namespace) {
-			return true
-		}
-	}
-	if err := sc.Err(); err != nil {
-		t.Fatalf("error parsing output from 'kubectl get ns': %v", err)
-	}
-	return false
-}
-
-func (r *Runner) CreateNamespace(t *testing.T, namespace string) {
-	cmd := exec.Command("kubectl", "create", "ns", namespace)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("error creating namespace %s: %v", namespace, err)
-	}
-}
-
-func (r *Runner) RemoveNamespace(t *testing.T, namespace string) {
-	cmd := exec.Command("kubectl", "delete", "ns", namespace, "--wait=false")
-	if err := cmd.Run(); err != nil {
-		t.Logf("error deleting namespace %s: %v", namespace, err)
-	}
 }
 
 func (r *Runner) VerifyExitCode(t *testing.T, err error) {
@@ -228,11 +96,11 @@ func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 }
 
 func (r *Runner) VerifyStdout(t *testing.T, stdout string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdOut), strings.TrimSpace(substituteTimestamps(stdout)))
+	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), strings.TrimSpace(substituteTimestamps(stdout)))
 }
 
 func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.Output[r.Format].StdErr), strings.TrimSpace(substituteTimestamps(stderr)))
+	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), strings.TrimSpace(substituteTimestamps(stderr)))
 }
 
 func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {

@@ -12,20 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: true
-
-stdOut: |
-  deployment.apps/first-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-  deployment.apps/second-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-
-inventory:
-  - group: apps
-    kind: Deployment
-    name: first-nginx
-    namespace: apply-depends-on
-  - group: apps
-    kind: Deployment
-    name: second-nginx
-    namespace: apply-depends-on
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  namespace: json-output
+data:
+  foo: bar
