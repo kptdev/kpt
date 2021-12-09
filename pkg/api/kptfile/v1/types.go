@@ -49,6 +49,9 @@ type KptFile struct {
 	// UpstreamLock is a resolved locator for the last fetch of the package.
 	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
 
+	// Origin is a resolved locator for the last pull or push of the package.
+	Origin *Origin `yaml:"origin,omitempty" json:"origin,omitempty"`
+
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty" json:"info,omitempty"`
 
@@ -164,6 +167,18 @@ type UpstreamLock struct {
 	Oci *OciLock `yaml:"oci,omitempty" json:"oci,omitempty"`
 }
 
+// Origin is a resolved locator when the package was last pulled or pushed.
+type Origin struct {
+	// Type is the type of origin.
+	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
+
+	// Git is the resolved locator for a package on Git.
+	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+
+	// Oci is the resolved locator for a package in an OCI image registry.
+	Oci *OciLock `yaml:"oci,omitempty" json:"oci,omitempty"`
+}
+
 // GitLock is the resolved locator for a package on Git.
 type GitLock struct {
 	// Repo is the git repository that was fetched.
@@ -188,6 +203,9 @@ type OciLock struct {
 	// Image is the OCI image repository for the package.
 	// e.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend@sha256:b0c94f11d856e59673daca566857a7ead126ef8e2b6915ed662804f858d7eaea'
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
+
+	// Digest is the unique sha of the image when it was last pulled.
+	Digest string `yaml:"digest,omitempty" json:"digest,omitempty"`
 }
 
 // PackageInfo contains optional information about the package such as license, documentation, etc.

@@ -39,6 +39,7 @@ import (
 type ociUpstream struct {
 	oci     *kptfilev1.Oci
 	ociLock *kptfilev1.OciLock
+	origin  *kptfilev1.Oci
 }
 
 var _ Fetcher = &ociUpstream{}
@@ -46,6 +47,14 @@ var _ Fetcher = &ociUpstream{}
 func NewOciUpstream(oci *kptfilev1.Oci) Fetcher {
 	return &ociUpstream{
 		oci: oci,
+	}
+}
+
+func NewOciOrigin(oci *kptfilev1.Oci) Fetcher {
+	return &ociUpstream{
+		origin: &kptfilev1.Oci{
+			Image: oci.Image,
+		},
 	}
 }
 
@@ -73,10 +82,27 @@ func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 	}
 }
 
+func (u *ociUpstream) BuildOrigin(digest string) *kptfilev1.Origin {
+	return &kptfilev1.Origin{
+		Type: kptfilev1.OciOrigin,
+		Oci:  &kptfilev1.OciLock{
+			Image:  u.origin.Image,
+			Digest: digest,
+		},
+	}
+}
+
 func (u *ociUpstream) Validate() error {
 	const op errors.Op = "upstream.Validate"
-	if len(u.oci.Image) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+	if u.oci != nil {
+		if len(u.oci.Image) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+		}
+	}
+	if u.origin != nil {
+		if len(u.origin.Image) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+		}
 	}
 	return nil
 }
@@ -97,6 +123,15 @@ func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
 	return dest, nil
+}
+
+func (u *ociUpstream) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
+	const op errors.Op = "upstream.FetchOrigin"
+	imageDigest, err := pullAndExtract(u.origin.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	if err != nil {
+		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
+	}
+	return dest, imageDigest.Name(), nil
 }
 
 func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {

@@ -29,9 +29,11 @@ type Fetcher interface {
 	Validate() error
 	BuildUpstream() *kptfilev1.Upstream
 	BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock
+	BuildOrigin(digest string) *kptfilev1.Origin
 
 	FetchUpstream(ctx context.Context, dest string) (absPath string, digest string, err error)
 	FetchUpstreamLock(ctx context.Context, dest string) (absPath string, err error)
+	FetchOrigin(ctx context.Context, dest string) (absPath string, digest string, err error)
 
 	CloneUpstream(ctx context.Context, dest string) error
 

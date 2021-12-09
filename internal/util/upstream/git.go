@@ -38,6 +38,7 @@ import (
 type gitUpstream struct {
 	git     *v1.Git
 	gitLock *v1.GitLock
+	origin  *v1.Git
 }
 
 var _ Fetcher = &gitUpstream{}
@@ -45,6 +46,12 @@ var _ Fetcher = &gitUpstream{}
 func NewGitUpstream(git *v1.Git) Fetcher {
 	return &gitUpstream{
 		git: git,
+	}
+}
+
+func NewGitOrigin(git *v1.Git) Fetcher {
+	return &gitUpstream{
+		origin: git,
 	}
 }
 
@@ -59,6 +66,9 @@ func (u *gitUpstream) LockedString() string {
 func (u *gitUpstream) Validate() error {
 	const op errors.Op = "upstream.Validate"
 	g := u.git
+	if g == nil {
+		g = u.origin
+	}
 	if len(g.Repo) == 0 {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
 	}
@@ -97,6 +107,18 @@ func (u *gitUpstream) BuildUpstreamLock(digest string) *v1.UpstreamLock {
 	}
 }
 
+func (u *gitUpstream) BuildOrigin(digest string) *v1.Origin {
+	return &v1.Origin{
+		Type: v1.GitOrigin,
+		Git:  &v1.GitLock{
+			Repo:      u.origin.Repo,
+			Directory: u.origin.Directory,
+			Ref:       u.origin.Ref,
+			Commit:    digest,
+		},
+	}
+}
+
 func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, string, error) {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.git.Repo,
@@ -121,6 +143,23 @@ func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 		return "", err
 	}
 	return path.Join(repoSpec.Dir, repoSpec.Path), nil
+}
+
+func (u *gitUpstream) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
+	repoSpec := &git.RepoSpec{
+		OrgRepo: u.origin.Repo,
+		Path:    u.origin.Directory,
+		Ref:     u.origin.Ref,
+	}
+	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
+		return "", "", err
+	}
+	defer os.RemoveAll(repoSpec.Dir)
+	if err := pkgutil.CopyPackage(repoSpec.AbsPath(), dest, true, pkg.All); err != nil {
+		return "", "", err
+	}
+
+	return dest, repoSpec.Commit, nil
 }
 
 func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {
