@@ -36,11 +36,13 @@ type TestCaseConfig struct {
 	// Inventory is the expected list of resource present in the inventory.
 	Inventory []InventoryEntry `yaml:"inventory,omitempty"`
 
-	// PreinstallResourceGroup causes the test framework to verify that the
-	// ResourceGroup CRD is available in the cluster before running the test.
+	// NoResourceGroup defines whether the RG CRD should be present in the cluster
+	// when the test starts.
 	NoResourceGroup bool `yaml:"noResourceGroup,omitempty"`
 
-	
+	// Parallel defines whether the test can be run in parallel with other
+	// tests. The primary requirement here is that the test doesn't create,
+	// update, or delete any cluster-scoped resources.
 	Parallel bool `yaml:"parallel,omitempty"`
 
 	// KptArgs is a list of args that will be provided to the kpt command
