@@ -701,18 +701,18 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 }
 
 // RGFile returns the resourcegroup object by lazy loading it from the filesytem.
-func (p *Pkg) RGFile() (*rgfilev1alpha1.ResourceGroup, error) {
+func (p *Pkg) RGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
 		// TODO(rquitales): Handle real reading errors vs file does not exist.
-		rg, _ := ReadRGFile(p.UniquePath.String())
+		rg, _ := ReadRGFile(p.UniquePath.String(), filename)
 		p.rgFile = rg
 	}
 	return p.rgFile, nil
 }
 
 // TODO(rquitales): Create new error types for resourcegroup.
-func ReadRGFile(p string) (*rgfilev1alpha1.ResourceGroup, error) {
-	f, err := os.Open(filepath.Join(p, rgfilev1alpha1.RGFileName))
+func ReadRGFile(p, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+	f, err := os.Open(filepath.Join(p, filename))
 	if err != nil {
 		return nil, &KptfileError{
 			Path: types.UniquePath(p),
