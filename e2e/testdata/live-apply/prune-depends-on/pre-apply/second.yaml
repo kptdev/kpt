@@ -21,7 +21,7 @@ metadata:
     config.k8s.io/owning-inventory: prune-depends-on
     config.kubernetes.io/depends-on: apps/namespaces/prune-depends-on/Deployment/first-nginx
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: second-nginx
