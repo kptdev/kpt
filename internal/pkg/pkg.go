@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -119,6 +120,9 @@ type Pkg struct {
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
 	kptfile *kptfilev1.KptFile
+
+	// A package can contain zero or one ResourceGroup object.
+	rgFile *rgfilev1alpha1.ResourceGroup
 }
 
 // New returns a pkg given an absolute or relative OS-defined path.
@@ -694,4 +698,50 @@ func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath types.UniquePath) error {
 // RemovePkgPathAnnotation removes the package path on a given resource.
 func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 	return rn.PipeE(yaml.ClearAnnotation(pkgPathAnnotation))
+}
+
+// RGFile returns the resourcegroup object by lazy loading it from the filesytem.
+func (p *Pkg) RGFile() (*rgfilev1alpha1.ResourceGroup, error) {
+	if p.rgFile == nil {
+		// TODO(rquitales): Handle real reading errors vs file does not exist.
+		rg, _ := ReadRGFile(p.UniquePath.String())
+		p.rgFile = rg
+	}
+	return p.rgFile, nil
+}
+
+// TODO(rquitales): Create new error types for resourcegroup.
+func ReadRGFile(p string) (*rgfilev1alpha1.ResourceGroup, error) {
+	f, err := os.Open(filepath.Join(p, rgfilev1alpha1.RGFileName))
+	if err != nil {
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
+	}
+	defer f.Close()
+
+	rg, err := DecodeRGFile(f)
+	if err != nil {
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
+	}
+	return rg, nil
+}
+
+func DecodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
+	rg := &rgfilev1alpha1.ResourceGroup{}
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return rg, err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
+	d.KnownFields(true)
+	if err := d.Decode(rg); err != nil {
+		return rg, err
+	}
+	return rg, nil
 }
