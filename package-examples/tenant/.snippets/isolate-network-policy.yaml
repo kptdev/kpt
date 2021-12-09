@@ -1,0 +1,11 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-namespace
+  namespace: tenant-name
+spec:
+  podSelector:
+    matchLabels: null
+  ingress:
+  - from:
+    - podSelector: {}
