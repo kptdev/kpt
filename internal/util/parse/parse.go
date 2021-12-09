@@ -114,14 +114,17 @@ func GitParseArgs(ctx context.Context, args []string) (GitTarget, error) {
 		version = defaultRef
 	}
 
-	destination, err := getDest(args[1], repo, remoteDir)
-	if err != nil {
-		return g, err
-	}
 	g.Ref = version
 	g.Directory = path.Clean(remoteDir)
 	g.Repo = repo
-	g.Destination = filepath.Clean(destination)
+
+	if len(args) >= 2 {
+		destination, err := getDest(args[1], repo, remoteDir)
+		if err != nil {
+			return g, err
+		}
+		g.Destination = filepath.Clean(destination)
+	}
 	return g, nil
 }
 
@@ -286,6 +289,11 @@ func getRepoAndPkg(v string) (string, string, error) {
 }
 
 func getDest(v, repo, subdir string) (string, error) {
+	// v is "" for commands that do not require an output path
+	if v == "" {
+		return "", nil
+	}
+
 	v = filepath.Clean(v)
 
 	f, err := os.Stat(v)

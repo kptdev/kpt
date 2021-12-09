@@ -26,16 +26,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
 // Command fetches a package from a git repository, copies it to a local
 // directory, and expands any remote subpackages.
 type Command struct {
-	// Git contains information about the git repo to fetch
-	Git *kptfilev1.Git
-
 	// Contains information about the upstraem package to fetch
 	Upstream upstream.Fetcher
 

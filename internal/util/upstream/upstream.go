@@ -25,6 +25,7 @@ import (
 type Fetcher interface {
 	fmt.Stringer
 	LockedString() string
+	OriginString() string
 
 	Validate() error
 	BuildUpstream() *kptfilev1.Upstream
@@ -34,12 +35,16 @@ type Fetcher interface {
 	FetchUpstream(ctx context.Context, dest string) (absPath string, digest string, err error)
 	FetchUpstreamLock(ctx context.Context, dest string) (absPath string, err error)
 	FetchOrigin(ctx context.Context, dest string) (absPath string, digest string, err error)
+	PushOrigin(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error)
 
 	CloneUpstream(ctx context.Context, dest string) error
 
 	Ref() (string, error)
 	SetRef(ref string) error
 	ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootRef string) bool
+
+	OriginRef() (string, error)
+	SetOriginRef(ref string) error
 }
 
 func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
@@ -73,6 +78,31 @@ func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
 		}
 	}
 	return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile upstream type must be one of: %s,%s", kptfilev1.GitOrigin, kptfilev1.OciOrigin))
+}
+
+func NewOrigin(kf *kptfilev1.KptFile) (Fetcher, error) {
+	const op errors.Op = "upstream.NewOrigin"
+	if kf != nil && kf.Origin != nil {
+		switch kf.Origin.Type {
+		case kptfilev1.GitOrigin:
+			if kf.Upstream.Git == nil {
+				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile origin must have git information"))
+			}
+			u := &gitUpstream{
+				origin: kf.Origin.Git,
+			}
+			return u, nil
+		case kptfilev1.OciOrigin:
+			if kf.Origin.Oci == nil {
+				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile origin must have oci information"))
+			}
+			u := &ociUpstream{
+				origin: kf.Origin.Oci,
+			}
+			return u, nil
+		}
+	}
+	return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile origin type must be one of: %s,%s", kptfilev1.GitOrigin, kptfilev1.OciOrigin))
 }
 
 func ShouldUpdateSubPkgRef(subUpstream Fetcher, rootUpstream Fetcher, originalRootRef string) bool {

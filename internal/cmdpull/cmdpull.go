@@ -80,7 +80,6 @@ func (r *Runner) parseArgs(args []string) (string, error) {
 
 	t1, err1 := parse.GitParseArgs(r.ctx, args)
 	if err1 == nil {
-		r.Pull.Git = &t1.Git
 		r.Pull.Upstream = upstream.NewGitOrigin(&t1.Git)
 		return t1.Destination, nil
 	}

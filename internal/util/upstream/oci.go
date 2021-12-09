@@ -16,9 +16,12 @@ package upstream
 
 import (
 	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,8 +33,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
@@ -39,7 +44,7 @@ import (
 type ociUpstream struct {
 	oci     *kptfilev1.Oci
 	ociLock *kptfilev1.OciLock
-	origin  *kptfilev1.Oci
+	origin  *kptfilev1.OciLock
 }
 
 var _ Fetcher = &ociUpstream{}
@@ -52,7 +57,7 @@ func NewOciUpstream(oci *kptfilev1.Oci) Fetcher {
 
 func NewOciOrigin(oci *kptfilev1.Oci) Fetcher {
 	return &ociUpstream{
-		origin: &kptfilev1.Oci{
+		origin: &kptfilev1.OciLock{
 			Image: oci.Image,
 		},
 	}
@@ -64,6 +69,10 @@ func (u *ociUpstream) String() string {
 
 func (u *ociUpstream) LockedString() string {
 	return u.ociLock.Image
+}
+
+func (u *ociUpstream) OriginString() string {
+	return u.origin.Image
 }
 
 func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
@@ -168,6 +177,18 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	return nil
 }
 
+func (u *ociUpstream) PushOrigin(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {
+	const op errors.Op = "upstream.PushOrigin"
+
+	imageDigest, err := archiveAndPush(u.origin.Image, source, kptfile, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	if err != nil {
+		return "",errors.E(op, errors.OCI, types.UniquePath(source), err)
+	}
+
+	return imageDigest.String(), nil
+}
+
+
 func (u *ociUpstream) Ref() (string, error) {
 	const op errors.Op = "upstream.Ref"
 	r, err := name.ParseReference(u.oci.Image)
@@ -188,6 +209,31 @@ func (u *ociUpstream) SetRef(ref string) error {
 		u.oci.Image = r.Context().Digest(ref).Name()
 	} else {
 		u.oci.Image = r.Context().Tag(ref).Name()
+	}
+
+	return nil
+}
+
+func (u *ociUpstream) OriginRef() (string, error) {
+	const op errors.Op = "upstream.OriginRef"
+	r, err := name.ParseReference(u.origin.Image)
+	if err != nil {
+		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
+	}
+	return r.Identifier(), nil
+}
+
+func (u *ociUpstream) SetOriginRef(ref string) error {
+	const op errors.Op = "upstream.SetOriginRef"
+	r, err := name.ParseReference(u.origin.Image)
+	if err != nil {
+		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
+	}
+
+	if len(strings.SplitN(ref, "sha256:", 2)[0]) == 0 {
+		u.origin.Image = r.Context().Digest(ref).Name()
+	} else {
+		u.origin.Image = r.Context().Tag(ref).Name()
 	}
 
 	return nil
@@ -275,6 +321,118 @@ func pullAndExtract(imageName string, dir string, options ...remote.Option) (nam
 
 	// Determine the digest of the image that was extracted
 	imageDigestHash, err := image.Digest()
+	if err != nil {
+		return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
+	}
+	imageDigest := ref.Context().Digest("sha256:" + imageDigestHash.Hex)
+
+	// Return the image with digest when successful, needed for upstreamLock
+	return imageDigest, nil
+}
+
+// archiveAndPush uses current credentials (gcloud auth) to tar and
+// extract (untar) image files to target directory. The desired version or digest must
+// be in the imageName, and the resolved image sha256 digest is returned.
+func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, options ...remote.Option) (name.Reference, error) {
+	const op errors.Op = "upstream.archiveAndPush"
+
+	ref, err := name.ParseReference(imageName)
+	if err != nil {
+		return nil, fmt.Errorf("parsing reference %q: %v", imageName, err)
+	}
+
+	// Make new layer
+	tarFile, err := ioutil.TempFile("", "tar")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tarFile.Name())
+
+	if err := func() error {
+		defer tarFile.Close()
+
+		gw := gzip.NewWriter(tarFile)
+		defer gw.Close()
+
+		tw := tar.NewWriter(gw)
+		defer tw.Close()
+
+		if err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			relative, err := filepath.Rel(dir, path)
+			if err != nil {
+				return err
+			}
+			if info.IsDir() && relative == "." {
+				return nil
+			}
+
+			// TODO(dejardin) if info is symlink also read link target
+			link := ""
+
+			// generate tar header
+			header, err := tar.FileInfoHeader(info, link)
+			if err != nil {
+				return err
+			}
+
+			var buf *bytes.Buffer
+			if strings.EqualFold(header.Name, "Kptfile") {
+				buf = &bytes.Buffer{}
+				kptfileutil.Write(buf, kptfile)
+				header.Size = int64(buf.Len())
+			}
+
+			// must provide real name
+			// (see https://golang.org/src/archive/tar/common.go?#L626)
+			header.Name = filepath.ToSlash(relative)
+
+			// write header
+			if err := tw.WriteHeader(header); err != nil {
+				return err
+			}
+			// if not a dir, write file content
+			if !info.IsDir() {
+				data, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				if buf != nil {
+					if _, err := io.Copy(tw, buf); err != nil {
+						return err
+					}
+				} else {
+					if _, err := io.Copy(tw, data); err != nil {
+						return err
+					}
+				}
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		return nil
+	}(); err != nil {
+		return nil, err
+	}
+
+	// Append new layer
+	newLayers := []string{tarFile.Name()}
+	img, err := crane.Append(empty.Image, newLayers...)
+	if err != nil {
+		return nil, fmt.Errorf("appending %v: %v", newLayers, err)
+	}
+
+	if err := remote.Write(ref, img, options...); err != nil {
+		return nil, fmt.Errorf("pushing image %s: %v", ref, err)
+	}
+
+	// Determine the digest of the image that was pushed
+	imageDigestHash, err := img.Digest()
 	if err != nil {
 		return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
 	}
