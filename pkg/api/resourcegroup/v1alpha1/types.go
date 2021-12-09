@@ -27,6 +27,8 @@ const (
 	RGFileGroup      = "kpt.dev"
 	RGFileVersion    = "v1alpha1"
 	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
+	// RGInventoryIDLabel is the label name used for storing an inventory ID.
+	RGInventoryIDLabel = "cli-utils.sigs.k8s.io/inventory-id"
 )
 
 // DefaultMeta is the ResourceMeta for ResourceGroup instances.
