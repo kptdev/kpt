@@ -39,9 +39,7 @@ There are many ways to organize the tenant package and its variants. In this gui
 we will explore one of the patterns where we keep the packages and their variants
 in different repos as shown in the figure below.
 
-TODO(droot): export the drawing from Google docs and insert here.
-
-![drawing](https://docs.google.com/drawings/d/12345/export/png)
+![drawing](/static/images/tenant-onboarding.svg)
 
 Package catalog repo contains kpt packages that will be used to create variants
 of the packages. Platform repo contains the variants of the packages and there
