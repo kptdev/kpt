@@ -108,6 +108,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		Quiet:       r.Quiet,
 		Name:        r.Name,
 		InventoryID: r.InventoryID,
+		RGFileName:  r.RGFile,
 		Force:       r.Force,
 	}).Run(r.ctx)
 	if err != nil {
@@ -125,6 +126,7 @@ type ConfigureInventoryInfo struct {
 
 	Name        string
 	InventoryID string
+	RGFileName  string
 
 	Force bool
 }
@@ -157,7 +159,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: inventoryID,
-	}, c.Force)
+	}, c.RGFileName, c.Force)
 	if !c.Quiet {
 		if err == nil {
 			pr.Printf("success\n")
@@ -176,10 +178,10 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 }
 
 // Run fills in the inventory object values into the resourcegroup object and writes to file storage.
-func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
+func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force bool) error {
 	const op errors.Op = "cmdliveinit.updateResourceGroup"
 	// Read the resourcegroup object io io.dir
-	rg, err := p.RGFile()
+	rg, err := p.RGFile(filename)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -195,7 +197,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
 	if inv.InventoryID != "" {
 		rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
 	}
-	if err := resourcegrouputil.WriteFile(p.UniquePath.String(), rg); err != nil {
+	if err := resourcegrouputil.WriteFile(p.UniquePath.String(), rg, filename); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil

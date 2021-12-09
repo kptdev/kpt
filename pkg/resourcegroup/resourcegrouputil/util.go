@@ -26,18 +26,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func WriteFile(dir string, k *rgfilev1alpha1.ResourceGroup) error {
+func WriteFile(dir string, k *rgfilev1alpha1.ResourceGroup, filename string) error {
 	const op errors.Op = "resourcegrouputil.WriteFile"
 	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat(filepath.Join(dir, rgfilev1alpha1.RGFileName)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(dir, filename)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 
 	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, rgfilev1alpha1.RGFileName), b, 0600)
+	err = ioutil.WriteFile(filepath.Join(dir, filename), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
