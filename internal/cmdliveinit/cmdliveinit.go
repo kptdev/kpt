@@ -18,7 +18,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/pkg/resourcegroup/resourcegrouputil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -57,6 +58,7 @@ func NewRunner(ctx context.Context, factory cmdutil.Factory,
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
+	cmd.Flags().StringVar(&r.RGFile, "rg-file", rgfilev1alpha1.RGFileName, "ResourceGroup object filepath")
 	return r
 }
 
@@ -74,6 +76,7 @@ type Runner struct {
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
 	namespace   string // Inventory object namespace
+	RGFile      string // resourcegroup object filepath
 	InventoryID string // Inventory object unique identifier label
 	Quiet       bool   // Output message during initialization
 }
@@ -130,7 +133,6 @@ type ConfigureInventoryInfo struct {
 func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
-
 	var name, namespace, inventoryID string
 
 	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
@@ -139,7 +141,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	namespace = strings.TrimSpace(ns)
 	if !c.Quiet {
-		pr.Printf("initializing Kptfile inventory info (namespace: %s)...", namespace)
+		pr.Printf("initializing ResourceGroup inventory info (namespace: %s)...", namespace)
 	}
 
 	// Autogenerate the name if it is not provided through the flag.
@@ -149,18 +151,9 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	} else {
 		name = c.Name
 	}
-	// Generate the inventory id if one is not specified through a flag.
-	if c.InventoryID == "" {
-		id, err := generateID(namespace, name, time.Now())
-		if err != nil {
-			return errors.E(op, c.Pkg.UniquePath, err)
-		}
-		inventoryID = id
-	} else {
-		inventoryID = c.InventoryID
-	}
+	inventoryID = c.InventoryID
 	// Finally, update these values in the Inventory section of the Kptfile.
-	err = updateKptfile(c.Pkg, &kptfilev1.Inventory{
+	err = createRGFile(c.Pkg, &kptfilev1.Inventory{
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: inventoryID,
@@ -182,22 +175,27 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	return nil
 }
 
-// Run fills in the inventory object values into the Kptfile.
-func updateKptfile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
-	const op errors.Op = "cmdliveinit.updateKptfile"
-	// Read the Kptfile io io.dir
-	kf, err := p.Kptfile()
+// Run fills in the inventory object values into the resourcegroup object and writes to file storage.
+func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
+	const op errors.Op = "cmdliveinit.updateResourceGroup"
+	// Read the resourcegroup object io io.dir
+	rg, err := p.RGFile()
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	// Validate the inventory values don't already exist
-	isEmpty := kptfileInventoryEmpty(kf.Inventory)
-	if !isEmpty && !force {
+	if rg != nil && !force {
 		return errors.E(op, p.UniquePath, &InvExistsError{})
 	}
-	// Finally, set the inventory parameters in the Kptfile and write it.
-	kf.Inventory = inv
-	if err := kptfileutil.WriteFile(p.UniquePath.String(), kf); err != nil {
+	// Initialize new resourcegroup object, as rg should have been nil.
+	rg = &rgfilev1alpha1.ResourceGroup{rgfilev1alpha1.TypeMeta}
+	// Finally, set the inventory parameters in the ResourceGroup object and write it.
+	rg.Name = inv.Name
+	rg.Namespace = inv.Namespace
+	if inv.InventoryID != "" {
+		rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
+	}
+	if err := resourcegrouputil.WriteFile(p.UniquePath.String(), rg); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
