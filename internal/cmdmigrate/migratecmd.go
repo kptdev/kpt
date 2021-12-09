@@ -16,6 +16,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -39,10 +41,13 @@ type MigrateRunner struct {
 	dir             string
 	dryRun          bool
 	name            string
+	rgFile          string
 	force           bool
 	rgInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
 	cmInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
 	cmLoader        manifestreader.ManifestLoader
+
+	cmNotMigrated bool // flag to determine if migration from ConfigMap has occurred
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
@@ -82,6 +87,7 @@ func NewRunner(ctx context.Context, factory util.Factory, cmLoader manifestreade
 	cmd.Flags().StringVar(&r.name, "name", "", "Inventory object name")
 	cmd.Flags().BoolVar(&r.force, "force", false, "Set inventory values even if already set in Kptfile")
 	cmd.Flags().BoolVar(&r.dryRun, "dry-run", false, "Do not actually migrate, but show steps")
+	cmd.Flags().StringVar(&r.rgFile, "rg-file", rgfilev1alpha1.RGFileName, "ResourceGroup object filepath")
 
 	r.Command = cmd
 	return r
@@ -121,6 +127,74 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 		}
 	}
 
+	// Apply the ResourceGroup CRD to the cluster, ignoring if it already exists.
+	if err := mr.applyCRD(); err != nil {
+		return err
+	}
+
+	// Check if we need to migrate from ConfigMap.
+	if err := mr.migrateCM(stdinBytes, args); err != nil {
+		return err
+	}
+	// Migrate from Kptfile.
+	if mr.cmNotMigrated {
+		return mr.migrateKptfile(args)
+	}
+
+	return nil
+}
+
+func (mr *MigrateRunner) migrateKptfile(args []string) error {
+	klog.V(4).Infoln("attempting to migrate from Kptfile inventory")
+	fmt.Fprint(mr.ioStreams.Out, "  reading existing Kptfile...")
+	if !mr.dryRun {
+		p, err := pkg.New(args[0])
+		if err != nil {
+			return err
+		}
+		kf, err := p.Kptfile()
+		if err != nil {
+			return err
+		}
+
+		if _, err := kptfileutil.ValidateInventory(kf.Inventory); err != nil {
+			// Invalid Kptfile.
+			return err
+		}
+
+		err = (&cmdliveinit.ConfigureInventoryInfo{
+			Pkg:         p,
+			Factory:     mr.factory,
+			Quiet:       true,
+			Name:        kf.Inventory.Name,
+			Namespace:   kf.Inventory.Namespace,
+			InventoryID: kf.Inventory.InventoryID,
+			RGFileName:  mr.rgFile,
+			Force:       mr.force,
+		}).Run(mr.ctx)
+
+		if err != nil {
+			var invExistsError *cmdliveinit.InvExistsError
+			if errors.As(err, &invExistsError) {
+				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
+			} else {
+				return err
+			}
+		}
+
+		// Rewrite Kptfile without inventory info.
+		kf.Inventory = nil
+		err = kptfileutil.WriteFile(p.UniquePath.String(), kf)
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	return nil
+}
+
+// migrateCM migrates from ConfigMap to resourcegroup object.
+func (mr *MigrateRunner) migrateCM(stdinBytes []byte, args []string) error {
 	// Create the inventory clients for reading inventories based on RG and
 	// ConfigMap.
 	rgInvClient, err := mr.rgInvClientFunc(mr.factory)
@@ -131,17 +205,13 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	// Apply the ResourceGroup CRD to the cluster, ignoring if it already exists.
-	if err := mr.applyCRD(); err != nil {
-		return err
-	}
 	// Retrieve the current ConfigMap inventory objects.
 	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
 	if err != nil {
 		if _, ok := err.(inventory.NoInventoryObjError); ok {
 			// No ConfigMap inventory means the migration has already run before.
 			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
+			mr.cmNotMigrated = true
 			return nil
 		}
 		klog.V(4).Infof("error retrieving ConfigMap inventory object: %s", err)
@@ -149,8 +219,8 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	}
 	cmInventoryID := cmInvObj.ID()
 	klog.V(4).Infof("previous inventoryID: %s", cmInventoryID)
-	// Update the Kptfile with the resource group values (e.g. namespace, name, id).
-	if err := mr.updateKptfile(mr.ctx, args, cmInventoryID); err != nil {
+	// Create ResourceGroup object file locallly (e.g. namespace, name, id).
+	if err := mr.createRGfile(mr.ctx, args, cmInventoryID); err != nil {
 		return err
 	}
 	cmObjs, err := mr.retrieveInvObjs(cmInvClient, cmInvObj)
@@ -190,9 +260,9 @@ func (mr *MigrateRunner) applyCRD() error {
 	return err
 }
 
-// updateKptfile installs the "inventory" fields in the Kptfile.
-func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevID string) error {
-	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
+// createRGfile writes the inventory information into the resourcegroup object.
+func (mr *MigrateRunner) createRGfile(ctx context.Context, args []string, prevID string) error {
+	fmt.Fprint(mr.ioStreams.Out, "  creating ResourceGroup object file...")
 	if !mr.dryRun {
 		p, err := pkg.New(args[0])
 		if err != nil {
@@ -203,6 +273,7 @@ func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevI
 			Factory:     mr.factory,
 			Quiet:       true,
 			InventoryID: prevID,
+			RGFileName:  mr.rgFile,
 			Force:       mr.force,
 		}).Run(ctx)
 

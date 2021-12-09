@@ -75,7 +75,7 @@ type Runner struct {
 	ioStreams   genericclioptions.IOStreams
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
-	namespace   string // Inventory object namespace
+	Namespace   string // Inventory object namespace
 	RGFile      string // resourcegroup object filepath
 	InventoryID string // Inventory object unique identifier label
 	Quiet       bool   // Output message during initialization
@@ -125,6 +125,7 @@ type ConfigureInventoryInfo struct {
 	Quiet   bool
 
 	Name        string
+	Namespace   string
 	InventoryID string
 	RGFileName  string
 
@@ -137,11 +138,16 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	pr := printer.FromContextOrDie(ctx)
 	var name, namespace, inventoryID string
 
-	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
+	if c.Namespace != "" {
+		namespace = c.Namespace
+	} else {
+		var err error
+		namespace, err = config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, err)
+		}
 	}
-	namespace = strings.TrimSpace(ns)
+	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
 		pr.Printf("initializing ResourceGroup inventory info (namespace: %s)...", namespace)
 	}
@@ -155,7 +161,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	inventoryID = c.InventoryID
 	// Finally, update these values in the Inventory section of the Kptfile.
-	err = createRGFile(c.Pkg, &kptfilev1.Inventory{
+	err := createRGFile(c.Pkg, &kptfilev1.Inventory{
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: inventoryID,
