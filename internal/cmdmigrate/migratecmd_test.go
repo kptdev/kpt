@@ -286,14 +286,14 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 		},
 		"One migrate object is valid": {
 			invObj:  kptfileStr,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMetaOrDie(pod1)},
+			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
 			isError: false,
 		},
 		"Multiple migrate objects are valid": {
 			invObj: kptfileStr,
 			objs: []object.ObjMetadata{
-				object.UnstructuredToObjMetaOrDie(pod1),
-				object.UnstructuredToObjMetaOrDie(pod2),
+				object.UnstructuredToObjMetadata(pod1),
+				object.UnstructuredToObjMetadata(pod2),
 			},
 			isError: false,
 		},

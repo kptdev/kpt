@@ -198,7 +198,7 @@ func FetchFunctionImages() []string {
 }
 
 // fnName -> v<major>.<minor> -> catalogEntry
-type catalogV2 map[string]map[string]struct{
+type catalogV2 map[string]map[string]struct {
 	LatestPatchVersion string
 	Examples           interface{}
 }
