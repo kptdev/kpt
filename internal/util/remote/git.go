@@ -40,11 +40,13 @@ type gitUpstream struct {
 	gitLock *kptfilev1.GitLock
 }
 
+var _ Upstream = &gitUpstream{}
+
 type gitOrigin struct {
 	git  *kptfilev1.GitLock
 }
 
-var _ Upstream = &gitUpstream{}
+var _ Origin = &gitOrigin{}
 
 func NewGitUpstream(git *kptfilev1.Git) Upstream {
 	return &gitUpstream{
