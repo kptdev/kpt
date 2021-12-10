@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
 
@@ -34,7 +34,7 @@ import (
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Contains information about the upstraem package to fetch
-	Upstream upstream.Fetcher
+	Upstream remote.Fetcher
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.

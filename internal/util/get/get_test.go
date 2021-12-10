@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	. "github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -58,7 +58,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	defer clean()
 
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo: "foo",
 		}),
 		Destination: w.WorkspaceDirectory,
@@ -83,7 +83,7 @@ func TestCommand_Run(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+	err := Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
@@ -144,7 +144,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+	err := Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir}),
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
@@ -208,7 +208,7 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	cliOutput := &bytes.Buffer{}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+	err := Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir}),
 		Destination: absPath,
 	}.Run(fake.CtxWithPrinter(cliOutput, cliOutput))
@@ -273,7 +273,7 @@ func TestCommand_Run_destination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -337,7 +337,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: subdir,
@@ -417,7 +417,7 @@ func TestCommand_Run_branch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/heads/exp",
 			Directory: "/",
@@ -500,7 +500,7 @@ func TestCommand_Run_tag(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/tags/v2",
 			Directory: "/",
@@ -641,7 +641,7 @@ func TestCommand_Run_ref(t *testing.T) {
 
 			absPath := filepath.Join(w.WorkspaceDirectory, repos[testutil.Upstream].RepoName)
 			err = Command{
-				Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+				Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 					Repo:      repos[testutil.Upstream].RepoDirectory,
 					Ref:       ref,
 					Directory: tc.directory,
@@ -670,7 +670,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -724,7 +724,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 
 	// try to clone and expect a failure
 	err = Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -781,7 +781,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "more", "dirs", g.RepoName)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
 			Directory: "/",
@@ -801,7 +801,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      "foo",
 			Directory: "/",
 			Ref:       "refs/heads/master",
@@ -831,7 +831,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/heads/foo",
@@ -864,7 +864,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
 			Ref:       "refs/tags/foo",
@@ -1389,7 +1389,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
 
 			err = Command{
-				Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+				Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 					Repo:      upstreamRepo.RepoDirectory,
 					Directory: tc.directory,
 					Ref:       tc.ref,
@@ -1460,7 +1460,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 
 	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
 	err := Command{
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: "/",
 			Ref:       "master",

@@ -25,7 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -107,7 +107,7 @@ func (g *TestSetupManager) Init() bool {
 	// Get the content from the upstream repo into the local workspace.
 	if !assert.NoError(g.T, get.Command{
 		Destination: filepath.Join(g.LocalWorkspace.WorkspaceDirectory, g.targetDir),
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.Repos[Upstream].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: g.GetSubDirectory,
@@ -203,7 +203,7 @@ func UpdateGitDir(t *testing.T, name string, gitDir GitDirectory, changes []Cont
 func (g *TestSetupManager) GetSubPkg(dest, repo, upstreamDir string) {
 	assert.NoError(g.T, get.Command{
 		Destination: path.Join(g.LocalWorkspace.FullPackagePath(), dest),
-		Upstream: upstream.NewGitUpstream(&kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      g.Repos[repo].RepoDirectory,
 			Ref:       g.GetRef,
 			Directory: path.Join(g.GetSubDirectory, upstreamDir),

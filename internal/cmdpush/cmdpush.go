@@ -15,7 +15,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/push"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/spf13/cobra"
 )
 
@@ -118,13 +118,13 @@ func (r *Runner) parseArgs(args []string) error {
 	if r.Origin != "" {
 		t1, err1 := parse.GitParseArgs(r.ctx, []string {r.Origin, ""})
 		if err1 == nil {
-			r.Push.Remote = upstream.NewGitOrigin(&t1.Git)
+			r.Push.Remote = remote.NewGitOrigin(&t1.Git)
 			return nil
 		}
 	
 		t2, err2 := parse.OciParseArgs(r.ctx, []string {r.Origin, ""})
 		if err2 == nil {
-			r.Push.Remote = upstream.NewOciOrigin(&t2.Oci)
+			r.Push.Remote = remote.NewOciOrigin(&t2.Oci)
 			return nil
 		}
 

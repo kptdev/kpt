@@ -20,7 +20,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
@@ -43,7 +43,7 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	ups, err := upstream.NewUpstream(kf)
+	ups, err := remote.NewUpstream(kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}

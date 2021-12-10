@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package upstream
+package remote
 
 import (
 	"context"
@@ -48,7 +48,7 @@ type Fetcher interface {
 }
 
 func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
-	const op errors.Op = "upstream.NewUpstream"
+	const op errors.Op = "remote.NewUpstream"
 	if kf != nil && kf.Upstream != nil {
 		switch kf.Upstream.Type {
 		case kptfilev1.GitOrigin:
@@ -81,7 +81,7 @@ func NewUpstream(kf *kptfilev1.KptFile) (Fetcher, error) {
 }
 
 func NewOrigin(kf *kptfilev1.KptFile) (Fetcher, error) {
-	const op errors.Op = "upstream.NewOrigin"
+	const op errors.Op = "remote.NewOrigin"
 	if kf != nil && kf.Origin != nil {
 		switch kf.Origin.Type {
 		case kptfilev1.GitOrigin:

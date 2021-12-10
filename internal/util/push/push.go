@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/masterminds/semver"
 )
@@ -39,7 +39,7 @@ type Command struct {
 	Ref string
 
 	// Contains information about the package origin
-	Remote upstream.Fetcher
+	Remote remote.Fetcher
 
 	// Increment determines is the version portion of the reference should be increased
 	Increment bool
@@ -64,7 +64,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if c.Remote == nil {
-		c.Remote, err = upstream.NewOrigin(kf)
+		c.Remote, err = remote.NewOrigin(kf)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("package must have an origin reference: %v", err))
 		}

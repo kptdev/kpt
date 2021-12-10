@@ -28,8 +28,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 )
@@ -41,7 +41,7 @@ type Command struct {
 	Git *kptfilev1.Git
 
 	// Contains information about the upstraem package to fetch
-	Upstream upstream.Fetcher
+	Upstream remote.Fetcher
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -120,7 +120,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
 
-			upstream, err := upstream.NewUpstream(kf)
+			upstream, err := remote.NewUpstream(kf)
 			if err != nil {
 				return errors.E(op, p.UniquePath, err)
 			}

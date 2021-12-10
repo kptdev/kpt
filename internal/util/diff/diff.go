@@ -29,7 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
@@ -111,7 +111,7 @@ type Command struct {
 	PkgDiffer PkgDiffer
 
 	// Contains information about the upstream package to fetch
-	Upstream upstream.Fetcher
+	Upstream remote.Fetcher
 }
 
 func (c *Command) Run(ctx context.Context) error {
@@ -122,7 +122,7 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
 
-	c.Upstream, err = upstream.NewUpstream(kptFile)
+	c.Upstream, err = remote.NewUpstream(kptFile)
 	if err != nil {
 		return errors.Errorf("upstream required: %v", err)
 	}

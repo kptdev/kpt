@@ -29,8 +29,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
-	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -115,7 +115,7 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 
-	rootUps, err := upstream.NewUpstream(rootKf)
+	rootUps, err := remote.NewUpstream(rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must have an upstream reference: %v", err))
 	}
@@ -169,10 +169,10 @@ func (u Command) Run(ctx context.Context) error {
 				return errors.E(op, p.UniquePath, err)
 			}
 
-			if subUps, err := upstream.NewUpstream(subKf); err == nil {
+			if subUps, err := remote.NewUpstream(subKf); err == nil {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
-				if upstream.ShouldUpdateSubPkgRef(subUps, rootUps, originalRootKfRef) {
+				if remote.ShouldUpdateSubPkgRef(subUps, rootUps, originalRootKfRef) {
 					if err := updateSubKf(subKf, subUps, u.Ref, u.Strategy); err != nil {
 						return errors.E(op, subPkg.UniquePath, err)
 					}
@@ -194,7 +194,7 @@ func (u Command) Run(ctx context.Context) error {
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUps upstream.Fetcher, ref string, strategy kptfilev1.UpdateStrategyType) error {
+func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Fetcher, ref string, strategy kptfilev1.UpdateStrategyType) error {
 	// check if explicit ref provided
 	if ref != "" {
 		if err := subUps.SetRef(ref); err != nil {
@@ -245,7 +245,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	pr := printer.FromContextOrDie(ctx)
 	pr.PrintPackage(p, !(p == u.Pkg))
 
-	upstream, err := upstream.NewUpstream(kf)
+	upstream, err := remote.NewUpstream(kf)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
