@@ -15,6 +15,7 @@
 parallel: true
 kptArgs:
   - "--output=json"
+  - "--reconcile-timeout=1m"
 stdOut: |
   {"eventType":"resourceApplied","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
   {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"third-nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
