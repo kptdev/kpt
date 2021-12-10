@@ -395,7 +395,9 @@ func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, op
 			var buf *bytes.Buffer
 			if strings.EqualFold(header.Name, "Kptfile") {
 				buf = &bytes.Buffer{}
-				kptfileutil.Write(buf, kptfile)
+				if err := kptfileutil.Write(buf, kptfile); err != nil {
+					return err
+				}
 				header.Size = int64(buf.Len())
 			}
 

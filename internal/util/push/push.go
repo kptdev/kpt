@@ -71,7 +71,9 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if c.Ref != "" {
-		c.Origin.SetRef(c.Ref)
+		if err := c.Origin.SetRef(c.Ref); err != nil {
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
+		}
 	}
 
 	if c.Increment {
@@ -114,7 +116,9 @@ func (c Command) Run(ctx context.Context) error {
 
 		pr.Printf("Incrementing %s to %s\n", ref, buf.String())
 
-		c.Origin.SetRef(buf.String())
+		if err := c.Origin.SetRef(buf.String()); err != nil {
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
+		}
 	}
 
 	// the kptfile pushed in the package does not have origin data
