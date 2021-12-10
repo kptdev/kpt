@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/upstream"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -43,6 +44,8 @@ type Command struct {
 // Run runs the Command.
 func (c Command) Run(ctx context.Context) error {
 	const op errors.Op = "pull.Run"
+	pr := printer.FromContextOrDie(ctx)
+
 	if err := (&c).DefaultValues(); err != nil {
 		return errors.E(op, err)
 	}
@@ -56,11 +59,15 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
+	pr.Printf("Pulling origin %s\n", c.Upstream.OriginString())
+
 	// TODO(dejardin) need to understand abs path for kpt pkg pull from git
 	_, digest, err := c.Upstream.FetchOrigin(ctx, c.Destination)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
+
+	pr.Printf("Pulled digest %s\n", digest)
 
 	kf, err := pkg.ReadKptfile(c.Destination)
 	if err != nil {
