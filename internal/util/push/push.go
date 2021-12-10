@@ -26,7 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/masterminds/semver"
+	"github.com/Masterminds/semver"
 )
 
 // Command fetches a package from a git repository, copies it to a local
