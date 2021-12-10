@@ -1,3 +1,17 @@
+// Copyright 2021 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cmdpush
 
 import (
@@ -25,22 +39,22 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:        "push [DIR@VERSION] [flags]",
-		Args:       cobra.MaximumNArgs(1),
-		Short:      docs.GetShort,
-		Long:       docs.GetShort + "\n" + docs.GetLong,
-		Example:    docs.GetExamples,
-		RunE:       r.runE,
-		PreRunE:    r.preRunE,
+		Use:     "push [DIR@VERSION] [flags]",
+		Args:    cobra.MaximumNArgs(1),
+		Short:   docs.GetShort,
+		Long:    docs.GetShort + "\n" + docs.GetLong,
+		Example: docs.GetExamples,
+		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 
 	c.Flags().StringVar(&r.Origin, "origin", "",
 		"assigns or changes the location where the package should be pushed. Default is to push it to "+
-		"the origin from which the package was pulled.")
+			"the origin from which the package was pulled.")
 	c.Flags().BoolVar(&r.Increment, "increment", false,
 		"increment the version of the package when pushed. This will increment the DIR@VERSION if provided, "+
-		"otherwise it will increment the origin's version when pulled. The version must be semver or integer, and "+
-		"may have an optional leading 'v'")
+			"otherwise it will increment the origin's version when pulled. The version must be semver or integer, and "+
+			"may have an optional leading 'v'")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -52,9 +66,9 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function
 type Runner struct {
-	ctx      context.Context
+	ctx       context.Context
 	Push      push.Command
-	Command  *cobra.Command
+	Command   *cobra.Command
 	Origin    string
 	Increment bool
 }
@@ -116,13 +130,13 @@ func (r *Runner) parseArgs(args []string) error {
 	r.Push.Pkg = p
 
 	if r.Origin != "" {
-		t1, err1 := parse.GitParseArgs(r.ctx, []string {r.Origin, ""})
+		t1, err1 := parse.GitParseArgs(r.ctx, []string{r.Origin, ""})
 		if err1 == nil {
 			r.Push.Origin = remote.NewGitOrigin(&t1.Git)
 			return nil
 		}
-	
-		t2, err2 := parse.OciParseArgs(r.ctx, []string {r.Origin, ""})
+
+		t2, err2 := parse.OciParseArgs(r.ctx, []string{r.Origin, ""})
 		if err2 == nil {
 			r.Push.Origin = remote.NewOciOrigin(&t2.Oci)
 			return nil

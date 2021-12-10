@@ -43,7 +43,7 @@ type gitUpstream struct {
 var _ Upstream = &gitUpstream{}
 
 type gitOrigin struct {
-	git  *kptfilev1.GitLock
+	git *kptfilev1.GitLock
 }
 
 var _ Origin = &gitOrigin{}
@@ -143,7 +143,7 @@ func (u *gitUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 func (u *gitOrigin) Build(digest string) *kptfilev1.Origin {
 	return &kptfilev1.Origin{
 		Type: kptfilev1.GitOrigin,
-		Git:  &kptfilev1.GitLock{
+		Git: &kptfilev1.GitLock{
 			Repo:      u.git.Repo,
 			Directory: u.git.Directory,
 			Ref:       u.git.Ref,

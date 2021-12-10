@@ -80,7 +80,7 @@ func (c Command) Run(ctx context.Context) error {
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information: %v", err))
 		}
-		
+
 		prefix := ""
 		if ref != "" && ref[:1] == "v" {
 			prefix = "v"
@@ -99,11 +99,11 @@ func (c Command) Run(ctx context.Context) error {
 		var buf bytes.Buffer
 		switch dotParts {
 		case 1:
-			fmt.Fprintf(&buf, "%s%d", prefix, v.Major() + 1)
+			fmt.Fprintf(&buf, "%s%d", prefix, v.Major()+1)
 		case 2:
-			fmt.Fprintf(&buf, "%s%d.%d", prefix, v.Major(), v.Minor() + 1)
+			fmt.Fprintf(&buf, "%s%d.%d", prefix, v.Major(), v.Minor()+1)
 		case 3:
-			fmt.Fprintf(&buf, "%s%d.%d.%d", prefix, v.Major(), v.Minor(), v.Patch() + 1)
+			fmt.Fprintf(&buf, "%s%d.%d.%d", prefix, v.Major(), v.Minor(), v.Patch()+1)
 		}
 		if v.Prerelease() != "" {
 			fmt.Fprintf(&buf, "-%s", v.Prerelease())
@@ -112,16 +112,16 @@ func (c Command) Run(ctx context.Context) error {
 			fmt.Fprintf(&buf, "+%s", v.Metadata())
 		}
 
-		pr.Printf("Incrementing %s to %s\n",ref, buf.String())
+		pr.Printf("Incrementing %s to %s\n", ref, buf.String())
 
 		c.Origin.SetRef(buf.String())
 	}
 
 	// the kptfile pushed in the package does not have origin data
-	// this is because the digest will be incorrect. Also, if it is 
+	// this is because the digest will be incorrect. Also, if it is
 	// pulled from a different location or via different branch, the
 	// correct origin will be added as part of the pull operation.
-	kf.Origin = nil	
+	kf.Origin = nil
 
 	pr.Printf("Pushing origin %s\n", c.Origin.String())
 

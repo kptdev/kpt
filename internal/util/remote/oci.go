@@ -49,7 +49,7 @@ type ociUpstream struct {
 var _ Upstream = &ociUpstream{}
 
 type ociOrigin struct {
-	oci  *kptfilev1.OciLock
+	oci *kptfilev1.OciLock
 }
 
 var _ Origin = &ociOrigin{}
@@ -103,7 +103,7 @@ func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 func (u *ociOrigin) Build(digest string) *kptfilev1.Origin {
 	return &kptfilev1.Origin{
 		Type: kptfilev1.OciOrigin,
-		Oci:  &kptfilev1.OciLock{
+		Oci: &kptfilev1.OciLock{
 			Image:  u.oci.Image,
 			Digest: digest,
 		},
@@ -196,12 +196,11 @@ func (u *ociOrigin) Push(ctx context.Context, source string, kptfile *kptfilev1.
 
 	imageDigest, err := archiveAndPush(u.oci.Image, source, kptfile, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
-		return "",errors.E(op, errors.OCI, types.UniquePath(source), err)
+		return "", errors.E(op, errors.OCI, types.UniquePath(source), err)
 	}
 
 	return imageDigest.String(), nil
 }
-
 
 func (u *ociUpstream) Ref() (string, error) {
 	const op errors.Op = "remote.Ref"
