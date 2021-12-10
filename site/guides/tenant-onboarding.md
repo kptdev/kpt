@@ -14,7 +14,7 @@ helm chart.
 
 ## Terminology
 
-Before we jump into the tutorial, let’s go over some terminologies that are 
+Before we jump into the tutorial, let’s go over some terminologies that are
 used throughout this guide.
 
 ### Tenant
@@ -52,8 +52,48 @@ organization has many benefits such as:
 * It allows flexibility in roles/permissions for package publishing/consumption.
 * Platform repo also serves as the deployment repository.
 
-Example of [Pkg Catalog Repo](https://github.com/droot/pkg-catalog) and
-[Platform Repo](https://github.com/droot/platform).
+```shell
+# An sample layout for package catalog repo
+# that contains the tenant pkg
+pkg-catalog $ tree .
+.
+├── LICENSE
+├── README.md
+└── tenant
+    ├── Kptfile
+    ├── README.md
+    ├── namespace.yaml
+    ├── ns-invariant.yaml
+    ├── quota.yaml
+    ├── role-binding.yaml
+    └── service-account.yaml
+    # other packages will come here
+```
+
+```shell
+# An sample layout for platform repo
+platform $ tree .
+.
+├── LICENSE
+├── README.md
+└── tenants
+    ├── tenant-a
+    │   ├── Kptfile
+    │   ├── README.md
+    │   ├── namespace.yaml
+    │   ├── ns-invariant.yaml
+    │   ├── quota.yaml
+    │   ├── role-binding.yaml
+    │   └── service-account.yaml
+    └── tenant-b
+        ├── Kptfile
+        ├── README.md
+        ├── namespace.yaml
+        ├── ns-invariant.yaml
+        ├── quota.yaml
+        ├── role-binding.yaml
+        └── service-account.yaml
+```
 
 ## Tenant package
 
@@ -70,7 +110,7 @@ try to offer all the possible customization options. The tenant package should
 offer a reasonable set of defaults with required constraints. Downstream users
 of the tenant package can directly edit, add/delete resources as per their needs.
 
-Here is an example of a [basic tenant package](https://github.com/droot/pkg-catalog). 
+Here is an example of a [basic tenant package](https://github.com/GoogleContainerTools/kpt/tree/main/package-examples/tenant).
 
 ```shell
 
@@ -226,15 +266,6 @@ application teams to onboard a new tenant. In the next guide, we will explore
 how platform teams can do it at a scale when there are hundreds of tenants
 provisioned on a kubernetes cluster. Next guides will explore package lifecycle
 (pkg diff/update) use cases at large scale.
-
-## Friction Encountered
-
-* `set-namespace` function doesn’t update the namespace for service account in
- subjects in rolebinding
-* `kpt pkg update` doesn’t merge pipelines from upstream packages smoothly.
-  Was not able to find the fully qualified version for kpt functions.
-* `kpt fn render` image-pull-policy should be `ifNotPresent` by default. It
-  slows the `fn render` unnecessarily.
 
 ## Quick links
 
