@@ -125,14 +125,14 @@ func (c Command) Run(ctx context.Context) error {
 
 	pr.Printf("Pushing origin %s\n", c.Origin.String())
 
-	digest, err := c.Origin.PushOrigin(ctx, path, kf)
+	digest, err := c.Origin.Push(ctx, path, kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
 	pr.Printf("Pushed digest %s\n", digest)
 
-	kf.Origin = c.Origin.BuildOrigin(digest)
+	kf.Origin = c.Origin.Build(digest)
 	err = kptfileutil.WriteFile(path, kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)

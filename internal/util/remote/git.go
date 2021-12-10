@@ -41,7 +41,7 @@ type gitUpstream struct {
 }
 
 type gitOrigin struct {
-	origin  *kptfilev1.GitLock
+	git  *kptfilev1.GitLock
 }
 
 var _ Upstream = &gitUpstream{}
@@ -54,7 +54,7 @@ func NewGitUpstream(git *kptfilev1.Git) Upstream {
 
 func NewGitOrigin(git *kptfilev1.Git) Origin {
 	return &gitOrigin{
-		origin: &kptfilev1.GitLock{
+		git: &kptfilev1.GitLock{
 			Repo:      git.Repo,
 			Directory: git.Directory,
 			Ref:       git.Ref,
@@ -71,11 +71,11 @@ func (u *gitUpstream) LockedString() string {
 }
 
 func (u *gitOrigin) String() string {
-	return fmt.Sprintf("%s@%s", u.origin.Repo, u.origin.Ref)
+	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
 }
 
 func (u *gitOrigin) LockedString() string {
-	return fmt.Sprintf("%s@%s", u.origin.Repo, u.origin.Ref)
+	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
 }
 
 func (u *gitUpstream) Validate() error {
@@ -97,7 +97,7 @@ func (u *gitUpstream) Validate() error {
 
 func (u *gitOrigin) Validate() error {
 	const op errors.Op = "remote.Validate"
-	g := u.origin
+	g := u.git
 	if g != nil {
 		if len(g.Repo) == 0 {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
@@ -138,13 +138,13 @@ func (u *gitUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 	}
 }
 
-func (u *gitOrigin) BuildOrigin(digest string) *kptfilev1.Origin {
+func (u *gitOrigin) Build(digest string) *kptfilev1.Origin {
 	return &kptfilev1.Origin{
 		Type: kptfilev1.GitOrigin,
 		Git:  &kptfilev1.GitLock{
-			Repo:      u.origin.Repo,
-			Directory: u.origin.Directory,
-			Ref:       u.origin.Ref,
+			Repo:      u.git.Repo,
+			Directory: u.git.Directory,
+			Ref:       u.git.Ref,
 			Commit:    digest,
 		},
 	}
@@ -176,11 +176,11 @@ func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 	return path.Join(repoSpec.Dir, repoSpec.Path), nil
 }
 
-func (u *gitOrigin) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
+func (u *gitOrigin) Fetch(ctx context.Context, dest string) (string, string, error) {
 	repoSpec := &git.RepoSpec{
-		OrgRepo: u.origin.Repo,
-		Path:    u.origin.Directory,
-		Ref:     u.origin.Ref,
+		OrgRepo: u.git.Repo,
+		Path:    u.git.Directory,
+		Ref:     u.git.Ref,
 	}
 	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
 		return "", "", err
@@ -202,7 +202,7 @@ func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	return cloneAndCopy(ctx, repoSpec, dest)
 }
 
-func (u *gitOrigin) PushOrigin(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error) {
+func (u *gitOrigin) Push(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error) {
 	return "", fmt.Errorf("git push not implemented")
 }
 
@@ -216,11 +216,11 @@ func (u *gitUpstream) SetRef(ref string) error {
 }
 
 func (u *gitOrigin) Ref() (string, error) {
-	return u.origin.Ref, nil
+	return u.git.Ref, nil
 }
 
 func (u *gitOrigin) SetRef(ref string) error {
-	u.origin.Ref = ref
+	u.git.Ref = ref
 	return nil
 }
 

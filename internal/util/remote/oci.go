@@ -49,7 +49,7 @@ type ociUpstream struct {
 var _ Upstream = &ociUpstream{}
 
 type ociOrigin struct {
-	origin  *kptfilev1.OciLock
+	oci  *kptfilev1.OciLock
 }
 
 var _ Origin = &ociOrigin{}
@@ -62,7 +62,7 @@ func NewOciUpstream(oci *kptfilev1.Oci) Upstream {
 
 func NewOciOrigin(oci *kptfilev1.Oci) Origin {
 	return &ociOrigin{
-		origin: &kptfilev1.OciLock{
+		oci: &kptfilev1.OciLock{
 			Image: oci.Image,
 		},
 	}
@@ -77,11 +77,11 @@ func (u *ociUpstream) LockedString() string {
 }
 
 func (u *ociOrigin) String() string {
-	return u.origin.Image
+	return u.oci.Image
 }
 
 func (u *ociOrigin) LockedString() string {
-	return u.origin.Digest
+	return u.oci.Digest
 }
 
 func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
@@ -100,11 +100,11 @@ func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 	}
 }
 
-func (u *ociOrigin) BuildOrigin(digest string) *kptfilev1.Origin {
+func (u *ociOrigin) Build(digest string) *kptfilev1.Origin {
 	return &kptfilev1.Origin{
 		Type: kptfilev1.OciOrigin,
 		Oci:  &kptfilev1.OciLock{
-			Image:  u.origin.Image,
+			Image:  u.oci.Image,
 			Digest: digest,
 		},
 	}
@@ -122,8 +122,8 @@ func (u *ociUpstream) Validate() error {
 
 func (u *ociOrigin) Validate() error {
 	const op errors.Op = "remote.Validate"
-	if u.origin != nil {
-		if len(u.origin.Image) == 0 {
+	if u.oci != nil {
+		if len(u.oci.Image) == 0 {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
 		}
 	}
@@ -148,9 +148,9 @@ func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 	return dest, nil
 }
 
-func (u *ociOrigin) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
-	const op errors.Op = "remote.FetchOrigin"
-	imageDigest, err := pullAndExtract(u.origin.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+func (u *ociOrigin) Fetch(ctx context.Context, dest string) (string, string, error) {
+	const op errors.Op = "remote.Fetch"
+	imageDigest, err := pullAndExtract(u.oci.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
@@ -191,10 +191,10 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	return nil
 }
 
-func (u *ociOrigin) PushOrigin(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {
-	const op errors.Op = "remote.PushOrigin"
+func (u *ociOrigin) Push(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {
+	const op errors.Op = "remote.Push"
 
-	imageDigest, err := archiveAndPush(u.origin.Image, source, kptfile, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	imageDigest, err := archiveAndPush(u.oci.Image, source, kptfile, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "",errors.E(op, errors.OCI, types.UniquePath(source), err)
 	}
@@ -230,24 +230,24 @@ func (u *ociUpstream) SetRef(ref string) error {
 
 func (u *ociOrigin) Ref() (string, error) {
 	const op errors.Op = "remote.Ref"
-	r, err := name.ParseReference(u.origin.Image)
+	r, err := name.ParseReference(u.oci.Image)
 	if err != nil {
-		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
+		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
 	}
 	return r.Identifier(), nil
 }
 
 func (u *ociOrigin) SetRef(ref string) error {
 	const op errors.Op = "remote.SetRef"
-	r, err := name.ParseReference(u.origin.Image)
+	r, err := name.ParseReference(u.oci.Image)
 	if err != nil {
-		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
+		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
 	}
 
 	if len(strings.SplitN(ref, "sha256:", 2)[0]) == 0 {
-		u.origin.Image = r.Context().Digest(ref).Name()
+		u.oci.Image = r.Context().Digest(ref).Name()
 	} else {
-		u.origin.Image = r.Context().Tag(ref).Name()
+		u.oci.Image = r.Context().Tag(ref).Name()
 	}
 
 	return nil

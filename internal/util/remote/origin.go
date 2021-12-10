@@ -28,10 +28,10 @@ type Origin interface {
 
 	Validate() error
 
-	BuildOrigin(digest string) *kptfilev1.Origin
+	Build(digest string) *kptfilev1.Origin
 
-	FetchOrigin(ctx context.Context, dest string) (absPath string, digest string, err error)
-	PushOrigin(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error)
+	Fetch(ctx context.Context, dest string) (absPath string, digest string, err error)
+	Push(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error)
 
 	Ref() (string, error)
 	SetRef(ref string) error
@@ -46,7 +46,7 @@ func NewOrigin(kf *kptfilev1.KptFile) (Origin, error) {
 				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile origin must have git information"))
 			}
 			u := &gitOrigin{
-				origin: kf.Origin.Git,
+				git: kf.Origin.Git,
 			}
 			return u, nil
 		case kptfilev1.OciOrigin:
@@ -54,7 +54,7 @@ func NewOrigin(kf *kptfilev1.KptFile) (Origin, error) {
 				return nil, errors.E(op, errors.MissingParam, fmt.Errorf("kptfile origin must have oci information"))
 			}
 			u := &ociOrigin{
-				origin: kf.Origin.Oci,
+				oci: kf.Origin.Oci,
 			}
 			return u, nil
 		}
