@@ -34,7 +34,7 @@ import (
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Contains information about the upstraem package to fetch
-	Upstream remote.Fetcher
+	Origin remote.Origin
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -59,10 +59,10 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
-	pr.Printf("Pulling origin %s\n", c.Upstream.OriginString())
+	pr.Printf("Pulling origin %s\n", c.Origin.String())
 
 	// TODO(dejardin) need to understand abs path for kpt pkg pull from git
-	_, digest, err := c.Upstream.FetchOrigin(ctx, c.Destination)
+	_, digest, err := c.Origin.FetchOrigin(ctx, c.Destination)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
@@ -74,7 +74,7 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
 
-	kf.Origin = c.Upstream.BuildOrigin(digest)
+	kf.Origin = c.Origin.BuildOrigin(digest)
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
 		return cleanUpDirAndError(c.Destination, err)
@@ -86,10 +86,10 @@ func (c Command) Run(ctx context.Context) error {
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
 	const op errors.Op = "pull.DefaultValues"
-	if c.Upstream == nil {
+	if c.Origin == nil {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo or image reference information"))
 	}
-	if err := c.Upstream.Validate(); err != nil {
+	if err := c.Origin.Validate(); err != nil {
 		return errors.E(op, err)
 	}
 	if !filepath.IsAbs(c.Destination) {

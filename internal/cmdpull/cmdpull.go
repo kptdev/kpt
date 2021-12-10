@@ -80,13 +80,13 @@ func (r *Runner) parseArgs(args []string) (string, error) {
 
 	t1, err1 := parse.GitParseArgs(r.ctx, args)
 	if err1 == nil {
-		r.Pull.Upstream = remote.NewGitOrigin(&t1.Git)
+		r.Pull.Origin = remote.NewGitOrigin(&t1.Git)
 		return t1.Destination, nil
 	}
 
 	t2, err2 := parse.OciParseArgs(r.ctx, args)
 	if err2 == nil {
-		r.Pull.Upstream = remote.NewOciOrigin(&t2.Oci)
+		r.Pull.Origin = remote.NewOciOrigin(&t2.Oci)
 		return t2.Destination, nil
 	}
 

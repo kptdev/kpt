@@ -39,7 +39,7 @@ type Command struct {
 	Ref string
 
 	// Contains information about the package origin
-	Remote remote.Fetcher
+	Origin remote.Origin
 
 	// Increment determines is the version portion of the reference should be increased
 	Increment bool
@@ -63,20 +63,20 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if c.Remote == nil {
-		c.Remote, err = remote.NewOrigin(kf)
+	if c.Origin == nil {
+		c.Origin, err = remote.NewOrigin(kf)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("package must have an origin reference: %v", err))
 		}
 	}
 
 	if c.Ref != "" {
-		c.Remote.SetOriginRef(c.Ref)
+		c.Origin.SetRef(c.Ref)
 	}
 
 	if c.Increment {
 		// TODO(dejardin) move this logic into a util with test coverage
-		ref, err := c.Remote.OriginRef()
+		ref, err := c.Origin.Ref()
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information: %v", err))
 		}
@@ -114,7 +114,7 @@ func (c Command) Run(ctx context.Context) error {
 
 		pr.Printf("Incrementing %s to %s\n",ref, buf.String())
 
-		c.Remote.SetOriginRef(buf.String())
+		c.Origin.SetRef(buf.String())
 	}
 
 	// the kptfile pushed in the package does not have origin data
@@ -123,16 +123,16 @@ func (c Command) Run(ctx context.Context) error {
 	// correct origin will be added as part of the pull operation.
 	kf.Origin = nil	
 
-	pr.Printf("Pushing origin %s\n", c.Remote.OriginString())
+	pr.Printf("Pushing origin %s\n", c.Origin.String())
 
-	digest, err := c.Remote.PushOrigin(ctx, path, kf)
+	digest, err := c.Origin.PushOrigin(ctx, path, kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
 	pr.Printf("Pushed digest %s\n", digest)
 
-	kf.Origin = c.Remote.BuildOrigin(digest)
+	kf.Origin = c.Origin.BuildOrigin(digest)
 	err = kptfileutil.WriteFile(path, kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)

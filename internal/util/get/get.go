@@ -41,7 +41,7 @@ type Command struct {
 	Git *kptfilev1.Git
 
 	// Contains information about the upstraem package to fetch
-	Upstream remote.Fetcher
+	Upstream remote.Upstream
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.

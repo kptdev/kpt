@@ -194,7 +194,7 @@ func (u Command) Run(ctx context.Context) error {
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Fetcher, ref string, strategy kptfilev1.UpdateStrategyType) error {
+func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Upstream, ref string, strategy kptfilev1.UpdateStrategyType) error {
 	// check if explicit ref provided
 	if ref != "" {
 		if err := subUps.SetRef(ref); err != nil {

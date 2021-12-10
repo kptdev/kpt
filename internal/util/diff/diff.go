@@ -111,7 +111,7 @@ type Command struct {
 	PkgDiffer PkgDiffer
 
 	// Contains information about the upstream package to fetch
-	Upstream remote.Fetcher
+	Upstream remote.Upstream
 }
 
 func (c *Command) Run(ctx context.Context) error {

@@ -29,7 +29,7 @@ func TestNewUpstream(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    Fetcher
+		want    Upstream
 		wantErr bool
 	}{
 		{

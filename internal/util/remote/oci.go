@@ -44,19 +44,24 @@ import (
 type ociUpstream struct {
 	oci     *kptfilev1.Oci
 	ociLock *kptfilev1.OciLock
+}
+
+var _ Upstream = &ociUpstream{}
+
+type ociOrigin struct {
 	origin  *kptfilev1.OciLock
 }
 
-var _ Fetcher = &ociUpstream{}
+var _ Origin = &ociOrigin{}
 
-func NewOciUpstream(oci *kptfilev1.Oci) Fetcher {
+func NewOciUpstream(oci *kptfilev1.Oci) Upstream {
 	return &ociUpstream{
 		oci: oci,
 	}
 }
 
-func NewOciOrigin(oci *kptfilev1.Oci) Fetcher {
-	return &ociUpstream{
+func NewOciOrigin(oci *kptfilev1.Oci) Origin {
+	return &ociOrigin{
 		origin: &kptfilev1.OciLock{
 			Image: oci.Image,
 		},
@@ -71,8 +76,12 @@ func (u *ociUpstream) LockedString() string {
 	return u.ociLock.Image
 }
 
-func (u *ociUpstream) OriginString() string {
+func (u *ociOrigin) String() string {
 	return u.origin.Image
+}
+
+func (u *ociOrigin) LockedString() string {
+	return u.origin.Digest
 }
 
 func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
@@ -91,7 +100,7 @@ func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
 	}
 }
 
-func (u *ociUpstream) BuildOrigin(digest string) *kptfilev1.Origin {
+func (u *ociOrigin) BuildOrigin(digest string) *kptfilev1.Origin {
 	return &kptfilev1.Origin{
 		Type: kptfilev1.OciOrigin,
 		Oci:  &kptfilev1.OciLock{
@@ -102,12 +111,17 @@ func (u *ociUpstream) BuildOrigin(digest string) *kptfilev1.Origin {
 }
 
 func (u *ociUpstream) Validate() error {
-	const op errors.Op = "upstream.Validate"
+	const op errors.Op = "remote.Validate"
 	if u.oci != nil {
 		if len(u.oci.Image) == 0 {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
 		}
 	}
+	return nil
+}
+
+func (u *ociOrigin) Validate() error {
+	const op errors.Op = "remote.Validate"
 	if u.origin != nil {
 		if len(u.origin.Image) == 0 {
 			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
@@ -117,7 +131,7 @@ func (u *ociUpstream) Validate() error {
 }
 
 func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, string, error) {
-	const op errors.Op = "upstream.FetchUpstream"
+	const op errors.Op = "remote.FetchUpstream"
 	imageDigest, err := pullAndExtract(u.oci.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
@@ -126,7 +140,7 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, s
 }
 
 func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (string, error) {
-	const op errors.Op = "upstream.FetchUpstreamLock"
+	const op errors.Op = "remote.FetchUpstreamLock"
 	_, err := pullAndExtract(u.ociLock.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
@@ -134,8 +148,8 @@ func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 	return dest, nil
 }
 
-func (u *ociUpstream) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
-	const op errors.Op = "upstream.FetchOrigin"
+func (u *ociOrigin) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
+	const op errors.Op = "remote.FetchOrigin"
 	imageDigest, err := pullAndExtract(u.origin.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
@@ -144,7 +158,7 @@ func (u *ociUpstream) FetchOrigin(ctx context.Context, dest string) (string, str
 }
 
 func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
-	const op errors.Op = "upstream.FetchUpstreamClone"
+	const op errors.Op = "remote.FetchUpstreamClone"
 	// pr := printer.FromContextOrDie(ctx)
 
 	// We need to create a temp directory where we can copy the content of the repo.
@@ -177,8 +191,8 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	return nil
 }
 
-func (u *ociUpstream) PushOrigin(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {
-	const op errors.Op = "upstream.PushOrigin"
+func (u *ociOrigin) PushOrigin(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {
+	const op errors.Op = "remote.PushOrigin"
 
 	imageDigest, err := archiveAndPush(u.origin.Image, source, kptfile, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
@@ -190,7 +204,7 @@ func (u *ociUpstream) PushOrigin(ctx context.Context, source string, kptfile *kp
 
 
 func (u *ociUpstream) Ref() (string, error) {
-	const op errors.Op = "upstream.Ref"
+	const op errors.Op = "remote.Ref"
 	r, err := name.ParseReference(u.oci.Image)
 	if err != nil {
 		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
@@ -199,7 +213,7 @@ func (u *ociUpstream) Ref() (string, error) {
 }
 
 func (u *ociUpstream) SetRef(ref string) error {
-	const op errors.Op = "upstream.SetRef"
+	const op errors.Op = "remote.SetRef"
 	r, err := name.ParseReference(u.oci.Image)
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.oci.Image, err))
@@ -214,8 +228,8 @@ func (u *ociUpstream) SetRef(ref string) error {
 	return nil
 }
 
-func (u *ociUpstream) OriginRef() (string, error) {
-	const op errors.Op = "upstream.OriginRef"
+func (u *ociOrigin) Ref() (string, error) {
+	const op errors.Op = "remote.Ref"
 	r, err := name.ParseReference(u.origin.Image)
 	if err != nil {
 		return "", errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
@@ -223,8 +237,8 @@ func (u *ociUpstream) OriginRef() (string, error) {
 	return r.Identifier(), nil
 }
 
-func (u *ociUpstream) SetOriginRef(ref string) error {
-	const op errors.Op = "upstream.SetOriginRef"
+func (u *ociOrigin) SetRef(ref string) error {
+	const op errors.Op = "remote.SetRef"
 	r, err := name.ParseReference(u.origin.Image)
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error parsing reference: %s %w", u.origin.Image, err))
@@ -241,7 +255,7 @@ func (u *ociUpstream) SetOriginRef(ref string) error {
 
 // shouldUpdateSubPkgRef checks if subpkg ref should be updated.
 // This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
-func (u *ociUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKfRef string) bool {
+func (u *ociUpstream) ShouldUpdateSubPkgRef(rootUpstream Upstream, originalRootKfRef string) bool {
 	root, ok := rootUpstream.(*ociUpstream)
 	if !ok {
 		return false
@@ -262,7 +276,7 @@ func (u *ociUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKf
 // extract (untar) image files to target directory. The desired version or digest must
 // be in the imageName, and the resolved image sha256 digest is returned.
 func pullAndExtract(imageName string, dir string, options ...remote.Option) (name.Reference, error) {
-	const op errors.Op = "upstream.pullAndExtract"
+	const op errors.Op = "remote.pullAndExtract"
 
 	ref, err := name.ParseReference(imageName)
 	if err != nil {
@@ -334,7 +348,7 @@ func pullAndExtract(imageName string, dir string, options ...remote.Option) (nam
 // extract (untar) image files to target directory. The desired version or digest must
 // be in the imageName, and the resolved image sha256 digest is returned.
 func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, options ...remote.Option) (name.Reference, error) {
-	const op errors.Op = "upstream.archiveAndPush"
+	const op errors.Op = "remote.archiveAndPush"
 
 	ref, err := name.ParseReference(imageName)
 	if err != nil {

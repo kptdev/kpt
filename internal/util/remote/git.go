@@ -31,28 +31,30 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/otiai10/copy"
 )
 
 type gitUpstream struct {
-	git     *v1.Git
-	gitLock *v1.GitLock
-	origin  *v1.GitLock
+	git     *kptfilev1.Git
+	gitLock *kptfilev1.GitLock
 }
 
-var _ Fetcher = &gitUpstream{}
+type gitOrigin struct {
+	origin  *kptfilev1.GitLock
+}
 
-func NewGitUpstream(git *v1.Git) Fetcher {
+var _ Upstream = &gitUpstream{}
+
+func NewGitUpstream(git *kptfilev1.Git) Upstream {
 	return &gitUpstream{
 		git: git,
 	}
 }
 
-func NewGitOrigin(git *v1.Git) Fetcher {
-	return &gitUpstream{
-		origin: &v1.GitLock{
+func NewGitOrigin(git *kptfilev1.Git) Origin {
+	return &gitOrigin{
+		origin: &kptfilev1.GitLock{
 			Repo:      git.Repo,
 			Directory: git.Directory,
 			Ref:       git.Ref,
@@ -68,14 +70,16 @@ func (u *gitUpstream) LockedString() string {
 	return fmt.Sprintf("%s@%s", u.gitLock.Repo, u.gitLock.Ref)
 }
 
-
-func (u *gitUpstream) OriginString() string {
+func (u *gitOrigin) String() string {
 	return fmt.Sprintf("%s@%s", u.origin.Repo, u.origin.Ref)
 }
 
+func (u *gitOrigin) LockedString() string {
+	return fmt.Sprintf("%s@%s", u.origin.Repo, u.origin.Ref)
+}
 
 func (u *gitUpstream) Validate() error {
-	const op errors.Op = "upstream.Validate"
+	const op errors.Op = "remote.Validate"
 	g := u.git
 	if g != nil {
 		if len(g.Repo) == 0 {
@@ -91,36 +95,53 @@ func (u *gitUpstream) Validate() error {
 	return nil
 }
 
-func (u *gitUpstream) BuildUpstream() *v1.Upstream {
+func (u *gitOrigin) Validate() error {
+	const op errors.Op = "remote.Validate"
+	g := u.origin
+	if g != nil {
+		if len(g.Repo) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+		}
+		if len(g.Ref) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+		}
+		if len(g.Directory) == 0 {
+			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
+		}
+	}
+	return nil
+}
+
+func (u *gitUpstream) BuildUpstream() *kptfilev1.Upstream {
 	repoDir := u.git.Directory
 	if !strings.HasSuffix(repoDir, "file://") {
 		repoDir = filepath.Join(path.Split(repoDir))
 	}
 	u.git.Directory = repoDir
 
-	return &v1.Upstream{
-		Type: v1.GitOrigin,
+	return &kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
 		Git:  u.git,
 	}
 }
 
-func (u *gitUpstream) BuildUpstreamLock(digest string) *v1.UpstreamLock {
-	u.gitLock = &v1.GitLock{
+func (u *gitUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
+	u.gitLock = &kptfilev1.GitLock{
 		Repo:      u.git.Repo,
 		Directory: u.git.Directory,
 		Ref:       u.git.Ref,
 		Commit:    digest,
 	}
-	return &v1.UpstreamLock{
-		Type: v1.GitOrigin,
+	return &kptfilev1.UpstreamLock{
+		Type: kptfilev1.GitOrigin,
 		Git:  u.gitLock,
 	}
 }
 
-func (u *gitUpstream) BuildOrigin(digest string) *v1.Origin {
-	return &v1.Origin{
-		Type: v1.GitOrigin,
-		Git:  &v1.GitLock{
+func (u *gitOrigin) BuildOrigin(digest string) *kptfilev1.Origin {
+	return &kptfilev1.Origin{
+		Type: kptfilev1.GitOrigin,
+		Git:  &kptfilev1.GitLock{
 			Repo:      u.origin.Repo,
 			Directory: u.origin.Directory,
 			Ref:       u.origin.Ref,
@@ -155,7 +176,7 @@ func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) (strin
 	return path.Join(repoSpec.Dir, repoSpec.Path), nil
 }
 
-func (u *gitUpstream) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
+func (u *gitOrigin) FetchOrigin(ctx context.Context, dest string) (string, string, error) {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: u.origin.Repo,
 		Path:    u.origin.Directory,
@@ -181,7 +202,7 @@ func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	return cloneAndCopy(ctx, repoSpec, dest)
 }
 
-func (u *gitUpstream) PushOrigin(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error) {
+func (u *gitOrigin) PushOrigin(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error) {
 	return "", fmt.Errorf("git push not implemented")
 }
 
@@ -194,18 +215,18 @@ func (u *gitUpstream) SetRef(ref string) error {
 	return nil
 }
 
-func (u *gitUpstream) OriginRef() (string, error) {
+func (u *gitOrigin) Ref() (string, error) {
 	return u.origin.Ref, nil
 }
 
-func (u *gitUpstream) SetOriginRef(ref string) error {
+func (u *gitOrigin) SetRef(ref string) error {
 	u.origin.Ref = ref
 	return nil
 }
 
 // shouldUpdateSubPkgRef checks if subpkg ref should be updated.
 // This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
-func (u *gitUpstream) ShouldUpdateSubPkgRef(rootUpstream Fetcher, originalRootKfRef string) bool {
+func (u *gitUpstream) ShouldUpdateSubPkgRef(rootUpstream Upstream, originalRootKfRef string) bool {
 	root, ok := rootUpstream.(*gitUpstream)
 	return ok &&
 		u.git.Repo == root.git.Repo &&

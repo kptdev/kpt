@@ -22,21 +22,21 @@ import (
 )
 
 //nolint:scopelint
-func TestNewGitFetcher(t *testing.T) {
+func TestNewGitUpstream(t *testing.T) {
 	type args struct {
 		git *v1.Git
 	}
 	tests := []struct {
 		name string
 		args args
-		want Fetcher
+		want Upstream
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewGitUpstream(tt.args.git); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewGitFetcher() = %v, want %v", got, tt.want)
+				t.Errorf("NewGitUpstream() = %v, want %v", got, tt.want)
 			}
 		})
 	}
