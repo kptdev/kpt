@@ -29,11 +29,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	KindClusterName   = "live-e2e-test"
-	K8sVersionEnvName = "K8S_VERSION"
-)
-
 // Runner uses the provided Config to run a test.
 type Runner struct {
 	// Config provides the configuration for how this test should be

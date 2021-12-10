@@ -18,13 +18,10 @@ package update
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -121,13 +118,6 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must have an upstream reference: %v", err))
 	}
 
-	if rootKf.Upstream.Type == kptfilev1.GitOrigin {
-		// require package is checked into git before trying to update it
-		if err := checkIfCommitted(ctx, u.Pkg); err != nil {
-			return errors.E(op, u.Pkg.UniquePath, err)
-		}
-	}
-
 	originalRootKfRef, err := rootUps.Ref()
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
@@ -204,64 +194,6 @@ func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Upstream, ref string, s
 	}
 	if strategy != "" {
 		subKf.Upstream.UpdateStrategy = strategy
-	}
-	return nil
-}
-
-// repoClone is an interface that represents a clone of a repo on the local
-// disk.
-type repoClone interface {
-	AbsPath() string
-}
-
-// newNilRepoClone creates a new nilRepoClone that implements the repoClone
-// interface
-func newNilRepoClone() (*nilRepoClone, error) {
-	const op errors.Op = "update.newNilRepoClone"
-	dir, err := ioutil.TempDir("", "kpt-empty-")
-	if err != nil {
-		return nil, errors.E(op, errors.IO, fmt.Errorf("errors creating a temporary directory: %w", err))
-	}
-	return &nilRepoClone{
-		dir: dir,
-	}, nil
-}
-
-// nilRepoClone is an implementation of the repoClone interface, but that
-// just represents an empty directory. This simplifies the logic for update
-// since we don't have to special case situations where we don't have
-// upstream and/or origin.
-type nilRepoClone struct {
-	dir string
-}
-
-// AbsPath returns the absolute path to the local directory for the repo. For
-// the nilRepoClone, this will always be an empty directory.
-func (nrc *nilRepoClone) AbsPath() string {
-	return nrc.dir
-}
-
-func checkIfCommitted(ctx context.Context, p *pkg.Pkg) error {
-	const op errors.Op = "update.checkIfCommitted"
-	g, err := gitutil.NewLocalGitRunner(p.UniquePath.String())
-	if err != nil {
-		return err
-	}
-
-	rr, err := g.Run(ctx, "status", "-s")
-	if err != nil {
-		var gitExecErr *gitutil.GitExecError
-		if errors.As(err, &gitExecErr) {
-			if strings.Contains(gitExecErr.StdErr, "not a git repository") {
-				return &PkgNotGitRepoError{Path: p.UniquePath}
-			}
-		}
-		return errors.E(op, p.UniquePath, err)
-	}
-	if strings.TrimSpace(rr.Stdout) != "" {
-		return errors.E(op, p.UniquePath, &PkgRepoDirtyError{
-			Path: p.UniquePath,
-		})
 	}
 	return nil
 }
