@@ -153,6 +153,9 @@ type Oci struct {
 	// Image is the OCI image repository for the package.
 	// e.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend:latest'
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
+
+	// Directory is the sub-package of the image.
+	Directory string `yaml:"path,omitempty" json:"path,omitempty"`
 }
 
 // UpstreamLock is a resolved locator for the last fetch of the package.
@@ -203,6 +206,9 @@ type OciLock struct {
 	// Image is the OCI image repository for the package.
 	// e.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend@sha256:b0c94f11d856e59673daca566857a7ead126ef8e2b6915ed662804f858d7eaea'
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
+
+	// Directory is the sub-package of the image.
+	Directory string `yaml:"path,omitempty" json:"path,omitempty"`
 
 	// Digest is the unique sha of the image when it was last pulled.
 	Digest string `yaml:"digest,omitempty" json:"digest,omitempty"`

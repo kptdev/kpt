@@ -24,6 +24,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -73,7 +74,7 @@ func (u *ociUpstream) String() string {
 }
 
 func (u *ociUpstream) LockedString() string {
-	return u.ociLock.Image
+	return u.ociLock.Digest
 }
 
 func (u *ociOrigin) String() string {
@@ -92,7 +93,9 @@ func (u *ociUpstream) BuildUpstream() *kptfilev1.Upstream {
 }
 
 func (u *ociUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
-	u.ociLock.Image = digest
+	u.ociLock.Image = u.oci.Image
+	u.ociLock.Directory = u.oci.Directory
+	u.ociLock.Digest = digest
 
 	return &kptfilev1.UpstreamLock{
 		Type: kptfilev1.OciOrigin,
@@ -136,16 +139,16 @@ func (u *ociUpstream) FetchUpstream(ctx context.Context, dest string) (string, s
 	if err != nil {
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
-	return dest, imageDigest.Name(), nil
+	return path.Join(dest, u.oci.Directory), imageDigest.Name(), nil
 }
 
 func (u *ociUpstream) FetchUpstreamLock(ctx context.Context, dest string) (string, error) {
 	const op errors.Op = "remote.FetchUpstreamLock"
-	_, err := pullAndExtract(u.ociLock.Image, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
+	_, err := pullAndExtract(u.ociLock.Digest, dest, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
 	if err != nil {
 		return "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
-	return dest, nil
+	return path.Join(dest, u.ociLock.Directory), nil
 }
 
 func (u *ociOrigin) Fetch(ctx context.Context, dest string) (string, string, error) {
@@ -154,7 +157,7 @@ func (u *ociOrigin) Fetch(ctx context.Context, dest string) (string, string, err
 	if err != nil {
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
-	return dest, imageDigest.Name(), nil
+	return path.Join(dest, u.oci.Directory), imageDigest.Name(), nil
 }
 
 func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
@@ -175,7 +178,7 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
 
-	sourcePath := dir
+	sourcePath := path.Join(dir, u.oci.Directory)
 	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
@@ -392,6 +395,10 @@ func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, op
 				return err
 			}
 
+			// must provide real name
+			// (see https://golang.org/src/archive/tar/common.go?#L626)
+			header.Name = filepath.ToSlash(relative)
+
 			var buf *bytes.Buffer
 			if strings.EqualFold(header.Name, "Kptfile") {
 				buf = &bytes.Buffer{}
@@ -400,10 +407,6 @@ func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, op
 				}
 				header.Size = int64(buf.Len())
 			}
-
-			// must provide real name
-			// (see https://golang.org/src/archive/tar/common.go?#L626)
-			header.Name = filepath.ToSlash(relative)
 
 			// write header
 			if err := tw.WriteHeader(header); err != nil {
