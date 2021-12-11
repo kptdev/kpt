@@ -62,7 +62,7 @@ func targetFromImageReference(image, dest string) (OciTarget, error) {
 	}
 
 	directory := ""
-	parts :=  strings.SplitN(ref.Context().Name(), "//", 2)
+	parts := strings.SplitN(ref.Context().Name(), "//", 2)
 	if len(parts) == 2 {
 		directory = "/" + parts[1]
 		repo, err := name.NewRepository(parts[0])
@@ -80,7 +80,7 @@ func targetFromImageReference(image, dest string) (OciTarget, error) {
 
 	return OciTarget{
 		Oci: kptfilev1.Oci{
-			Image: ref.Name(),
+			Image:     ref.Name(),
 			Directory: directory,
 		},
 		Destination: destination,
