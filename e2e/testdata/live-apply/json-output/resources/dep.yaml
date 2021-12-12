@@ -15,19 +15,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: third-nginx
+  name: nginx
   namespace: json-output
   annotations:
-    config.k8s.io/owning-inventory: json-output
+    config.kubernetes.io/depends-on: apps/namespaces/json-output/ConfigMap/cm
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: third-nginx
+      app: nginx
   template:
     metadata:
       labels:
-        app: third-nginx
+        app: nginx
     spec:
       containers:
         - name: nginx
