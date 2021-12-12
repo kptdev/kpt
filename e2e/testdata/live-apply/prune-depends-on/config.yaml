@@ -13,6 +13,10 @@
 # limitations under the License.
 
 parallel: true
+
+kptArgs:
+  - "--reconcile-timeout=1m"
+
 stdOut: |
   configmap/cm created
   1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
