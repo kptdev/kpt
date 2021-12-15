@@ -1,4 +1,4 @@
-# Tenant onboarding use-case
+# Tenant onboarding
 
 We have seen that in large organizations using kubernetes, there is a platform
 team (or infrastructure team) that is responsible for managing the kubernetes
@@ -20,13 +20,13 @@ used throughout this guide.
 ### Tenant
 
 A tenant represents a collection of related infra/app resources and needs to be
-isolated from others resources, for example,a microservice, a workload, a team
+isolated from other resources, for example, a microservice, a workload, a team
 (group of developers) sharing common infra resources.
 
 ### Platform team
 
-Central infra team responsible for managing the Kubernetes cluster and is
-typically have higher (administrative) privileges on the Kubernetes cluster
+Central infra team responsible for managing the Kubernetes cluster. Members of
+the platform teams typically have administrative privileges on the Kubernetes cluster.
 
 ### App developer team
 
@@ -53,7 +53,7 @@ organization has many benefits such as:
 * Platform repo also serves as the deployment repository.
 
 ```shell
-# An sample layout for package catalog repo
+# A sample layout for package catalog repo
 # that contains the tenant pkg
 pkg-catalog $ tree .
 .
@@ -114,6 +114,8 @@ Here is an example of a [basic tenant package](https://github.com/GoogleContaine
 
 ```shell
 
+$ export PKG_CATALOG_DIR=<path/to/pkg/catalog/dir>
+$ cd $PKG_CATALOG_DIR
 pkg-catalog $ kpt pkg tree tenant
 Package "tenant"
 ├── [Kptfile]  Kptfile tenant
@@ -129,6 +131,8 @@ The tenant package’s Kptfile offers basic customization and enforces single
 namespace constraint.
 
 ```shell
+
+$ cd $PKG_CATALOG_DIR
 pkg-catalog $ cat tenant/Kptfile
 apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -160,6 +164,8 @@ Also `.krmignore` files instructs kpt to ignore all resources in the `.snippets`
 directory for other workflows.
 
 ```shell
+
+$ cd $PKG_CATALOG_DIR
 pkg-catalog $ ls tenant/.snippets/
 isolate-network-policy.yaml  quota.large.yaml  quota.medium.yaml
 quota.small.yaml  role-binding.yaml  service-account.yaml
@@ -176,8 +182,9 @@ package by tagging the version as shown below:
 
 ```shell
 # Assuming you are in the pkg catalog repo where tenant package exists
+$ cd $PKG_CATALOG_DIR
 
-# Pl. remove the inventory information from the Kptfile before publishing
+# Please remove the inventory information from the Kptfile before publishing
 
 # create new tag
 $ git tag tenant/v0.1 main
@@ -196,22 +203,29 @@ they can request for new tenants by simply issuing a PR against the platform rep
 
 ```shell
 
-# assuming you have already a fork of the platform repo
-# (remote origin pointing to the fork).
+# assuming you have a fork of the platform repo residing locally at pointed by
+# by PLATFORM_DIR env variable locally. 
+$ cd $PLATFORM_DIR
 
 # create a new branch to onboard new tenant
 $ git checkout -b onboarding-tenant-a
 
 $ cd tenants
-$ kpt pkg get <pkg-catalog-repo>/tenant@v0.1 tenant-a
+
+# create an instance `tenant-a` of the upstream tenant package using `kpt pkg get`
+# Ensure PKG_CATALOG_REPO env variable points to the pkg catalog repo.
+$ kpt pkg get $PKG_CATALOG_REPO/tenant@v0.1 tenant-a
 
 # tenant customizations:
 # change the namespace to tenant-a in the tenant-a/Kptfile
-# configure the quota.yaml if needed or
+# configure the quota.yaml by directly editing if needed
 # or cp .snippets/quota.{small, large, medium}.yaml as quota.yaml
-# cp .snippets/isolate-network.yaml if isolation is needed
+# or cp .snippets/isolate-network.yaml if isolation is needed
 # or directly edit the resources
+# or add functions to the pipeline in Kptfile
 
+# render the package to ensure all customizations are applied
+# and validations are run.
 $ kpt fn render tenant-a
 
 # if all invariants passed, then we are all set.
@@ -232,8 +246,9 @@ Let’s go through the steps needed to update the tenant package.
 
 ```shell
 
-# assuming you have already a fork of the platform repo
-# (remote origin pointing to the fork).
+# assuming you have a fork of the platform repo residing locally at pointed by
+# by PLATFORM_DIR env variable locally. 
+$ cd $PLATFORM_DIR
 
 # create a new branch to update tenant
 $ git checkout -b update-tenant-a
@@ -250,8 +265,6 @@ $ git push origin update-tenant-a
 # make a pull request for platform team to merge
 # TODO (link to an example PR will be great here)
 
-// TODO: explain the edge cases where `pkg update` may not be smooth.
-
 ```
 
 Note that the platform team can add/update the snippets in the tenant package.
@@ -266,9 +279,3 @@ application teams to onboard a new tenant. In the next guide, we will explore
 how platform teams can do it at a scale when there are hundreds of tenants
 provisioned on a kubernetes cluster. Next guides will explore package lifecycle
 (pkg diff/update) use cases at large scale.
-
-## Quick links
-
-[Pkg Catalog Repo](https://github.com/droot/pkg-catalog)
-[Platform Repo](https://github.com/droot/platform)
-[kube-common-setup helm chart](https://github.com/nghnam/kube-common-setup)
