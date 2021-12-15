@@ -135,27 +135,49 @@ doesn't provide a very complete end to end experience. Because kpt would already
 by `gcrane`, it is not difficult to support additional commands to move pull and push package contents from local folders
 to remote images and back.
 
-### ` kpt pkg push`
-
-```
-Usage: kpt pkg push [DIR] --image={IMAGE[:TAG]}
-  DIR           Folder containing package root Kptfile. Default is current directory.
-  IMAGE[:TAG]   Name of image to push contents onto, with optional TAG to assign to resulting commit. Default TAG is `Latest`
-```
-
-This command will `tar` the contents of the package into a single image layer, and push it into the OCI repository. For
-Google Artifact Registry and Google Container Registry, the current `gcloud auth` SSO credentials are used.
-
 ### ` kpt pkg pull`
 
 ```
-Usage: kpt pkg pull [DIR] --image={IMAGE[:TAG|@sha256:DIGEST]}
+Usage: kpt pkg pull oci://{IMAGE[:TAG|@sha256:DIGEST]} [DIR] 
   DIR                         Destination folder for image contents. Default folder name is the last part of the IMAGE path.
   IMAGE[:TAG|@sha256:DIGEST]  Name of image to pull contents from, with optional TAG or DIGEST. Default TAG is `Latest`
 ```
 
 This command is the reverse of push. An image can be pulled from a repository to a local folder, modified, and pushed
 back to the same location, same location with different TAG, or entirely different location.
+
+The target DIR is optional, following the conventions of `kpg pkg get`, and will default to the final image/path segment.
+
+`kpt pkg pull` works on git uri as well. This may be used, for example, to mirror a set of known blueprints into a private 
+oci registry.
+
+### ` kpt pkg push`
+
+```
+Usage: kpt pkg push [DIR@VERSION] [--origin oci://{IMAGE[:TAG]}] [--increment]
+  DIR@VERSION     Folder containing package root Kptfile. Default is current directory.
+                  Optional @VERSION changes tag or branch to push onto. Default is most recently pulled or pushed tag.
+  --origin        Name of image to push contents onto, with optional TAG to assign to resulting commit.
+                  Default is to use most recently pulled/pushed image. Required if Kptfile does not have an origin.
+  --increment     Increase the version by 1 while pushing. Default is to leave the origin's TAG or DIR@VERSION unchanged.
+                  The Kptfile's image TAG is also updated to the new value. 
+```
+
+This command will `tar` the contents of the package into a single image layer, and push it into the OCI repository. For
+Google Artifact Registry and Google Container Registry, the current `gcloud auth` SSO credentials are used.
+
+The simplest form of the command is `kpt pkg push` or `kpt pkg push DIR` which will push the current contents back to
+the IMAGE:TAG location that was saved when `kpt pkg pull` was run.
+
+The synxax `kpt pkg push @VERSION` or `kpt pkg push DIR@VERSION` will push back to the image location it came from, but with a new TAG name or version. Examples are `kpt pkt push @draft` or `kpt pkg push @v4`
+
+If the Kptfile was not obtained by `kpt pkg pull` - for example it's a new package from `kpt pkg init` or `kpt pkg get` - then
+the first `kpt pkg push` will require an `--origin IMAGE:TAG` option to provide the target location. It is only necessary on the first
+call.
+
+Finally, if the IMAGE's TAG value is a valid version number, the `--increment` switch can be used to add 1 to the current value before pushing.
+
+In the simplest case a `v1` is changed to `v2`, and `1` is changed to `2`, but any TAG that is a valid semver (with optional leading 'v') will have the smallest part of the number incremented. So `v1.0` becomes `v1.1`, `v1.0.0` becomes `v1.0.1`, and `v4.1.9-alpha` becomes `v4.1.10-alpha`
 
 #### Comparison of `pkg get` and `pkg pull`
 
