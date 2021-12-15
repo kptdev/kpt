@@ -188,6 +188,11 @@
           "description": "Image is the OCI image repository for the package.\ne.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend:latest'",
           "type": "string",
           "x-go-name": "Image"
+        },
+        "path": {
+          "description": "Directory is the sub-package of the image.",
+          "type": "string",
+          "x-go-name": "Directory"
         }
       },
       "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -196,10 +201,36 @@
       "type": "object",
       "title": "OciLock is the resolved locator for a package in an OCI image registry.",
       "properties": {
+        "digest": {
+          "description": "Digest is the unique sha of the image when it was last pulled.",
+          "type": "string",
+          "x-go-name": "Digest"
+        },
         "image": {
           "description": "Image is the OCI image repository for the package.\ne.g. 'LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/app-frontend@sha256:b0c94f11d856e59673daca566857a7ead126ef8e2b6915ed662804f858d7eaea'",
           "type": "string",
           "x-go-name": "Image"
+        },
+        "path": {
+          "description": "Directory is the sub-package of the image.",
+          "type": "string",
+          "x-go-name": "Directory"
+        }
+      },
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "Origin": {
+      "type": "object",
+      "title": "Origin is a resolved locator when the package was last pulled or pushed.",
+      "properties": {
+        "git": {
+          "$ref": "#/definitions/GitLock"
+        },
+        "oci": {
+          "$ref": "#/definitions/OciLock"
+        },
+        "type": {
+          "$ref": "#/definitions/OriginType"
         }
       },
       "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -453,6 +484,9 @@
           "description": "Namespace is the metadata.namespace field of a Resource",
           "type": "string",
           "x-go-name": "Namespace"
+        },
+        "origin": {
+          "$ref": "#/definitions/Origin"
         },
         "pipeline": {
           "$ref": "#/definitions/Pipeline"
