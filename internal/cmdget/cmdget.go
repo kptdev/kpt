@@ -17,7 +17,6 @@ package cmdget
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -83,7 +82,17 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	destination, err := r.parseArgs(args)
+	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
+		SetGit: func(git *kptfilev1.Git) error {
+			r.Get.Git = git
+			r.Get.Upstream = remote.NewGitUpstream(git)
+			return nil
+		},
+		SetOci: func(oci *kptfilev1.Oci) error {
+			r.Get.Upstream = remote.NewOciUpstream(oci)
+			return nil
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -100,25 +109,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Get.UpdateStrategy = strategy
 	return nil
-}
-
-func (r *Runner) parseArgs(args []string) (string, error) {
-	const op errors.Op = "cmdget.preRunE"
-
-	t1, err1 := parse.GitParseArgs(r.ctx, args)
-	if err1 == nil {
-		r.Get.Git = &t1.Git
-		r.Get.Upstream = remote.NewGitUpstream(&t1.Git)
-		return t1.Destination, nil
-	}
-
-	t2, err2 := parse.OciParseArgs(r.ctx, args)
-	if err2 == nil {
-		r.Get.Upstream = remote.NewOciUpstream(&t2.Oci)
-		return t2.Destination, nil
-	}
-
-	return "", errors.E(op, fmt.Errorf("%v %v", err1, err2))
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {

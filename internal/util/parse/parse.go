@@ -22,11 +22,46 @@ import (
 	"path/filepath"
 	"strings"
 
+	kpterrors "github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
+
+type Options struct {
+	SetGit func(git *kptfilev1.Git) error
+	SetOci func(oci *kptfilev1.Oci) error
+}
+
+func ParseArgs(ctx context.Context, args []string, opts Options) (string, error) {
+	const op kpterrors.Op = "parse.ParseArgs"
+
+	tGit, errGit := GitParseArgs(ctx, args)
+	if errGit == nil {
+		if opts.SetGit == nil {
+			return "", kpterrors.E(op, fmt.Errorf("git locations not supported: %v", errGit))
+		}
+		if err := opts.SetGit(&tGit.Git); err != nil {
+			return "", err
+		}
+		return tGit.Destination, nil
+	}
+
+	tOci, errOci := OciParseArgs(ctx, args)
+	if errOci == nil {
+		if opts.SetOci == nil {
+			return "", kpterrors.E(op, fmt.Errorf("oci locations not supported: %v", errOci))
+		}
+		if err := opts.SetOci(&tOci.Oci); err != nil {
+			return "", err
+		}
+		return tOci.Destination, nil
+	}
+
+	// TODO(oci-support) combining error messages like this is suboptimal in several ways
+	return "", kpterrors.E(op, fmt.Errorf("%v %v", errGit, errOci))
+}
 
 type OciTarget struct {
 	kptfilev1.Oci

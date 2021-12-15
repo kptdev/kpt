@@ -16,7 +16,6 @@ package cmdpull
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -28,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/pull"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -39,9 +39,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c := &cobra.Command{
 		Use:     "pull {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY]",
 		Args:    cobra.MinimumNArgs(1),
-		Short:   docs.GetShort,
-		Long:    docs.GetShort + "\n" + docs.GetLong,
-		Example: docs.GetExamples,
+		Short:   docs.PullShort,
+		Long:    docs.PullShort + "\n" + docs.PullLong,
+		Example: docs.PullExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -75,7 +75,16 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	destination, err := r.parseArgs(args)
+	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
+		SetGit: func(git *kptfilev1.Git) error {
+			r.Pull.Origin = remote.NewGitOrigin(git)
+			return nil
+		},
+		SetOci: func(oci *kptfilev1.Oci) error {
+			r.Pull.Origin = remote.NewOciOrigin(oci)
+			return nil
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -87,24 +96,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	r.Pull.Destination = string(p.UniquePath)
 
 	return nil
-}
-
-func (r *Runner) parseArgs(args []string) (string, error) {
-	const op errors.Op = "cmdpull.preRunE"
-
-	t1, err1 := parse.GitParseArgs(r.ctx, args)
-	if err1 == nil {
-		r.Pull.Origin = remote.NewGitOrigin(&t1.Git)
-		return t1.Destination, nil
-	}
-
-	t2, err2 := parse.OciParseArgs(r.ctx, args)
-	if err2 == nil {
-		r.Pull.Origin = remote.NewOciOrigin(&t2.Oci)
-		return t2.Destination, nil
-	}
-
-	return "", errors.E(op, fmt.Errorf("%v %v", err1, err2))
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {

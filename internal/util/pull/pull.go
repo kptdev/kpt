@@ -61,7 +61,7 @@ func (c Command) Run(ctx context.Context) error {
 
 	pr.Printf("Pulling origin %s\n", c.Origin.String())
 
-	// TODO(dejardin) need to understand abs path for kpt pkg pull from git
+	// TODO(oci-support) need to understand abs path for kpt pkg pull from git
 	_, digest, err := c.Origin.Fetch(ctx, c.Destination)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)

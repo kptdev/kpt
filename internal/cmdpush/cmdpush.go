@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/push"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 )
 
@@ -41,9 +42,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c := &cobra.Command{
 		Use:     "push [DIR@VERSION] [flags]",
 		Args:    cobra.MaximumNArgs(1),
-		Short:   docs.GetShort,
-		Long:    docs.GetShort + "\n" + docs.GetLong,
-		Example: docs.GetExamples,
+		Short:   docs.PushShort,
+		Long:    docs.PushShort + "\n" + docs.PushLong,
+		Example: docs.PushExamples,
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
@@ -74,17 +75,7 @@ type Runner struct {
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
-	if err := r.parseArgs(args); err != nil {
-		return err
-	}
-
-	r.Push.Increment = r.Increment
-
-	return nil
-}
-
-func (r *Runner) parseArgs(args []string) error {
-	const op errors.Op = "cmdpublish.preRunE"
+	const op errors.Op = "cmdpush.preRunE"
 
 	var path string
 	var ref string
@@ -115,34 +106,30 @@ func (r *Runner) parseArgs(args []string) error {
 		r.Push.Ref = ref
 	}
 
-	p, err := pkg.New(resolvedPath)
+	r.Push.Increment = r.Increment
+
+	r.Push.Pkg, err = pkg.New(resolvedPath)
 	if err != nil {
 		return errors.E(op, err)
 	}
-	relPath, err := resolveRelPath(p.UniquePath)
+	relPath, err := resolveRelPath(r.Push.Pkg.UniquePath)
 	if err != nil {
-		return errors.E(op, p.UniquePath, err)
+		return errors.E(op, r.Push.Pkg.UniquePath, err)
 	}
 	if strings.HasPrefix(relPath, pkg.ParentDir) {
-		return errors.E(op, p.UniquePath, fmt.Errorf("package path must be under current working directory"))
+		return errors.E(op, r.Push.Pkg.UniquePath, fmt.Errorf("package path must be under current working directory"))
 	}
 
-	r.Push.Pkg = p
-
 	if r.Origin != "" {
-		t1, err1 := parse.GitParseArgs(r.ctx, []string{r.Origin, ""})
-		if err1 == nil {
-			r.Push.Origin = remote.NewGitOrigin(&t1.Git)
-			return nil
+		_, err := parse.ParseArgs(r.ctx, args, parse.Options{
+			SetOci: func(oci *kptfilev1.Oci) error {
+				r.Push.Origin = remote.NewOciOrigin(oci)
+				return nil
+			},
+		})
+		if err != nil {
+			return err
 		}
-
-		t2, err2 := parse.OciParseArgs(r.ctx, []string{r.Origin, ""})
-		if err2 == nil {
-			r.Push.Origin = remote.NewOciOrigin(&t2.Oci)
-			return nil
-		}
-
-		return errors.E(op, fmt.Errorf("%v %v", err1, err2))
 	}
 
 	return nil
@@ -158,7 +145,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 }
 
 func resolveRelPath(path types.UniquePath) (string, error) {
-	const op errors.Op = "cmdupdate.resolveRelPath"
+	const op errors.Op = "cmdpush.resolveRelPath"
 	cwd, err := os.Getwd()
 	if err != nil {
 		return "", errors.E(op, errors.IO,

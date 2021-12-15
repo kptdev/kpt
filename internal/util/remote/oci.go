@@ -386,7 +386,7 @@ func archiveAndPush(imageName string, dir string, kptfile *kptfilev1.KptFile, op
 				return nil
 			}
 
-			// TODO(dejardin) if info is symlink also read link target
+			// TODO(oci-support) if info is symlink also read link target
 			link := ""
 
 			// generate tar header

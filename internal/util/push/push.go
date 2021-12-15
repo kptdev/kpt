@@ -77,7 +77,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if c.Increment {
-		// TODO(dejardin) move this logic into a util with test coverage
+		// TODO(oci-support) move this logic into a util with test coverage
 		ref, err := c.Origin.Ref()
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information: %v", err))
