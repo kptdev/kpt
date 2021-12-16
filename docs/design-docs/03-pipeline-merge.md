@@ -47,11 +47,20 @@ Here is what users can expect when they invoke the command, `kpt pkg update` on 
 **Local**: Local fork of the package on disk.
 
 Firstly, we need to define the identity of the function in order to uniquely identify 
-them across three sources and perform a 3-way merge. We can identify the function 
-using the image field value and the input type(configMap or configPath).
+them across three sources and perform a 3-way merge. In order to identify the instance of a
+function, we should add a new optional field `name` to function definition.
+
+Here is the merge keys used by update logic to identify function in the order of precedence:
+
+1. name
+2. image(ignoring the version value)
+3. function config type(`configMap` or `configPath`)
+4. relative order of the function
+
 Here is an example of the merging apply-setters function when new setters are added 
 upstream and existing setter values are updated locally. This is the most common 
-use case where kpt fails to merge them.
+use case where kpt fails to merge them. Since `name` field is not specified, `image`
+value is used to identify and merge the function
 
 ```yaml
 Original:
@@ -171,8 +180,7 @@ pipeline:
 ```
 
 This might not be what all users expect. But this is the default behavior in case 
-of conflict while merging normal resources as well. So we can inherit the behavior 
-and be consistent. In order to provide more visibility to the users, we can add 
+of conflict while merging normal resources as well. In order to provide more visibility to the users, we can add 
 log messages in cases of such conflicts and intimate users about the updated value. 
 In the future, we can add support to a different conflict strategy of `--local-wins`
 as an option to the kpt pkg update command.
@@ -332,6 +340,83 @@ pipeline:
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
+```
+
+Depending on order of the functions doesn't always yield expected behavior. Users
+might reorder the functions or insert a function at random location in the local pipeline.
+In this case, we recommend users to leverage name field 
+in order to merge the functions in deterministic fashion.
+
+```yaml
+Original:
+
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: foo
+        put-value: bar
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: abc
+        put-comment: ${some-setter-name}
+
+Updated upstream:
+
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: foo
+        put-value: bar-new
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: abc
+        put-comment: ${updated-setter-name}
+
+Local:
+
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: my-new-function
+      configMap:
+        by-value: YOUR_TEAM
+        put-value: my-team
+    - image: gcr.io/kpt-fn/generate-folders:v0.1
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: foo
+        put-value: bar
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: db
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: abc
+        put-comment: ${some-setter-name}
+
+Expected output:
+
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: my-new-function
+      configMap:
+        by-value: YOUR_TEAM
+        put-value: my-team
+    - image: gcr.io/kpt-fn/generate-folders:v0.1
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: foo
+        put-value: bar-new
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: db
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      configMap:
+        by-value: abc
+        put-comment: ${updated-setter-name}
 ```
 
 Merging selectors is difficult as there is no identity. If both upstream and 
