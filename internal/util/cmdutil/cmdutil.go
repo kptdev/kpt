@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
@@ -39,7 +40,7 @@ const (
 	Stdout                             = "stdout"
 	Unwrap                             = "unwrap"
 	dockerVersionTimeout time.Duration = 5 * time.Second
-	FunctionsCatalogURL                = "https://catalog.kpt.dev/catalog.json"
+	FunctionsCatalogURL                = "https://catalog.kpt.dev/catalog-v2.json"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -196,18 +197,25 @@ func FetchFunctionImages() []string {
 	return listImages(content)
 }
 
+// fnName -> v<major>.<minor> -> catalogEntry
+type catalogV2 map[string]map[string]struct{
+	LatestPatchVersion string
+	Examples           interface{}
+}
+
 // listImages returns the list of latest images from the input catalog content
 func listImages(content string) []string {
 	var result []string
-	jsonData := map[string]map[string]interface{}{}
+	var jsonData catalogV2
 	err := json.Unmarshal([]byte(content), &jsonData)
 	if err != nil {
 		return result
 	}
 	for fnName, fnInfo := range jsonData {
 		var latestVersion string
-		for version := range fnInfo {
-			if latestVersion < version {
+		for _, catalogEntry := range fnInfo {
+			version := catalogEntry.LatestPatchVersion
+			if semver.Compare(version, latestVersion) == 1 {
 				latestVersion = version
 			}
 		}

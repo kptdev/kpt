@@ -14,6 +14,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
+	golang.org/x/mod v0.5.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.22.3
 	k8s.io/apiextensions-apiserver v0.22.2
