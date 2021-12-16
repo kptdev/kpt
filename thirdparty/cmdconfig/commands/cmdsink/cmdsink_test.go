@@ -26,7 +26,7 @@ func TestSinkCommand(t *testing.T) {
 	os.RemoveAll(d)
 
 	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -148,7 +148,7 @@ func TestSinkCommand_Error(t *testing.T) {
 	}
 
 	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - kind: Deployment
@@ -186,7 +186,7 @@ func TestSinkCommandJSON(t *testing.T) {
 	os.RemoveAll(d)
 
 	r := GetSinkRunner(fake.CtxWithDefaultPrinter(), "")
-	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1alpha1
+	r.Command.SetIn(bytes.NewBufferString(`apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo",

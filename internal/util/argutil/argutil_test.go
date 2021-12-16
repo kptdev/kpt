@@ -144,6 +144,10 @@ func TestResolveSymlink(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", actual2)
 
+	actual3, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), ".")
+	assert.NoError(t, err)
+	assert.Equal(t, ".", actual3)
+
 	_, err = ResolveSymlink(fake.CtxWithDefaultPrinter(), "baz")
 	assert.Error(t, err)
 	assert.Equal(t, "lstat baz: no such file or directory", err.Error())

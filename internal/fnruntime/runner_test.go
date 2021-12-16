@@ -567,7 +567,7 @@ file:
 		yml, err := yaml.Parse(tc.input)
 		assert.NoError(t, err)
 
-		result := &framework.ResultItem{}
+		result := &framework.Result{}
 		err = yaml.Unmarshal([]byte(tc.input), result)
 		assert.NoError(t, err)
 		assert.NoError(t, populateResourceRef(yml, result))

@@ -68,7 +68,7 @@ func TestCmd_execute(t *testing.T) {
 			},
 			TypeMeta: yaml.TypeMeta{
 				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileName},
+				Kind:       kptfilev1.KptFileKind},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
@@ -128,7 +128,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 			},
 			TypeMeta: yaml.TypeMeta{
 				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileName},
+				Kind:       kptfilev1.KptFileKind},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
@@ -345,6 +345,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "specify '.git'")
+				assert.Contains(t, err.Error(), "specify 'oci://'")
 			},
 		},
 		"valid strategy provided": {

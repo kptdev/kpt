@@ -17,7 +17,7 @@ stdErr: |
   [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
   [FAIL] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
     Results:
-      [ERROR] failed to configure function: input namespace cannot be empty
+      [error]: failed to configure function: input namespace cannot be empty
     Stderr:
       "[error] /// : failed to configure function: input namespace cannot be empty"
     Exit code: 1

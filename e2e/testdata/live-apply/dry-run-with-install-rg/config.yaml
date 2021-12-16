@@ -1,18 +1,25 @@
-requiresCleanCluster: true
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+parallel: false
+noResourceGroup: true
 kptArgs:
   - "--dry-run"
   - "--install-resource-group"
-output:
-  events:
-    stdOut: |
-      deployment.apps/nginx-deployment created (dry-run)
-      1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed (dry-run)
-    stdErr: |
-      installing inventory ResourceGroup CRD.
-  json:
-    stdOut: |
-      {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"nginx-deployment","namespace":"dry-run-with-install-rg","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-      {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
-    stdErr: |
-      installing inventory ResourceGroup CRD.
+stdOut: |
+  deployment.apps/nginx-deployment created (dry-run)
+  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed (dry-run)
+stdErr: |
+  installing inventory ResourceGroup CRD.
 exitCode: 0

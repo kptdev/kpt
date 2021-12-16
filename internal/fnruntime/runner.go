@@ -224,21 +224,24 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 		return err
 	}
 
-	return parseNameAndNamespace(yml, fnResult)
+	return migrateLegacyResult(yml, fnResult)
 }
 
-// parseNameAndNamespace populates name and namespace in fnResult.Result if a
+// migrateLegacyResult populates name and namespace in fnResult.Result if a
 // function (e.g. using kyaml Go SDKs) gives results in a schema
 // that puts a resourceRef's name and namespace under a metadata field
 // TODO: fix upstream (https://github.com/GoogleContainerTools/kpt/issues/2091)
-func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
+func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	items, err := yml.Elements()
 	if err != nil {
 		return err
 	}
 
 	for i := range items {
-		if err := populateResourceRef(items[i], &fnResult.Results[i]); err != nil {
+		if err = populateResourceRef(items[i], fnResult.Results[i]); err != nil {
+			return err
+		}
+		if err = populateProposedValue(items[i], fnResult.Results[i]); err != nil {
 			return err
 		}
 	}
@@ -246,7 +249,22 @@ func parseNameAndNamespace(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	return nil
 }
 
-func populateResourceRef(item *yaml.RNode, resultItem *framework.ResultItem) error {
+func populateProposedValue(item *yaml.RNode, resultItem *framework.Result) error {
+	sv, err := item.Pipe(yaml.Lookup("field", "suggestedValue"))
+	if err != nil {
+		return err
+	}
+	if sv == nil {
+		return nil
+	}
+	if resultItem.Field == nil {
+		resultItem.Field = &framework.Field{}
+	}
+	resultItem.Field.ProposedValue = sv
+	return nil
+}
+
+func populateResourceRef(item *yaml.RNode, resultItem *framework.Result) error {
 	r, err := item.Pipe(yaml.Lookup("resourceRef", "metadata"))
 	if err != nil {
 		return err
@@ -282,7 +300,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 		// function returned structured results
 		var lines []string
 		for _, item := range fnResult.Results {
-			lines = append(lines, resultToString(item))
+			lines = append(lines, item.String())
 		}
 		ri := &multiLineFormatter{
 			Title:          "Results",
@@ -400,57 +418,6 @@ func (ri *multiLineFormatter) String() string {
 		b.WriteString(fmt.Sprintf(lineIndent+"...(%d line(s) truncated, use '--truncate-output=false' to disable)\n", truncatedLines))
 	}
 	return b.String()
-}
-
-// resultToString converts given structured result item to string format.
-func resultToString(result framework.ResultItem) string {
-	// TODO: Go SDK should implement Stringer method
-	// for framework.ResultItem. This is a temporary
-	// wrapper that will eventually be moved to Go SDK.
-
-	defaultSeverity := "info"
-
-	s := strings.Builder{}
-
-	severity := defaultSeverity
-
-	if string(result.Severity) != "" {
-		severity = string(result.Severity)
-	}
-	s.WriteString(fmt.Sprintf("[%s] %s", strings.ToUpper(severity), result.Message))
-
-	resourceID := resourceRefToString(result.ResourceRef)
-	if resourceID != "" {
-		// if an object is involved
-		s.WriteString(fmt.Sprintf(" in object %q", resourceID))
-	}
-
-	if result.File.Path != "" {
-		s.WriteString(fmt.Sprintf(" in file %q", result.File.Path))
-	}
-
-	if result.Field.Path != "" {
-		s.WriteString(fmt.Sprintf(" in field %q", result.Field.Path))
-	}
-
-	return s.String()
-}
-
-func resourceRefToString(ref yaml.ResourceIdentifier) string {
-	s := strings.Builder{}
-	if ref.APIVersion != "" {
-		s.WriteString(fmt.Sprintf("%s/", ref.APIVersion))
-	}
-	if ref.Kind != "" {
-		s.WriteString(fmt.Sprintf("%s/", ref.Kind))
-	}
-	if ref.Namespace != "" {
-		s.WriteString(fmt.Sprintf("%s/", ref.Namespace))
-	}
-	if ref.Name != "" {
-		s.WriteString(ref.Name)
-	}
-	return s.String()
 }
 
 func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {

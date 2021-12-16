@@ -22,9 +22,9 @@ source: |-
      "metadata": {
         "name": "httpbin",
         "annotations": {
-          "config.kubernetes.io/index": 0,
+          "internal.config.kubernetes.io/index": 0,
           # generates resource in directory that is not a package
-          "config.kubernetes.io/path": "../notpkg/deployment_httpbin.yaml"
+          "internal.config.kubernetes.io/path": "../notpkg/deployment_httpbin.yaml"
         }
      },
      "spec": {

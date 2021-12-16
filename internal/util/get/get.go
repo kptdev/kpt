@@ -20,19 +20,20 @@ import (
 	goerrors "errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 // Command fetches a package from a git repository, copies it to a local
@@ -40,6 +41,9 @@ import (
 type Command struct {
 	// Git contains information about the git repo to fetch
 	Git *kptfilev1.Git
+
+	// Contains information about the upstraem package to fetch
+	Upstream remote.Upstream
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -70,19 +74,10 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
-	// normalize path to a filepath
-	repoDir := c.Git.Directory
-	if !strings.HasSuffix(repoDir, "file://") {
-		repoDir = filepath.Join(path.Split(repoDir))
-	}
-	c.Git.Directory = repoDir
-
 	kf := kptfileutil.DefaultKptfile(c.Name)
-	kf.Upstream = &kptfilev1.Upstream{
-		Type:           kptfilev1.GitOrigin,
-		Git:            c.Git,
-		UpdateStrategy: c.UpdateStrategy,
-	}
+
+	kf.Upstream = c.Upstream.BuildUpstream()
+	kf.Upstream.UpdateStrategy = c.UpdateStrategy
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
@@ -98,9 +93,16 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	if err := addmergecomment.Process(c.Destination); err != nil {
-		return cleanUpDirAndError(c.Destination, err)
-	}
+	inout := &kio.LocalPackageReadWriter{PackagePath: c.Destination, PreserveSeqIndent: true, WrapBareSeqNode: true}
+	amc := &addmergecomment.AddMergeComment{}
+	at := &attribution.Attributor{PackagePaths: []string{c.Destination}, CmdGroup: "pkg"}
+	// do not error out as this is best effort
+	_ = kio.Pipeline{
+		Inputs:  []kio.Reader{inout},
+		Filters: []kio.Filter{kio.FilterAll(amc), kio.FilterAll(at)},
+		Outputs: []kio.Writer{inout},
+	}.Execute()
+
 	return nil
 }
 
@@ -126,8 +128,14 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
-			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-			err := (&fetch.Command{
+
+			upstream, err := remote.NewUpstream(kf)
+			if err != nil {
+				return errors.E(op, p.UniquePath, err)
+			}
+			pr.Printf("Fetching %s\n", upstream.String())
+
+			err = (&fetch.Command{
 				Pkg: p,
 			}).Run(ctx)
 			if err != nil {
@@ -150,23 +158,12 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 // DefaultValues sets values to the default values if they were unspecified
 func (c *Command) DefaultValues() error {
 	const op errors.Op = "get.DefaultValues"
-	if c.Git == nil {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo information"))
+	if c.Upstream == nil {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify git repo or image reference information"))
 	}
-	g := c.Git
-	if len(g.Repo) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+	if err := c.Upstream.Validate(); err != nil {
+		return errors.E(op, err)
 	}
-	if len(g.Ref) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
-	}
-	if len(c.Destination) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify destination"))
-	}
-	if len(g.Directory) == 0 {
-		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-	}
-
 	if !filepath.IsAbs(c.Destination) {
 		return errors.E(op, errors.InvalidParam, fmt.Errorf("destination must be an absolute path"))
 	}

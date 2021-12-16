@@ -163,8 +163,9 @@ func WriteToOutput(r io.Reader, w io.Writer, outDir string) error {
 		outputs = []kio.Writer{&kio.LocalPackageWriter{PackagePath: outDir}}
 	} else {
 		outputs = []kio.Writer{&kio.ByteWriter{
-			Writer:           w,
-			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}},
+			Writer: w,
+			ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation,
+				kioutil.LegacyIndexAnnotation, kioutil.LegacyPathAnnotation}}, // nolint:staticcheck
 		}
 	}
 

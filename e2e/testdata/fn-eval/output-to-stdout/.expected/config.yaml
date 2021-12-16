@@ -13,7 +13,7 @@
 # limitations under the License.
 
 stdOut: |
-  apiVersion: config.kubernetes.io/v1alpha1
+  apiVersion: config.kubernetes.io/v1
   kind: ResourceList
   items:
   - # Copyright 2021 Google LLC
@@ -36,6 +36,8 @@ stdOut: |
       annotations:
         config.kubernetes.io/index: "0"
         config.kubernetes.io/path: resources.yaml
+        internal.config.kubernetes.io/index: "0"
+        internal.config.kubernetes.io/path: resources.yaml
         internal.config.kubernetes.io/seqindent: compact
       namespace: staging
     spec:
@@ -47,6 +49,8 @@ stdOut: |
       annotations:
         config.kubernetes.io/index: "1"
         config.kubernetes.io/path: resources.yaml
+        internal.config.kubernetes.io/index: "1"
+        internal.config.kubernetes.io/path: resources.yaml
         internal.config.kubernetes.io/seqindent: compact
       namespace: staging
     spec:

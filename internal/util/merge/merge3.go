@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -153,6 +154,9 @@ func (p PruningLocalPackageReader) Read() ([]*yaml.RNode, error) {
 	// Exclude any resources that exist underneath an excluded path.
 	var filteredNodes []*yaml.RNode
 	for _, node := range nodes {
+		if err := kioutil.CopyLegacyAnnotations(node); err != nil {
+			return nil, err
+		}
 		n, err := node.Pipe(yaml.GetAnnotation(kioutil.PathAnnotation))
 		if err != nil {
 			return nil, err
@@ -185,6 +189,13 @@ type ResourceMergeMatcher struct {
 // is not present, then it falls back to Namespace and Name on the resource meta
 func (rm *ResourceMergeMatcher) IsSameResource(node1, node2 *yaml.RNode) bool {
 	if node1 == nil || node2 == nil {
+		return false
+	}
+
+	if err := kioutil.CopyLegacyAnnotations(node1); err != nil {
+		return false
+	}
+	if err := kioutil.CopyLegacyAnnotations(node2); err != nil {
 		return false
 	}
 
@@ -346,7 +357,9 @@ func (*resourceHandler) equals(r1, r2 *yaml.RNode) (bool, error) {
 }
 
 func stripKyamlAnnos(n *yaml.RNode) error {
-	for _, a := range []string{mergeSourceAnnotation, kioutil.PathAnnotation, kioutil.IndexAnnotation} {
+	for _, a := range []string{mergeSourceAnnotation, kioutil.PathAnnotation, kioutil.IndexAnnotation,
+		kioutil.LegacyPathAnnotation, kioutil.LegacyIndexAnnotation, // nolint:staticcheck
+		kioutil.InternalAnnotationsMigrationResourceIDAnnotation, attribution.CNRMMetricsAnnotation} {
 		err := n.PipeE(yaml.ClearAnnotation(a))
 		if err != nil {
 			return err

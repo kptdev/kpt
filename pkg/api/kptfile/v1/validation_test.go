@@ -14,8 +14,12 @@
 package v1
 
 import (
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -394,6 +398,126 @@ kind: Kustomization
 			if got != tc.exp {
 				t.Fatalf("got %v expected %v", got, tc.exp)
 			}
+		})
+	}
+}
+
+func TestGetValidatedFnConfigFromPath(t *testing.T) {
+	testcases := []struct {
+		name   string
+		input  string
+		exp    string
+		errMsg string
+	}{
+		{
+			name: "normal resource",
+			input: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+spec:
+  selector:
+    app: bar
+`,
+			exp: `apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+  annotations:
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'compact'
+spec:
+  selector:
+    app: bar
+`,
+		},
+		{
+			name: "multiple resources wrapped in List",
+			input: `
+apiVersion: v1
+kind: List
+metadata:
+  name: upsert-multiple-resources-config
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: myService
+    namespace: mySpace
+  spec:
+    selector:
+      app: bar
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: myDeployment2
+    namespace: mySpace
+  spec:
+    replicas: 10
+`,
+			exp: `apiVersion: v1
+kind: List
+metadata:
+  name: upsert-multiple-resources-config
+  annotations:
+    config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/index: '0'
+    internal.config.kubernetes.io/seqindent: 'compact'
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: myService
+    namespace: mySpace
+  spec:
+    selector:
+      app: bar
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: myDeployment2
+    namespace: mySpace
+  spec:
+    replicas: 10
+`,
+		},
+		{
+			name: "error for multiple resources",
+			input: `
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService
+  namespace: mySpace
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myService2
+  namespace: mySpace
+`,
+			errMsg: `functionConfig "f1.yaml" must not contain more than one config, got 2`,
+		},
+	}
+	for _, tc := range testcases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			d, err := ioutil.TempDir("", "")
+			assert.NoError(t, err)
+			err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
+			assert.NoError(t, err)
+			got, err := GetValidatedFnConfigFromPath(types.UniquePath(d), "f1.yaml")
+			if tc.errMsg != "" {
+				assert.Error(t, err)
+				assert.Equal(t, tc.errMsg, err.Error())
+				return
+			}
+			assert.NoError(t, err)
+			actual, err := got.String()
+			assert.NoError(t, err)
+			assert.Equal(t, tc.exp, actual)
 		})
 	}
 }

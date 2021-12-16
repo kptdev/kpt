@@ -175,7 +175,7 @@ type InventoryFilter struct {
 
 func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if object.GetApiVersion() != kptfilev1.KptFileAPIVersion ||
-		object.GetKind() != kptfilev1.KptFileName {
+		object.GetKind() != kptfilev1.KptFileKind {
 		return object, nil
 	}
 

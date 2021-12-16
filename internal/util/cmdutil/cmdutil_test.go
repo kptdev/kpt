@@ -40,7 +40,7 @@ func TestWriteFnOutput(t *testing.T) {
 			name:   "wrapped output to stdout",
 			dest:   "stdout",
 			writer: bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -48,17 +48,17 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
-			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedStdout: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -66,22 +66,22 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 		},
 		{
 			name:   "unwrapped output to stdout",
 			dest:   "unwrap",
 			writer: bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -89,15 +89,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: apps/v1
 kind: Deployment
@@ -113,7 +113,7 @@ metadata:
 		{
 			name: "output to another directory",
 			dest: "foo/bar",
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -121,15 +121,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedPkg: `apiVersion: apps/v1
 kind: Deployment
@@ -137,6 +137,7 @@ metadata:
   name: nginx-deployment
   annotations:
     config.kubernetes.io/path: 'foo/bar/deployment.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/deployment.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -144,13 +145,14 @@ metadata:
   name: nginx-svc
   annotations:
     config.kubernetes.io/path: 'foo/bar/svc.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/svc.yaml'
 `,
 		},
 		{
 			name:      "wrapped output to stdout by default if input is from stdin",
 			fromStdin: true,
 			writer:    bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -158,17 +160,17 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
-			expectedStdout: `apiVersion: config.kubernetes.io/v1alpha1
+			expectedStdout: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -176,15 +178,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 		},
 		{
@@ -192,7 +194,7 @@ items:
 			fromStdin: true,
 			dest:      "unwrap",
 			writer:    bytes.Buffer{},
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -200,15 +202,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedStdout: `apiVersion: apps/v1
 kind: Deployment
@@ -225,7 +227,7 @@ metadata:
 			name:      "output to directory for input from stdin",
 			fromStdin: true,
 			dest:      "foo/bar",
-			content: `apiVersion: config.kubernetes.io/v1alpha1
+			content: `apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
   - apiVersion: apps/v1
@@ -233,15 +235,15 @@ items:
     metadata:
       name: nginx-deployment
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'deployment.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'deployment.yaml'
   - apiVersion: v1
     kind: Service
     metadata:
       name: nginx-svc
       annotations:
-        config.kubernetes.io/index: '0'
-        config.kubernetes.io/path: 'svc.yaml'
+        internal.config.kubernetes.io/index: '0'
+        internal.config.kubernetes.io/path: 'svc.yaml'
 `,
 			expectedPkg: `apiVersion: apps/v1
 kind: Deployment
@@ -249,6 +251,7 @@ metadata:
   name: nginx-deployment
   annotations:
     config.kubernetes.io/path: 'foo/bar/deployment.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/deployment.yaml'
 ---
 apiVersion: v1
 kind: Service
@@ -256,6 +259,7 @@ metadata:
   name: nginx-svc
   annotations:
     config.kubernetes.io/path: 'foo/bar/svc.yaml'
+    internal.config.kubernetes.io/path: 'foo/bar/svc.yaml'
 `,
 		},
 	}

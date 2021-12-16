@@ -170,7 +170,7 @@ func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.Dr
 		InventoryPolicy: r.inventoryPolicy,
 		DryRunStrategy:  dryRunStrategy,
 	}
-	ch := destroyer.Run(inv, options)
+	ch := destroyer.Run(context.Background(), inv, options)
 
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.

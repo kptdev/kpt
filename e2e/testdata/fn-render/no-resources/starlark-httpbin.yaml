@@ -16,13 +16,43 @@ kind: StarlarkRun
 metadata:
   name: httpbin-gen
 source: |-
-  httpbin_deployment = {
+  httpbin_deployment_internal = {
      "apiVersion": "apps/v1",
      "kind": "Deployment",
      "metadata": {
         "name": "httpbin",
         "annotations": {
-          "config.kubernetes.io/index": 0,
+          "internal.config.kubernetes.io/index": 0,
+          # generates resource in parent directory
+          "internal.config.kubernetes.io/path": "/another/file/out.yaml"
+        }
+     },
+     "spec": {
+        "replicas": 4,
+        "template": {
+           "spec": {
+              "containers": [
+                {
+                  "name": "httpbin",
+                  "image": "kennethreitz/httpbin",
+                  "ports": [
+                    {
+                       "containerPort": 9876
+                    }
+                  ]
+                }
+              ]
+           }
+        }
+    }
+  }
+  httpbin_deployment_legacy = {
+     "apiVersion": "apps/v1",
+     "kind": "Deployment",
+     "metadata": {
+        "name": "httpbin-2",
+        "annotations": {
+          "config.kubernetes.io/index": 1,
           # generates resource in parent directory
           "config.kubernetes.io/path": "/another/file/out.yaml"
         }
@@ -55,6 +85,7 @@ source: |-
       if is_httpbin(r):
         return
 
-    resources.append(httpbin_deployment)
+    resources.append(httpbin_deployment_internal)
+    resources.append(httpbin_deployment_legacy)
 
   ensure_httpbin(ctx.resource_list["items"])

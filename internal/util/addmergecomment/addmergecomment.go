@@ -41,7 +41,9 @@ func Process(paths ...string) error {
 			Outputs: []kio.Writer{inout},
 		}.Execute()
 		if err != nil {
-			return err
+			// this should be a best effort, do not error if this step fails
+			// https://github.com/GoogleContainerTools/kpt/issues/2559
+			return nil
 		}
 	}
 	return nil

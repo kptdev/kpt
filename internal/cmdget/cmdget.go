@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +39,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
+		Use:        "get {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY]",
 		Args:       cobra.MinimumNArgs(1),
 		Short:      docs.GetShort,
 		Long:       docs.GetShort + "\n" + docs.GetLong,
@@ -81,15 +82,24 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	t, err := parse.GitParseArgs(r.ctx, args)
+	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
+		SetGit: func(git *kptfilev1.Git) error {
+			r.Get.Git = git
+			r.Get.Upstream = remote.NewGitUpstream(git)
+			return nil
+		},
+		SetOci: func(oci *kptfilev1.Oci) error {
+			r.Get.Upstream = remote.NewOciUpstream(oci)
+			return nil
+		},
+	})
 	if err != nil {
-		return errors.E(op, err)
+		return err
 	}
 
-	r.Get.Git = &t.Git
-	p, err := pkg.New(t.Destination)
+	p, err := pkg.New(destination)
 	if err != nil {
-		return errors.E(op, types.UniquePath(t.Destination), err)
+		return errors.E(op, types.UniquePath(destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 
