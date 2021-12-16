@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/pkg/status"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -214,10 +215,20 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 	if err != nil {
 		return err
 	}
+
+	statusPoller, err := status.NewStatusPoller(r.factory)
+	if err != nil {
+		return err
+	}
+
 	applier, err := apply.NewApplier(r.factory, invClient)
 	if err != nil {
 		return err
 	}
+	// TODO(mortent): See if we can improve this. Having to change the Applier after it has been
+	// created feels a bit awkward.
+	applier.StatusPoller = statusPoller
+
 	ch := applier.Run(r.ctx, invInfo, objs, apply.Options{
 		ServerSideOptions:      r.serverSideOptions,
 		PollInterval:           r.period,
