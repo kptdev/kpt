@@ -6,19 +6,19 @@
 ## Why
 
 Currently, `kpt pkg update` doesn't merge the `pipeline` section in the Kptfile as expected. 
-The fact that the `pipeline` section is a non-associative list with no defined function identity and ordering makes 
-it very difficult to merge with upstream counterparts. This is forcing users to use 
-setters and discouraging them from declaring other functions in the `pipeline` as 
-they will be deleted during the `kpt pkg update`. Merging the pipeline correctly 
-will reduce huge amounts of friction in declaring new functions. This will encourage 
-users to declare more functions in the pipeline which in turn helps to avoid excessive 
-parameterization.
+The fact that the `pipeline` section is a non-associative list with no defined function identity makes 
+it very difficult to merge with upstream counterparts. Ordering of the functions is also important.
+This friction is forcing users to use `setters` and discouraging them from declaring other functions in the `pipeline` as 
+they will be deleted during the `kpt pkg update`. [Here](https://github.com/GoogleContainerTools/kpt/issues/2529) 
+is the example issue. Merging the pipeline correctly will reduce huge amounts of 
+friction in declaring new functions. This will encourage users to declare more functions 
+in the pipeline which in turn helps to **avoid excessive parameterization**.
 
-Consider the example of [Landing Zone](https://github.com/GoogleCloudPlatform/blueprints/tree/main/catalog) blueprints. Only the apply-setters function 
-is being used here. This is an anti-pattern for package-as-interface motivation 
+Consider the example of [Landing Zone](https://github.com/GoogleCloudPlatform/blueprints/tree/main/catalog) blueprints. 
+Parameters(setters) are the primary interface for the package. This is an anti-pattern for package-as-interface motivation 
 and one of the major blockers for not using other functions is the merge behavior 
 of the pipeline. If this problem is solved, LZ maintainers can rewrite the packages 
-with best practices aligned to the bigger goal of treating the package as an interface, 
+with best practices aligned to the bigger goal of treating the package-as-interface, 
 discourage excessive use of setters and only use them as parameterization techniques of last resort.
 
 ## Design
@@ -30,7 +30,7 @@ update` command in the same way they do currently. This effort will improve the 
 output of the pipeline section.
 
 **Is this change backwards compatible**: We are not making any changes to the api, 
-we are only improving the merged output of the pipeline section. This change will 
+we are only improving the merged output of the `pipeline` section. This change will 
 produce a different output of Kptfile when compared to the current version but this 
 is not a breaking change.
 
@@ -47,7 +47,7 @@ Here is what users can expect when they invoke the command, `kpt pkg update` on 
 **Local**: Local fork of the package on disk.
 
 Firstly, we need to define the identity of the function in order to uniquely identify 
-them across three sources and perform a 3-way merge. In order to identify the instance of a
+a function across three sources to perform a 3-way merge. In order to reliably identify the instance of a
 function, we should add a new optional field `name` to function definition.
 
 Here is the merge keys used by update logic to identify function in the order of precedence:
@@ -122,29 +122,29 @@ Original:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters.yaml
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configPath: labels.yaml
 
 Updated upstream:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters-updated.yaml // upstream value changed
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configPath: labels-updated.yaml // upstream value changed
 
 Local:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters-local.yaml // local value changed
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configPath: labels-local.yaml // local value changed
 
 Expected Output:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters-updated.yaml // upstream overrides local 
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configPath: labels-updated.yaml // upstream overrides local 
 ```
 
 Similarly, the upstream version wins if both upstream and local are updated, else local is preserved.
@@ -154,29 +154,29 @@ Original:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configPath: setters.yaml
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configPath: annotations.yaml
 
 Updated upstream:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1.2
-      configPath: setters.yaml
+    - image: gcr.io/kpt-fn/set-annotations:v0.1.2
+      configPath: annotations.yaml
 
 Local:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1.1
-      configPath: setters.yaml
+    - image: gcr.io/kpt-fn/set-annotations:v0.1.1
+      configPath: annotations.yaml
 
 Expected Output:
 
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1.2
-      configPath: setters-updated.yaml
+    - image: gcr.io/kpt-fn/set-annotations:v0.1.2
+      configPath: annotations.yaml
 ```
 
 This might not be what all users expect. But this is the default behavior in case 
@@ -486,5 +486,6 @@ Why should upstream win in case of conflicts ? Is this what the user always expe
 - Not necessarily. User expectations might be different in different scenarios for resolving conflicts. 
 But since we already went down the path of upstream-wins strategy in case of conflicts for merging resources, 
 we are going down that route to maintain consistency.
-- There is an open issue to support multiple conflict resolution strategies and provide interactive update behavior to resolve 
+- There is an open [issue](https://github.com/GoogleContainerTools/kpt/issues/1437) to support 
+multiple conflict resolution strategies and provide interactive update behavior to resolve 
 conflicts which is out of scope for this doc and will be addressed soon.
