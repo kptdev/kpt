@@ -210,55 +210,6 @@ upstreamLock:
 `,
 		},
 
-		"pipeline in upstream replaces local": {
-			origin: `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: foo
-pipeline:
-  mutators:
-    - image: foo:bar
-`,
-			updated: `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: foo
-pipeline:
-  mutators:
-    - image: foo:bar
-      configMap:
-        source: updated
-    - image: some:image
-`,
-			local: `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: foo
-pipeline:
-  mutators:
-    - image: my:image
-      configMap:
-        source: local
-    - image: foo:bar
-`,
-			updateUpstream: true,
-			expected: `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: foo
-pipeline:
-  mutators:
-    - image: foo:bar
-      configMap:
-        source: updated
-    - image: some:image
-`,
-		},
-
 		"pipeline in local remains if there are no changes in upstream": {
 			origin: `
 apiVersion: kpt.dev/v1
