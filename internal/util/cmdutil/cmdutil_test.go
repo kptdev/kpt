@@ -316,30 +316,39 @@ func TestListImages(t *testing.T) {
 	result := listImages(`{
   "apply-setters": {
     "v0.1": {
-      "apply-setters-simple": {
-        "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+      "LatestPatchVersion": "v0.1.1",
+      "Examples": {
+        "apply-setters-simple": {
+          "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+        }
       }
     }
   },
   "gatekeeper": {
     "v0.1": {
-      "gatekeeper-warning-only": {
-        "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+      "LatestPatchVersion": "v0.1.3",
+      "Examples": {
+        "gatekeeper-warning-only": {
+          "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+        }
       }
     },
     "v0.2": {
-      "gatekeeper-warning-only": {
-        "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+      "LatestPatchVersion": "v0.2.1",
+      "Examples": {
+        "gatekeeper-warning-only": {
+          "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+        }
       }
     }
   }
 }`)
 	sort.Strings(result)
-	assert.Equal(t, []string{"apply-setters:v0.1", "gatekeeper:v0.2"}, result)
+	assert.Equal(t, []string{"apply-setters:v0.1.1", "gatekeeper:v0.2.1"}, result)
 }
