@@ -89,6 +89,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 			// Complete exits if it is called in completion mode, otherwise it is a no-op
 			cmdcomplete.Complete(cmd.Parent(), false, nil).Complete("kpt")
 		},
+		DisableFlagParsing: true,
 	})
 
 	// find the pager if one exists
