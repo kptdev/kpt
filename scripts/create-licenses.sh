@@ -238,7 +238,7 @@ done >> ${TMP_LICENSE_FILE}
 cat ${TMP_LICENSE_FILE} > ${VENDOR_LICENSE_FILE}
 
 # Create a package of Mozilla repository source code (only go code).
-zip -qr $ZIP_FILENAME $mozilla_repos -i '*.go'
+[ -n "$mozilla_repos" ] && zip -qr $ZIP_FILENAME $mozilla_repos -i '*.go'
 
 # Cleanup vendor directory
 rm -rf vendor
