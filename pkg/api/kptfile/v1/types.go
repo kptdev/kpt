@@ -275,8 +275,6 @@ type Function struct {
 	// 	 exec: /usr/local/bin/my-custom-fn
 	Exec string `yaml:"exec,omitempty" json:"exec,omitempty"`
 
-	ExecArgs []string `yaml:"-" json:"-"`
-
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a KRM resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on

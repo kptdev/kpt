@@ -52,15 +52,6 @@ func NewRunner(
 	}
 	if f.Image != "" {
 		f.Image = AddDefaultImagePathPrefix(f.Image)
-	} else {
-		s, err := shlex.Split(f.Exec)
-		if err != nil {
-			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
-		}
-		if len(s) > 0 {
-			f.Exec = s[0]
-			f.ExecArgs = s[1:]
-		}
 	}
 
 	fnResult := &fnresult.Result{
@@ -83,10 +74,22 @@ func NewRunner(
 		}
 		fltr.Run = cfn.Run
 	case f.Exec != "":
+		var execArgs []string
 		// assuming exec here
+		s, err := shlex.Split(f.Exec)
+		if err != nil {
+			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+		}
+		execPath := f.Exec
+		if len(s) > 0 {
+			execPath = s[0]
+		}
+		if len(s) > 1 {
+			execArgs = s[1:]
+		}
 		eFn := &ExecFn{
-			Path:     f.Exec,
-			Args:     f.ExecArgs,
+			Path:     execPath,
+			Args:     execArgs,
 			FnResult: fnResult,
 		}
 		fltr.Run = eFn.Run
