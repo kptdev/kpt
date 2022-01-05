@@ -62,18 +62,21 @@ upstream and existing setter values are updated locally. This is the most common
 use case where kpt fails to merge them. Since `name` field is not specified, `image`
 value is used to identify and merge the function
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configMap:
         image: nginx
         tag: 1.0.1
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -81,18 +84,23 @@ pipeline:
         image: nginx
         tag: 1.0.1
         new-setter: new-setter-value // new setter is added
+```
+```
+Local
+```
 
-Local:
-
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configMap:
         image: nginx
         tag: 1.2.0 // value of tag is updated
-
-Current Output:
-
+```
+```
+Current Output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -100,9 +108,11 @@ pipeline:
         image: nginx
         tag: 1.0.1 // entire pipeline is overridden by upstream 
         new-setter: new-setter-value
-
-Expected Output:
-
+```
+```
+Expected Output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -117,30 +127,37 @@ the modified local value will be preserved. But in the following example, both
 upstream and local values change. So, similar to merging resources, upstream 
 value wins if the same fields in both upstream and local are updated.
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configPath: labels.yaml
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configPath: labels-updated.yaml // upstream value changed
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configPath: labels-local.yaml // local value changed
-
-Expected Output:
-
+```
+```
+Expected Output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1
@@ -149,30 +166,37 @@ pipeline:
 
 Similarly, the upstream version wins if both upstream and local are updated, else local is preserved.
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-annotations:v0.1
       configPath: annotations.yaml
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-annotations:v0.1.2
       configPath: annotations.yaml
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-annotations:v0.1.1
       configPath: annotations.yaml
-
-Expected Output:
-
+```
+```
+Expected Output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-annotations:v0.1.2
@@ -189,24 +213,29 @@ as an option to the kpt pkg update command.
 
 Newly added upstream functions are appended at the end.
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configPath: setters.yaml
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configPath: setters.yaml
     - image: gcr.io/kpt-fn/generate-folders:v0.1
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -214,9 +243,11 @@ pipeline:
     - image: gcr.io/kpt-fn/set-namespace:v0.1
       configMap:
         namespace: foo
-
-Expected output:
-
+```
+```
+Expected output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -229,25 +260,29 @@ pipeline:
 
 If a function is deleted upstream and not changed on the local, it will be deleted on local.
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configPath: setters.yaml
     - image: gcr.io/kpt-fn/generate-folders:v0.1
-
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
       configPath: setters.yaml
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -256,9 +291,11 @@ pipeline:
     - image: gcr.io/kpt-fn/set-namespace:v0.1
       configMap:
         namespace: foo
-
-Expected output:
-
+```
+```
+Expected output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
@@ -272,9 +309,10 @@ Same function declared multiple times: If the same function is declared multiple
 times with the same input type(configMap/configPath), order is used as a tie-breaker 
 to identify the function, which means the functions are merged based on their order
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -285,9 +323,11 @@ pipeline:
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -298,9 +338,11 @@ pipeline:
       configMap:
         by-value: abc
         put-comment: ${updated-setter-name}
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/generate-folders:v0.1
@@ -319,9 +361,11 @@ pipeline:
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
-
-Expected output:
-
+```
+```
+Expected output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/generate-folders:v0.1
@@ -347,9 +391,10 @@ might reorder the functions or insert a function at random location in the local
 In this case, we recommend users to leverage name field 
 in order to merge the functions in deterministic fashion.
 
+```
+Original
+```
 ```yaml
-Original:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -360,9 +405,11 @@ pipeline:
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -373,9 +420,11 @@ pipeline:
       configMap:
         by-value: abc
         put-comment: ${updated-setter-name}
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -395,9 +444,11 @@ pipeline:
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
-
-Expected output:
-
+```
+```
+Expected output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
@@ -423,9 +474,10 @@ Merging selectors is difficult as there is no identity. If both upstream and
 local selectors for a given function diverge, the entire section of selectors 
 from upstream will override the selectors on local for that function.
 
+```
+Origin
+```
 ```yaml
-Origin:
-
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/ensure-name-substring:v0.1
@@ -434,9 +486,11 @@ pipeline:
           name: wordpress
         - kind: Service
           name: wordpress
-
-Updated upstream:
-
+```
+```
+Updated upstream
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/ensure-name-substring:v0.1
@@ -447,9 +501,11 @@ pipeline:
           name: wordpress
         - kind: Foo
           name: wordpress
-
-Local:
-
+```
+```
+Local
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/ensure-name-substring:v0.1
@@ -459,9 +515,11 @@ pipeline:
         - kind: Service
           name: my-wordpress
         - namespace: my-space
-
-Expected output:
-
+```
+```
+Expected output
+```
+```yaml
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.1
