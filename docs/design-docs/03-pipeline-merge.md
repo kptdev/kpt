@@ -181,7 +181,7 @@ Updated upstream
 ```yaml
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-annotations:v0.1.2
+    - image: gcr.io/kpt-fn/set-annotations:v0.2.0
       configPath: annotations.yaml
 ```
 ```
@@ -199,7 +199,7 @@ Expected Output
 ```yaml
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-annotations:v0.1.2
+    - image: gcr.io/kpt-fn/set-annotations:v0.2.0
       configPath: annotations.yaml
 ```
 
@@ -211,7 +211,7 @@ as an option to the kpt pkg update command.
 
 #### More examples with expected output
 
-Newly added upstream functions are appended at the end.
+Newly added upstream function.
 
 ```
 Original
