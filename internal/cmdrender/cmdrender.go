@@ -47,6 +47,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", string(fnruntime.IfNotPresentPull),
 		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+	c.Flags().BoolVar(&r.allowExec, "allow-exec", false,
+		"allow binary executable to be run during pipeline execution.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -61,6 +63,7 @@ type Runner struct {
 	pkgPath         string
 	resultsDirPath  string
 	imagePullPolicy string
+	allowExec       bool
 	dest            string
 	Command         *cobra.Command
 	ctx             context.Context
@@ -98,10 +101,6 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
-	err := cmdutil.DockerCmdAvailable()
-	if err != nil {
-		return err
-	}
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {
@@ -114,9 +113,9 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
+		AllowExec:       r.allowExec,
 	}
-	err = executor.Execute(r.ctx)
-	if err != nil {
+	if err := executor.Execute(r.ctx); err != nil {
 		return err
 	}
 

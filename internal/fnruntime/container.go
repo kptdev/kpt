@@ -128,6 +128,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
 	}
+
 	switch f.ImagePullPolicy {
 	case NeverPull:
 		args = append(args, "--pull", "never")

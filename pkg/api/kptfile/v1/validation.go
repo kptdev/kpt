@@ -67,14 +67,29 @@ func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 }
 
 func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
-	err := ValidateFunctionImageURL(f.Image)
-	if err != nil {
+	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
-			Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
-			Value:  f.Image,
-			Reason: err.Error(),
+			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Reason: "must specify a functon (`image` or `exec`) to execute",
 		}
 	}
+	if f.Image != "" && f.Exec != "" {
+		return &ValidateError{
+			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+			Reason: "must not specify both `image` and `exec` at the same time",
+		}
+	}
+	if f.Image != "" {
+		err := ValidateFunctionImageURL(f.Image)
+		if err != nil {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].image", fnType, idx),
+				Value:  f.Image,
+				Reason: err.Error(),
+			}
+		}
+	}
+	// TODO(droot): validate the exec
 
 	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
 		return &ValidateError{
