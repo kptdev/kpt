@@ -151,30 +151,6 @@ pipeline:
 
 ```
 
-### Optional resources
-
-Sometimes customizing a package may require adding a new resource. For example,
-if a team wants to define rules for isolating the network for a tenant, they
-need to define network policy resources. Our tenant package has a hidden
-directory called `.snippets` that contains snippets of such resources that a
-package consumer may need. Platform team can also surface canned configuration
-for example quota.medium.yaml can be used for medium size workloads.
-
-Also `.krmignore` files instructs kpt to ignore all resources in the `.snippets`
-directory for other workflows.
-
-```shell
-
-$ cd $PKG_CATALOG_DIR
-pkg-catalog $ ls tenant/.snippets/
-isolate-network-policy.yaml  quota.large.yaml  quota.medium.yaml
-quota.small.yaml  role-binding.yaml  service-account.yaml
-
-pkg-catalog $ cat tenant/.krmignore
-.snippets
-
-```
-
 ### Publishing Tenant Package
 
 So once you are happy with the tenant package, you can publish the tenant
@@ -219,10 +195,8 @@ $ kpt pkg get $PKG_CATALOG_REPO/tenant@v0.1 tenant-a
 # tenant customizations:
 # change the namespace to tenant-a in the tenant-a/Kptfile
 # configure the quota.yaml by directly editing if needed
-# or cp .snippets/quota.{small, large, medium}.yaml as quota.yaml
-# or cp .snippets/isolate-network.yaml if isolation is needed
-# or directly edit the resources
-# or add functions to the pipeline in Kptfile
+# configure resources by directly editing them
+# Add functions to the pipeline in Kptfile
 
 # render the package to ensure all customizations are applied
 # and validations are run.
@@ -263,14 +237,7 @@ $ git commit -am "updated tenant-a to newer version"
 $ git push origin update-tenant-a
 
 # make a pull request for platform team to merge
-# TODO (link to an example PR will be great here)
-
 ```
-
-Note that the platform team can add/update the snippets in the tenant package.
-`kpt pkg update` updates the hidden snippets directory automatically but
-resources created by copying snippets will not be updated automatically and
-need to be updated manually if needed.
 
 ## Summary
 
