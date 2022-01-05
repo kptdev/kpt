@@ -43,6 +43,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
+	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return cmdutil.FetchFunctionImages(), cobra.ShellCompDirectiveDefault
+	})
 	r.Command.Flags().StringVar(
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(

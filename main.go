@@ -60,10 +60,10 @@ func runMain() int {
 	// Note(droot): There are too many flags exposed that makes the command
 	// usage verbose but couldn't find a way to make it less verbose.
 	klog.InitFlags(&logFlags)
-	cmd.Flags().AddGoFlagSet(&logFlags)
 	// By default klog v1 logs to stderr, switch that off
-	_ = cmd.Flags().Set("logtostderr", "false")
-	_ = cmd.Flags().Set("alsologtostderr", "false")
+	_ = logFlags.Set("logtostderr", "false")
+	_ = logFlags.Set("alsologtostderr", "true")
+	cmd.Flags().AddGoFlagSet(&logFlags)
 
 	err = cmd.Execute()
 	if err != nil {
