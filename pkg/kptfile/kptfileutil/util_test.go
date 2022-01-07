@@ -802,6 +802,103 @@ pipeline:
 `,
 		},
 
+		"Ideal deterministic behavior: add function at random location with name specified in all sources": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
+      configMap:
+        by-value: foo
+        put-value: bar
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
+      configMap:
+        by-value: abc
+        put-comment: ${some-setter-name}
+`,
+			update: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
+      configMap:
+        by-value: foo
+        put-value: bar-new
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
+      configMap:
+        by-value: abc
+        put-comment: ${updated-setter-name}
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: my-new-function
+      configMap:
+        by-value: YOUR_TEAM
+        put-value: my-team
+    - image: gcr.io/kpt-fn/generate-folders:v0.1
+      name: gf1
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
+      configMap:
+        by-value: foo
+        put-value: bar
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      name: sl1
+      configMap:
+        app: db
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
+      configMap:
+        by-value: abc
+        put-comment: ${some-setter-name}
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: YOUR_TEAM
+      put-value: my-team
+    name: my-new-function
+  - image: gcr.io/kpt-fn/generate-folders:v0.1
+    name: gf1
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: foo
+      put-value: bar-new
+    name: sr1
+  - image: gcr.io/kpt-fn/set-labels:v0.1
+    configMap:
+      app: db
+    name: sl1
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: abc
+      put-comment: ${updated-setter-name}
+    name: sr2
+`,
+		},
+
 		// When adding an associative key, we get a real merge of the pipeline.
 		// In this case, we have an initial empty list in origin and different
 		// functions are added in upstream and local. In this case the element
