@@ -33,7 +33,7 @@ the platform teams typically have administrative privileges on the Kubernetes cl
 The team responsible for operating the tenant. Once the tenant is provisioned,
 this team will typically deploy resources (workload, services etc) in the tenant.
 
-## Package Organization
+## Package organization
 
 There are many ways to organize the tenant package and its variants. In this guide,
 we will explore one of the patterns where we keep the packages and their variants
@@ -151,7 +151,7 @@ pipeline:
 
 ```
 
-### Publishing Tenant Package
+### Publishing tenant package
 
 So once you are happy with the tenant package, you can publish the tenant
 package by tagging the version as shown below:
