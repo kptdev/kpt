@@ -715,22 +715,14 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/generate-folders:v0.1
   - image: gcr.io/kpt-fn/search-replace:v0.1
     configMap:
       by-value: foo
       put-value: bar-new
-  - image: gcr.io/kpt-fn/set-labels:v0.1
-    configMap:
-      app: db
   - image: gcr.io/kpt-fn/search-replace:v0.1
     configMap:
       by-value: abc
       put-comment: ${updated-setter-name}
-  - image: gcr.io/kpt-fn/search-replace:v0.1
-    configMap:
-      by-value: YOUR_TEAM
-      put-value: my-team
 `,
 		},
 
@@ -801,17 +793,8 @@ pipeline:
   mutators:
   - image: gcr.io/kpt-fn/search-replace:v0.1
     configMap:
-      by-value: YOUR_TEAM
-      put-value: my-team
-    name: my-new-function
-  - image: gcr.io/kpt-fn/generate-folders:v0.1
-  - image: gcr.io/kpt-fn/search-replace:v0.1
-    configMap:
       by-value: foo
       put-value: bar-new
-  - image: gcr.io/kpt-fn/set-labels:v0.1
-    configMap:
-      app: db
   - image: gcr.io/kpt-fn/search-replace:v0.1
     configMap:
       by-value: abc
