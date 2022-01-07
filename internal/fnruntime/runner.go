@@ -165,6 +165,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
 }
@@ -345,16 +346,22 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 // on kpt CLI.
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
-	if len(fnErr.Stderr) > 0 {
+	printFnStderr(ctx, fnErr.Stderr)
+	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
+}
+
+// printFnStderr prints given stdErr in a user friendly format on kpt CLI.
+func printFnStderr(ctx context.Context, stdErr string) {
+	pr := printer.FromContextOrDie(ctx)
+	if len(stdErr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
-			Lines:          strings.Split(fnErr.Stderr, "\n"),
+			Lines:          strings.Split(stdErr, "\n"),
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
 		pr.Printf("%s", errLines.String())
 	}
-	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in
