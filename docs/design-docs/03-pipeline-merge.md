@@ -50,12 +50,23 @@ Firstly, we need to define the identity of the function in order to uniquely ide
 a function across three sources to perform a 3-way merge. In order to reliably identify the instance of a
 function, we should add a new optional field `name` to function definition.
 
-Here is the merge keys used by update logic to identify function in the order of precedence:
+We will introduce a new field `name` for identifying functions and merge pipeline as associative list.
+The aim is to encourage users eventually to have `name` field specified for all functions
+similar to containers in deployment. But in the meanwhile, we will be using image name in 
+order to identify the function and make it an associative list for merging. The limitation
+of this approach is the multiple functions with same image can be declared in the pipeline.
+In that case we will fall back to current merge logic of merging pipeline as non-associative list.
+In order to have deterministic behavior, we will use image as merge key iff none of the 
+functions have `name` field specified and iff there are no duplicate image names declare in functions.
 
-1. name
-2. image(ignoring the version value)
-3. function config type(`configMap` or `configPath`)
-4. relative order of the function
+So the algorithm to merge:
+
+1. If `name` field is specified in all the functions across all sources, merge 
+it as associative list using `name` field as merge key.
+2. If `name` field is not specified in all the functions across all sources,
+and if there is no duplicate declaration of image names for functions, use `image` value
+(excluding the version) as merge key and merge it as associative list.
+3. In all other cases fall back to the current merge behavior.
 
 Here is an example of the merging apply-setters function when new setters are added 
 upstream and existing setter values are updated locally. This is the most common 
@@ -203,12 +214,6 @@ pipeline:
       configPath: annotations.yaml
 ```
 
-This might not be what all users expect. But this is the default behavior in case 
-of conflict while merging normal resources as well. In order to provide more visibility to the users, we can add 
-log messages in cases of such conflicts and intimate users about the updated value. 
-In the future, we can add support to a different conflict strategy of `--local-wins`
-as an option to the kpt pkg update command.
-
 #### More examples with expected output
 
 Newly added upstream function.
@@ -306,8 +311,7 @@ pipeline:
 ```
 
 Same function declared multiple times: If the same function is declared multiple 
-times with the same input type(configMap/configPath), order is used as a tie-breaker 
-to identify the function, which means the functions are merged based on their order
+times and `name` field is not specified, fall back to the current merge behavior
 
 ```
 Original
@@ -368,28 +372,18 @@ Expected output
 ```yaml
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/generate-folders:v0.1
-    - image: gcr.io/kpt-fn/search-replace:v0.1
-      configMap:
-        by-value: foo
-        put-value: bar-new
-    - image: gcr.io/kpt-fn/set-labels:v0.1
-      configMap:
-        app: db
-    - image: gcr.io/kpt-fn/search-replace:v0.1
-      configMap:
-        by-value: abc
-        put-comment: ${updated-setter-name}
-    - image: gcr.io/kpt-fn/search-replace:v0.1
-      configMap:
-        by-value: YOUR_TEAM
-        put-value: my-team
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: foo
+      put-value: bar-new
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: abc
+      put-comment: ${updated-setter-name}
 ```
 
-Depending on order of the functions doesn't always yield expected behavior. Users
-might reorder the functions or insert a function at random location in the local pipeline.
-In this case, we recommend users to leverage name field 
-in order to merge the functions in deterministic fashion.
+In the following scenario, only one function has the `name` field specified. All the
+other functions doesn't have name specified, hence we fall back to current merge logic.
 
 ```
 Original
@@ -451,27 +445,112 @@ Expected output
 ```yaml
 pipeline:
   mutators:
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: foo
+      put-value: bar-new
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    configMap:
+      by-value: abc
+      put-comment: ${updated-setter-name}
+```
+
+Here is the ideal scenario which leads to deterministic merge behavior using `name`
+field across all sources
+
+```
+Original
+```
+```yaml
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
+      configMap:
+        by-value: foo
+        put-value: bar
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
+      configMap:
+        by-value: abc
+        put-comment: ${some-setter-name}
+```
+```
+Updated upstream
+```
+```yaml
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
+      configMap:
+        by-value: foo
+        put-value: bar-new
+    - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
+      configMap:
+        by-value: abc
+        put-comment: ${updated-setter-name}
+```
+```
+Local
+```
+```yaml
+pipeline:
+  mutators:
     - image: gcr.io/kpt-fn/search-replace:v0.1
       name: my-new-function
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
     - image: gcr.io/kpt-fn/generate-folders:v0.1
+      name: gf1
     - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr1
       configMap:
         by-value: foo
-        put-value: bar-new
+        put-value: bar
     - image: gcr.io/kpt-fn/set-labels:v0.1
+      name: sl1
       configMap:
         app: db
     - image: gcr.io/kpt-fn/search-replace:v0.1
+      name: sr2
       configMap:
         by-value: abc
-        put-comment: ${updated-setter-name}
+        put-comment: ${some-setter-name}
+```
+```
+Expected output
+```
+```yaml
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    name: my-new-function
+    configMap:
+      by-value: YOUR_TEAM
+      put-value: my-team
+  - image: gcr.io/kpt-fn/generate-folders:v0.1
+    name: gf1
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    name: sr1
+    configMap:
+      by-value: foo
+      put-value: bar-new
+  - image: gcr.io/kpt-fn/set-labels:v0.1
+    name: sl1
+    configMap:
+      app: db
+  - image: gcr.io/kpt-fn/search-replace:v0.1
+    name: sr2
+    configMap:
+      by-value: abc
+      put-comment: ${updated-setter-name}
 ```
 
-Merging selectors is difficult as there is no identity. If both upstream and 
-local selectors for a given function diverge, the entire section of selectors 
+Merging selectors is difficult as there is no identity. If both upstream and
+local selectors for a given function diverge, the entire section of selectors
 from upstream will override the selectors on local for that function.
 
 ```
@@ -537,7 +616,7 @@ pipeline:
 ## Alternatives Considered
 
 For identifying the function, we can add the function version to the primary key
-(in addition to the function name+input config type). But it is highly likely that 
+(in addition to the function name). But it is highly likely that 
 changing the function version means updating the function as opposed to adding a new function.
 
 Why should upstream win in case of conflicts ? Is this what the user always expects?
