@@ -15,6 +15,7 @@
 package live
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"os"

@@ -121,7 +121,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 
 	if r.Origin != "" {
-		_, err := parse.ParseArgs(r.ctx, args, parse.Options{
+		_, err := parse.ParseArgs(r.ctx, []string{r.Origin, path}, parse.Options{
 			SetOci: func(oci *kptfilev1.Oci) error {
 				r.Push.Origin = remote.NewOciOrigin(oci)
 				return nil
