@@ -15,11 +15,11 @@
 parallel: true
 kptArgs:
   - "--output=json"
+  - "--reconcile-timeout=1m"
 stdOut: |
   {"eventType":"resourceApplied","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"third-nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"configuredCount":0,"count":2,"createdCount":2,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
-  {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"fourth-nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
+  {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
+  {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
   {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
   {"eventType":"resourcePruned","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Pruned","timestamp":"<TIMESTAMP>","type":"prune"}
   {"eventType":"completed","pruned":1,"skipped":0,"timestamp":"<TIMESTAMP>","type":"prune"}
@@ -31,9 +31,5 @@ inventory:
     namespace: json-output
   - group: apps
     kind: Deployment
-    name: third-nginx
-    namespace: json-output
-  - group: apps
-    kind: Deployment
-    name: fourth-nginx
+    name: nginx
     namespace: json-output

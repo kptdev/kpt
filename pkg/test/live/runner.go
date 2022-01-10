@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -96,11 +97,15 @@ func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 }
 
 func (r *Runner) VerifyStdout(t *testing.T, stdout string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), strings.TrimSpace(substituteTimestamps(stdout)))
+	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), prepOutput(t, stdout))
 }
 
 func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), strings.TrimSpace(substituteTimestamps(stderr)))
+	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), prepOutput(t, stderr))
+}
+
+func prepOutput(t *testing.T, s string) string {
+	return strings.TrimSpace(substituteTimestamps(removeStatusEvents(t, s)))
 }
 
 func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
@@ -172,4 +177,33 @@ var timestampRegexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)
 
 func substituteTimestamps(text string) string {
 	return timestampRegexp.ReplaceAllString(text, "<TIMESTAMP>")
+}
+
+var statuses = []status.Status{
+	status.InProgressStatus,
+	status.CurrentStatus,
+	status.FailedStatus,
+	status.TerminatingStatus,
+	status.UnknownStatus,
+	status.NotFoundStatus,
+}
+
+func removeStatusEvents(t *testing.T, text string) string {
+	scanner := bufio.NewScanner(strings.NewReader(text))
+	var lines []string
+
+scan:
+	for scanner.Scan() {
+		line := scanner.Text()
+		for _, s := range statuses {
+			if strings.Contains(line, s.String()) {
+				continue scan
+			}
+		}
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		t.Fatalf("error scanning output: %v", err)
+	}
+	return strings.Join(lines, "\n")
 }

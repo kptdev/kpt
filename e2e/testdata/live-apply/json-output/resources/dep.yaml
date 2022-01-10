@@ -12,11 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-alpine
-RUN apk update && apk upgrade && \
-    apk add --no-cache git less diffutils bash openssh docker-cli && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm /var/cache/apk/*
-# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/docker/
-COPY kpt /usr/local/bin/kpt
-ENTRYPOINT ["kpt"]
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: json-output
+  annotations:
+    config.kubernetes.io/depends-on: apps/namespaces/json-output/ConfigMap/cm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80

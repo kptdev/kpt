@@ -349,6 +349,10 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--image-pull-policy", r.testCase.Config.ImagePullPolicy)
 			}
 
+			if r.testCase.Config.AllowExec {
+				kptArgs = append(kptArgs, "--allow-exec")
+			}
+
 			if r.testCase.Config.DisableOutputTruncate {
 				kptArgs = append(kptArgs, "--truncate-output=false")
 			}

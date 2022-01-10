@@ -11,11 +11,10 @@ require (
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/otiai10/copy v1.6.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
-	github.com/posener/complete/v2 v2.0.1-alpha.12
 	github.com/spf13/cobra v1.2.1
-	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
+	golang.org/x/mod v0.5.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.22.3
 	k8s.io/apiextensions-apiserver v0.22.2

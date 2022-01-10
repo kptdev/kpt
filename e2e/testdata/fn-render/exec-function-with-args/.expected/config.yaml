@@ -12,11 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-alpine
-RUN apk update && apk upgrade && \
-    apk add --no-cache git less diffutils bash openssh docker-cli && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm /var/cache/apk/*
-# This is set up for the Dockerfile to be used by goreleaser: https://goreleaser.com/customization/docker/
-COPY kpt /usr/local/bin/kpt
-ENTRYPOINT ["kpt"]
+allowExec: true
