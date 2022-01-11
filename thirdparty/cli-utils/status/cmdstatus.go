@@ -27,9 +27,9 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/engine"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	kstatus "sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	status "sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 const (
@@ -234,7 +234,7 @@ func allKnownNotifierFunc(cancelFunc context.CancelFunc) collector.ObserverFunc 
 }
 
 func pollerFactoryFunc(f util.Factory) (poller.Poller, error) {
-	return status.NewStatusPoller(f)
+	return polling.NewStatusPollerFromFactory(f, []engine.StatusReader{})
 }
 
 func invClient(f util.Factory) (inventory.InventoryClient, error) {

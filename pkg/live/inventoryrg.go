@@ -31,8 +31,9 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/engine"
 	"sigs.k8s.io/cli-utils/pkg/object"
-	utilfactory "sigs.k8s.io/cli-utils/pkg/util/factory"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -149,9 +150,10 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 			Kind:  strings.TrimSpace(kind),
 		}
 		klog.V(4).Infof("creating obj metadata: %s/%s/%s", namespace, name, groupKind)
-		objMeta, err := object.CreateObjMetadata(namespace, name, groupKind)
-		if err != nil {
-			return []object.ObjMetadata{}, err
+		objMeta := object.ObjMetadata{
+			GroupKind: groupKind,
+			Name:      name,
+			Namespace: namespace,
 		}
 		objs = append(objs, objMeta)
 	}
@@ -266,7 +268,7 @@ func InstallResourceGroupCRD(factory cmdutil.Factory) error {
 		}
 		// Create the task to apply the ResourceGroup CRD.
 		applyRGTask := NewApplyCRDTask(factory, crd)
-		objs := object.UnstructuredsToObjMetasOrDie([]*unstructured.Unstructured{crd})
+		objs := object.UnstructuredSetToObjMetadataSet([]*unstructured.Unstructured{crd})
 		// Create the tasks to apply the ResourceGroup CRD.
 		tasks := []taskrunner.Task{
 			applyRGTask,
@@ -278,7 +280,7 @@ func InstallResourceGroupCRD(factory cmdutil.Factory) error {
 		for _, t := range tasks {
 			taskQueue <- t
 		}
-		statusPoller, err := utilfactory.NewStatusPoller(factory)
+		statusPoller, err := polling.NewStatusPollerFromFactory(factory, []engine.StatusReader{})
 		if err != nil {
 			handleError(eventChannel, err)
 			return
