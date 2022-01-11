@@ -47,10 +47,8 @@ Here is what users can expect when they invoke the command, `kpt pkg update` on 
 **Local**: Local fork of the package on disk.
 
 Firstly, we need to define the identity of the function in order to uniquely identify 
-a function across three sources to perform a 3-way merge. In order to reliably identify the instance of a
-function, we should add a new optional field `name` to function definition.
-
-We will introduce a new field `name` for identifying functions and merge pipeline as associative list.
+a function across three sources to perform a 3-way merge. We will introduce a 
+new field `name` for identifying functions and merge pipeline as associative list.
 The aim is to encourage users eventually to have `name` field specified for all functions
 similar to containers in deployment. But in the meanwhile, we will be using image name in 
 order to identify the function and make it an associative list for merging. The limitation
