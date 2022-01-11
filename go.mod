@@ -22,7 +22,7 @@ require (
 	k8s.io/klog/v2 v2.10.0
 	k8s.io/kube-openapi v0.0.0-20211109043139-026bd182f079 // indirect
 	k8s.io/kubectl v0.22.2
-	sigs.k8s.io/cli-utils v0.26.1-0.20220111001916-0c9b214db384
+	sigs.k8s.io/cli-utils v0.27.0
 	sigs.k8s.io/kustomize/api v0.8.11
 	sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117
 )
