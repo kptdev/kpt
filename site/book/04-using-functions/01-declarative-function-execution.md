@@ -122,8 +122,21 @@ For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-l
 ### `exec`
 
 The `exec` field specifies the executable command for the function. You can specify
-an executable with arguments. For example, specifying `"sed -e 's/foo/bar/'"` will
-replace all occurances of `foo` with `bar` in the package resources.
+an executable with arguments.
+
+Example below uses `sed` executable to replace all occurances of `foo` with `bar`
+in the package resources.
+
+```yaml
+# PKG_DIR/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - exec: "sed -e 's/foo/bar/'"
+```
 
 Note that you must render the package by allowing executables by specifying `--allow-exec`
 command line flag as shown below.
