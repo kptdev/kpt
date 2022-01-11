@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - exec: "./testdata/fn-render/exec-function-stderr/function.sh"
