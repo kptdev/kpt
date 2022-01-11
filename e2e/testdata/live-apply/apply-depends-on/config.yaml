@@ -15,13 +15,17 @@
 parallel: true
 
 kptArgs:
-  - "--reconcile-timeout=1m"
+  - "--reconcile-timeout=2m"
 
 stdOut: |
   deployment.apps/first-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  deployment.apps/first-nginx reconcile pending
+  deployment.apps/first-nginx reconciled
   deployment.apps/second-nginx created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
+  deployment.apps/second-nginx reconcile pending
+  deployment.apps/second-nginx reconciled
+  2 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 
 inventory:
   - group: apps

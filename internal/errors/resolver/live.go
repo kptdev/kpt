@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/print/common"
 )
 
 //nolint:gochecknoinits
@@ -161,5 +162,14 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 			}),
 		}, true
 	}
+
+	var resultError *common.ResultError
+	if errors.As(err, &resultError) {
+		return ResolvedResult{
+			Message:  resultError.Error(),
+			ExitCode: 3,
+		}, true
+	}
+
 	return ResolvedResult{}, false
 }

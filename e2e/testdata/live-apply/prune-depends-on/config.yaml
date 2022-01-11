@@ -20,10 +20,17 @@ kptArgs:
 stdOut: |
   configmap/cm created
   1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+  configmap/cm reconcile pending
+  configmap/cm reconciled
   deployment.apps/second-nginx pruned
-  1 resource(s) pruned, 0 skipped, 0 failed
+  deployment.apps/second-nginx reconcile pending
+  deployment.apps/second-nginx reconciled
   deployment.apps/first-nginx pruned
-  1 resource(s) pruned, 0 skipped, 0 failed
+  2 resource(s) pruned, 0 skipped, 0 failed to prune
+  deployment.apps/first-nginx reconcile pending
+  deployment.apps/first-nginx reconciled
+  3 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
+
 inventory:
   - kind: ConfigMap
     name: cm
