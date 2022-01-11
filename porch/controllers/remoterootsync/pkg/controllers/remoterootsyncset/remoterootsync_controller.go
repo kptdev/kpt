@@ -25,6 +25,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -98,14 +99,20 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
+
 	var patchErrs []error
 	for _, clusterRef := range subject.Spec.ClusterRefs {
-		if err := r.applyToClusterRef(ctx, &subject, clusterRef); err != nil {
+		err := r.applyToClusterRef(ctx, &subject, clusterRef)
+		if err != nil {
 			patchErrs = append(patchErrs, err)
-			continue
 		}
-
+		if updateTargetStatus(&subject, clusterRef, err) {
+			if err := r.Status().Update(ctx, &subject); err != nil {
+				patchErrs = append(patchErrs, err)
+			}
+		}
 	}
+
 	if len(patchErrs) != 0 {
 		for _, patchErr := range patchErrs {
 			klog.Errorf("%v", patchErr)
@@ -113,6 +120,31 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, patchErrs[0]
 	}
 	return ctrl.Result{}, nil
+}
+
+func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, err error) bool {
+	var found *api.TargetStatus
+	for i := range subject.Status.Targets {
+		target := &subject.Status.Targets[i]
+		if target.Ref == *ref {
+			found = target
+			break
+		}
+	}
+	if found == nil {
+		subject.Status.Targets = append(subject.Status.Targets, api.TargetStatus{
+			Ref: *ref,
+		})
+		found = &subject.Status.Targets[len(subject.Status.Targets)-1]
+	}
+
+	if err != nil {
+		meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionFalse, Reason: "Error", Message: err.Error()})
+	} else {
+		meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Applied"})
+	}
+	// TODO: SetStatusCondition should return an indiciation if anything has changes
+	return true
 }
 
 func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, subject *api.RemoteRootSyncSet, clusterRef *api.ClusterRef) error {
