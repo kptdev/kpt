@@ -1022,8 +1022,8 @@ rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.22/go.mod h1:LEScyzhFmoF5pso/YSeBstl57mOzx9xlU9n85RGrDQg=
-sigs.k8s.io/cli-utils v0.26.1-0.20220108032703-d7d63f4b6289 h1:4kv1Ge3sdzNPT96uRa5zU+vNczErzkoQYanbQmRgn60=
-sigs.k8s.io/cli-utils v0.26.1-0.20220108032703-d7d63f4b6289/go.mod h1:8ll2fyx+bzjbwmwUnKBQU+2LDbMDsxy44DiDZ+drALg=
+sigs.k8s.io/cli-utils v0.26.1-0.20220111001916-0c9b214db384 h1:wElBbmlm1HWOxmnn1YWf0hR6BLrFFkszKCBfOWDDYv0=
+sigs.k8s.io/cli-utils v0.26.1-0.20220111001916-0c9b214db384/go.mod h1:8ll2fyx+bzjbwmwUnKBQU+2LDbMDsxy44DiDZ+drALg=
 sigs.k8s.io/controller-runtime v0.10.1 h1:+eLHgY/VrJWnfg6iXUqhCUqNXgPH1NZeP9drNAAgWlg=
 sigs.k8s.io/controller-runtime v0.10.1/go.mod h1:CQp8eyUQZ/Q7PJvnIrB6/hgfTC1kBkGylwsLgOQi1WY=
 sigs.k8s.io/kustomize/api v0.8.11 h1:LzQzlq6Z023b+mBtc6v72N2mSHYmN8x7ssgbf/hv0H8=

@@ -15,16 +15,24 @@
 parallel: true
 kptArgs:
   - "--output=json"
-  - "--reconcile-timeout=1m"
+  - "--reconcile-timeout=2m"
 stdOut: |
   {"eventType":"resourceApplied","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
+  {"eventType":"resourceReconciled","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"eventType":"resourceReconciled","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
   {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"configuredCount":0,"count":1,"createdCount":1,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
+  {"configuredCount":0,"count":2,"createdCount":2,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
   {"eventType":"resourcePruned","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Pruned","timestamp":"<TIMESTAMP>","type":"prune"}
-  {"eventType":"completed","pruned":1,"skipped":0,"timestamp":"<TIMESTAMP>","type":"prune"}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
   {"eventType":"resourcePruned","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Pruned","timestamp":"<TIMESTAMP>","type":"prune"}
-  {"eventType":"completed","pruned":1,"skipped":0,"timestamp":"<TIMESTAMP>","type":"prune"}
+  {"eventType":"completed","failed":0,"pruned":2,"skipped":0,"timestamp":"<TIMESTAMP>","type":"prune"}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"eventType":"completed","failed":0,"reconciled":4,"skipped":0,"timeout":0,"timestamp":"<TIMESTAMP>","type":"wait"}
+
 inventory:
   - kind: ConfigMap
     name: cm
