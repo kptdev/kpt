@@ -22,7 +22,19 @@ deployment.apps/wordpress-mysql created
 persistentvolumeclaim/mysql-pv-claim created
 persistentvolumeclaim/wp-pv-claim created
 6 resource(s) applied. 6 created, 0 unchanged, 0 configured, 0 failed
-0 resource(s) pruned, 0 skipped, 0 failed
+service/wordpress reconcile pending
+service/wordpress-mysql reconcile pending
+deployment.apps/wordpress reconcile pending
+deployment.apps/wordpress-mysql reconcile pending
+persistentvolumeclaim/mysql-pv-claim reconcile pending
+persistentvolumeclaim/wp-pv-claim reconcile pending
+service/wordpress reconciled
+service/wordpress-mysql reconciled
+persistentvolumeclaim/mysql-pv-claim reconciled
+persistentvolumeclaim/wp-pv-claim reconciled
+deployment.apps/wordpress-mysql reconciled
+deployment.apps/wordpress reconciled
+6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
 ?> Refer to the [apply command reference][apply-doc] for usage.
@@ -58,14 +70,15 @@ would see that 6 resources would be created:
 
 ```shell
 $ kpt live apply wordpress --dry-run
-service/wordpress created (dry-run)
-service/wordpress-mysql created (dry-run)
-deployment.apps/wordpress created (dry-run)
-deployment.apps/wordpress-mysql created (dry-run)
-persistentvolumeclaim/mysql-pv-claim created (dry-run)
-persistentvolumeclaim/wp-pv-claim created (dry-run)
-6 resource(s) applied. 6 created, 0 unchanged, 0 configured, 0 failed (dry-run)
-0 resource(s) pruned, 0 skipped, 0 failed (dry-run)
+Dry-run strategy: client
+service/wordpress created
+service/wordpress-mysql created
+deployment.apps/wordpress created
+deployment.apps/wordpress-mysql created
+persistentvolumeclaim/mysql-pv-claim created
+persistentvolumeclaim/wp-pv-claim created
+6 resource(s) applied. 6 created, 0 unchanged, 0 configured, 0 failed
+0 resource(s) pruned, 0 skipped, 0 failed
 ```
 
 When combined with server-side apply, the resources in the package pass through
@@ -77,12 +90,12 @@ After you have deployed the package, you can get its current status at any time:
 
 ```shell
 $ kpt live status wordpress
-deployment.apps/wordpress is InProgress: Available: 0/1
-persistentvolumeclaim/wp-pv-claim is InProgress: PVC is not Bound. phase: Pending
-service/wordpress-mysql is Current: Service is ready
-persistentvolumeclaim/mysql-pv-claim is Current: PVC is Bound
-deployment.apps/wordpress-mysql is InProgress: Available: 0/1
 service/wordpress is Current: Service is ready
+service/wordpress-mysql is Current: Service is ready
+deployment.apps/wordpress is Current: Deployment is available. Replicas: 1
+deployment.apps/wordpress-mysql is Current: Deployment is available. Replicas: 1
+persistentvolumeclaim/mysql-pv-claim is Current: PVC is Bound
+persistentvolumeclaim/wp-pv-claim is Current: PVC is Bound
 ```
 
 ?> Refer to the [status command reference][status-doc] for usage.
@@ -100,7 +113,20 @@ deployment.apps/wordpress-mysql deleted
 deployment.apps/wordpress deleted
 service/wordpress-mysql deleted
 service/wordpress deleted
-6 resource(s) deleted, 0 skipped
+6 resource(s) deleted, 0 skipped, 0 failed to delete
+persistentvolumeclaim/wp-pv-claim reconcile pending
+persistentvolumeclaim/mysql-pv-claim reconcile pending
+deployment.apps/wordpress-mysql reconcile pending
+deployment.apps/wordpress reconcile pending
+service/wordpress-mysql reconcile pending
+service/wordpress reconcile pending
+deployment.apps/wordpress-mysql reconciled
+deployment.apps/wordpress reconciled
+service/wordpress-mysql reconciled
+service/wordpress reconciled
+persistentvolumeclaim/mysql-pv-claim reconciled
+persistentvolumeclaim/wp-pv-claim reconciled
+6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
 ?> Refer to the [destroy command reference][destroy-doc] for usage.

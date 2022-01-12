@@ -51,21 +51,18 @@ and `Service` are created and reconciled before the Wordpress `Deployment` and `
 $ kpt live apply wordpress-with-dependencies --reconcile-timeout=2m
 service/wordpress-mysql created
 statefulset.apps/wordpress-mysql created
-2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
-statefulset.apps/wordpress-mysql is NotFound: Resource not found
-service/wordpress-mysql is NotFound: Resource not found
-service/wordpress-mysql is Current: Service is ready
-statefulset.apps/wordpress-mysql is InProgress: Ready: 0/1
-statefulset.apps/wordpress-mysql is InProgress: Ready: 0/1
-statefulset.apps/wordpress-mysql is Current: Partition rollout complete. updated: 1
-deployment.apps/wordpress created
+service/wordpress-mysql reconcile pending
+statefulset.apps/wordpress-mysql reconcile pending
+service/wordpress-mysql reconciled
+statefulset.apps/wordpress-mysql reconciled
 service/wordpress created
-2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
-deployment.apps/wordpress is NotFound: Resource not found
-service/wordpress is NotFound: Resource not found
-service/wordpress is Current: Service is ready
-deployment.apps/wordpress is InProgress: Available: 0/1
-deployment.apps/wordpress is Current: Deployment is available. Replicas: 1
+deployment.apps/wordpress created
+4 resource(s) applied. 4 created, 0 unchanged, 0 configured, 0 failed
+service/wordpress reconcile pending
+deployment.apps/wordpress reconcile pending
+service/wordpress reconciled
+deployment.apps/wordpress reconciled
+4 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
 When you delete the package from the cluster, you can see that
@@ -74,10 +71,16 @@ resources are deleted in reverse order:
 $ kpt live destroy wordpress-with-dependencies
 deployment.apps/wordpress deleted
 service/wordpress deleted
-2 resource(s) deleted, 0 skipped
+deployment.apps/wordpress reconciled
+service/wordpress reconciled
 statefulset.apps/wordpress-mysql deleted
 service/wordpress-mysql deleted
-2 resource(s) deleted, 0 skipped
+4 resource(s) deleted, 0 skipped, 0 failed to delete
+statefulset.apps/wordpress-mysql reconcile pending
+service/wordpress-mysql reconcile pending
+statefulset.apps/wordpress-mysql reconciled
+service/wordpress-mysql reconciled
+4 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
 See [depends-on] for more information.
