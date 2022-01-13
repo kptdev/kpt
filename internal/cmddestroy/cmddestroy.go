@@ -59,7 +59,7 @@ func NewRunner(ctx context.Context, factory util.Factory,
 			fmt.Sprintf("%q and %q.", flagutils.InventoryPolicyStrict, flagutils.InventoryPolicyAdopt))
 	c.Flags().BoolVar(&r.dryRun, "dry-run", false,
 		"dry-run apply for the resources in the package.")
-	c.Flags().BoolVar(&r.printStatusEvents, "status-events", false,
+	c.Flags().BoolVar(&r.printStatusEvents, "show-status-events", false,
 		"Print status events (always enabled for table output)")
 	return r
 }
