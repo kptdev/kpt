@@ -27,6 +27,47 @@ Verify the version:
 $ kpt version
 ```
 
+## (Optional) enable shell auto-completion
+
+kpt provides auto-completion support for several of the common shells.
+To see the options for enabling shell auto-completion:
+```shell
+kpt completion -h
+```
+
+### Prerequisites
+`kpt` depends on `bash-completion` in order to support auto-completion for the
+bash shell. If you are using bash as your shell, you will need to install
+`bash-completion` in order to use kpt's auto-completion feature.
+`bash-completion` is provided by many package managers
+(see [here][bash-completion]).
+
+### Enable kpt auto-completion
+The kpt completion script for a shell can be generated with the commands
+`kpt completion bash`, `kpt completion zsh`, etc. Sourcing the completion script
+in your shell enables auto-completion.
+
+#### Enable auto-completion for your current shell
+bash:
+```shell
+source <(kpt completion bash)
+```
+zsh:
+```shell
+source <(kpt completion zsh)
+```
+etc.
+#### Enable kpt completion for all your shell sessions
+bash:
+```shell
+echo 'source <(kpt completion bash)' >> ~/.bashrc
+```
+zsh:
+```shell
+echo 'source <(kpt completion zsh)' >> ~/.zshrc
+```
+etc.
+
 <!-- gcloud and homebrew are not yet available for builds from the main branch.
 ## gcloud
 
@@ -70,7 +111,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.9 version
+$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.10 version
 ```
 
 ### `kpt-gcloud`
@@ -78,7 +119,7 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.9 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.9 version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.10 version
 ```
 
 ## Source
@@ -101,7 +142,8 @@ $ kpt version
   https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.9/kpt_linux_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.10/kpt_linux_amd64
 [darwin]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.9/kpt_darwin_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.10/kpt_darwin_amd64
 [migration guide]: /installation/migration
+[bash-completion]: https://github.com/scop/bash-completion#installation

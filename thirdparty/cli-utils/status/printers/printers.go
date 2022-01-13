@@ -4,14 +4,14 @@
 package printers
 
 import (
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/events"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers/json"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/list"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/printer"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers/table"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/printers"
+	"sigs.k8s.io/cli-utils/pkg/printers/events"
+	"sigs.k8s.io/cli-utils/pkg/printers/json"
 )
 
 // CreatePrinter return an implementation of the Printer interface. The

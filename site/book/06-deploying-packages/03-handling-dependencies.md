@@ -79,3 +79,8 @@ statefulset.apps/wordpress-mysql deleted
 service/wordpress-mysql deleted
 2 resource(s) deleted, 0 skipped
 ```
+
+See [depends-on] for more information.
+
+[depends-on]:
+  /reference/annotations/depends-on/

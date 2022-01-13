@@ -25,17 +25,16 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/flagutils"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/cmd/flagutils"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
-	status "sigs.k8s.io/cli-utils/pkg/util/factory"
+	"sigs.k8s.io/cli-utils/pkg/printers"
 )
 
 // NewRunner returns a command runner
@@ -81,6 +80,8 @@ func NewRunner(ctx context.Context, factory util.Factory,
 		"If true, install the inventory ResourceGroup CRD before applying.")
 	c.Flags().BoolVar(&r.dryRun, "dry-run", false,
 		"dry-run apply for the resources in the package.")
+	c.Flags().BoolVar(&r.printStatusEvents, "status-events", false,
+		"Print status events (always enabled for table output)")
 	return r
 }
 
@@ -106,6 +107,7 @@ type Runner struct {
 	pruneTimeout                 time.Duration
 	inventoryPolicyString        string
 	dryRun                       bool
+	printStatusEvents            bool
 
 	inventoryPolicy inventory.InventoryPolicy
 	prunePropPolicy v1.DeletionPropagation
@@ -208,33 +210,36 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	poller, err := status.NewStatusPoller(r.factory)
-	if err != nil {
-		return err
-	}
 	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 	if err != nil {
 		return err
 	}
-	applier, err := apply.NewApplier(r.factory, invClient, poller)
+	applier, err := apply.NewApplier(r.factory, invClient)
 	if err != nil {
 		return err
 	}
 	ch := applier.Run(r.ctx, invInfo, objs, apply.Options{
-		ServerSideOptions: r.serverSideOptions,
-		PollInterval:      r.period,
-		ReconcileTimeout:  r.reconcileTimeout,
-		// If we are not waiting for status, tell the applier to not
-		// emit the events.
-		EmitStatusEvents:       r.reconcileTimeout != time.Duration(0) || r.pruneTimeout != time.Duration(0),
+		ServerSideOptions:      r.serverSideOptions,
+		PollInterval:           r.period,
+		ReconcileTimeout:       r.reconcileTimeout,
+		EmitStatusEvents:       true, // We are always waiting for reconcile.
 		DryRunStrategy:         dryRunStrategy,
 		PrunePropagationPolicy: r.prunePropPolicy,
 		PruneTimeout:           r.pruneTimeout,
 		InventoryPolicy:        r.inventoryPolicy,
 	})
 
+	// Print the preview strategy unless the output format is json.
+	if dryRunStrategy.ClientOrServerDryRun() && r.output != printers.JSONPrinter {
+		if dryRunStrategy.ServerDryRun() {
+			fmt.Println("Dry-run strategy: server")
+		} else {
+			fmt.Println("Dry-run strategy: client")
+		}
+	}
+
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.
 	printer := printers.GetPrinter(r.output, r.ioStreams)
-	return printer.Print(ch, dryRunStrategy)
+	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
 }

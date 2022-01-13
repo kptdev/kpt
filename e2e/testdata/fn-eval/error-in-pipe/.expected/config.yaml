@@ -21,8 +21,11 @@ stdErr: |
     Stderr:
       "[error] /// : failed to configure function: input namespace cannot be empty"
     Exit code: 1
-
+  
    
   [RUNNING] "gcr.io/kpt-fn/dne"
   [FAIL] "gcr.io/kpt-fn/dne" in 0s
-  Error: Function image "gcr.io/kpt-fn/dne" doesn't exist
+    Stderr:
+      "docker: Error response from daemon: manifest for gcr.io/kpt-fn/dne:latest not found: manifest unknown: Failed to fetch \"latest\" from request \"/v2/kpt-fn/dne/manifests/latest\"."
+      "See 'docker run --help'."
+    Exit code: 125
