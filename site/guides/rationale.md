@@ -1,4 +1,4 @@
-# The Rationale behind Kpt
+# The Rationale behind kpt
 
 Infrastructure as Code (IaC) refers to two main ideas, which go hand in hand:
 1. Represent infrastructure configuration as code or a code-like text format: general-purpose languages, domain-specific configuration languages, and template languages.
@@ -14,15 +14,15 @@ Additionally, Infrastructure as Code representations whose consumer interfaces t
 
 Fortunately, Infrastructure as Code is not a requirement in order to represent the state declaratively. The Kubernetes API was [designed to be natively declarative](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md#declarative-configuration). The serialized configuration format of resources is [identical to their API wire format](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md#configuration-using-rest-api-resource-specifications). These resource representations were intended to form the core of a declarative data model, which is sufficient in order to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
-Kpt supports management of Configuration as Data. The core ideas are simple:
+kpt supports management of Configuration as Data. The core ideas are simple:
 * uses a uniform, serializable data model to represent configuration ([KRM](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md))
 * makes configuration data (packages) the source of truth, stored separately from the live state 
 * separates code that acts on the configuration (functions) from the configuration data
 * abstracts the storage layer (using the [function I/O spec](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md)) so that clients manipulating configuration data don’t need to directly interact with it
 
-Kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/kustomize/), but optimizes for in-place configuration transformation rather than out-of-place transformation, and also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging.
+kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/kustomize/), but optimizes for in-place configuration transformation rather than out-of-place transformation, and also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging.
 
-Kpt currently provides a client-side CLI, but we plan to develop APIs to enable other clients to leverage its capabilities. It’s not just another package tool, but the kernel of a package orchestration service.
+kpt currently provides a client-side CLI, but we plan to develop APIs to enable other clients to leverage its capabilities. It’s not just another package tool, but the kernel of a package orchestration service.
 
 This enables WYSIWYG management of configuration similar to how the live state can be modified with traditional imperative tools:
 <img src="./wysiwyg.svg">
