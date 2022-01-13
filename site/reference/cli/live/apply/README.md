@@ -101,9 +101,9 @@ PKG_PATH | -:
   Perform the apply operation server-side rather than client-side.
   Default value is false (client-side).
 
---status-events:
+--show-status-events:
   The output will include the details on the reconciliation status
-  for all resources.
+  for all resources. Default is `false`.
 
   Does not apply for the `table` output format.
 ```
