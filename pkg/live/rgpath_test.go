@@ -23,7 +23,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 	testCases := map[string]struct {
 		manifests      map[string]string
 		namespace      string
-		expectedObjs   []object.ObjMetadata
+		expectedObjs   object.ObjMetadataSet
 		expectedErrMsg string
 	}{
 		"Empty package is ok": {
@@ -151,7 +151,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 				"cr.yaml": cr,
 			},
 			namespace:      "test-namespace",
-			expectedErrMsg: "unknown resource types: Custom.custom.io",
+			expectedErrMsg: "unknown resource types: custom.io/v1/Custom",
 		},
 		"local-config is filtered out": {
 			manifests: map[string]string{
@@ -211,7 +211,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			readObjMetas := object.UnstructuredsToObjMetasOrDie(readObjs)
+			readObjMetas := object.UnstructuredSetToObjMetadataSet(readObjs)
 
 			sort.Slice(readObjMetas, func(i, j int) bool {
 				return readObjMetas[i].String() < readObjMetas[j].String()

@@ -1,3 +1,4 @@
+#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: false
-noResourceGroup: true
-kptArgs:
-  - "--dry-run"
-  - "--install-resource-group"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-stdErr: |
-  installing inventory ResourceGroup CRD.
-exitCode: 0
+set -eo pipefail
+
+kpt fn source \
+  | kpt fn eval --exec ./function.sh

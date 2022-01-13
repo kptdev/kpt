@@ -83,4 +83,4 @@ service/wordpress-mysql deleted
 See [depends-on] for more information.
 
 [depends-on]:
-  /reference/annotations/depends-on
+  /reference/annotations/depends-on/

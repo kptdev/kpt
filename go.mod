@@ -16,7 +16,7 @@ require (
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
 	golang.org/x/mod v0.5.1
 	gotest.tools v2.2.0+incompatible
-	k8s.io/api v0.22.3
+	k8s.io/api v0.22.3 // indirect
 	k8s.io/apiextensions-apiserver v0.22.2
 	k8s.io/apimachinery v0.22.3
 	k8s.io/cli-runtime v0.22.2
@@ -24,8 +24,7 @@ require (
 	k8s.io/klog/v2 v2.10.0
 	k8s.io/kube-openapi v0.0.0-20211109043139-026bd182f079 // indirect
 	k8s.io/kubectl v0.22.2
-	k8s.io/utils v0.0.0-20210820185131-d34e5cb4466e
-	sigs.k8s.io/cli-utils v0.26.1-0.20211020064957-d62b5c62002d
+	sigs.k8s.io/cli-utils v0.27.0
 	sigs.k8s.io/kustomize/api v0.8.11
 	sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117
 )

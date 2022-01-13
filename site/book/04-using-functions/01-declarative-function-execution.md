@@ -110,12 +110,47 @@ The end result is that:
 If any of the functions in the pipeline fails for whatever reason, then the
 entire pipeline is aborted and the local filesystem is left intact.
 
-## Specifying `image`
+## Specifying `function`
+
+### `image`
 
 The `image` field specifies the container image for the function. You can specify
 an image from any container registry. If the registry is omitted, the default
 container registry for functions catalog (`gcr.io/kpt-fn`) is prepended automatically.
 For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-labels:v0.1`.
+
+### `exec`
+
+The `exec` field specifies the executable command for the function. You can specify
+an executable with arguments.
+
+Example below uses `sed` executable to replace all occurances of `foo` with `bar`
+in the package resources.
+
+```yaml
+# PKG_DIR/Kptfile (Excerpt)
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - exec: "sed -e 's/foo/bar/'"
+```
+
+Note that you must render the package by allowing executables by specifying `--allow-exec`
+command line flag as shown below.
+
+```shell
+$ kpt fn render [PKG_DIR] --allow-exec
+```
+
+Using `exec` is not recommended for two reasons:
+
+- It makes the package non-portable since rendering the package requires the
+  executables to be present on the system.
+- Executing binaries is not very secure since they can perform privileged operations
+  on the system.
 
 ## Specifying `functionConfig`
 

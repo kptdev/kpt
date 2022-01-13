@@ -41,7 +41,7 @@ func (a *ApplyCRDTask) Action() event.ResourceAction {
 }
 
 func (a *ApplyCRDTask) Identifiers() object.ObjMetadataSet {
-	return object.UnstructuredsToObjMetasOrDie([]*unstructured.Unstructured{a.crd})
+	return object.UnstructuredSetToObjMetadataSet([]*unstructured.Unstructured{a.crd})
 }
 
 // NewApplyCRDTask returns a pointer to an ApplyCRDTask struct,
@@ -89,4 +89,6 @@ func (a *ApplyCRDTask) Start(taskContext *taskrunner.TaskContext) {
 	}()
 }
 
-func (a *ApplyCRDTask) ClearTimeout() {}
+func (a *ApplyCRDTask) Cancel(_ *taskrunner.TaskContext) {}
+
+func (a *ApplyCRDTask) StatusUpdate(_ *taskrunner.TaskContext, _ object.ObjMetadata) {}

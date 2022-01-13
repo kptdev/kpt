@@ -48,6 +48,11 @@ PKG_PATH:
 #### Flags
 
 ```
+--allow-exec:
+  Allow executable binaries to run as function. Note that executable binaries
+  can perform privileged operations on your system, so ensure that binaries
+  referred in the pipeline are trusted and safe to execute.
+
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
   to one of always, ifNotPresent, never. If unspecified, always will be the

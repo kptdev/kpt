@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: false
-noResourceGroup: true
-kptArgs:
-  - "--dry-run"
-  - "--install-resource-group"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
+testType: eval
 stdErr: |
-  installing inventory ResourceGroup CRD.
-exitCode: 0
+  [RUNNING] "./function.sh"
+  [PASS] "./function.sh" in 0s
+    Stderr:
+      "Hello world 0!"
+      "Hello world 1!"
+      "Hello world 2!"
+      "Hello world 3!"
+      ...(18 line(s) truncated, use '--truncate-output=false' to disable)

@@ -18,12 +18,14 @@ package fnruntime
 
 import (
 	"bytes"
+	"context"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
@@ -575,5 +577,72 @@ file:
 		out, err := yaml.Marshal(result)
 		assert.NoError(t, err)
 		assert.Equal(t, tc.expected, string(out))
+	}
+}
+
+func TestPrintFnStderr(t *testing.T) {
+	tests := map[string]struct {
+		input          string // input
+		truncateOutput bool   // whether to truncate output
+		expected       string // expected result
+	}{
+		"no output": {
+			input:          ``,
+			truncateOutput: true,
+			expected:       ``,
+		},
+		"truncated output": {
+			input: `0
+1
+2
+3
+4
+5`,
+			truncateOutput: true,
+			expected: `  Stderr:
+    "0"
+    "1"
+    "2"
+    "3"
+    ...(2 line(s) truncated, use '--truncate-output=false' to disable)
+`,
+		},
+		"non-truncated output": {
+			input: `0
+1
+2
+3
+4
+5`,
+			truncateOutput: false,
+			expected: `  Stderr:
+    "0"
+    "1"
+    "2"
+    "3"
+    "4"
+    "5"
+`,
+		},
+	}
+	cleanupFunc := func() func() {
+		origTruncateOutput := printer.TruncateOutput
+		return func() {
+			printer.TruncateOutput = origTruncateOutput
+		}
+	}()
+	defer cleanupFunc()
+	for testName, tc := range tests {
+		t.Run(testName, func(t *testing.T) {
+			printer.TruncateOutput = tc.truncateOutput
+			out := &bytes.Buffer{}
+			err := &bytes.Buffer{}
+			ctx := printer.WithContext(context.Background(), printer.New(out, err))
+
+			printFnStderr(ctx, tc.input)
+
+			assert.Equal(t, tc.expected, err.String())
+			assert.Equal(t, "", out.String())
+		})
 	}
 }
