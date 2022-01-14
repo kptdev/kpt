@@ -224,6 +224,9 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	return nil
 }
 
+// merge merges the Kptfiles from various sources and updates localKf with output
+// please refer to https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
+// for related design
 func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	shouldAddSyntheticMergeName := shouldAddSyntheticMergeName(localKf, updatedKf, originalKf)
 	if shouldAddSyntheticMergeName {
@@ -271,10 +274,10 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	return nil
 }
 
-// shouldAddSyntheticMergeName returns true iff all the functions in all the sources
-// doesn't have name field set, it means the user is unaware of name field, and we
-// use image as mergeKey instead of name in such cases
-// it also checks if there are no duplicate image name declarations
+// shouldAddSyntheticMergeName returns true iff all the functions from all sources
+// doesn't have name field set and there are no duplicate function declarations,
+// it means the user is unaware of name field, and we use image name or exec field
+// value as mergeKey instead of name in such cases
 func shouldAddSyntheticMergeName(kfs ...*kptfilev1.KptFile) bool {
 	for _, kf := range kfs {
 		if kf == nil || kf.Pipeline == nil {
@@ -287,7 +290,10 @@ func shouldAddSyntheticMergeName(kfs ...*kptfilev1.KptFile) bool {
 	return true
 }
 
-// shouldAddSyntheticMergeNameUtil is util method for shouldAddSyntheticMergeName
+// shouldAddSyntheticMergeNameUtil returns true iff all the functions from input list
+// doesn't have name field set and there are no duplicate function declarations,
+// it means the user is unaware of name field, and we use image name or exec field
+// value as mergeKey instead of name in such cases
 func shouldAddSyntheticMergeNameUtil(fns []kptfilev1.Function) bool {
 	imageNamesSet := sets.String{}
 	for _, fn := range fns {
@@ -322,11 +328,12 @@ func addNameForMerge(kfs ...*kptfilev1.KptFile) {
 // addName adds name field to the input function if empty
 // name is nothing but image name in this case as we use it as fall back mergeKey
 func addName(fn kptfilev1.Function) kptfilev1.Function {
-	if fn.Name == "" {
-		parts := strings.Split(fn.Image, ":")
-		if len(parts) > 0 {
-			fn.Name = fmt.Sprintf("_kpt-merge_%s", parts[0])
-		}
+	if fn.Name != "" {
+		return fn
+	}
+	parts := strings.Split(fn.Image, ":")
+	if len(parts) > 0 {
+		fn.Name = fmt.Sprintf("_kpt-merge_%s", parts[0])
 	}
 	return fn
 }
