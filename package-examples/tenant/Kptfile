@@ -1,0 +1,14 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: tenant
+info:
+  description: Base tenant package
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1
+      configMap:
+        namespace: tenant-name
+  validators:
+    - image: gcr.io/kpt-fn/starlark:v0.3
+      configPath: ns-invariant.yaml
