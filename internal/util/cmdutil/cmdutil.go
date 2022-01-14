@@ -35,12 +35,13 @@ import (
 )
 
 const (
-	StackTraceOnErrors                 = "COBRA_STACK_TRACE_ON_ERRORS"
-	trueString                         = "true"
-	Stdout                             = "stdout"
-	Unwrap                             = "unwrap"
-	dockerVersionTimeout time.Duration = 5 * time.Second
-	FunctionsCatalogURL                = "https://catalog.kpt.dev/catalog-v2.json"
+	StackTraceOnErrors                      = "COBRA_STACK_TRACE_ON_ERRORS"
+	trueString                              = "true"
+	Stdout                                  = "stdout"
+	Unwrap                                  = "unwrap"
+	dockerVersionTimeout      time.Duration = 5 * time.Second
+	FunctionsCatalogURL                     = "https://catalog.kpt.dev/catalog-v2.json"
+	minSupportedDockerVersion string        = "v20.10.0"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -88,21 +89,38 @@ func ResolveAbsAndRelPaths(path string) (string, string, error) {
 	return relPath, absPath, nil
 }
 
-// DockerCmdAvailable runs `docker ps` to check that the docker command is
-// available, and returns an error with installation instructions if it is not
+// DockerCmdAvailable runs `docker version` to check that the docker command is
+// available and is a supported version. Returns an error with installation
+// instructions if it is not
 func DockerCmdAvailable() error {
 	suggestedText := `docker must be running to use this command
 To install docker, follow the instructions at https://docs.docker.com/get-docker/.
 `
-	buffer := &bytes.Buffer{}
+	cmdOut := &bytes.Buffer{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "docker", "version")
-	cmd.Stderr = buffer
+	cmd := exec.CommandContext(ctx, "docker", "version", "--format", "{{.Client.Version}}")
+	cmd.Stdout = cmdOut
 	err := cmd.Run()
-	if err != nil {
+	if err != nil || cmdOut.String() == "" {
 		return fmt.Errorf("%s", suggestedText)
+	}
+	return isSupportedDockerVersion(strings.TrimSuffix(cmdOut.String(), "\n"))
+}
+
+// isSupportedDockerVersion returns an error if a given docker version is invalid
+// or is less than minSupportedDockerVersion
+func isSupportedDockerVersion(v string) error {
+	suggestedText := fmt.Sprintf(`docker client version must be %s or greater`, minSupportedDockerVersion)
+	// docker version output does not have a leading v which is required by semver, so we prefix it
+	currentDockerVersion := fmt.Sprintf("v%s", v)
+	if !semver.IsValid(currentDockerVersion) {
+		return fmt.Errorf("%s: found invalid version %s", suggestedText, currentDockerVersion)
+	}
+	// if currentDockerVersion is less than minDockerClientVersion, compare returns +1
+	if semver.Compare(minSupportedDockerVersion, currentDockerVersion) > 0 {
+		return fmt.Errorf("%s: found %s", suggestedText, currentDockerVersion)
 	}
 	return nil
 }
