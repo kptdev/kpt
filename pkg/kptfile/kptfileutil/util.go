@@ -228,7 +228,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 // please refer to https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
 // for related design
 func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
-	shouldAddSyntheticMergeName := shouldAddSyntheticMergeName(localKf, updatedKf, originalKf)
+	shouldAddSyntheticMergeName := shouldAddFnKey(localKf, updatedKf, originalKf)
 	if shouldAddSyntheticMergeName {
 		addNameForMerge(localKf, updatedKf, originalKf)
 	}
@@ -260,7 +260,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	}
 
 	if shouldAddSyntheticMergeName {
-		removeSyntheticMergeName(localKf, updatedKf, originalKf, &mergedKf)
+		removeFnKey(localKf, updatedKf, originalKf, &mergedKf)
 	}
 
 	// Copy the merged content into the local Kptfile struct. We don't copy
@@ -274,37 +274,42 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	return nil
 }
 
-// shouldAddSyntheticMergeName returns true iff all the functions from all sources
+// shouldAddFnKey returns true iff all the functions from all sources
 // doesn't have name field set and there are no duplicate function declarations,
 // it means the user is unaware of name field, and we use image name or exec field
 // value as mergeKey instead of name in such cases
-func shouldAddSyntheticMergeName(kfs ...*kptfilev1.KptFile) bool {
+func shouldAddFnKey(kfs ...*kptfilev1.KptFile) bool {
 	for _, kf := range kfs {
 		if kf == nil || kf.Pipeline == nil {
 			continue
 		}
-		if !shouldAddSyntheticMergeNameUtil(kf.Pipeline.Mutators) || !shouldAddSyntheticMergeNameUtil(kf.Pipeline.Validators) {
+		if !shouldAddFnKeyUtil(kf.Pipeline.Mutators) || !shouldAddFnKeyUtil(kf.Pipeline.Validators) {
 			return false
 		}
 	}
 	return true
 }
 
-// shouldAddSyntheticMergeNameUtil returns true iff all the functions from input list
+// shouldAddFnKeyUtil returns true iff all the functions from input list
 // doesn't have name field set and there are no duplicate function declarations,
 // it means the user is unaware of name field, and we use image name or exec field
 // value as mergeKey instead of name in such cases
-func shouldAddSyntheticMergeNameUtil(fns []kptfilev1.Function) bool {
-	imageNamesSet := sets.String{}
+func shouldAddFnKeyUtil(fns []kptfilev1.Function) bool {
+	keySet := sets.String{}
 	for _, fn := range fns {
 		if fn.Name != "" {
 			return false
 		}
-		imageName := strings.Split(fn.Image, ":")[0]
-		if imageNamesSet.Has(imageName) {
+		var key string
+		if fn.Exec != "" {
+			key = fn.Exec
+		} else {
+			key = strings.Split(fn.Image, ":")[0]
+		}
+		if keySet.Has(key) {
 			return false
 		}
-		imageNamesSet.Insert(imageName)
+		keySet.Insert(key)
 	}
 	return true
 }
@@ -331,15 +336,21 @@ func addName(fn kptfilev1.Function) kptfilev1.Function {
 	if fn.Name != "" {
 		return fn
 	}
-	parts := strings.Split(fn.Image, ":")
-	if len(parts) > 0 {
-		fn.Name = fmt.Sprintf("_kpt-merge_%s", parts[0])
+	var key string
+	if fn.Exec != "" {
+		key = fn.Exec
+	} else {
+		parts := strings.Split(fn.Image, ":")
+		if len(parts) > 0 {
+			key = parts[0]
+		}
 	}
+	fn.Name = fmt.Sprintf("_kpt-merge_%s", key)
 	return fn
 }
 
-// removeSyntheticMergeName remove the synthesized name field before writing
-func removeSyntheticMergeName(kfs ...*kptfilev1.KptFile) {
+// removeFnKey remove the synthesized function name field before writing
+func removeFnKey(kfs ...*kptfilev1.KptFile) {
 	for _, kf := range kfs {
 		if kf == nil || kf.Pipeline == nil {
 			continue

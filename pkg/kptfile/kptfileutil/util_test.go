@@ -410,6 +410,43 @@ pipeline:
 `,
 		},
 
+		"exec: no associative key, additions in both upstream and local": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+`,
+			update: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+  - exec: gen-folders
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+  - exec: folder-ref
+`,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: pipeline
+pipeline:
+  mutators:
+  - exec: folder-ref
+  - exec: gen-folders
+`,
+		},
+
 		"add new setter in upstream, update local setter value": {
 			origin: `
 apiVersion: kpt.dev/v1
