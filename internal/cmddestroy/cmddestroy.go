@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/pkg/status"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -160,10 +161,18 @@ func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.Dr
 	if err != nil {
 		return err
 	}
+
+	statusPoller, err := status.NewStatusPoller(r.factory)
+	if err != nil {
+		return err
+	}
+
 	destroyer, err := apply.NewDestroyer(r.factory, invClient)
 	if err != nil {
 		return err
 	}
+	destroyer.StatusPoller = statusPoller
+
 	options := apply.DestroyerOptions{
 		InventoryPolicy:  r.inventoryPolicy,
 		DryRunStrategy:   dryRunStrategy,
