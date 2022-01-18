@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
@@ -223,7 +224,15 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	return nil
 }
 
+// merge merges the Kptfiles from various sources and updates localKf with output
+// please refer to https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
+// for related design
 func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
+	shouldAddSyntheticMergeName := shouldAddFnKey(localKf, updatedKf, originalKf)
+	if shouldAddSyntheticMergeName {
+		addNameForMerge(localKf, updatedKf, originalKf)
+	}
+
 	localBytes, err := yaml.Marshal(localKf)
 	if err != nil {
 		return err
@@ -239,7 +248,7 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 		return err
 	}
 
-	mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), false)
+	mergedBytes, err := merge3.MergeStrings(string(localBytes), string(originalBytes), string(updatedBytes), true)
 	if err != nil {
 		return err
 	}
@@ -248,6 +257,10 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	err = yaml.Unmarshal([]byte(mergedBytes), &mergedKf)
 	if err != nil {
 		return err
+	}
+
+	if shouldAddSyntheticMergeName {
+		removeFnKey(localKf, updatedKf, originalKf, &mergedKf)
 	}
 
 	// Copy the merged content into the local Kptfile struct. We don't copy
@@ -259,6 +272,100 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	localKf.Pipeline = mergedKf.Pipeline
 	localKf.Inventory = mergedKf.Inventory
 	return nil
+}
+
+// shouldAddFnKey returns true iff all the functions from all sources
+// doesn't have name field set and there are no duplicate function declarations,
+// it means the user is unaware of name field, and we use image name or exec field
+// value as mergeKey instead of name in such cases
+func shouldAddFnKey(kfs ...*kptfilev1.KptFile) bool {
+	for _, kf := range kfs {
+		if kf == nil || kf.Pipeline == nil {
+			continue
+		}
+		if !shouldAddFnKeyUtil(kf.Pipeline.Mutators) || !shouldAddFnKeyUtil(kf.Pipeline.Validators) {
+			return false
+		}
+	}
+	return true
+}
+
+// shouldAddFnKeyUtil returns true iff all the functions from input list
+// doesn't have name field set and there are no duplicate function declarations,
+// it means the user is unaware of name field, and we use image name or exec field
+// value as mergeKey instead of name in such cases
+func shouldAddFnKeyUtil(fns []kptfilev1.Function) bool {
+	keySet := sets.String{}
+	for _, fn := range fns {
+		if fn.Name != "" {
+			return false
+		}
+		var key string
+		if fn.Exec != "" {
+			key = fn.Exec
+		} else {
+			key = strings.Split(fn.Image, ":")[0]
+		}
+		if keySet.Has(key) {
+			return false
+		}
+		keySet.Insert(key)
+	}
+	return true
+}
+
+// addNameForMerge adds name field for all the functions if empty
+// name is primarily used as merge-key
+func addNameForMerge(kfs ...*kptfilev1.KptFile) {
+	for _, kf := range kfs {
+		if kf == nil || kf.Pipeline == nil {
+			continue
+		}
+		for i, mutator := range kf.Pipeline.Mutators {
+			kf.Pipeline.Mutators[i] = addName(mutator)
+		}
+		for i, validator := range kf.Pipeline.Validators {
+			kf.Pipeline.Validators[i] = addName(validator)
+		}
+	}
+}
+
+// addName adds name field to the input function if empty
+// name is nothing but image name in this case as we use it as fall back mergeKey
+func addName(fn kptfilev1.Function) kptfilev1.Function {
+	if fn.Name != "" {
+		return fn
+	}
+	var key string
+	if fn.Exec != "" {
+		key = fn.Exec
+	} else {
+		parts := strings.Split(fn.Image, ":")
+		if len(parts) > 0 {
+			key = parts[0]
+		}
+	}
+	fn.Name = fmt.Sprintf("_kpt-merge_%s", key)
+	return fn
+}
+
+// removeFnKey remove the synthesized function name field before writing
+func removeFnKey(kfs ...*kptfilev1.KptFile) {
+	for _, kf := range kfs {
+		if kf == nil || kf.Pipeline == nil {
+			continue
+		}
+		for i := range kf.Pipeline.Mutators {
+			if strings.HasPrefix(kf.Pipeline.Mutators[i].Name, "_kpt-merge_") {
+				kf.Pipeline.Mutators[i].Name = ""
+			}
+		}
+		for i := range kf.Pipeline.Validators {
+			if strings.HasPrefix(kf.Pipeline.Validators[i].Name, "_kpt-merge_") {
+				kf.Pipeline.Validators[i].Name = ""
+			}
+		}
+	}
 }
 
 func updateUpstreamAndUpstreamLock(localKf, updatedKf *kptfilev1.KptFile) {

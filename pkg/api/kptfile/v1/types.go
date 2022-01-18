@@ -284,6 +284,10 @@ type Function struct {
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
 	ConfigMap map[string]string `yaml:"configMap,omitempty" json:"configMap,omitempty"`
 
+	// `Name` is used to uniquely identify the function declaration
+	// this is primarily used for merging function declaration with upstream counterparts
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected
 	Selectors []Selector `yaml:"selectors,omitempty" json:"selectors,omitempty"`
