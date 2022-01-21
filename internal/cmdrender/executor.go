@@ -43,6 +43,7 @@ var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` 
 
 // Executor hydrates a given pkg.
 type Executor struct {
+	Input           io.Reader
 	PkgPath         string
 	ResultsDirPath  string
 	Output          io.Writer
@@ -69,21 +70,23 @@ func (e *Executor) Execute(ctx context.Context) error {
 	var rootFS, rootPkgFS fs.FS
 	var err error
 
-	if filepath.Ext(e.PkgPath) == ".tgz" {
-		rootFS, err = openArchive(e.PkgPath)
+	if e.Input != nil {
+		rootFS, err = resourceListAsFS(e.Input)
 		if err != nil {
 			return errors.E(op, types.UniquePath(e.PkgPath), err)
 		}
 		e.PkgPath = "/"
 	} else {
-		// rootFS = os.DirFS(e.PkgPath)
-		// rootFS = inMemPkg()
-		rootFS, err = resourceListAsFS(rl)
-		if err != nil {
-			return errors.E(op, types.UniquePath(e.PkgPath), err)
+		if filepath.Ext(e.PkgPath) == ".tgz" {
+			rootFS, err = openArchive(e.PkgPath)
+			if err != nil {
+				return errors.E(op, types.UniquePath(e.PkgPath), err)
+			}
+			e.PkgPath = "/"
+		} else {
+			rootFS = os.DirFS(e.PkgPath)
+			// rootFS = inMemPkg()
 		}
-
-		e.PkgPath = "/"
 	}
 
 	rootPkgFS = pkg.NewPrefixFS(e.PkgPath, rootFS)

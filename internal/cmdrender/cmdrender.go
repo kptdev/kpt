@@ -60,6 +60,7 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
+	Input           io.Reader
 	pkgPath         string
 	resultsDirPath  string
 	imagePullPolicy string
@@ -77,6 +78,11 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 		r.pkgPath = wd
+
+		// TODO(droot): This is to just test stdin till we figure out a way
+		// to specify it
+		r.Input = os.Stdin
+		r.dest = cmdutil.Stdout
 	} else {
 		// resolve and validate the provided path
 		r.pkgPath = args[0]
@@ -109,6 +115,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		output = &outContent
 	}
 	executor := Executor{
+		Input:           r.Input,
 		PkgPath:         r.pkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
