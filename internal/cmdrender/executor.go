@@ -77,7 +77,12 @@ func (e *Executor) Execute(ctx context.Context) error {
 		e.PkgPath = "/"
 	} else {
 		// rootFS = os.DirFS(e.PkgPath)
-		rootFS = inMemPkg()
+		// rootFS = inMemPkg()
+		rootFS, err = resourceListAsFS(rl)
+		if err != nil {
+			return errors.E(op, types.UniquePath(e.PkgPath), err)
+		}
+
 		e.PkgPath = "/"
 	}
 
