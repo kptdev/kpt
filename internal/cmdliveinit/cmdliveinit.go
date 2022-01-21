@@ -94,7 +94,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	p, err := pkg.New(dir, pkg.NewPkgFS(dir, os.DirFS(dir)))
+	p, err := pkg.New(dir, pkg.NewPrefixFS(dir, os.DirFS(dir)))
 	if err != nil {
 		return errors.E(op, err)
 	}

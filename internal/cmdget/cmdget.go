@@ -90,7 +90,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 
 	r.Get.Git = &t.Git
-	p, err := pkg.New(t.Destination, pkg.NewPkgFS(t.Destination, os.DirFS(t.Destination)))
+	p, err := pkg.New(t.Destination, pkg.NewPrefixFS(t.Destination, os.DirFS(t.Destination)))
 	if err != nil {
 		return errors.E(op, types.UniquePath(t.Destination), err)
 	}

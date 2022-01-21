@@ -6,61 +6,74 @@ import (
 	"path/filepath"
 )
 
-type FSer interface {
+// Thanks to Louis for the initial implementation.
+
+// Sometimes deep down in the call stack, we need
+// underlying FS but we may only have access to the
+// wrappedFS, so this interface defines capability
+// to provide the underlying FS.
+type UnwrapFS interface {
 	FS() fs.FS
 }
-type PkgFS struct {
+
+// fs.FS implementations (io/DirFS etc) don't work
+// with rooted (absolute paths).
+// PrefixFS wraps a given fs.FS type to make it work
+// with rooted (absolute paths).
+// kpt codebase uses absolute paths for pkg, so PrefixFS
+// avoids converting absolute paths to relative paths everywhere.
+type PrefixFS struct {
 	fs fs.FS
 
-	pkgPath string
+	prefix string
 }
 
-func NewPkgFS(path string, fs fs.FS) fs.FS {
-	return &PkgFS{
-		pkgPath: path,
-		fs:      fs,
+func NewPrefixFS(path string, fs fs.FS) fs.FS {
+	return &PrefixFS{
+		prefix: path,
+		fs:     fs,
 	}
 }
 
-func (pkg PkgFS) rel(name string) string {
-	rel, err := filepath.Rel(pkg.pkgPath, name)
+func (pkg PrefixFS) rel(name string) string {
+	rel, err := filepath.Rel(pkg.prefix, name)
 	if err != nil {
 		panic(err)
 	}
 	return rel
 }
 
-func (pkg PkgFS) join(path string) string {
-	return filepath.Join(pkg.pkgPath, path)
+func (pkg PrefixFS) join(path string) string {
+	return filepath.Join(pkg.prefix, path)
 }
 
-func (pkg PkgFS) Open(name string) (fs.File, error) {
+func (pkg PrefixFS) Open(name string) (fs.File, error) {
 	if path.IsAbs(name) {
 		name = pkg.rel(name)
 	}
 	return pkg.fs.Open(name)
 }
 
-func (pkg PkgFS) Stat(name string) (fs.FileInfo, error) {
+func (pkg PrefixFS) Stat(name string) (fs.FileInfo, error) {
 	if path.IsAbs(name) {
 		name = pkg.rel(name)
 	}
 	return fs.Stat(pkg.fs, name)
 }
 
-func (pkg PkgFS) Sub(sub string) *PkgFS {
-	return &PkgFS{
-		pkgPath: path.Join(pkg.pkgPath, sub),
-		fs:      pkg.fs,
+func (pkg PrefixFS) Sub(sub string) *PrefixFS {
+	return &PrefixFS{
+		prefix: path.Join(pkg.prefix, sub),
+		fs:     pkg.fs,
 	}
 }
 
-func (pkg PkgFS) FS() fs.FS {
+func (pkg PrefixFS) FS() fs.FS {
 	return pkg.fs
 }
 
 // interface guards
 
 var (
-	_ fs.FS = &PkgFS{}
+	_ fs.FS = &PrefixFS{}
 )

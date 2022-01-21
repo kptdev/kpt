@@ -69,7 +69,7 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 // CopyPackage copies the content of a single package from src to dst. If includeSubpackages
 // is true, it will copy resources belonging to any subpackages.
 func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
-	pkgFS := pkg.NewPkgFS(src, os.DirFS(src))
+	pkgFS := pkg.NewPrefixFS(src, os.DirFS(src))
 	subpackagesToCopy, err := pkg.Subpackages(pkgFS, src, matcher, true)
 	if err != nil {
 		return err
@@ -266,7 +266,7 @@ func SubPkgFirstSorter(paths []string) func(i, j int) bool {
 func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPaths ...string) ([]string, error) {
 	uniquePaths := make(map[string]bool)
 	for _, path := range pkgPaths {
-		paths, err := pkg.Subpackages(pkg.NewPkgFS(path, os.DirFS(path)), path, matcher, recurse)
+		paths, err := pkg.Subpackages(pkg.NewPrefixFS(path, os.DirFS(path)), path, matcher, recurse)
 		if err != nil {
 			return []string{}, err
 		}
@@ -313,7 +313,7 @@ func FormatPackage(pkgPath string) {
 // subpackages. This is used to format Kptfiles in the order of go structures
 // TODO: phanimarupaka remove this method after addressing https://github.com/GoogleContainerTools/kpt/issues/2052
 func RoundTripKptfilesInPkg(pkgPath string) error {
-	paths, err := pkg.Subpackages(pkg.NewPkgFS(pkgPath, os.DirFS(pkgPath)), pkgPath, pkg.All, true)
+	paths, err := pkg.Subpackages(pkg.NewPrefixFS(pkgPath, os.DirFS(pkgPath)), pkgPath, pkg.All, true)
 	if err != nil {
 		return err
 	}

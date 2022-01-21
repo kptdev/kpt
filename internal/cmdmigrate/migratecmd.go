@@ -194,7 +194,7 @@ func (mr *MigrateRunner) applyCRD() error {
 func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
-		p, err := pkg.New(args[0], pkg.NewPkgFS(args[0], os.DirFS(args[0])))
+		p, err := pkg.New(args[0], pkg.NewPrefixFS(args[0], os.DirFS(args[0])))
 		if err != nil {
 			return err
 		}

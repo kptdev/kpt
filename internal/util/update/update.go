@@ -315,7 +315,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	const op errors.Op = "update.updatePackage"
 	pr := printer.FromContextOrDie(ctx)
 
-	localExists, err := pkg.IsPackageDir(pkg.NewPkgFS(localPath, os.DirFS(localPath)), localPath)
+	localExists, err := pkg.IsPackageDir(pkg.NewPrefixFS(localPath, os.DirFS(localPath)), localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -324,7 +324,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// from updated and origin might not have a Kptfile at the root.
 	updatedExists := isRootPkg
 	if !isRootPkg {
-		updatedExists, err = pkg.IsPackageDir(pkg.NewPkgFS(updatedPath, os.DirFS(updatedPath)), updatedPath)
+		updatedExists, err = pkg.IsPackageDir(pkg.NewPrefixFS(updatedPath, os.DirFS(updatedPath)), updatedPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
@@ -332,7 +332,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 
 	originExists := isRootPkg
 	if !isRootPkg {
-		originExists, err = pkg.IsPackageDir(pkg.NewPkgFS(originPath, os.DirFS(originPath)), originPath)
+		originExists, err = pkg.IsPackageDir(pkg.NewPrefixFS(originPath, os.DirFS(originPath)), originPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}

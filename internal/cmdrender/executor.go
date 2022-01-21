@@ -79,7 +79,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		rootFS = os.DirFS(e.PkgPath)
 	}
 
-	rootPkgFS = pkg.NewPkgFS(e.PkgPath, rootFS)
+	rootPkgFS = pkg.NewPrefixFS(e.PkgPath, rootFS)
 	root, err := newPkgNode(e.PkgPath, nil, rootPkgFS)
 	if err != nil {
 		return errors.E(op, types.UniquePath(e.PkgPath), err)

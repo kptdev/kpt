@@ -296,7 +296,7 @@ func (r *RunFns) init() error {
 		}
 		r.uniquePath = types.UniquePath(absPath)
 
-		r.fsys = pkg.NewPkgFS(absPath, os.DirFS(absPath))
+		r.fsys = pkg.NewPrefixFS(absPath, os.DirFS(absPath))
 	}
 
 	r.fnResults = fnresult.NewResultList()

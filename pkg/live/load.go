@@ -147,7 +147,7 @@ func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kp
 }
 
 func readInvInfoFromDisk(path string) (kptfilev1.Inventory, error) {
-	p, err := pkg.New(path, pkg.NewPkgFS(path, os.DirFS(path)))
+	p, err := pkg.New(path, pkg.NewPrefixFS(path, os.DirFS(path)))
 	if err != nil {
 		return kptfilev1.Inventory{}, err
 	}

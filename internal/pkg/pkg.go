@@ -517,7 +517,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	}
 
 	var fileSystem *kyamlFileSystem
-	if mainFS, ok := p.Fsys().(FSer); ok {
+	if mainFS, ok := p.Fsys().(UnwrapFS); ok {
 		fileSystem = &kyamlFileSystem{
 			fsys:   mainFS.FS(),
 			prefix: p.UniquePath.String(),
