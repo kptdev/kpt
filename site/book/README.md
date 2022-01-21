@@ -23,4 +23,4 @@ Let's get started!
 [chapter 4]: /book/04-using-functions/
 [chapter 5]: /book/05-developing-functions/
 [chapter 6]: /book/06-deploying-packages/
-[chapter 7]: /book/06-effective-customizations/
+[chapter 7]: /book/07-effective-customizations/
