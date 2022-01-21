@@ -76,7 +76,9 @@ func (e *Executor) Execute(ctx context.Context) error {
 		}
 		e.PkgPath = "/"
 	} else {
-		rootFS = os.DirFS(e.PkgPath)
+		// rootFS = os.DirFS(e.PkgPath)
+		rootFS = inMemPkg()
+		e.PkgPath = "/"
 	}
 
 	rootPkgFS = pkg.NewPrefixFS(e.PkgPath, rootFS)

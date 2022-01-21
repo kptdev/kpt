@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"testing/fstest"
 
 	"github.com/mholt/archiver/v4"
-	"github.com/psanford/memfs"
 )
 
 var deployment = `# deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-deployment
+  name: in-memory-nginx-deployment
 spec:
   replicas: 3
 `
@@ -28,32 +28,16 @@ pipeline:
     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
-      configMap:
-        tier: backend
 `
 
-func makeMemPkg() (fs.FS, string) {
+func inMemPkg() fs.FS {
 
-	rootFS := memfs.New()
-
-	/*
-		err := rootFS.MkdirAll("a", 0777)
-		if err != nil {
-			panic(err)
-		} */
-
-	err := rootFS.WriteFile("deployment.yaml", []byte(deployment), 0755)
-	if err != nil {
-		panic(err)
+	rootFS := fstest.MapFS{
+		"deployment.yaml": {Data: []byte(deployment)},
+		"Kptfile":         {Data: []byte(kptFile)},
 	}
 
-	err = rootFS.WriteFile("Kptfile", []byte(kptFile), 0755)
-	if err != nil {
-		panic(err)
-	}
-
-	err = fs.WalkDir(rootFS, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(rootFS, ".", func(path string, d fs.DirEntry, err error) error {
 		fmt.Println(path)
 		return nil
 	})
@@ -61,7 +45,7 @@ func makeMemPkg() (fs.FS, string) {
 		panic(err)
 	}
 
-	return rootFS, "/"
+	return rootFS
 }
 
 func openArchive(filename string) (fs.FS, error) {
