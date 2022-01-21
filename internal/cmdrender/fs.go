@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"strings"
 	"testing/fstest"
 
 	"github.com/mholt/archiver/v4"
@@ -92,9 +93,13 @@ func resourceListAsFS(r io.Reader) (fs.FS, error) {
 
 	for _, rs := range xs {
 		// rs points to *yaml.RNode
-		path, _, err := kioutil.GetFileAnnotations(rs)
+		path, idx, err := kioutil.GetFileAnnotations(rs)
 		if err != nil {
 			return nil, err
+		}
+		dotIdx := strings.Index(path, ".")
+		if dotIdx > 0 {
+			path = fmt.Sprintf("%s_%s%s", path[:dotIdx], idx, path[dotIdx:])
 		}
 		content := rs.MustString()
 		rootFS[path] = &fstest.MapFile{Data: []byte(content)}
