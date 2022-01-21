@@ -7,8 +7,10 @@ require (
 	github.com/go-errors/errors v1.4.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
+	github.com/mholt/archiver/v4 v4.0.0-alpha.3 // indirect
 	github.com/otiai10/copy v1.6.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
+	github.com/psanford/memfs v0.0.0-20210214183328-a001468d78ef
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
 	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
@@ -25,4 +27,9 @@ require (
 	sigs.k8s.io/cli-utils v0.27.0
 	sigs.k8s.io/kustomize/api v0.8.11
 	sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117
+)
+
+replace (
+	sigs.k8s.io/kustomize/api => /Users/sunilarora/go/src/sigs.k8s.io/kustomize/api
+	sigs.k8s.io/kustomize/kyaml => /Users/sunilarora/go/src/sigs.k8s.io/kustomize/kyaml
 )

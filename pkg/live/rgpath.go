@@ -5,6 +5,7 @@ package live
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -28,7 +29,7 @@ type ResourceGroupPathManifestReader struct {
 // Kptfile data. If unable to generate the ResourceGroup inventory
 // object from the Kptfile, it is NOT an error.
 func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
-	p, err := pkg.New(r.PkgPath)
+	p, err := pkg.New(r.PkgPath, pkg.NewPkgFS(r.PkgPath, os.DirFS(r.PkgPath)))
 	if err != nil {
 		return nil, err
 	}

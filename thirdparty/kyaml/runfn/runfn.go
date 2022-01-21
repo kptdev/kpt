@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -34,6 +35,8 @@ type RunFns struct {
 
 	// Path is the path to the directory containing functions
 	Path string
+
+	fsys fs.FS
 
 	// uniquePath is the absolute version of Path
 	uniquePath types.UniquePath
@@ -292,6 +295,8 @@ func (r *RunFns) init() error {
 			return errors.Wrap(err)
 		}
 		r.uniquePath = types.UniquePath(absPath)
+
+		r.fsys = pkg.NewPkgFS(absPath, os.DirFS(absPath))
 	}
 
 	r.fnResults = fnresult.NewResultList()
@@ -333,7 +338,7 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
+	return kptfile.GetValidatedFnConfigFromPath(r.fsys, "", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters

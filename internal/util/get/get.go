@@ -91,7 +91,7 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	p, err := pkg.New(c.Destination)
+	p, err := pkg.New(c.Destination, pkg.NewPkgFS(c.Destination, os.DirFS(c.Destination)))
 	if err != nil {
 		return cleanUpDirAndError(c.Destination, err)
 	}

@@ -75,7 +75,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		args = append(args, pkg.CurDir)
 	}
-	p, err := pkg.New(args[0])
+	p, err := pkg.New(args[0], pkg.NewPkgFS(args[0], os.DirFS(args[0])))
 	if err != nil {
 		return err
 	}

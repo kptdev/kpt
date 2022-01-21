@@ -16,7 +16,7 @@ package v1
 
 import (
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -34,8 +34,8 @@ const (
 	kustomizationAPIGroup = "kustomize.config.k8s.io"
 )
 
-func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
-	if err := kf.Pipeline.validate(pkgPath); err != nil {
+func (kf *KptFile) Validate(fsys fs.FS, pkgPath types.UniquePath) error {
+	if err := kf.Pipeline.validate(fsys, pkgPath); err != nil {
 		return fmt.Errorf("invalid pipeline: %w", err)
 	}
 	// TODO: validate other fields
@@ -45,20 +45,20 @@ func (kf *KptFile) Validate(pkgPath types.UniquePath) error {
 // validate will validate all fields in the Pipeline
 // 'mutators' and 'validators' share same schema and
 // they are valid if all functions in them are ALL valid.
-func (p *Pipeline) validate(pkgPath types.UniquePath) error {
+func (p *Pipeline) validate(fsys fs.FS, pkgPath types.UniquePath) error {
 	if p == nil {
 		return nil
 	}
 	for i := range p.Mutators {
 		f := p.Mutators[i]
-		err := f.validate("mutators", i, pkgPath)
+		err := f.validate(fsys, "mutators", i, pkgPath)
 		if err != nil {
 			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
 	}
 	for i := range p.Validators {
 		f := p.Validators[i]
-		err := f.validate("validators", i, pkgPath)
+		err := f.validate(fsys, "validators", i, pkgPath)
 		if err != nil {
 			return fmt.Errorf("function %q: %w", f.Image, err)
 		}
@@ -66,7 +66,7 @@ func (p *Pipeline) validate(pkgPath types.UniquePath) error {
 	return nil
 }
 
-func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) error {
+func (f *Function) validate(fsys fs.FS, fnType string, idx int, pkgPath types.UniquePath) error {
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
 			Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
@@ -106,7 +106,7 @@ func (f *Function) validate(fnType string, idx int, pkgPath types.UniquePath) er
 				Reason: err.Error(),
 			}
 		}
-		if _, err := GetValidatedFnConfigFromPath(pkgPath, f.ConfigPath); err != nil {
+		if _, err := GetValidatedFnConfigFromPath(fsys, pkgPath, f.ConfigPath); err != nil {
 			return &ValidateError{
 				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", fnType, idx),
 				Value:  f.ConfigPath,
@@ -171,9 +171,9 @@ func validateFnConfigPathSyntax(p string) error {
 // GetValidatedFnConfigFromPath validates the functionConfig at the path specified by
 // the package path (pkgPath) and configPath, returning the functionConfig as an
 // RNode if the validation is successful.
-func GetValidatedFnConfigFromPath(pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
+func GetValidatedFnConfigFromPath(fsys fs.FS, pkgPath types.UniquePath, configPath string) (*yaml.RNode, error) {
 	path := filepath.Join(string(pkgPath), configPath)
-	file, err := os.Open(path)
+	file, err := fsys.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("functionConfig must exist in the current package")
 	}

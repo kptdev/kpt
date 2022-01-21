@@ -356,7 +356,7 @@ func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, re
 		return dir, err
 	}
 
-	p, err := pkg.New(dir)
+	p, err := pkg.New(dir, pkg.NewPkgFS(dir, os.DirFS(dir)))
 	if err != nil {
 		return dir, err
 	}

@@ -100,7 +100,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	p, err := pkg.New(resolvedPath)
+	p, err := pkg.New(resolvedPath, pkg.NewPkgFS(resolvedPath, os.DirFS(resolvedPath)))
 	if err != nil {
 		return err
 	}

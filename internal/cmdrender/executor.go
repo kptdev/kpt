@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -55,7 +56,31 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	pr := printer.FromContextOrDie(ctx)
 
-	root, err := newPkgNode(e.PkgPath, nil)
+	if !filepath.IsAbs(e.PkgPath) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		// If the provided path is relative, we find the absolute path by
+		// combining the current working directory with the path.
+		e.PkgPath = filepath.Join(cwd, e.PkgPath)
+	}
+
+	var rootFS, rootPkgFS fs.FS
+	var err error
+
+	if filepath.Ext(e.PkgPath) == ".tgz" {
+		rootFS, err = openArchive(e.PkgPath)
+		if err != nil {
+			return errors.E(op, types.UniquePath(e.PkgPath), err)
+		}
+		e.PkgPath = "/"
+	} else {
+		rootFS = os.DirFS(e.PkgPath)
+	}
+
+	rootPkgFS = pkg.NewPkgFS(e.PkgPath, rootFS)
+	root, err := newPkgNode(e.PkgPath, nil, rootPkgFS)
 	if err != nil {
 		return errors.E(op, types.UniquePath(e.PkgPath), err)
 	}
@@ -193,14 +218,14 @@ type pkgNode struct {
 }
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
-func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
+func newPkgNode(path string, p *pkg.Pkg, pkgFS fs.FS) (pn *pkgNode, err error) {
 	const op errors.Op = "pkg.read"
 
 	if path == "" && p == nil {
 		return pn, fmt.Errorf("missing package path %s or package", path)
 	}
 	if path != "" {
-		p, err = pkg.New(path)
+		p, err = pkg.New(path, pkgFS)
 		if err != nil {
 			return pn, errors.E(op, p.UniquePath, err)
 		}
@@ -213,7 +238,7 @@ func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
-	if err := kf.Validate(p.UniquePath); err != nil {
+	if err := kf.Validate(p.Fsys(), p.UniquePath); err != nil {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
@@ -280,7 +305,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		var transitiveResources []*yaml.RNode
 		var subPkgNode *pkgNode
 
-		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
+		if subPkgNode, err = newPkgNode("", subpkg, pn.pkg.Fsys()); err != nil {
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
 
