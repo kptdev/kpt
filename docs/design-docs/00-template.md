@@ -75,6 +75,10 @@ design.
 # Review Process
 
 Design doc creators should raise the pull request similar to [this](https://github.com/GoogleContainerTools/kpt/pull/2576).
+Please name your documents with the design document number.  Pick n+1 from what's currently merged knowing that a slight
+renaming might need to happen if multiple design docs get accepted simultaneously.
+Please keep the name of the design doc in lower case with dashes in between words.
+
 Reviewers are auto-assigned to review the PR. Optionally, doc owner can mention any
 specific reviewers on the PR description. The turn around time for each review cycle
 on the PR from kpt maintainers is 1-2 days. After maintainers add comments to the PR,
