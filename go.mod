@@ -27,8 +27,3 @@ require (
 	sigs.k8s.io/kustomize/api v0.8.11
 	sigs.k8s.io/kustomize/kyaml v0.13.1-0.20211203194734-cd2c6a1ad117
 )
-
-replace (
-	sigs.k8s.io/kustomize/api => /Users/sunilarora/go/src/sigs.k8s.io/kustomize/api
-	sigs.k8s.io/kustomize/kyaml => /Users/sunilarora/go/src/sigs.k8s.io/kustomize/kyaml
-)
