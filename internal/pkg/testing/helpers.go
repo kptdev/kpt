@@ -15,6 +15,7 @@
 package testing
 
 import (
+	"os"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -24,7 +25,7 @@ import (
 // CreatePkgOrFail creates a new package from the provided path. Unlike the
 // pkg.New function, it fails the test instead of returning an error.
 func CreatePkgOrFail(t *testing.T, path string) *pkg.Pkg {
-	p, err := pkg.New(path)
+	p, err := pkg.New(path, pkg.NewPrefixFS(path, os.DirFS(path)))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

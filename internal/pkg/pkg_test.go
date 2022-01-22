@@ -82,7 +82,7 @@ func TestNewPkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, test.workingDir))
 			defer revert()
-			p, err := New(test.inputPath)
+			p, err := New(test.inputPath, NewPrefixFS(test.inputPath, os.DirFS(test.inputPath)))
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(p.DisplayPath))
 		})
@@ -166,14 +166,15 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
 			defer revert()
-			parent, err := New(test.pkgPath)
+			parent, err := New(test.pkgPath, NewPrefixFS(test.pkgPath, os.DirFS(test.pkgPath)))
 			assert.NoError(t, err)
 			if test.rootPkgParentDirPath != "" {
-				rootPkg, err := New(test.rootPkgParentDirPath)
+				rootPkg, err := New(test.rootPkgParentDirPath,
+					NewPrefixFS(test.rootPkgParentDirPath, os.DirFS(test.rootPkgParentDirPath)))
 				assert.NoError(t, err)
 				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
 			}
-			subPkg, err := New(test.subPkgPath)
+			subPkg, err := New(test.subPkgPath, NewPrefixFS(test.subPkgPath, os.DirFS(test.subPkgPath)))
 			assert.NoError(t, err)
 			err = parent.adjustDisplayPathForSubpkg(subPkg)
 			assert.NoError(t, err)
@@ -407,7 +408,7 @@ func TestDirectSubpackages(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, nil)
 			defer os.RemoveAll(pkgPath)
-			p, err := New(pkgPath)
+			p, err := New(pkgPath, NewPrefixFS(pkgPath, os.DirFS(pkgPath)))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -593,7 +594,7 @@ func TestSubpackages(t *testing.T) {
 				for _, matcher := range v.matcher {
 					for _, recursive := range v.recursive {
 						t.Run(fmt.Sprintf("matcher:%s-recursive:%t", matcher, recursive), func(t *testing.T) {
-							paths, err := Subpackages(pkgPath, matcher, recursive)
+							paths, err := Subpackages(NewPrefixFS(pkgPath, os.DirFS(pkgPath)), pkgPath, matcher, recursive)
 							if !assert.NoError(t, err) {
 								t.FailNow()
 							}
@@ -615,7 +616,7 @@ func TestSubpackages_symlinks(t *testing.T) {
 		t.SkipNow()
 	}
 
-	pkg := pkgbuilder.NewRootPkg().
+	p := pkgbuilder.NewRootPkg().
 		WithResource(pkgbuilder.DeploymentResource).
 		WithSubPackages(
 			pkgbuilder.NewSubPkg("subpkg").
@@ -623,7 +624,7 @@ func TestSubpackages_symlinks(t *testing.T) {
 				WithResource(pkgbuilder.ConfigMapResource),
 		)
 
-	pkgPath := pkg.ExpandPkg(t, nil)
+	pkgPath := p.ExpandPkg(t, nil)
 	defer func() {
 		_ = os.RemoveAll(pkgPath)
 	}()
@@ -636,7 +637,7 @@ func TestSubpackages_symlinks(t *testing.T) {
 		t.FailNow()
 	}
 
-	paths, err := Subpackages(pkgPath, All, true)
+	paths, err := Subpackages(NewPrefixFS(pkgPath, os.DirFS(pkgPath)), pkgPath, All, true)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
