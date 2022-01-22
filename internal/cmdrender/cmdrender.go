@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -78,20 +79,33 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 		r.pkgPath = wd
-
-		// TODO(droot): This is to just test stdin till we figure out a way
-		// to specify it
-		r.Input = os.Stdin
-		r.dest = cmdutil.Stdout
 	} else {
 		// resolve and validate the provided path
 		r.pkgPath = args[0]
 	}
 	var err error
-	r.pkgPath, err = argutil.ResolveSymlink(r.ctx, r.pkgPath)
-	if err != nil {
-		return err
+
+	switch r.pkgPath {
+	case "-":
+		// force the output to stdout if reading the input from stdin
+		r.Input = os.Stdin
+		r.dest = cmdutil.Stdout
+	default:
+		r.pkgPath, err = argutil.ResolveSymlink(r.ctx, r.pkgPath)
+		if err != nil {
+			return err
+		}
+		if !filepath.IsAbs(r.pkgPath) {
+			cwd, err := os.Getwd()
+			if err != nil {
+				return err
+			}
+			// If the provided path is relative, we find the absolute path by
+			// combining the current working directory with the path.
+			r.pkgPath = filepath.Join(cwd, r.pkgPath)
+		}
 	}
+
 	if r.dest != "" && r.dest != cmdutil.Stdout && r.dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.dest); err != nil {
 			return err

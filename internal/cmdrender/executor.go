@@ -57,36 +57,29 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	pr := printer.FromContextOrDie(ctx)
 
-	if !filepath.IsAbs(e.PkgPath) {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		// If the provided path is relative, we find the absolute path by
-		// combining the current working directory with the path.
-		e.PkgPath = filepath.Join(cwd, e.PkgPath)
-	}
-
 	var rootFS, rootPkgFS fs.FS
 	var err error
 
-	if e.Input != nil {
+	// set up the filesystem for given pkg path
+	switch {
+	case e.PkgPath == "-":
+		// Reading the resource list from stdin
 		rootFS, err = resourceListAsFS(e.Input)
 		if err != nil {
 			return errors.E(op, types.UniquePath(e.PkgPath), err)
 		}
 		e.PkgPath = "/"
-	} else {
-		if filepath.Ext(e.PkgPath) == ".tgz" {
-			rootFS, err = openArchive(e.PkgPath)
-			if err != nil {
-				return errors.E(op, types.UniquePath(e.PkgPath), err)
-			}
-			e.PkgPath = "/"
-		} else {
-			rootFS = os.DirFS(e.PkgPath)
-			// rootFS = inMemPkg()
+	case filepath.Ext(e.PkgPath) == ".tgz":
+		// Reading from an archive
+		rootFS, err = openArchive(e.PkgPath)
+		if err != nil {
+			return errors.E(op, types.UniquePath(e.PkgPath), err)
 		}
+		e.PkgPath = "/"
+	default:
+		// Defaults to a directory on the filesystem
+		rootFS = os.DirFS(e.PkgPath)
+		// rootFS = inMemPkg()
 	}
 
 	rootPkgFS = pkg.NewPrefixFS(e.PkgPath, rootFS)
