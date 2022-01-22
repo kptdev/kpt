@@ -15,9 +15,12 @@ package v1
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
+	"testing/fstest"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -153,7 +156,7 @@ func TestKptfileValidate(t *testing.T) {
 	for _, c := range cases {
 		c := c
 		t.Run(c.name, func(t *testing.T) {
-			err := c.kptfile.Validate("")
+			err := c.kptfile.Validate(fstest.MapFS{}, "")
 			if c.valid && err != nil {
 				t.Fatalf("kptfile should be valid, %s", err)
 			}
@@ -508,7 +511,9 @@ metadata:
 			assert.NoError(t, err)
 			err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
 			assert.NoError(t, err)
-			got, err := GetValidatedFnConfigFromPath(types.UniquePath(d), "f1.yaml")
+			got, err := GetValidatedFnConfigFromPath(
+				pkg.NewPrefixFS(d, os.DirFS(d)),
+				types.UniquePath(d), "f1.yaml")
 			if tc.errMsg != "" {
 				assert.Error(t, err)
 				assert.Equal(t, tc.errMsg, err.Error())
