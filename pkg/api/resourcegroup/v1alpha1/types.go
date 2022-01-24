@@ -29,8 +29,8 @@ const (
 	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
 )
 
-// TypeMeta is the TypeMeta for ResourceGroup instances.
-var TypeMeta = yaml.ResourceMeta{
+// DefaultMeta is the ResourceMeta for ResourceGroup instances.
+var DefaultMeta = yaml.ResourceMeta{
 	TypeMeta: yaml.TypeMeta{
 		APIVersion: RGFileAPIVersion,
 		Kind:       RGFileKind,
