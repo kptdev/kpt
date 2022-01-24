@@ -53,6 +53,9 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"the update strategy that will be used when updating the package. This will change "+
 			"the default strategy for the package -- must be one of: "+
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
+	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
+	})
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r

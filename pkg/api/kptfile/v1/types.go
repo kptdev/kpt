@@ -268,6 +268,13 @@ type Function struct {
 	//	image: set-labels
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
+	// Exec specifies the function binary executable.
+	// The executable can be fully qualified or it must exists in the $PATH e.g:
+	//
+	// 	 exec: set-namespace
+	// 	 exec: /usr/local/bin/my-custom-fn
+	Exec string `yaml:"exec,omitempty" json:"exec,omitempty"`
+
 	// `ConfigPath` specifies a slash-delimited relative path to a file in the current directory
 	// containing a KRM resource used as the function config. This resource is
 	// excluded when resolving 'sources', and as a result cannot be operated on
@@ -276,6 +283,10 @@ type Function struct {
 
 	// `ConfigMap` is a convenient way to specify a function config of kind ConfigMap.
 	ConfigMap map[string]string `yaml:"configMap,omitempty" json:"configMap,omitempty"`
+
+	// `Name` is used to uniquely identify the function declaration
+	// this is primarily used for merging function declaration with upstream counterparts
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected

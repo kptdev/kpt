@@ -1,0 +1,15 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: ns-invariant
+source: |
+  def ensure_one_namespace(resource_list):
+    num_ns = 0
+    for resource in resource_list["items"]:
+      if resource["apiVersion"] == "v1" and resource["kind"] == "Namespace":
+        num_ns += 1
+    # only one namespace is allowed
+    if num_ns > 1:
+      fail("pkg must contain single namespace") 
+
+  ensure_one_namespace(ctx.resource_list)

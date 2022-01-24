@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	kptcommands "github.com/GoogleContainerTools/kpt/commands"
-	"github.com/GoogleContainerTools/kpt/internal/cmdcomplete"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -36,7 +35,6 @@ var pgr []string
 
 func GetMain(ctx context.Context) *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
-	installComp := false
 	cmd := &cobra.Command{
 		Use:          "kpt",
 		Short:        overview.CliShort,
@@ -46,18 +44,6 @@ func GetMain(ctx context.Context) *cobra.Command {
 		// adjust the error message coming from libraries
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if installComp {
-				os.Setenv("COMP_INSTALL", "1")
-				os.Setenv("COMP_YES", "1")
-				fmt.Fprint(cmd.OutOrStdout(), "Installing shell completion...\n")
-				fmt.Fprint(cmd.OutOrStdout(),
-					"This will add 'complete -C /Users/$USER/go/bin/kpt kpt' to "+
-						".bashrc, .bash_profile, etc\n")
-				fmt.Fprint(cmd.OutOrStdout(), "Run `COMP_INSTALL=0 kpt` to uninstall.\n")
-			}
-			// Complete exits if it is called in completion mode, otherwise it is a no-op
-			cmdcomplete.Complete(cmd, false, nil).Complete("kpt")
-
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err
@@ -76,20 +62,6 @@ func GetMain(ctx context.Context) *cobra.Command {
 
 	// create context with associated printer
 	ctx = printer.WithContext(ctx, pr)
-
-	cmd.Flags().BoolVar(&installComp, "install-completion", false,
-		"Install shell completion")
-	// this command will be invoked by the shell-completion code
-	cmd.AddCommand(&cobra.Command{
-		Use:           "kpt",
-		Hidden:        true,
-		SilenceErrors: true,
-		SilenceUsage:  true,
-		Run: func(cmd *cobra.Command, args []string) {
-			// Complete exits if it is called in completion mode, otherwise it is a no-op
-			cmdcomplete.Complete(cmd.Parent(), false, nil).Complete("kpt")
-		},
-	})
 
 	// find the pager if one exists
 	func() {

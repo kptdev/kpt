@@ -14,7 +14,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/printers"
+	"github.com/GoogleContainerTools/kpt/pkg/status"
 	statusprinters "github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
@@ -29,7 +29,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	kstatus "sigs.k8s.io/cli-utils/pkg/kstatus/status"
-	status "sigs.k8s.io/cli-utils/pkg/util/factory"
+	"sigs.k8s.io/cli-utils/pkg/printers"
 )
 
 const (

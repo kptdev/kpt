@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM gcr.io/google.com/cloudsdktool/cloud-sdk:355.0.0-alpine
+FROM gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-alpine
 RUN apk update && apk upgrade && \
     apk add --no-cache git less diffutils bash openssh docker-cli && \
     rm -rf /var/lib/apt/lists/* && \

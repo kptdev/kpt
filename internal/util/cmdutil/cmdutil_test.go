@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -316,30 +317,79 @@ func TestListImages(t *testing.T) {
 	result := listImages(`{
   "apply-setters": {
     "v0.1": {
-      "apply-setters-simple": {
-        "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+      "LatestPatchVersion": "v0.1.1",
+      "Examples": {
+        "apply-setters-simple": {
+          "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+        }
       }
     }
   },
   "gatekeeper": {
     "v0.1": {
-      "gatekeeper-warning-only": {
-        "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+      "LatestPatchVersion": "v0.1.3",
+      "Examples": {
+        "gatekeeper-warning-only": {
+          "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+        }
       }
     },
     "v0.2": {
-      "gatekeeper-warning-only": {
-        "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
-        "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
-        "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+      "LatestPatchVersion": "v0.2.1",
+      "Examples": {
+        "gatekeeper-warning-only": {
+          "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
+          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+        }
       }
     }
   }
 }`)
 	sort.Strings(result)
-	assert.Equal(t, []string{"apply-setters:v0.1", "gatekeeper:v0.2"}, result)
+	assert.Equal(t, []string{"apply-setters:v0.1.1", "gatekeeper:v0.2.1"}, result)
+}
+
+func TestIsSupportedDockerVersion(t *testing.T) {
+	tests := []struct {
+		name   string
+		inputV string
+		errMsg string
+	}{
+		{
+			name:   "greater than min version",
+			inputV: "20.10.1",
+		},
+		{
+			name:   "equal to min version",
+			inputV: "20.10.0",
+		},
+		{
+			name:   "less than min version",
+			inputV: "20.9.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found v20.9.1",
+		},
+		{
+			name:   "invalid semver",
+			inputV: "20..12.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found invalid version v20..12.1",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+			err := isSupportedDockerVersion(tt.inputV)
+			if tt.errMsg != "" {
+				require.NotNil(err)
+				require.Contains(err.Error(), tt.errMsg)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
 }
