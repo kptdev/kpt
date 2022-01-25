@@ -27,7 +27,6 @@ COPY porch/controllers/go.mod porch/controllers/go.sum porch/controllers/
 COPY porch/engine/go.mod porch/engine/go.mod porch/engine/
 COPY porch/repository/go.mod porch/repository/go.sum porch/repository/
 COPY porch/kpt/go.mod porch/kpt/go.sum porch/kpt/
-COPY porch/kptlib/go.mod porch/kptlib/go.sum porch/kptlib/
 
 RUN echo "Downloading root modules ..." \
  && go mod download
@@ -43,8 +42,6 @@ RUN echo "Downloading repository modules ..." \
  && cd porch/repository && go mod download
 RUN echo "Downloading kpt modules ..." \
  && cd porch/kpt && go mod download
-RUN echo "Downloading kptlib modules ..." \
- && cd porch/kptlib && go mod download
 
 COPY internal internal
 COPY pkg pkg
