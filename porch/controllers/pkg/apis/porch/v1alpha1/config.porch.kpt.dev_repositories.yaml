@@ -1,0 +1,270 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.7.0
+  creationTimestamp: null
+  name: repositories.config.porch.kpt.dev
+spec:
+  group: config.porch.kpt.dev
+  names:
+    kind: Repository
+    listKind: RepositoryList
+    plural: repositories
+    singular: repository
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Repository
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: "RepositorySpec defines the desired state of Repository \n
+              Notes:  * deployment repository - in KRM API ConfigSync would be configured
+              directly? (or via this API)"
+            properties:
+              content:
+                description: 'Content stored in the repository (i.e. Function, PackageRevision
+                  - the literal values correspond to the API resource names). TODO:
+                  support repository with mixed content?'
+                type: string
+              description:
+                description: User-friendly description of the repository
+                type: string
+              git:
+                description: Git repository details. Required if `type` is `git`.
+                  Ignored if `type` is not `git`.
+                properties:
+                  branch:
+                    description: Name of the branch containig the packages. Finalized
+                      packages will be committed to this branch (if the repository
+                      allows write access).
+                    type: string
+                  directory:
+                    description: Directory within the Git repository where the packages
+                      are stored. A subdirectory of this directory containing a Kptfile
+                      is considered a package. If unspecified, defaults to root directory.
+                    type: string
+                  repo:
+                    description: 'Address of the Git repository, for example:   `https://github.com/GoogleCloudPlatform/blueprints.git`'
+                    type: string
+                  secretRef:
+                    description: Reference to secret containing authentication credentials.
+                    properties:
+                      name:
+                        description: Name of the secret. The secret is expected to
+                          be located in the same namespace as the resource containing
+                          the reference.
+                        type: string
+                    type: object
+                required:
+                - branch
+                - directory
+                - repo
+                type: object
+              mutators:
+                description: '`Mutators` specifies list of functions to be added to
+                  the list of package''s mutators on changes to the packages in the
+                  repository to ensure the packages meet constraints enforced by the
+                  mutators associated with the repository. Based on the Kubernetest
+                  Admission Controllers (https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/).
+                  The functions will be evaluated in the order specified in the list.'
+                items:
+                  properties:
+                    configMap:
+                      additionalProperties:
+                        type: string
+                      description: '`ConfigMap` specifies the function config (https://kpt.dev/reference/cli/fn/eval/).'
+                      type: object
+                    functionRef:
+                      description: '`FunctionRef` specifies the function by reference
+                        to a Function resource. Mutually exclusive with `Image`.'
+                      properties:
+                        name:
+                          description: '`Name` is the name of the `Function` resource
+                            referenced. The resource is expected to be within the
+                            same namespace.'
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    image:
+                      description: '`Image` specifies the function image, such as
+                        `gcr.io/kpt-fn/gatekeeper:v0.2`. Use of `Image` is mutually
+                        exclusive with `FunctionRef`.'
+                      type: string
+                  type: object
+                type: array
+              oci:
+                description: OCI repository details. Required if `type` is `oci`.
+                  Ignored if `type` is not `oci`.
+                properties:
+                  registry:
+                    description: Registry is the address of the OCI registry
+                    type: string
+                  secretRef:
+                    description: Reference to secret containing authentication credentials.
+                    properties:
+                      name:
+                        description: Name of the secret. The secret is expected to
+                          be located in the same namespace as the resource containing
+                          the reference.
+                        type: string
+                    type: object
+                required:
+                - registry
+                type: object
+              title:
+                description: Title of the repository for display in the UIs.
+                type: string
+              type:
+                description: Type of the repository (i.e. git, OCI)
+                type: string
+              upstream:
+                description: Upstream is the default upstream repository for packages
+                  in this repository. Specifying it per repository allows simpler
+                  UX when creating packages.
+                properties:
+                  git:
+                    description: Git repository details. Required if `type` is `git`.
+                      Must be unspecified if `type` is not `git`.
+                    properties:
+                      branch:
+                        description: Name of the branch containig the packages. Finalized
+                          packages will be committed to this branch (if the repository
+                          allows write access).
+                        type: string
+                      directory:
+                        description: Directory within the Git repository where the
+                          packages are stored. A subdirectory of this directory containing
+                          a Kptfile is considered a package. If unspecified, defaults
+                          to root directory.
+                        type: string
+                      repo:
+                        description: 'Address of the Git repository, for example:   `https://github.com/GoogleCloudPlatform/blueprints.git`'
+                        type: string
+                      secretRef:
+                        description: Reference to secret containing authentication
+                          credentials.
+                        properties:
+                          name:
+                            description: Name of the secret. The secret is expected
+                              to be located in the same namespace as the resource
+                              containing the reference.
+                            type: string
+                        type: object
+                    required:
+                    - branch
+                    - directory
+                    - repo
+                    type: object
+                  oci:
+                    description: OCI repository details. Required if `type` is `oci`.
+                      Must be unspecified if `type` is not `oci`.
+                    properties:
+                      registry:
+                        description: Registry is the address of the OCI registry
+                        type: string
+                      secretRef:
+                        description: Reference to secret containing authentication
+                          credentials.
+                        properties:
+                          name:
+                            description: Name of the secret. The secret is expected
+                              to be located in the same namespace as the resource
+                              containing the reference.
+                            type: string
+                        type: object
+                    required:
+                    - registry
+                    type: object
+                  repositoryRef:
+                    description: RepositoryRef contains a reference to an existing
+                      Repository resource to be used as the default upstream repository.
+                    properties:
+                      name:
+                        description: Name of the Repository resource referenced.
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  type:
+                    description: Type of the repository (i.e. git, OCI). If empty,
+                      repositoryRef will be used.
+                    type: string
+                type: object
+              validators:
+                description: '`Validators` specifies list of functions to be added
+                  to the list of package''s validators on changes to the packages
+                  in the repository to ensure the packages meet constraints enforced
+                  by the validators associated with the repository. Based on the Kubernetest
+                  Admission Controllers (https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/).
+                  The functions will be evaluated in the order specified in the list.'
+                items:
+                  properties:
+                    configMap:
+                      additionalProperties:
+                        type: string
+                      description: '`ConfigMap` specifies the function config (https://kpt.dev/reference/cli/fn/eval/).'
+                      type: object
+                    functionRef:
+                      description: '`FunctionRef` specifies the function by reference
+                        to a Function resource. Mutually exclusive with `Image`.'
+                      properties:
+                        name:
+                          description: '`Name` is the name of the `Function` resource
+                            referenced. The resource is expected to be within the
+                            same namespace.'
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    image:
+                      description: '`Image` specifies the function image, such as
+                        `gcr.io/kpt-fn/gatekeeper:v0.2`. Use of `Image` is mutually
+                        exclusive with `FunctionRef`.'
+                      type: string
+                  type: object
+                type: array
+            type: object
+          status:
+            description: RepositoryStatus defines the observed state of Repository
+            type: object
+        type: object
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

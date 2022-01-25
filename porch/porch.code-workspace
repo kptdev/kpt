@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "api"
+		},
+		{
+			"path": "engine"
+		},
+		{
+			"path": "repository"
+		},
+		{
+			"path": "kpt"
+		},
+		{
+			"path": "apiserver"
+		},
+		{
+			"path": "controllers"
+		},
+		{
+			"path": "."
+		}
+	]
+}
