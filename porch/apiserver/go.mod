@@ -29,7 +29,6 @@ require (
 
 replace (
 	github.com/GoogleContainerTools/kpt => ../../
-	github.com/GoogleContainerTools/kpt/pkg/kptlib => ../kptlib
 	github.com/GoogleContainerTools/kpt/porch/api => ../api
 	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
