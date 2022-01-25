@@ -41,7 +41,6 @@ replace (
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
-	github.com/GoogleContainerTools/kpt/pkg/kptlib v0.0.0-00010101000000-000000000000 // indirect
 	github.com/GoogleContainerTools/kpt/porch/kpt v0.0.0-00010101000000-000000000000 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
