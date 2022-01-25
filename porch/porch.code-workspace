@@ -1,0 +1,36 @@
+{
+	"folders": [
+		{
+			"path": "api"
+		},
+		{
+			"path": "engine"
+		},
+		{
+			"path": "repository"
+		},
+		{
+			"path": "apiserver"
+		},
+		{
+			"path": "controllers"
+		},
+		{
+			"path": "controllers/remoterootsync"
+		},
+		{
+			"path": "func"
+		},
+		{
+			"name": "porch",
+			"path": "."
+		},
+		{
+			"path": "test",
+		},
+		{
+			"name": "kpt",
+			"path": ".."
+		}
+	]
+}

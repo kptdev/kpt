@@ -29,9 +29,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/man"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -75,7 +77,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		args = append(args, pkg.CurDir)
 	}
-	p, err := pkg.New(args[0])
+
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
+	if err != nil {
+		return err
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
 	if err != nil {
 		return err
 	}

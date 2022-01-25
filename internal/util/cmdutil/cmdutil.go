@@ -22,7 +22,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -62,32 +61,6 @@ func PrintErrorStacktrace() bool {
 
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
-
-func ResolveAbsAndRelPaths(path string) (string, string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", "", err
-	}
-
-	var relPath string
-	var absPath string
-	if filepath.IsAbs(path) {
-		// If the provided path is absolute, we find the relative path by
-		// comparing it to the current working directory.
-		relPath, err = filepath.Rel(cwd, path)
-		if err != nil {
-			return "", "", err
-		}
-		absPath = filepath.Clean(path)
-	} else {
-		// If the provided path is relative, we find the absolute path by
-		// combining the current working directory with the relative path.
-		relPath = filepath.Clean(path)
-		absPath = filepath.Join(cwd, path)
-	}
-
-	return relPath, absPath, nil
-}
 
 // DockerCmdAvailable runs `docker version` to check that the docker command is
 // available and is a supported version. Returns an error with installation

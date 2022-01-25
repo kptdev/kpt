@@ -16,6 +16,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -27,6 +28,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // MigrateRunner encapsulates fields for the kpt migrate command.
@@ -194,7 +196,11 @@ func (mr *MigrateRunner) applyCRD() error {
 func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  updating Kptfile inventory values...")
 	if !mr.dryRun {
-		p, err := pkg.New(args[0])
+		absPath, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
+		if err != nil {
+			return err
+		}
+		p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
 		if err != nil {
 			return err
 		}

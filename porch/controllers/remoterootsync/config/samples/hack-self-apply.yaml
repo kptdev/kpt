@@ -1,0 +1,29 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+apiVersion: config.cloud.google.com/v1alpha1
+kind: RemoteRootSyncSet
+metadata:
+  name: loopback-apply
+  namespace: default
+spec:
+  clusterRefs:
+  - apiVersion: container.cnrm.cloud.google.com/v1beta1
+    kind: ContainerCluster
+    name: loopback! # TODO: This is a hack used during development, remove once we are more end-to-end enabled.
+  template:
+    oci:
+      #repository: us-west1-docker.pkg.dev/example-google-project-id/deployment/myfirstnginx:v1
+      repository: us-west1-docker.pkg.dev/example-google-project-id/packages/porch:v0.0.1

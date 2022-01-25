@@ -1,0 +1,56 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+functions:
+  - function: set-image
+    images:
+    - gcr.io/kpt-fn/set-image@sha256:e37f0229141e0848f910ef5c783da1634e4e3cb82e1757fa848f53d14447f4a5
+    - gcr.io/kpt-fn/set-image:unstable
+  - function: set-namespace
+    images:
+    - gcr.io/kpt-fn/set-namespace@sha256:7adc23986f97572d75af9aec6a7f74d60f7b9976227f43a75486633e7c539e6f
+    - gcr.io/kpt-fn/set-namespace:v0.2.0
+  - function: upsert-resource
+    images:
+    - gcr.io/kpt-fn/upsert-resource@sha256:77196bdb9e33e4259d530ee1996a05c40bbefe39b80d52dcb66c32f7b85a62f1
+    - gcr.io/kpt-fn/upsert-resource:v0.2.0
+  - function: set-project-id
+    images:
+    - gcr.io/kpt-fn/set-project-id@sha256:966c9e51163bce52274dfa0406ae580283712cb38625660cd2f66e9f13d2c01b
+    - gcr.io/kpt-fn/set-project-id:v0.2.0
+  - function: apply-setters
+    images:
+    - gcr.io/kpt-fn/apply-setters@sha256:4d4295727183396f0c3c6a75d2560254c2f9041a39e95dc1e5beffeb49cc1a12
+    - gcr.io/kpt-fn/apply-setters:v0.2.0
+  - function: apply-setters-v1
+    images:
+    - gcr.io/kpt-fn/apply-setters@sha256:d2a0219b24a47ebb4bf568d3ccf5bb0e7be2f3f94b28b0c3b1bed011a51d7c35
+    - gcr.io/kpt-fn/apply-setters:v0.1
+    - gcr.io/kpt-fn/apply-setters:v0.1.1
+  - function: search-replace
+    images:
+    - gcr.io/kpt-fn/search-replace@sha256:6864b06bf654fbdff3efb666a0a75fa14da2ba405f33187b60648e0b74bc2272
+    - gcr.io/kpt-fn/search-replace:v0.2.0
+  - function: ensure-name-substring
+    images:
+    - gcr.io/kpt-fn/ensure-name-substring@sha256:3105ac150f86dcafa2d656e30feb5c51b83a43f5bb9b84458cdde620c9757227
+    - gcr.io/kpt-fn/ensure-name-substring:v0.1.1
+  - function: set-annotations
+    images:
+    - gcr.io/kpt-fn/set-annotations@sha256:76d65ebddf6ce9c2c00bbcb3c0e963a2d856685bdcf2f1072386f41ca9b563e5
+    - gcr.io/kpt-fn/set-annotations:v0.1.4
+  - function: set-labels
+    images:
+    - gcr.io/kpt-fn/set-labels@sha256:0dfc3c8aba8b791d0c45fe7eafbc8cf3c5920a09f69848f46dcc270ae3423641
+    - gcr.io/kpt-fn/set-labels:v0.1.5
