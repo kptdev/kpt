@@ -83,24 +83,18 @@ vet: $(MODULES)
 fmt: $(MODULES)
 	@for f in $(^D); do (cd $$f; echo "Formatting $$f"; gofmt -s -w .); done
 
-KUBECONFIG=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))hack/local/kubeconfig
-
-.PHONY: init deinit
-init:
-	@ [[ -z $$(find "./config/$${USER}" -type f -name '*.yaml') ]] || KUBECONFIG="$(KUBECONFIG)" kubectl apply -f "./config/$${USER}"
-
-deinit:
-	@ [[ -z $$(find "./config/$${USER}" -type f -name '*.yaml') ]] || KUBECONFIG="$(KUBECONFIG)" kubectl delete -f "./config/$${USER}"
+KUBECONFIG_DOCKER=$(CURDIR)/hack/local/kubeconfig
+KUBECONFIG_LOCAL=$(CURDIR)/hack/local/kubeconfig.local
 
 .PHONY: run-local
 run-local:
-	KUBECONFIG=$(KUBECONFIG) kubectl apply -f hack/local/localconfig.yaml
-	KUBECONFIG=$(KUBECONFIG) kubectl apply -f controllers/pkg/apis/porch/v1alpha1/
+	KUBECONFIG=$(KUBECONFIG_DOCKER) kubectl apply -f hack/local/localconfig.yaml
+	KUBECONFIG=$(KUBECONFIG_DOCKER) kubectl apply -f controllers/pkg/apis/porch/v1alpha1/
 	cd apiserver; go run ./cmd/porch \
 	--secure-port 9443 \
 	--standalone-debug-mode \
-	--kubeconfig=$(KUBECONFIG) \
-	--cache-directory="$(dir $(abspath $(lastword $(MAKEFILE_LIST)))).cache"
+	--kubeconfig=$(KUBECONFIG_DOCKER) \
+	--cache-directory="$(CURDIR)/.cache"
 
 .PHONY: run-jaeger
 run-jaeger:
@@ -109,3 +103,45 @@ run-jaeger:
 .PHONY: porch
 porch:
 	cd apiserver; go build ./cmd/porch
+
+BUILDDIR=$(CURDIR)/.build
+
+.PHONY: start-local-etcd
+start-local-etcd:
+	etcd \
+	  --listen-client-urls http://127.0.0.1:2379 \
+	  --advertise-client-urls http://127.0.0.1:2379 \
+	  --name porch \
+	  --data-dir $(BUILDDIR)/data/porch.etcd
+
+$(BUILDDIR)/kubernetes:
+	git clone https://github.com/kubernetes/kubernetes --branch v1.23.1 --depth=1 $(BUILDDIR)/kubernetes
+
+$(BUILDDIR)/kube-apiserver: $(BUILDDIR)/kubernetes
+	cd $(BUILDDIR)/kubernetes; git checkout refs/tags/v1.23.1
+	cd $(BUILDDIR)/kubernetes; make generated_files
+	cd $(BUILDDIR)/kubernetes; CGO_ENABLED=0 go build -o $(BUILDDIR)/kube-apiserver ./cmd/kube-apiserver
+
+.PHONY: start-local-apiserver
+start-local-apiserver: $(BUILDDIR)/kube-apiserver
+	hack/local/makekeys.sh
+	$(BUILDDIR)/kube-apiserver \
+	  --etcd-servers http://localhost:2379 \
+	  --secure-port 9444 \
+	  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
+	  --service-account-key-file=$(BUILDDIR)/pki/service-account.pub \
+	  --service-account-signing-key-file=$(BUILDDIR)/pki/service-account.key \
+	  --cert-dir=$(BUILDDIR)/pki \
+	  --authorization-mode=RBAC \
+	  --anonymous-auth=false \
+	  --client-ca-file=$(BUILDDIR)/pki/ca.crt
+
+.PHONY: start-local-porch
+start-local-porch:
+	KUBECONFIG=$(KUBECONFIG_LOCAL) kubectl apply -f hack/local/apiservice.local.yaml
+	KUBECONFIG=$(KUBECONFIG_LOCAL) kubectl apply -f controllers/pkg/apis/porch/v1alpha1/
+	cd apiserver; go run ./cmd/porch \
+	--secure-port 9443 \
+	--standalone-debug-mode \
+	--kubeconfig=$(KUBECONFIG_LOCAL) \
+	--cache-directory="$(CURDIR)/.cache"
