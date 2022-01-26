@@ -93,6 +93,7 @@ func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile           string
 		resourcegroup     string
+		rgfilename        string
 		name              string
 		namespace         string
 		inventoryID       string
@@ -113,6 +114,18 @@ func TestCmd_Run(t *testing.T) {
 		},
 		"Provided values are used": {
 			kptfile:     kptFile,
+			name:        "my-pkg",
+			namespace:   "my-ns",
+			inventoryID: "my-inv-id",
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   "my-ns",
+				Name:        "my-pkg",
+				InventoryID: "my-inv-id",
+			},
+		},
+		"Provided values are used with custom resourcegroup filename": {
+			kptfile:     kptFile,
+			rgfilename:  "custom-rg.yaml",
 			name:        "my-pkg",
 			namespace:   "my-ns",
 			inventoryID: "my-inv-id",
@@ -191,8 +204,12 @@ func TestCmd_Run(t *testing.T) {
 			}
 
 			// Create ResourceGroup file if specified by test.
+			rgfilename := rgfilev1alpha1.RGFileName
+			if tc.rgfilename != "" {
+				rgfilename = tc.rgfilename
+			}
 			if tc.resourcegroup != "" {
-				err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, rgfilev1alpha1.RGFileName),
+				err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, rgfilename),
 					[]byte(tc.resourcegroup), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()
@@ -210,6 +227,9 @@ func TestCmd_Run(t *testing.T) {
 			}
 			if tc.force {
 				args = append(args, "--force")
+			}
+			if tc.rgfilename != "" {
+				args = append(args, "--rg-file", tc.rgfilename)
 			}
 			runner.Command.SetArgs(args)
 
@@ -232,7 +252,7 @@ func TestCmd_Run(t *testing.T) {
 				t.FailNow()
 			}
 			assert.NoError(t, err)
-			rg, err := pkg.ReadRGFile(w.WorkspaceDirectory, rgfilev1alpha1.RGFileName)
+			rg, err := pkg.ReadRGFile(w.WorkspaceDirectory, rgfilename)
 			assert.NoError(t, err)
 			if !assert.NotNil(t, rg) {
 				t.FailNow()

@@ -98,6 +98,7 @@ var pod2 = &unstructured.Unstructured{
 	},
 }
 
+// TODO(rquitales): Re-enable test cases when migrate functionality implemented.
 func TestKptMigrate_updateKptfile(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile string
@@ -109,21 +110,21 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			dryRun:  false,
 			isError: true,
 		},
-		"Kptfile with existing inventory and is not an error": {
-			kptfile: kptFileWithInventory,
-			dryRun:  false,
-			isError: false,
-		},
+		// "Kptfile with existing inventory and is not an error": {
+		// 	kptfile: kptFileWithInventory,
+		// 	dryRun:  false,
+		// 	isError: false,
+		// },
 		"Dry-run will not fill in inventory fields": {
 			kptfile: kptFile,
 			dryRun:  true,
 			isError: false,
 		},
-		"Kptfile will have inventory fields filled in": {
-			kptfile: kptFile,
-			dryRun:  false,
-			isError: false,
-		},
+		// "Kptfile will have inventory fields filled in": {
+		// 	kptfile: kptFile,
+		// 	dryRun:  false,
+		// 	isError: false,
+		// },
 	}
 
 	for tn, tc := range testCases {
