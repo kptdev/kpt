@@ -136,6 +136,7 @@ type ConfigureInventoryInfo struct {
 	Quiet   bool
 
 	Name        string
+	Namespace   string
 	InventoryID string
 	RGFileName  string
 
@@ -148,11 +149,17 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	pr := printer.FromContextOrDie(ctx)
 	var name, namespace string
 
-	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
+	switch c.Namespace {
+	case "":
+		ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, err)
+		}
+		namespace = strings.TrimSpace(ns)
+	default:
+		namespace = c.Namespace
 	}
-	namespace = strings.TrimSpace(ns)
+
 	if !c.Quiet {
 		pr.Printf("initializing ResourceGroup inventory info (namespace: %s)...", namespace)
 	}
@@ -165,7 +172,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		name = c.Name
 	}
 	// Finally, create a ResourceGroup containing the inventory information.
-	err = createRGFile(c.Pkg, &kptfilev1.Inventory{
+	err := createRGFile(c.Pkg, &kptfilev1.Inventory{
 		Namespace:   namespace,
 		Name:        name,
 		InventoryID: c.InventoryID,

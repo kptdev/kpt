@@ -11,6 +11,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -96,86 +97,6 @@ var pod2 = &unstructured.Unstructured{
 			"namespace": testNamespace,
 		},
 	},
-}
-
-// TODO(rquitales): Re-enable test cases when migrate functionality implemented.
-func TestKptMigrate_updateKptfile(t *testing.T) {
-	testCases := map[string]struct {
-		kptfile string
-		dryRun  bool
-		isError bool
-	}{
-		"Missing Kptfile is an error": {
-			kptfile: "",
-			dryRun:  false,
-			isError: true,
-		},
-		// "Kptfile with existing inventory and is not an error": {
-		// 	kptfile: kptFileWithInventory,
-		// 	dryRun:  false,
-		// 	isError: false,
-		// },
-		"Dry-run will not fill in inventory fields": {
-			kptfile: kptFile,
-			dryRun:  true,
-			isError: false,
-		},
-		// "Kptfile will have inventory fields filled in": {
-		// 	kptfile: kptFile,
-		// 	dryRun:  false,
-		// 	isError: false,
-		// },
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			// Set up fake test factory
-			tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
-			defer tf.Cleanup()
-			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-
-			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-migrate-test")
-			assert.NoError(t, err)
-			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
-			assert.NoError(t, err)
-
-			ctx := fake.CtxWithDefaultPrinter()
-			// Create MigrateRunner and call "updateKptfile"
-			cmLoader := manifestreader.NewManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.dryRun = tc.dryRun
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
-				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
-			}
-			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
-			// Check if there should be an error
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
-				return
-			}
-			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(dir)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			// Check the kptfile inventory section now has values.
-			if !tc.dryRun {
-				assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
-				if len(kf.Inventory.Name) == 0 {
-					t.Errorf("inventory name not set in Kptfile")
-				}
-				if kf.Inventory.InventoryID != testInventoryID {
-					t.Errorf("inventory id not set in Kptfile: %s", kf.Inventory.InventoryID)
-				}
-			} else if kf.Inventory != nil {
-				t.Errorf("inventory shouldn't be set during dryrun")
-			}
-		})
-	}
 }
 
 func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
@@ -285,8 +206,18 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			objs:    []object.ObjMetadata{},
 			isError: false,
 		},
+		"Kptfile does not have inventory is valid": {
+			invObj:  kptFile,
+			objs:    []object.ObjMetadata{},
+			isError: false,
+		},
 		"One migrate object is valid": {
 			invObj:  kptfileStr,
+			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			isError: false,
+		},
+		"One migrate object is valid with inventory in Kptfile": {
+			invObj:  kptFileWithInventory,
 			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
 			isError: false,
 		},
@@ -321,6 +252,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+
 			// Retrieve the objects stored by the inventory client and validate.
 			migratedObjs, err := rgInvClient.GetClusterObjs(nil, common.DryRunNone)
 			assert.NoError(t, err)
@@ -344,21 +276,123 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 	}
 }
 
-// var kptFileWithInventory = `
-// apiVersion: kpt.dev/v1
-// kind: Kptfile
-// metadata:
-//   name: test1
-// upstreamLock:
-//   type: git
-//   git:
-//     repo: git@github.com:seans3/blueprint-helloworld
-//     directory: /
-//     ref: master
-// inventory:
-//     name: foo
-//     namespace: test-namespace
-//     inventoryID: ` + testInventoryID + "\n"
+func TestKptMigrate_migrateKptfile(t *testing.T) {
+	testCases := map[string]struct {
+		kptfile    string
+		rgFilename string
+		dryRun     bool
+		isError    bool
+	}{
+		"Missing Kptfile is an error": {
+			kptfile: "",
+			dryRun:  false,
+			isError: true,
+		},
+		"Kptfile with existing inventory will create ResourceGroup": {
+			kptfile: kptFileWithInventory,
+			dryRun:  false,
+			isError: false,
+		},
+		"Dry-run will not fill in inventory fields": {
+			kptfile: kptFile,
+			dryRun:  true,
+			isError: false,
+		},
+		"ResourceGroup will be generated": {
+			kptfile: kptFileWithInventory,
+			dryRun:  false,
+			isError: false,
+		},
+		"Custom ResourceGroup file will be generated": {
+			kptfile:    kptFileWithInventory,
+			rgFilename: "custom-rg.yaml",
+			dryRun:     false,
+			isError:    false,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Set up fake test factory
+			tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+			defer tf.Cleanup()
+			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+			// Set up temp directory with Ktpfile
+			dir, err := ioutil.TempDir("", "kpt-migrate-test")
+			assert.NoError(t, err)
+			p := filepath.Join(dir, "Kptfile")
+			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			assert.NoError(t, err)
+
+			ctx := fake.CtxWithDefaultPrinter()
+			// Create MigrateRunner and call "updateKptfile"
+			cmLoader := manifestreader.NewManifestLoader(tf)
+			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			migrateRunner.dryRun = tc.dryRun
+			if tc.rgFilename != "" {
+				migrateRunner.rgFile = tc.rgFilename
+			}
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
+				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			}
+			err = migrateRunner.migrateKptfile([]string{dir})
+			// Check if there should be an error
+			if tc.isError {
+				if err == nil {
+					t.Fatalf("expected error but received none")
+				}
+				return
+			}
+			assert.NoError(t, err)
+			kf, err := pkg.ReadKptfile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			rg, err := pkg.ReadRGFile(dir, migrateRunner.rgFile)
+			if !tc.dryRun && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// Ensure the Kptfile does not contain inventory information.
+			if !assert.Nil(t, kf.Inventory) {
+				t.Errorf("inventory information should not be set in Kptfile")
+			}
+
+			if !tc.dryRun {
+				if rg == nil {
+					t.Fatalf("unable to read ResourceGroup file")
+				}
+				assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
+				if len(rg.ObjectMeta.Name) == 0 {
+					t.Errorf("inventory name not set in Kptfile")
+				}
+				if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
+					t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+				}
+			} else if rg != nil {
+				t.Errorf("inventory shouldn't be set during dryrun")
+			}
+		})
+	}
+}
+
+var kptFileWithInventory = `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+upstreamLock:
+  type: git
+  git:
+    repo: git@github.com:seans3/blueprint-helloworld
+    directory: /
+    ref: master
+inventory:
+    name: foo
+    namespace: test-namespace
+    inventoryID: ` + testInventoryID + "\n"
 
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
@@ -374,5 +408,14 @@ upstreamLock:
     directory: /
     ref: master
 `
+
+var rgFile = `
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: foo
+  namespace: test-namespace
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: ` + testInventoryID + "\n"
 
 var inventoryNamespace = "test-namespace"

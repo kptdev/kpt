@@ -99,7 +99,7 @@ func NewCommand(ctx context.Context, f util.Factory, cmLoader manifestreader.Man
 	return NewRunner(ctx, f, cmLoader, ioStreams).Command
 }
 
-// Run executes the migration from the ConfigMap based inventory to the ResourceGroup
+// Run executes the migration from the ConfigMap or Kptfile based inventory to the ResourceGroup
 // based inventory.
 func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	// Validate the number of arguments.
@@ -170,7 +170,7 @@ func (mr *MigrateRunner) migrateKptfile(args []string) error {
 			Namespace:   kf.Inventory.Namespace,
 			InventoryID: kf.Inventory.InventoryID,
 			RGFileName:  mr.rgFile,
-			Force:       mr.force,
+			Force:       true,
 		}).Run(mr.ctx)
 
 		if err != nil {
@@ -180,13 +180,6 @@ func (mr *MigrateRunner) migrateKptfile(args []string) error {
 			} else {
 				return err
 			}
-		}
-
-		// Rewrite Kptfile without inventory info.
-		kf.Inventory = nil
-		err = kptfileutil.WriteFile(p.UniquePath.String(), kf)
-		if err != nil {
-			return err
 		}
 	}
 	fmt.Fprint(mr.ioStreams.Out, "success\n")
