@@ -30,11 +30,20 @@ import (
 const defaultInventoryName = "inventory"
 
 // InvExistsError defines new error when the inventory
-// values have already been set on the Kptfile.
+// values have already been set on the ResourceGroup file.
 type InvExistsError struct{}
 
 func (i *InvExistsError) Error() string {
 	return "inventory information already set for package"
+}
+
+// InvInKfExistsError defines new error when the inventory
+// values have already been set on the Kptfile and we will warn
+// the user to migrate rather than init.
+type InvInKfExistsError struct{}
+
+func (i *InvInKfExistsError) Error() string {
+	return "inventory information already set within Kptfile for package"
 }
 
 func NewRunner(ctx context.Context, factory cmdutil.Factory,
@@ -193,7 +202,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	// Validate the inventory values don't exist in Kptfile.
 	isEmpty := kptfileInventoryEmpty(kf.Inventory)
 	if !isEmpty {
-		return errors.E(op, p.UniquePath, &InvExistsError{})
+		return errors.E(op, p.UniquePath, &InvInKfExistsError{})
 	}
 
 	// Validate the inventory values don't already exist in Resourcegroup.
