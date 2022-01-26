@@ -717,6 +717,9 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 
 // ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
 func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+	if filename == "" {
+		filename = rgfilev1alpha1.RGFileName
+	}
 	if p.rgFile == nil {
 		rg, err := ReadRGFile(p.UniquePath.String(), filename)
 		if err != nil {
@@ -727,7 +730,7 @@ func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error)
 	return p.rgFile, nil
 }
 
-// ReadRGFile reads the KptFile in the given pkg.
+// ReadRGFile reads the ResourceGroup in the given pkg.
 func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	f, err := os.Open(filepath.Join(path, filename))
 	if err != nil {
@@ -738,23 +741,28 @@ func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	}
 	defer f.Close()
 
-	rg := &rgfilev1alpha1.ResourceGroup{}
-	c, err := io.ReadAll(f)
+	rg, err := DecodeRGFile(f)
 	if err != nil {
 		return nil, &RGError{
 			Path: types.UniquePath(path),
 			Err:  err,
 		}
 	}
+	return rg, nil
+}
+
+// DecodeRGFile converts a string reader into structured a ResourceGroup object.
+func DecodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
+	rg := &rgfilev1alpha1.ResourceGroup{}
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return rg, err
+	}
 
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err := d.Decode(rg); err != nil {
-		return nil, &RGError{
-			Path: types.UniquePath(path),
-			Err:  err,
-		}
+		return rg, err
 	}
 	return rg, nil
-
 }

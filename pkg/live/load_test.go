@@ -381,7 +381,7 @@ func TestValidateInventory(t *testing.T) {
 				Name: "foo",
 			},
 			expectErr:           true,
-			expectedErrorFields: []string{"namespace", "inventoryID"},
+			expectedErrorFields: []string{"namespace"},
 		},
 	}
 

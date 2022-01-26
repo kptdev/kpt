@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -64,6 +65,12 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		if err != nil {
 			return objs, err
 		}
+
+		// Skip if we detect ResourceGroup file.
+		if u.GetKind() == rgfilev1alpha1.RGFileKind {
+			continue
+		}
+
 		objs = append(objs, u)
 	}
 

@@ -62,6 +62,7 @@ func NewRunner(ctx context.Context, factory util.Factory,
 		"dry-run apply for the resources in the package.")
 	c.Flags().BoolVar(&r.printStatusEvents, "show-status-events", false,
 		"Print status events (always enabled for table output)")
+	c.Flags().StringVar(&r.rgFile, "rg-file", "", "ResourceGroup object filepath")
 	return r
 }
 
@@ -83,6 +84,7 @@ type Runner struct {
 	output                string
 	inventoryPolicyString string
 	dryRun                bool
+	rgFile                string
 	printStatusEvents     bool
 
 	inventoryPolicy inventory.InventoryPolicy
@@ -128,7 +130,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
+	_, inv, err := live.Load(r.factory, path, r.rgFile, c.InOrStdin())
 	if err != nil {
 		return err
 	}

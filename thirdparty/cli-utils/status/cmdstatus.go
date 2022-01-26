@@ -66,6 +66,7 @@ func NewRunner(ctx context.Context, factory util.Factory) *Runner {
 	c.Flags().StringVar(&r.output, "output", "events", "Output format.")
 	c.Flags().DurationVar(&r.timeout, "timeout", 0,
 		"How long to wait before exiting")
+	c.Flags().StringVar(&r.rgFile, "rg-file", "", "ResourceGroup object filepath")
 	return r
 }
 
@@ -85,6 +86,7 @@ type Runner struct {
 	pollUntil string
 	timeout   time.Duration
 	output    string
+	rgFile    string
 
 	pollerFactoryFunc func(util.Factory) (poller.Poller, error)
 }
@@ -124,7 +126,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
+	_, inv, err := live.Load(r.factory, path, r.rgFile, c.InOrStdin())
 	if err != nil {
 		return err
 	}
