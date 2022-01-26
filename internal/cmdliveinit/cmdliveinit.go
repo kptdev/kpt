@@ -5,25 +5,28 @@ package cmdliveinit
 
 import (
 	"context"
-	"crypto/sha1"
+	goerrors "errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/resourcegroup/resourcegrouputil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const defaultInventoryName = "inventory"
@@ -189,7 +192,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	const op errors.Op = "cmdliveinit.updateResourceGroup"
 	// Read the resourcegroup object io io.dir
 	rg, err := p.ReadRGFile(filename)
-	if err != nil {
+	if err != nil && !goerrors.Is(err, os.ErrNotExist) {
 		return errors.E(op, p.UniquePath, err)
 	}
 
@@ -218,7 +221,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	if inv.InventoryID != "" {
 		rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
 	}
-	if err := resourcegrouputil.WriteFile(p.UniquePath.String(), rg, filename); err != nil {
+	if err := writeRGFile(p.UniquePath.String(), rg, filename); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 
@@ -232,20 +235,22 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	return nil
 }
 
-// generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
-// or an error if either namespace or name is empty.
-func generateHash(namespace string, name string) (string, error) {
-	const op errors.Op = "cmdliveinit.generateHash"
-	if len(namespace) == 0 || len(name) == 0 {
-		return "", errors.E(op,
-			fmt.Errorf("can not generate hash with empty namespace or name"))
+func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) error {
+	const op errors.Op = "cmdliveinit.writeRGFile"
+	b, err := yaml.MarshalWithOptions(rg, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		return err
 	}
-	str := fmt.Sprintf("%s:%s", namespace, name)
-	h := sha1.New()
-	if _, err := h.Write([]byte(str)); err != nil {
-		return "", errors.E(op, err)
+	if _, err := os.Stat(filepath.Join(dir, filename)); err != nil && !goerrors.Is(err, os.ErrNotExist) {
+		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
-	return fmt.Sprintf("%x", (h.Sum(nil))), nil
+
+	// fyi: perm is ignored if the file already exists
+	err = ioutil.WriteFile(filepath.Join(dir, filename), b, 0600)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+	return nil
 }
 
 // kptfileInventoryEmpty returns true if the Inventory structure

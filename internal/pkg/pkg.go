@@ -100,6 +100,21 @@ func (e *UnknownKptfileResourceError) Error() string {
 	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
+// RGError is an implementation of the error interface that is returned whenever
+// kpt encounters errors reading a resourcegroup object file.
+type RGError struct {
+	Path types.UniquePath
+	Err  error
+}
+
+func (rg *RGError) Error() string {
+	return fmt.Sprintf("error reading ResourceGroup file at %q: %s", rg.Path.String(), rg.Err.Error())
+}
+
+func (rg *RGError) Unwrap() error {
+	return rg.Err
+}
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
 	// UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
@@ -703,8 +718,10 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 // ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
 func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
-		// TODO(rquitales): Handle real reading errors vs file does not exist.
-		rg, _ := ReadRGFile(p.UniquePath.String(), filename)
+		rg, err := ReadRGFile(p.UniquePath.String(), filename)
+		if err != nil {
+			return nil, err
+		}
 		p.rgFile = rg
 	}
 	return p.rgFile, nil
@@ -714,34 +731,30 @@ func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error)
 func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	f, err := os.Open(filepath.Join(path, filename))
 	if err != nil {
-		return nil, &KptfileError{
+		return nil, &RGError{
 			Path: types.UniquePath(path),
 			Err:  err,
 		}
 	}
 	defer f.Close()
 
-	rg, err := decodeRGFile(f)
+	rg := &rgfilev1alpha1.ResourceGroup{}
+	c, err := io.ReadAll(f)
 	if err != nil {
-		return nil, &KptfileError{
+		return nil, &RGError{
 			Path: types.UniquePath(path),
 			Err:  err,
 		}
-	}
-	return rg, nil
-}
-
-func decodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
-	rg := &rgfilev1alpha1.ResourceGroup{}
-	c, err := io.ReadAll(in)
-	if err != nil {
-		return rg, err
 	}
 
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err := d.Decode(rg); err != nil {
-		return rg, err
+		return nil, &RGError{
+			Path: types.UniquePath(path),
+			Err:  err,
+		}
 	}
 	return rg, nil
+
 }
