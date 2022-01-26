@@ -35,9 +35,9 @@ start-etcd:
 	docker rm etcd || true
 	docker run --detach --user `id -u`:`id -g` \
 	  --network=porch \
-		--ip 192.168.8.200 \
-		--name etcd -v `pwd`/.build/data/etcd:/data \
-		etcd --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://127.0.0.1:2379
+	  --ip 192.168.8.200 \
+	  --name etcd -v `pwd`/.build/data/etcd:/data \
+	  etcd --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://127.0.0.1:2379
 
 .PHONY: start-kube-apiserver
 start-kube-apiserver:
@@ -47,11 +47,11 @@ start-kube-apiserver:
 	hack/local/makekeys.sh
 	docker run --detach --user `id -u`:`id -g` \
 	  --network=porch \
-		--ip 192.168.8.201 \
-		--name kube-apiserver -v `pwd`/.build/pki:/pki \
+	  --ip 192.168.8.201 \
+	  --name kube-apiserver -v `pwd`/.build/pki:/pki \
 	  --add-host host.docker.internal:host-gateway \
 	  kube-apiserver \
-		--etcd-servers http://etcd:2379 \
+	  --etcd-servers http://etcd:2379 \
 	  --secure-port 9444 \
 	  --service-account-issuer=https://kubernetes.default.svc.cluster.local \
 	  --service-account-key-file=/pki/service-account.pub \

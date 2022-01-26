@@ -21,9 +21,13 @@ import (
 	"os"
 	"path/filepath"
 
+	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	kptlib "github.com/GoogleContainerTools/kpt/pkg/kptlib"
 	"k8s.io/klog/v2"
 )
 
@@ -35,8 +39,8 @@ type PkgUpdateOpts struct {
 // PkgUpdate is a wrapper around `kpt pkg update`, running it against the package in packageDir
 func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdateOpts) error {
 	// TODO: Printer should be a logr
-	pr := kptlib.NewPrinter(os.Stdout, os.Stderr)
-	ctx = kptlib.WithPrinterContext(ctx, pr)
+	pr := printer.New(os.Stdout, os.Stderr)
+	ctx = printer.WithContext(ctx, pr)
 
 	// This code is based on the kpt pkg update code.
 
@@ -48,7 +52,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 	}
 	defer f.Close()
 
-	kf, err := kptlib.ParseKptFile(f)
+	kf, err := internalpkg.DecodeKptfile(f)
 	if err != nil {
 		return fmt.Errorf("error parsing kptfile: %w", err)
 	}
@@ -68,41 +72,40 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		return err // errors.E(op, u.Pkg.UniquePath, err)
 	}
 
-	var updated *kptlib.FetchResults
 	// var updatedDigest string
-	// var updatedDir string
+	var updatedRepoSpec git.RepoSpec
+	var updatedDir string
 	var originDir string
 	switch kf.Upstream.Type {
 	case kptfilev1.GitOrigin:
 		g := kf.Upstream.Git
-		upstream := &kptlib.GitRepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
+		upstream := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 		klog.Infof("Fetching upstream from %s@%s\n", upstream.OrgRepo, upstream.Ref)
 		// pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		// if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
 		// 	return errors.E(op, p.UniquePath, err)
 		// }
-		fetched, err := kptlib.Fetch(ctx, upstream)
-		if err != nil {
-			return err //errors.E(op, p.UniquePath, err)
+		updated := *upstream
+		if err := fetch.ClonerUsingGitExec(ctx, &updated); err != nil {
+			return err
 		}
-		updated = fetched
 		defer os.RemoveAll(updated.AbsPath())
-		// updatedDir = updated.AbsPath()
+		updatedDir = updated.AbsPath()
+		updatedRepoSpec = updated
 
 		// var origin repoClone
 		if kf.UpstreamLock != nil {
 			gLock := kf.UpstreamLock.Git
-			originRepoSpec := &kptlib.GitRepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
+			originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 			klog.Infof("Fetching origin from %s@%s\n", originRepoSpec.OrgRepo, originRepoSpec.Ref)
 			// pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			// if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			// 	return errors.E(op, p.UniquePath, err)
 			// }
-			fetched, err := kptlib.Fetch(ctx, originRepoSpec)
-			if err != nil {
+			if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 				return err //errors.E(op, p.UniquePath, err)
 			}
-			originDir = fetched.AbsPath()
+			originDir = originRepoSpec.AbsPath()
 		} else {
 			dir, err := ioutil.TempDir("", "kpt-empty-")
 			if err != nil {
@@ -156,7 +159,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// relPath := s.Pop()
 		relPath := "."
 		localPath := filepath.Join(packageDir, relPath)
-		updatedPath := filepath.Join(updated.AbsPath(), relPath)
+		updatedPath := filepath.Join(updatedDir, relPath)
 		originPath := filepath.Join(originDir, relPath)
 		isRoot := false
 		if relPath == "." {
@@ -167,14 +170,15 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// 	return errors.E(op, p.UniquePath, err)
 		// }
 
-		updateOptions := kptlib.UpdateOptions{
+		updateOptions := update.UpdateOptions{
 			RelPackagePath: relPath,
 			LocalPath:      localPath,
 			UpdatedPath:    updatedPath,
 			OriginPath:     originPath,
 			IsRoot:         isRoot,
 		}
-		if err := kptlib.UpdateResourceMerge(ctx, updateOptions); err != nil {
+		updater := update.ResourceMergeUpdater{}
+		if err := updater.Update(updateOptions); err != nil {
 			return err
 		}
 
@@ -188,8 +192,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// }
 	}
 
-	updatedRepoSpec := updated.GitRepoSpec()
-	if err := kptlib.UpdateUpstreamLockFromGit(packageDir, &updatedRepoSpec); err != nil {
+	if err := kptfileutil.UpdateUpstreamLockFromGit(packageDir, &updatedRepoSpec); err != nil {
 		return err // errors.E(op, p.UniquePath, err)
 	}
 

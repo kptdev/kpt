@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/pkg/kptlib v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/kpt v0.0.0-00010101000000-000000000000
@@ -15,7 +14,6 @@ require (
 
 replace (
 	github.com/GoogleContainerTools/kpt => ../../
-	github.com/GoogleContainerTools/kpt/pkg/kptlib => ../kptlib
 	github.com/GoogleContainerTools/kpt/porch/api => ../api
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/kpt => ../kpt
