@@ -219,7 +219,7 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  dir,
 				ResultsDir:            "foo/",
-				ImagePullPolicy:       fnruntime.AlwaysPull,
+				ImagePullPolicy:       fnruntime.IfNotPresentPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -258,7 +258,7 @@ apiVersion: v1
 			path: dir,
 			expectedStruct: &runfn.RunFns{
 				Path:                  dir,
-				ImagePullPolicy:       fnruntime.AlwaysPull,
+				ImagePullPolicy:       fnruntime.IfNotPresentPull,
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -283,7 +283,7 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:                  dir,
 				AsCurrentUser:         true,
-				ImagePullPolicy:       fnruntime.AlwaysPull,
+				ImagePullPolicy:       fnruntime.IfNotPresentPull,
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),

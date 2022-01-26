@@ -15,11 +15,11 @@
 package list
 
 import (
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/print/list"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	pollevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/object"
+	"sigs.k8s.io/cli-utils/pkg/print/list"
 )
 
 // BaseListPrinter implements the Printer interface and outputs the resource

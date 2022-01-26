@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-requiresCleanCluster: true
+parallel: false
+noResourceGroup: true
 kptArgs:
   - "--dry-run"
-output:
-  events:
-    stdErr: |
-      Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
+stdErr: |
+  Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
 exitCode: 1

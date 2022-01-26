@@ -19,9 +19,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/cli-utils/pkg/print/common"
 )
 
 //nolint:gochecknoinits
@@ -42,14 +42,6 @@ package or automatically deleting omitted resources (pruning).
 Error: Package has multiple inventory object templates.
 
 The package should have one and only one inventory object template.
-`
-	//nolint:lll
-	timeoutErrorMsg = `
-Error: Timeout after {{printf "%.0f" .err.Timeout.Seconds}} seconds waiting for {{printf "%d" (len .err.TimedOutResources)}} out of {{printf "%d" (len .err.Identifiers)}} resources to reach condition {{ .err.Condition}}:{{ printf "\n" }}
-
-{{- range .err.TimedOutResources}}
-{{printf "%s/%s %s %s" .Identifier.GroupKind.Kind .Identifier.Name .Status .Message }}
-{{- end}}
 `
 
 	resourceGroupCRDInstallErrorMsg = `
@@ -85,15 +77,13 @@ Details:
 `
 
 	unknownTypesMsg = `
-Error: {{ printf "%d" (len .err.GroupKinds) }} resource types could not be found in the cluster or as CRDs among the applied resources.
+Error: {{ printf "%d" (len .err.GroupVersionKinds) }} resource types could not be found in the cluster or as CRDs among the applied resources.
 
 Resource types:
-{{- range .err.GroupKinds}}
+{{- range .err.GroupVersionKinds}}
 {{ printf "%s" .String }}
 {{- end}}
 `
-
-	TimeoutErrorExitCode = 3
 )
 
 // liveErrorResolver is an implementation of the ErrorResolver interface
@@ -116,16 +106,6 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 			Message: ExecuteTemplate(multipleInventoryObjErrorMsg, map[string]interface{}{
 				"err": *multipleInventoryObjError,
 			}),
-		}, true
-	}
-
-	var timeoutError *taskrunner.TimeoutError
-	if errors.As(err, &timeoutError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(timeoutErrorMsg, map[string]interface{}{
-				"err": *timeoutError,
-			}),
-			ExitCode: TimeoutErrorExitCode,
 		}, true
 	}
 
@@ -182,5 +162,14 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 			}),
 		}, true
 	}
+
+	var resultError *common.ResultError
+	if errors.As(err, &resultError) {
+		return ResolvedResult{
+			Message:  resultError.Error(),
+			ExitCode: 3,
+		}, true
+	}
+
 	return ResolvedResult{}, false
 }

@@ -59,6 +59,12 @@ PKG_PATH | -:
       as the status of resources become available.
 
   The default value is ‘events’.
+
+--show-status-events:
+  The output will include the details on the reconciliation status
+  for all resources. Default is `false`.
+
+  Does not apply for the `table` output format.
 ```
 
 <!--mdtogo-->

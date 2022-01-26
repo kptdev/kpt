@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/shlex"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -38,33 +39,62 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// NewContainerRunner returns a kio.Filter given a specification of a container function
+// NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
-func NewContainerRunner(
+func NewRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy, displayResourceCount bool) (kio.Filter, error) {
+
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
+	if f.Image != "" {
+		f.Image = AddDefaultImagePathPrefix(f.Image)
+	}
 
 	fnResult := &fnresult.Result{
-		Image: f.Image,
+		Image:    f.Image,
+		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(pkgPath),
 	}
-	cfn := &ContainerFn{
-		Path:            pkgPath,
-		Image:           f.Image,
-		ImagePullPolicy: imagePullPolicy,
-		Ctx:             ctx,
-		FnResult:        fnResult,
-	}
-	fltr := &runtimeutil.FunctionFilter{
-		Run:            cfn.Run,
-		FunctionConfig: config,
+
+	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
+	switch {
+	case f.Image != "":
+		cfn := &ContainerFn{
+			Path:            pkgPath,
+			Image:           f.Image,
+			ImagePullPolicy: imagePullPolicy,
+			Ctx:             ctx,
+			FnResult:        fnResult,
+		}
+		fltr.Run = cfn.Run
+	case f.Exec != "":
+		var execArgs []string
+		// assuming exec here
+		s, err := shlex.Split(f.Exec)
+		if err != nil {
+			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+		}
+		execPath := f.Exec
+		if len(s) > 0 {
+			execPath = s[0]
+		}
+		if len(s) > 1 {
+			execArgs = s[1:]
+		}
+		eFn := &ExecFn{
+			Path:     execPath,
+			Args:     execArgs,
+			FnResult: fnResult,
+		}
+		fltr.Run = eFn.Run
+	default:
+		return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 	}
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
 }
@@ -135,6 +165,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
 }
@@ -315,16 +346,22 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 // on kpt CLI.
 func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 	pr := printer.FromContextOrDie(ctx)
-	if len(fnErr.Stderr) > 0 {
+	printFnStderr(ctx, fnErr.Stderr)
+	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
+}
+
+// printFnStderr prints given stdErr in a user friendly format on kpt CLI.
+func printFnStderr(ctx context.Context, stdErr string) {
+	pr := printer.FromContextOrDie(ctx)
+	if len(stdErr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
-			Lines:          strings.Split(fnErr.Stderr, "\n"),
+			Lines:          strings.Split(stdErr, "\n"),
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
 		pr.Printf("%s", errLines.String())
 	}
-	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // path (location) of a KRM resources is tracked in a special key in

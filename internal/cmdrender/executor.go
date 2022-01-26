@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -37,12 +38,15 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
+
 // Executor hydrates a given pkg.
 type Executor struct {
 	PkgPath         string
 	ResultsDirPath  string
 	Output          io.Writer
 	ImagePullPolicy fnruntime.ImagePullPolicy
+	AllowExec       bool
 }
 
 // Execute runs a pipeline.
@@ -62,6 +66,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		pkgs:            map[types.UniquePath]*pkgNode{},
 		fnResults:       fnresult.NewResultList(),
 		imagePullPolicy: e.ImagePullPolicy,
+		allowExec:       e.AllowExec,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -162,6 +167,15 @@ type hydrationContext struct {
 
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// allowExec determines if function binary executable are allowed
+	// to be run during pipeline execution. Running function binaries is a
+	// privileged operation, so explicit permission is required.
+	allowExec bool
+
+	// bookkeeping to ensure docker command availability check is done once
+	// during rendering
+	dockerCheckDone bool
 }
 
 //
@@ -426,11 +440,22 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if err != nil {
 			return err
 		}
+		var validator kio.Filter
 		displayResourceCount := false
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		validator, err := fnruntime.NewContainerRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if fn.Exec != "" && !hctx.allowExec {
+			return errAllowedExecNotSpecified
+		}
+		if fn.Image != "" && !hctx.dockerCheckDone {
+			err := cmdutil.DockerCmdAvailable()
+			if err != nil {
+				return err
+			}
+			hctx.dockerCheckDone = true
+		}
+		validator, err = fnruntime.NewRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
 			return err
 		}
@@ -527,17 +552,28 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]kio.Filter, error) {
 	var runners []kio.Filter
 	for i := range fns {
+		var err error
+		var runner kio.Filter
 		fn := fns[i]
-		fn.Image = fnruntime.AddDefaultImagePathPrefix(fn.Image)
 		displayResourceCount := false
 		if len(fn.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		r, err := fnruntime.NewContainerRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if fn.Exec != "" && !hctx.allowExec {
+			return nil, errAllowedExecNotSpecified
+		}
+		if fn.Image != "" && !hctx.dockerCheckDone {
+			err := cmdutil.DockerCmdAvailable()
+			if err != nil {
+				return nil, err
+			}
+			hctx.dockerCheckDone = true
+		}
+		runner, err = fnruntime.NewRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		if err != nil {
 			return nil, err
 		}
-		runners = append(runners, r)
+		runners = append(runners, runner)
 	}
 	return runners, nil
 }
