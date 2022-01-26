@@ -19,44 +19,45 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
 func ExampleCommand() {
-	err := get.Command{Git: &kptfilev1.Git{
+	err := get.Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "v1.0",
-	}}.Run(fake.CtxWithDefaultPrinter())
+	})}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
 }
 
 func ExampleCommand_branch() {
-	err := get.Command{Git: &kptfilev1.Git{
+	err := get.Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/heads/v1.0",
-	}}.Run(fake.CtxWithDefaultPrinter())
+	})}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
 }
 
 func ExampleCommand_tag() {
-	err := get.Command{Git: &kptfilev1.Git{
+	err := get.Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "refs/tags/v1.0",
-	}}.Run(fake.CtxWithDefaultPrinter())
+	})}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
 }
 
 func ExampleCommand_commit() {
-	err := get.Command{Git: &kptfilev1.Git{
+	err := get.Command{Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 		Repo: "https://github.com/example-org/example-repo",
 		Ref:  "8186bef8e5c0621bf80fa8106bd595aae8b62884",
-	}}.Run(fake.CtxWithDefaultPrinter())
+	})}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
 	}
@@ -64,11 +65,11 @@ func ExampleCommand_commit() {
 
 func ExampleCommand_subdir() {
 	err := get.Command{
-		Git: &kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo:      "https://github.com/example-org/example-repo",
 			Ref:       "v1.0",
 			Directory: filepath.Join("path", "to", "package"),
-		},
+		}),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error
@@ -77,10 +78,10 @@ func ExampleCommand_subdir() {
 
 func ExampleCommand_destination() {
 	err := get.Command{
-		Git: &kptfilev1.Git{
+		Upstream: remote.NewGitUpstream(&kptfilev1.Git{
 			Repo: "https://github.com/example-org/example-repo",
 			Ref:  "v1.0",
-		},
+		}),
 		Destination: "destination-dir"}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		// handle error

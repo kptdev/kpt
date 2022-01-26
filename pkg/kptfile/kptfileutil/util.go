@@ -18,6 +18,7 @@ import (
 	"bytes"
 	goerrors "errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -48,6 +49,20 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
+	return nil
+}
+
+func Write(dst io.Writer, k *kptfilev1.KptFile) error {
+	const op errors.Op = "kptfileutil.WriteFile"
+	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		return err
+	}
+
+	if _, err := dst.Write(b); err != nil {
+		return errors.E(op, errors.IO, err)
+	}
+
 	return nil
 }
 
@@ -195,12 +210,8 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	return nil
 }
 
-// UpdateUpstreamLockFromGit updates the upstreamLock of the package specified
-// by path by using the values from spec. It will also populate the commit
-// field in upstreamLock using the latest commit of the git repo given
-// by spec.
-func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
-	const op errors.Op = "kptfileutil.UpdateUpstreamLockFromGit"
+func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
 	// read KptFile cloned with the package if it exists
 	kpgfile, err := pkg.ReadKptfile(path)
 	if err != nil {
@@ -208,7 +219,21 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = &kptfilev1.UpstreamLock{
+	kpgfile.UpstreamLock = upstreamLock
+
+	err = WriteFile(path, kpgfile)
+	if err != nil {
+		return errors.E(op, types.UniquePath(path), err)
+	}
+	return nil
+}
+
+// UpdateUpstreamLockFromGit updates the upstreamLock of the package specified
+// by path by using the values from spec. It will also populate the commit
+// field in upstreamLock using the latest commit of the git repo given
+// by spec.
+func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
+	return UpdateUpstreamLock(path, &kptfilev1.UpstreamLock{
 		Type: kptfilev1.GitOrigin,
 		Git: &kptfilev1.GitLock{
 			Repo:      spec.OrgRepo,
@@ -216,12 +241,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 			Ref:       spec.Ref,
 			Commit:    spec.Commit,
 		},
-	}
-	err = WriteFile(path, kpgfile)
-	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
-	}
-	return nil
+	})
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output
