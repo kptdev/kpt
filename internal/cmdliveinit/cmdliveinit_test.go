@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
@@ -64,8 +63,6 @@ metadata:
   name: inventory-obj-name
   namespace: test-namespace
 `
-
-var testTime = time.Unix(5555555, 66666666)
 
 func TestCmd_Run_NoKptfile(t *testing.T) {
 	// Set up fake test factory

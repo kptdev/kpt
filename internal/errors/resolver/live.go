@@ -64,7 +64,7 @@ Error: Inventory information has already been added to the package resourcegroup
 
 	//nolint:lll
 	invInfoInKfAlreadyExistsMsg = `
-Error: Inventory information has already been added to the packge Kptfile object. Please consider migrating to a standalone resourcegroup object using the 'kpt live migrate' command.
+Error: Inventory information has already been added to the package Kptfile object. Please consider migrating to a standalone resourcegroup object using the 'kpt live migrate' command.
 `
 
 	multipleInvInfoMsg = `

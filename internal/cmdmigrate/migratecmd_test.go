@@ -344,21 +344,21 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 	}
 }
 
-var kptFileWithInventory = `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: test1
-upstreamLock:
-  type: git
-  git:
-    repo: git@github.com:seans3/blueprint-helloworld
-    directory: /
-    ref: master
-inventory:
-    name: foo
-    namespace: test-namespace
-    inventoryID: ` + testInventoryID + "\n"
+// var kptFileWithInventory = `
+// apiVersion: kpt.dev/v1
+// kind: Kptfile
+// metadata:
+//   name: test1
+// upstreamLock:
+//   type: git
+//   git:
+//     repo: git@github.com:seans3/blueprint-helloworld
+//     directory: /
+//     ref: master
+// inventory:
+//     name: foo
+//     namespace: test-namespace
+//     inventoryID: ` + testInventoryID + "\n"
 
 const testInventoryID = "SSSSSSSSSS-RRRRR"
 
