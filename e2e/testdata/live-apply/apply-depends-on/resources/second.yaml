@@ -20,7 +20,7 @@ metadata:
   annotations:
     config.kubernetes.io/depends-on: apps/namespaces/apply-depends-on/Deployment/first-nginx
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: second-nginx

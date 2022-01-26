@@ -34,7 +34,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 	testCases := map[string]struct {
 		pkg            *pkgbuilder.RootPkg
 		namespace      string
-		expectedObjs   []object.ObjMetadata
+		expectedObjs   object.ObjMetadataSet
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
 	}{
@@ -184,7 +184,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
+			objMetas := object.UnstructuredSetToObjMetadataSet(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})
@@ -199,7 +199,7 @@ func TestLoad_StdIn(t *testing.T) {
 	testCases := map[string]struct {
 		pkg            *pkgbuilder.RootPkg
 		namespace      string
-		expectedObjs   []object.ObjMetadata
+		expectedObjs   object.ObjMetadataSet
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
 	}{
@@ -343,7 +343,7 @@ func TestLoad_StdIn(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			objMetas := object.UnstructuredsToObjMetasOrDie(objs)
+			objMetas := object.UnstructuredSetToObjMetadataSet(objs)
 			sort.Slice(objMetas, func(i, j int) bool {
 				return objMetas[i].String() < objMetas[j].String()
 			})

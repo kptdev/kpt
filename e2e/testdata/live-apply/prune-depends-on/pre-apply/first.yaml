@@ -20,7 +20,7 @@ metadata:
   annotations:
     config.k8s.io/owning-inventory: prune-depends-on
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: first-nginx

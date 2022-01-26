@@ -3352,6 +3352,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								WithUpstreamRef("foo", "/", "v1.0", "resource-merge").
 								WithUpstreamLockRef("foo", "/", "v1.0", 0).
 								WithPipeline(
+									pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
 									pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
 								),
 						).
@@ -3405,6 +3406,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1).
 						WithPipeline(
 							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+							pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
 							pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:v1"),
 						),
 				).
@@ -3457,6 +3459,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								pkgbuilder.NewKptfile().
 									WithPipeline(
 										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
+										pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3491,7 +3494,6 @@ func TestRun_remote_subpackages(t *testing.T) {
 									WithUpstreamLockRef("foo", "/", masterBranch, 0).
 									WithPipeline(
 										pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
-										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:v1"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3511,6 +3513,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 								WithUpstreamLockRef("foo", "/", masterBranch, 1).
 								WithPipeline(
+									pkgbuilder.NewFunction("gcr.io/kpt-dev/zork:v1"),
 									pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
 									pkgbuilder.NewFunction("gcr.io/kpt-dev/bar:latest"),
 								),

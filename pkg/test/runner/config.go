@@ -71,6 +71,9 @@ type TestCaseConfig struct {
 	// be the same as the CLI flag.
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
 
+	// AllowExec determines if `fn render` needs to be invoked with `--allow-exec` flag
+	AllowExec bool `json:"allowExec,omitempty" yaml:"allowExec,omitempty"`
+
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 

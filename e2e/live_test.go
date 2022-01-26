@@ -17,12 +17,12 @@
 package e2e
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	livetest "github.com/GoogleContainerTools/kpt/pkg/test/live"
+	"github.com/stretchr/testify/require"
 )
 
 func TestLiveApply(t *testing.T) {
@@ -32,18 +32,40 @@ func TestLiveApply(t *testing.T) {
 func runTests(t *testing.T, path string) {
 	testCases := scanTestCases(t, path)
 
+	livetest.RemoveKindCluster(t)
+	livetest.CreateKindCluster(t)
+
 	for p := range testCases {
+		p := p
 		c := testCases[p]
-		for format := range c.Output {
-			testName := fmt.Sprintf("%s#%s", p, format)
-			t.Run(testName, func(t *testing.T) {
-				(&livetest.Runner{
-					Config: c,
-					Path: p,
-					Format: format,
-				}).Run(t)
-			})
+
+		if !c.Parallel {
+			continue
 		}
+
+		t.Run(p, func(t *testing.T) {
+			if c.Parallel {
+				t.Parallel()
+			}
+
+			if c.NoResourceGroup {
+				require.False(t, c.Parallel, "Parallel tests can not modify the RG CRD")
+				if livetest.CheckIfResourceGroupInstalled(t) {
+					livetest.RemoveResourceGroup(t)
+				}
+			} else {
+				livetest.InstallResourceGroup(t)
+			}
+
+			ns := filepath.Base(p)
+			livetest.CreateNamespace(t, ns)
+			defer livetest.RemoveNamespace(t, ns)
+
+			(&livetest.Runner{
+				Config:    c,
+				Path:      p,
+			}).Run(t)
+		})
 	}
 }
 

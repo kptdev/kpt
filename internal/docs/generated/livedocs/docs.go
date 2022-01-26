@@ -75,25 +75,31 @@ Flags:
   
   --prune-timeout:
     The threshold for how long to wait for all pruned resources to be
-    deleted before giving up. If this flag is not set, kpt live apply will not
-    wait. In most cases, it would also make sense to set the
+    deleted before giving up. If this flag is not set, kpt live apply will wait
+    until interrupted. In most cases, it would also make sense to set the
     --prune-propagation-policy to Foreground when this flag is set.
   
   --reconcile-timeout:
     The threshold for how long to wait for all resources to reconcile before
-    giving up. If this flag is not set, kpt live apply will not wait for
-    resources to reconcile.
+    giving up. If this flag is not set, kpt live apply will wait until
+    interrupted.
   
   --server-side:
     Perform the apply operation server-side rather than client-side.
     Default value is false (client-side).
+  
+  --show-status-events:
+    The output will include the details on the reconciliation status
+    for all resources. Default is ` + "`" + `false` + "`" + `.
+  
+    Does not apply for the ` + "`" + `table` + "`" + ` output format.
 `
 var ApplyExamples = `
   # apply resources in the current directory
   $ kpt live apply
 
-  # apply resources in the my-dir directory and wait for all the resources to be
-  # reconciled before pruning
+  # apply resources in the my-dir directory and wait up until 15 minutes 
+  # for all the resources to be reconciled before pruning
   $ kpt live apply --reconcile-timeout=15m my-dir
 
   # apply resources and specify how often to poll the cluster for resource status
@@ -140,6 +146,12 @@ Flags:
         as the status of resources become available.
   
     The default value is ‘events’.
+  
+  --show-status-events:
+    The output will include the details on the reconciliation status
+    for all resources. Default is ` + "`" + `false` + "`" + `.
+  
+    Does not apply for the ` + "`" + `table` + "`" + ` output format.
 `
 var DestroyExamples = `
   # remove all resources in the current package from the cluster.
