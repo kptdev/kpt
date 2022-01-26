@@ -3,8 +3,10 @@ module github.com/GoogleContainerTools/kpt
 go 1.16
 
 require (
+	github.com/Masterminds/semver v1.5.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.0
 	github.com/go-errors/errors v1.4.0
+	github.com/google/go-containerregistry v0.6.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/otiai10/copy v1.6.0

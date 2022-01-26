@@ -1,22 +1,22 @@
 ---
-title: "`get`"
-linkTitle: "get"
+title: "`push`"
+linkTitle: "push"
 type: docs
 description: >
-  Fetch a package from a git repo.
+  TODO(oci-support) rewrite: Fetch a package from a git repo.
 ---
 
 <!--mdtogo:Short
-    Fetch a package from a git repo.
+    TODO(oci-support) rewrite: Fetch a package from a git repo.
 -->
 
-`get` fetches a remote package from a git subdirectory and writes it to a new
+TODO(oci-support) rewrite: `get` fetches a remote package from a git subdirectory and writes it to a new
 local directory.
 
 ### Synopsis
 
 <!--mdtogo:Long-->
-
+TODO(oci-support) rewrite: 
 ```
 kpt pkg get {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY] [flags]
 ```
@@ -97,7 +97,7 @@ cd $TEST_HOME
 
 <!--mdtogo:Examples-->
 
-<!-- @pkgGet @verifyExamples-->
+<!-- @pkgPush @verifyExamples-->
 
 ```shell
 # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
@@ -105,7 +105,7 @@ cd $TEST_HOME
 $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master
 ```
 
-<!-- @pkgGet @verifyExamples-->
+<!-- @pkgPush @verifyExamples-->
 
 ```shell
 # Fetch package cockroachdb from github.com/kubernetes/examples/staging/cockroachdb
@@ -114,7 +114,7 @@ $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@mas
 $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@master ./my-package/
 ```
 
-<!-- @pkgGet @verifyExamples-->
+<!-- @pkgPush @verifyExamples-->
 
 ```shell
 # Fetch package examples from github.com/kubernetes/examples at the specified
