@@ -704,14 +704,14 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
 		// TODO(rquitales): Handle real reading errors vs file does not exist.
-		rg, _ := readRGFile(p.UniquePath.String(), filename)
+		rg, _ := ReadRGFile(p.UniquePath.String(), filename)
 		p.rgFile = rg
 	}
 	return p.rgFile, nil
 }
 
-// TODO(rquitales): Create new error types for resourcegroup.
-func readRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+// ReadRGFile reads the KptFile in the given pkg.
+func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	f, err := os.Open(filepath.Join(path, filename))
 	if err != nil {
 		return nil, &KptfileError{

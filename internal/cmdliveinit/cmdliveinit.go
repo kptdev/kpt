@@ -8,9 +8,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -19,6 +17,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/resourcegroup/resourcegrouputil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -201,9 +200,11 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	}
 	// Validate the inventory values don't exist in Kptfile.
 	isEmpty := kptfileInventoryEmpty(kf.Inventory)
-	if !isEmpty {
+	if !isEmpty && !force {
 		return errors.E(op, p.UniquePath, &InvInKfExistsError{})
 	}
+	// Set the Kptfile inventory to be nil since we force write to resourcegroup instead.
+	kf.Inventory = nil
 
 	// Validate the inventory values don't already exist in Resourcegroup.
 	if rg != nil && !force {
@@ -220,20 +221,15 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	if err := resourcegrouputil.WriteFile(p.UniquePath.String(), rg, filename); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-	return nil
-}
 
-// generateID returns the string which is a SHA1 hash of the passed namespace
-// and name, with the unix timestamp string concatenated. Returns an error
-// if either the namespace or name are empty.
-func generateID(namespace string, name string, t time.Time) (string, error) {
-	const op errors.Op = "cmdliveinit.generateID"
-	hashStr, err := generateHash(namespace, name)
-	if err != nil {
-		return "", errors.E(op, err)
+	// Rewrite Kptfile if inventory exists
+	if !isEmpty {
+		if err := kptfileutil.WriteFile(p.UniquePath.String(), kf); err != nil {
+			return errors.E(op, p.UniquePath, err)
+		}
 	}
-	timeStr := strconv.FormatInt(t.UTC().UnixNano(), 10)
-	return fmt.Sprintf("%s-%s", hashStr, timeStr), nil
+
+	return nil
 }
 
 // generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
