@@ -700,38 +700,38 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 	return rn.PipeE(yaml.ClearAnnotation(pkgPathAnnotation))
 }
 
-// RGFile returns the resourcegroup object by lazy loading it from the filesytem.
-func (p *Pkg) RGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+// ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
+func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
 		// TODO(rquitales): Handle real reading errors vs file does not exist.
-		rg, _ := ReadRGFile(p.UniquePath.String(), filename)
+		rg, _ := readRGFile(p.UniquePath.String(), filename)
 		p.rgFile = rg
 	}
 	return p.rgFile, nil
 }
 
 // TODO(rquitales): Create new error types for resourcegroup.
-func ReadRGFile(p, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
-	f, err := os.Open(filepath.Join(p, filename))
+func readRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+	f, err := os.Open(filepath.Join(path, filename))
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: types.UniquePath(path),
 			Err:  err,
 		}
 	}
 	defer f.Close()
 
-	rg, err := DecodeRGFile(f)
+	rg, err := decodeRGFile(f)
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: types.UniquePath(path),
 			Err:  err,
 		}
 	}
 	return rg, nil
 }
 
-func DecodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
+func decodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
 	rg := &rgfilev1alpha1.ResourceGroup{}
 	c, err := io.ReadAll(in)
 	if err != nil {

@@ -18,6 +18,7 @@
 package v1alpha1
 
 import (
+	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -28,7 +29,7 @@ const (
 	RGFileVersion    = "v1alpha1"
 	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
 	// RGInventoryIDLabel is the label name used for storing an inventory ID.
-	RGInventoryIDLabel = "cli-utils.sigs.k8s.io/inventory-id"
+	RGInventoryIDLabel = common.InventoryLabel
 )
 
 // DefaultMeta is the ResourceMeta for ResourceGroup instances.

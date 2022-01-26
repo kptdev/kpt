@@ -135,7 +135,7 @@ type ConfigureInventoryInfo struct {
 func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	const op errors.Op = "cmdliveinit.Run"
 	pr := printer.FromContextOrDie(ctx)
-	var name, namespace, inventoryID string
+	var name, namespace string
 
 	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
 	if err != nil {
@@ -153,12 +153,11 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	} else {
 		name = c.Name
 	}
-	inventoryID = c.InventoryID
-	// Finally, update these values in the Inventory section of the Kptfile.
+	// Finally, create a ResourceGroup containing the inventory information.
 	err = createRGFile(c.Pkg, &kptfilev1.Inventory{
 		Namespace:   namespace,
 		Name:        name,
-		InventoryID: inventoryID,
+		InventoryID: c.InventoryID,
 	}, c.RGFileName, c.Force)
 	if !c.Quiet {
 		if err == nil {
@@ -177,21 +176,33 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	return nil
 }
 
-// Run fills in the inventory object values into the resourcegroup object and writes to file storage.
+// createRGFile fills in the inventory object values into the resourcegroup object and writes to file storage.
 func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force bool) error {
 	const op errors.Op = "cmdliveinit.updateResourceGroup"
 	// Read the resourcegroup object io io.dir
-	rg, err := p.RGFile(filename)
+	rg, err := p.ReadRGFile(filename)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-	// Validate the inventory values don't already exist
+
+	// Read the Kptfile to ensure that inventory information is not in Kptfile either.
+	kf, err := p.Kptfile()
+	if err != nil {
+		return errors.E(op, p.UniquePath, err)
+	}
+	// Validate the inventory values don't exist in Kptfile.
+	isEmpty := kptfileInventoryEmpty(kf.Inventory)
+	if !isEmpty {
+		return errors.E(op, p.UniquePath, &InvExistsError{})
+	}
+
+	// Validate the inventory values don't already exist in Resourcegroup.
 	if rg != nil && !force {
 		return errors.E(op, p.UniquePath, &InvExistsError{})
 	}
 	// Initialize new resourcegroup object, as rg should have been nil.
-	rg = &rgfilev1alpha1.ResourceGroup{rgfilev1alpha1.TypeMeta}
-	// Finally, set the inventory parameters in the ResourceGroup object and write it.
+	rg = &rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
+	// // Finally, set the inventory parameters in the ResourceGroup object and write it.
 	rg.Name = inv.Name
 	rg.Namespace = inv.Namespace
 	if inv.InventoryID != "" {
