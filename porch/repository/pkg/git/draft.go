@@ -176,7 +176,10 @@ func storeBlobHashInTrees(trees map[string]*object.Tree, fullPath string, hash p
 }
 
 func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree, treePath string) (plumbing.Hash, error) {
-	tree := trees[treePath]
+	tree, ok := trees[treePath]
+	if !ok {
+		return plumbing.Hash{}, fmt.Errorf("failed to find a tree %q", treePath)
+	}
 
 	entries := tree.Entries
 	sort.Slice(entries, func(i, j int) bool {

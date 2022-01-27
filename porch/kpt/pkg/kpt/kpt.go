@@ -15,23 +15,59 @@
 package kpt
 
 import (
+	"context"
 	"fmt"
 
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt/internal"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func NewKpt() Kpt {
-	return &kpt{}
+func NewPlaceholderRenderer() fn.Renderer {
+	return &renderer{}
 }
 
-type kpt struct {
+func NewPlaceholderEvaluator() fn.Evaluator {
+	return &evaluator{}
 }
 
-func (k *kpt) Eval(input kio.Reader, function string, config kio.Reader, output kio.Writer) error {
+type evaluator struct {
+}
+
+var _ fn.Evaluator = &evaluator{}
+
+type renderer struct {
+}
+
+var _ fn.Renderer = &renderer{}
+
+func (k *evaluator) Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts fn.EvalOptions) error {
+	rw := &kio.LocalPackageReadWriter{
+		IncludeSubpackages: true,
+		PackagePath:        "/",
+		FileSystem: filesys.FileSystemOrOnDisk{
+			FileSystem: pkg,
+		},
+	}
+
+	var config kio.ResourceNodeSlice
+	if fn.ConfigMap != nil {
+		if cm, err := NewConfigMap(fn.ConfigMap); err != nil {
+			return err
+		} else {
+			config = kio.ResourceNodeSlice{cm}
+		}
+	}
+
+	return k.OldEval(rw, fn.Image, config, rw)
+}
+
+func (k *evaluator) OldEval(input kio.Reader, function string, config kio.Reader, output kio.Writer) error {
 	var err error
 	rl := framework.ResourceList{}
 
@@ -73,9 +109,17 @@ func (k *kpt) Eval(input kio.Reader, function string, config kio.Reader, output 
 	return nil
 }
 
-func (k *kpt) Render(input kio.Reader, output kio.Writer) error {
+func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) error {
+	rw := &kio.LocalPackageReadWriter{
+		PackagePath:        "/",
+		IncludeSubpackages: true,
+		FileSystem: filesys.FileSystemOrOnDisk{
+			FileSystem: pkg,
+		},
+	}
+
 	// Currently a noop rendering. TODO: Implement
-	nodes, err := input.Read()
+	nodes, err := rw.Read()
 	if err != nil {
 		return err
 	}
@@ -86,7 +130,7 @@ func (k *kpt) Render(input kio.Reader, output kio.Writer) error {
 		n.SetAnnotations(ann)
 	}
 
-	return output.Write(nodes)
+	return rw.Write(nodes)
 }
 
 func NewConfigMap(data map[string]string) (*yaml.RNode, error) {

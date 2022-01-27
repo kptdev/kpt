@@ -15,14 +15,18 @@
 package kpt
 
 import (
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 type Kpt interface {
+	fn.Renderer
+	fn.Evaluator
+
 	// Evaluates kpt function on the resources comprising a (set of) package(s).
 	// function is a reference to the kpt function (image URI).
-	Eval(input kio.Reader, function string, config kio.Reader, output kio.Writer) error
+	OldEval(input kio.Reader, function string, config kio.Reader, output kio.Writer) error
 
 	// TODO: accept a function evaluation strategy interface to overwrite docker-based evaluation.
-	Render(inupt kio.Reader, output kio.Writer) error
+	OldRender(inupt kio.Reader, output kio.Writer) error
 }

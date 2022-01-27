@@ -12,19 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kpt_test
+package kpt
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestSetLabels(t *testing.T) {
-	k := kpt.NewKpt()
+	k := &evaluator{}
 
 	const path = "bucket.yaml"
 	const pathAnnotation = "internal.config.kubernetes.io/package-path"
@@ -57,7 +56,7 @@ data:
 	var result []*yaml.RNode = nil
 	var output kio.WriterFunc = func(o []*yaml.RNode) error { result = o; return nil }
 
-	if err := k.Eval(pkg, "gcr.io/kpt-fn/set-labels:v0.1.5", cfg, output); err != nil {
+	if err := k.OldEval(pkg, "gcr.io/kpt-fn/set-labels:v0.1.5", cfg, output); err != nil {
 		t.Errorf("function eval failed: %v", err)
 	}
 	if got, want := len(result), 1; got != want {

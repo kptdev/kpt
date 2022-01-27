@@ -24,14 +24,14 @@ import (
 	"reflect"
 	"strings"
 
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	tempkpt "github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"k8s.io/klog/v2"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 type CaDEngine interface {
@@ -45,14 +45,16 @@ type CaDEngine interface {
 
 func NewCaDEngine(cache *cache.Cache) (CaDEngine, error) {
 	return &cadEngine{
-		cache: cache,
-		kpt:   kpt.NewKpt(),
+		cache:     cache,
+		renderer:  kpt.NewPlaceholderRenderer(),
+		evaluator: kpt.NewPlaceholderEvaluator(),
 	}, nil
 }
 
 type cadEngine struct {
-	cache *cache.Cache
-	kpt   kpt.Kpt
+	cache     *cache.Cache
+	renderer  fn.Renderer
+	evaluator fn.Evaluator
 }
 
 var _ CaDEngine = &cadEngine{}
@@ -99,7 +101,10 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 			if task.Eval == nil {
 				return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
 			}
-			mutations = append(mutations, &evalFunctionMutation{kpt: cad.kpt, task: task})
+			mutations = append(mutations, &evalFunctionMutation{
+				evaluator: cad.evaluator,
+				task:      task,
+			})
 
 		default:
 			return nil, fmt.Errorf("task of type %q not supported", task.Type)
@@ -107,7 +112,10 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Render package after creation.
-	mutations = append(mutations, &renderPackageMutation{kpt: cad.kpt})
+	mutations = append(mutations, &renderPackageMutation{
+		renderer:  cad.renderer,
+		evaluator: cad.evaluator,
+	})
 
 	baseResources := repository.PackageResources{}
 
@@ -156,7 +164,10 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		}
 	}
 
-	mutations = append(mutations, &renderPackageMutation{kpt: cad.kpt})
+	mutations = append(mutations, &renderPackageMutation{
+		renderer:  cad.renderer,
+		evaluator: cad.evaluator,
+	})
 
 	draft, err := repo.UpdatePackage(ctx, oldPackage)
 	if err != nil {
@@ -330,44 +341,33 @@ func loadResourcesFromDirectory(dir string) (repository.PackageResources, error)
 }
 
 type evalFunctionMutation struct {
-	kpt  kpt.Kpt
-	task *api.Task
+	evaluator fn.Evaluator
+	task      *api.Task
 }
 
 func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	e := m.task.Eval
 
-	image := e.Image
-	config, err := kpt.NewConfigMap(e.ConfigMap)
+	// TODO: Do this outside of Apply, Apply to take fs.
+	fs := &memfs{}
+	if err := writeResources(fs, resources); err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+
+	if err := m.evaluator.Eval(ctx, fs, v1.Function{
+		Image:     e.Image,
+		ConfigMap: e.ConfigMap,
+		Selectors: []v1.Selector{},
+	}, fn.EvalOptions{}); err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+
+	result, err := readResources(fs)
 	if err != nil {
 		return repository.PackageResources{}, nil, err
 	}
 
-	extra := map[string]string{}
-
-	r := &packageReader{
-		input: resources,
-		extra: extra,
-	}
-
-	w := &packageWriter{
-		output: repository.PackageResources{
-			Contents: map[string]string{},
-		},
-	}
-
-	if err := m.kpt.Eval(r, image, kio.ResourceNodeSlice{config}, w); err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-
-	for k, v := range extra {
-		if _, ok := w.output.Contents[k]; ok {
-			klog.Warningf("package writer created non-krm output: %q", k)
-		}
-		w.output.Contents[k] = v
-	}
-
-	return w.output, m.task, nil
+	return result, m.task, nil
 }
 
 type mutationReplaceResources struct {
