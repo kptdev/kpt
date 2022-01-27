@@ -72,7 +72,7 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, authO
 		repo = r
 	} else if !fi.IsDir() {
 		// Internal error - corrupted cache.
-		return nil, fmt.Errorf("cannot clone git repository: %q", spec.Repo)
+		return nil, fmt.Errorf("cannot clone git repository %q: %w", spec.Repo, err)
 	} else {
 		r, err := gogit.PlainOpen(dir)
 		if err != nil {
@@ -81,7 +81,7 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, authO
 
 		remotes, err := r.Remotes()
 		if err != nil {
-			return nil, fmt.Errorf("cannot list remotes in %q", spec.Repo)
+			return nil, fmt.Errorf("cannot list remotes in %q: %w", spec.Repo, err)
 		}
 
 		found := false
@@ -97,7 +97,7 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, authO
 		}
 		if !found {
 			// TODO: add remote?
-			return nil, fmt.Errorf("cannot clone git repository: %q", spec.Repo)
+			return nil, fmt.Errorf("cannot clone git repository (remote not found): %q", spec.Repo)
 		}
 		repo = r
 	}
