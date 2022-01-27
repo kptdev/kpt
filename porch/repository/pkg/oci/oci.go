@@ -119,7 +119,7 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 					revision:        tag,
 					created:         created,
 					parent:          r,
-					resourceVersion: constructResourceVersion(m.Uploaded),
+					resourceVersion: constructResourceVersion(m.Created),
 				}
 				p.uid = constructUID(p.packageName + ":" + p.revision)
 
@@ -135,6 +135,33 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 	}
 
 	return result, nil
+}
+
+func (r *ociRepository) buildPackageRevision(ctx context.Context, name ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
+	if r.content != configapi.RepositoryContentPackage {
+		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)
+	}
+
+	ctx, span := tracer.Start(ctx, "buildPackageRevision")
+	defer span.End()
+
+	p := &ociPackageRevision{
+		digestName:      name,
+		packageName:     packageName,
+		revision:        revision,
+		created:         created,
+		parent:          r,
+		resourceVersion: constructResourceVersion(created),
+	}
+	p.uid = constructUID(p.packageName + ":" + p.revision)
+
+	tasks, err := r.loadTasks(ctx, p.digestName)
+	if err != nil {
+		return nil, err
+	}
+	p.tasks = tasks
+
+	return p, nil
 }
 
 func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Function, error) {

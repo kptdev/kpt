@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/gcrane"
@@ -41,7 +42,7 @@ import (
 
 func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.PackageRevision) (repository.PackageDraft, error) {
 	base := empty.Image
-	return r.CreateDraft(
+	return r.createDraft(
 		obj.Spec.PackageName,
 		obj.Spec.Revision,
 		base,
@@ -76,7 +77,7 @@ func (r *ociRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		return nil, fmt.Errorf("error fetching image %q: %w", ref, err)
 	}
 
-	return r.CreateDraft(
+	return r.createDraft(
 		packageName,
 		revision,
 		base,
@@ -84,36 +85,33 @@ func (r *ociRepository) UpdatePackage(ctx context.Context, old repository.Packag
 	)
 }
 
-func (r *ociRepository) CreateDraft(packageName, revision string, base v1.Image, digestName ImageDigestName) (*ociPackageDraft, error) {
+func (r *ociRepository) createDraft(packageName, revision string, base v1.Image, digestName ImageDigestName) (*ociPackageDraft, error) {
 	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
 	if err != nil {
 		return nil, err
 	}
 
-	now := time.Now()
-
 	return &ociPackageDraft{
-		ociPackageRevision: ociPackageRevision{
-			digestName:      digestName,
-			packageName:     packageName,
-			revision:        revision,
-			created:         now,
-			resourceVersion: constructResourceVersion(now),
-			uid:             constructUID(packageName + ":" + revision),
-			parent:          r,
-			tasks:           []api.Task{},
-		},
-		base: base,
-		tag:  ociRepo.Tag(revision),
+		packageName: packageName,
+		parent:      r,
+		tasks:       []api.Task{},
+		base:        base,
+		tag:         ociRepo.Tag(revision),
 	}, nil
 }
 
 type ociPackageDraft struct {
-	ociPackageRevision
+	packageName string
 
-	base       v1.Image
-	tag        name.Tag
-	addenndums []mutate.Addendum
+	created time.Time
+
+	parent *ociRepository
+
+	tasks []v1alpha1.Task
+
+	base      v1.Image
+	tag       name.Tag
+	addendums []mutate.Addendum
 }
 
 var _ repository.PackageDraft = (*ociPackageDraft)(nil)
@@ -171,11 +169,11 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 		return fmt.Errorf("failed to create remote layer from digest: %w", err)
 	}
 
-	p.addenndums = append(p.addenndums, mutate.Addendum{
+	p.addendums = append(p.addendums, mutate.Addendum{
 		Layer: remoteLayer,
 		History: v1.History{
 			Author:    "kool kat",
-			Created:   v1.Time{Time: time.Now()},
+			Created:   v1.Time{Time: p.created},
 			CreatedBy: "kpt:" + string(taskJSON),
 		},
 	})
@@ -192,7 +190,7 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 
 	klog.Infof("pushing %s", ref)
 
-	img, err := mutate.Append(p.base, p.addenndums...)
+	img, err := mutate.Append(p.base, p.addendums...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to append image layers: %w", err)
 	}
@@ -209,21 +207,17 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	}
 	klog.Infof("desc %s", string(desc.Manifest))
 
-	// Update draft structure
-	p.addenndums = nil
-	p.digestName = ImageDigestName{
+	digestName := ImageDigestName{
 		Image:  ref.Name(),
 		Digest: desc.Digest.String(),
 	}
 
-	tasks, err := p.parent.loadTasks(ctx, p.digestName)
+	configFile, err := p.parent.storage.cachedConfigFile(ctx, digestName)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting config file: %w", err)
 	}
-	p.tasks = tasks
 
-	// TODO: Return pure PackageRevision
-	return p, nil
+	return p.parent.buildPackageRevision(ctx, digestName, p.packageName, p.tag.TagStr(), configFile.Created.Time)
 }
 
 func constructResourceVersion(t time.Time) string {

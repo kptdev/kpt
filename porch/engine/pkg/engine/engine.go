@@ -111,7 +111,9 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	// Render package after creation.
 	mutations = append(mutations, &renderPackageMutation{kpt: cad.kpt})
 
-	return updateDraft(ctx, draft, mutations)
+	baseResources := repository.PackageResources{}
+
+	return updateDraft(ctx, draft, baseResources, mutations)
 }
 
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
@@ -163,7 +165,15 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	return updateDraft(ctx, draft, mutations)
+	apiResources, err := oldPackage.GetResources(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get package resources: %w", err)
+	}
+	resources := repository.PackageResources{
+		Contents: apiResources.Spec.Resources,
+	}
+
+	return updateDraft(ctx, draft, resources, mutations)
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision) error {
@@ -197,20 +207,20 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		},
 	}
 
-	return updateDraft(ctx, draft, mutations)
-}
-
-func updateDraft(ctx context.Context, draft repository.PackageDraft, mutations []mutation) (repository.PackageRevision, error) {
-	apiResources, err := draft.GetResources(ctx)
+	apiResources, err := oldPackage.GetResources(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get package draft resources: %w", err)
+		return nil, fmt.Errorf("cannot get package resources: %w", err)
 	}
 	resources := repository.PackageResources{
 		Contents: apiResources.Spec.Resources,
 	}
 
+	return updateDraft(ctx, draft, resources, mutations)
+}
+
+func updateDraft(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (repository.PackageRevision, error) {
 	for _, m := range mutations {
-		applied, task, err := m.Apply(ctx, resources)
+		applied, task, err := m.Apply(ctx, baseResources)
 		if err != nil {
 			return nil, err
 		}
@@ -221,7 +231,7 @@ func updateDraft(ctx context.Context, draft repository.PackageDraft, mutations [
 		}, task); err != nil {
 			return nil, err
 		}
-		resources = applied
+		baseResources = applied
 	}
 
 	// Updates are done.
