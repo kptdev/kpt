@@ -1,5 +1,5 @@
 # Docs need to have a single approver to maintain consistency.
-/site @droot @frankfarzan @phanimarupaka @mengqiy
+/site @droot @frankfarzan @phanimarupaka @mengqiy @yuwenma @natasha41575
 # These packages are referenced in docs.
 /package-examples/nginx/ @droot @mortent @phanimarupaka @mengqiy
 /package-examples/wordpress/ @droot @mortent @phanimarupaka @mengqiy
