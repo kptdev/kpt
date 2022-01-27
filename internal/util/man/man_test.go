@@ -155,7 +155,7 @@ Java server ConfigMap
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: java\-config
+  name: java-config
 
 .fi
 .RE
