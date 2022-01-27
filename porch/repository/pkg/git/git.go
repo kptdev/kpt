@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
@@ -42,7 +43,12 @@ const (
 	refDraftPrefix = "refs/heads/drafts/"
 )
 
-func OpenRepository(name, namespace string, spec *configapi.GitRepository, authOpts repository.AuthOptions, root string) (repository.Repository, error) {
+type GitRepository interface {
+	repository.Repository
+	GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
+}
+
+func OpenRepository(name, namespace string, spec *configapi.GitRepository, authOpts repository.AuthOptions, root string) (GitRepository, error) {
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 	auth := createAuth(authOpts)
@@ -223,6 +229,52 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 
 func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
 	return fmt.Errorf("gitRepository::DeletePackageRevision not implemented")
+}
+
+func (r *gitRepository) GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	git := r.repo
+	var lock kptfilev1.GitLock
+	var hash plumbing.Hash
+	if resolved, err := git.ResolveRevision(plumbing.Revision(ref)); err != nil {
+		return nil, lock, fmt.Errorf("cannot resolve git reference: %s", ref)
+	} else {
+		hash = *resolved
+	}
+	commit, err := git.CommitObject(hash)
+	if err != nil {
+		return nil, lock, fmt.Errorf("cannot reolve git reference %s (hash: %s) to commit", ref, hash)
+	}
+	ctree, err := commit.Tree()
+	if err != nil {
+		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash %s) to tree", ref, hash)
+	}
+	te, err := ctree.FindEntry(path)
+	if err != nil {
+		return nil, lock, fmt.Errorf("cannot find package %s@%s", path, ref)
+	}
+	if te.Mode != filemode.Dir {
+		return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, ref)
+	}
+	origin, err := git.Remote("origin")
+	if err != nil {
+		return nil, lock, fmt.Errorf("cannot determine repository origin: %w", err)
+	}
+
+	lock = kptfilev1.GitLock{
+		Repo:      origin.Config().URLs[0],
+		Directory: path,
+		Ref:       ref,
+		Commit:    commit.Hash.String(),
+	}
+
+	return &gitPackageRevision{
+		parent:   r,
+		path:     path,
+		revision: ref,
+		updated:  commit.Author.When,
+		tree:     te.Hash,
+		sha:      hash,
+	}, lock, nil
 }
 
 func (r *gitRepository) discoverFinalizedPackages(main *plumbing.Reference) ([]repository.PackageRevision, error) {

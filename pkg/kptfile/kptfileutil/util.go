@@ -213,15 +213,15 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := pkg.ReadKptfile(path)
+	kptfile, err := pkg.ReadKptfile(path)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = upstreamLock
+	kptfile.UpstreamLock = upstreamLock
 
-	err = WriteFile(path, kpgfile)
+	err = WriteFile(path, kptfile)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
 	}

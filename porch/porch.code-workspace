@@ -19,7 +19,15 @@
 			"path": "controllers"
 		},
 		{
+			"path": "controllers/remoterootsync"
+		},
+		{
+			"name": "porch",
 			"path": "."
+		},
+		{
+			"name": "kpt-base",
+			"path": ".."
 		}
 	]
 }

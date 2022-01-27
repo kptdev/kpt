@@ -39,9 +39,7 @@ type CaDEngine interface {
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
-
 	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, obj repository.PackageRevision) error
-
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions) ([]repository.Function, error)
 }
 
@@ -240,40 +238,6 @@ func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configap
 	}
 
 	return fns, nil
-}
-
-type clonePackageMutation struct {
-	task *api.Task
-	name string // package target name
-}
-
-func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
-	packageURI := m.task.Clone.Upstream.Git.Repo
-	if m.task.Clone.Upstream.Git.Directory != "" {
-		if !strings.HasSuffix(packageURI, ".git") {
-			packageURI += ".git"
-		}
-		packageURI += "/" + m.task.Clone.Upstream.Git.Directory
-	}
-	packageVersion := m.task.Clone.Upstream.Git.Ref
-
-	// TODO: load directly from source repository
-	dir, err := ioutil.TempDir("", "kpt-pkg-get-*")
-	if err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-	defer os.RemoveAll(dir)
-
-	if err := tempkpt.PkgGet(ctx, packageURI, packageVersion, filepath.Join(dir, m.name), tempkpt.PkgGetOpts{}); err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-
-	loaded, err := loadResourcesFromDirectory(dir)
-	if err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-
-	return loaded, m.task, nil
 }
 
 type updatePackageMutation struct {
