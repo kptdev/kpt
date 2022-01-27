@@ -237,8 +237,12 @@ done >> ${TMP_LICENSE_FILE}
 
 cat ${TMP_LICENSE_FILE} > ${VENDOR_LICENSE_FILE}
 
+# initialize zip file to ensure existence (downstream builds depend on libs.zip)
+README="${KUBE_ROOT}/scripts/docs/create-licenses/README.md"
+zip -q "${ZIP_FILENAME}" "${README}"
+
 # Create a package of Mozilla repository source code (only go code).
-[ -n "$mozilla_repos" ] && zip -qr $ZIP_FILENAME $mozilla_repos -i '*.go'
+[ -n "$mozilla_repos" ] && zip -qur $ZIP_FILENAME $mozilla_repos -i '*.go'
 
 # Cleanup vendor directory
 rm -rf vendor
