@@ -16,6 +16,7 @@ package git
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -231,46 +232,69 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	return fmt.Errorf("gitRepository::DeletePackageRevision not implemented")
 }
 
-func (r *gitRepository) GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
+func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
 	git := r.repo
-	var lock kptfilev1.GitLock
-	var hash plumbing.Hash
-	if resolved, err := git.ResolveRevision(plumbing.Revision(ref)); err != nil {
-		return nil, lock, fmt.Errorf("cannot resolve git reference: %s", ref)
-	} else {
-		hash = *resolved
+
+	origin, err := git.Remote("origin")
+	if err != nil {
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot determine repository origin: %w", err)
 	}
+
+	lock := kptfilev1.GitLock{
+		Repo:      origin.Config().URLs[0],
+		Directory: path,
+		Ref:       version,
+	}
+	var hash plumbing.Hash
+
+	// Versions map to git tags in one of two ways:
+	//
+	// * directly (tag=version)- but then this means that all packages in the repo must be versioned together.
+	// * prefixed (tag=<packageDir/<version>) - solving the co-versioning problem.
+	//
+	// We have to check both forms when looking up a version.
+	refNames := []string{
+		path + "/" + version,
+		version,
+	}
+	for _, ref := range refNames {
+		if resolved, err := git.ResolveRevision(plumbing.Revision(ref)); err != nil {
+			if errors.Is(err, plumbing.ErrReferenceNotFound) {
+				continue
+			}
+			return nil, lock, fmt.Errorf("error resolving git reference %q: %w", ref, err)
+		} else {
+			hash = *resolved
+			break
+		}
+	}
+
+	if hash.IsZero() {
+		return nil, lock, fmt.Errorf("cannot find git reference (tried %v)", refNames)
+	}
+
 	commit, err := git.CommitObject(hash)
 	if err != nil {
-		return nil, lock, fmt.Errorf("cannot reolve git reference %s (hash: %s) to commit", ref, hash)
+		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash: %s) to commit: %w", version, hash, err)
 	}
+	lock.Commit = commit.Hash.String()
+
 	ctree, err := commit.Tree()
 	if err != nil {
-		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash %s) to tree", ref, hash)
+		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash %s) to tree: %w", version, hash, err)
 	}
 	te, err := ctree.FindEntry(path)
 	if err != nil {
-		return nil, lock, fmt.Errorf("cannot find package %s@%s", path, ref)
+		return nil, lock, fmt.Errorf("cannot find package %s@%s: %w", path, version, err)
 	}
 	if te.Mode != filemode.Dir {
-		return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, ref)
-	}
-	origin, err := git.Remote("origin")
-	if err != nil {
-		return nil, lock, fmt.Errorf("cannot determine repository origin: %w", err)
-	}
-
-	lock = kptfilev1.GitLock{
-		Repo:      origin.Config().URLs[0],
-		Directory: path,
-		Ref:       ref,
-		Commit:    commit.Hash.String(),
+		return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, version)
 	}
 
 	return &gitPackageRevision{
 		parent:   r,
 		path:     path,
-		revision: ref,
+		revision: version,
 		updated:  commit.Author.When,
 		tree:     te.Hash,
 		sha:      hash,
