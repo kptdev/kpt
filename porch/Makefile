@@ -61,7 +61,8 @@ start-kube-apiserver:
 	  --anonymous-auth=false \
 	  --client-ca-file=/pki/ca.crt
 
-MODULES = $(shell find . -path ./forks -prune -o -name 'go.mod' -print)
+MODULES = $(shell find . -path ./forks -prune -path ./.build -prune -o -name 'go.mod' -print)
+
 .PHONY: generate
 generate: $(MODULES)
 	@for f in $(^D); do (cd $$f; echo "Generating $$f"; go generate -v ./...) || exit 1; done
