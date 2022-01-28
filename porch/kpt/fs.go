@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package engine
+package kpt
 
 import (
 	"errors"
@@ -26,6 +26,8 @@ import (
 
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
+
+type MemFS = memfs
 
 type filedata struct {
 	b []byte

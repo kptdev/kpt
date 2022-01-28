@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
-	k8s.io/klog/v2 v2.10.0
 	sigs.k8s.io/kustomize/kyaml v0.13.1
 )
 
@@ -13,7 +12,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-errors/errors v1.4.0 // indirect
-	github.com/go-logr/logr v0.4.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.14 // indirect

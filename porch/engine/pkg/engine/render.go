@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -34,7 +35,7 @@ type renderPackageMutation struct {
 var _ mutation = &renderPackageMutation{}
 
 func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
-	fs := &memfs{}
+	fs := &kpt.MemFS{}
 
 	if err := writeResources(fs, resources); err != nil {
 		return repository.PackageResources{}, nil, err

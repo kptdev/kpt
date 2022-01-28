@@ -15,18 +15,23 @@
 package kpt
 
 import (
+	"context"
+
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"sigs.k8s.io/kustomize/kyaml/kio"
+	"github.com/GoogleContainerTools/kpt/porch/kpt/internal"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-type Kpt interface {
-	fn.Renderer
-	fn.Evaluator
+func NewPlaceholderEvaluator() fn.Evaluator {
+	return &evaluator{}
+}
 
-	// Evaluates kpt function on the resources comprising a (set of) package(s).
-	// function is a reference to the kpt function (image URI).
-	OldEval(input kio.Reader, function string, config kio.Reader, output kio.Writer) error
+type evaluator struct {
+}
 
-	// TODO: accept a function evaluation strategy interface to overwrite docker-based evaluation.
-	OldRender(inupt kio.Reader, output kio.Writer) error
+var _ fn.Evaluator = &evaluator{}
+
+func (e *evaluator) Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts fn.EvalOptions) error {
+	return internal.Eval(ctx, pkg, fn, opts)
 }

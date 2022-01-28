@@ -29,7 +29,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	tempkpt "github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 )
@@ -349,7 +349,7 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	e := m.task.Eval
 
 	// TODO: Do this outside of Apply, Apply to take fs.
-	fs := &memfs{}
+	fs := &kpt.MemFS{}
 	if err := writeResources(fs, resources); err != nil {
 		return repository.PackageResources{}, nil, err
 	}

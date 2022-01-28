@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )

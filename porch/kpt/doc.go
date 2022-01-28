@@ -12,22 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
-
-import (
-	"fmt"
-
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-)
-
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"gcr.io/kpt-fn/set-labels:v0.1.5": setLabels,
-}
-
-func Eval(function string, rl *framework.ResourceList) error {
-	if fn, ok := functions[function]; ok {
-		return fn(rl)
-	} else {
-		return fmt.Errorf("unsupported kpt function %q", function)
-	}
-}
+// A placeholder kpt library implementing simple packge manipulation primitives.
+// TODO: Rename this package
+package kpt
