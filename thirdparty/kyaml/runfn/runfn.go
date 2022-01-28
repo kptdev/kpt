@@ -240,7 +240,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 			return writeErr
 		}
 	}
-	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults)
+	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults, nil)
 	if err != nil {
 		// function fails
 		if resultErr == nil {

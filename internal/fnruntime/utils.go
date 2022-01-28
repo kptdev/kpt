@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -32,7 +33,7 @@ import (
 const ResourceIDAnnotation = "internal.config.k8s.io/kpt-resource-id"
 
 // SaveResults saves results gathered from running the pipeline at specified dir.
-func SaveResults(resultsDir string, fnResults *fnresult.ResultList) (string, error) {
+func SaveResults(resultsDir string, fnResults *fnresult.ResultList, fsys filesys.FileSystem) (string, error) {
 	if resultsDir == "" {
 		return "", nil
 	}
@@ -46,7 +47,11 @@ func SaveResults(resultsDir string, fnResults *fnresult.ResultList) (string, err
 		return "", err
 	}
 
-	err = ioutil.WriteFile(filePath, out.Bytes(), 0744)
+	if fsys == nil {
+		err = ioutil.WriteFile(filePath, out.Bytes(), 0744)
+	} else {
+		err = fsys.WriteFile(filePath, out.Bytes())
+	}
 	if err != nil {
 		return "", err
 	}

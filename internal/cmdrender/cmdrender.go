@@ -108,7 +108,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		// capture the content to be written
 		output = &outContent
 	}
-	executor := Executor{
+	executor := Renderer{
 		PkgPath:         r.pkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
