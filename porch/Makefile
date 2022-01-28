@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
+BUILDDIR=$(CURDIR)/.build
+CACHEDIR=$(CURDIR)/.cache
+MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
+
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver run-local
 
@@ -30,13 +35,13 @@ stop:
 .PHONY: start-etcd
 start-etcd:
 	docker buildx build -t etcd --output=type=docker hack/local/etcd
-	mkdir -p .build/data/etcd
+	mkdir -p $(BUILDDIR)/data/etcd
 	docker stop etcd || true
 	docker rm etcd || true
 	docker run --detach --user `id -u`:`id -g` \
 	  --network=porch \
 	  --ip 192.168.8.200 \
-	  --name etcd -v `pwd`/.build/data/etcd:/data \
+	  --name etcd -v $(BUILDDIR)/data/etcd:/data \
 	  etcd --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://127.0.0.1:2379
 
 .PHONY: start-kube-apiserver
@@ -48,7 +53,7 @@ start-kube-apiserver:
 	docker run --detach --user `id -u`:`id -g` \
 	  --network=porch \
 	  --ip 192.168.8.201 \
-	  --name kube-apiserver -v `pwd`/.build/pki:/pki \
+	  --name kube-apiserver -v $(BUILDDIR)/pki:/pki \
 	  --add-host host.docker.internal:host-gateway \
 	  kube-apiserver \
 	  --etcd-servers http://etcd:2379 \
@@ -60,8 +65,6 @@ start-kube-apiserver:
 	  --authorization-mode=RBAC \
 	  --anonymous-auth=false \
 	  --client-ca-file=/pki/ca.crt
-
-MODULES = $(shell find . -path ./forks -prune -path ./.build -prune -o -name 'go.mod' -print)
 
 .PHONY: generate
 generate: $(MODULES)
@@ -84,15 +87,6 @@ vet: $(MODULES)
 fmt: $(MODULES)
 	@for f in $(^D); do (cd $$f; echo "Formatting $$f"; gofmt -s -w .); done
 
-KUBECONFIG=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))hack/local/kubeconfig
-
-.PHONY: init deinit
-init:
-	@ [[ -z $$(find "./config/$${USER}" -type f -name '*.yaml') ]] || KUBECONFIG="$(KUBECONFIG)" kubectl apply -f "./config/$${USER}"
-
-deinit:
-	@ [[ -z $$(find "./config/$${USER}" -type f -name '*.yaml') ]] || KUBECONFIG="$(KUBECONFIG)" kubectl delete -f "./config/$${USER}"
-
 .PHONY: run-local
 run-local:
 	KUBECONFIG=$(KUBECONFIG) kubectl apply -f hack/local/localconfig.yaml
@@ -100,8 +94,8 @@ run-local:
 	cd apiserver; go run ./cmd/porch \
 	--secure-port 9443 \
 	--standalone-debug-mode \
-	--kubeconfig=$(KUBECONFIG) \
-	--cache-directory="$(dir $(abspath $(lastword $(MAKEFILE_LIST)))).cache"
+	--kubeconfig="$(KUBECONFIG)" \
+	--cache-directory="$(CACHEDIR)"
 
 .PHONY: run-jaeger
 run-jaeger:
