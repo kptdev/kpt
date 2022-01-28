@@ -33,7 +33,6 @@ replace (
 	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
-	github.com/GoogleContainerTools/kpt/porch/kpt => ../kpt
 	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
 )
 
