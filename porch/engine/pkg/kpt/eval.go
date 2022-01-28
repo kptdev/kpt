@@ -19,7 +19,7 @@ import (
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"github.com/GoogleContainerTools/kpt/porch/kpt/internal"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

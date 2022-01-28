@@ -25,7 +25,7 @@ import (
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 )

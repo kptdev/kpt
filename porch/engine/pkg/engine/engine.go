@@ -28,8 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
-	tempkpt "github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
-	"github.com/GoogleContainerTools/kpt/porch/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 )
@@ -284,7 +283,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	packageName = strings.TrimPrefix(packageName, ".git")
 
 	packageDir := filepath.Join(dir, packageName)
-	if err := tempkpt.PkgUpdate(ctx, ref, packageDir, tempkpt.PkgUpdateOpts{}); err != nil {
+	if err := kpt.PkgUpdate(ctx, ref, packageDir, kpt.PkgUpdateOpts{}); err != nil {
 		return repository.PackageResources{}, nil, err
 	}
 
