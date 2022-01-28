@@ -65,7 +65,9 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources
 func writeResources(fs filesys.FileSystem, resources repository.PackageResources) error {
 	for k, v := range resources.Contents {
-		fs.MkdirAll(path.Dir(k))
+		if err := fs.MkdirAll(path.Dir(k)); err != nil {
+			return err
+		}
 		if err := fs.WriteFile(k, []byte(v)); err != nil {
 			return err
 		}
