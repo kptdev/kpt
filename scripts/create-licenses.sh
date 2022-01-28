@@ -168,7 +168,7 @@ V2_LICENSE_DIR="vendor/github.com/cpuguy83/go-md2man"
 mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
 
 # Loop through every vendored package
-mozilla_repos=""
+mozilla_repos=()
 for PACKAGE in $(go list -mod=mod -m -json all | jq -r .Path | sort -f); do
   if [[ -e "staging/src/${PACKAGE}" ]]; then
     # echo "$PACKAGE is a staging package, skipping" > /dev/stderr
@@ -224,7 +224,7 @@ __EOF__
   license=$(cat "${file}")
   if [[ "$license" == *"Mozilla"* ]]
   then
-    mozilla_repos+=" ${DEPS_DIR}/${PACKAGE}"
+    mozilla_repos+=("${DEPS_DIR}/${PACKAGE}")
   fi
 
   cat ${file}
@@ -237,8 +237,12 @@ done >> ${TMP_LICENSE_FILE}
 
 cat ${TMP_LICENSE_FILE} > ${VENDOR_LICENSE_FILE}
 
+# initialize zip file to ensure existence (downstream builds depend on libs.zip)
+README="${KUBE_ROOT}/scripts/docs/create-licenses/README.md"
+zip -q "${ZIP_FILENAME}" "${README}"
+
 # Create a package of Mozilla repository source code (only go code).
-[ -n "$mozilla_repos" ] && zip -qr $ZIP_FILENAME $mozilla_repos -i '*.go'
+[ ${#mozilla_repos[@]} != 0 ] && zip -qur "${ZIP_FILENAME}" "${mozilla_repos[@]}" -i '*.go'
 
 # Cleanup vendor directory
 rm -rf vendor
