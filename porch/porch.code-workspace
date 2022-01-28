@@ -10,9 +10,6 @@
 			"path": "repository"
 		},
 		{
-			"path": "kpt"
-		},
-		{
 			"path": "apiserver"
 		},
 		{
@@ -26,7 +23,7 @@
 			"path": "."
 		},
 		{
-			"name": "kpt-base",
+			"name": "kpt",
 			"path": ".."
 		}
 	]
