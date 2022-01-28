@@ -39,8 +39,7 @@ type PackageRevision interface {
 }
 
 type PackageDraft interface {
-	PackageRevision
-	UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error
+	UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, task *v1alpha1.Task) error
 	// Finish round of updates.
 	Close(ctx context.Context) (PackageRevision, error)
 }
