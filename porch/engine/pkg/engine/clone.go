@@ -76,7 +76,7 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 
 	revision, lock, err := r.GetPackage(gitPackage.Ref, gitPackage.Directory)
 	if err != nil {
-		return repository.PackageResources{}, fmt.Errorf("cannot find packge %s@%s: %w", gitPackage.Directory, gitPackage.Ref, err)
+		return repository.PackageResources{}, fmt.Errorf("cannot find package %s@%s: %w", gitPackage.Directory, gitPackage.Ref, err)
 	}
 
 	resources, err := revision.GetResources(ctx)

@@ -161,7 +161,7 @@ kubectl api-resources
 kubectl get packagerevisions --namespace default
 ```
 
-Follow the instructions above on how to register repositories and discover packges.
+Follow the instructions above on how to register repositories and discover packages.
 
 ### Running Locally
 
