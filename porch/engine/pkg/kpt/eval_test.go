@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kpt_test
+package kpt
 
 import (
-	"strings"
+	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestSetLabels(t *testing.T) {
-	k := kpt.NewKpt()
+	k := &evaluator{}
 
 	const path = "bucket.yaml"
-	const pathAnnotation = "internal.config.kubernetes.io/package-path"
 	const pkgYaml = `# Comment
 apiVersion: storage.cnrm.cloud.google.com/v1beta1
 kind: StorageBucket
@@ -37,29 +38,35 @@ metadata:
 spec:
     storageClass: standard
 `
-	const cfgYaml = `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-    name: config
-data:
-    label-key: label-value
-`
 
-	pkg := &kio.ByteReader{
-		Reader: strings.NewReader(pkgYaml),
-		SetAnnotations: map[string]string{
-			pathAnnotation: path,
+	fs := &MemFS{}
+	fs.Mkdir("/") // TODO: Make this automatic.
+	fs.WriteFile(path, []byte(pkgYaml))
+
+	if err := k.Eval(context.Background(), fs, v1.Function{
+		Image: "gcr.io/kpt-fn/set-labels:v0.1.5",
+		ConfigMap: map[string]string{
+			"label-key": "label-value",
+		},
+	}, fn.EvalOptions{}); err != nil {
+		t.Errorf("Eval failed: %v", err)
+	}
+
+	r := kio.LocalPackageReader{
+		PackagePath: "/",
+		FileSystem: filesys.FileSystemOrOnDisk{
+			FileSystem: fs,
 		},
 	}
-	cfg := &kio.ByteReader{Reader: strings.NewReader(cfgYaml)}
 
-	var result []*yaml.RNode = nil
-	var output kio.WriterFunc = func(o []*yaml.RNode) error { result = o; return nil }
+	var result []*yaml.RNode
 
-	if err := k.Eval(pkg, "gcr.io/kpt-fn/set-labels:v0.1.5", cfg, output); err != nil {
-		t.Errorf("function eval failed: %v", err)
+	if nodes, err := r.Read(); err != nil {
+		t.Errorf("Result read failed: %v", err)
+	} else {
+		result = nodes
 	}
+
 	if got, want := len(result), 1; got != want {
 		t.Errorf("Expected single resource in the result. got %d", got)
 	}
@@ -69,13 +76,6 @@ data:
 			t.Error("label 'label-key' was not set")
 		} else if want := "label-value"; got != want {
 			t.Errorf("unexpected label-key value; got %q, want %q", got, want)
-		}
-
-		annotations := n.GetAnnotations()
-		if got, ok := annotations[pathAnnotation]; !ok {
-			t.Errorf("expected %q annotation, got none", pathAnnotation)
-		} else if want := path; got != want {
-			t.Errorf("%q annotation: got %q, want %q", pathAnnotation, got, want)
 		}
 	}
 }

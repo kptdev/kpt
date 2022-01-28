@@ -18,14 +18,15 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func TestRender(t *testing.T) {
 	render := &renderPackageMutation{
-		kpt: kpt.NewKpt(),
+		renderer:  kpt.NewPlaceholderRenderer(),
+		evaluator: kpt.NewPlaceholderEvaluator(),
 	}
 
 	const path = "bucket.yaml"

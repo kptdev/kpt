@@ -16,48 +16,82 @@ package engine
 
 import (
 	"context"
+	iofs "io/fs"
+	"path"
+	"strings"
 
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/kpt/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"k8s.io/klog/v2"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type renderPackageMutation struct {
-	kpt kpt.Kpt
+	renderer  fn.Renderer
+	evaluator fn.Evaluator
 }
 
 var _ mutation = &renderPackageMutation{}
 
 func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
-	extra := map[string]string{}
-	r := &packageReader{
-		input: resources,
-		extra: extra,
-	}
-	w := &packageWriter{
-		output: repository.PackageResources{
-			Contents: map[string]string{},
-		},
-	}
+	fs := &kpt.MemFS{}
 
-	if err := m.kpt.Render(r, w); err != nil {
+	if err := writeResources(fs, resources); err != nil {
 		return repository.PackageResources{}, nil, err
 	}
 
-	for k, v := range extra {
-		if _, ok := w.output.Contents[k]; ok {
-			klog.Warningf("package rendering overwrote non-krm content: %q", k)
-		}
-		w.output.Contents[k] = v
+	if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+		Eval: m.evaluator,
+	}); err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+
+	result, err := readResources(fs)
+	if err != nil {
+		return repository.PackageResources{}, nil, err
 	}
 
 	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
-	return w.output, &api.Task{
+	return result, &api.Task{
 		Type: "eval",
 		Eval: &api.FunctionEvalTaskSpec{
 			Image:     "render",
 			ConfigMap: map[string]string{},
 		},
+	}, nil
+}
+
+// TODO: Implement filesystem abstraction directly rather than on top of PackageResources
+func writeResources(fs filesys.FileSystem, resources repository.PackageResources) error {
+	for k, v := range resources.Contents {
+		if err := fs.MkdirAll(path.Dir(k)); err != nil {
+			return err
+		}
+		if err := fs.WriteFile(k, []byte(v)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func readResources(fs filesys.FileSystem) (repository.PackageResources, error) {
+	contents := map[string]string{}
+
+	if err := fs.Walk("", func(path string, info iofs.FileInfo, err error) error {
+		if info.Mode().IsRegular() {
+			data, err := fs.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			contents[strings.TrimPrefix(path, "/")] = string(data)
+		}
+		return nil
+	}); err != nil {
+		return repository.PackageResources{}, err
+	}
+
+	return repository.PackageResources{
+		Contents: contents,
 	}, nil
 }

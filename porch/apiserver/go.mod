@@ -33,14 +33,12 @@ replace (
 	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
-	github.com/GoogleContainerTools/kpt/porch/kpt => ../kpt
 	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
 )
 
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
-	github.com/GoogleContainerTools/kpt/porch/kpt v0.0.0-00010101000000-000000000000 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect

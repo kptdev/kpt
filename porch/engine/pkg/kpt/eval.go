@@ -12,22 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package kpt
 
 import (
-	"fmt"
+	"context"
 
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"gcr.io/kpt-fn/set-labels:v0.1.5": setLabels,
+func NewPlaceholderEvaluator() fn.Evaluator {
+	return &evaluator{}
 }
 
-func Eval(function string, rl *framework.ResourceList) error {
-	if fn, ok := functions[function]; ok {
-		return fn(rl)
-	} else {
-		return fmt.Errorf("unsupported kpt function %q", function)
-	}
+type evaluator struct {
+}
+
+var _ fn.Evaluator = &evaluator{}
+
+func (e *evaluator) Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts fn.EvalOptions) error {
+	return internal.Eval(ctx, pkg, fn, opts)
 }
