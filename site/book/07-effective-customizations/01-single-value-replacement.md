@@ -1,6 +1,6 @@
 ## Scenario
 
-I have a single value replacement in my package, I don’t want package consumers to look through all the yaml files to find the value I want them to set, it seems easier to just create a parameter for this value and have the user look at Kptfile for inputs.
+I have a single value replacement in my package. I don’t want package consumers to look through all the yaml files to find the value I want them to set. It seems easier to just create a parameter for this value and have the user look at Kptfile for inputs.
 
 ## Problems
 
