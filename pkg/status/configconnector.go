@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -58,6 +59,9 @@ func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader eng
 	u.SetGroupVersionKind(gvk)
 	err = reader.Get(ctx, key, &u)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return newResourceStatus(id, status.NotFoundStatus, &u, "Resource not found")
+		}
 		return newUnknownResourceStatus(id, nil, err)
 	}
 
