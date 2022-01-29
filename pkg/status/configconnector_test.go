@@ -147,7 +147,7 @@ metadata:
 			// Return not found error if we want the resource to be deleted.
 			if tc.deleted {
 				fakeClusterReader.getResource = nil
-				fakeClusterReader.getErr = errors.NewNotFound(schema.GroupResource{tc.gvk.Group, tc.gvk.Kind}, "fake-name")
+				fakeClusterReader.getErr = errors.NewNotFound(schema.GroupResource{Group: tc.gvk.Group, Resource: tc.gvk.Kind}, "fake-name")
 			}
 
 			fakeMapper := fakemapper.NewFakeRESTMapper(tc.gvk)
