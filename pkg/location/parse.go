@@ -25,6 +25,7 @@ func ParseReference(location string, opts ...Option) (Reference, error) {
 				Writer: opt.stdout,
 			}, nil
 		}
+		return nil, errors.New("stdin/stdout not supported here")
 	}
 
 	if _, ok := startsWith(location, "oci://"); ok {

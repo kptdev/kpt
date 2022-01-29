@@ -1,10 +1,16 @@
 package location
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 
 	"github.com/google/go-containerregistry/pkg/name"
+)
+
+var (
+	test_reader = &bytes.Buffer{}
+	test_writer = &bytes.Buffer{}
 )
 
 func TestParseReference(t *testing.T) {
@@ -128,6 +134,48 @@ func TestParseReference(t *testing.T) {
 				Directory: "path/to/directory",
 			},
 			wantErr: false,
+		},
+		{
+			name: "InputStream",
+			args: args{
+				location: "-",
+				opts:     []Option{WithStdin(test_reader)},
+			},
+			want: InputStream{
+				Reader: test_reader,
+			},
+			wantErr: false,
+		},
+		{
+			name: "OutputStream",
+			args: args{
+				location: "-",
+				opts:     []Option{WithStdout(test_writer)},
+			},
+			want: OutputStream{
+				Writer: test_writer,
+			},
+			wantErr: false,
+		},
+		{
+			name: "DuplexStream",
+			args: args{
+				location: "-",
+				opts:     []Option{WithStdin(test_reader), WithStdout(test_writer)},
+			},
+			want: InputOutputStream{
+				Reader: test_reader,
+				Writer: test_writer,
+			},
+			wantErr: false,
+		},
+		{
+			name: "StreamLocationNotExpected",
+			args: args{
+				location: "-",
+			},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {

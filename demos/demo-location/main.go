@@ -13,6 +13,10 @@ import (
 func main() {
 	ctx := context.Background()
 
+	opts := []location.Option{
+		location.WithContext(ctx),
+	}
+
 	fmt.Println("- parsing argument to location")
 	fmt.Println()
 
@@ -21,7 +25,7 @@ func main() {
 		"oci://us-docker.pkg.dev/my-project-id/my-repo-name/my-blueprint:draft",
 		"example",
 		"sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
-		location.WithContext(ctx),
+		opts...,
 	)
 
 	example(
@@ -29,7 +33,7 @@ func main() {
 		"https://github.com/GoogleCloudPlatform/blueprints.git/catalog/gke@gke-blueprint-v0.4.0",
 		"main",
 		"2b8afca2ef0662cf5ea39c797832ac9c5ea67c7e",
-		location.WithContext(ctx),
+		opts...,
 	)
 
 	example(
@@ -37,16 +41,17 @@ func main() {
 		"path/to/dir",
 		"qa",
 		"",
-		location.WithContext(ctx),
+		opts...,
 	)
 
+	// stdin and stdout options are added on individual calls to parse, because
+	// only the caller knows if "-" in an argument means read from stdin or write to stdout
 	example(
 		"stdin example",
 		"-",
 		"",
 		"",
-		location.WithContext(ctx),
-		location.WithStdin(os.Stdin),
+		append(opts, location.WithStdin(os.Stdin))...,
 	)
 
 	example(
@@ -54,18 +59,15 @@ func main() {
 		"-",
 		"",
 		"",
-		location.WithContext(ctx),
-		location.WithStdout(os.Stdout),
+		append(opts, location.WithStdin(os.Stdin))...,
 	)
 
 	example(
-		"stdin/out example",
+		"duplex example",
 		"-",
 		"",
 		"",
-		location.WithContext(ctx),
-		location.WithStdin(os.Stdin),
-		location.WithStdout(os.Stdout),
+		append(opts, location.WithStdin(os.Stdin), location.WithStdout(os.Stdout))...,
 	)
 
 	fmt.Println("- creating locations directly")

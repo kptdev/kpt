@@ -15,7 +15,7 @@ func Identifier(ref location.Reference, identifier string) (location.Reference, 
 	case IdentifierSetter:
 		return ref.SetIdentifier(identifier)
 	}
-	return nil, fmt.Errorf("identifier not supported for reference: %v", ref)
+	return nil, fmt.Errorf("changing identifier not supported for reference: %v", ref)
 }
 
 type LockSetter interface {
