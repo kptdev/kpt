@@ -13,6 +13,7 @@ var (
 	test_writer = &bytes.Buffer{}
 )
 
+//nolint:scopelint
 func TestParseReference(t *testing.T) {
 	type args struct {
 		location string

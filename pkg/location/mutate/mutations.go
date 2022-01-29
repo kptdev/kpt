@@ -11,8 +11,7 @@ type IdentifierSetter interface {
 }
 
 func Identifier(ref location.Reference, identifier string) (location.Reference, error) {
-	switch ref := ref.(type) {
-	case IdentifierSetter:
+	if ref, ok := ref.(IdentifierSetter); ok {
 		return ref.SetIdentifier(identifier)
 	}
 	return nil, fmt.Errorf("changing identifier not supported for reference: %v", ref)
@@ -23,8 +22,7 @@ type LockSetter interface {
 }
 
 func Lock(ref location.Reference, hash string) (location.ReferenceLock, error) {
-	switch ref := ref.(type) {
-	case LockSetter:
+	if ref, ok := ref.(LockSetter); ok {
 		return ref.SetLock(hash)
 	}
 	return nil, fmt.Errorf("locked reference not support for reference: %v", ref)

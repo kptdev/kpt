@@ -9,6 +9,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
+//nolint:scopelint
 func TestSetIdentifier(t *testing.T) {
 	type args struct {
 		ref        location.Reference
@@ -82,6 +83,7 @@ func TestSetIdentifier(t *testing.T) {
 	}
 }
 
+//nolint:scopelint
 func TestSetLock(t *testing.T) {
 	type args struct {
 		ref  location.Reference

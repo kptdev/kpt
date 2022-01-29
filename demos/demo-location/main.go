@@ -158,7 +158,7 @@ type CustomLocation struct {
 type CustomLocationLock struct {
 	WhereItIs            string
 	LabelOrVersionString string
-	UniqueIdString       string
+	UniqueIDString       string
 }
 
 // compile-time check that duck types are correct
@@ -174,24 +174,24 @@ func (ref CustomLocation) String() string {
 
 // string when reference appears in console and log messages
 func (ref CustomLocationLock) String() string {
-	return fmt.Sprint(" WhereItIs:", ref.WhereItIs, " LabelOrVersionString:", ref.LabelOrVersionString, " UniqueIdString:", ref.UniqueIdString)
+	return fmt.Sprint(" WhereItIs:", ref.WhereItIs, " LabelOrVersionString:", ref.LabelOrVersionString, " UniqueIDString:", ref.UniqueIDString)
 }
 
 // return location with only the identifier changed
 // depending on location, the exact meaning may be branch/label/version/tag/etc
-func (ref CustomLocation) SetIdentifier(name string) (location.Reference, error) {
+func (ref CustomLocation) SetIdentifier(labelOrVersion string) (location.Reference, error) {
 	return CustomLocation{
 		WhereItIs:            ref.WhereItIs,
-		LabelOrVersionString: name,
+		LabelOrVersionString: labelOrVersion,
 	}, nil
 }
 
 // return the locked form of the location
 // depending on location, the exact meaning may be commit-id, image-digest, url-query parameter, exact resource name, etc.
-func (ref CustomLocation) SetLock(uniqueId string) (location.ReferenceLock, error) {
+func (ref CustomLocation) SetLock(uniqueID string) (location.ReferenceLock, error) {
 	return CustomLocationLock{
 		WhereItIs:            ref.WhereItIs,
 		LabelOrVersionString: ref.LabelOrVersionString,
-		UniqueIdString:       uniqueId,
+		UniqueIDString:       uniqueID,
 	}, nil
 }
