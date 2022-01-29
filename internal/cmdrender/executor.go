@@ -218,12 +218,7 @@ func newPkgNode(path string, p *pkg.Pkg, fs filesys.FileSystem) (pn *pkgNode, er
 		return pn, fmt.Errorf("missing package path %s or package", path)
 	}
 	if path != "" {
-		if fs == nil {
-			p, err = pkg.New(path)
-		} else {
-			// should take fs
-			p, err = pkg.NewWithFs(path, fs)
-		}
+		p, err = pkg.New(fs, path)
 		if err != nil {
 			return pn, errors.E(op, p.UniquePath, err)
 		}

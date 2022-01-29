@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
@@ -127,32 +128,7 @@ type Pkg struct {
 
 // New returns a pkg given an absolute or relative OS-defined path.
 // Use ReadKptfile or ReadPipeline on the return value to read meta resources from filesystem.
-func New(path string) (*Pkg, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	var absPath string
-	if filepath.IsAbs(path) {
-		absPath = filepath.Clean(path)
-	} else {
-		// If the provided path is relative, we find the absolute path by
-		// combining the current working directory with the path.
-		absPath = filepath.Join(cwd, path)
-	}
-	pkg := &Pkg{
-		UniquePath: types.UniquePath(absPath),
-		// by default, rootPkgParentDirPath should be the absolute path to the parent directory of package being instantiated
-		rootPkgParentDirPath: filepath.Dir(absPath),
-		// by default, DisplayPath should be the package name which is same as directory name
-		DisplayPath: types.DisplayPath(filepath.Base(absPath)),
-	}
-	return pkg, nil
-}
-
-// NewWithFs returns a pkg given an absolute or relative OS-defined path.
-// It uses the input FileSystem implementation as opposed to FileSystem on disk
-func NewWithFs(path string, fs filesys.FileSystem) (*Pkg, error) {
+func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 	var absPath string
 	if filepath.IsAbs(path) {
 		absPath = filepath.Clean(path)
@@ -319,19 +295,13 @@ func (p *Pkg) RelativePathTo(ancestorPkg *Pkg) (string, error) {
 func (p *Pkg) DirectSubpackages() ([]*Pkg, error) {
 	var subPkgs []*Pkg
 
-	var packagePaths []string
-	var err error
-	if p.fsys == nil {
-		packagePaths, err = Subpackages(p.UniquePath.String(), All, false)
-	} else {
-		packagePaths, err = SubpackagesWithFs(p.fsys, p.UniquePath.String(), All, false)
-	}
+	packagePaths, err := Subpackages(p.fsys, p.UniquePath.String(), All, false)
 	if err != nil {
 		return subPkgs, err
 	}
 
 	for _, subPkgPath := range packagePaths {
-		subPkg, err := New(filepath.Join(p.UniquePath.String(), subPkgPath))
+		subPkg, err := New(p.fsys, filepath.Join(p.UniquePath.String(), subPkgPath))
 		if err != nil {
 			return subPkgs, fmt.Errorf("failed to read package at path %q: %w", subPkgPath, err)
 		}
@@ -387,14 +357,10 @@ const (
 // Symlinks are ignored.
 // TODO: For now this accepts the path as a string type. See if we can leverage
 // the package type here.
-func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
+func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
 	const op errors.Op = "pkg.Subpackages"
 
-	_, err := os.Stat(rootPath)
-	if err != nil && !os.IsNotExist(err) {
-		return []string{}, err
-	}
-	if os.IsNotExist(err) {
+	if !fsys.Exists(rootPath) {
 		return []string{}, nil
 	}
 	packagePaths := make(map[string]bool)
@@ -417,7 +383,7 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 			}
 
 			// Check if the directory is the root of a kpt package
-			isPkg, err := IsPackageDir(path)
+			isPkg, err := IsPackageDir(fsys, path)
 			if err != nil {
 				return err
 			}
@@ -466,130 +432,10 @@ func Subpackages(rootPath string, matcher SubpackageMatcher, recursive bool) ([]
 	return paths, nil
 }
 
-// SubpackagesWithFs returns a slice of paths to any subpackages of the provided path.
-// The matcher parameter decides if all types of subpackages should be considered,
-// and the recursive parameter determines if only direct subpackages are
-// considered. All returned paths will be relative to the provided rootPath.
-// The top level package is not considered a subpackage. If the provided path
-// doesn't exist, an empty slice will be returned.
-// It operates on the input FileSystem as opposed to FileSystem on disk
-func SubpackagesWithFs(fsys filesys.FileSystem, rootPath string, matcher SubpackageMatcher, recursive bool) ([]string, error) {
-	const op errors.Op = "pkg.Subpackages"
-
-	if !fsys.Exists(rootPath) {
-		return []string{}, nil
-	}
-	packagePaths := make(map[string]bool)
-	if err := fsys.Walk(rootPath, func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("failed to read package %s: %w", rootPath, err)
-		}
-
-		// Ignore the root folder
-		if path == rootPath {
-			return nil
-		}
-
-		// For every folder, we check if it is a kpt package
-		if fi.IsDir() {
-			// Ignore anything inside the .git folder
-			// TODO: We eventually want to support user-defined ignore lists.
-			if fi.Name() == ".git" {
-				return filepath.SkipDir
-			}
-
-			// Check if the directory is the root of a kpt package
-			isPkg, err := IsPackageDirFs(fsys, path)
-			if err != nil {
-				return err
-			}
-
-			// If the path is the root of a subpackage, add the
-			// path to the slice and return SkipDir since we don't need to
-			// walk any deeper into the directory.
-			if isPkg {
-				kf, err := FSReadKptfile(fsys, path)
-				if err != nil {
-					return errors.E(op, types.UniquePath(path), err)
-				}
-				switch matcher {
-				case Local:
-					if kf.Upstream == nil {
-						packagePaths[path] = true
-					}
-				case Remote:
-					if kf.Upstream != nil {
-						packagePaths[path] = true
-					}
-				case All:
-					packagePaths[path] = true
-				default:
-
-				}
-				if !recursive {
-					return filepath.SkipDir
-				}
-				return nil
-			}
-		}
-		return nil
-	}); err != nil {
-		return []string{}, fmt.Errorf("failed to read package at %s: %w", rootPath, err)
-	}
-
-	paths := []string{}
-	for subPkgPath := range packagePaths {
-		relPath, err := filepath.Rel(rootPath, subPkgPath)
-		if err != nil {
-			return paths, fmt.Errorf("failed to find relative path for %s: %w", subPkgPath, err)
-		}
-		paths = append(paths, relPath)
-	}
-	return paths, nil
-}
-
-// IsPackageDirFs checks if the package with input path exists in the input FileSystem
-func IsPackageDirFs(fsys filesys.FileSystem, path string) (bool, error) {
-	if !fsys.Exists(filepath.Join(path, kptfilev1.KptFileName)) {
-		return false, nil
-	}
-	return true, nil
-}
-
-// FSReadKptfile reads the Kptfile from the input FileSystem
-func FSReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
-	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
-	if err != nil {
-		return nil, &KptfileError{
-			Path: types.UniquePath(p),
-			Err:  err,
-		}
-	}
-	defer f.Close()
-
-	kf, err := DecodeKptfile(f)
-	if err != nil {
-		return nil, &KptfileError{
-			Path: types.UniquePath(p),
-			Err:  err,
-		}
-	}
-	return kf, nil
-}
-
 // IsPackageDir checks if there exists a Kptfile on the provided path, i.e.
 // whether the provided path is the root of a package.
-func IsPackageDir(path string) (bool, error) {
-	_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
-
-	// If we got an error that wasn't IsNotExist, something went wrong and
-	// we don't really know if the file exists or not.
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-
-	// If the error is IsNotExist, we know the file doesn't exist.
-	if os.IsNotExist(err) {
+func IsPackageDir(fsys filesys.FileSystem, path string) (bool, error) {
+	if !fsys.Exists(filepath.Join(path, kptfilev1.KptFileName)) {
 		return false, nil
 	}
 	return true, nil
@@ -612,11 +458,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	const op errors.Op = "pkg.readResources"
 
 	var hasKptfile bool
-	if p.fsys == nil {
-		hasKptfile, err = IsPackageDir(p.UniquePath.String())
-	} else {
-		hasKptfile, err = IsPackageDirFs(p.fsys, p.UniquePath.String())
-	}
+	hasKptfile, err = IsPackageDir(p.fsys, p.UniquePath.String())
 	if err != nil {
 		return nil, errors.E(op, p.UniquePath, err)
 	}
@@ -757,7 +599,7 @@ func fnConfigFilePaths(pl *kptfilev1.Pipeline) (fnConfigPaths sets.String) {
 // are all relative to rootPath.
 func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.String, error) {
 	const op errors.Op = "pkg.FunctionConfigFilePaths"
-	ok, err := IsPackageDir(string(rootPath))
+	ok, err := IsPackageDir(filesys.FileSystemOrOnDisk{}, string(rootPath))
 	if err != nil {
 		return nil, errors.E(op, rootPath, err)
 	}
@@ -766,7 +608,7 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 		pkgPaths = []types.UniquePath{rootPath}
 	}
 	if recursive {
-		subPkgPaths, err := Subpackages(string(rootPath), All, true)
+		subPkgPaths, err := Subpackages(filesys.FileSystemOrOnDisk{}, string(rootPath), All, true)
 		if err != nil {
 			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get subpackage paths: %w", err))
 		}
@@ -778,7 +620,11 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 	fnConfigPaths := sets.String{}
 	for _, uniquePath := range pkgPaths {
 		path := string(uniquePath)
-		p, err := New(path)
+		absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
+		if err != nil {
+			return nil, err
+		}
+		p, err := New(filesys.FileSystemOrOnDisk{}, absPath)
 		if err != nil {
 			return nil, errors.E(op, rootPath, err)
 		}

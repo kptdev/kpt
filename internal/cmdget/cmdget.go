@@ -28,9 +28,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // NewRunner returns a command runner
@@ -100,7 +102,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	p, err := pkg.New(destination)
+	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(destination)
+	if err != nil {
+		return err
+	}
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(destination), err)
 	}

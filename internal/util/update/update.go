@@ -32,6 +32,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // PkgNotGitRepoError is the error type returned if the package being updated is not inside
@@ -286,7 +287,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	const op errors.Op = "update.updatePackage"
 	pr := printer.FromContextOrDie(ctx)
 
-	localExists, err := pkg.IsPackageDir(localPath)
+	localExists, err := pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -295,7 +296,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// from updated and origin might not have a Kptfile at the root.
 	updatedExists := isRootPkg
 	if !isRootPkg {
-		updatedExists, err = pkg.IsPackageDir(updatedPath)
+		updatedExists, err = pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, updatedPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
@@ -303,7 +304,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 
 	originExists := isRootPkg
 	if !isRootPkg {
-		originExists, err = pkg.IsPackageDir(originPath)
+		originExists, err = pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, originPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
