@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	test_reader = &bytes.Buffer{}
-	test_writer = &bytes.Buffer{}
+	testReader = &bytes.Buffer{}
+	testWriter = &bytes.Buffer{}
 )
 
 //nolint:scopelint
@@ -140,10 +140,10 @@ func TestParseReference(t *testing.T) {
 			name: "InputStream",
 			args: args{
 				location: "-",
-				opts:     []Option{WithStdin(test_reader)},
+				opts:     []Option{WithStdin(testReader)},
 			},
 			want: InputStream{
-				Reader: test_reader,
+				Reader: testReader,
 			},
 			wantErr: false,
 		},
@@ -151,10 +151,10 @@ func TestParseReference(t *testing.T) {
 			name: "OutputStream",
 			args: args{
 				location: "-",
-				opts:     []Option{WithStdout(test_writer)},
+				opts:     []Option{WithStdout(testWriter)},
 			},
 			want: OutputStream{
-				Writer: test_writer,
+				Writer: testWriter,
 			},
 			wantErr: false,
 		},
@@ -162,11 +162,11 @@ func TestParseReference(t *testing.T) {
 			name: "DuplexStream",
 			args: args{
 				location: "-",
-				opts:     []Option{WithStdin(test_reader), WithStdout(test_writer)},
+				opts:     []Option{WithStdin(testReader), WithStdout(testWriter)},
 			},
 			want: InputOutputStream{
-				Reader: test_reader,
-				Writer: test_writer,
+				Reader: testReader,
+				Writer: testWriter,
 			},
 			wantErr: false,
 		},
