@@ -7,6 +7,12 @@ go 1.17
 require k8s.io/apimachinery v0.23.0
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
+)
+
+require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
