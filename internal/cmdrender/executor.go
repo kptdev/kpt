@@ -41,8 +41,8 @@ import (
 
 var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
-// Renderer hydrates a given pkg by running the functions in the input pipeline
-type Renderer struct {
+// Render hydrates a given pkg by running the functions in the input pipeline
+type Render struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
 
@@ -64,7 +64,7 @@ type Renderer struct {
 }
 
 // Execute runs a pipeline.
-func (e *Renderer) Execute(ctx context.Context) error {
+func (e *Render) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
@@ -144,7 +144,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 	return e.saveFnResults(ctx, hctx.fnResults)
 }
 
-func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+func (e *Render) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
 	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults, e.FileSystem)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
