@@ -99,7 +99,7 @@ spec:
 
 	fs := &memfs{}
 	if err := fs.MkdirAll("a/b/c"); err != nil {
-		t.Errorf(`MkdirAll("a") failed %v`, err)
+		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
 	}
 	if err := fs.WriteFile("/a/b/c/resources.yaml", []byte(resources)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
@@ -107,7 +107,7 @@ spec:
 	if err := fs.WriteFile("/a/b/c/Kptfile", []byte(kptfile)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
-	r := render.Render{
+	r := render.Renderer{
 		PkgPath:         "/a/b/c",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
@@ -220,7 +220,7 @@ spec:
 
 	fs := &memfs{}
 	if err := fs.MkdirAll("app"); err != nil {
-		t.Errorf(`MkdirAll("a") failed %v`, err)
+		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
 	}
 	if err := fs.WriteFile("/app/resources.yaml", []byte(appResources)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
@@ -235,7 +235,7 @@ spec:
 		t.Errorf("Failed to write file: %v", err)
 	}*/
 
-	r := render.Render{
+	r := render.Renderer{
 		PkgPath:         "/app",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,

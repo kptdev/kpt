@@ -41,8 +41,8 @@ import (
 
 var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
-// Render hydrates a given pkg by running the functions in the input pipeline
-type Render struct {
+// Renderer hydrates a given pkg by running the functions in the input pipeline
+type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
 
@@ -64,12 +64,12 @@ type Render struct {
 }
 
 // Execute runs a pipeline.
-func (e *Render) Execute(ctx context.Context) error {
+func (e *Renderer) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
 
-	root, err := newPkgNode(e.PkgPath, nil, e.FileSystem)
+	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
 		return errors.E(op, types.UniquePath(e.PkgPath), err)
 	}
@@ -144,8 +144,8 @@ func (e *Render) Execute(ctx context.Context) error {
 	return e.saveFnResults(ctx, hctx.fnResults)
 }
 
-func (e *Render) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
-	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults, e.FileSystem)
+func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
@@ -211,14 +211,14 @@ type pkgNode struct {
 }
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
-func newPkgNode(path string, p *pkg.Pkg, fs filesys.FileSystem) (pn *pkgNode, err error) {
+func newPkgNode(fsys filesys.FileSystem, path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 	const op errors.Op = "pkg.read"
 
 	if path == "" && p == nil {
 		return pn, fmt.Errorf("missing package path %s or package", path)
 	}
 	if path != "" {
-		p, err = pkg.New(fs, path)
+		p, err = pkg.New(fsys, path)
 		if err != nil {
 			return pn, errors.E(op, p.UniquePath, err)
 		}
@@ -298,7 +298,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		var transitiveResources []*yaml.RNode
 		var subPkgNode *pkgNode
 
-		if subPkgNode, err = newPkgNode("", subpkg, hctx.fileSystem); err != nil {
+		if subPkgNode, err = newPkgNode(hctx.fileSystem, "", subpkg); err != nil {
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
 

@@ -40,7 +40,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	}
 
 	// Lookup all files referenced by all subpackages.
-	fcPaths, err := pkg.FunctionConfigFilePaths(p.UniquePath, true)
+	fcPaths, err := pkg.FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, p.UniquePath, true)
 	if err != nil {
 		return nil, err
 	}

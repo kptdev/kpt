@@ -115,7 +115,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	executor := render.Render{
+	executor := render.Renderer{
 		PkgPath:         absPkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,

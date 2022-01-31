@@ -126,7 +126,7 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(r.uniquePath, r.IncludeMetaResources)
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(filesys.FileSystemOrOnDisk{}, r.uniquePath, r.IncludeMetaResources)
 		if err != nil {
 			return nil, nil, outputPkg, err
 		}
@@ -241,7 +241,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 			return writeErr
 		}
 	}
-	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults, filesys.FileSystemOrOnDisk{})
+	resultsFile, resultErr := fnruntime.SaveResults(filesys.FileSystemOrOnDisk{}, r.ResultsDir, r.fnResults)
 	if err != nil {
 		// function fails
 		if resultErr == nil {

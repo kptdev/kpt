@@ -31,8 +31,8 @@ import (
 // kpt during round trip and should be deleted after that
 const ResourceIDAnnotation = "internal.config.k8s.io/kpt-resource-id"
 
-// SaveResults saves results gathered from running the pipeline at specified dir.
-func SaveResults(resultsDir string, fnResults *fnresult.ResultList, fsys filesys.FileSystem) (string, error) {
+// SaveResults saves results gathered from running the pipeline at specified dir in the input FileSystem.
+func SaveResults(fsys filesys.FileSystem, resultsDir string, fnResults *fnresult.ResultList) (string, error) {
 	if resultsDir == "" {
 		return "", nil
 	}

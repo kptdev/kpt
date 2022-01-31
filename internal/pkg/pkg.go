@@ -116,7 +116,7 @@ type Pkg struct {
 	// be used for display purposes and is subject to change.
 	DisplayPath types.DisplayPath
 
-	// rootPkgParentDirPath is the absolute path to the parent directory of root package
+	// rootPkgParentDirPath is the absolute path to the parent directory of root package,
 	// root package is defined as the package on which the command is invoked by user
 	// this must be same for all the nested subpackages in root package
 	rootPkgParentDirPath string
@@ -126,15 +126,13 @@ type Pkg struct {
 	kptfile *kptfilev1.KptFile
 }
 
-// New returns a pkg given an absolute or relative OS-defined path.
+// New returns a pkg given an absolute OS-defined path.
 // Use ReadKptfile or ReadPipeline on the return value to read meta resources from filesystem.
 func New(fs filesys.FileSystem, path string) (*Pkg, error) {
-	var absPath string
-	if filepath.IsAbs(path) {
-		absPath = filepath.Clean(path)
-	} else {
+	if !filepath.IsAbs(path) {
 		return nil, fmt.Errorf("need absolute path")
 	}
+	absPath := filepath.Clean(path)
 	pkg := &Pkg{
 		fsys:       fs,
 		UniquePath: types.UniquePath(absPath),
@@ -596,7 +594,7 @@ func fnConfigFilePaths(pl *kptfilev1.Pipeline) (fnConfigPaths sets.String) {
 // package pipeline. rootPath is the path to the package. recursive decides
 // will config file paths in subpackages will be returned. Returned paths
 // are all relative to rootPath.
-func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.String, error) {
+func FunctionConfigFilePaths(fsys filesys.FileSystem, rootPath types.UniquePath, recursive bool) (sets.String, error) {
 	const op errors.Op = "pkg.FunctionConfigFilePaths"
 	ok, err := IsPackageDir(filesys.FileSystemOrOnDisk{}, string(rootPath))
 	if err != nil {
@@ -607,7 +605,7 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 		pkgPaths = []types.UniquePath{rootPath}
 	}
 	if recursive {
-		subPkgPaths, err := Subpackages(filesys.FileSystemOrOnDisk{}, string(rootPath), All, true)
+		subPkgPaths, err := Subpackages(fsys, string(rootPath), All, true)
 		if err != nil {
 			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get subpackage paths: %w", err))
 		}
@@ -648,14 +646,14 @@ func FunctionConfigFilePaths(rootPath types.UniquePath, recursive bool) (sets.St
 // invoked by kio.LocalPackageReader when it reads the package. The filter will return
 // true if the file should be skipped during reading. Skipped files will not be included
 // in all steps following.
-func FunctionConfigFilterFunc(pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
+func FunctionConfigFilterFunc(fsys filesys.FileSystem, pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
 	if includeMetaResources {
 		return func(relPath string) bool {
 			return false
 		}, nil
 	}
 
-	fnConfigPaths, err := FunctionConfigFilePaths(pkgPath, true)
+	fnConfigPaths, err := FunctionConfigFilePaths(fsys, pkgPath, true)
 	if err != nil {
 		return nil, err
 	}

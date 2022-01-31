@@ -773,7 +773,7 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 			for _, v := range tc.cases {
 				v := v
 				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
-					paths, err := FunctionConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
+					paths, err := FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, types.UniquePath(pkgPath), v.recursive)
 					if !assert.NoError(t, err) {
 						t.FailNow()
 					}

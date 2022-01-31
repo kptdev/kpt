@@ -17,6 +17,7 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -98,7 +99,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(types.UniquePath(resolvedPath), r.IncludeMetaResources)
+		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(filesys.FileSystemOrOnDisk{}, types.UniquePath(resolvedPath), r.IncludeMetaResources)
 		if err != nil {
 			return err
 		}
