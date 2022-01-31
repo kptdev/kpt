@@ -249,14 +249,14 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 // NewUpstreamFromReference creates kptfilev1.Upstream structures from supported
 // location types. The kptfile upstream supports specific, well-known types.
 func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, error) {
-	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
+	const op errors.Op = "kptfileutil.NewUpstreamFromReference"
 	switch ref := ref.(type) {
 	case location.Git:
 		return &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.Git{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory),
+				Directory: toDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 			},
 		}, nil
@@ -265,7 +265,7 @@ func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, erro
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.Oci{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory),
+				Directory: toDirectory(ref.Directory, true),
 			},
 		}, nil
 	}
@@ -276,14 +276,14 @@ func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, erro
 // NewUpstreamLockFromReferenceLock creates kptfilev1.UpstreamLock structures from supported
 // location types. The kptfile upstream supports specific, well-known types.
 func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.UpstreamLock, error) {
-	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
+	const op errors.Op = "kptfileutil.NewUpstreamLockFromReferenceLock"
 	switch ref := ref.(type) {
 	case location.GitLock:
 		return &kptfilev1.UpstreamLock{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory),
+				Directory: toDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 				Commit:    ref.Commit,
 			},
@@ -293,7 +293,7 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.OciLock{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory),
+				Directory: toDirectory(ref.Directory, true),
 				Digest:    ref.Digest.Name(),
 			},
 		}, nil
@@ -304,8 +304,8 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 
 // toDirectory convert relative Reference sub-package locations to
 // the kptfilev1 absolute-within-repo conventions.
-func toDirectory(relPath string) string {
-	if absPath := filepath.Join("/", relPath); absPath != "/" {
+func toDirectory(relPath string, omitDefault bool) string {
+	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
 		return absPath
 	}
 	// root location is default in kptfilev1

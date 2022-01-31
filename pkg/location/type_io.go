@@ -11,6 +11,15 @@ type InputStream struct {
 
 var _ Reference = InputStream{}
 
+func stdinParser(value string, opt options) (Reference, error) {
+	if value == "-" {
+		return InputStream{
+			Reader: opt.stdin,
+		}, nil
+	}
+	return nil, nil
+}
+
 func (ref InputStream) String() string {
 	return fmt.Sprintf("type:io reader:%v", ref.Reader)
 }
@@ -29,6 +38,15 @@ type OutputStream struct {
 
 var _ Reference = OutputStream{}
 
+func stdoutParser(value string, opt options) (Reference, error) {
+	if value == "-" {
+		return OutputStream{
+			Writer: opt.stdout,
+		}, nil
+	}
+	return nil, nil
+}
+
 func (ref OutputStream) String() string {
 	return fmt.Sprintf("type:io writer:%v", ref.Writer)
 }
@@ -38,24 +56,5 @@ func (ref OutputStream) Type() string {
 }
 
 func (ref OutputStream) Validate() error {
-	return nil
-}
-
-type InputOutputStream struct {
-	Reader io.Reader
-	Writer io.Writer
-}
-
-var _ Reference = InputOutputStream{}
-
-func (ref InputOutputStream) String() string {
-	return fmt.Sprintf("type:io reader:%v writer:%v", ref.Reader, ref.Writer)
-}
-
-func (ref InputOutputStream) Type() string {
-	return "io"
-}
-
-func (ref InputOutputStream) Validate() error {
 	return nil
 }

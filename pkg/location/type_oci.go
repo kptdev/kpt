@@ -68,6 +68,13 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 	return Oci{}, fmt.Errorf("invalid format")
 }
 
+func parseOci(value string, opt options) (Reference, error) {
+	if _, ok := startsWith(value, "oci://"); ok {
+		return NewOci(value)
+	}
+	return nil, nil
+}
+
 func (ref Oci) String() string {
 	return fmt.Sprintf("type:oci image:%q directory:%q", ref.Image, ref.Directory)
 }

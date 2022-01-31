@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
@@ -15,6 +16,27 @@ func main() {
 
 	opts := []location.Option{
 		location.WithContext(ctx),
+		location.WithParser(func(value string) (location.Reference, error) {
+			parts := strings.SplitN(value, ":", 3)
+			if len(parts) == 3 && parts[0] == "custom" {
+				return CustomLocation{
+					WhereItIs:            parts[1],
+					LabelOrVersionString: parts[2],
+				}, nil
+			}
+			return nil, nil
+		}),
+		location.WithGit(),
+		location.WithOci(),
+		location.WithDir(),
+	}
+
+	optsStdin := []location.Option{
+		location.WithStdin(os.Stdin),
+	}
+
+	optsStdout := []location.Option{
+		location.WithStdout(os.Stdout),
 	}
 
 	fmt.Println("- parsing argument to location")
@@ -44,6 +66,14 @@ func main() {
 		opts...,
 	)
 
+	example(
+		"custom example",
+		"custom:where:which",
+		"another",
+		"98175",
+		opts...,
+	)
+
 	// stdin and stdout options are added on individual calls to parse, because
 	// only the caller knows if "-" in an argument means read from stdin or write to stdout
 	example(
@@ -51,7 +81,7 @@ func main() {
 		"-",
 		"",
 		"",
-		append(opts, location.WithStdin(os.Stdin))...,
+		append(optsStdin, opts...)...,
 	)
 
 	example(
@@ -59,15 +89,7 @@ func main() {
 		"-",
 		"",
 		"",
-		append(opts, location.WithStdin(os.Stdin))...,
-	)
-
-	example(
-		"duplex example",
-		"-",
-		"",
-		"",
-		append(opts, location.WithStdin(os.Stdin), location.WithStdout(os.Stdout))...,
+		append(optsStdout, opts...)...,
 	)
 
 	fmt.Println("- creating locations directly")
@@ -122,26 +144,32 @@ func example(caption string, arg string, identifier string, hash string, opts ..
 }
 
 func run(arg string, identifier string, hash string, opts ...location.Option) error {
+	// parse arg to a reference
 	parsed, err := location.ParseReference(arg, opts...)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("parsed: {%v}\n", parsed)
 
+	var changed location.Reference
 	if identifier != "" {
-		changed, err := mutate.Identifier(parsed, identifier)
+		// changing reference's pkg identifier field
+		changed, err = mutate.Identifier(parsed, identifier)
 		if err != nil {
 			return err
 		}
 		fmt.Printf("changed: {%v}\n", changed)
+	} else {
+		changed = parsed
+	}
 
-		if hash != "" {
-			locked, err := mutate.Lock(changed, hash)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("locked: {%v}\n", locked)
+	if hash != "" {
+		// making a locked reference with the unique value field for that reference type
+		locked, err := mutate.Lock(changed, hash)
+		if err != nil {
+			return err
 		}
+		fmt.Printf("locked: {%v}\n", locked)
 	}
 
 	return nil

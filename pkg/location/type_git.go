@@ -36,11 +36,14 @@ type GitLock struct {
 var _ ReferenceLock = GitLock{}
 
 func NewGit(location string, opts ...Option) (Git, error) {
-	opt := makeOptions(opts...)
+	return newGit(location, makeOptions(opts...))
+}
 
+func newGit(location string, opt options) (Git, error) {
 	// args[1] is "" for commands that do not require an output path
 	gitTarget, err := parse.GitParseArgs(opt.ctx, []string{location, ""})
-	if err != nil {
+	var zero parse.GitTarget
+	if err != nil || gitTarget == zero {
 		return Git{}, err
 	}
 
@@ -57,6 +60,18 @@ func NewGit(location string, opts ...Option) (Git, error) {
 		Directory: dir,
 		Ref:       gitTarget.Ref,
 	}, nil
+}
+
+func parseGit(location string, opt options) (Reference, error) {
+	git, gitErr := newGit(location, opt)
+	var zero Git
+	if gitErr == nil && git != zero {
+		return git, nil
+	}
+
+	// TODO - figure out which gitErr must be returned, and which simply mean "it's not a git path"
+
+	return nil, nil
 }
 
 func (ref Git) String() string {

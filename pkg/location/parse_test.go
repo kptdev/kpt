@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	testReader = &bytes.Buffer{}
-	testWriter = &bytes.Buffer{}
+	testReader  = &bytes.Buffer{}
+	testWriter  = &bytes.Buffer{}
+	testOptions = []Option{WithOci(), WithGit(), WithDir()}
 )
 
 //nolint:scopelint
@@ -159,29 +160,19 @@ func TestParseReference(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "DuplexStream",
-			args: args{
-				location: "-",
-				opts:     []Option{WithStdin(testReader), WithStdout(testWriter)},
-			},
-			want: InputOutputStream{
-				Reader: testReader,
-				Writer: testWriter,
-			},
-			wantErr: false,
-		},
-		{
 			name: "StreamLocationNotExpected",
 			args: args{
 				location: "-",
 			},
-			want:    nil,
-			wantErr: true,
+			want: Dir{
+				Directory: "-",
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseReference(tt.args.location, tt.args.opts...)
+			got, err := ParseReference(tt.args.location, append(tt.args.opts, testOptions...)...)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
