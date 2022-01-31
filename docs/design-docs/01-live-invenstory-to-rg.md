@@ -72,7 +72,7 @@ resoucegroup.yaml
 ```yaml
 apiVersion: kpt.dev/v1alpha1
 kind: ResourceGroup
-metadata  
+metadata:
   name: <INVENTORY_NAME>
   namespace: <INVENTORY_NAMESPACE>
   labels:
