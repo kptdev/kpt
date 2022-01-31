@@ -17,7 +17,6 @@ package fnruntime
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -47,11 +46,7 @@ func SaveResults(resultsDir string, fnResults *fnresult.ResultList, fsys filesys
 		return "", err
 	}
 
-	if fsys == nil {
-		err = ioutil.WriteFile(filePath, out.Bytes(), 0744)
-	} else {
-		err = fsys.WriteFile(filePath, out.Bytes())
-	}
+	err = fsys.WriteFile(filePath, out.Bytes())
 	if err != nil {
 		return "", err
 	}

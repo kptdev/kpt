@@ -13,6 +13,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -240,7 +241,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 			return writeErr
 		}
 	}
-	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults, nil)
+	resultsFile, resultErr := fnruntime.SaveResults(r.ResultsDir, r.fnResults, filesys.FileSystemOrOnDisk{})
 	if err != nil {
 		// function fails
 		if resultErr == nil {
