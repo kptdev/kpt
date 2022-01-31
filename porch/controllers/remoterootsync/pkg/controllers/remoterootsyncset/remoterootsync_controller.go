@@ -17,20 +17,27 @@ package remoterootsyncset
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"strings"
+	"unicode"
 
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -44,6 +51,12 @@ var (
 type RemoteRootSyncSetReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	ociStorage *oci.Storage
+
+	// localRESTConfig stores the local RESTConfig from the manager
+	// This is currently (only) used in "development" mode, for loopback configuration
+	localRESTConfig *rest.Config
 }
 
 //+kubebuilder:rbac:groups=config.cloud.google.com,resources=remoterootsyncs,verbs=get;list;watch;create;update;patch;delete
@@ -103,10 +116,23 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, subject *api.RemoteRootSyncSet, clusterRef *api.ClusterRef) error {
-	restConfig, err := remoteclient.GetRemoteClient(ctx, r.Client, clusterRef, subject.Namespace)
-	if err != nil {
-		return err
+	var restConfig *rest.Config
+
+	if os.Getenv("HACK_ENABLE_LOOPBACK") != "" {
+		if clusterRef.Name == "loopback!" {
+			restConfig = r.localRESTConfig
+			klog.Warningf("HACK: using loopback! configuration")
+		}
 	}
+
+	if restConfig == nil {
+		rc, err := remoteclient.GetRemoteClient(ctx, r.Client, clusterRef, subject.Namespace)
+		if err != nil {
+			return err
+		}
+		restConfig = rc
+	}
+
 	client, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
 		return fmt.Errorf("failed to create a new dynamic client: %w", err)
@@ -122,7 +148,7 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 
 	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
 
-	objects, err := BuildObjectsToApply(subject)
+	objects, err := r.BuildObjectsToApply(ctx, subject)
 	if err != nil {
 		return err
 	}
@@ -136,27 +162,96 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 }
 
 // BuildObjectsToApply config root sync
-func BuildObjectsToApply(subject *api.RemoteRootSyncSet) ([]*unstructured.Unstructured, error) {
+func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, subject *api.RemoteRootSyncSet) ([]*unstructured.Unstructured, error) {
+	// TODO: stop hard-coding the image source; get from a deployment instead
+	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
+	imageName := oci.ImageTagName{
+		Image: "us-west1-docker.pkg.dev/" + gcpProjectID + "/deployment/myfirstnginx",
+		Tag:   "v1",
+	}
+
+	digest, err := r.ociStorage.LookupImageTag(ctx, imageName)
+	if err != nil {
+		return nil, err
+	}
+
+	resources, err := r.ociStorage.LoadResources(ctx, digest)
+	if err != nil {
+		return nil, err
+	}
+
 	var objects []*unstructured.Unstructured
 
-	ns := &unstructured.Unstructured{}
-	ns.SetName("foo")
-	ns.SetAPIVersion("v1")
-	ns.SetKind("Namespace")
-	ns.SetAnnotations(map[string]string{
-		"created-by": subject.GetNamespace() + "-" + subject.GetName(),
-	})
+	for _, item := range resources.Items {
+		ext := path.Ext(item.Path)
+		ext = strings.ToLower(ext)
 
-	objects = append(objects, ns)
+		parse := false
+		switch ext {
+		case ".yaml", ".yml":
+			parse = true
+
+		default:
+			klog.Warningf("ignoring non-yaml file %s", item.Path)
+		}
+
+		if !parse {
+			continue
+		}
+		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
+		for _, s := range strings.Split(item.Contents, "\n---\n") {
+			if isWhitespace(s) {
+				continue
+			}
+
+			o := &unstructured.Unstructured{}
+			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
+				return nil, fmt.Errorf("error parsing yaml from %s: %w", item.Path, err)
+			}
+
+			// Hack: default namespace until we populate the namespace in our packages
+			if o.GetNamespace() == "" {
+				klog.Warningf("HACK: setting namespace to default")
+				o.SetNamespace("default")
+			}
+
+			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
+			objects = append(objects, o)
+		}
+	}
 
 	return objects, nil
 }
 
+func isWhitespace(s string) bool {
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return true
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *RemoteRootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewControllerManagedBy(mgr).
+	if err := ctrl.NewControllerManagedBy(mgr).
 		For(&api.RemoteRootSyncSet{}).
-		Complete(r)
+		Complete(r); err != nil {
+		return err
+	}
+
+	cacheDir := "./.cache"
+
+	ociStorage, err := oci.NewStorage(cacheDir)
+	if err != nil {
+		return err
+	}
+
+	r.ociStorage = ociStorage
+
+	r.localRESTConfig = mgr.GetConfig()
+
+	return nil
 }
 
 func (r *RemoteRootSyncSetReconciler) deleteExternalResources(ctx context.Context, rootsyncset *api.RemoteRootSyncSet) error {
