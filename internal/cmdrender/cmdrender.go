@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/render"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -114,7 +115,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	executor := Render{
+	executor := render.Render{
 		PkgPath:         absPkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,

@@ -150,7 +150,7 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := ReadKptfile(p.UniquePath.String())
+		kf, err := ReadKptfile(p.fsys, p.UniquePath.String())
 		if err != nil {
 			return nil, err
 		}
@@ -165,8 +165,8 @@ func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 // of Kptfile in code. One option is to follow Kubernetes approach to
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
-func ReadKptfile(p string) (*kptfilev1.KptFile, error) {
-	f, err := os.Open(filepath.Join(p, kptfilev1.KptFileName))
+func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
+	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
 	if err != nil {
 		return nil, &KptfileError{
 			Path: types.UniquePath(p),
@@ -191,7 +191,6 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	if err != nil {
 		return kf, err
 	}
-
 	if err := CheckKptfileVersion(c); err != nil {
 		return kf, err
 	}
@@ -349,7 +348,7 @@ const (
 )
 
 // Subpackages returns a slice of paths to any subpackages of the provided path.
-// The matcher parameter decides if all types of subpackages should be considered,
+// The matcher parameter decides the types of subpackages should be considered(ALL/LOCAL/REMOTE/NONE),
 // and the recursive parameter determines if only direct subpackages are
 // considered. All returned paths will be relative to the provided rootPath.
 // The top level package is not considered a subpackage. If the provided path
@@ -364,7 +363,7 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 		return []string{}, nil
 	}
 	packagePaths := make(map[string]bool)
-	if err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+	if err := fsys.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("failed to read package %s: %w", rootPath, err)
 		}
@@ -392,7 +391,7 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				kf, err := ReadKptfile(path)
+				kf, err := ReadKptfile(fsys, path)
 				if err != nil {
 					return errors.E(op, types.UniquePath(path), err)
 				}
@@ -446,7 +445,7 @@ func IsPackageDir(fsys filesys.FileSystem, path string) (bool, error) {
 // information, it will always return false.
 // If a Kptfile is not found on the provided path, an error will be returned.
 func IsPackageUnfetched(path string) (bool, error) {
-	kf, err := ReadKptfile(path)
+	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
 	if err != nil {
 		return false, err
 	}

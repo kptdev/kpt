@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // Command fetches a package from a git repository, copies it to a local
@@ -69,7 +70,7 @@ func (c Command) Run(ctx context.Context) error {
 
 	pr.Printf("Pulled digest %s\n", digest)
 
-	kf, err := pkg.ReadKptfile(c.Destination)
+	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, c.Destination)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}

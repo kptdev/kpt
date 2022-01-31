@@ -33,6 +33,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/otiai10/copy"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type gitUpstream struct {
@@ -356,7 +357,7 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 
 	// Verify that if a Kptfile exists in the package, it contains the correct
 	// version of the Kptfile.
-	_, err = pkg.ReadKptfile(pkgPath)
+	_, err = pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
 	if err != nil {
 		// A Kptfile isn't required, so it is fine if there is no Kptfile.
 		if errors.Is(err, os.ErrNotExist) {

@@ -413,7 +413,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		// Both exists, so just go ahead as normal.
 	}
 
-	pkgKf, err := pkg.ReadKptfile(localPath)
+	pkgKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}

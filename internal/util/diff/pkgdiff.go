@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -79,11 +80,11 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 }
 
 func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
-	pkg1Kf, err := pkg.ReadKptfile(filepath.Join(pkg1, filepath.Dir(filePath)))
+	pkg1Kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(pkg1, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
-	pkg2Kf, err := pkg.ReadKptfile(filepath.Join(pkg2, filepath.Dir(filePath)))
+	pkg2Kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(pkg2, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
