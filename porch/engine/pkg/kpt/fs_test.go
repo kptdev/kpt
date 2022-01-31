@@ -124,6 +124,7 @@ spec:
 	}
 }
 
+// TODO: Make this test work by uncommenting the portions
 func TestMemFSRenderSubpkgs(t *testing.T) {
 	appResources := `apiVersion: apps/v1
 kind: Deployment
