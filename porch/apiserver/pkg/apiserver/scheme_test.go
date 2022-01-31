@@ -16,7 +16,11 @@ package apiserver
 
 import (
 	"testing"
+
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/fuzzer"
+	"k8s.io/apimachinery/pkg/api/apitesting/roundtrip"
 )
 
 func TestRoundTripTypes(t *testing.T) {
+	roundtrip.RoundTripTestForScheme(t, Scheme, fuzzer.Funcs)
 }
