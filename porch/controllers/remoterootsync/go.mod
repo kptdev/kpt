@@ -15,13 +15,13 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-replace github.com/googleapis/gnostic v0.5.6 => github.com/googleapis/gnostic v0.5.5
-
 replace (
+	github.com/GoogleContainerTools/kpt => ../../../
 	github.com/GoogleContainerTools/kpt/porch => ../../
 	github.com/GoogleContainerTools/kpt/porch/api => ../../api
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../../controllers
 	github.com/GoogleContainerTools/kpt/porch/repository => ../../repository
+	github.com/googleapis/gnostic v0.5.6 => github.com/googleapis/gnostic v0.5.5
 )
 
 require (
