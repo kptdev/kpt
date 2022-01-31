@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/testutil"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
@@ -53,6 +54,7 @@ func TestReadStatus(t *testing.T) {
 		resource       string
 		gvk            schema.GroupVersionKind
 		expectedStatus status.Status
+		deleted        bool
 	}{
 		"Resource with deletionTimestap is Terminating": {
 			resource: `
@@ -117,6 +119,22 @@ status:
 			},
 			expectedStatus: status.FailedStatus,
 		},
+
+		"Resource has been deleted": {
+			resource: `
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+  name: fake-bucket
+`,
+			gvk: schema.GroupVersionKind{
+				Group:   "storage.cnrm.cloud.google.com",
+				Version: "v1beta1",
+				Kind:    "StorageBucket",
+			},
+			expectedStatus: status.NotFoundStatus,
+			deleted:        true,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -126,6 +144,12 @@ status:
 			fakeClusterReader := &fakeClusterReader{
 				getResource: obj,
 			}
+			// Return not found error if we want the resource to be deleted.
+			if tc.deleted {
+				fakeClusterReader.getResource = nil
+				fakeClusterReader.getErr = errors.NewNotFound(schema.GroupResource{Group: tc.gvk.Group, Resource: tc.gvk.Kind}, "fake-name")
+			}
+
 			fakeMapper := fakemapper.NewFakeRESTMapper(tc.gvk)
 			statusReader := &ConfigConnectorStatusReader{
 				Mapper: fakeMapper,
