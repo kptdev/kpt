@@ -38,9 +38,9 @@ jobs:
       - name: Build server
         run: make porch
         working-directory: ./porch
-      - name: Build controllers
+      - name: Run CI
         run: make ci
-        working-directory: ./porch/controllers
+        working-directory: ./porch
       - name: Test
         run: make test
         working-directory: ./porch
