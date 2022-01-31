@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
@@ -131,7 +132,7 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 // sections will also be copied into local.
 func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := pkg.ReadKptfile(localPath)
+	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -139,7 +140,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(updatedPath)
+	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(updatedPath), err)
@@ -170,7 +171,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 // sections will also be copied into local.
 func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := pkg.ReadKptfile(localPath)
+	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -178,7 +179,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(updatedPath)
+	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -186,7 +187,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	originKf, err := pkg.ReadKptfile(originPath)
+	originKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -213,7 +214,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
 	// read KptFile cloned with the package if it exists
-	kptfile, err := pkg.ReadKptfile(path)
+	kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
 	}

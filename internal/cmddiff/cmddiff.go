@@ -25,7 +25,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/diff"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // NewRunner returns a command runner.
@@ -100,7 +102,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	p, err := pkg.New(resolvedPath)
+	absResolvedPath, _, err := pathutil.ResolveAbsAndRelPaths(resolvedPath)
+	if err != nil {
+		return err
+	}
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absResolvedPath)
 	if err != nil {
 		return err
 	}

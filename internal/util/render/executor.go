@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdrender
+package render
 
 import (
 	"context"
@@ -32,6 +32,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -40,22 +41,35 @@ import (
 
 var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
-// Executor hydrates a given pkg.
-type Executor struct {
-	PkgPath         string
-	ResultsDirPath  string
-	Output          io.Writer
+// Renderer hydrates a given pkg by running the functions in the input pipeline
+type Renderer struct {
+	// PkgPath is the absolute path to the root package
+	PkgPath string
+
+	// ResultsDirPath is absolute path to the directory to write results
+	ResultsDirPath string
+
+	// Output is the writer to which the output resources are written
+	Output io.Writer
+
+	// ImagePullPolicy pull image before running the container.
+	// It must be one of fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull
 	ImagePullPolicy fnruntime.ImagePullPolicy
-	AllowExec       bool
+
+	// AllowExec allow binary executable to be run during pipeline execution
+	AllowExec bool
+
+	// FileSystem is the input filesystem to operate on
+	FileSystem filesys.FileSystem
 }
 
 // Execute runs a pipeline.
-func (e *Executor) Execute(ctx context.Context) error {
+func (e *Renderer) Execute(ctx context.Context) error {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
 
-	root, err := newPkgNode(e.PkgPath, nil)
+	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
 		return errors.E(op, types.UniquePath(e.PkgPath), err)
 	}
@@ -67,6 +81,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		fnResults:       fnresult.NewResultList(),
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
+		fileSystem:      e.FileSystem,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -100,6 +115,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 			PackageFileName:    kptfilev1.KptFileName,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
+			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
 		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
@@ -128,8 +144,8 @@ func (e *Executor) Execute(ctx context.Context) error {
 	return e.saveFnResults(ctx, hctx.fnResults)
 }
 
-func (e *Executor) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
-	resultsFile, err := fnruntime.SaveResults(e.ResultsDirPath, fnResults)
+func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
@@ -176,6 +192,8 @@ type hydrationContext struct {
 	// bookkeeping to ensure docker command availability check is done once
 	// during rendering
 	dockerCheckDone bool
+
+	fileSystem filesys.FileSystem
 }
 
 //
@@ -193,14 +211,14 @@ type pkgNode struct {
 }
 
 // newPkgNode returns a pkgNode instance given a path or pkg.
-func newPkgNode(path string, p *pkg.Pkg) (pn *pkgNode, err error) {
+func newPkgNode(fsys filesys.FileSystem, path string, p *pkg.Pkg) (pn *pkgNode, err error) {
 	const op errors.Op = "pkg.read"
 
 	if path == "" && p == nil {
 		return pn, fmt.Errorf("missing package path %s or package", path)
 	}
 	if path != "" {
-		p, err = pkg.New(path)
+		p, err = pkg.New(fsys, path)
 		if err != nil {
 			return pn, errors.E(op, p.UniquePath, err)
 		}
@@ -280,7 +298,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		var transitiveResources []*yaml.RNode
 		var subPkgNode *pkgNode
 
-		if subPkgNode, err = newPkgNode("", subpkg); err != nil {
+		if subPkgNode, err = newPkgNode(hctx.fileSystem, "", subpkg); err != nil {
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
 

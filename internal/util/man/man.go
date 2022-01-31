@@ -29,6 +29,7 @@ import (
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // Command displays local package documentation as man pages.
@@ -58,7 +59,7 @@ func (m Command) Run() error {
 	}
 
 	// lookup the path to the man page
-	k, err := pkg.ReadKptfile(m.Path)
+	k, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, m.Path)
 	if err != nil {
 		return err
 	}
