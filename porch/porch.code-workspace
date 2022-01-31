@@ -19,6 +19,9 @@
 			"path": "controllers/remoterootsync"
 		},
 		{
+			"path": "func"
+		},
+		{
 			"name": "porch",
 			"path": "."
 		},

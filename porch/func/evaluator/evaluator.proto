@@ -1,0 +1,127 @@
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package evaluator;
+
+import "struct.proto";
+
+option go_package = "github.com/GoogleContainerTools/kpt/porch/func/evaluator";
+
+// Evaluator of kpt functions
+service FunctionEvaluator {
+  // Evaluates a kpt function on the provided package
+  rpc EvaluateFunction(EvaluateFunctionRequest)
+      returns (EvaluateFunctionResponse) {}
+}
+
+message EvaluateFunctionRequest {
+  // Serialized ResourceList (https://kpt.dev/reference/schema/resource-list/)
+  bytes resource_list = 1;
+
+  // kpt image identifying the function to evaluate
+  string image = 2;
+
+  oneof config {
+    // Function config as a simple map of key, value pairs.
+    ConfigMap map = 3;
+
+    // Function config as an arbitrary KRM resource.
+    google.protobuf.Struct struct = 4;
+  }
+}
+
+// ConfigMap wraps a map<string, string> for use in oneof clause.
+message ConfigMap {
+  map<string, string> data = 1;
+}
+
+message EvaluateFunctionResponse {
+  // Serialized ResourceList (https://kpt.dev/reference/schema/resource-list/)
+  bytes resource_list = 1;
+  repeated FunctionResult results = 2;
+  bytes log = 3;
+}
+
+enum Severity {
+  Info = 0;
+  Warning = 1;
+  Error = 2;
+}
+
+message FunctionResult {
+  // Human readable message accompanying the function result
+  string message = 1;
+
+  // Severity of this result
+  Severity severity = 2;
+
+  // Reference to the resource to which the function result relates
+  ResourceIdentifier resource_ref = 3;
+
+  // Field to which the function result relates
+  Field field = 4;
+
+  // File containing the resource to which the function result relates
+  File file = 5;
+
+  // Arbitrary metadata accompanying the function result
+  map<string, string> tags = 6;
+}
+
+// ResourceIdentifier uniquely identifies a resource.
+message ResourceIdentifier {
+  TypeMeta type_meta = 1;
+  NameMeta name_meta = 2;
+}
+
+message TypeMeta {
+  // The apiVersion field of a Resource
+  string api_version = 1;
+
+  // The kind field of a Resource
+  string kind = 2;
+}
+
+message NameMeta {
+  // The metadata.name field of a Resource
+  string name = 1;
+
+  // The metadata.namespace field of a Resource
+  string namespace = 2;
+}
+
+// Field references a field in a resource
+message Field {
+  // The field path
+  string path = 1;
+
+  // The current field value
+  google.protobuf.Value current_value = 2;
+
+  // The proposed field value to fix an issue.
+  google.protobuf.Value proposed_value = 3;
+}
+
+// File references a file containing a resource
+message File {
+  // Path is relative path to the file containing the resource.
+  // This field is required.
+  string path = 1;
+
+  // Index is the index into the file containing the resource
+  // (i.e. if there are multiple resources in a single file)
+  int32 index = 2;
+}
