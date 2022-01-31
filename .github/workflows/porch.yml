@@ -41,3 +41,5 @@ jobs:
       - name: Test
         run: make test
         working-directory: ./porch
+      - name: Tidy
+        run: make tidy
