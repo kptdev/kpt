@@ -35,9 +35,12 @@ jobs:
           go-version: 1.17.6
       - name: Run Porch Unit Tests
         uses: actions/checkout@v2
-      - name: Build
+      - name: Build server
         run: make porch
         working-directory: ./porch
+      - name: Build controllers
+        run: make ci
+        working-directory: ./porch/controllers
       - name: Test
         run: make test
         working-directory: ./porch
