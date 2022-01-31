@@ -67,6 +67,11 @@ type OCISpec struct {
 
 // RootSyncSetStatus defines the observed state of RootSyncSet
 type RemoteRootSyncSetStatus struct {
+	Targets []TargetStatus `json:"targets,omitempty"`
+}
+
+type TargetStatus struct {
+	Ref ClusterRef `json:"ref,omitempty"`
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
