@@ -155,7 +155,7 @@ type Oci struct {
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
 	// Directory is the sub-package of the image.
-	Directory string `yaml:"path,omitempty" json:"path,omitempty"`
+	Directory string `yaml:"directory,omitempty" json:"directory,omitempty"`
 }
 
 // UpstreamLock is a resolved locator for the last fetch of the package.
@@ -208,7 +208,7 @@ type OciLock struct {
 	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
 	// Directory is the sub-package of the image.
-	Directory string `yaml:"path,omitempty" json:"path,omitempty"`
+	Directory string `yaml:"directory,omitempty" json:"directory,omitempty"`
 
 	// Digest is the unique sha of the image when it was last pulled.
 	Digest string `yaml:"digest,omitempty" json:"digest,omitempty"`

@@ -180,6 +180,14 @@ func (ref custom) String() string {
 	return fmt.Sprintf("place:%s label:%s", ref.Place, ref.Label)
 }
 
+func (ref custom) Type() string {
+	return "custom"
+}
+
+func (ref custom) Validate() error {
+	return nil
+}
+
 func (ref custom) SetIdentifier(identifier string) (location.Reference, error) {
 	return custom{
 		Place: ref.Place,

@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
@@ -243,6 +244,72 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 			Commit:    spec.Commit,
 		},
 	})
+}
+
+// NewUpstreamFromReference creates kptfilev1.Upstream structures from supported
+// location types. The kptfile upstream supports specific, well-known types.
+func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, error) {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
+	switch ref := ref.(type) {
+	case location.Git:
+		return &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
+				Repo:      ref.Repo,
+				Directory: toDirectory(ref.Directory),
+				Ref:       ref.Ref,
+			},
+		}, nil
+	case location.Oci:
+		return &kptfilev1.Upstream{
+			Type: kptfilev1.OciOrigin,
+			Oci: &kptfilev1.Oci{
+				Image:     ref.Image.Name(),
+				Directory: toDirectory(ref.Directory),
+			},
+		}, nil
+	}
+	return nil, errors.E(op, errors.InvalidParam,
+		fmt.Errorf("reference is not a supported upstream type"))
+}
+
+// NewUpstreamLockFromReferenceLock creates kptfilev1.UpstreamLock structures from supported
+// location types. The kptfile upstream supports specific, well-known types.
+func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.UpstreamLock, error) {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
+	switch ref := ref.(type) {
+	case location.GitLock:
+		return &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
+				Repo:      ref.Repo,
+				Directory: toDirectory(ref.Directory),
+				Ref:       ref.Ref,
+				Commit:    ref.Commit,
+			},
+		}, nil
+	case location.OciLock:
+		return &kptfilev1.UpstreamLock{
+			Type: kptfilev1.OciOrigin,
+			Oci: &kptfilev1.OciLock{
+				Image:     ref.Image.Name(),
+				Directory: toDirectory(ref.Directory),
+				Digest:    ref.Digest.Name(),
+			},
+		}, nil
+	}
+	return nil, errors.E(op, errors.InvalidParam,
+		fmt.Errorf("reference is not a supported upstream type"))
+}
+
+// toDirectory convert relative Reference sub-package locations to
+// the kptfilev1 absolute-within-repo conventions.
+func toDirectory(relPath string) string {
+	if absPath := filepath.Join("/", relPath); absPath != "/" {
+		return absPath
+	}
+	// root location is default in kptfilev1
+	return ""
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output

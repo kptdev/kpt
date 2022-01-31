@@ -2,9 +2,11 @@ package location
 
 import (
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 )
 
@@ -63,6 +65,31 @@ func (ref Git) String() string {
 
 func (ref GitLock) String() string {
 	return fmt.Sprintf("%v commit:%q", ref.Git, ref.Commit)
+}
+
+func (ref Git) Type() string {
+	return "git"
+}
+
+func (ref Git) Validate() error {
+	const op errors.Op = "git.Validate"
+	if len(ref.Repo) == 0 {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
+	}
+	if len(ref.Ref) == 0 {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
+	}
+	if len(ref.Directory) == 0 {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
+	}
+	return nil
+}
+
+func (ref Git) GetDefaultDirectoryName() (string, error) {
+	repo := ref.Repo
+	repo = strings.TrimSuffix(repo, "/")
+	repo = strings.TrimSuffix(repo, ".git")
+	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), nil
 }
 
 func (ref Git) SetIdentifier(name string) (Reference, error) {

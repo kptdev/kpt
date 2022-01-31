@@ -1,11 +1,12 @@
 package location
 
 import (
-	"errors"
 	"fmt"
+	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
@@ -64,7 +65,7 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 		}, nil
 	}
 
-	return Oci{}, errors.New("invalid format")
+	return Oci{}, fmt.Errorf("invalid format")
 }
 
 func (ref Oci) String() string {
@@ -73,6 +74,22 @@ func (ref Oci) String() string {
 
 func (ref OciLock) String() string {
 	return fmt.Sprintf("%v digest:%q", ref.Oci, ref.Digest)
+}
+
+func (ref Oci) Validate() error {
+	const op errors.Op = "oci.Validate"
+	if ref.Image == nil {
+		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify image"))
+	}
+	return nil
+}
+
+func (ref Oci) Type() string {
+	return "oci"
+}
+
+func (ref Oci) GetDefaultDirectoryName() (string, error) {
+	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), nil
 }
 
 func (ref Oci) SetIdentifier(identifier string) (Reference, error) {
