@@ -54,6 +54,8 @@ type Command struct {
 	// Kptfile. This determines how changes will be merged when updating the
 	// package.
 	UpdateStrategy kptfilev1.UpdateStrategyType
+
+	EnableDefaultGcloud bool
 }
 
 // Run runs the Command.
@@ -98,6 +100,12 @@ func (c Command) Run(ctx context.Context) error {
 
 	if err = c.fetchPackages(ctx, p); err != nil {
 		return cleanUpDirAndError(c.Destination, err)
+	}
+
+	if c.EnableDefaultGcloud {
+		if err := AddGcloudConfigMap(c.Destination, c.Name); err != nil {
+			return err
+		}
 	}
 
 	inout := &kio.LocalPackageReadWriter{PackagePath: c.Destination, PreserveSeqIndent: true, WrapBareSeqNode: true}
