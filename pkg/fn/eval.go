@@ -24,8 +24,8 @@ import (
 )
 
 type EvalOptions struct {
-	// FnResultList stores the result of the function evaluation
-	FnResultList *fnresult.ResultList
+	// ResultList stores the result of the function evaluation
+	ResultList *fnresult.ResultList
 }
 
 type Evaluator interface {

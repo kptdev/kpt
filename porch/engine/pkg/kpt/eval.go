@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func NewPlaceholderEvaluator() fn.Evaluator {
@@ -34,4 +35,8 @@ var _ fn.Evaluator = &evaluator{}
 
 func (e *evaluator) Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts fn.EvalOptions) error {
 	return internal.Eval(ctx, pkg, fn, opts)
+}
+
+func (e *evaluator) NewRunner(ctx context.Context, fn *v1.Function, opts fn.EvalOptions) (kio.Filter, error) {
+	return nil, nil
 }
