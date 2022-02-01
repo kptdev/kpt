@@ -279,12 +279,6 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 				return nil, fmt.Errorf("error parsing yaml from %s: %w", item.Path, err)
 			}
 
-			// Hack: default namespace until we populate the namespace in our packages
-			if o.GetNamespace() == "" {
-				klog.Warningf("HACK: setting namespace to default")
-				o.SetNamespace("default")
-			}
-
 			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
 			objects = append(objects, o)
 		}
