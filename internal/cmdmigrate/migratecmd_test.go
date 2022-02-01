@@ -11,6 +11,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -177,6 +178,118 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 	}
 }
 
+func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
+	testCases := map[string]struct {
+		kptfile       string
+		rgFilename    string
+		resourcegroup string
+		dryRun        bool
+		isError       bool
+	}{
+		"Missing Kptfile is an error": {
+			kptfile:    "",
+			rgFilename: "resourcegroup.yaml",
+			dryRun:     false,
+			isError:    true,
+		},
+		"Kptfile with existing inventory will create ResourceGroup": {
+			kptfile:    kptFileWithInventory,
+			rgFilename: "resourcegroup.yaml",
+			dryRun:     false,
+			isError:    false,
+		},
+		"ResopurceGroup file already exists will error": {
+			kptfile:       kptFileWithInventory,
+			rgFilename:    "resourcegroup.yaml",
+			resourcegroup: resourceGroupInventory,
+			dryRun:        false,
+			isError:       true,
+		},
+		"Dry-run will not fill in inventory fields": {
+			kptfile:    kptFile,
+			rgFilename: "resourcegroup.yaml",
+			dryRun:     true,
+			isError:    false,
+		},
+		"Custom ResourceGroup file will be generated": {
+			kptfile:    kptFileWithInventory,
+			rgFilename: "custom-rg.yaml",
+			dryRun:     false,
+			isError:    false,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Set up fake test factory
+			tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+			defer tf.Cleanup()
+			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+			// Set up temp directory with Ktpfile
+			dir, err := ioutil.TempDir("", "kpt-migrate-test")
+			assert.NoError(t, err)
+			p := filepath.Join(dir, "Kptfile")
+			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			assert.NoError(t, err)
+
+			if tc.resourcegroup != "" {
+				p := filepath.Join(dir, tc.rgFilename)
+				err = ioutil.WriteFile(p, []byte(tc.resourcegroup), 0600)
+				assert.NoError(t, err)
+			}
+
+			ctx := fake.CtxWithDefaultPrinter()
+			// Create MigrateRunner and call "updateKptfile"
+			cmLoader := manifestreader.NewManifestLoader(tf)
+			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			migrateRunner.dryRun = tc.dryRun
+			migrateRunner.rgFile = tc.rgFilename
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
+				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			}
+			err = migrateRunner.migrateKptfileToRG([]string{dir})
+			// Check if there should be an error
+			if tc.isError {
+				if err == nil {
+					t.Fatalf("expected error but received none")
+				}
+				return
+			}
+			assert.NoError(t, err)
+			kf, err := pkg.ReadKptfile(dir)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			rg, err := pkg.ReadRGFile(dir, migrateRunner.rgFile)
+			if !tc.dryRun && !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			// Ensure the Kptfile does not contain inventory information.
+			if !assert.Nil(t, kf.Inventory) {
+				t.Errorf("inventory information should not be set in Kptfile")
+			}
+
+			if !tc.dryRun {
+				if rg == nil {
+					t.Fatalf("unable to read ResourceGroup file")
+				}
+				assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
+				if len(rg.ObjectMeta.Name) == 0 {
+					t.Errorf("inventory name not set in Kptfile")
+				}
+				if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
+					t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+				}
+			} else if rg != nil {
+				t.Errorf("inventory shouldn't be set during dryrun")
+			}
+		})
+	}
+}
+
 func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 	testCases := map[string]struct {
 		configMap string
@@ -297,6 +410,16 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			},
 			isError: false,
 		},
+		"Kptfile does not have inventory is valid": {
+			invObj:  kptFile,
+			objs:    []object.ObjMetadata{},
+			isError: false,
+		},
+		"One migrate object is valid with inventory in Kptfile": {
+			invObj:  kptFileWithInventory,
+			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			isError: false,
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -375,3 +498,13 @@ upstreamLock:
 `
 
 var inventoryNamespace = "test-namespace"
+
+var resourceGroupInventory = `
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: foo
+  namespace: test-namespace
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: SSSSSSSSSS-RRRRR
+`
