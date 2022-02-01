@@ -207,7 +207,15 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 	}
 
 	// TODO: Cache applyset
-	patchOptions := metav1.PatchOptions{FieldManager: "remoterootsync-" + subject.GetNamespace() + "-" + subject.GetName()}
+	patchOptions := metav1.PatchOptions{
+		FieldManager: "remoterootsync-" + subject.GetNamespace() + "-" + subject.GetName(),
+	}
+
+	// We force to overcome errors like: Apply failed with 1 conflict: conflict with "kubectl-client-side-apply" using apps/v1: .spec.template.spec.containers[name="porch-server"].image
+	// TODO: How to handle this better
+	force := true
+	patchOptions.Force = &force
+
 	applyset, err := applyset.New(applyset.Options{
 		RESTMapper:   restMapper,
 		Client:       client,
