@@ -1,10 +1,12 @@
-# Copyright 2022 Google LLC
+#!/usr/bin/env bash
+
+# Copyright 2022 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#      http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,9 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GCP project to use for development
-GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
+set -e
 
-.PHONY: run-local
-run-local:
-	GCP_PROJECT_ID=${GCP_PROJECT_ID} HACK_ENABLE_LOOPBACK=1 go run .
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+make -C "${REPO_ROOT}/porch" fix-all
+
+changes=$(git status --porcelain || true)
+if [ -n "${changes}" ]; then
+  echo "ERROR: some files changes, please run `make fixup`"
+  echo "changed files:"
+  printf "%s" "${changes}\n"
+  echo "git diff:"
+  git --no-pager diff
+  exit 1
+fi
