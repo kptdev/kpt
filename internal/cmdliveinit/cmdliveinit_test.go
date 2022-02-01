@@ -14,6 +14,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -57,6 +58,14 @@ inventory:
     inventoryID: ` + testInventoryID + "\n"
 
 var testTime = time.Unix(5555555, 66666666)
+
+var resourceGroupInventory = `
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: foo
+  namespace: test-namespace
+`
 
 func TestCmd_generateID(t *testing.T) {
 	testCases := map[string]struct {
@@ -130,6 +139,8 @@ func TestCmd_Run_NoKptfile(t *testing.T) {
 func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile           string
+		resourcegroup     string
+		rgfilename        string
 		name              string
 		namespace         string
 		inventoryID       string
@@ -161,20 +172,66 @@ func TestCmd_Run(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 		},
+		"Provided values are used with custom resourcegroup filename": {
+			kptfile:     kptFile,
+			rgfilename:  "custom-rg.yaml",
+			name:        "my-pkg",
+			namespace:   "my-ns",
+			inventoryID: "my-inv-id",
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   "my-ns",
+				Name:        "my-pkg",
+				InventoryID: "my-inv-id",
+			},
+		},
 		"Kptfile with inventory already set is error": {
 			kptfile:          kptFileWithInventory,
 			name:             inventoryName,
 			namespace:        inventoryNamespace,
 			inventoryID:      inventoryID,
 			force:            false,
+			expectedErrorMsg: "inventory information already set",
+		},
+		"ResourceGroup with inventory already set is error": {
+			kptfile:          kptFile,
+			resourcegroup:    resourceGroupInventory,
+			rgfilename:       "resourcegroup.yaml",
+			name:             inventoryName,
+			namespace:        inventoryNamespace,
+			inventoryID:      inventoryID,
+			force:            false,
 			expectedErrorMsg: "inventory information already set for package",
 		},
-		"The force flag allows changing inventory information even if already set": {
+		"ResourceGroup with inventory and Kptfile with inventory already set is error": {
+			kptfile:          kptFileWithInventory,
+			resourcegroup:    resourceGroupInventory,
+			rgfilename:       "resourcegroup.yaml",
+			name:             inventoryName,
+			namespace:        inventoryNamespace,
+			inventoryID:      inventoryID,
+			force:            false,
+			expectedErrorMsg: "inventory information already set",
+		},
+		"The force flag allows changing inventory information even if already set in Kptfile": {
 			kptfile:     kptFileWithInventory,
 			name:        inventoryName,
 			namespace:   inventoryNamespace,
 			inventoryID: inventoryID,
 			force:       true,
+			expectedInventory: kptfilev1.Inventory{
+				Namespace:   inventoryNamespace,
+				Name:        inventoryName,
+				InventoryID: inventoryID,
+			},
+		},
+		"The force flag allows changing inventory information even if already set in ResourceGroup": {
+			kptfile:       kptFile,
+			resourcegroup: resourceGroupInventory,
+			rgfilename:    "resourcegroup.yaml",
+			name:          inventoryName,
+			namespace:     inventoryNamespace,
+			inventoryID:   inventoryID,
+			force:         true,
 			expectedInventory: kptfilev1.Inventory{
 				Namespace:   inventoryNamespace,
 				Name:        inventoryName,
@@ -198,11 +255,21 @@ func TestCmd_Run(t *testing.T) {
 				t.FailNow()
 			}
 
+			// Create ResourceGroup file if testing the STDIN feature.
+			if tc.resourcegroup != "" && tc.rgfilename != "" {
+				err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, tc.rgfilename),
+					[]byte(tc.resourcegroup), 0600)
+				if !assert.NoError(t, err) {
+					t.FailNow()
+				}
+			}
+
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.namespace = tc.namespace
+			runner.RGFile = tc.rgfilename
 			args := []string{
 				"--name", tc.name,
 				"--inventory-id", tc.inventoryID,
@@ -223,17 +290,39 @@ func TestCmd_Run(t *testing.T) {
 				return
 			}
 
-			// Otherwise, validate the kptfile values
+			// Otherwise, validate the kptfile values and/or resourcegroup values.
+			var actualInv kptfilev1.Inventory
 			assert.NoError(t, err)
 			kf, err := pkg.ReadKptfile(w.WorkspaceDirectory)
 			assert.NoError(t, err)
-			if !assert.NotNil(t, kf.Inventory) {
-				t.FailNow()
+
+			switch tc.rgfilename {
+			case "":
+				if !assert.NotNil(t, kf.Inventory) {
+					t.FailNow()
+				}
+				actualInv = *kf.Inventory
+			default:
+				// Check resourcegroup file if testing the STDIN feature.
+				rg, err := pkg.ReadRGFile(w.WorkspaceDirectory, tc.rgfilename)
+				assert.NoError(t, err)
+				if !assert.NotNil(t, rg) {
+					t.FailNow()
+				}
+
+				// Convert resourcegroup inventory back to Kptfile structure so we can share assertion
+				// logic for Kptfile inventory and ResourceGroup inventory structure.
+				actualInv = kptfilev1.Inventory{
+					Name:        rg.Name,
+					Namespace:   rg.Namespace,
+					InventoryID: rg.Labels[rgfilev1alpha1.RGInventoryIDLabel],
+				}
 			}
-			actualInv := *kf.Inventory
+
 			expectedInv := tc.expectedInventory
 			assertInventoryName(t, expectedInv.Name, actualInv.Name)
 			assert.Equal(t, expectedInv.Namespace, actualInv.Namespace)
+
 			if tc.expectAutoGenID {
 				assertGenInvID(t, actualInv.Name, actualInv.Namespace, actualInv.InventoryID)
 			} else {

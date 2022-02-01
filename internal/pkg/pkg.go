@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -99,6 +100,21 @@ func (e *UnknownKptfileResourceError) Error() string {
 	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
+// RGError is an implementation of the error interface that is returned whenever
+// kpt encounters errors reading a resourcegroup object file.
+type RGError struct {
+	Path types.UniquePath
+	Err  error
+}
+
+func (rg *RGError) Error() string {
+	return fmt.Sprintf("error reading ResourceGroup file at %q: %s", rg.Path.String(), rg.Err.Error())
+}
+
+func (rg *RGError) Unwrap() error {
+	return rg.Err
+}
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
 	// UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
@@ -119,6 +135,9 @@ type Pkg struct {
 	// A package can contain zero or one Kptfile meta resource.
 	// A nil value represents an implicit package.
 	kptfile *kptfilev1.KptFile
+
+	// A package can contain zero or one ResourceGroup object.
+	rgFile *rgfilev1alpha1.ResourceGroup
 }
 
 // New returns a pkg given an absolute or relative OS-defined path.
@@ -694,4 +713,51 @@ func SetPkgPathAnnotation(rn *yaml.RNode, pkgPath types.UniquePath) error {
 // RemovePkgPathAnnotation removes the package path on a given resource.
 func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 	return rn.PipeE(yaml.ClearAnnotation(pkgPathAnnotation))
+}
+
+// ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
+func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+	if p.rgFile == nil {
+		rg, err := ReadRGFile(p.UniquePath.String(), filename)
+		if err != nil {
+			return nil, err
+		}
+		p.rgFile = rg
+	}
+	return p.rgFile, nil
+}
+
+// TODO(rquitales): Consolidate both Kptfile and ResourceGroup file reading functions to use
+// shared logic/function.
+
+// ReadRGFile reads the KptFile in the given pkg.
+func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+	f, err := os.Open(filepath.Join(path, filename))
+	if err != nil {
+		return nil, &RGError{
+			Path: types.UniquePath(path),
+			Err:  err,
+		}
+	}
+	defer f.Close()
+
+	rg := &rgfilev1alpha1.ResourceGroup{}
+	c, err := io.ReadAll(f)
+	if err != nil {
+		return nil, &RGError{
+			Path: types.UniquePath(path),
+			Err:  err,
+		}
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
+	d.KnownFields(true)
+	if err := d.Decode(rg); err != nil {
+		return nil, &RGError{
+			Path: types.UniquePath(path),
+			Err:  err,
+		}
+	}
+	return rg, nil
+
 }
