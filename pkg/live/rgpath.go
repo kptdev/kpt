@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -63,6 +64,13 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		u, err := kyamlNodeToUnstructured(n)
 		if err != nil {
 			return objs, err
+		}
+
+		// Skip if current file is a ResourceGroup resource. We do not want to apply/delete any ResourceGroup CRs when we
+		// run any `kpt live` commands on a package. Instead, we have specific logic in place for handling ResourceGroups in
+		// the live cluster.
+		if u.GetKind() == rgfilev1alpha1.RGFileKind && u.GetAPIVersion() == rgfilev1alpha1.DefaultMeta.APIVersion {
+			continue
 		}
 		objs = append(objs, u)
 	}

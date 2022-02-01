@@ -326,3 +326,10 @@ type Inventory struct {
 	Labels      map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
 	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
 }
+
+func (i Inventory) IsValid() bool {
+	// Name and Namespace are required inventory fields, so we check these 2 fields.
+	// InventoryID is an optional field since we only store it locally if the user
+	// specifies one.
+	return i.Name != "" && i.Namespace != ""
+}

@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -49,7 +50,15 @@ func (e *InventoryInfoValidationError) Error() string {
 type MultipleInventoryInfoError struct{}
 
 func (e *MultipleInventoryInfoError) Error() string {
-	return "multiple Kptfiles contains inventory information"
+	return "multiple inventory information found in package"
+}
+
+// NoInvInfoError is the error returned if there are no inventory information
+// provided in either a stream or locally.
+type NoInvInfoError struct{}
+
+func (e *NoInvInfoError) Error() string {
+	return "no inventory information was provided within the stream or package"
 }
 
 // Load reads resources either from disk or from an input stream. It filters
@@ -58,24 +67,56 @@ func (e *MultipleInventoryInfoError) Error() string {
 // for inventory information inside Kptfile resources.
 // It returns the resources in unstructured format and the inventory information.
 // If no inventory information is found, that is not considered an error here.
-func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func Load(f util.Factory, path, rgfile string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	if path == "-" {
-		return loadFromStream(f, stdIn)
+		return loadFromStream(f, stdIn, rgfile)
 	}
-	return loadFromDisk(f, path)
+	return loadFromDisk(f, path, rgfile)
 }
 
 // loadFromStream reads resources from the provided reader and returns the
 // filtered resources and any inventory information found in Kptfile resources.
 // If there is more than one Kptfile in the stream with inventory information, that
 // is considered an error.
-func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func loadFromStream(f util.Factory, r io.Reader, rgfile string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	var stdInBuf bytes.Buffer
 	tee := io.TeeReader(r, &stdInBuf)
 
+	// Check if stream contains inventory info.
 	invInfo, err := readInvInfoFromStream(tee)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
+	}
+
+	// Check resourcegroup file for inventory information if file is specified.
+	if rgfile != "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, kptfilev1.Inventory{}, err
+		}
+
+		diskInv, err := readInvInfoFromDisk(cwd, rgfile)
+		if err != nil {
+			return nil, kptfilev1.Inventory{}, err
+		}
+
+		if diskInv.IsValid() && invInfo.IsValid() {
+			return nil, kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+		}
+
+		if !diskInv.IsValid() && !invInfo.IsValid() {
+			return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
+		}
+
+		if diskInv.IsValid() {
+			invInfo = diskInv
+		}
+
+	}
+
+	// Stream does not contain a valid inventory and no local inventory does not exist, or is not valid.
+	if !invInfo.IsValid() {
+		return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
 	}
 
 	ro, err := toReaderOptions(f)
@@ -96,6 +137,7 @@ func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, 
 
 func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 	invFilter := &InventoryFilter{}
+	rgFilter := &RGFilter{}
 	if err := (&kio.Pipeline{
 		Inputs: []kio.Reader{
 			&kio.ByteReader{
@@ -105,18 +147,31 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 		},
 		Filters: []kio.Filter{
 			kio.FilterAll(invFilter),
+			kio.FilterAll(rgFilter),
 		},
 	}).Execute(); err != nil {
 		return kptfilev1.Inventory{}, err
 	}
 
-	if len(invFilter.Inventories) > 1 {
+	if len(invFilter.Inventories) > 1 ||
+		len(rgFilter.Inventories) > 1 ||
+		(len(invFilter.Inventories) > 0 && len(rgFilter.Inventories) > 0) {
 		return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
 	}
 
 	if len(invFilter.Inventories) == 1 {
 		return *invFilter.Inventories[0], nil
 	}
+
+	if len(rgFilter.Inventories) == 1 {
+		invID := rgFilter.Inventories[0].Labels[rgfilev1alpha1.RGInventoryIDLabel]
+		return kptfilev1.Inventory{
+			Name:        rgFilter.Inventories[0].Name,
+			Namespace:   rgFilter.Inventories[0].Namespace,
+			InventoryID: invID,
+		}, nil
+	}
+
 	return kptfilev1.Inventory{}, nil
 }
 
@@ -124,8 +179,8 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 // It returns the filtered resources and any inventory information found in
 // Kptfile resources.
 // Only the Kptfile in the root directory will be checked for inventory information.
-func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
-	invInfo, err := readInvInfoFromDisk(path)
+func loadFromDisk(f util.Factory, path, rgfile string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+	invInfo, err := readInvInfoFromDisk(path, rgfile)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
 	}
@@ -146,18 +201,51 @@ func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kp
 	return objs, invInfo, nil
 }
 
-func readInvInfoFromDisk(path string) (kptfilev1.Inventory, error) {
+func readInvInfoFromDisk(path, rgfile string) (kptfilev1.Inventory, error) {
 	p, err := pkg.New(path)
 	if err != nil {
 		return kptfilev1.Inventory{}, err
 	}
 
+	// Read Kptfile for inventory. We ignore errors if no local Kptfile as that could
+	// be provided via STDIN.
 	kf, err := p.Kptfile()
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		return kptfilev1.Inventory{}, nil
+	if rgfile == "" {
+		if err != nil && errors.Is(err, os.ErrNotExist) {
+			return kptfilev1.Inventory{}, nil
+		}
+		if err != nil {
+			return kptfilev1.Inventory{}, err
+		}
 	}
-	if err != nil {
-		return kptfilev1.Inventory{}, err
+
+	// Check if resourcegroup exists and use inventory info from there if provided.
+	if rgfile != "" {
+		rg, err := p.ReadRGFile(rgfile)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return kptfilev1.Inventory{}, nil
+		}
+
+		// Ensure we only have at most 1 instance of an inventory.
+		if kf != nil {
+			if kf.Inventory == nil && rg == nil {
+				return kptfilev1.Inventory{}, nil
+			}
+
+			if kf.Inventory != nil && rg != nil {
+				return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+			}
+
+			if kf.Inventory != nil {
+				return *kf.Inventory, nil
+			}
+		}
+
+		return kptfilev1.Inventory{
+			Name:        rg.ObjectMeta.Name,
+			Namespace:   rg.ObjectMeta.Namespace,
+			InventoryID: rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel],
+		}, nil
 	}
 
 	if kf.Inventory == nil {
@@ -190,6 +278,30 @@ func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if kf.Inventory != nil {
 		i.Inventories = append(i.Inventories, kf.Inventory)
 	}
+	return object, nil
+}
+
+// RGFilter is an implementation of the yaml.Filter interface
+// that extracts inventory information from resourcegroup objects.
+type RGFilter struct {
+	Inventories []*rgfilev1alpha1.ResourceGroup
+}
+
+func (r *RGFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
+	if object.GetApiVersion() != rgfilev1alpha1.RGFileAPIVersion ||
+		object.GetKind() != rgfilev1alpha1.RGFileKind {
+		return object, nil
+	}
+
+	s, err := object.String()
+	if err != nil {
+		return object, err
+	}
+	rg, err := pkg.DecodeRGFile(bytes.NewBufferString(s))
+	if err != nil {
+		return nil, err
+	}
+	r.Inventories = append(r.Inventories, rg)
 	return object, nil
 }
 
@@ -237,14 +349,6 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 			Value:  inventory.Namespace,
 			Type:   errors.Missing,
 			Reason: "\"inventory.namespace\" must not be empty",
-		})
-	}
-	if inventory.InventoryID == "" {
-		violations = append(violations, errors.Violation{
-			Field:  "inventoryID",
-			Value:  inventory.InventoryID,
-			Type:   errors.Missing,
-			Reason: "\"inventory.inventoryID\" must not be empty",
 		})
 	}
 	if len(violations) > 0 {
