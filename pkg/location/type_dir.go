@@ -17,6 +17,7 @@ package location
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 )
 
 type Dir struct {
@@ -26,11 +27,14 @@ type Dir struct {
 var _ Reference = Dir{}
 
 func parseDir(location string, opt options) (Reference, error) {
-	if fs.ValidPath(location) {
+	dir := filepath.Clean(location)
+
+	if fs.ValidPath(dir) {
 		return Dir{
-			Directory: location,
+			Directory: dir,
 		}, nil
 	}
+
 	return nil, nil
 }
 
