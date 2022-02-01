@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -92,7 +91,8 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			}
 
 			// TODO: decide whether paths should include package directory or not.
-			resources[path.Join(p.path, file.Name)] = content
+			resources[file.Name] = content
+			//resources[path.Join(p.path, file.Name)] = content
 		}
 	}
 	return &v1alpha1.PackageRevisionResources{

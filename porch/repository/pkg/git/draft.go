@@ -30,6 +30,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
+	"k8s.io/klog/v2"
 )
 
 type gitPackageDraft struct {
@@ -62,7 +63,9 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 			return err
 		}
 
-		if err := storeBlobHashInTrees(dirs, k, hash); err != nil {
+		// TODO: decide whether paths should include package directory or not.
+		p := path.Join(d.path, k)
+		if err := storeBlobHashInTrees(dirs, p, hash); err != nil {
 			return err
 		}
 	}
@@ -87,15 +90,17 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
+	// TODO: This removal of drafts is a hack
+	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), strings.ReplaceAll(d.draft.Name().String(), "/drafts/", "/")))
+	klog.Infof("pushing refspec %v", refSpec)
+
 	if err := d.parent.repo.Push(&git.PushOptions{
-		RemoteName: "origin",
-		RefSpecs: []config.RefSpec{
-			config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), d.draft.Name())),
-		},
+		RemoteName:        "origin",
+		RefSpecs:          []config.RefSpec{refSpec},
 		Auth:              d.parent.auth,
 		RequireRemoteRefs: []config.RefSpec{},
 	}); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to push to git: %w", err)
 	}
 
 	// TODO: return Revision only.

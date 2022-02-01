@@ -68,7 +68,7 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, authO
 		isBare := true
 		r, err := gogit.PlainClone(dir, isBare, &opts)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}
 		repo = r
 	} else if !fi.IsDir() {
@@ -253,10 +253,16 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 	// * prefixed (tag=<packageDir/<version>) - solving the co-versioning problem.
 	//
 	// We have to check both forms when looking up a version.
-	refNames := []string{
-		path + "/" + version,
-		version,
+	refNames := []string{}
+	if path != "" {
+		refNames = append(refNames, path+"/"+version)
+		// HACK: Is this always refs/remotes/origin ?  Is it ever not (i.e. do we need both forms?)
+		refNames = append(refNames, "refs/remotes/origin/"+path+"/"+version)
 	}
+	refNames = append(refNames, version)
+	// HACK: Is this always refs/remotes/origin ?  Is it ever not (i.e. do we need both forms?)
+	refNames = append(refNames, "refs/remotes/origin/"+version)
+
 	for _, ref := range refNames {
 		if resolved, err := git.ResolveRevision(plumbing.Revision(ref)); err != nil {
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
@@ -270,6 +276,8 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 	}
 
 	if hash.IsZero() {
+		r.dumpAllRefs()
+
 		return nil, lock, fmt.Errorf("cannot find git reference (tried %v)", refNames)
 	}
 
@@ -279,16 +287,20 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 	}
 	lock.Commit = commit.Hash.String()
 
-	ctree, err := commit.Tree()
+	commitTree, err := commit.Tree()
 	if err != nil {
 		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash %s) to tree: %w", version, hash, err)
 	}
-	te, err := ctree.FindEntry(path)
-	if err != nil {
-		return nil, lock, fmt.Errorf("cannot find package %s@%s: %w", path, version, err)
-	}
-	if te.Mode != filemode.Dir {
-		return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, version)
+	treeHash := commitTree.Hash
+	if path != "" {
+		te, err := commitTree.FindEntry(path)
+		if err != nil {
+			return nil, lock, fmt.Errorf("cannot find package %s@%s: %w", path, version, err)
+		}
+		if te.Mode != filemode.Dir {
+			return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, version)
+		}
+		treeHash = te.Hash
 	}
 
 	return &gitPackageRevision{
@@ -296,7 +308,7 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 		path:     path,
 		revision: version,
 		updated:  commit.Author.When,
-		tree:     te.Hash,
+		tree:     treeHash,
 		sha:      hash,
 	}, lock, nil
 }
@@ -415,4 +427,38 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 func createDraftRefName(name, revision string) plumbing.ReferenceName {
 	refName := fmt.Sprintf("refs/heads/drafts/%s/%s", name, revision)
 	return plumbing.ReferenceName(refName)
+}
+
+func (r *gitRepository) dumpAllRefs() {
+	refs, err := r.repo.References()
+	if err != nil {
+		klog.Warningf("failed to get references: %v", err)
+	} else {
+		for {
+			ref, err := refs.Next()
+			if err != nil {
+				if err != io.EOF {
+					klog.Warningf("failed to get next reference: %v", err)
+				}
+				break
+			}
+			klog.Infof("ref %#v", ref.Name())
+		}
+	}
+
+	branches, err := r.repo.Branches()
+	if err != nil {
+		klog.Warningf("failed to get branches: %v", err)
+	} else {
+		for {
+			branch, err := branches.Next()
+			if err != nil {
+				if err != io.EOF {
+					klog.Warningf("failed to get next branch: %v", err)
+				}
+				break
+			}
+			klog.Infof("branch %#v", branch.Name())
+		}
+	}
 }
