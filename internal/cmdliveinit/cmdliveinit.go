@@ -225,6 +225,7 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	// // Finally, set the inventory parameters in the ResourceGroup object and write it.
 	rg.Name = inv.Name
 	rg.Namespace = inv.Namespace
+
 	if inv.InventoryID != "" {
 		rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
 	}

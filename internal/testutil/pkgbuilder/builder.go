@@ -26,6 +26,7 @@ import (
 	"text/template"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -91,6 +92,8 @@ var (
 // by using the Build function
 type pkg struct {
 	Kptfile *Kptfile
+
+	RGFile *RGFile
 
 	resources []resourceInfoWithMutators
 
@@ -170,6 +173,12 @@ func NewRootPkg() *RootPkg {
 			files: make(map[string]string),
 		},
 	}
+}
+
+// WithRGFile configures the current package to have a resourcegroup file.
+func (rp *RootPkg) WithRGFile(rg *RGFile) *RootPkg {
+	rp.pkg.RGFile = rg
+	return rp
 }
 
 // WithKptfile configures the current package to have a Kptfile. Only
@@ -298,6 +307,22 @@ func (sp *SubPkg) WithFile(name, content string) *SubPkg {
 func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 	sp.pkg.withSubPackages(ps...)
 	return sp
+}
+
+// RGFile represents a minimal resourcegroup.
+type RGFile struct {
+	Name, Namespace, ID string
+}
+
+func NewRGFile() *RGFile {
+	return &RGFile{}
+}
+
+func (rg *RGFile) WithInventory(inv Inventory) *RGFile {
+	rg.Name = inv.Name
+	rg.Namespace = inv.Namespace
+	rg.ID = inv.ID
+	return rg
 }
 
 // Kptfile represents the Kptfile of a package.
@@ -476,6 +501,16 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 		}
 	}
 
+	if pkg.RGFile != nil {
+		content := buildRGFile(pkg, pkgName, reposInfo)
+
+		err := ioutil.WriteFile(filepath.Join(pkgPath, rgfilev1alpha1.RGFileName),
+			[]byte(content), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, ri := range pkg.resources {
 		m := ri.resourceInfo.manifest
 		r := yaml.MustParse(m)
@@ -598,6 +633,22 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 	}
 	result := buf.String()
 	return result
+}
+
+func buildRGFile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
+	tmp := rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
+	tmp.ObjectMeta.Name = pkg.RGFile.Name
+	tmp.ObjectMeta.Namespace = pkg.RGFile.Namespace
+	if pkg.RGFile.ID != "" {
+		tmp.ObjectMeta.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: pkg.RGFile.ID}
+	}
+
+	b, err := yaml.MarshalWithOptions(tmp, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		panic(err)
+	}
+
+	return string(b)
 }
 
 // resolveRepoRef looks up the repo path for a repo from the reposInfo

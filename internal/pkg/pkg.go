@@ -717,9 +717,6 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 
 // ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
 func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
-	if filename == "" {
-		filename = rgfilev1alpha1.RGFileName
-	}
 	if p.rgFile == nil {
 		rg, err := ReadRGFile(p.UniquePath.String(), filename)
 		if err != nil {

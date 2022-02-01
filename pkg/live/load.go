@@ -53,6 +53,14 @@ func (e *MultipleInventoryInfoError) Error() string {
 	return "multiple inventory information found in package"
 }
 
+// NoInvInfoError is the error returned if there are no inventory information
+// provided in either a stream or locally.
+type NoInvInfoError struct{}
+
+func (e *NoInvInfoError) Error() string {
+	return "no inventory information was provided within the stream"
+}
+
 // Load reads resources either from disk or from an input stream. It filters
 // out resources that should be ignored and defaults the namespace for
 // namespace-scoped resources that doesn't have the namespace set. It also looks
@@ -92,6 +100,10 @@ func loadFromStream(f util.Factory, r io.Reader, rgfile string) ([]*unstructured
 
 	if diskInv.Name != "" && invInfo.Name != "" {
 		return nil, kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+	}
+
+	if diskInv.Name == "" && invInfo.Name == "" {
+		return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
 	}
 
 	if diskInv.Name != "" {
@@ -158,6 +170,11 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 // Kptfile resources.
 // Only the Kptfile in the root directory will be checked for inventory information.
 func loadFromDisk(f util.Factory, path, rgfile string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+	// Use default ResourceGroup file name if not specified.
+	if rgfile == "" {
+		rgfile = rgfilev1alpha1.RGFileName
+	}
+
 	invInfo, err := readInvInfoFromDisk(path, rgfile)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err

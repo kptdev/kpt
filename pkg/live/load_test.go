@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -38,7 +39,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
 	}{
-		"no Kptfile in root package": {
+		"no Kptfile and resourcegroup in root package": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithFile("deployment.yaml", deploymentA),
 			namespace: "foo",
@@ -160,6 +161,39 @@ func TestLoad_LocalDisk(t *testing.T) {
 				InventoryID: "foo-bar",
 			},
 		},
+		"Inventory information taken from resourcegroup": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+				Name:      "foo",
+				Namespace: "bar",
+				ID:        "foo-bar"},
+			)),
+			namespace:    "foo",
+			expectedObjs: []object.ObjMetadata{},
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
+		},
+		"Multiple inventories in resourcegroup and Kptfile, expect error": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().WithInventory(pkgbuilder.Inventory{
+						Name:      "foo",
+						Namespace: "bar",
+						ID:        "foo-bar"},
+					),
+				).WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+				Name:      "foo",
+				Namespace: "bar",
+				ID:        "foo-bar"},
+			)),
+			namespace:      "foo",
+			expectedErrMsg: "multiple inventory information found in package",
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -173,7 +207,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}()
 
 			var buf bytes.Buffer
-			objs, inv, err := Load(tf, dir, &buf)
+			objs, inv, err := Load(tf, dir, rgfilev1alpha1.RGFileName, &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -209,31 +243,14 @@ func TestLoad_StdIn(t *testing.T) {
 					pkgbuilder.NewKptfile(),
 				).
 				WithFile("deployment.yaml", deploymentA),
-			namespace: "foo",
-			expectedObjs: []object.ObjMetadata{
-				{
-					GroupKind: schema.GroupKind{
-						Group: "apps",
-						Kind:  "Deployment",
-					},
-					Name:      "test-deployment",
-					Namespace: "foo",
-				},
-			},
+			namespace:      "foo",
+			expectedErrMsg: "no inventory information was provided within the stream",
 		},
 		"missing namespace for namespace scoped resources are defaulted": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithFile("cm.yaml", configMap),
-			namespace: "foo",
-			expectedObjs: []object.ObjMetadata{
-				{
-					GroupKind: schema.GroupKind{
-						Kind: "ConfigMap",
-					},
-					Name:      "cm",
-					Namespace: "foo",
-				},
-			},
+			namespace:      "foo",
+			expectedErrMsg: "no inventory information was provided within the stream",
 		},
 		"inventory info is taken from the Kptfile": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -297,7 +314,7 @@ func TestLoad_StdIn(t *testing.T) {
 						),
 				),
 			namespace:      "foo",
-			expectedErrMsg: "multiple Kptfiles contains inventory information",
+			expectedErrMsg: "multiple inventory information found in package",
 		},
 	}
 
@@ -332,7 +349,7 @@ func TestLoad_StdIn(t *testing.T) {
 				t.FailNow()
 			}
 
-			objs, inv, err := Load(tf, "-", &buf)
+			objs, inv, err := Load(tf, "-", "", &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
