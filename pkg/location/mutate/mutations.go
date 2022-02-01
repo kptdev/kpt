@@ -42,7 +42,7 @@ func Identifier(ref location.Reference, identifier string) (location.Reference, 
 // LockSetter is implemented by location.Reference types that
 // support mutate.Log
 type LockSetter interface {
-	SetLock(hash string) (location.ReferenceLock, error)
+	SetLock(lock string) (location.ReferenceLock, error)
 }
 
 // Lock returns a new ReferenceLock where the property that identifies the
@@ -50,9 +50,9 @@ type LockSetter interface {
 // The exact meaning of the value depends on the type of reference, and
 // is typically returned from the remote storage system as part of sending or
 // receiving content.
-func Lock(ref location.Reference, hash string) (location.ReferenceLock, error) {
+func Lock(ref location.Reference, lock string) (location.ReferenceLock, error) {
 	if ref, ok := ref.(LockSetter); ok {
-		return ref.SetLock(hash)
+		return ref.SetLock(lock)
 	}
 	return nil, fmt.Errorf("locked reference not support for reference: %v", ref)
 }

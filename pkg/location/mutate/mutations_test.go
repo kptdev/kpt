@@ -209,9 +209,9 @@ func (ref custom) SetIdentifier(identifier string) (location.Reference, error) {
 	}, nil
 }
 
-func (ref custom) SetLock(hash string) (location.ReferenceLock, error) {
+func (ref custom) SetLock(lock string) (location.ReferenceLock, error) {
 	return customLock{
 		custom: ref,
-		Lock:   hash,
+		Lock:   lock,
 	}, nil
 }

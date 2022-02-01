@@ -149,15 +149,15 @@ func main() {
 
 }
 
-func example(caption string, arg string, identifier string, hash string, opts ...location.Option) {
+func example(caption string, arg string, identifier string, lock string, opts ...location.Option) {
 	fmt.Printf("%s %q\n", caption, arg)
-	if err := run(arg, identifier, hash, opts...); err != nil {
+	if err := run(arg, identifier, lock, opts...); err != nil {
 		fmt.Printf("example error: %v\n", err)
 	}
 	fmt.Println()
 }
 
-func run(arg string, identifier string, hash string, opts ...location.Option) error {
+func run(arg string, identifier string, lock string, opts ...location.Option) error {
 	// parse arg to a reference
 	parsed, err := location.ParseReference(arg, opts...)
 	if err != nil {
@@ -177,9 +177,9 @@ func run(arg string, identifier string, hash string, opts ...location.Option) er
 		changed = parsed
 	}
 
-	if hash != "" {
+	if lock != "" {
 		// making a locked reference with the unique value field for that reference type
-		locked, err := mutate.Lock(changed, hash)
+		locked, err := mutate.Lock(changed, lock)
 		if err != nil {
 			return err
 		}
