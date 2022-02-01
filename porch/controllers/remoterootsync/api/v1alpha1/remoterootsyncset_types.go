@@ -42,10 +42,24 @@ type RemoteRootSyncSet struct {
 	Status RemoteRootSyncSetStatus `json:"status,omitempty"`
 }
 
+func (o *RemoteRootSyncSet) GetSpec() *RemoteRootSyncSetSpec {
+	if o == nil {
+		return nil
+	}
+	return &o.Spec
+}
+
 // RemoteRootSyncSetSpec defines the desired state of RemoteRootSync
 type RemoteRootSyncSetSpec struct {
 	ClusterRefs []*ClusterRef     `json:"clusterRefs,omitempty"`
 	Template    *RootSyncTemplate `json:"template,omitempty"`
+}
+
+func (o *RemoteRootSyncSetSpec) GetTemplate() *RootSyncTemplate {
+	if o == nil {
+		return nil
+	}
+	return o.Template
 }
 
 type ClusterRef struct {
@@ -61,8 +75,22 @@ type RootSyncTemplate struct {
 	OCI *OCISpec `json:"oci,omitempty"`
 }
 
+func (o *RootSyncTemplate) GetOCI() *OCISpec {
+	if o == nil {
+		return nil
+	}
+	return o.OCI
+}
+
 type OCISpec struct {
 	Repository string `json:"repository,omitempty"`
+}
+
+func (o *OCISpec) GetRepository() string {
+	if o == nil {
+		return ""
+	}
+	return o.Repository
 }
 
 // RootSyncSetStatus defines the observed state of RootSyncSet

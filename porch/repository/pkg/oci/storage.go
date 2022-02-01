@@ -71,6 +71,17 @@ func (i ImageTagName) ociReference() (name.Reference, error) {
 	return imageRef, nil
 }
 
+func ParseImageTagName(s string) (*ImageTagName, error) {
+	t, err := name.NewTag(s)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse %q as tag: %w", s, err)
+	}
+	return &ImageTagName{
+		Image: t.Repository.Name(),
+		Tag:   t.TagStr(),
+	}, nil
+}
+
 // ImageDigestName holds an image we know by digest (which is immutable and more cacheable)
 type ImageDigestName struct {
 	Image  string

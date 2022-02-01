@@ -233,14 +233,17 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 
 // BuildObjectsToApply config root sync
 func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, subject *api.RemoteRootSyncSet) ([]*unstructured.Unstructured, error) {
-	// TODO: stop hard-coding the image source; get from a deployment instead
-	gcpProjectID := os.Getenv("GCP_PROJECT_ID")
-	imageName := oci.ImageTagName{
-		Image: "us-west1-docker.pkg.dev/" + gcpProjectID + "/deployment/myfirstnginx",
-		Tag:   "v1",
+	repository := subject.GetSpec().GetTemplate().GetOCI().GetRepository()
+	if repository == "" {
+		return nil, fmt.Errorf("spec.template.oci.repository is not set")
 	}
+	imageName, err := oci.ParseImageTagName(repository)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse image %q: %w", repository, err)
+	}
+	klog.Infof("image name %s -> %#v", repository, *imageName)
 
-	digest, err := r.ociStorage.LookupImageTag(ctx, imageName)
+	digest, err := r.ociStorage.LookupImageTag(ctx, *imageName)
 	if err != nil {
 		return nil, err
 	}
