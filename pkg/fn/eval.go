@@ -17,13 +17,19 @@ package fn
 import (
 	"context"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 type EvalOptions struct {
+	// FnResultList stores the result of the function evaluation
+	FnResultList fnresult.ResultList
 }
 
 type Evaluator interface {
 	Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts EvalOptions) error
+	NewRunner(ctx context.Context, fn *v1.Function, pkgPath types.UniquePath, opts EvalOptions) (kio.Filter, error)
 }

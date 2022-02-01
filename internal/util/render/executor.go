@@ -32,6 +32,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -46,8 +47,15 @@ type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
 
+	// Evaluator evaluates the function, if specified, this can override the default
+	// kpt function evaluator
+	Evaluator fn.Evaluator
+
 	// ResultsDirPath is absolute path to the directory to write results
 	ResultsDirPath string
+
+	// fnResultsList is the list of results from the pipeline execution
+	fnResultsList *fnresult.ResultList
 
 	// Output is the writer to which the output resources are written
 	Output io.Writer
@@ -82,6 +90,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
 		fileSystem:      e.FileSystem,
+		evaluator:       e.Evaluator,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -122,7 +131,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 			return fmt.Errorf("failed to save resources: %w", err)
 		}
 
-		if err = pruneResources(hctx); err != nil {
+		if err = pruneResources(e.FileSystem, hctx); err != nil {
 			return err
 		}
 		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
@@ -145,6 +154,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 }
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
+	e.fnResultsList = fnResults
 	resultsFile, err := fnruntime.SaveResults(e.FileSystem, e.ResultsDirPath, fnResults)
 	if err != nil {
 		return fmt.Errorf("failed to save function results: %w", err)
@@ -194,6 +204,8 @@ type hydrationContext struct {
 	dockerCheckDone bool
 
 	fileSystem filesys.FileSystem
+
+	evaluator fn.Evaluator
 }
 
 //
@@ -451,29 +463,33 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 	}
 
 	for i := range pl.Validators {
-		fn := pl.Validators[i]
+		function := pl.Validators[i]
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		selectedResources, err := fnruntime.SelectInput(input, fn.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return err
 		}
 		var validator kio.Filter
 		displayResourceCount := false
-		if len(fn.Selectors) > 0 {
+		if len(function.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		if fn.Exec != "" && !hctx.allowExec {
+		if function.Exec != "" && !hctx.allowExec {
 			return errAllowedExecNotSpecified
 		}
-		if fn.Image != "" && !hctx.dockerCheckDone {
+		if function.Image != "" && !hctx.dockerCheckDone {
 			err := cmdutil.DockerCmdAvailable()
 			if err != nil {
 				return err
 			}
 			hctx.dockerCheckDone = true
 		}
-		validator, err = fnruntime.NewRunner(ctx, &fn, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if hctx.evaluator != nil {
+			validator, err = hctx.evaluator.NewRunner(ctx, &function, pn.pkg.UniquePath, fn.EvalOptions{FnResultList: *hctx.fnResults})
+		} else {
+			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		}
 		if err != nil {
 			return err
 		}
@@ -572,22 +588,26 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		var err error
 		var runner kio.Filter
-		fn := fns[i]
+		function := fns[i]
 		displayResourceCount := false
-		if len(fn.Selectors) > 0 {
+		if len(function.Selectors) > 0 {
 			displayResourceCount = true
 		}
-		if fn.Exec != "" && !hctx.allowExec {
+		if function.Exec != "" && !hctx.allowExec {
 			return nil, errAllowedExecNotSpecified
 		}
-		if fn.Image != "" && !hctx.dockerCheckDone {
+		if function.Image != "" && !hctx.dockerCheckDone {
 			err := cmdutil.DockerCmdAvailable()
 			if err != nil {
 				return nil, err
 			}
 			hctx.dockerCheckDone = true
 		}
-		runner, err = fnruntime.NewRunner(ctx, &fn, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		if hctx.evaluator != nil {
+			runner, err = hctx.evaluator.NewRunner(ctx, &function, pkgPath, fn.EvalOptions{FnResultList: *hctx.fnResults})
+		} else {
+			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+		}
 		if err != nil {
 			return nil, err
 		}
@@ -630,10 +650,10 @@ func trackOutputFiles(hctx *hydrationContext) error {
 
 // pruneResources compares the input and output of the hydration and prunes
 // resources that are no longer present in the output of the hydration.
-func pruneResources(hctx *hydrationContext) error {
+func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 	filesToBeDeleted := hctx.inputFiles.Difference(hctx.outputFiles)
 	for f := range filesToBeDeleted {
-		if err := os.Remove(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
+		if err := fsys.RemoveAll(filepath.Join(string(hctx.root.pkg.UniquePath), f)); err != nil {
 			return fmt.Errorf("failed to delete file: %w", err)
 		}
 	}

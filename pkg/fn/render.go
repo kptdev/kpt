@@ -21,7 +21,8 @@ import (
 )
 
 type RenderOptions struct {
-	Eval Evaluator
+	Eval    Evaluator
+	PkgPath string
 }
 
 type Renderer interface {
