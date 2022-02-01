@@ -486,7 +486,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.dockerCheckDone = true
 		}
 		if hctx.evaluator != nil {
-			validator, err = hctx.evaluator.NewRunner(ctx, &function, pn.pkg.UniquePath, fn.EvalOptions{FnResultList: *hctx.fnResults})
+			validator, err = hctx.evaluator.NewRunner(ctx, &function, fn.EvalOptions{FnResultList: hctx.fnResults})
 		} else {
 			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}
@@ -604,7 +604,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			hctx.dockerCheckDone = true
 		}
 		if hctx.evaluator != nil {
-			runner, err = hctx.evaluator.NewRunner(ctx, &function, pkgPath, fn.EvalOptions{FnResultList: *hctx.fnResults})
+			runner, err = hctx.evaluator.NewRunner(ctx, &function, fn.EvalOptions{FnResultList: hctx.fnResults})
 		} else {
 			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}
