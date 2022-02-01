@@ -16,6 +16,7 @@ type Oci struct {
 }
 
 var _ Reference = Oci{}
+var _ DirectoryNameDefaulter = Oci{}
 
 type OciLock struct {
 	Oci
@@ -75,14 +76,17 @@ func parseOci(value string, opt options) (Reference, error) {
 	return nil, nil
 }
 
+// Type implements location.Reference
 func (ref Oci) String() string {
 	return fmt.Sprintf("type:oci image:%q directory:%q", ref.Image, ref.Directory)
 }
 
+// Type implements location.ReferenceLock
 func (ref OciLock) String() string {
 	return fmt.Sprintf("%v digest:%q", ref.Oci, ref.Digest)
 }
 
+// Validate implements location.Reference
 func (ref Oci) Validate() error {
 	const op errors.Op = "oci.Validate"
 	if ref.Image == nil {
@@ -91,14 +95,17 @@ func (ref Oci) Validate() error {
 	return nil
 }
 
+// Type implements location.Reference
 func (ref Oci) Type() string {
 	return "oci"
 }
 
-func (ref Oci) GetDefaultDirectoryName() (string, error) {
-	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), nil
+// GetDefaultDirectoryName is called from location.DefaultDirectoryName
+func (ref Oci) GetDefaultDirectoryName() (string, bool) {
+	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), false
 }
 
+// SetIdentifier is called from mutate.Identifier
 func (ref Oci) SetIdentifier(identifier string) (Reference, error) {
 	return Oci{
 		Image:     ref.Image.Context().Tag(identifier),
@@ -106,6 +113,7 @@ func (ref Oci) SetIdentifier(identifier string) (Reference, error) {
 	}, nil
 }
 
+// SetLock is called from mutate.Lock
 func (ref Oci) SetLock(lock string) (ReferenceLock, error) {
 	return OciLock{
 		Oci:    ref,

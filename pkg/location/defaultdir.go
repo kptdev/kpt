@@ -1,14 +1,19 @@
 package location
 
-import "fmt"
-
+// DirectoryNameDefaulter is present on Reference types that
+// suggest a default local folder name
 type DirectoryNameDefaulter interface {
-	GetDefaultDirectoryName() (string, error)
+	// GetDefaultDirectoryName implements the location.DefaultDirectoryName() method
+	GetDefaultDirectoryName() (string, bool)
 }
 
-func DefaultDirectoryName(ref Reference) (string, error) {
+// DefaultDirectoryName returns the suggested local directory name to
+// create when a package from a remove reference is cloned or pulled.
+// Returns an empty string and false if the Reference type does not have
+// anything path-like to suggest from.
+func DefaultDirectoryName(ref Reference) (string, bool) {
 	if ref, ok := ref.(DirectoryNameDefaulter); ok {
 		return ref.GetDefaultDirectoryName()
 	}
-	return "", fmt.Errorf("default directory not supported for reference: %v", ref)
+	return "", false
 }

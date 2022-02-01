@@ -20,14 +20,17 @@ func stdinParser(value string, opt options) (Reference, error) {
 	return nil, nil
 }
 
+// String implements location.Reference
 func (ref InputStream) String() string {
 	return fmt.Sprintf("type:io reader:%v", ref.Reader)
 }
 
+// Type implements location.Reference
 func (ref InputStream) Type() string {
 	return "io"
 }
 
+// Validate implements location.Reference
 func (ref InputStream) Validate() error {
 	return nil
 }
@@ -47,14 +50,17 @@ func stdoutParser(value string, opt options) (Reference, error) {
 	return nil, nil
 }
 
+// String implements location.Reference
 func (ref OutputStream) String() string {
 	return fmt.Sprintf("type:io writer:%v", ref.Writer)
 }
 
+// Type implements location.Reference
 func (ref OutputStream) Type() string {
 	return "io"
 }
 
+// Validate implements location.Reference
 func (ref OutputStream) Validate() error {
 	return nil
 }

@@ -20,14 +20,17 @@ func parseDir(location string, opt options) (Reference, error) {
 	return nil, nil
 }
 
+// String implements location.Reference
 func (ref Dir) String() string {
 	return fmt.Sprintf("type:dir directory:%q", ref.Directory)
 }
 
+// Type implements location.Reference
 func (ref Dir) Type() string {
 	return "dir"
 }
 
+// Validate implements location.Reference
 func (ref Dir) Validate() error {
 	return nil
 }

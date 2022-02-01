@@ -24,6 +24,7 @@ type Git struct {
 }
 
 var _ Reference = Git{}
+var _ DirectoryNameDefaulter = Git{}
 
 type GitLock struct {
 	Git
@@ -74,18 +75,22 @@ func parseGit(location string, opt options) (Reference, error) {
 	return nil, nil
 }
 
+// String implements location.Reference
 func (ref Git) String() string {
 	return fmt.Sprintf("type:git repo:%q ref:%q directory:%q", ref.Repo, ref.Ref, ref.Directory)
 }
 
+// String implements location.ReferenceLock
 func (ref GitLock) String() string {
 	return fmt.Sprintf("%v commit:%q", ref.Git, ref.Commit)
 }
 
+// Type implements location.Reference
 func (ref Git) Type() string {
 	return "git"
 }
 
+// Validate implements location.Reference
 func (ref Git) Validate() error {
 	const op errors.Op = "git.Validate"
 	if len(ref.Repo) == 0 {
@@ -100,13 +105,15 @@ func (ref Git) Validate() error {
 	return nil
 }
 
-func (ref Git) GetDefaultDirectoryName() (string, error) {
+// GetDefaultDirectoryName is called from location.DefaultDirectoryName
+func (ref Git) GetDefaultDirectoryName() (string, bool) {
 	repo := ref.Repo
 	repo = strings.TrimSuffix(repo, "/")
 	repo = strings.TrimSuffix(repo, ".git")
-	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), nil
+	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), true
 }
 
+// SetIdentifier is called from mutate.Identifier
 func (ref Git) SetIdentifier(name string) (Reference, error) {
 	return Git{
 		Repo:      ref.Repo,
@@ -115,6 +122,7 @@ func (ref Git) SetIdentifier(name string) (Reference, error) {
 	}, nil
 }
 
+// SetLock is called from mutate.Lock
 func (ref Git) SetLock(lock string) (ReferenceLock, error) {
 	return GitLock{
 		Git:    ref,
