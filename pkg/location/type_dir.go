@@ -26,16 +26,16 @@ type Dir struct {
 
 var _ Reference = Dir{}
 
-func parseDir(location string, opt options) (Reference, error) {
+func parseDir(location string) Reference {
 	dir := filepath.Clean(location)
 
 	if fs.ValidPath(dir) {
 		return Dir{
 			Directory: dir,
-		}, nil
+		}
 	}
 
-	return nil, nil
+	return nil
 }
 
 // String implements location.Reference

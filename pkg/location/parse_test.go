@@ -25,14 +25,14 @@ import (
 var (
 	testReader  = &bytes.Buffer{}
 	testWriter  = &bytes.Buffer{}
-	testOptions = []Option{WithOci(), WithGit(), WithDir()}
+	testParsers = WithParsers(StdioParser, GitParser, OciParser, DirParser)
 )
 
 //nolint:scopelint
 func TestParseReference(t *testing.T) {
 	type args struct {
 		location string
-		opts     []Option
+		opts     Option
 	}
 	tests := []struct {
 		name    string
@@ -155,7 +155,7 @@ func TestParseReference(t *testing.T) {
 			name: "InputStream",
 			args: args{
 				location: "-",
-				opts:     []Option{WithStdin(testReader)},
+				opts:     WithStdin(testReader),
 			},
 			want: InputStream{
 				Reader: testReader,
@@ -166,10 +166,22 @@ func TestParseReference(t *testing.T) {
 			name: "OutputStream",
 			args: args{
 				location: "-",
-				opts:     []Option{WithStdout(testWriter)},
+				opts:     WithStdout(testWriter),
 			},
 			want: OutputStream{
 				Writer: testWriter,
+			},
+			wantErr: false,
+		},
+		{
+			name: "DuplexStream",
+			args: args{
+				location: "-",
+				opts:     Options(WithStdin(testReader), WithStdout(testWriter)),
+			},
+			want: DuplexStream{
+				InputStream:  InputStream{Reader: testReader},
+				OutputStream: OutputStream{Writer: testWriter},
 			},
 			wantErr: false,
 		},
@@ -186,7 +198,7 @@ func TestParseReference(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseReference(tt.args.location, append(tt.args.opts, testOptions...)...)
+			got, err := ParseReference(tt.args.location, tt.args.opts, testParsers)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return

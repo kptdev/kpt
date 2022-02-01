@@ -28,30 +28,16 @@ import (
 func main() {
 	ctx := context.Background()
 
-	opts := []location.Option{
+	opts := location.Options(
 		location.WithContext(ctx),
-		location.WithParser(func(value string) (location.Reference, error) {
-			parts := strings.SplitN(value, ":", 3)
-			if len(parts) == 3 && parts[0] == "custom" {
-				return CustomLocation{
-					WhereItIs:            parts[1],
-					LabelOrVersionString: parts[2],
-				}, nil
-			}
-			return nil, nil
-		}),
-		location.WithGit(),
-		location.WithOci(),
-		location.WithDir(),
-	}
-
-	optsStdin := []location.Option{
-		location.WithStdin(os.Stdin),
-	}
-
-	optsStdout := []location.Option{
-		location.WithStdout(os.Stdout),
-	}
+		location.WithParsers(
+			location.StdioParser,
+			CustomParser,
+			location.GitParser,
+			location.OciParser,
+			location.DirParser,
+		),
+	)
 
 	fmt.Println("- parsing argument to location")
 	fmt.Println()
@@ -61,7 +47,7 @@ func main() {
 		"oci://us-docker.pkg.dev/my-project-id/my-repo-name/my-blueprint:draft",
 		"example",
 		"sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
-		opts...,
+		opts,
 	)
 
 	example(
@@ -69,7 +55,7 @@ func main() {
 		"https://github.com/GoogleCloudPlatform/blueprints.git/catalog/gke@gke-blueprint-v0.4.0",
 		"main",
 		"2b8afca2ef0662cf5ea39c797832ac9c5ea67c7e",
-		opts...,
+		opts,
 	)
 
 	example(
@@ -77,7 +63,7 @@ func main() {
 		"path/to/dir",
 		"qa",
 		"",
-		opts...,
+		opts,
 	)
 
 	example(
@@ -85,7 +71,7 @@ func main() {
 		"custom:where:which",
 		"another",
 		"98175",
-		opts...,
+		opts,
 	)
 
 	// stdin and stdout options are added on individual calls to parse, because
@@ -95,7 +81,8 @@ func main() {
 		"-",
 		"",
 		"",
-		append(optsStdin, opts...)...,
+		location.WithStdin(os.Stdin),
+		opts,
 	)
 
 	example(
@@ -103,7 +90,8 @@ func main() {
 		"-",
 		"",
 		"",
-		append(optsStdout, opts...)...,
+		location.WithStdout(os.Stdout),
+		opts,
 	)
 
 	fmt.Println("- creating locations directly")
@@ -146,7 +134,6 @@ func main() {
 	locked, _ := mutate.Lock(updated, "98510723450981325098375013")
 	fmt.Printf("locked: %v\n", locked)
 	fmt.Println()
-
 }
 
 func example(caption string, arg string, identifier string, lock string, opts ...location.Option) {
@@ -207,6 +194,21 @@ var _ location.Reference = CustomLocation{}
 var _ location.ReferenceLock = CustomLocationLock{}
 var _ mutate.IdentifierSetter = CustomLocation{}
 var _ mutate.LockSetter = CustomLocation{}
+
+var CustomParser = location.NewParser(
+	[]string{
+		"Custom locations format is 'custom:[WHERE]:[LABEL-OR-VERSION]'",
+	},
+	func(parse *location.Parse) {
+		parts := strings.SplitN(parse.Value, ":", 3)
+		if len(parts) == 3 && parts[0] == "custom" {
+			parse.Result(CustomLocation{
+				WhereItIs:            parts[1],
+				LabelOrVersionString: parts[2],
+			})
+		}
+	},
+)
 
 // string when reference appears in console and log messages
 func (ref CustomLocation) String() string {

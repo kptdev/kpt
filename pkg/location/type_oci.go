@@ -83,7 +83,7 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 	return Oci{}, fmt.Errorf("invalid format")
 }
 
-func parseOci(value string, opt options) (Reference, error) {
+func parseOci(value string) (Reference, error) {
 	if _, ok := startsWith(value, "oci://"); ok {
 		return NewOci(value)
 	}

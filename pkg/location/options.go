@@ -28,16 +28,45 @@ type options struct {
 
 func makeOptions(opts ...Option) options {
 	opt := options{}
-	for _, o := range opts {
-		o(&opt)
-	}
+	Options(opts...)(&opt)
 	return opt
 }
 
-type parser func(value string, opt options) (Reference, error)
+type parser func(value string, opt options) result
+
+// result is returned by each parser, called in order.
+//
+// `ref` is assigned if the parser successfully recognized and processed the location string.
+//
+// `err` is assigned if the parser unambiguously recognized the format string, which then failed to parse.
+// An example is "oci://imagename:tag+name" because oci:// is unambiguous and "+" is an invalid tag character.
+// The first `err` returned will be displayed. No other helpText is displayed because it would be misleading.
+//
+// `helpText` is optional. If every result `ref` and `err` are nil, then helpText are combined in a final error.
+// a parser may return constant helpText (e.g. "use '-' to read from input stream") or may return helpText
+// that is related to a parse error on an ambiguous string (e.g. "use .git in the path if you meant git")
+type result struct {
+	// the first non-nil ref is returned. parser should set this if the location is parsed and valid.
+	ref Reference
+	// the first non-nil err is returned. parser should set this only when location unambiguously matches.
+	err error
+	// helpText is optional, and is shown if every parsers neither succeeded nor unambiguously failed
+	helpText []string
+}
 
 // Option is a functional option for location parsing.
 type Option func(*options)
+
+// Options is a convenience to combine several options into one.
+func Options(opts ...Option) Option {
+	return func(opt *options) {
+		for _, option := range opts {
+			if option != nil {
+				option(opt)
+			}
+		}
+	}
+}
 
 // WithDefaultTag sets the default tag that will be used if one is not provided.
 func WithContext(ctx context.Context) Option {
@@ -46,48 +75,22 @@ func WithContext(ctx context.Context) Option {
 	}
 }
 
-// WithStdin enables parser to assign "-" location onto an input io.Reader
+// WithStdin overrides the io.Reader used by the StdinParser
 func WithStdin(reader io.Reader) Option {
 	return func(opts *options) {
 		opts.stdin = reader
-		opts.parsers = append(opts.parsers, stdinParser)
 	}
 }
 
-// WithStdout enables parser to assign "-" location onto an output io.Writer
+// WithStdin overrides the io.Writer used by the StdoutParser
 func WithStdout(writer io.Writer) Option {
 	return func(opts *options) {
 		opts.stdout = writer
-		opts.parsers = append(opts.parsers, stdoutParser)
 	}
 }
 
-// WithGit enables standard parsing for the location.Git Reference type
-func WithGit() Option {
+func WithParsers(parsers ...parser) Option {
 	return func(opts *options) {
-		opts.parsers = append(opts.parsers, parseGit)
-	}
-}
-
-// WithOci enables standard parsing for the location.Oci Reference type
-func WithOci() Option {
-	return func(opts *options) {
-		opts.parsers = append(opts.parsers, parseOci)
-	}
-}
-
-// WithDir enables standard parsing for the location.Dir Reference type
-func WithDir() Option {
-	return func(opts *options) {
-		opts.parsers = append(opts.parsers, parseDir)
-	}
-}
-
-// WithParser enables parsing custom Reference type
-func WithParser(parser func(value string) (Reference, error)) Option {
-	return func(opts *options) {
-		opts.parsers = append(opts.parsers, func(value string, opt options) (Reference, error) {
-			return parser(value)
-		})
+		opts.parsers = append(opts.parsers, parsers...)
 	}
 }
