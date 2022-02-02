@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -27,8 +28,7 @@ data: {}
 `)
 	cm.SetName(pkgName)
 	cm.SetDataMap(data)
-	filename := fmt.Sprintf("%v-gcloud-config.yaml", pkgName)
-	return writeFile(filepath.Join(dir, filename), cm)
+	return writeFile(filepath.Join(dir, pkgutil.LocalGloudConfigFileName(pkgName)), cm)
 }
 
 func pullLocalGcloudConfig(pkgName string) (map[string]string, error) {

@@ -15,6 +15,7 @@
 package pkgutil
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -348,4 +349,8 @@ func Exists(path string) (bool, error) {
 		return false, err
 	}
 	return !os.IsNotExist(err), nil
+}
+
+var LocalGloudConfigFileName = func(pkgPath string) string {
+	return fmt.Sprintf("%v-gcloud-config.yaml", filepath.Base(pkgPath))
 }

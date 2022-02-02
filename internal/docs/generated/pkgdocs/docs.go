@@ -135,6 +135,16 @@ Flags:
         since it was fetched.
       * force-delete-replace: Wipe all the local changes to the package and replace
         it with the remote version.
+  
+  --local-gcloud:
+    Pulls the local gcloud config as default function data. The gcloud config to function
+    data is based on best practice. For example, the default gcloud "project" is used by 
+    "set-project-id" function to set project value for input resources' metadata.annotation 
+    "cnrm.cloud.google.com/project-id" and other specific "project" field.
+    e.g.  Resources of GVK "gkehub.cnrm.cloud.google.com_v1beta1_GKEHubFeatureMembership"
+    will have both ` + "`" + `metadata.annotations[cnrm.cloud.google.com/project-id]` + "`" + ` and
+    path ` + "`" + `spec.projectRef.external` + "`" + ` updated toe the local gcloud "project" 
+    when running ` + "`" + `set-project-id` + "`" + `.
 
 Env Vars:
 
