@@ -7,6 +7,7 @@ require (
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
+	github.com/google/go-cmp v0.5.6
 	k8s.io/klog/v2 v2.40.1
 	sigs.k8s.io/kustomize/api v0.8.11
 	sigs.k8s.io/kustomize/kyaml v0.13.1
@@ -44,7 +45,6 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/go-containerregistry v0.8.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

@@ -90,7 +90,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
 		fileSystem:      e.FileSystem,
-		evaluator:       e.Runner,
+		runner:          e.Runner,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -205,7 +205,8 @@ type hydrationContext struct {
 
 	fileSystem filesys.FileSystem
 
-	evaluator fn.FunctionRunner
+	// custom function runner
+	runner fn.FunctionRunner
 }
 
 //
@@ -479,14 +480,17 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			return errAllowedExecNotSpecified
 		}
 		if function.Image != "" && !hctx.dockerCheckDone {
-			err := cmdutil.DockerCmdAvailable()
-			if err != nil {
-				return err
+			if hctx.runner == nil {
+				// Check for Docker when using standard runner.
+				err := cmdutil.DockerCmdAvailable()
+				if err != nil {
+					return err
+				}
 			}
 			hctx.dockerCheckDone = true
 		}
-		if hctx.evaluator != nil {
-			validator, err = hctx.evaluator.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
+		if hctx.runner != nil {
+			validator, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
 			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}
@@ -597,14 +601,17 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			return nil, errAllowedExecNotSpecified
 		}
 		if function.Image != "" && !hctx.dockerCheckDone {
-			err := cmdutil.DockerCmdAvailable()
-			if err != nil {
-				return nil, err
+			if hctx.runner == nil {
+				// Check for Docker when using standard runner.
+				err := cmdutil.DockerCmdAvailable()
+				if err != nil {
+					return nil, err
+				}
 			}
 			hctx.dockerCheckDone = true
 		}
-		if hctx.evaluator != nil {
-			runner, err = hctx.evaluator.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
+		if hctx.runner != nil {
+			runner, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
 			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}

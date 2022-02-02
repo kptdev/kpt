@@ -20,16 +20,29 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"gcr.io/kpt-fn/set-labels:v0.1.5":    setLabels,
-	"gcr.io/kpt-fn/set-namespace:v0.2.0": setNamespace,
-}
-
-func Eval(image string, rl *framework.ResourceList) error {
-	// Evaluate
-	if f, ok := functions[image]; ok {
-		return f(rl)
-	} else {
-		return fmt.Errorf("unsupported kpt function %q", image)
+// Simple implementation of set-namespace kpt function, primarily for testing.
+func setNamespace(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return nil // nothing to do
 	}
+
+	if !validGVK(rl.FunctionConfig, "v1", "ConfigMap") {
+		return fmt.Errorf("invalid set-namespace function config type: %s/%s; expected v1/ConfigMap", rl.FunctionConfig.GetApiVersion(), rl.FunctionConfig.GetKind())
+	}
+
+	data := rl.FunctionConfig.GetDataMap()
+	if data == nil {
+		return nil // nothing to do
+	}
+
+	namespace, ok := data["namespace"]
+	if !ok {
+		return nil // nothing to do
+	}
+
+	for _, n := range rl.Items {
+		n.SetNamespace(namespace)
+	}
+
+	return nil
 }

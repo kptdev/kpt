@@ -28,31 +28,31 @@ import (
 )
 
 func NewPlaceholderFunctionRunner() fn.FunctionRunner {
-	return &evaluator{}
+	return &runner{}
 }
 
-type evaluator struct {
+type runner struct {
 }
 
-var _ fn.FunctionRunner = &evaluator{}
+var _ fn.FunctionRunner = &runner{}
 
-func (e *evaluator) NewRunner(ctx context.Context, fn *kptfilev1.Function, opts fn.RunnerOptions) (kio.Filter, error) {
-	return &runner{
+func (e *runner) NewRunner(ctx context.Context, fn *kptfilev1.Function, opts fn.RunnerOptions) (kio.Filter, error) {
+	return &filter{
 		ctx: ctx,
 		fn:  *fn,
 		rl:  opts.ResultList,
 	}, nil
 }
 
-type runner struct {
+type filter struct {
 	ctx context.Context
 	fn  kptfilev1.Function
 	rl  *fnresultv1.ResultList
 }
 
-var _ kio.Filter = &runner{}
+var _ kio.Filter = &filter{}
 
-func (r *runner) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+func (r *filter) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
 	rl := &framework.ResourceList{
 		Items:   items,
 		Results: []*framework.Result{},
