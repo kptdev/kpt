@@ -244,7 +244,7 @@ func newPkgNode(fsys filesys.FileSystem, path string, p *pkg.Pkg) (pn *pkgNode, 
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
-	if err := kf.Validate(p.UniquePath); err != nil {
+	if err := kf.Validate(fsys, p.UniquePath); err != nil {
 		return pn, errors.E(op, p.UniquePath, err)
 	}
 
