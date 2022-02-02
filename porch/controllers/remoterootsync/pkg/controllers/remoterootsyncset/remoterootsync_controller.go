@@ -23,6 +23,7 @@ import (
 	"unicode"
 
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/applyset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -100,16 +101,22 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
+	var result ctrl.Result
+
 	var patchErrs []error
 	for _, clusterRef := range subject.Spec.ClusterRefs {
-		err := r.applyToClusterRef(ctx, &subject, clusterRef)
+		results, err := r.applyToClusterRef(ctx, &subject, clusterRef)
 		if err != nil {
 			patchErrs = append(patchErrs, err)
 		}
-		if updateTargetStatus(&subject, clusterRef, err) {
+		if updateTargetStatus(&subject, clusterRef, results, err) {
 			if err := r.Status().Update(ctx, &subject); err != nil {
 				patchErrs = append(patchErrs, err)
 			}
+		}
+
+		if results != nil && !(results.AllApplied() && results.AllHealthy()) {
+			result.Requeue = true
 		}
 	}
 
@@ -119,10 +126,10 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		}
 		return ctrl.Result{}, patchErrs[0]
 	}
-	return ctrl.Result{}, nil
+	return result, nil
 }
 
-func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, err error) bool {
+func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, applyResults *applyset.ApplyResults, err error) bool {
 	var found *api.TargetStatus
 	for i := range subject.Status.Targets {
 		target := &subject.Status.Targets[i]
@@ -140,14 +147,28 @@ func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, err
 
 	if err != nil {
 		meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionFalse, Reason: "Error", Message: err.Error()})
+		meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "UpdateInProgress"})
 	} else {
-		meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Applied"})
+		if applyResults == nil {
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionFalse, Reason: "UnknownStatus"})
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "UnknownStatus"})
+		} else if !applyResults.AllApplied() {
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionFalse, Reason: "UpdateInProgress"})
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "UpdateInProgress"})
+		} else if !applyResults.AllHealthy() {
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Applied"})
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "WaitingForReady"})
+		} else {
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Applied"})
+			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "Ready"})
+		}
 	}
 	// TODO: SetStatusCondition should return an indiciation if anything has changes
+
 	return true
 }
 
-func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, subject *api.RemoteRootSyncSet, clusterRef *api.ClusterRef) error {
+func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, subject *api.RemoteRootSyncSet, clusterRef *api.ClusterRef) (*applyset.ApplyResults, error) {
 	var restConfig *rest.Config
 
 	if os.Getenv("HACK_ENABLE_LOOPBACK") != "" {
@@ -160,20 +181,20 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 	if restConfig == nil {
 		rc, err := remoteclient.GetRemoteClient(ctx, r.Client, clusterRef, subject.Namespace)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		restConfig = rc
 	}
 
 	client, err := dynamic.NewForConfig(restConfig)
 	if err != nil {
-		return fmt.Errorf("failed to create a new dynamic client: %w", err)
+		return nil, fmt.Errorf("failed to create a new dynamic client: %w", err)
 	}
 
 	// TODO: Use a better discovery client
 	discovery, err := discovery.NewDiscoveryClientForConfig(restConfig)
 	if err != nil {
-		return fmt.Errorf("error building discovery client: %w", err)
+		return nil, fmt.Errorf("error building discovery client: %w", err)
 	}
 
 	cached := memory.NewMemCacheClient(discovery)
@@ -182,15 +203,32 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 
 	objects, err := r.BuildObjectsToApply(ctx, subject)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	// TODO: Cache applyset
 	patchOptions := metav1.PatchOptions{FieldManager: "remoterootsync-" + subject.GetNamespace() + "-" + subject.GetName()}
-	if err := applyObjects(ctx, restMapper, client, objects, patchOptions); err != nil {
-		return fmt.Errorf("failed to apply to cluster %v: %w", clusterRef, err)
+	applyset, err := applyset.New(applyset.Options{
+		RESTMapper:   restMapper,
+		Client:       client,
+		PatchOptions: patchOptions,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	if err := applyset.ReplaceAllObjects(objects); err != nil {
+		return nil, err
+	}
+
+	results, err := applyset.ApplyOnce(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to apply to cluster %v: %w", clusterRef, err)
+	}
+
+	// TODO: Implement pruning
+
+	return results, nil
 }
 
 // BuildObjectsToApply config root sync
