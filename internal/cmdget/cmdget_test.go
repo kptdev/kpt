@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -230,8 +231,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(_, _ string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, "master", r.Get.Git.Ref)
-				assert.Equal(t, "something://foo", r.Get.Git.Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
+				assert.Equal(t, "something://foo", r.Get.Upstream.(location.Git).Repo)
 				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
 			},
 		},
@@ -242,9 +243,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, _ string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
-				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
+				assert.Equal(t, "blueprints/java", r.Get.Upstream.(location.Git).Directory)
 				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 			},
 		},
@@ -255,9 +256,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, _ string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
-				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
+				assert.Equal(t, "blueprints/java", r.Get.Upstream.(location.Git).Directory)
 				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 			},
 		},
@@ -268,9 +269,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, _ string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
-				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
+				assert.Equal(t, "blueprints/java", r.Get.Upstream.(location.Git).Directory)
 				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "baz"), r.Get.Destination)
 			},
 		},
@@ -281,9 +282,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, _ string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
-				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
+				assert.Equal(t, "blueprints/java", r.Get.Upstream.(location.Git).Directory)
 				assert.Equal(t, "/baz", r.Get.Destination)
 			},
 		},
@@ -294,8 +295,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
 				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
 			},
 		},
@@ -306,9 +307,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "/baz", r.Get.Git.Directory)
-				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "baz", r.Get.Upstream.(location.Git).Directory)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
 				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
 			},
 		},
@@ -319,9 +320,9 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "/baz", r.Get.Git.Directory)
-				assert.Equal(t, "v1", r.Get.Git.Ref)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "baz", r.Get.Upstream.(location.Git).Directory)
+				assert.Equal(t, "v1", r.Get.Upstream.(location.Git).Ref)
 				assert.Equal(t, filepath.Join(dir, "my-app"), r.Get.Destination)
 			},
 		},
@@ -332,8 +333,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
 				assert.Equal(t, filepath.Join(dir, "package"), r.Get.Destination)
 			},
 		},
@@ -355,8 +356,8 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 			runE: NoOpRunE,
 			validations: func(repo, dir string, r *cmdget.Runner, err error) {
 				assert.NoError(t, err)
-				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
-				assert.Equal(t, "master", r.Get.Git.Ref)
+				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Upstream.(location.Git).Repo)
+				assert.Equal(t, "master", r.Get.Upstream.(location.Git).Ref)
 				assert.Equal(t, filepath.Join(dir, "package"), r.Get.Destination)
 				assert.Equal(t, kptfilev1.FastForward, r.Get.UpdateStrategy)
 			},

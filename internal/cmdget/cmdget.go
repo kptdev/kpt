@@ -17,7 +17,9 @@ package cmdget
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -27,10 +29,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -87,17 +88,17 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
-		SetGit: func(git *kptfilev1.Git) error {
-			r.Get.Git = git
-			r.Get.Upstream = remote.NewGitUpstream(git)
-			return nil
-		},
-		SetOci: func(oci *kptfilev1.Oci) error {
-			r.Get.Upstream = remote.NewOciUpstream(oci)
-			return nil
-		},
-	})
+
+	upstream, err := location.ParseReference(
+		args[0],
+		location.WithContext(r.ctx),
+		location.WithParsers(location.GitParser, location.OciParser))
+	if err != nil {
+		return err
+	}
+	r.Get.Upstream = upstream
+
+	destination, err := getDest(args[1], upstream)
 	if err != nil {
 		return err
 	}
@@ -119,6 +120,33 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Get.UpdateStrategy = strategy
 	return nil
+}
+
+func getDest(dir string, ref location.Reference) (string, error) {
+	destination := filepath.Clean(dir)
+
+	f, err := os.Stat(destination)
+	if os.IsNotExist(err) {
+		parent := filepath.Dir(destination)
+		if _, err := os.Stat(parent); os.IsNotExist(err) {
+			// error -- fetch to directory where parent does not exist
+			return "", fmt.Errorf("parent directory %q does not exist", parent)
+		}
+		// fetch to a specific directory -- don't default the name
+		return destination, nil
+	}
+
+	if !f.IsDir() {
+		return "", fmt.Errorf("LOCAL_PKG_DEST must be a directory")
+	}
+
+	if name, ok := location.DefaultDirectoryName(ref); ok {
+		return filepath.Join(destination, name), nil
+	}
+
+	// this reference type does not provide a default name.
+	// the error message is a prompt to provide complete path to new dir.
+	return "", fmt.Errorf("destination directory already exists")
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {

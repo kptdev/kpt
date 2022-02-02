@@ -34,6 +34,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -41,11 +42,8 @@ import (
 // Command fetches a package from a git repository, copies it to a local
 // directory, and expands any remote subpackages.
 type Command struct {
-	// Git contains information about the git repo to fetch
-	Git *kptfilev1.Git
-
-	// Contains information about the upstraem package to fetch
-	Upstream remote.Upstream
+	// Contains information about the upstream package to fetch
+	Upstream location.Reference
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -78,7 +76,9 @@ func (c Command) Run(ctx context.Context) error {
 
 	kf := kptfileutil.DefaultKptfile(c.Name)
 
-	kf.Upstream = c.Upstream.BuildUpstream()
+	if kf.Upstream, err = kptfileutil.NewUpstreamFromReference(c.Upstream); err != nil {
+		return errors.E(op, err)
+	}
 	kf.Upstream.UpdateStrategy = c.UpdateStrategy
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
