@@ -18,7 +18,7 @@ CACHEDIR=$(CURDIR)/.cache
 MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
 
 .PHONY: all
-all: stop network start-etcd start-kube-apiserver run-local
+all: stop network start-etcd start-kube-apiserver start-function-runner run-local
 
 .PHONY: network
 network:
@@ -30,6 +30,8 @@ stop:
 	docker rm kube-apiserver || true
 	docker stop etcd || true
 	docker rm etcd || true
+	docker stop function-runner || true
+	docker rm function-runner || true
 	docker network rm porch || true
 
 .PHONY: start-etcd
@@ -65,6 +67,17 @@ start-kube-apiserver:
 	  --authorization-mode=RBAC \
 	  --anonymous-auth=false \
 	  --client-ca-file=/pki/ca.crt
+
+.PHONY: start-function-runner
+start-function-runner:
+	cd func; docker buildx build -t function-runner .
+	docker stop function-runner || true
+	docker rm -f function-runner || true
+	docker run --detach \
+	  --network=porch \
+	  --ip 192.168.8.202 \
+	  --name function-runner \
+	  function-runner
 
 .PHONY: generate
 generate: $(MODULES)

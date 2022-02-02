@@ -18,6 +18,20 @@
                 "--cache-directory=${workspaceFolder}/.cache"
             ],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch Func Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/func/client/main.go",
+            "args": [
+                "--address=192.168.8.202:9445",
+                "--package=${workspaceFolder}/func/config/",
+                "--image=gcr.io/kpt-fn/set-namespace:v0.2.0",
+                "--",
+                "namespace=foo"
+            ]
         }
     ]
 }
