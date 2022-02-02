@@ -15,6 +15,7 @@
 package extensions
 
 import (
+	"io"
 	"io/fs"
 
 	"github.com/GoogleContainerTools/kpt/pkg/location"
@@ -22,18 +23,26 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
+type Content interface {
+	io.Closer
+}
+
 type ChangeCommitter interface {
+	Content
 	CommitChanges() (location.Location, error)
 }
 
 type FileSystemProvider interface {
+	Content
 	ProvideFileSystem() (filesys.FileSystem, string, error)
 }
 
 type FSProvider interface {
+	Content
 	ProvideFS() (fs.FS, error)
 }
 
 type ReaderProvider interface {
+	Content
 	ProvideReader() (kio.Reader, error)
 }

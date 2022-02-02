@@ -15,9 +15,7 @@
 package content
 
 import (
-	"io"
+	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
 )
 
-type Content interface {
-	io.Closer
-}
+type Content = extensions.Content
