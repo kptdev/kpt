@@ -248,7 +248,6 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 		RequireRemoteRefs: []config.RefSpec{},
 	}
 
-	// TODO: Why can't we push by SHA here?
 	options.RefSpecs = append(options.RefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", oldRef.Hash(), newRef.Name())))
 
 	currentNewRefValue, err := r.repo.Storer.Reference(newRef.Name())
@@ -262,6 +261,7 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 
 	klog.Infof("pushing with options %v", options)
 
+	// Note that we push and _then_ we set the local reference to avoid drift
 	if err := r.repo.Push(options); err != nil {
 		return nil, fmt.Errorf("failed to push to git %#v: %w", options, err)
 	}
