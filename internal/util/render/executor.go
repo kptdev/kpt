@@ -47,9 +47,9 @@ type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
 
-	// Evaluator evaluates the function, if specified, this can override the default
+	// Runner evaluates the function, if specified, this can override the default
 	// kpt function evaluator
-	Evaluator fn.Evaluator
+	Runner fn.FunctionRunner
 
 	// ResultsDirPath is absolute path to the directory to write results
 	ResultsDirPath string
@@ -90,7 +90,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
 		fileSystem:      e.FileSystem,
-		evaluator:       e.Evaluator,
+		evaluator:       e.Runner,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -205,7 +205,7 @@ type hydrationContext struct {
 
 	fileSystem filesys.FileSystem
 
-	evaluator fn.Evaluator
+	evaluator fn.FunctionRunner
 }
 
 //
@@ -486,7 +486,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.dockerCheckDone = true
 		}
 		if hctx.evaluator != nil {
-			validator, err = hctx.evaluator.NewRunner(ctx, &function, fn.EvalOptions{ResultList: hctx.fnResults})
+			validator, err = hctx.evaluator.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
 			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}
@@ -604,7 +604,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			hctx.dockerCheckDone = true
 		}
 		if hctx.evaluator != nil {
-			runner, err = hctx.evaluator.NewRunner(ctx, &function, fn.EvalOptions{ResultList: hctx.fnResults})
+			runner, err = hctx.evaluator.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
 			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
 		}

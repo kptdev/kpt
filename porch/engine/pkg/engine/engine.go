@@ -24,6 +24,7 @@ import (
 	"reflect"
 	"strings"
 
+	fnresultv1 "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -31,6 +32,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 type CaDEngine interface {
@@ -44,16 +47,16 @@ type CaDEngine interface {
 
 func NewCaDEngine(cache *cache.Cache) (CaDEngine, error) {
 	return &cadEngine{
-		cache:     cache,
-		renderer:  kpt.NewPlaceholderRenderer(),
-		evaluator: kpt.NewPlaceholderEvaluator(),
+		cache:    cache,
+		renderer: kpt.NewPlaceholderRenderer(),
+		runner:   kpt.NewPlaceholderFunctionRunner(),
 	}, nil
 }
 
 type cadEngine struct {
-	cache     *cache.Cache
-	renderer  fn.Renderer
-	evaluator fn.Evaluator
+	cache    *cache.Cache
+	renderer fn.Renderer
+	runner   fn.FunctionRunner
 }
 
 var _ CaDEngine = &cadEngine{}
@@ -101,8 +104,8 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 				return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
 			}
 			mutations = append(mutations, &evalFunctionMutation{
-				evaluator: cad.evaluator,
-				task:      task,
+				runner: cad.runner,
+				task:   task,
 			})
 
 		default:
@@ -112,8 +115,8 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 	// Render package after creation.
 	mutations = append(mutations, &renderPackageMutation{
-		renderer:  cad.renderer,
-		evaluator: cad.evaluator,
+		renderer: cad.renderer,
+		runner:   cad.runner,
 	})
 
 	baseResources := repository.PackageResources{}
@@ -164,8 +167,8 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	mutations = append(mutations, &renderPackageMutation{
-		renderer:  cad.renderer,
-		evaluator: cad.evaluator,
+		renderer: cad.renderer,
+		runner:   cad.runner,
 	})
 
 	draft, err := repo.UpdatePackage(ctx, oldPackage)
@@ -340,8 +343,8 @@ func loadResourcesFromDirectory(dir string) (repository.PackageResources, error)
 }
 
 type evalFunctionMutation struct {
-	evaluator fn.Evaluator
-	task      *api.Task
+	runner fn.FunctionRunner
+	task   *api.Task
 }
 
 func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
@@ -353,12 +356,35 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		return repository.PackageResources{}, nil, err
 	}
 
-	if err := m.evaluator.Eval(ctx, fs, v1.Function{
+	results := fnresultv1.ResultList{}
+	filter, err := m.runner.NewRunner(ctx, &v1.Function{
 		Image:     e.Image,
 		ConfigMap: e.ConfigMap,
 		Selectors: []v1.Selector{},
-	}, fn.EvalOptions{}); err != nil {
-		return repository.PackageResources{}, nil, err
+	}, fn.RunnerOptions{
+		ResultList: &results,
+	})
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to create function runner: %w", err)
+	}
+
+	rw := &kio.LocalPackageReadWriter{
+		PackagePath:        "/", // TODO: Populate with the package directory.
+		IncludeSubpackages: true,
+		FileSystem: filesys.FileSystemOrOnDisk{
+			FileSystem: fs,
+		},
+	}
+
+	pipeline := kio.Pipeline{
+		Inputs:                []kio.Reader{rw},
+		Filters:               []kio.Filter{filter},
+		Outputs:               []kio.Writer{rw},
+		ContinueOnEmptyResult: false,
+	}
+
+	if err := pipeline.Execute(); err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function: %w", err)
 	}
 
 	result, err := readResources(fs)
