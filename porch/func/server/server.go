@@ -15,20 +15,42 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
+	"github.com/GoogleContainerTools/kpt/porch/func/internal"
 	"google.golang.org/grpc"
+	"k8s.io/klog/v2"
+)
+
+var (
+	port      = flag.Int("port", 9445, "The server port")
+	functions = flag.String("functions", "./functions", "Path to cached functions.")
+	config    = flag.String("config", "./config.yaml", "Path to the config file.")
 )
 
 func main() {
-	lis, _ := net.Listen("tcp", fmt.Sprint(":9445"))
-	server := grpc.NewServer()
-	pb.RegisterFunctionEvaluatorServer(server, &evaluator{})
-	server.Serve(lis)
-}
+	flag.Parse()
 
-type evaluator struct {
-	pb.UnimplementedFunctionEvaluatorServer
+	address := fmt.Sprintf(":%d", *port)
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		klog.Fatalf("failed to listen: %v", err)
+	}
+
+	evaluator, err := internal.NewEvaluatorWithConfig(*functions, *config)
+	if err != nil {
+		klog.Fatalf("failed to initialize evaluator server: %v", err)
+	}
+
+	klog.Infof("Listening on %s", address)
+
+	// Start the gRPC server
+	server := grpc.NewServer()
+	pb.RegisterFunctionEvaluatorServer(server, evaluator)
+	if err := server.Serve(lis); err != nil {
+		klog.Errorf("server failed: %v", err)
+	}
 }
