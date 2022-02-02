@@ -16,27 +16,83 @@ package kpt
 
 import (
 	"context"
+	"fmt"
 
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	fnresultv1 "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func NewPlaceholderEvaluator() fn.Evaluator {
+func NewPlaceholderFunctionRunner() fn.FunctionRunner {
 	return &evaluator{}
 }
 
 type evaluator struct {
 }
 
-var _ fn.Evaluator = &evaluator{}
+var _ fn.FunctionRunner = &evaluator{}
 
-func (e *evaluator) Eval(ctx context.Context, pkg filesys.FileSystem, fn v1.Function, opts fn.EvalOptions) error {
-	return internal.Eval(ctx, pkg, fn, opts)
+func (e *evaluator) NewRunner(ctx context.Context, fn *kptfilev1.Function, opts fn.RunnerOptions) (kio.Filter, error) {
+	return &runner{
+		ctx: ctx,
+		fn:  *fn,
+		rl:  opts.ResultList,
+	}, nil
 }
 
-func (e *evaluator) NewRunner(ctx context.Context, fn *v1.Function, opts fn.EvalOptions) (kio.Filter, error) {
-	return nil, nil
+type runner struct {
+	ctx context.Context
+	fn  kptfilev1.Function
+	rl  *fnresultv1.ResultList
+}
+
+var _ kio.Filter = &runner{}
+
+func (r *runner) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
+	rl := &framework.ResourceList{
+		Items:   items,
+		Results: []*framework.Result{},
+	}
+
+	if r.fn.ConfigMap != nil {
+		if cm, err := NewConfigMap(r.fn.ConfigMap); err != nil {
+			return nil, fmt.Errorf("cannot create config map: %w", err)
+		} else {
+			rl.FunctionConfig = cm
+		}
+	}
+
+	if err := internal.Eval(r.fn.Image, rl); err != nil {
+		return nil, fmt.Errorf("function evaluation failed; %w", err)
+	}
+
+	// Return error on error
+	if rl.Results.ExitCode() != 0 {
+		return nil, rl.Results
+	}
+
+	return rl.Items, nil
+}
+
+func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
+	node := yaml.NewMapRNode(&data)
+	if node == nil {
+		return nil, nil
+	}
+	// create a ConfigMap only for configMap config
+	configMap := yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`)
+	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
+		return nil, err
+	}
+	return configMap, nil
 }

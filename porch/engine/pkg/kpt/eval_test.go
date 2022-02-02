@@ -16,11 +16,11 @@ package kpt
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -28,7 +28,6 @@ import (
 func TestSetLabels(t *testing.T) {
 	k := &evaluator{}
 
-	const path = "bucket.yaml"
 	const pkgYaml = `# Comment
 apiVersion: storage.cnrm.cloud.google.com/v1beta1
 kind: StorageBucket
@@ -39,32 +38,32 @@ spec:
     storageClass: standard
 `
 
-	fs := &MemFS{}
-	fs.Mkdir("/") // TODO: Make this automatic.
-	fs.WriteFile(path, []byte(pkgYaml))
-
-	if err := k.Eval(context.Background(), fs, v1.Function{
+	filter, err := k.NewRunner(context.Background(), &v1.Function{
 		Image: "gcr.io/kpt-fn/set-labels:v0.1.5",
 		ConfigMap: map[string]string{
 			"label-key": "label-value",
 		},
-	}, fn.EvalOptions{}); err != nil {
+	}, fn.RunnerOptions{})
+
+	if err != nil {
 		t.Errorf("Eval failed: %v", err)
 	}
 
-	r := kio.LocalPackageReader{
-		PackagePath: "/",
-		FileSystem: filesys.FileSystemOrOnDisk{
-			FileSystem: fs,
-		},
+	var result []*yaml.RNode
+	var writer kio.WriterFunc = func(r []*yaml.RNode) error {
+		result = r
+		return nil
 	}
 
-	var result []*yaml.RNode
+	p := &kio.Pipeline{
+		Inputs:                []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(pkgYaml)}},
+		Filters:               []kio.Filter{filter},
+		Outputs:               []kio.Writer{writer},
+		ContinueOnEmptyResult: false,
+	}
 
-	if nodes, err := r.Read(); err != nil {
-		t.Errorf("Result read failed: %v", err)
-	} else {
-		result = nodes
+	if err := p.Execute(); err != nil {
+		t.Errorf("Failed to evaluate function: %v", err)
 	}
 
 	if got, want := len(result), 1; got != want {

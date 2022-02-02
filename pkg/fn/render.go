@@ -21,7 +21,7 @@ import (
 )
 
 type RenderOptions struct {
-	Eval    Evaluator
+	Runner  FunctionRunner
 	PkgPath string
 }
 

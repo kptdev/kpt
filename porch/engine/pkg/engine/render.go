@@ -28,8 +28,8 @@ import (
 )
 
 type renderPackageMutation struct {
-	renderer  fn.Renderer
-	evaluator fn.Evaluator
+	renderer fn.Renderer
+	runner   fn.FunctionRunner
 }
 
 var _ mutation = &renderPackageMutation{}
@@ -42,7 +42,7 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 	}
 
 	if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
-		Eval: m.evaluator,
+		Runner: m.runner,
 	}); err != nil {
 		return repository.PackageResources{}, nil, err
 	}
