@@ -33,14 +33,6 @@ message EvaluateFunctionRequest {
 
   // kpt image identifying the function to evaluate
   string image = 2;
-
-  oneof config {
-    // Function config as a simple map of key, value pairs.
-    ConfigMap map = 3;
-
-    // Function config as an arbitrary KRM resource.
-    google.protobuf.Struct struct = 4;
-  }
 }
 
 // ConfigMap wraps a map<string, string> for use in oneof clause.
@@ -52,4 +44,7 @@ message EvaluateFunctionResponse {
   // Serialized ResourceList (https://kpt.dev/reference/schema/resource-list/),
   // including structured function results.
   bytes resource_list = 1;
+
+  // Additional log produced by the function (if any).
+  bytes log = 2;
 }

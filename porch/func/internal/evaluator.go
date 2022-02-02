@@ -84,25 +84,23 @@ func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFuncti
 		return nil, status.Errorf(codes.NotFound, "Unsupported function %q", req.Image)
 	}
 
-	stdout := bytes.NewBuffer(nil)
-	stderr := bytes.NewBuffer(nil)
+	var stdout, stderr bytes.Buffer
 	cmd := exec.CommandContext(ctx, binary)
 	cmd.Stdin = bytes.NewReader(req.ResourceList)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		output := stderr.Bytes()
-		return nil, status.Errorf(codes.Internal, "Failed to execute function %q: %s (%s)", req.Image, err, string(output))
+		return nil, status.Errorf(codes.Internal, "Failed to execute function %q: %s (%s)", req.Image, err, stderr.String())
 	}
 
 	outbytes := stdout.Bytes()
-	errbytes := stderr.Bytes()
 
-	klog.Infof("Evaluated %q: stdout %d bytes, stderr:\n%s", req.Image, len(outbytes), string(errbytes))
+	klog.Infof("Evaluated %q: stdout %d bytes, stderr:\n%s", req.Image, len(outbytes), stderr.String())
 
 	// TODO: include stderr in the output?
 	return &pb.EvaluateFunctionResponse{
 		ResourceList: outbytes,
+		Log:          stderr.Bytes(),
 	}, nil
 }

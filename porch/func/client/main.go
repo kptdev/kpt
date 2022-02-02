@@ -19,6 +19,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -39,7 +40,8 @@ func main() {
 	flag.Parse()
 
 	if err := run(flag.Args()); err != nil {
-		fmt.Printf("Error: %w", err)
+		fmt.Fprintf(os.Stderr, "unexpected error: %v\n", err)
+		os.Exit(1)
 	}
 }
 
@@ -49,14 +51,14 @@ func run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("Request:\n%s", string(rl))
+	fmt.Printf("Request:\n\n%s\n", string(rl))
 
-	rl, err = call(rl)
+	res, err := call(rl)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Response:\n%s", string(rl))
+	fmt.Printf("Response:\n\n%s\n\nLog:\n%s\n", string(res.ResourceList), string(res.Log))
 	return nil
 }
 
@@ -92,10 +94,10 @@ func createResourceList(args []string) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func call(rl []byte) ([]byte, error) {
+func call(rl []byte) (*pb.EvaluateFunctionResponse, error) {
 	cc, err := grpc.Dial(*addressFlag, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to %s", *addressFlag)
+		return nil, fmt.Errorf("failed to connect to %s: %w", *addressFlag, err)
 	}
 	defer cc.Close()
 
@@ -110,9 +112,9 @@ func call(rl []byte) ([]byte, error) {
 
 	r, err := evaluator.EvaluateFunction(ctx, in)
 	if err != nil {
-		return nil, fmt.Errorf("function evaluation failed: %v", err)
+		return nil, fmt.Errorf("function evaluation failed: %w", err)
 	} else {
-		return r.ResourceList, nil
+		return r, nil
 	}
 }
 
@@ -133,7 +135,8 @@ func configmap(args []string) (*yaml.RNode, error) {
 	if node == nil {
 		return nil, nil
 	}
-	// create a ConfigMap only for configMap config
+
+	// create ConfigMap resource to contain function config
 	configMap := yaml.MustParse(`
 apiVersion: v1
 kind: ConfigMap

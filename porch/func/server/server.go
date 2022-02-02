@@ -18,6 +18,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/func/internal"
@@ -34,15 +35,22 @@ var (
 func main() {
 	flag.Parse()
 
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "unexpected error: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	address := fmt.Sprintf(":%d", *port)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
-		klog.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %w", err)
 	}
 
 	evaluator, err := internal.NewEvaluatorWithConfig(*functions, *config)
 	if err != nil {
-		klog.Fatalf("failed to initialize evaluator server: %v", err)
+		return fmt.Errorf("failed to initialize evaluator server: %w", err)
 	}
 
 	klog.Infof("Listening on %s", address)
@@ -51,6 +59,7 @@ func main() {
 	server := grpc.NewServer()
 	pb.RegisterFunctionEvaluatorServer(server, evaluator)
 	if err := server.Serve(lis); err != nil {
-		klog.Errorf("server failed: %v", err)
+		return fmt.Errorf("server failed: %w", err)
 	}
+	return nil
 }
