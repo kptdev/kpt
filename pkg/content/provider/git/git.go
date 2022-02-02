@@ -23,18 +23,20 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
+	"github.com/GoogleContainerTools/kpt/pkg/content/provider/dir"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type gitProvider struct {
+	extensions.FileSystemProvider
+
 	repoSpec *git.RepoSpec
 }
 
 var _ content.Content = &gitProvider{}
 var _ extensions.FileSystemProvider = &gitProvider{}
 
-func Open(ctx context.Context, ref location.Git) (_ content.Content, _ location.ReferenceLock, _err error) {
+func Open(ctx context.Context, ref location.Git) (_ *gitProvider, _ location.ReferenceLock, _err error) {
 
 	repoSpec := &git.RepoSpec{
 		OrgRepo: ref.Repo,
@@ -51,21 +53,32 @@ func Open(ctx context.Context, ref location.Git) (_ content.Content, _ location.
 		}
 	}()
 
-	// Make lock reference for commit
+	// make lock reference for commit
 	lock, err := ref.SetLock(repoSpec.Commit)
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// In this implementation, because the repo is cloned to a tmp folder, this
+	// provider can re-use the "dir" content provider. The path of interest
+	// is the cloned repoSpec.Dir + the repoSpec.Path package folder in the repo.
+	dir, err := dir.Open(location.Dir{
+		Directory: filepath.Join(repoSpec.Dir, repoSpec.Path),
+	})
+	if err != nil {
+		return nil, nil, err
+
+	}
 	return &gitProvider{
-		repoSpec: repoSpec,
+		FileSystemProvider: dir,
+		repoSpec:           repoSpec,
 	}, lock, nil
 }
 
 func (p *gitProvider) Close() error {
+	// close the underlying "dir" content provider
+	p.FileSystemProvider.Close()
+	
+	// remote the temp folder
 	return os.RemoveAll(p.repoSpec.Dir)
-}
-
-func (p *gitProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
-	return filesys.MakeFsOnDisk(), filepath.Join(p.repoSpec.Dir, p.repoSpec.Path), nil
 }

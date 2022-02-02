@@ -19,7 +19,6 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -35,22 +34,22 @@ type ociProvider struct {
 
 var _ extensions.FileSystemProvider = &ociProvider{}
 
-func Open(ref location.Oci, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
+func Open(ref location.Oci, options ...remote.Option) (*ociProvider, location.ReferenceLock, error) {
 	image, err := remote.Image(ref.Image, options...)
 	if err != nil {
-		return nil, location.OciLock{}, err
+		return nil, nil, err
 	}
 
 	// Determine the digest of the image that was extracted
 	imageDigestHash, err := image.Digest()
 	if err != nil {
-		return nil, location.OciLock{}, err
+		return nil, nil, err
 		// return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
 	}
 
 	lock, err := ref.SetLock("sha256:" + imageDigestHash.Hex)
 	if err != nil {
-		return nil, location.OciLock{}, err
+		return nil, nil, err
 	}
 
 	return &ociProvider{

@@ -32,7 +32,7 @@ var _ content.Content = &dirProvider{}
 var _ extensions.FileSystemProvider = &dirProvider{}
 var _ extensions.FSProvider = &dirProvider{}
 
-func Open(ref location.Dir) (content.Content, error) {
+func Open(ref location.Dir) (*dirProvider, error) {
 	return &dirProvider{
 		path: ref.Directory,
 	}, nil
