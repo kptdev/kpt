@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // Runner runs an e2e test
@@ -250,13 +252,31 @@ func (r *Runner) runFnEval() error {
 // Match strings starting with [PASS] or [FAIL] and ending with " in N...". We capture the duration portion
 var timestampRegex = regexp.MustCompile(`\[(?:PASS|FAIL)].* in ([0-9].*)`)
 
-func sanitizeTimestamps(stderr string) string {
+func sanitizeTimestampsRegex(stderr string) string {
 	// Output will have non-deterministic output timestamps. We will replace these to static message for
 	// stable comparison in tests.
 	for _, m := range timestampRegex.FindAllStringSubmatch(stderr, -1) {
 		stderr = strings.ReplaceAll(stderr, m[1], "0s")
 	}
 	return stderr
+}
+
+func sanitizeTimestamps(stderr string) string {
+	// Output will have non-deterministic output timestamps. We will replace these to static message for
+	// stable comparison in tests.
+	var sanitized []string
+	for _, line := range strings.Split(stderr, "\n") {
+		// [PASS] \"gcr.io/kpt-fn/set-namespace:v0.1.3\" in 2.0s
+		if strings.HasPrefix(line, "[PASS]") || strings.HasPrefix(line, "[FAIL]") {
+			tokens := strings.Fields(line)
+			if len(tokens) == 4 && tokens[2] == "in" {
+				tokens[3] = "0s"
+				line = strings.Join(tokens, " ")
+			}
+		}
+		sanitized = append(sanitized, line)
+	}
+	return strings.Join(sanitized, "\n")
 }
 
 // IsFnResultExpected determines if function results are expected for this testcase.
@@ -467,10 +487,12 @@ func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr str
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
 	if !strings.Contains(stderr, expectedStderr) {
+		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, stderr))
 		return fmt.Errorf("wanted stderr %q, got %q", expectedStderr, stderr)
 	}
 	expectedStdout := r.testCase.Config.StdOut
 	if !strings.Contains(stdout, expectedStdout) {
+		r.t.Logf("stdout diff is %s", cmp.Diff(expectedStdout, stdout))
 		return fmt.Errorf("wanted stdout %q, got %q", expectedStdout, stdout)
 	}
 	return nil
