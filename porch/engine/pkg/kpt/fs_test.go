@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestMemFS(t *testing.T) {
@@ -62,10 +63,10 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
       configMap:
         tier: backend`
 
@@ -78,13 +79,6 @@ metadata:
     tier: backend
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      tier: backend
-  template:
-    metadata:
-      labels:
-        tier: backend
 ---
 apiVersion: custom.io/v1
 kind: Custom
@@ -111,6 +105,7 @@ spec:
 		PkgPath:         "/a/b/c",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
+		Runner:          &runner{},
 	}
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -146,32 +141,12 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
       configMap:
         tier: db`
-
-	/*dbResources := `apiVersion: apps/v1
-	kind: StatefulSet
-	metadata:
-	  name: db
-	spec:
-	  replicas: 3`
-
-		dbKptfile := `apiVersion: kpt.dev/v1
-	kind: Kptfile
-	metadata:
-	  name: db
-	pipeline:
-	  mutators:
-	    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
-	      configMap:
-	        namespace: db
-	    - image: gcr.io/kpt-fn/set-labels:v0.1.4
-	      configMap:
-	        app: backend`*/
 
 	expectedAppResources := `apiVersion: apps/v1
 kind: Deployment
@@ -182,13 +157,6 @@ metadata:
     tier: db
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      tier: db
-  template:
-    metadata:
-      labels:
-        tier: db
 ---
 apiVersion: custom.io/v1
 kind: Custom
@@ -200,24 +168,6 @@ metadata:
 spec:
   image: nginx:1.2.3
 `
-	/*expectedDbResources := `apiVersion: apps/v1
-	kind: StatefulSet
-	metadata:
-	  name: db
-	  namespace: staging
-	  labels:
-	    tier: db
-	spec:
-	  replicas: 3
-	  selector:
-	    matchLabels:
-	      tier: db
-	  template:
-	    metadata:
-	      labels:
-	        tier: db
-	`*/
-
 	fs := &memfs{}
 	if err := fs.MkdirAll("app"); err != nil {
 		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
@@ -228,17 +178,12 @@ spec:
 	if err := fs.WriteFile("/app/Kptfile", []byte(appKptfile)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
-	/*if err := fs.WriteFile("/app/db/resources.yaml", []byte(dbResources)); err != nil {
-		t.Errorf("Failed to write file: %v", err)
-	}
-	if err := fs.WriteFile("/app/db/Kptfile", []byte(dbKptfile)); err != nil {
-		t.Errorf("Failed to write file: %v", err)
-	}*/
 
 	r := render.Renderer{
 		PkgPath:         "/app",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
+		Runner:          &runner{},
 	}
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -251,12 +196,6 @@ spec:
 	if res, err := fs.ReadFile("/app/resources.yaml"); err != nil {
 		t.Errorf("Failed to read file: %v", err)
 	} else if got, want := string(res), expectedAppResources; got != want {
-		t.Errorf("unexpected file contents: got %q, want %q", got, want)
+		t.Errorf("unexpected file contents: got %q, want %q\n%s", got, want, cmp.Diff(want, got))
 	}
-
-	/*if res, err := fs.ReadFile("/app/db/resources.yaml"); err != nil {
-		t.Errorf("Failed to read file: %v", err)
-	} else if got, want := string(res), expectedDbResources; got != want {
-		t.Errorf("unexpected file contents: got %q, want %q", got, want)
-	}*/
 }

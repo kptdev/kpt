@@ -26,7 +26,7 @@ import (
 )
 
 func TestSetLabels(t *testing.T) {
-	k := &evaluator{}
+	k := &runner{}
 
 	const pkgYaml = `# Comment
 apiVersion: storage.cnrm.cloud.google.com/v1beta1
