@@ -20,7 +20,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -247,18 +246,6 @@ func (r *Runner) runFnEval() error {
 	}
 
 	return nil
-}
-
-// Match strings starting with [PASS] or [FAIL] and ending with " in N...". We capture the duration portion
-var timestampRegex = regexp.MustCompile(`\[(?:PASS|FAIL)].* in ([0-9].*)`)
-
-func sanitizeTimestampsRegex(stderr string) string {
-	// Output will have non-deterministic output timestamps. We will replace these to static message for
-	// stable comparison in tests.
-	for _, m := range timestampRegex.FindAllStringSubmatch(stderr, -1) {
-		stderr = strings.ReplaceAll(stderr, m[1], "0s")
-	}
-	return stderr
 }
 
 func sanitizeTimestamps(stderr string) string {

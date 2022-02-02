@@ -62,8 +62,7 @@ func TestSanitizeTimestamps(t *testing.T) {
 	for _, g := range grid {
 		g := g // Avoid range go-tcha
 		t.Run(g.Name, func(t *testing.T) {
-			got := sanitizeTimestampsRegex(g.Input)
-			//got := sanitizeTimestamps(g.Input)
+			got := sanitizeTimestamps(g.Input)
 			want := g.Output
 
 			if diff := cmp.Diff(got, want); diff != "" {
