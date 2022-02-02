@@ -12,33 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package content
 
-import "fmt"
+import (
+	"fmt"
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
-}
+	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
+)
 
-type ReferenceLock interface {
-	Reference
-}
-
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
-}
-
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
+func FileSystem(content Content) (paths.FileSystemPath, error) {
+	switch content := content.(type) {
+	case extensions.FileSystemProvider:
+		fsys, path, err := content.ProvideFileSystem()
+		return paths.FileSystemPath{
+			FileSystem: fsys,
+			Path:       path,
+		}, err
+	default:
+		return paths.FileSystemPath{}, fmt.Errorf("not implemented")
 	}
-	if p.Reference != nil {
-		return p.Reference.String()
-	}
-	return fmt.Sprintf("%v", nil)
 }

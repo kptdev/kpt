@@ -24,6 +24,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -59,6 +60,42 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 				return c(path, info, err)
 			}
 			if err == nil && path != src {
+				excludedDirs[path] = true
+				return nil
+			}
+		}
+		return c(path, info, err)
+	})
+}
+
+// WalkPackageFS walks the package defined at src and provides a callback for
+// every folder and file. Any subpackages and the .git folder are excluded.
+func WalkPackageFS(src paths.FileSystemPath, c func(string, os.FileInfo, error) error) error {
+	excludedDirs := make(map[string]bool)
+	return src.FileSystem.Walk(src.Path, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return c(path, info, err)
+		}
+		// don't copy the .git dir
+		if path != src.Path {
+			rel := strings.TrimPrefix(path, src.Path)
+			if copyutil.IsDotGitFolder(rel) {
+				return nil
+			}
+		}
+
+		for dir := range excludedDirs {
+			if strings.HasPrefix(path, dir) {
+				return nil
+			}
+		}
+
+		if info.IsDir() {
+			_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
+			if err != nil && !os.IsNotExist(err) {
+				return c(path, info, err)
+			}
+			if err == nil && path != src.Path {
 				excludedDirs[path] = true
 				return nil
 			}
@@ -156,6 +193,110 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 				return err
 			}
 			err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func CopyPackageFS(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+	subpackagesToCopy, err := pkg.Subpackages(src.FileSystem, src.Path, matcher, true)
+	if err != nil {
+		return err
+	}
+
+	err = WalkPackageFS(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// path is an absolute path, rather than a path relative to src.
+		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
+		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
+		copyTo := strings.TrimPrefix(path, src.Path)
+
+		// TODO(oci) what does this do?
+		// if copyTo == "/Kptfile" {
+		// 	_, err := os.Stat(filepath.Join(dst.Path, copyTo))
+		// 	if err == nil {
+		// 		return nil
+		// 	}
+		// 	if !os.IsNotExist(err) {
+		// 		return err
+		// 	}
+		// }
+
+		// make directories that don't exist
+		if info.IsDir() {
+			return dst.FileSystem.MkdirAll(filepath.Join(dst.Path, copyTo))
+		}
+
+		if path == filepath.Join(src.Path, kptfilev1.KptFileName) && !copyRootKptfile {
+			return nil
+		}
+
+		// copy file by reading and writing it
+		b, err := src.FileSystem.ReadFile(filepath.Join(src.Path, copyTo))
+		if err != nil {
+			return err
+		}
+		err = dst.FileSystem.WriteFile(filepath.Join(dst.Path, copyTo), b)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	for _, subpackage := range subpackagesToCopy {
+		subpackageSrc := filepath.Join(src.Path, subpackage)
+		// subpackageDest := filepath.Join(dst, strings.TrimPrefix(subpackage, src))
+		err = src.FileSystem.Walk(subpackageSrc, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			// don't copy the .git dir
+			if path != src.Path {
+				rel := strings.TrimPrefix(path, subpackageSrc)
+				if copyutil.IsDotGitFolder(rel) {
+					return nil
+				}
+			}
+
+			copyTo := strings.TrimPrefix(path, src.Path)
+			if info.IsDir() {
+				return dst.FileSystem.MkdirAll(filepath.Join(dst.Path, copyTo))
+			}
+
+			// TODO(oci) what does this do?
+			// if copyTo == "/Kptfile" {
+			// 	_, err := os.Stat(filepath.Join(dst, copyTo))
+			// 	if err == nil {
+			// 		return nil
+			// 	}
+			// 	if !os.IsNotExist(err) {
+			// 		return err
+			// 	}
+			// }
+
+			// copy file by reading and writing it
+			b, err := src.FileSystem.ReadFile(filepath.Join(src.Path, copyTo))
+			if err != nil {
+				return err
+			}
+			err = dst.FileSystem.WriteFile(filepath.Join(dst.Path, copyTo), b)
 			if err != nil {
 				return err
 			}

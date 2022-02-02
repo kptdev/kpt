@@ -12,33 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package extensions
 
-import "fmt"
+import (
+	"io/fs"
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
+	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+)
+
+type ChangeCommitter interface {
+	CommitChanges() (location.Location, error)
 }
 
-type ReferenceLock interface {
-	Reference
+type FileSystemProvider interface {
+	ProvideFileSystem() (filesys.FileSystem, string, error)
 }
 
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
+type FSProvider interface {
+	ProvideFS() (fs.FS, error)
 }
 
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
-	}
-	if p.Reference != nil {
-		return p.Reference.String()
-	}
-	return fmt.Sprintf("%v", nil)
+type ReaderProvider interface {
+	ProvideReader() (kio.Reader, error)
 }

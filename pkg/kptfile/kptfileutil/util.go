@@ -29,8 +29,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/google/go-containerregistry/pkg/name"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
@@ -50,6 +52,21 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+	return nil
+}
+
+func WriteFileFS(dir paths.FileSystemPath, k *kptfilev1.KptFile) error {
+	const op errors.Op = "kptfileutil.WriteFile"
+	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		return err
+	}
+
+	// fyi: perm is ignored if the file already exists
+	err = dir.FileSystem.WriteFile(filepath.Join(dir.Path, kptfilev1.KptFileName), b)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir.String()), err)
 	}
 	return nil
 }
@@ -165,6 +182,45 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 	return nil
 }
 
+// UpdateKptfileWithoutOrigin updates the Kptfile in the package specified by
+// localPath with values from the package specified by updatedPath using a 3-way
+// merge strategy, but where origin does not have any values.
+// If updateUpstream is true, the values from the upstream and upstreamLock
+// sections will also be copied into local.
+func UpdateKptfileWithoutOriginFS(localPath, updatedPath paths.FileSystemPath, updateUpstream bool) error {
+	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
+	localKf, err := pkg.ReadKptfile(localPath.FileSystem, localPath.Path)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(localPath.Path), err)
+		}
+		localKf = &kptfilev1.KptFile{}
+	}
+
+	updatedKf, err := pkg.ReadKptfile(updatedPath.FileSystem, updatedPath.Path)
+	if err != nil {
+		if !goerrors.Is(err, os.ErrNotExist) {
+			return errors.E(op, types.UniquePath(updatedPath.Path), err)
+		}
+		updatedKf = &kptfilev1.KptFile{}
+	}
+
+	err = merge(localKf, updatedKf, &kptfilev1.KptFile{})
+	if err != nil {
+		return err
+	}
+
+	if updateUpstream {
+		updateUpstreamAndUpstreamLock(localKf, updatedKf)
+	}
+
+	err = WriteFileFS(localPath, localKf)
+	if err != nil {
+		return errors.E(op, types.UniquePath(localPath.Path), err)
+	}
+	return nil
+}
+
 // UpdateKptfile updates the Kptfile in the package specified by localPath with
 // values from the packages specified in updatedPath using the package specified
 // by originPath as the common ancestor.
@@ -226,6 +282,54 @@ func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error
 	err = WriteFile(path, kptfile)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
+	}
+	return nil
+}
+
+func UpdateUpstreamLockFS(path paths.FileSystemPath, upstreamLock *kptfilev1.UpstreamLock) error {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
+
+	// read KptFile cloned with the package if it exists
+	kptfile, err := pkg.ReadKptfile(path.FileSystem, path.Path)
+	if err != nil {
+		return errors.E(op, types.UniquePath(path.String()), err)
+	}
+
+	kptfile.UpstreamLock = upstreamLock
+
+	if err := WriteFileFS(path, kptfile); err != nil {
+		return errors.E(op, types.UniquePath(path.Path), err)
+	}
+	return nil
+}
+
+func UpdateUpstreamLocationsFS(path paths.FileSystemPath, loc location.Location) error {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
+
+	// read KptFile cloned with the package if it exists
+	kptfile, err := pkg.ReadKptfile(path.FileSystem, path.Path)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	prior := kptfile.Upstream
+
+	kptfile.Upstream, err = NewUpstreamFromReference(loc.Reference)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	kptfile.UpstreamLock, err = NewUpstreamLockFromReferenceLock(loc.ReferenceLock)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	if prior != nil && kptfile.Upstream != nil && kptfile.Upstream.UpdateStrategy == "" {
+		kptfile.Upstream.UpdateStrategy = prior.UpdateStrategy
+	}
+
+	if err := WriteFileFS(path, kptfile); err != nil {
+		return errors.E(op, err)
 	}
 	return nil
 }
@@ -305,6 +409,41 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 // toDirectory convert relative Reference sub-package locations to
 // the kptfilev1 absolute-within-repo conventions.
 func toDirectory(relPath string, omitDefault bool) string {
+	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
+		return absPath
+	}
+	// root location is default in kptfilev1
+	return ""
+}
+
+// NewReferenceFromUpstream creates location.Reference from kptfilev1.Upstream structures.
+// The kptfile upstream supports specific, well-known types.
+func NewReferenceFromUpstream(kf *kptfilev1.KptFile) (location.Reference, error) {
+	const op errors.Op = "kptfileutil.NewReferenceFromUpstream"
+	u := kf.Upstream
+	switch kf.Upstream.Type {
+	case kptfilev1.GitOrigin:
+		return location.Git{
+			Repo:      u.Git.Repo,
+			Directory: fromDirectory(u.Git.Directory, false),
+			Ref:       u.Git.Ref,
+		}, nil
+	case kptfilev1.OciOrigin:
+		image, err := name.ParseReference(u.Oci.Image)
+		if err != nil {
+			return nil, err
+		}
+		return location.Oci{
+			Image:     image,
+			Directory: fromDirectory(u.Oci.Directory, true),
+		}, nil
+	}
+	return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("upstream type is not supported"))
+}
+
+// fromDirectory convert kptfilev1 absolute-within-repo conventions to
+// relative Reference sub-package locations
+func fromDirectory(relPath string, omitDefault bool) string {
 	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
 		return absPath
 	}

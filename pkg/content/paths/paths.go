@@ -12,33 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package paths
 
-import "fmt"
+import (
+	"sigs.k8s.io/kustomize/kyaml/filesys"
+)
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
+type FileSystemPath struct {
+	FileSystem filesys.FileSystem
+	Path       string
 }
 
-type ReferenceLock interface {
-	Reference
+func (fsp FileSystemPath) String() string {
+	return fsp.Path
 }
 
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
+type FSPath struct {
+	FileSystem filesys.FileSystem
+	Path       string
 }
 
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
-	}
-	if p.Reference != nil {
-		return p.Reference.String()
-	}
-	return fmt.Sprintf("%v", nil)
+func (fsp FSPath) String() string {
+	return fsp.Path
 }

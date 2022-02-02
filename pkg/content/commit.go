@@ -12,33 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package content
 
-import "fmt"
+import (
+	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
+)
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
-}
-
-type ReferenceLock interface {
-	Reference
-}
-
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
-}
-
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
+func Commit(content Content) (location.Location, error) {
+	switch content := content.(type) {
+	case extensions.ChangeCommitter:
+		return content.CommitChanges()
+	default:
+		return location.Location{}, nil
 	}
-	if p.Reference != nil {
-		return p.Reference.String()
-	}
-	return fmt.Sprintf("%v", nil)
 }
