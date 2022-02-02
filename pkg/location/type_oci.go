@@ -147,7 +147,7 @@ func (ref Oci) Type() string {
 
 // GetDefaultDirectoryName is called from location.DefaultDirectoryName
 func (ref Oci) GetDefaultDirectoryName() (string, bool) {
-	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), false
+	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), true
 }
 
 // SetIdentifier is called from mutate.Identifier

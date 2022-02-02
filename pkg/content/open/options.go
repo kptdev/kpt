@@ -12,33 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package open
 
-import "fmt"
+import "context"
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
+type options struct {
+	ctx context.Context
 }
 
-type ReferenceLock interface {
-	Reference
+func makeOptions(opts ...Option) options {
+	opt := options{}
+	Options(opts...)(&opt)
+	return opt
 }
 
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
-}
+// Option is a functional option for content operations.
+type Option func(opt *options)
 
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
+// Options is a convenience to combine several options into one.
+func Options(opts ...Option) Option {
+	return func(opt *options) {
+		for _, option := range opts {
+			if option != nil {
+				option(opt)
+			}
+		}
 	}
-	if p.Reference != nil {
-		return p.Reference.String()
+}
+
+func WithContext(ctx context.Context) Option {
+	return func(opt *options) {
+		opt.ctx = ctx
 	}
-	return fmt.Sprintf("%v", nil)
 }
