@@ -19,6 +19,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,6 +45,12 @@ import (
 	"github.com/go-git/go-git/v5/storage"
 	"k8s.io/klog/v2"
 )
+
+func TestMain(m *testing.M) {
+	klog.InitFlags(nil)
+	flag.Parse()
+	os.Exit(m.Run())
+}
 
 // TestGitPackageRoundTrip creates a package in git and verifies we can read the contents back.
 func TestGitPackageRoundTrip(t *testing.T) {
@@ -140,6 +147,16 @@ func TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("draft.Close() failed: %v", err)
 		}
 		klog.Infof("created revision %v", revision.Name())
+	}
+
+	// We approve the draft so that we can fetch it
+	{
+		approved, err := repo.(*gitRepository).ApprovePackageRevision(ctx, packageName, revision)
+		if err != nil {
+			t.Fatalf("ApprovePackageRevision(%q, %q) failed: %v", packageName, revision, err)
+		}
+
+		klog.Infof("approved revision %v", approved.Name())
 	}
 
 	// We reopen to refetch
@@ -755,6 +772,8 @@ func (w *PacketLineWriter) WriteLine(s string) {
 		w.err = err
 		return
 	}
+
+	klog.V(4).Infof("writing pktline %q", s)
 }
 
 // WriteZeroPacketLine writes a special "0000" line - often used to indicate the end of a block in the git protocol
@@ -767,4 +786,6 @@ func (w *PacketLineWriter) WriteZeroPacketLine() {
 		w.err = err
 		return
 	}
+
+	klog.V(4).Infof("writing pktline 0000")
 }

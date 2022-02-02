@@ -29,7 +29,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"github.com/go-git/go-git/v5"
 	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -228,6 +230,53 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 	}, nil
 }
 
+func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revision string) (repository.PackageRevision, error) {
+	refName := createDraftRefName(path, revision)
+	oldRef, err := r.repo.Reference(refName, true)
+	if err != nil {
+		return nil, fmt.Errorf("cannot find draft package branch %q: %w", refName, err)
+	}
+
+	approvedName := createApprovedRefName(path, revision)
+
+	newRef := plumbing.NewHashReference(approvedName, oldRef.Hash())
+
+	options := &git.PushOptions{
+		RemoteName:        "origin",
+		RefSpecs:          []config.RefSpec{},
+		Auth:              r.auth,
+		RequireRemoteRefs: []config.RefSpec{},
+	}
+
+	// TODO: Why can't we push by SHA here?
+	options.RefSpecs = append(options.RefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", oldRef.Hash(), newRef.Name())))
+
+	currentNewRefValue, err := r.repo.Storer.Reference(newRef.Name())
+	if err == nil {
+		options.RequireRemoteRefs = append(options.RequireRemoteRefs, config.RefSpec(fmt.Sprintf("%s:%s", currentNewRefValue.Hash(), newRef.Name())))
+	} else if err == plumbing.ErrReferenceNotFound {
+		// TODO: Should we push with 000000 ?
+	} else {
+		return nil, fmt.Errorf("error getting reference %q: %w", newRef.Name(), err)
+	}
+
+	klog.Infof("pushing with options %v", options)
+
+	if err := r.repo.Push(options); err != nil {
+		return nil, fmt.Errorf("failed to push to git %#v: %w", options, err)
+	}
+
+	if err := r.repo.Storer.SetReference(newRef); err != nil {
+		return nil, fmt.Errorf("error storing git reference %v: %w", newRef, err)
+	}
+
+	approved, _, err := r.loadPackageRevision(revision, path, newRef.Hash())
+	if err != nil {
+		return nil, fmt.Errorf("cannot load approved package: %w", err)
+	}
+	return approved, nil
+}
+
 func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
 	return fmt.Errorf("gitRepository::DeletePackageRevision not implemented")
 }
@@ -235,16 +284,6 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
 	git := r.repo
 
-	origin, err := git.Remote("origin")
-	if err != nil {
-		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot determine repository origin: %w", err)
-	}
-
-	lock := kptfilev1.GitLock{
-		Repo:      origin.Config().URLs[0],
-		Directory: path,
-		Ref:       version,
-	}
 	var hash plumbing.Hash
 
 	// Versions map to git tags in one of two ways:
@@ -268,7 +307,7 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
 				continue
 			}
-			return nil, lock, fmt.Errorf("error resolving git reference %q: %w", ref, err)
+			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving git reference %q: %w", ref, err)
 		} else {
 			hash = *resolved
 			break
@@ -278,7 +317,24 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 	if hash.IsZero() {
 		r.dumpAllRefs()
 
-		return nil, lock, fmt.Errorf("cannot find git reference (tried %v)", refNames)
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find git reference (tried %v)", refNames)
+	}
+
+	return r.loadPackageRevision(version, path, hash)
+}
+
+func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	git := r.repo
+
+	origin, err := git.Remote("origin")
+	if err != nil {
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot determine repository origin: %w", err)
+	}
+
+	lock := kptfilev1.GitLock{
+		Repo:      origin.Config().URLs[0],
+		Directory: path,
+		Ref:       version,
 	}
 
 	commit, err := git.CommitObject(hash)
@@ -426,6 +482,11 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 
 func createDraftRefName(name, revision string) plumbing.ReferenceName {
 	refName := fmt.Sprintf("refs/heads/drafts/%s/%s", name, revision)
+	return plumbing.ReferenceName(refName)
+}
+
+func createApprovedRefName(name, revision string) plumbing.ReferenceName {
+	refName := fmt.Sprintf("refs/heads/%s/%s", name, revision)
 	return plumbing.ReferenceName(refName)
 }
 
