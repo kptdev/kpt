@@ -10,8 +10,8 @@ require (
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/google/go-cmp v0.5.6
 	k8s.io/klog/v2 v2.40.1
-	sigs.k8s.io/kustomize/api v0.8.11
-	sigs.k8s.io/kustomize/kyaml v0.13.1
+	sigs.k8s.io/kustomize/api v0.11.1
+	sigs.k8s.io/kustomize/kyaml v0.13.3
 )
 
 replace (
