@@ -17,6 +17,9 @@ BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
 MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
 
+# GCP project to use for development
+GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
+
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver start-function-runner run-local
 
@@ -125,3 +128,8 @@ fix-headers:
 
 .PHONY: fix-all
 fix-all: fix-headers fmt tidy
+
+.PHONY: push-images
+push-images:
+	hack/build-image.sh --project $(GCP_PROJECT_ID) --push
+	make -C controllers/ push-image

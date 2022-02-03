@@ -40,11 +40,26 @@ RUN echo "Downloading engine modules ..." \
 RUN echo "Downloading repository modules ..." \
  && cd porch/repository && go mod download
 
+# Prebuild some library dependencies to warm the cache
+RUN cd porch/apiserver; go build -v \
+  google.golang.org/grpc \
+  k8s.io/apiserver/pkg/server \
+  k8s.io/component-base/cli \
+  k8s.io/klog/v2 \
+  github.com/google/go-containerregistry/pkg/gcrane \
+  k8s.io/client-go/kubernetes/scheme \
+  github.com/go-git/go-git/v5
+
 COPY internal internal
 COPY pkg pkg
-COPY porch porch
+COPY porch/api porch/api
+COPY porch/apiserver porch/apiserver
+COPY porch/controllers porch/controllers
+COPY porch/engine porch/engine
+COPY porch/repository porch/repository
 
-RUN cd porch/apiserver; go build -o /porch ./cmd/porch
+
+RUN cd porch/apiserver; go build -v -o /porch ./cmd/porch
 
 FROM debian:bullseye
 RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt && rm -rf /var/cache/apt
