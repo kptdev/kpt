@@ -27,7 +27,7 @@ var _ Reference = InputStream{}
 
 // String implements location.Reference
 func (ref InputStream) String() string {
-	return fmt.Sprintf("type:io reader:%v", ref.Reader)
+	return fmt.Sprintf("reader:%v", ref.Reader)
 }
 
 // Type implements location.Reference
@@ -48,7 +48,7 @@ var _ Reference = OutputStream{}
 
 // String implements location.Reference
 func (ref OutputStream) String() string {
-	return fmt.Sprintf("type:io writer:%v", ref.Writer)
+	return fmt.Sprintf("writer:%v", ref.Writer)
 }
 
 // Type implements location.Reference
@@ -68,5 +68,5 @@ type DuplexStream struct {
 
 // String implements location.Reference
 func (ref DuplexStream) String() string {
-	return fmt.Sprintf("type:io reader:%v writer:%v", ref.InputStream.Reader, ref.OutputStream.Writer)
+	return fmt.Sprintf("reader:%v writer:%v", ref.InputStream.Reader, ref.OutputStream.Writer)
 }
