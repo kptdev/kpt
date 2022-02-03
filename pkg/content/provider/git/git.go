@@ -76,15 +76,15 @@ func Open(ctx context.Context, ref location.Git) (_ *gitProvider, _ location.Ref
 
 	}
 	return &gitProvider{
-		base: dir,
-		repoSpec:           repoSpec,
+		base:     dir,
+		repoSpec: repoSpec,
 	}, lock, nil
 }
 
 func (p *gitProvider) Close() error {
 	// close the underlying "dir" content provider
 	p.base.Close()
-	
+
 	// remove the temp folder
 	return os.RemoveAll(p.repoSpec.Dir)
 }
