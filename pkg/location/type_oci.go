@@ -78,11 +78,13 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 				return Oci{
 					Image:     repo.Tag(ref.TagStr()),
 					Directory: dir,
+					original:  location,
 				}, nil
 			case name.Digest:
 				return Oci{
 					Image:     repo.Digest(ref.DigestStr()),
 					Directory: dir,
+					original:  location,
 				}, nil
 			}
 		}
