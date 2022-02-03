@@ -72,6 +72,10 @@ func pullLocalGcloudConfig(pkgName string) (map[string]string, error) {
 	}
 
 	return map[string]string{
+		// !!! `name` should not belong to gcloud-config.yaml. If needed, the user's Kptfile shall refer to the
+		// metadata resource which can be propagated in `kpt fn render` runtime. e.g. via --include-metadata-resource flag.
+		// This is a temporary workaround.
+		"name":      pkgName,
 		"namespace": projectID,
 		"projectID": projectID,
 		"zone":      zone,
