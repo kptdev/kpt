@@ -32,7 +32,7 @@ func main() {
 
 	// create context with associated printer
 	ctx := printer.WithContext(context.Background(), pr)
-	
+
 	// run through samples on location.Dir{}
 	fmt.Print("\n## Temp folder example\n\n")
 	if err := tempFolderExample(ctx); err != nil {
@@ -44,7 +44,7 @@ func main() {
 	if err := githubBlueprintExample(ctx); err != nil {
 		fmt.Printf("error in githubBlueprintExample: %v\n", err)
 	}
-	
+
 	if len(os.Args) == 2 {
 		// run through examples on provided location
 		fmt.Print("\n## Parsed location example\n\n")
@@ -90,9 +90,9 @@ func githubBlueprintExample(ctx context.Context) error {
 	return runAll(
 		ctx,
 		location.Git{
-			Repo: "https://github.com/GoogleCloudPlatform/blueprints",
+			Repo:      "https://github.com/GoogleCloudPlatform/blueprints",
 			Directory: "catalog/gke",
-			Ref: "main",
+			Ref:       "main",
 		},
 	)
 }
@@ -190,9 +190,8 @@ func readFromReader(ctx context.Context, ref location.Reference) error {
 		return err
 	}
 	for _, node := range nodes {
-		//s, _ := node.String()
 		m, _ := node.GetMeta()
-		
+
 		fmt.Printf("read %v\n", m.GetIdentifier())
 	}
 	return nil
