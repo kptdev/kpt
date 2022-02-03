@@ -16,6 +16,7 @@ package location
 
 import (
 	"bytes"
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -34,10 +35,14 @@ func TestParseReference(t *testing.T) {
 		location string
 		opts     Option
 	}
+	type want struct {
+		location  string
+		reference Reference
+	}
 	tests := []struct {
 		name    string
 		args    args
-		want    Reference
+		want    want
 		wantErr bool
 	}{
 		{
@@ -45,9 +50,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://ubuntu",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("ubuntu"),
-				Directory: ".",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("ubuntu"),
+					Directory: ".",
+				},
+				location: "oci://ubuntu",
 			},
 			wantErr: false,
 		},
@@ -56,9 +64,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name:tag",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name:tag"),
-				Directory: ".",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name:tag"),
+					Directory: ".",
+				},
+				location: "oci://my-registry.local/name:tag",
 			},
 			wantErr: false,
 		},
@@ -67,9 +78,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba"),
-				Directory: ".",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba"),
+					Directory: ".",
+				},
+				location: "oci://my-registry.local/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
 			},
 			wantErr: false,
 		},
@@ -78,9 +92,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name//sub/directory",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name:latest"),
-				Directory: "sub/directory",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name:latest"),
+					Directory: "sub/directory",
+				},
+				location: "oci://my-registry.local/name//sub/directory",
 			},
 			wantErr: false,
 		},
@@ -89,9 +106,25 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name//sub/directory:tag",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name:tag"),
-				Directory: "sub/directory",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name:tag"),
+					Directory: "sub/directory",
+				},
+				location: "oci://my-registry.local/name//sub/directory:tag",
+			},
+			wantErr: false,
+		}, {
+			name: "OciNameWithDirectoryAndDigest",
+			args: args{
+				location: "oci://my-registry.local/name//sub/directory@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
+			},
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba"),
+					Directory: "sub/directory",
+				},
+				location: "oci://my-registry.local/name//sub/directory@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
 			},
 			wantErr: false,
 		},
@@ -100,9 +133,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name///sub/directory",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name:latest"),
-				Directory: "sub/directory",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name:latest"),
+					Directory: "sub/directory",
+				},
+				location: "oci://my-registry.local/name///sub/directory",
 			},
 			wantErr: false,
 		},
@@ -111,9 +147,12 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "oci://my-registry.local/name//",
 			},
-			want: Oci{
-				Image:     name.MustParseReference("my-registry.local/name:latest"),
-				Directory: ".",
+			want: want{
+				reference: Oci{
+					Image:     name.MustParseReference("my-registry.local/name:latest"),
+					Directory: ".",
+				},
+				location: "oci://my-registry.local/name//",
 			},
 			wantErr: false,
 		},
@@ -122,10 +161,13 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "https://hostname/repo.git@main",
 			},
-			want: Git{
-				Repo:      "https://hostname/repo",
-				Directory: ".",
-				Ref:       "main",
+			want: want{
+				reference: Git{
+					Repo:      "https://hostname/repo",
+					Directory: ".",
+					Ref:       "main",
+				},
+				location: "https://hostname/repo.git@main",
 			},
 			wantErr: false,
 		},
@@ -134,10 +176,13 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "https://hostname/repo.git/sub/directory@main",
 			},
-			want: Git{
-				Repo:      "https://hostname/repo",
-				Directory: "sub/directory",
-				Ref:       "main",
+			want: want{
+				reference: Git{
+					Repo:      "https://hostname/repo",
+					Directory: "sub/directory",
+					Ref:       "main",
+				},
+				location: "https://hostname/repo.git/sub/directory@main",
 			},
 			wantErr: false,
 		},
@@ -146,8 +191,11 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "path/to/directory",
 			},
-			want: Dir{
-				Directory: "path/to/directory",
+			want: want{
+				reference: Dir{
+					Directory: "path/to/directory",
+				},
+				location: "path/to/directory",
 			},
 			wantErr: false,
 		},
@@ -157,8 +205,11 @@ func TestParseReference(t *testing.T) {
 				location: "-",
 				opts:     WithStdin(testReader),
 			},
-			want: InputStream{
-				Reader: testReader,
+			want: want{
+				reference: InputStream{
+					Reader: testReader,
+				},
+				location: "-",
 			},
 			wantErr: false,
 		},
@@ -168,8 +219,11 @@ func TestParseReference(t *testing.T) {
 				location: "-",
 				opts:     WithStdout(testWriter),
 			},
-			want: OutputStream{
-				Writer: testWriter,
+			want: want{
+				reference: OutputStream{
+					Writer: testWriter,
+				},
+				location: "-",
 			},
 			wantErr: false,
 		},
@@ -179,9 +233,12 @@ func TestParseReference(t *testing.T) {
 				location: "-",
 				opts:     Options(WithStdin(testReader), WithStdout(testWriter)),
 			},
-			want: DuplexStream{
-				InputStream:  InputStream{Reader: testReader},
-				OutputStream: OutputStream{Writer: testWriter},
+			want: want{
+				reference: DuplexStream{
+					InputStream:  InputStream{Reader: testReader},
+					OutputStream: OutputStream{Writer: testWriter},
+				},
+				location: "-",
 			},
 			wantErr: false,
 		},
@@ -190,8 +247,10 @@ func TestParseReference(t *testing.T) {
 			args: args{
 				location: "-",
 			},
-			want: Dir{
-				Directory: "-",
+			want: want{
+				reference: Dir{
+					Directory: "-",
+				},
 			},
 			wantErr: false,
 		},
@@ -203,7 +262,20 @@ func TestParseReference(t *testing.T) {
 				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if tt.want.location != "" {
+				if got.String() != tt.want.location {
+					t.Errorf("Parse().String() = %v, want.location %v", got, tt.want.location)
+				}
+			}
+			gotJSON, err := json.Marshal(got)
+			if err != nil {
+				t.Error(err)
+			}
+			wantJSON, err := json.Marshal(tt.want.reference)
+			if err != nil {
+				t.Error(err)
+			}
+			if !reflect.DeepEqual(gotJSON, wantJSON) {
 				t.Errorf("Parse() = %v, want %v", got, tt.want)
 			}
 		})
