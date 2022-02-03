@@ -17,20 +17,21 @@ package internal
 import (
 	"fmt"
 
+	function "github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters/applysetters"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"gcr.io/kpt-fn/apply-setters:v0.2.0": applySetters,
-	"gcr.io/kpt-fn/set-labels:v0.1.5":    setLabels,
-	"gcr.io/kpt-fn/set-namespace:v0.2.0": setNamespace,
-}
-
-func Eval(image string, rl *framework.ResourceList) error {
-	// Evaluate
-	if f, ok := functions[image]; ok {
-		return f(rl)
-	} else {
-		return fmt.Errorf("unsupported kpt function %q", image)
+func applySetters(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return nil // nothing to do
 	}
+
+	var fn function.ApplySetters
+	function.Decode(rl.FunctionConfig, &fn)
+	if items, err := fn.Filter(rl.Items); err != nil {
+		return fmt.Errorf("apply-setter evaluation failed: %w", err)
+	} else {
+		rl.Items = items
+	}
+	return nil
 }

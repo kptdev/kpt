@@ -39,6 +39,7 @@ replace (
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
+	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220113124808-70ae35bab23f // indirect
