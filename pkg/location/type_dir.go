@@ -15,13 +15,18 @@
 package location
 
 import (
-	"fmt"
 	"io/fs"
 	"path/filepath"
 )
 
 type Dir struct {
+	// Directory is absolute or relative to current working directory.
+	// This path is always based on the OS file system.
 	Directory string
+
+	// original is the value before parsing, it is returned
+	// by String() to improve round-trip accuracy
+	original string
 }
 
 var _ Reference = Dir{}
@@ -32,6 +37,7 @@ func parseDir(location string) Reference {
 	if fs.ValidPath(dir) {
 		return Dir{
 			Directory: dir,
+			original:  location,
 		}
 	}
 
@@ -40,7 +46,10 @@ func parseDir(location string) Reference {
 
 // String implements location.Reference
 func (ref Dir) String() string {
-	return fmt.Sprintf("type:dir directory:%q", ref.Directory)
+	if ref.original != "" {
+		return ref.original
+	}
+	return ref.Directory
 }
 
 // Type implements location.Reference

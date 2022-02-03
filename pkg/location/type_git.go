@@ -35,6 +35,10 @@ type Git struct {
 
 	// Ref can be a Git branch, tag, or a commit SHA-1.
 	Ref string
+
+	// original is the value before parsing, it is returned
+	// by String() to improve round-trip accuracy
+	original string
 }
 
 var _ Reference = Git{}
@@ -74,6 +78,7 @@ func newGit(location string, opt options) (Git, error) {
 		Repo:      gitTarget.Repo,
 		Directory: dir,
 		Ref:       gitTarget.Ref,
+		original:  location,
 	}, nil
 }
 
@@ -91,12 +96,22 @@ func parseGit(location string, opt options) Reference {
 
 // String implements location.Reference
 func (ref Git) String() string {
-	return fmt.Sprintf("type:git repo:%q ref:%q directory:%q", ref.Repo, ref.Ref, ref.Directory)
+	if ref.original != "" {
+		return ref.original
+	}
+	return gitString(ref.Repo, ref.Directory, ref.Ref)
 }
 
 // String implements location.ReferenceLock
 func (ref GitLock) String() string {
-	return fmt.Sprintf("%v commit:%q", ref.Git, ref.Commit)
+	return gitString(ref.Repo, ref.Directory, ref.Commit)
+}
+
+func gitString(repo, dir, identifier string) string {
+	if dir != "" && dir != "/" && dir != "." {
+		return fmt.Sprintf("%s/%s@%s", repo, dir, identifier)
+	}
+	return fmt.Sprintf("%s@%s", repo, identifier)
 }
 
 // Type implements location.Reference
