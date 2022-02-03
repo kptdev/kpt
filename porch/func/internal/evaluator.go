@@ -79,6 +79,12 @@ func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluat
 }
 
 func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
+	if fast, resp, err := fastEval(ctx, req); fast {
+		return resp, err
+	}
+
+	// out-of-proc eval
+
 	binary, cached := e.cache[req.Image]
 	if !cached {
 		return nil, status.Errorf(codes.NotFound, "Unsupported function %q", req.Image)
