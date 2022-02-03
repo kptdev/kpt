@@ -51,6 +51,9 @@ type Renderer struct {
 	// kpt function evaluator
 	Runner fn.FunctionRunner
 
+	// Picker knows how to pick a functionexecutor for a given function
+	Picker fn.FunctionPicker
+
 	// ResultsDirPath is absolute path to the directory to write results
 	ResultsDirPath string
 
@@ -91,6 +94,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		allowExec:       e.AllowExec,
 		fileSystem:      e.FileSystem,
 		runner:          e.Runner,
+		picker:          e.Picker,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -207,6 +211,9 @@ type hydrationContext struct {
 
 	// custom function runner
 	runner fn.FunctionRunner
+
+	// function picker
+	picker fn.FunctionPicker
 }
 
 //
@@ -492,7 +499,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if hctx.runner != nil {
 			validator, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
-			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.picker)
 		}
 		if err != nil {
 			return err
@@ -613,7 +620,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		if hctx.runner != nil {
 			runner, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
 		} else {
-			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount)
+			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.picker)
 		}
 		if err != nil {
 			return nil, err
