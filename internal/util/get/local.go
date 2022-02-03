@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -13,6 +14,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+var domainRegex = regexp.MustCompile(`\S+@(\S+)`)
+
+// AddGcloudConfigMap creates a `gcloud-config.yaml` file under PKG_DIR.
+// This file has a ConfigMap `gcloud-config` whose `data` stores local
+// gcloud configurations.
 func AddGcloudConfigMap(dir, pkgName string) error {
 	const op errors.Op = "kptfileutil.PullLocalGcloudConfig"
 	data, err := pullLocalGcloudConfig(pkgName)
@@ -23,22 +29,19 @@ func AddGcloudConfigMap(dir, pkgName string) error {
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: 
+  name:
 data: {}
 `)
-	cm.SetName(pkgName)
+	// !! This ConfigMap should always be assigned to this value to make it "convention over configuration".
+	cm.SetName(pkgutil.GcloudMetaName)
 	cm.SetDataMap(data)
-	return writeFile(filepath.Join(dir, pkgutil.LocalGloudConfigFileName(pkgName)), cm)
+	return writeFile(filepath.Join(dir, pkgutil.GcloudConfigFile), cm)
 }
 
 func pullLocalGcloudConfig(pkgName string) (map[string]string, error) {
 	projectID := getGcloudConfig("project")
 	if projectID == "" {
 		return nil, fmt.Errorf("`project` has not been set in `gcloud`")
-	}
-	account := getGcloudConfig("core/account")
-	if account == "" {
-		fmt.Println("`core/account` has not been set in `gcloud`")
 	}
 	zone := getGcloudConfig("compute/zone")
 	if zone == "" {
@@ -47,6 +50,18 @@ func pullLocalGcloudConfig(pkgName string) (map[string]string, error) {
 	region := getGcloudConfig("compute/region")
 	if region == "" {
 		fmt.Println(fmt.Errorf("`compute/region` has not been set in `gcloud`"))
+	}
+	var domain string
+	if account := getGcloudConfig("core/account"); account == "" {
+		fmt.Println("`core/account` has not been set in `gcloud`")
+	} else {
+		// e.g. account `NAME@COMPANY.com` has matching domain `COMPANY.com`
+		matches := domainRegex.FindStringSubmatch(account)
+		if len(matches) < 2 {
+			fmt.Println("`unable to parse `domain` from gcloud `core/account`")
+		} else {
+			domain = matches[1]
+		}
 	}
 	orgID, err := getGcloudOrgID(projectID)
 	if err != nil {
@@ -57,12 +72,11 @@ func pullLocalGcloudConfig(pkgName string) (map[string]string, error) {
 	}
 
 	return map[string]string{
-		"name":      pkgName,
 		"namespace": projectID,
 		"projectID": projectID,
 		"zone":      zone,
 		"region":    region,
-		"domain":    account,
+		"domain":    domain,
 		"orgID":     orgID,
 	}, nil
 

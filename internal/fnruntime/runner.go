@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/google/shlex"
@@ -499,22 +498,6 @@ data: {}
 			return nil, errors.E(op, fn, err)
 		}
 		return configNode, nil
-	default:
-		path := filepath.Join(string(pkgPath), pkgutil.LocalGloudConfigFileName(string(pkgPath)))
-		file, err := os.Open(path)
-		if err != nil {
-			// local gcloud won't be used.
-			return nil, nil
-		}
-		b, err := ioutil.ReadAll(file)
-		if err != nil {
-			return nil, errors.E(op, fn, err)
-		}
-		node, err = yaml.Parse(string(b))
-		if err != nil {
-			return nil, errors.E(op, fn, fmt.Errorf("invalid default `ConfigMap` function config in %v %w", path, err))
-		}
-		return node, nil
 	}
 	return nil, nil
 }

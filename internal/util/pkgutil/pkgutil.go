@@ -15,7 +15,6 @@
 package pkgutil
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,6 +28,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
+)
+
+const (
+	GcloudConfigFile = "gcloud-config.yaml"
+	GcloudMetaName   = "gcloud-config.kpt.dev"
 )
 
 // WalkPackage walks the package defined at src and provides a callback for
@@ -349,8 +353,4 @@ func Exists(path string) (bool, error) {
 		return false, err
 	}
 	return !os.IsNotExist(err), nil
-}
-
-var LocalGloudConfigFileName = func(pkgPath string) string {
-	return fmt.Sprintf("%v-gcloud-config.yaml", filepath.Base(pkgPath))
 }
