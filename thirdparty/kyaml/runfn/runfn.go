@@ -334,7 +334,7 @@ func getUIDGID(asCurrentUser bool, currentUser currentUserFunc) (string, error) 
 // getFunctionConfig returns yaml representation of functionConfig that can
 // be provided to a function as input.
 func (r *RunFns) getFunctionConfig() (*yaml.RNode, error) {
-	return kptfile.GetValidatedFnConfigFromPath("", r.FnConfigPath)
+	return kptfile.GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, "", r.FnConfigPath)
 }
 
 // defaultFnFilterProvider provides function filters
