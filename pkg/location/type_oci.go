@@ -25,8 +25,16 @@ import (
 )
 
 type Oci struct {
-	Image     name.Reference
+	// Image is the tag or digest location of the package.
+	Image name.Reference
+
+	// Directory is a relative path inside the image's file
+	// system for sub-package references.
 	Directory string
+
+	// original is the value before parsing, it is returned
+	// by String() to improve round-trip accuracy.
+	original string
 }
 
 var _ Reference = Oci{}
@@ -34,6 +42,10 @@ var _ DirectoryNameDefaulter = Oci{}
 
 type OciLock struct {
 	Oci
+
+	// Digest is the locked, digest location. It is determined
+	// when the Oci.Image is used to pull the remote contents
+	// from an image registry.
 	Digest name.Reference
 }
 
@@ -77,6 +89,7 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 		return Oci{
 			Image:     ref,
 			Directory: ".",
+			original:  location,
 		}, nil
 	}
 
@@ -92,12 +105,28 @@ func parseOci(value string) (Reference, error) {
 
 // Type implements location.Reference
 func (ref Oci) String() string {
-	return fmt.Sprintf("type:oci image:%q directory:%q", ref.Image, ref.Directory)
+	if ref.original != "" {
+		return ref.original
+	}
+	return ociString(ref.Image, ref.Directory)
 }
 
 // Type implements location.ReferenceLock
 func (ref OciLock) String() string {
-	return fmt.Sprintf("%v digest:%q", ref.Oci, ref.Digest)
+	return ociString(ref.Digest, ref.Directory)
+}
+
+func ociString(image name.Reference, directory string) string {
+	if directory != "" && directory != "." && directory != "/" {
+		if image, ok := image.(name.Tag); ok {
+			return fmt.Sprintf("oci://%s//%s:%s", image.Context().Name(), directory, image.TagStr())
+		}
+		if image, ok := image.(name.Digest); ok {
+			return fmt.Sprintf("oci://%s//%s@%s", image.Context().Name(), directory, image.DigestStr())
+		}
+		return fmt.Sprintf("oci://%s//%s", image.Context().Name(), directory)
+	}
+	return fmt.Sprintf("oci://%s", image)
 }
 
 // Validate implements location.Reference
