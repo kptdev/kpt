@@ -16,6 +16,7 @@ package fn
 
 import (
 	"context"
+	"io"
 
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -30,3 +31,12 @@ type RunnerOptions struct {
 type FunctionRunner interface {
 	NewRunner(ctx context.Context, fn *v1.Function, opts RunnerOptions) (kio.Filter, error)
 }
+
+// FunctionExecutor knows how to run a function.
+type FunctionExecutor interface {
+	// Run method accepts resourceList in wireformat and returns resourceList in wire format.
+	Run(r io.Reader, w io.Writer) error
+}
+
+// FunctionPicker returns a function executor to be used for a given function configuration.
+type FunctionPicker func(fn *v1.Function) FunctionExecutor
