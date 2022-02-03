@@ -15,7 +15,6 @@
 package location
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -27,7 +26,7 @@ var _ Reference = InputStream{}
 
 // String implements location.Reference
 func (ref InputStream) String() string {
-	return fmt.Sprintf("reader:%v", ref.Reader)
+	return "-"
 }
 
 // Type implements location.Reference
@@ -48,7 +47,7 @@ var _ Reference = OutputStream{}
 
 // String implements location.Reference
 func (ref OutputStream) String() string {
-	return fmt.Sprintf("writer:%v", ref.Writer)
+	return "-"
 }
 
 // Type implements location.Reference
@@ -68,5 +67,5 @@ type DuplexStream struct {
 
 // String implements location.Reference
 func (ref DuplexStream) String() string {
-	return fmt.Sprintf("reader:%v writer:%v", ref.InputStream.Reader, ref.OutputStream.Writer)
+	return "-"
 }
