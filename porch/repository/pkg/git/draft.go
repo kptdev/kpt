@@ -90,8 +90,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
-	// TODO: This removal of drafts is a hack
-	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), strings.ReplaceAll(d.draft.Name().String(), "/drafts/", "/")))
+	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), d.draft.Name().String()))
 	klog.Infof("pushing refspec %v", refSpec)
 
 	if err := d.parent.repo.Push(&git.PushOptions{
