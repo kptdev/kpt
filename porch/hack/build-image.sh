@@ -77,7 +77,7 @@ Usage: build-image.sh [flags]
 Supported Flags:
   --project [GCP_PROJECT]   ... will build image gcr.io/{GCP_PROJECT}/porch:${TAG}
   --tag [TAG]               ... tag for the image, i.e. 'latest'
-  --repository [REPOSITORY] ... the Doker image repository. will build image
+  --repository [REPOSITORY] ... the image repository. will build image
                                 [REPOSITORY]/porch:${TAG}
   --push                    ... push the image to the repository also
 EOF
@@ -96,5 +96,5 @@ fi
 
 IMAGE="${REPOSITORY}/porch:${TAG}"
 
-run docker build -t "${IMAGE}" -f "${BASE_DIR}/porch/hack/Dockerfile" "${BASE_DIR}"
-[[ "${PUSH}" != "Yes" ]] || run docker push "${IMAGE}"
+[[ "${PUSH}" == "Yes" ]] || run docker buildx build --load -t "${IMAGE}" -f "${BASE_DIR}/porch/hack/Dockerfile" "${BASE_DIR}"
+[[ "${PUSH}" != "Yes" ]] || run docker buildx build --push -t "${IMAGE}" -f "${BASE_DIR}/porch/hack/Dockerfile" "${BASE_DIR}"
