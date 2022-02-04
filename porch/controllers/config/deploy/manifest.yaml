@@ -1,0 +1,83 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: porch-system
+
+---
+
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: porch-controllers
+  namespace: porch-system
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: porch-controllers
+  namespace: porch-system
+  labels:
+    k8s-app: "porch-controllers"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: "porch-controllers"
+  template:
+    metadata:
+      labels:
+        k8s-app: "porch-controllers"
+    spec:
+      serviceAccountName: porch-controllers
+      containers:
+      - name: porch-controllers
+        # Update to the image of your porch-controllers build.
+        image: gcr.io/example-google-project-id/porch-controllers:latest
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: porch-controllers
+rules:
+- apiGroups: ["config.porch.kpt.dev"]
+  resources: ["repositories"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["config.cloud.google.com"]
+  resources: ["remoterootsyncsets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["config.cloud.google.com"]
+  resources: ["remoterootsyncsets/status"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: porch-system:porch-controllers
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: porch-controllers
+subjects:
+- kind: ServiceAccount
+  name: porch-controllers
+  namespace: porch-system
