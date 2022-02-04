@@ -17,82 +17,51 @@ package kpt
 import (
 	"context"
 	"fmt"
+	"io"
 
-	fnresultv1 "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func NewPlaceholderFunctionRunner() fn.FunctionRunner {
-	return &runner{}
+func NewPlaceholderFunctionRuntime() fn.FunctionRuntime {
+	return &runtime{}
+}
+
+type runtime struct {
+}
+
+var _ fn.FunctionRuntime = &runtime{}
+
+func (e *runtime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (fn.FunctionRunner, error) {
+	processor := internal.FindProcessor(fn.Image)
+	if processor == nil {
+		return nil, fmt.Errorf("unsupported kpt function %q", fn.Image)
+	}
+
+	return &runner{
+		ctx:       ctx,
+		fn:        *fn,
+		processor: processor,
+	}, nil
 }
 
 type runner struct {
+	ctx       context.Context
+	fn        kptfilev1.Function
+	processor framework.ResourceListProcessorFunc
 }
 
 var _ fn.FunctionRunner = &runner{}
 
-func (e *runner) NewRunner(ctx context.Context, fn *kptfilev1.Function, opts fn.RunnerOptions) (kio.Filter, error) {
-	return &filter{
-		ctx: ctx,
-		fn:  *fn,
-		rl:  opts.ResultList,
-	}, nil
-}
-
-type filter struct {
-	ctx context.Context
-	fn  kptfilev1.Function
-	rl  *fnresultv1.ResultList
-}
-
-var _ kio.Filter = &filter{}
-
-func (r *filter) Filter(items []*yaml.RNode) ([]*yaml.RNode, error) {
-	rl := &framework.ResourceList{
-		Items:   items,
-		Results: []*framework.Result{},
+func (fr *runner) Run(r io.Reader, w io.Writer) error {
+	rw := &kio.ByteReadWriter{
+		Reader:                r,
+		Writer:                w,
+		KeepReaderAnnotations: true,
 	}
 
-	if r.fn.ConfigMap != nil {
-		if cm, err := NewConfigMap(r.fn.ConfigMap); err != nil {
-			return nil, fmt.Errorf("cannot create config map: %w", err)
-		} else {
-			rl.FunctionConfig = cm
-		}
-	}
-
-	if err := internal.Eval(r.fn.Image, rl); err != nil {
-		return nil, fmt.Errorf("function evaluation failed; %w", err)
-	}
-
-	// Return error on error
-	if rl.Results.ExitCode() != 0 {
-		return nil, rl.Results
-	}
-
-	return rl.Items, nil
-}
-
-func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
-	node := yaml.NewMapRNode(&data)
-	if node == nil {
-		return nil, nil
-	}
-	// create a ConfigMap only for configMap config
-	configMap := yaml.MustParse(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: function-input
-data: {}
-`)
-	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
-		return nil, err
-	}
-	return configMap, nil
+	return framework.Execute(fr.processor, rw)
 }

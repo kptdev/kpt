@@ -31,6 +31,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/google/shlex"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -44,7 +45,8 @@ import (
 func NewRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, displayResourceCount bool) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
+	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
@@ -63,38 +65,48 @@ func NewRunner(
 	}
 
 	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
-	switch {
-	case f.Image != "":
-		cfn := &ContainerFn{
-			Path:            pkgPath,
-			Image:           f.Image,
-			ImagePullPolicy: imagePullPolicy,
-			Ctx:             ctx,
-			FnResult:        fnResult,
+
+	if runtime != nil {
+		if runner, err := runtime.GetRunner(ctx, f); err != nil {
+			return nil, fmt.Errorf("function runtime failed to evaluate function %q", f.Image)
+		} else if runner != nil {
+			fltr.Run = runner.Run
 		}
-		fltr.Run = cfn.Run
-	case f.Exec != "":
-		var execArgs []string
-		// assuming exec here
-		s, err := shlex.Split(f.Exec)
-		if err != nil {
-			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+	}
+	if fltr.Run == nil {
+		switch {
+		case f.Image != "":
+			cfn := &ContainerFn{
+				Path:            pkgPath,
+				Image:           f.Image,
+				ImagePullPolicy: imagePullPolicy,
+				Ctx:             ctx,
+				FnResult:        fnResult,
+			}
+			fltr.Run = cfn.Run
+		case f.Exec != "":
+			var execArgs []string
+			// assuming exec here
+			s, err := shlex.Split(f.Exec)
+			if err != nil {
+				return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+			}
+			execPath := f.Exec
+			if len(s) > 0 {
+				execPath = s[0]
+			}
+			if len(s) > 1 {
+				execArgs = s[1:]
+			}
+			eFn := &ExecFn{
+				Path:     execPath,
+				Args:     execArgs,
+				FnResult: fnResult,
+			}
+			fltr.Run = eFn.Run
+		default:
+			return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 		}
-		execPath := f.Exec
-		if len(s) > 0 {
-			execPath = s[0]
-		}
-		if len(s) > 1 {
-			execArgs = s[1:]
-		}
-		eFn := &ExecFn{
-			Path:     execPath,
-			Args:     execArgs,
-			FnResult: fnResult,
-		}
-		fltr.Run = eFn.Run
-	default:
-		return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 	}
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
 }

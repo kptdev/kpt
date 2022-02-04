@@ -15,8 +15,6 @@
 package internal
 
 import (
-	"fmt"
-
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
@@ -26,11 +24,6 @@ var functions map[string]framework.ResourceListProcessorFunc = map[string]framew
 	"gcr.io/kpt-fn/set-namespace:v0.2.0": setNamespace,
 }
 
-func Eval(image string, rl *framework.ResourceList) error {
-	// Evaluate
-	if f, ok := functions[image]; ok {
-		return f(rl)
-	} else {
-		return fmt.Errorf("unsupported kpt function %q", image)
-	}
+func FindProcessor(image string) framework.ResourceListProcessorFunc {
+	return functions[image]
 }

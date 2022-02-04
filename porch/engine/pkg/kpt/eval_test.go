@@ -15,55 +15,66 @@
 package kpt
 
 import (
+	"bytes"
 	"context"
-	"strings"
+	"path"
 	"testing"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+func ReadResourceList(t *testing.T, pkgdir string, config *yaml.RNode) []byte {
+	r := &kio.LocalPackageReader{
+		PackagePath:     pkgdir,
+		WrapBareSeqNode: true,
+	}
+
+	var rl bytes.Buffer
+	w := &kio.ByteWriter{
+		Writer:                &rl,
+		KeepReaderAnnotations: true,
+		WrappingKind:          kio.ResourceListKind,
+		WrappingAPIVersion:    kio.ResourceListAPIVersion,
+		FunctionConfig:        config,
+	}
+	if err := (kio.Pipeline{Inputs: []kio.Reader{r}, Outputs: []kio.Writer{w}}).Execute(); err != nil {
+		t.Fatalf("Failed to load package %q", pkgdir)
+		return nil
+	} else {
+		return rl.Bytes()
+	}
+}
+
 func TestSetLabels(t *testing.T) {
-	k := &runner{}
-
-	const pkgYaml = `# Comment
-apiVersion: storage.cnrm.cloud.google.com/v1beta1
-kind: StorageBucket
-metadata:
-    name: blueprints-project-bucket
-    namespace: config-control
-spec:
-    storageClass: standard
-`
-
-	filter, err := k.NewRunner(context.Background(), &v1.Function{
+	r := &runtime{}
+	runner, err := r.GetRunner(context.Background(), &v1.Function{
 		Image: "gcr.io/kpt-fn/set-labels:v0.1.5",
-		ConfigMap: map[string]string{
-			"label-key": "label-value",
-		},
-	}, fn.RunnerOptions{})
-
+	})
 	if err != nil {
+		t.Errorf("GetRunner failed: %v", err)
+	}
+
+	config, err := NewConfigMap(map[string]string{
+		"label-key": "label-value",
+	})
+	if err != nil {
+		t.Fatalf("Failed to create function config map: %v", err)
+	}
+
+	input := ReadResourceList(t, path.Join(".", "testdata", "bucket"), config)
+	var output bytes.Buffer
+	if err := runner.Run(bytes.NewReader(input), &output); err != nil {
 		t.Errorf("Eval failed: %v", err)
 	}
 
-	var result []*yaml.RNode
-	var writer kio.WriterFunc = func(r []*yaml.RNode) error {
-		result = r
-		return nil
-	}
+	t.Log(output.String())
 
-	p := &kio.Pipeline{
-		Inputs:                []kio.Reader{&kio.ByteReader{Reader: strings.NewReader(pkgYaml)}},
-		Filters:               []kio.Filter{filter},
-		Outputs:               []kio.Writer{writer},
-		ContinueOnEmptyResult: false,
-	}
-
-	if err := p.Execute(); err != nil {
-		t.Errorf("Failed to evaluate function: %v", err)
+	reader := kio.ByteReader{Reader: &output}
+	result, err := reader.Read()
+	if err != nil {
+		t.Errorf("Reading results failed")
 	}
 
 	if got, want := len(result), 1; got != want {
@@ -77,4 +88,23 @@ spec:
 			t.Errorf("unexpected label-key value; got %q, want %q", got, want)
 		}
 	}
+}
+
+func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
+	node := yaml.NewMapRNode(&data)
+	if node == nil {
+		return nil, nil
+	}
+	// create a ConfigMap only for configMap config
+	configMap := yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`)
+	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
+		return nil, err
+	}
+	return configMap, nil
 }

@@ -21,8 +21,8 @@ import (
 )
 
 type RenderOptions struct {
-	Runner  FunctionRunner
 	PkgPath string
+	Runtime FunctionRuntime
 }
 
 type Renderer interface {
