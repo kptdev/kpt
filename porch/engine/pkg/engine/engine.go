@@ -110,35 +110,11 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	var mutations []mutation
 	for i := range obj.Spec.Tasks {
 		task := &obj.Spec.Tasks[i]
-		switch task.Type {
-		case api.TaskTypeClone:
-			if task.Clone == nil {
-				return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
-			}
-			mutations = append(mutations, &clonePackageMutation{
-				task: task,
-				name: obj.Spec.PackageName,
-			})
-
-		case api.TaskTypePatch:
-			if task.Patch == nil {
-				return nil, fmt.Errorf("patch not set for task of type %q", task.Type)
-			}
-			// TODO: support patch?
-			return nil, fmt.Errorf("patch not supported on create")
-
-		case api.TaskTypeEval:
-			if task.Eval == nil {
-				return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
-			}
-			mutations = append(mutations, &evalFunctionMutation{
-				runtime: cad.runtime,
-				task:    task,
-			})
-
-		default:
-			return nil, fmt.Errorf("task of type %q not supported", task.Type)
+		mutation, err := cad.mapTaskToMutation(ctx, obj, task)
+		if err != nil {
+			return nil, err
 		}
+		mutations = append(mutations, mutation)
 	}
 
 	// Render package after creation.
@@ -150,6 +126,38 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	baseResources := repository.PackageResources{}
 
 	return updateDraft(ctx, draft, baseResources, mutations)
+}
+
+func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task) (mutation, error) {
+	switch task.Type {
+	case api.TaskTypeClone:
+		if task.Clone == nil {
+			return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
+		}
+		return &clonePackageMutation{
+			task: task,
+			name: obj.Spec.PackageName,
+		}, nil
+
+	case api.TaskTypePatch:
+		if task.Patch == nil {
+			return nil, fmt.Errorf("patch not set for task of type %q", task.Type)
+		}
+		// TODO: support patch?
+		return nil, fmt.Errorf("patch not supported on create")
+
+	case api.TaskTypeEval:
+		if task.Eval == nil {
+			return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
+		}
+		return &evalFunctionMutation{
+			runtime: cad.runtime,
+			task:    task,
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("task of type %q not supported", task.Type)
+	}
 }
 
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
