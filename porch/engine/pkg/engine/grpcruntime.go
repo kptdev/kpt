@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"google.golang.org/grpc"
+	"k8s.io/klog/v2"
 )
 
 type grpcRuntime struct {
@@ -43,11 +44,14 @@ func (gr *grpcRuntime) GetRunner(ctx context.Context, fn *v1.Function) (fn.Funct
 }
 
 func (gr *grpcRuntime) Close() error {
+	var err error
 	if gr.cc != nil {
-		gr.cc.Close()
+		if err = gr.cc.Close(); err != nil {
+			klog.Warningf("Failed to close grpc client connection: %v", err)
+		}
 		gr.cc = nil
 	}
-	return nil
+	return err
 }
 
 type grpcRunner struct {

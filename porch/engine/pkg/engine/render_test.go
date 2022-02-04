@@ -63,7 +63,7 @@ func TestRender(t *testing.T) {
 
 	got, ok := rendered.Contents["bucket.yaml"]
 	if !ok {
-		t.Errorf("Cannot find output config %q", got)
+		t.Errorf("Cannot find output config (bucket.yaml) in %v", rendered.Contents)
 	}
 
 	want, err := ioutil.ReadFile(filepath.Join(testdata, "expected.txt"))

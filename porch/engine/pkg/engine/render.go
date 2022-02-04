@@ -65,7 +65,7 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources
 func writeResources(fs filesys.FileSystem, resources repository.PackageResources) (string, error) {
-	var packageDir string
+	var packageDir string // path to the topmost directory containing Kptfile
 	for k, v := range resources.Contents {
 		dir := path.Dir(k)
 		if dir == "." {
@@ -79,11 +79,14 @@ func writeResources(fs filesys.FileSystem, resources repository.PackageResources
 			return "", err
 		}
 		if base == "Kptfile" {
+			// Found Kptfile. Check if the current directory is ancestor of the current
+			// topmost package directory. If so, use it instead.
 			if packageDir == "" || strings.HasPrefix(packageDir, dir+"/") {
 				packageDir = dir
 			}
 		}
 	}
+	// Return topmost directory containing Kptfile
 	return packageDir, nil
 }
 

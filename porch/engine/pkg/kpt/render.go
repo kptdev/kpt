@@ -16,6 +16,7 @@ package kpt
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
@@ -43,29 +44,39 @@ func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.R
 		FileSystem: pkg,
 	}
 
-	return rr.Execute(printer.WithContext(ctx, print{}))
+	return rr.Execute(printer.WithContext(ctx, &packagePrinter{}))
 }
 
-type print struct{}
+type packagePrinter struct{}
 
-var _ printer.Printer = &print{}
+var _ printer.Printer = &packagePrinter{}
 
-func (p print) PrintPackage(pkg *pkg.Pkg, leadingNewline bool) {
-
+func (p *packagePrinter) PrintPackage(pkg *pkg.Pkg, leadingNewline bool) {
+	p.Printf("Package %q: ", pkg.DisplayPath)
 }
 
-func (p print) Printf(format string, args ...interface{}) {
+func (p *packagePrinter) Printf(format string, args ...interface{}) {
 	klog.Infof(format, args...)
 }
 
-func (p print) OptPrintf(opt *printer.Options, format string, args ...interface{}) {
-
+func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...interface{}) {
+	if opt == nil {
+		p.Printf(format, args...)
+		return
+	}
+	var prefix string
+	if !opt.PkgDisplayPath.Empty() {
+		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath))
+	} else if !opt.PkgPath.Empty() {
+		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgPath))
+	}
+	p.Printf(prefix+format, args...)
 }
 
-func (p print) OutStream() io.Writer {
+func (p *packagePrinter) OutStream() io.Writer {
 	return os.Stdout
 }
 
-func (p print) ErrStream() io.Writer {
+func (p *packagePrinter) ErrStream() io.Writer {
 	return os.Stderr
 }
