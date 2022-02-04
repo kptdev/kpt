@@ -7,8 +7,10 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
+	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/google/go-cmp v0.5.7
+	google.golang.org/grpc v1.44.0
 	k8s.io/klog/v2 v2.40.1
 	sigs.k8s.io/kustomize/kyaml v0.13.3
 )
@@ -17,6 +19,7 @@ replace (
 	github.com/GoogleContainerTools/kpt => ../../
 	github.com/GoogleContainerTools/kpt/porch/api => ../api
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
+	github.com/GoogleContainerTools/kpt/porch/func => ../func
 	github.com/GoogleContainerTools/kpt/porch/kpt => ../kpt
 	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
 )
@@ -84,6 +87,7 @@ require (
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

@@ -36,11 +36,13 @@ var _ mutation = &renderPackageMutation{}
 func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	fs := filesys.MakeFsInMemory()
 
-	if err := writeResources(fs, resources); err != nil {
+	pkgPath, err := writeResources(fs, resources)
+	if err != nil {
 		return repository.PackageResources{}, nil, err
 	}
 
 	if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+		PkgPath: pkgPath,
 		Runtime: m.runtime,
 	}); err != nil {
 		return repository.PackageResources{}, nil, err
@@ -62,16 +64,27 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 }
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources
-func writeResources(fs filesys.FileSystem, resources repository.PackageResources) error {
+func writeResources(fs filesys.FileSystem, resources repository.PackageResources) (string, error) {
+	var packageDir string
 	for k, v := range resources.Contents {
-		if err := fs.MkdirAll(path.Dir(k)); err != nil {
-			return err
+		dir := path.Dir(k)
+		if dir == "." {
+			dir = "/"
 		}
-		if err := fs.WriteFile(k, []byte(v)); err != nil {
-			return err
+		if err := fs.MkdirAll(dir); err != nil {
+			return "", err
+		}
+		base := path.Base(k)
+		if err := fs.WriteFile(path.Join(dir, base), []byte(v)); err != nil {
+			return "", err
+		}
+		if base == "Kptfile" {
+			if packageDir == "" || strings.HasPrefix(packageDir, dir+"/") {
+				packageDir = dir
+			}
 		}
 	}
-	return nil
+	return packageDir, nil
 }
 
 func readResources(fs filesys.FileSystem) (repository.PackageResources, error) {

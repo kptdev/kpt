@@ -16,57 +16,62 @@ package engine
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 func TestRender(t *testing.T) {
 	render := &renderPackageMutation{
-		renderer: kpt.NewPlaceholderRenderer(),
-		runtime:  kpt.NewPlaceholderFunctionRuntime(),
+		renderer: kpt.NewRenderer(),
+		runtime:  kpt.NewSimpleFunctionRuntime(),
 	}
 
-	const path = "bucket.yaml"
-	const annotation = "porch.kpt.dev/rendered"
-	const content = `# Comment
-apiVersion: storage.cnrm.cloud.google.com/v1beta1
-kind: StorageBucket
-metadata:
-    name: blueprints-project-bucket
-    namespace: config-control
-spec:
-    storageClass: standard
-`
+	testdata, err := filepath.Abs(filepath.Join(".", "testdata", "simple-render"))
+	if err != nil {
+		t.Fatalf("Failed to find testdata: %v", err)
+	}
+	packagePath := filepath.Join(testdata, "simple-bucket")
+	r := &kio.LocalPackageReader{
+		PackagePath:        packagePath,
+		IncludeSubpackages: true,
+		MatchFilesGlob:     append(kio.MatchAll, v1.KptFileName),
+		FileSystem:         filesys.FileSystemOrOnDisk{},
+	}
 
-	resources := repository.PackageResources{
-		Contents: map[string]string{
-			path: content,
+	w := &packageWriter{
+		output: repository.PackageResources{
+			Contents: map[string]string{},
 		},
 	}
 
-	output, _, err := render.Apply(context.Background(), resources)
+	if err := (kio.Pipeline{Inputs: []kio.Reader{r}, Outputs: []kio.Writer{w}}).Execute(); err != nil {
+		t.Fatalf("Failed to read package: %v", err)
+	}
+
+	rendered, _, err := render.Apply(context.Background(), w.output)
 	if err != nil {
 		t.Errorf("package render failed: %v", err)
 	}
 
-	if got, want := len(output.Contents), 1; got != want {
-		t.Errorf("Expected single resource in the result. got %d", got)
+	got, ok := rendered.Contents["bucket.yaml"]
+	if !ok {
+		t.Errorf("Cannot find output config %q", got)
 	}
 
-	result, err := kio.ParseAll(output.Contents[path])
+	want, err := ioutil.ReadFile(filepath.Join(testdata, "expected.txt"))
 	if err != nil {
-		t.Errorf("Failed to parse rendered package content: %v", err)
+		t.Fatalf("Cannot read expected.txt: %v", err)
 	}
 
-	for _, n := range result {
-		annotations := n.GetAnnotations()
-		if got, ok := annotations[annotation]; !ok {
-			t.Errorf("expected %q annotation, got none", annotation)
-		} else if want := "yes"; got != want {
-			t.Errorf("%q annotation: got %q, want %q", annotation, got, want)
-		}
+	if diff := cmp.Diff(string(want), got); diff != "" {
+		t.Errorf("Unexpected result (-want, +got): %s", diff)
 	}
 }

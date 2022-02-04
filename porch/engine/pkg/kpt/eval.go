@@ -26,14 +26,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
-func NewPlaceholderFunctionRuntime() fn.FunctionRuntime {
+func NewSimpleFunctionRuntime() FunctionRuntime {
 	return &runtime{}
 }
 
 type runtime struct {
 }
 
-var _ fn.FunctionRuntime = &runtime{}
+var _ FunctionRuntime = &runtime{}
 
 func (e *runtime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (fn.FunctionRunner, error) {
 	processor := internal.FindProcessor(fn.Image)
@@ -46,6 +46,10 @@ func (e *runtime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (fn.Fun
 		fn:        *fn,
 		processor: processor,
 	}, nil
+}
+
+func (e *runtime) Close() error {
+	return nil
 }
 
 type runner struct {

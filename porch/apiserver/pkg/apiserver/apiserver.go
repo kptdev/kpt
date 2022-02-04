@@ -62,6 +62,7 @@ func init() {
 type ExtraConfig struct {
 	CoreAPIKubeconfigPath string
 	CacheDirectory        string
+	FunctionRunnerAddress string
 }
 
 // Config defines the config for the apiserver
@@ -159,7 +160,9 @@ func (c completedConfig) New() (*PorchServer, error) {
 		return nil, fmt.Errorf("failed to build client for core apiserver: %w", err)
 	}
 
-	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, c.GenericConfig.RESTOptionsGetter, coreClient, c.ExtraConfig.CacheDirectory)
+	porchGroup, err := porch.NewRESTStorage(
+		Scheme, Codecs, c.GenericConfig.RESTOptionsGetter, coreClient,
+		c.ExtraConfig.CacheDirectory, c.ExtraConfig.FunctionRunnerAddress)
 	if err != nil {
 		return nil, err
 	}
