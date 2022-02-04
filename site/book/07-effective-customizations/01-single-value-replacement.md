@@ -63,9 +63,9 @@ be updated.
 1. kpt allows the user to edit a particular value directly in the configuration 
 data and will handle upstream merge.  When [editing the yaml] directly the 
 consumers are not confined to the parameters that the package author has 
-provided.  kpt has made an investment into upstream merge that allows 
-[updating a package] that has been changed with a text editor.  In this case 
-storageClass can be set directly by the user.
+provided.  [kpt pkg update] merges the local edits made by consumer with the 
+changes in the upstream package made by publisher. In this case `storageClass` 
+can be set directly by the user.
 1. Attributes like resource names which are often updated by consumers to add 
 prefix or suffix (e.g. *-dev, *-stage, *-prod, na1-*, eu1-*) are best handled 
 by the [ensure-name-substring] function that will handle dependency updates as 
@@ -129,7 +129,7 @@ sub packages we will get the consistent annotations across all resources
 without having to find all the places where annotations can go.
 
 [editing the yaml]: /book/03-packages/03-editing-a-package
-[updating a package]: /book/03-packages/05-updating-a-package
+[kpt pkg update]: /book/03-packages/05-updating-a-package
 [ensure-name-substring]: https://catalog.kpt.dev/ensure-name-substring/v0.1/
 [search-and-replace]: https://catalog.kpt.dev/search-replace/v0.2/
 [set-labels]: https://catalog.kpt.dev/set-labels/v0.1/
