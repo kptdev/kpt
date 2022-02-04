@@ -22,7 +22,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -35,7 +34,7 @@ type renderPackageMutation struct {
 var _ mutation = &renderPackageMutation{}
 
 func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
-	fs := &kpt.MemFS{}
+	fs := filesys.MakeFsInMemory()
 
 	if err := writeResources(fs, resources); err != nil {
 		return repository.PackageResources{}, nil, err
@@ -78,7 +77,7 @@ func writeResources(fs filesys.FileSystem, resources repository.PackageResources
 func readResources(fs filesys.FileSystem) (repository.PackageResources, error) {
 	contents := map[string]string{}
 
-	if err := fs.Walk("", func(path string, info iofs.FileInfo, err error) error {
+	if err := fs.Walk("/", func(path string, info iofs.FileInfo, err error) error {
 		if info.Mode().IsRegular() {
 			data, err := fs.ReadFile(path)
 			if err != nil {
