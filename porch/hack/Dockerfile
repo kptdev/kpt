@@ -26,6 +26,7 @@ COPY porch/apiserver/go.mod porch/apiserver/go.sum porch/apiserver/
 COPY porch/controllers/go.mod porch/controllers/go.sum porch/controllers/
 COPY porch/engine/go.mod porch/engine/go.mod porch/engine/
 COPY porch/repository/go.mod porch/repository/go.sum porch/repository/
+COPY porch/func/go.mod porch/func/go.sum porch/func/
 
 RUN echo "Downloading root modules ..." \
  && go mod download
@@ -39,6 +40,8 @@ RUN echo "Downloading engine modules ..." \
  && cd porch/engine && go mod download
 RUN echo "Downloading repository modules ..." \
  && cd porch/repository && go mod download
+RUN echo "Downloading func modules ..." \
+ && cd porch/func && go mod download
 
 COPY internal internal
 COPY pkg pkg

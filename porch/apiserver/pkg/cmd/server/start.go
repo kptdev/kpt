@@ -48,6 +48,7 @@ type PorchServerOptions struct {
 	LocalStandaloneDebugging bool // Enables local standalone running/debugging of the apiserver.
 	CacheDirectory           string
 	CoreAPIKubeconfigPath    string
+	FunctionRunnerAddress    string
 
 	SharedInformerFactory informers.SharedInformerFactory
 	StdOut                io.Writer
@@ -179,6 +180,7 @@ func (o *PorchServerOptions) Config() (*apiserver.Config, error) {
 		ExtraConfig: apiserver.ExtraConfig{
 			CoreAPIKubeconfigPath: o.CoreAPIKubeconfigPath,
 			CacheDirectory:        o.CacheDirectory,
+			FunctionRunnerAddress: o.FunctionRunnerAddress,
 		},
 	}
 	return config, nil
@@ -221,5 +223,6 @@ func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {
 				"authorizing the requests, this flag is only intended for debugging in your workstation.")
 	}
 
+	fs.StringVar(&o.FunctionRunnerAddress, "function-runner", "", "Address of the function runner gRPC service.")
 	fs.StringVar(&o.CacheDirectory, "cache-directory", "", "Directory where Porch server stores repository and package caches.")
 }

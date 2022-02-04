@@ -30,10 +30,10 @@ import (
 )
 
 func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, restOptionsGetter genericregistry.RESTOptionsGetter,
-	coreClient client.WithWatch, cacheDirectory string) (genericapiserver.APIGroupInfo, error) {
+	coreClient client.WithWatch, cacheDirectory string, functionRunnerAddress string) (genericapiserver.APIGroupInfo, error) {
 
 	c := cache.NewCache(cacheDirectory)
-	cad, err := engine.NewCaDEngine(c)
+	cad, err := engine.NewCaDEngine(c, functionRunnerAddress)
 
 	if err != nil {
 		return genericapiserver.APIGroupInfo{}, err

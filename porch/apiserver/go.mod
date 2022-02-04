@@ -15,7 +15,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout v0.20.0
 	go.opentelemetry.io/otel/sdk v0.20.0
 	go.opentelemetry.io/otel/sdk/metric v0.20.0
-	google.golang.org/grpc v1.43.0
+	google.golang.org/grpc v1.44.0
 	k8s.io/api v0.23.1
 	k8s.io/apimachinery v0.23.1
 	k8s.io/apiserver v0.23.0
@@ -33,6 +33,7 @@ replace (
 	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
+	github.com/GoogleContainerTools/kpt/porch/func => ../func
 	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
 )
 
@@ -40,6 +41,7 @@ require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0 // indirect
+	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20220113124808-70ae35bab23f // indirect
@@ -76,6 +78,7 @@ require (
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-containerregistry v0.8.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
@@ -122,6 +125,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
