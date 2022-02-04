@@ -45,10 +45,9 @@ pipeline:
 
 ## Problems
 
-1. With popularity the single values inevitably expand to provide a facade to 
-a large portion of the data defeating the purpose of minimizing the cognitive 
-load.  With this small example almost half of the StorageBucket configuration 
-is now covered with parameters.
+1. With package popularity the single values inevitably expand to provide a 
+facade to a large portion of the data.  That defeats the purpose of minimizing 
+the cognitive load.  With this small example almost half of the StorageBucket configuration is now covered with parameters.
 1. Some values like resource names are used as references so setting them in 
 one place needs to trigger updates in all the places where they are referenced.
 1. If additional resources that have similar values are added to the package 
