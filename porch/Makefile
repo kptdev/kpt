@@ -70,7 +70,7 @@ start-kube-apiserver:
 
 .PHONY: start-function-runner
 start-function-runner:
-	cd func; docker buildx build -t function-runner .
+	$(MAKE) -C ./func build-image
 	docker stop function-runner || true
 	docker rm -f function-runner || true
 	docker run --detach \
