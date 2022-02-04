@@ -7,7 +7,7 @@ require (
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/klog/v2 v2.40.1
-	sigs.k8s.io/kustomize/kyaml v0.13.2
+	sigs.k8s.io/kustomize/kyaml v0.13.3
 )
 
 require (
