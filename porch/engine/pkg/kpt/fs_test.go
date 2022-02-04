@@ -21,10 +21,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
 	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 func TestMemFS(t *testing.T) {
-	fs := &memfs{}
+	fs := filesys.MakeFsInMemory()
 
 	if err := fs.MkdirAll("a/b/c/"); err != nil {
 		t.Errorf("MkdirAll(\"a/b/c/\") failed %v", err)
@@ -91,7 +92,7 @@ spec:
   image: nginx:1.2.3
 `
 
-	fs := &memfs{}
+	fs := filesys.MakeFsInMemory()
 	if err := fs.MkdirAll("a/b/c"); err != nil {
 		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
 	}
@@ -168,7 +169,7 @@ metadata:
 spec:
   image: nginx:1.2.3
 `
-	fs := &memfs{}
+	fs := filesys.MakeFsInMemory()
 	if err := fs.MkdirAll("app"); err != nil {
 		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
 	}
