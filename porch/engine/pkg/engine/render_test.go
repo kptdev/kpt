@@ -26,7 +26,7 @@ import (
 func TestRender(t *testing.T) {
 	render := &renderPackageMutation{
 		renderer: kpt.NewPlaceholderRenderer(),
-		runner:   kpt.NewPlaceholderFunctionRunner(),
+		runtime:  kpt.NewPlaceholderFunctionRuntime(),
 	}
 
 	const path = "bucket.yaml"

@@ -46,7 +46,7 @@ func NewRunner(
 	ctx context.Context, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
-	picker fn.FunctionPicker) (kio.Filter, error) {
+	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
 	config, err := newFnConfig(f, pkgPath)
 	if err != nil {
@@ -66,9 +66,11 @@ func NewRunner(
 
 	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
 
-	if picker != nil {
-		if fnExecutor := picker(f); fnExecutor != nil {
-			fltr.Run = fnExecutor.Run
+	if runtime != nil {
+		if runner, err := runtime.GetRunner(ctx, f); err != nil {
+			return nil, fmt.Errorf("function runtime failed to evaluate function %q", f.Image)
+		} else if runner != nil {
+			fltr.Run = runner.Run
 		}
 	}
 	if fltr.Run == nil {

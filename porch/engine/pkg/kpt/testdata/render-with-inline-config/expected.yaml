@@ -1,0 +1,22 @@
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: storage.cnrm.cloud.google.com/v1beta1
+  kind: StorageBucket
+  metadata: # kpt-merge: config-control/blueprints-project-bucket
+    name: updated-project-id-updated-bucket-name # kpt-set: ${project-id}-${name}
+    namespace: updated-namespace # kpt-set: ${namespace}
+    annotations:
+      cnrm.cloud.google.com/force-destroy: "false"
+      cnrm.cloud.google.com/project-id: updated-project-id # kpt-set: ${project-id}
+      cnrm.cloud.google.com/blueprint: 'kpt-fn'
+      config.kubernetes.io/index: '0'
+      config.kubernetes.io/path: 'bucket.yaml'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'bucket.yaml'
+      internal.config.kubernetes.io/seqindent: 'compact'
+  spec:
+    storageClass: updated-storage-class # kpt-set: ${storage-class}
+    uniformBucketLevelAccess: true
+    versioning:
+      enabled: false

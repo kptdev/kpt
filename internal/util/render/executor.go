@@ -47,12 +47,8 @@ type Renderer struct {
 	// PkgPath is the absolute path to the root package
 	PkgPath string
 
-	// Runner evaluates the function, if specified, this can override the default
-	// kpt function evaluator
-	Runner fn.FunctionRunner
-
-	// Picker knows how to pick a functionexecutor for a given function
-	Picker fn.FunctionPicker
+	// Runtime knows how to pick a function runner for a given function
+	Runtime fn.FunctionRuntime
 
 	// ResultsDirPath is absolute path to the directory to write results
 	ResultsDirPath string
@@ -93,8 +89,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
 		fileSystem:      e.FileSystem,
-		runner:          e.Runner,
-		picker:          e.Picker,
+		runtime:         e.Runtime,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -209,11 +204,8 @@ type hydrationContext struct {
 
 	fileSystem filesys.FileSystem
 
-	// custom function runner
-	runner fn.FunctionRunner
-
-	// function picker
-	picker fn.FunctionPicker
+	// function runtime
+	runtime fn.FunctionRuntime
 }
 
 //
@@ -240,7 +232,7 @@ func newPkgNode(fsys filesys.FileSystem, path string, p *pkg.Pkg) (pn *pkgNode, 
 	if path != "" {
 		p, err = pkg.New(fsys, path)
 		if err != nil {
-			return pn, errors.E(op, p.UniquePath, err)
+			return pn, errors.E(op, path, err)
 		}
 	}
 	// Note: Ensuring the presence of Kptfile can probably be moved
@@ -487,7 +479,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			return errAllowedExecNotSpecified
 		}
 		if function.Image != "" && !hctx.dockerCheckDone {
-			if hctx.runner == nil {
+			if hctx.runtime == nil {
 				// Check for Docker when using standard runner.
 				err := cmdutil.DockerCmdAvailable()
 				if err != nil {
@@ -496,11 +488,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			}
 			hctx.dockerCheckDone = true
 		}
-		if hctx.runner != nil {
-			validator, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
-		} else {
-			validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.picker)
-		}
+		validator, err = fnruntime.NewRunner(ctx, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.runtime)
 		if err != nil {
 			return err
 		}
@@ -608,7 +596,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			return nil, errAllowedExecNotSpecified
 		}
 		if function.Image != "" && !hctx.dockerCheckDone {
-			if hctx.runner == nil {
+			if hctx.runtime == nil {
 				// Check for Docker when using standard runner.
 				err := cmdutil.DockerCmdAvailable()
 				if err != nil {
@@ -617,11 +605,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			}
 			hctx.dockerCheckDone = true
 		}
-		if hctx.runner != nil {
-			runner, err = hctx.runner.NewRunner(ctx, &function, fn.RunnerOptions{ResultList: hctx.fnResults})
-		} else {
-			runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.picker)
-		}
+		runner, err = fnruntime.NewRunner(ctx, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, displayResourceCount, hctx.runtime)
 		if err != nil {
 			return nil, err
 		}

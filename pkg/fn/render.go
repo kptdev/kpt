@@ -21,10 +21,8 @@ import (
 )
 
 type RenderOptions struct {
-	Runner  FunctionRunner
 	PkgPath string
-
-	Picker FunctionPicker
+	Runtime FunctionRuntime
 }
 
 type Renderer interface {

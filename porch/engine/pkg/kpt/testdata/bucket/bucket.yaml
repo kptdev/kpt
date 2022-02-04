@@ -1,0 +1,8 @@
+# Comment
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+    name: blueprints-project-bucket
+    namespace: config-control
+spec:
+    storageClass: standard

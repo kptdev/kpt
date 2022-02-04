@@ -18,25 +18,16 @@ import (
 	"context"
 	"io"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
-type RunnerOptions struct {
-	// ResultList stores the result of the function evaluation
-	ResultList *fnresult.ResultList
-}
-
+// FunctionRunner knows how to run a function.
 type FunctionRunner interface {
-	NewRunner(ctx context.Context, fn *v1.Function, opts RunnerOptions) (kio.Filter, error)
-}
-
-// FunctionExecutor knows how to run a function.
-type FunctionExecutor interface {
 	// Run method accepts resourceList in wireformat and returns resourceList in wire format.
 	Run(r io.Reader, w io.Writer) error
 }
 
-// FunctionPicker returns a function executor to be used for a given function configuration.
-type FunctionPicker func(fn *v1.Function) FunctionExecutor
+// FunctionRuntime provides a way to obtain a function runner to be used for a given function configuration.
+type FunctionRuntime interface {
+	GetRunner(ctx context.Context, fn *v1.Function) (FunctionRunner, error)
+}

@@ -15,178 +15,67 @@
 package kpt
 
 import (
+	"bytes"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
 	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-const (
-	simpleBucketBucket = `
-apiVersion: storage.cnrm.cloud.google.com/v1beta1
-kind: StorageBucket
-metadata: # kpt-merge: config-control/blueprints-project-bucket
-  name: blueprints-project-bucket # kpt-set: ${project-id}-${name}
-  namespace: config-control # kpt-set: ${namespace}
-  annotations:
-    cnrm.cloud.google.com/force-destroy: "false"
-    cnrm.cloud.google.com/project-id: blueprints-project # kpt-set: ${project-id}
-spec:
-  storageClass: standard # kpt-set: ${storage-class}
-  uniformBucketLevelAccess: true
-  versioning:
-    enabled: false
-`
-
-	simpleBucketKptfile = `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: simple-bucket
-  annotations:
-    blueprints.cloud.google.com/title: Google Cloud Storage Bucket blueprint
-info:
-  description: A Google Cloud Storage bucket
-pipeline:
-  mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.2.0
-      configPath: setters.yaml
-`
-
-	simpleBucketSetters = `
-apiVersion: v1
-kind: ConfigMap
-metadata: # kpt-merge: /setters
-  name: setters
-data:
-  name: updated-bucket-name
-  namespace: updated-namespace
-  project-id: updated-project-id
-  storage-class: updated-storage-class
-`
-)
-
-func TestRenderWithFunctionConfigFile(t *testing.T) {
-	t.Skip("kpt renderer does not correctly construct function config")
-
-	fs := &memfs{}
-	if err := fs.MkdirAll("/simple-bucket"); err != nil {
-		t.Errorf("Failed MkdirAll: %v", err)
-	}
-	for k, v := range map[string]string{
-		"/simple-bucket/bucket.yaml":  simpleBucketBucket,
-		"/simple-bucket/Kptfile":      simpleBucketKptfile,
-		"/simple-bucket/setters.yaml": simpleBucketSetters,
-	} {
-		if err := fs.WriteFile(k, []byte(v)); err != nil {
-			t.Errorf("Failed creating file %q: %v", k, err)
-		}
-	}
-
-	r := render.Renderer{
-		PkgPath:    "/simple-bucket",
-		Runner:     &runner{},
-		FileSystem: fs,
-	}
-
-	if err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
-		t.Errorf("Render failed: %v", err)
-	}
-
-	got, err := fs.ReadFile("/simple-bucket/bucket.yaml")
-	if err != nil {
-		t.Errorf("Cannot read \"/simple-bucket/bucket.yaml\": %v", err)
-	}
-
-	if diff := cmp.Diff(wantBucketBucket, string(got)); diff != "" {
-		t.Errorf("Unexpected result (-want, +got): %s", diff)
+func readFile(t *testing.T, path string) []byte {
+	if data, err := ioutil.ReadFile(path); err != nil {
+		t.Fatalf("Cannot read file %q", err)
+		return nil
+	} else {
+		return data
 	}
 }
 
-const (
-	inlineBucketBucket = `
-apiVersion: storage.cnrm.cloud.google.com/v1beta1
-kind: StorageBucket
-metadata: # kpt-merge: config-control/blueprints-project-bucket
-  name: blueprints-project-bucket # kpt-set: ${project-id}-${name}
-  namespace: config-control # kpt-set: ${namespace}
-  annotations:
-    cnrm.cloud.google.com/force-destroy: "false"
-    cnrm.cloud.google.com/project-id: blueprints-project # kpt-set: ${project-id}
-spec:
-  storageClass: standard # kpt-set: ${storage-class}
-  uniformBucketLevelAccess: true
-  versioning:
-    enabled: false
-`
-
-	inlineBucketKptfile = `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: simple-bucket
-  annotations:
-    blueprints.cloud.google.com/title: Google Cloud Storage Bucket blueprint
-info:
-  description: A Google Cloud Storage bucket
-pipeline:
-  mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.2.0
-      configMap:
-        name: updated-bucket-name
-        namespace: updated-namespace
-        project-id: updated-project-id
-        storage-class: updated-storage-class
-`
-
-	wantBucketBucket = `apiVersion: storage.cnrm.cloud.google.com/v1beta1
-kind: StorageBucket
-metadata: # kpt-merge: config-control/blueprints-project-bucket
-  name: updated-project-id-updated-bucket-name # kpt-set: ${project-id}-${name}
-  namespace: updated-namespace # kpt-set: ${namespace}
-  annotations:
-    cnrm.cloud.google.com/force-destroy: "false"
-    cnrm.cloud.google.com/project-id: updated-project-id # kpt-set: ${project-id}
-    cnrm.cloud.google.com/blueprint: 'kpt-fn'
-spec:
-  storageClass: updated-storage-class # kpt-set: ${storage-class}
-  uniformBucketLevelAccess: true
-  versioning:
-    enabled: false
-`
-)
-
-func TestRenderWithFunctionConfigInline(t *testing.T) {
-	fs := &memfs{}
-	if err := fs.MkdirAll("/inline-bucket"); err != nil {
-		t.Errorf("Failed MkdirAll: %v", err)
-	}
-	for k, v := range map[string]string{
-		"/inline-bucket/bucket.yaml": inlineBucketBucket,
-		"/inline-bucket/Kptfile":     inlineBucketKptfile,
-	} {
-		if err := fs.WriteFile(k, []byte(v)); err != nil {
-			t.Errorf("Failed creating file %q: %v", k, err)
-		}
-	}
-
-	r := render.Renderer{
-		PkgPath:    "/inline-bucket",
-		Runner:     &runner{},
-		FileSystem: fs,
-	}
-
-	if err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
-		t.Errorf("Render failed: %v", err)
-	}
-
-	got, err := fs.ReadFile("/inline-bucket/bucket.yaml")
+func TestRender(t *testing.T) {
+	testdata, err := filepath.Abs(filepath.Join(".", "testdata"))
 	if err != nil {
-		t.Errorf("Cannot read \"/inline-bucket/bucket.yaml\": %v", err)
+		t.Fatalf("Cannot compute absolute path for ./testdata: %v", err)
 	}
 
-	if diff := cmp.Diff(wantBucketBucket, string(got)); diff != "" {
-		t.Errorf("Unexpected result (-want, +got): %s", diff)
+	for _, test := range []struct {
+		name string
+		pkg  string
+		want string
+	}{
+		{
+			name: "render-with-function-config",
+			pkg:  "simple-bucket",
+			want: "expected.yaml",
+		},
+		{
+			name: "render-with-inline-config",
+			pkg:  "simple-bucket",
+			want: "expected.yaml",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			r := render.Renderer{
+				PkgPath:    filepath.Join(testdata, test.name, test.pkg),
+				Runtime:    &runtime{},
+				FileSystem: filesys.FileSystemOrOnDisk{},
+				Output:     &output,
+			}
+
+			if err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
+				t.Errorf("Render failed: %v", err)
+			}
+
+			got := output.String()
+			want := readFile(t, filepath.Join(testdata, test.name, test.want))
+
+			if diff := cmp.Diff(string(want), string(got)); diff != "" {
+				t.Errorf("Unexpected result (-want, +got): %s", diff)
+			}
+		})
 	}
 }

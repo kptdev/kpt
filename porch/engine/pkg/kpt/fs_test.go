@@ -105,7 +105,7 @@ spec:
 		PkgPath:         "/a/b/c",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
-		Runner:          &runner{},
+		Runtime:         &runtime{},
 	}
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -183,7 +183,7 @@ spec:
 		PkgPath:         "/app",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
-		Runner:          &runner{},
+		Runtime:         &runtime{},
 	}
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
