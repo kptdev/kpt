@@ -49,12 +49,12 @@ func TestRender(t *testing.T) {
 		{
 			name: "render-with-function-config",
 			pkg:  "simple-bucket",
-			want: "expected.yaml",
+			want: "expected.txt",
 		},
 		{
 			name: "render-with-inline-config",
 			pkg:  "simple-bucket",
-			want: "expected.yaml",
+			want: "expected.txt",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
