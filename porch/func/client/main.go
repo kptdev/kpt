@@ -66,10 +66,7 @@ func createResourceList(args []string) ([]byte, error) {
 	r := kio.LocalPackageReader{
 		PackagePath:        *packageFlag,
 		IncludeSubpackages: true,
-	}
-	nodes, err := r.Read()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read package: %w", err)
+		WrapBareSeqNode:    true,
 	}
 
 	cfg, err := configmap(args)
@@ -77,9 +74,9 @@ func createResourceList(args []string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to create function config: %w", err)
 	}
 
-	b := bytes.NewBuffer(nil)
+	var b bytes.Buffer
 	w := kio.ByteWriter{
-		Writer:                b,
+		Writer:                &b,
 		KeepReaderAnnotations: true,
 		Style:                 0,
 		FunctionConfig:        cfg,
@@ -87,7 +84,7 @@ func createResourceList(args []string) ([]byte, error) {
 		WrappingAPIVersion:    kio.ResourceListAPIVersion,
 	}
 
-	if err := w.Write(nodes); err != nil {
+	if err := (kio.Pipeline{Inputs: []kio.Reader{r}, Outputs: []kio.Writer{w}}).Execute(); err != nil {
 		return nil, fmt.Errorf("failed to create serialized ResourceList: %w", err)
 	}
 
