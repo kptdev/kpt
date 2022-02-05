@@ -14,8 +14,9 @@
                 "--secure-port=9443",
                 "--v=7",
                 "--standalone-debug-mode",
-                "--kubeconfig=hack/local/kubeconfig",
-                "--cache-directory=${workspaceFolder}/.cache"
+                "--kubeconfig=${workspaceFolder}/hack/local/kubeconfig",
+                "--cache-directory=${workspaceFolder}/.cache",
+                "--function-runner=192.168.8.202:9445"
             ],
             "cwd": "${workspaceFolder}"
         },
