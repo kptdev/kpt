@@ -470,6 +470,7 @@ func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, 
 			return nil, errors.E(op, fn,
 				fmt.Errorf("missing function config %q", f.ConfigPath))
 		}
+		defer file.Close()
 		b, err := ioutil.ReadAll(file)
 		if err != nil {
 			return nil, errors.E(op, fn, err)
