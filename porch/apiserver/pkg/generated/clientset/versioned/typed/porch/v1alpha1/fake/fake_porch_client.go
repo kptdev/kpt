@@ -34,8 +34,8 @@ func (c *FakePorchV1alpha1) PackageRevisions(namespace string) v1alpha1.PackageR
 	return &FakePackageRevisions{c, namespace}
 }
 
-func (c *FakePorchV1alpha1) PackageRevisionResourceses(namespace string) v1alpha1.PackageRevisionResourcesInterface {
-	return &FakePackageRevisionResourceses{c, namespace}
+func (c *FakePorchV1alpha1) PackageRevisionResources(namespace string) v1alpha1.PackageRevisionResourcesInterface {
+	return &FakePackageRevisionResources{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

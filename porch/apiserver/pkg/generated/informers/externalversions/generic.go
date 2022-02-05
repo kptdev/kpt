@@ -55,8 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Porch().V1alpha1().Functions().Informer()}, nil
 	case v1alpha1.SchemeGroupVersion.WithResource("packagerevisions"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Porch().V1alpha1().PackageRevisions().Informer()}, nil
-	case v1alpha1.SchemeGroupVersion.WithResource("packagerevisionresourceses"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Porch().V1alpha1().PackageRevisionResourceses().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("packagerevisionresources"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Porch().V1alpha1().PackageRevisionResources().Informer()}, nil
 
 	}
 

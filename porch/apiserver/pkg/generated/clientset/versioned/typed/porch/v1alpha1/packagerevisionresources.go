@@ -28,10 +28,10 @@ import (
 	rest "k8s.io/client-go/rest"
 )
 
-// PackageRevisionResourcesesGetter has a method to return a PackageRevisionResourcesInterface.
+// PackageRevisionResourcesGetter has a method to return a PackageRevisionResourcesInterface.
 // A group's client should implement this interface.
-type PackageRevisionResourcesesGetter interface {
-	PackageRevisionResourceses(namespace string) PackageRevisionResourcesInterface
+type PackageRevisionResourcesGetter interface {
+	PackageRevisionResources(namespace string) PackageRevisionResourcesInterface
 }
 
 // PackageRevisionResourcesInterface has methods to work with PackageRevisionResources resources.
@@ -47,26 +47,26 @@ type PackageRevisionResourcesInterface interface {
 	PackageRevisionResourcesExpansion
 }
 
-// packageRevisionResourceses implements PackageRevisionResourcesInterface
-type packageRevisionResourceses struct {
+// packageRevisionResources implements PackageRevisionResourcesInterface
+type packageRevisionResources struct {
 	client rest.Interface
 	ns     string
 }
 
-// newPackageRevisionResourceses returns a PackageRevisionResourceses
-func newPackageRevisionResourceses(c *PorchV1alpha1Client, namespace string) *packageRevisionResourceses {
-	return &packageRevisionResourceses{
+// newPackageRevisionResources returns a PackageRevisionResources
+func newPackageRevisionResources(c *PorchV1alpha1Client, namespace string) *packageRevisionResources {
+	return &packageRevisionResources{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
 // Get takes name of the packageRevisionResources, and returns the corresponding packageRevisionResources object, and an error if there is any.
-func (c *packageRevisionResourceses) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PackageRevisionResources, err error) {
+func (c *packageRevisionResources) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.PackageRevisionResources, err error) {
 	result = &v1alpha1.PackageRevisionResources{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -74,8 +74,8 @@ func (c *packageRevisionResourceses) Get(ctx context.Context, name string, optio
 	return
 }
 
-// List takes label and field selectors, and returns the list of PackageRevisionResourceses that match those selectors.
-func (c *packageRevisionResourceses) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PackageRevisionResourcesList, err error) {
+// List takes label and field selectors, and returns the list of PackageRevisionResources that match those selectors.
+func (c *packageRevisionResources) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PackageRevisionResourcesList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -83,7 +83,7 @@ func (c *packageRevisionResourceses) List(ctx context.Context, opts v1.ListOptio
 	result = &v1alpha1.PackageRevisionResourcesList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -91,8 +91,8 @@ func (c *packageRevisionResourceses) List(ctx context.Context, opts v1.ListOptio
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested packageRevisionResourceses.
-func (c *packageRevisionResourceses) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested packageRevisionResources.
+func (c *packageRevisionResources) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -100,18 +100,18 @@ func (c *packageRevisionResourceses) Watch(ctx context.Context, opts v1.ListOpti
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
 // Create takes the representation of a packageRevisionResources and creates it.  Returns the server's representation of the packageRevisionResources, and an error, if there is any.
-func (c *packageRevisionResourceses) Create(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.CreateOptions) (result *v1alpha1.PackageRevisionResources, err error) {
+func (c *packageRevisionResources) Create(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.CreateOptions) (result *v1alpha1.PackageRevisionResources, err error) {
 	result = &v1alpha1.PackageRevisionResources{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(packageRevisionResources).
 		Do(ctx).
@@ -120,11 +120,11 @@ func (c *packageRevisionResourceses) Create(ctx context.Context, packageRevision
 }
 
 // Update takes the representation of a packageRevisionResources and updates it. Returns the server's representation of the packageRevisionResources, and an error, if there is any.
-func (c *packageRevisionResourceses) Update(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.UpdateOptions) (result *v1alpha1.PackageRevisionResources, err error) {
+func (c *packageRevisionResources) Update(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.UpdateOptions) (result *v1alpha1.PackageRevisionResources, err error) {
 	result = &v1alpha1.PackageRevisionResources{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		Name(packageRevisionResources.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(packageRevisionResources).
@@ -134,10 +134,10 @@ func (c *packageRevisionResourceses) Update(ctx context.Context, packageRevision
 }
 
 // Delete takes name of the packageRevisionResources and deletes it. Returns an error if one occurs.
-func (c *packageRevisionResourceses) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *packageRevisionResources) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -145,14 +145,14 @@ func (c *packageRevisionResourceses) Delete(ctx context.Context, name string, op
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *packageRevisionResourceses) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *packageRevisionResources) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -161,11 +161,11 @@ func (c *packageRevisionResourceses) DeleteCollection(ctx context.Context, opts 
 }
 
 // Patch applies the patch and returns the patched packageRevisionResources.
-func (c *packageRevisionResourceses) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PackageRevisionResources, err error) {
+func (c *packageRevisionResources) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PackageRevisionResources, err error) {
 	result = &v1alpha1.PackageRevisionResources{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("packagerevisionresourceses").
+		Resource("packagerevisionresources").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
