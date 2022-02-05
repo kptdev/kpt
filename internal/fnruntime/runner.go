@@ -19,7 +19,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -33,6 +32,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/google/shlex"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -43,12 +43,12 @@ import (
 // NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewRunner(
-	ctx context.Context, f *kptfilev1.Function,
+	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
 	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
-	config, err := newFnConfig(f, pkgPath)
+	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -469,7 +469,7 @@ func (ri *multiLineFormatter) String() string {
 	return b.String()
 }
 
-func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	var fn errors.Fn = errors.Fn(f.Image)
 
@@ -477,11 +477,12 @@ func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, 
 	switch {
 	case f.ConfigPath != "":
 		path := filepath.Join(string(pkgPath), f.ConfigPath)
-		file, err := os.Open(path)
+		file, err := fsys.Open(path)
 		if err != nil {
 			return nil, errors.E(op, fn,
 				fmt.Errorf("missing function config %q", f.ConfigPath))
 		}
+		defer file.Close()
 		b, err := ioutil.ReadAll(file)
 		if err != nil {
 			return nil, errors.E(op, fn, err)
