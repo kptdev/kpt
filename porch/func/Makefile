@@ -30,7 +30,7 @@ $(COMPILED_PROTO): evaluator/evaluator.proto
 
 .PHONY: build-image
 build-image:
-	docker buildx build --tag $(IMAGE_NAME):$(IMAGE_TAG) --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) .
+	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) .
 
 .PHONY: push-image
 push-image:

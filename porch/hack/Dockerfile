@@ -60,7 +60,7 @@ COPY porch/apiserver porch/apiserver
 COPY porch/controllers porch/controllers
 COPY porch/engine porch/engine
 COPY porch/repository porch/repository
-
+COPY porch/func porch/func
 
 RUN cd porch/apiserver; go build -v -o /porch ./cmd/porch
 

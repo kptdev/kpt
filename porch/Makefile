@@ -18,7 +18,9 @@ CACHEDIR=$(CURDIR)/.cache
 MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
 
 # GCP project to use for development
-GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
+export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
+export IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
+export IMAGE_TAG ?= latest
 
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver start-function-runner run-local
@@ -80,7 +82,7 @@ start-function-runner:
 	  --network=porch \
 	  --ip 192.168.8.202 \
 	  --name function-runner \
-	  function-runner
+	  gcr.io/$(GCP_PROJECT_ID)/function-runner:latest
 
 .PHONY: generate
 generate: $(MODULES)
@@ -130,7 +132,15 @@ fix-headers:
 .PHONY: fix-all
 fix-all: fix-headers fmt tidy
 
+KPTDIR = $(abspath $(CURDIR)/..)
 .PHONY: push-images
 push-images:
-	hack/build-image.sh --project $(GCP_PROJECT_ID) --push
+	docker buildx build --push --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
 	make -C controllers/ push-image
+	make -C func/ push-image
+
+.PHONY: build-images
+build-images:
+	docker buildx build --load --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
+	make -C controllers/ build-image
+	make -C func/ build-image

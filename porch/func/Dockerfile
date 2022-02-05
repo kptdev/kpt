@@ -25,8 +25,8 @@ FROM gcr.io/kpt-fn/upsert-resource:v0.2.0 as upsert-resource
 FROM golang:1.17.6-alpine3.15 as builder
 WORKDIR /build
 COPY . ./func
-RUN cd ./func ; go mod download
-RUN cd ./func ; go build -o /server ./server
+RUN cd ./func ; go mod download -x
+RUN cd ./func ; go build -v -o /server ./server
 
 FROM alpine:3.15
 

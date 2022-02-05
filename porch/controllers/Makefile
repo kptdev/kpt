@@ -14,7 +14,14 @@
 
 # GCP project to use for development
 GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
+IMAGE_TAG ?= latest
+IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
+IMAGE_NAME ?= porch-controllers
 
 .PHONY: push-image
 push-image:
-	cd ../..; docker buildx build --push --tag gcr.io/${GCP_PROJECT_ID}/porch-controllers:latest -f porch/controllers/Dockerfile .
+	cd ../..; docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f porch/controllers/Dockerfile .
+
+.PHONY: build-image
+build-image:
+	cd ../..; docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f porch/controllers/Dockerfile .

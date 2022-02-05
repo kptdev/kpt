@@ -118,24 +118,15 @@ Prerequisite:
 Build a Docker image using a script:
 
 ```sh
-./hack/build-image.sh
+make build-images
 
-# Supported flags
-# --repository [REPO]      name of the Docker repository
-# --project    [PROJECT]   GCP project (will translate to gcr.io/PROJECT)
-# --tag [TAG]              image tag, i.e. 'latest'
-# --push                   also push the image to the repository
+# Supported make variables:
+# IMAGE_TAG      - image tag, i.e. 'latest' (defaults to 'latest')
+# GCP_PROJECT_ID - GCP project hosting gcr.io repository (will translate to gcr.io/${GCP_PROJECT_ID})
+# IMAGE_REPO     - overwrites the default image repository
 
-
-# Example
-./hack/build-image.sh --project=my-gcp-project --push
-```
-
-Or, build directly via docker:
-**Note**: This must be done from the parent directory (kpt, not porch):
-
-```sh
-docker build -t TAG -f ./porch/hack/Dockerfile .
+# To push the image:
+make push-images
 ```
 
 ### Deploy into a Kubernetes Cluster
