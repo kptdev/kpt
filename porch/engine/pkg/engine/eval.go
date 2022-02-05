@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 
@@ -10,6 +9,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -40,6 +40,12 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		}
 	}
 
+	ff := &runtimeutil.FunctionFilter{
+		Run:            runner.Run,
+		FunctionConfig: functionConfig,
+		Results:        &yaml.RNode{},
+	}
+
 	pr := &packageReader{
 		input: resources,
 		extra: map[string]string{},
@@ -52,45 +58,20 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	// 	WrapBareSeqNode:    true,
 	// }
 
-	var rl bytes.Buffer
-	w := &kio.ByteWriter{
-		Writer:                &rl,
-		KeepReaderAnnotations: true,
-		FunctionConfig:        functionConfig,
-		WrappingKind:          kio.ResourceListKind,
-		WrappingAPIVersion:    kio.ResourceListAPIVersion,
-	}
-
-	pipeline := kio.Pipeline{
-		Inputs:  []kio.Reader{pr},
-		Outputs: []kio.Writer{w},
-	}
-
-	if err := pipeline.Execute(); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to serialize package: %w", err)
-	}
-
-	// Evaluate the function
-	var output bytes.Buffer
-	if err := runner.Run(&rl, &output); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function: %w", err)
-	}
-
 	result := repository.PackageResources{
 		Contents: map[string]string{},
 	}
 
-	if err := (kio.Pipeline{
-		Inputs: []kio.Reader{&kio.ByteReader{
-			Reader:            &output,
-			PreserveSeqIndent: true,
-			WrapBareSeqNode:   true,
-		}},
+	pipeline := kio.Pipeline{
+		Inputs:  []kio.Reader{pr},
+		Filters: []kio.Filter{ff},
 		Outputs: []kio.Writer{&packageWriter{
 			output: result,
 		}},
-	}.Execute()); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to de-serialize function result: %w", err)
+	}
+
+	if err := pipeline.Execute(); err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function: %w", err)
 	}
 
 	// Return extras. TODO: Apply should accept FS.
