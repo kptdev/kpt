@@ -20,9 +20,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
-	"strings"
 
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
@@ -98,19 +97,10 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 		return repository.PackageResources{}, fmt.Errorf("cannot read package resources: %w", err)
 	}
 
-	// Rewrite paths
-	results := map[string]string{}
-	prefix := gitPackage.Directory + "/"
-	for k, v := range resources.Spec.Resources {
-		if !strings.HasPrefix(k, prefix) {
-			return repository.PackageResources{}, fmt.Errorf("invalid file path within a package: %q", k)
-		}
-		results[path.Join(m.name, k[len(prefix):])] = v
-	}
+	contents := resources.Spec.Resources
 
 	// Update Kptfile
-	kptfilePath := path.Join(m.name, "Kptfile")
-	kptfile, found := results[kptfilePath]
+	kptfile, found := contents[v1.KptFileName]
 	if !found {
 		return repository.PackageResources{}, fmt.Errorf("package %s@%s is not valid; missing Kptfile", gitPackage.Directory, gitPackage.Ref)
 	}
@@ -120,10 +110,10 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 		return repository.PackageResources{}, err
 	}
 
-	results[kptfilePath] = kptfile
+	contents[v1.KptFileName] = kptfile
 
 	return repository.PackageResources{
-		Contents: results,
+		Contents: contents,
 	}, nil
 }
 
