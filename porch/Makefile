@@ -111,7 +111,8 @@ run-local:
 	--secure-port 9443 \
 	--standalone-debug-mode \
 	--kubeconfig="$(KUBECONFIG)" \
-	--cache-directory="$(CACHEDIR)"
+	--cache-directory="$(CACHEDIR)" \
+	--function-runner 192.168.8.202:9445
 
 .PHONY: run-jaeger
 run-jaeger:
