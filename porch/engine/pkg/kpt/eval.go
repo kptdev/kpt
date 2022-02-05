@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/internal"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func NewSimpleFunctionRuntime() FunctionRuntime {
@@ -43,7 +44,6 @@ func (e *runtime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (fn.Fun
 
 	return &runner{
 		ctx:       ctx,
-		fn:        *fn,
 		processor: processor,
 	}, nil
 }
@@ -54,7 +54,6 @@ func (e *runtime) Close() error {
 
 type runner struct {
 	ctx       context.Context
-	fn        kptfilev1.Function
 	processor framework.ResourceListProcessorFunc
 }
 
@@ -68,4 +67,23 @@ func (fr *runner) Run(r io.Reader, w io.Writer) error {
 	}
 
 	return framework.Execute(fr.processor, rw)
+}
+
+func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
+	node := yaml.NewMapRNode(&data)
+	if node == nil {
+		return nil, nil
+	}
+	// create a ConfigMap only for configMap config
+	configMap := yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`)
+	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
+		return nil, err
+	}
+	return configMap, nil
 }

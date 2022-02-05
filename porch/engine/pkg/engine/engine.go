@@ -389,11 +389,19 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	// TODO: Apply should accept filesystem instead of PackageResources
 
 	runner, err := m.runtime.GetRunner(ctx, &v1.Function{
-		Image:     e.Image,
-		ConfigMap: e.ConfigMap,
+		Image: e.Image,
 	})
 	if err != nil {
 		return repository.PackageResources{}, nil, fmt.Errorf("failed to create function runner: %w", err)
+	}
+
+	var functionConfig *yaml.RNode
+	if m.task.Eval.ConfigMap != nil {
+		if cm, err := kpt.NewConfigMap(m.task.Eval.ConfigMap); err != nil {
+			return repository.PackageResources{}, nil, fmt.Errorf("failed to create function config: %w", err)
+		} else {
+			functionConfig = cm
+		}
 	}
 
 	pr := &packageReader{
@@ -412,7 +420,7 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	w := &kio.ByteWriter{
 		Writer:                &rl,
 		KeepReaderAnnotations: true,
-		FunctionConfig:        &yaml.RNode{},
+		FunctionConfig:        functionConfig,
 		WrappingKind:          kio.ResourceListKind,
 		WrappingAPIVersion:    kio.ResourceListAPIVersion,
 	}
