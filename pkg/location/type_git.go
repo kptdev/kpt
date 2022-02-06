@@ -15,13 +15,16 @@
 package location
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 )
 
 type Git struct {
@@ -42,7 +45,9 @@ type Git struct {
 }
 
 var _ Reference = Git{}
-var _ DirectoryNameDefaulter = Git{}
+var _ extensions.IdentifierGetter = Git{}
+var _ extensions.DefaultDirectoryNameGetter = Git{}
+var _ extensions.DefaultIdentifierGetter = Git{}
 
 type GitLock struct {
 	Git
@@ -52,7 +57,12 @@ type GitLock struct {
 	Commit string
 }
 
+var _ Reference = GitLock{}
 var _ ReferenceLock = GitLock{}
+var _ extensions.IdentifierGetter = GitLock{}
+var _ extensions.LockGetter = GitLock{}
+var _ extensions.DefaultDirectoryNameGetter = GitLock{}
+var _ extensions.DefaultIdentifierGetter = GitLock{}
 
 func NewGit(location string, opts ...Option) (Git, error) {
 	return newGit(location, makeOptions(opts...))
@@ -140,6 +150,22 @@ func (ref Git) GetDefaultDirectoryName() (string, bool) {
 	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), true
 }
 
+func (ref Git) GetDefaultIdentifier(ctx context.Context) (string, error) {
+	gur, err := gitutil.NewGitUpstreamRepo(ctx, ref.Repo)
+	if err != nil {
+		return "", err
+	}
+	b, err := gur.GetDefaultBranch(ctx)
+	if err != nil {
+		return "", err
+	}
+	return b, nil
+}
+
+func (ref Git) GetIdentifier() (string, bool) {
+	return ref.Ref, true
+}
+
 // SetIdentifier is called from mutate.Identifier
 func (ref Git) SetIdentifier(name string) (Reference, error) {
 	return Git{
@@ -147,6 +173,10 @@ func (ref Git) SetIdentifier(name string) (Reference, error) {
 		Directory: ref.Directory,
 		Ref:       name,
 	}, nil
+}
+
+func (ref GitLock) GetLock() (string, bool) {
+	return ref.Commit, true
 }
 
 // SetLock is called from mutate.Lock

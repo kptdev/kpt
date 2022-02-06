@@ -30,7 +30,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -135,11 +134,11 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
 
-			upstream, err := remote.NewUpstream(kf)
+			ref, err := kptfileutil.NewReferenceFromUpstream(kf)
 			if err != nil {
 				return errors.E(op, p.UniquePath, err)
 			}
-			pr.Printf("Fetching %s\n", upstream.String())
+			pr.Printf("Fetching %s\n", ref.String())
 
 			err = (&fetch.Command{
 				Pkg: p,

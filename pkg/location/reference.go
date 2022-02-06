@@ -14,7 +14,11 @@
 
 package location
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
+)
 
 type Reference interface {
 	fmt.Stringer
@@ -26,19 +30,40 @@ type ReferenceLock interface {
 	Reference
 }
 
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
+func Identifier(ref Reference) (string, bool) {
+	if ref, ok := ref.(extensions.IdentifierGetter); ok {
+		return ref.GetIdentifier()
+	}
+	return "", false
 }
 
-var _ fmt.Stringer = Location{}
+func Lock(ref ReferenceLock) (string, bool) {
+	if ref, ok := ref.(extensions.LockGetter); ok {
+		return ref.GetLock()
+	}
+	return "", false
+}
 
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
+// DefaultIdentifier returns the suggested identifier to use
+// for a reference location when one is not provided. This may
+// be a default tag name like "latest", or a default branch name
+// like "main". Some locations may attempt to obtain the default
+// identifier by communicating with the remote provider.
+func DefaultIdentifier(ref Reference, opts ...Option) (string, error) {
+	if ref, ok := ref.(extensions.DefaultIdentifierGetter); ok {
+		opt := makeOptions(opts...)
+		return ref.GetDefaultIdentifier(opt.ctx)
 	}
-	if p.Reference != nil {
-		return p.Reference.String()
+	return "", fmt.Errorf("not supported")
+}
+
+// DefaultDirectoryName returns the suggested local directory name to
+// create when a package from a remove reference is cloned or pulled.
+// Returns an empty string and false if the Reference type does not have
+// anything path-like to suggest from.
+func DefaultDirectoryName(ref Reference) (string, bool) {
+	if ref, ok := ref.(extensions.DefaultDirectoryNameGetter); ok {
+		return ref.GetDefaultDirectoryName()
 	}
-	return fmt.Sprintf("%v", nil)
+	return "", false
 }

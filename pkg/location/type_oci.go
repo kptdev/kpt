@@ -15,12 +15,14 @@
 package location
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
@@ -38,7 +40,9 @@ type Oci struct {
 }
 
 var _ Reference = Oci{}
-var _ DirectoryNameDefaulter = Oci{}
+var _ extensions.IdentifierGetter = Oci{}
+var _ extensions.DefaultDirectoryNameGetter = Oci{}
+var _ extensions.DefaultIdentifierGetter = Oci{}
 
 type OciLock struct {
 	Oci
@@ -51,6 +55,10 @@ type OciLock struct {
 
 var _ Reference = OciLock{}
 var _ ReferenceLock = OciLock{}
+var _ extensions.IdentifierGetter = OciLock{}
+var _ extensions.LockGetter = OciLock{}
+var _ extensions.DefaultDirectoryNameGetter = OciLock{}
+var _ extensions.DefaultIdentifierGetter = OciLock{}
 
 func NewOci(location string, opts ...Option) (Oci, error) {
 
@@ -150,12 +158,27 @@ func (ref Oci) GetDefaultDirectoryName() (string, bool) {
 	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), true
 }
 
+func (ref Oci) GetDefaultIdentifier(ctx context.Context) (string, error) {
+	return "latest", nil
+}
+
+func (ref Oci) GetIdentifier() (string, bool) {
+	return ref.Image.Identifier(), true
+}
+
 // SetIdentifier is called from mutate.Identifier
 func (ref Oci) SetIdentifier(identifier string) (Reference, error) {
 	return Oci{
 		Image:     ref.Image.Context().Tag(identifier),
 		Directory: ref.Directory,
 	}, nil
+}
+
+func (ref OciLock) GetLock() (string, bool) {
+	if d, ok := ref.Digest.(name.Digest); ok {
+		return d.DigestStr(), true
+	}
+	return "", false
 }
 
 // SetLock is called from mutate.Lock
