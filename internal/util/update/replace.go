@@ -62,7 +62,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 			}
 		} else {
 
-			if err = pkgutil.CopyPackageObsolete(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
+			if err = pkgutil.CopyPackage(types.DiskPath(updatedSubPkgPath), types.DiskPath(localSubPkgPath), !isRootPkg, pkg.None); err != nil {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		}

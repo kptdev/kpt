@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
@@ -153,7 +154,7 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
 
-	err = pkgutil.CopyPackageObsolete(c.Path, currPkg, true, pkg.Local)
+	err = pkgutil.CopyPackage(types.DiskPath(c.Path), types.DiskPath(currPkg), true, pkg.Local)
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}

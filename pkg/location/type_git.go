@@ -86,7 +86,7 @@ func parseGit(location string, opt options) (Reference, error) {
 	git, err := newGit(location, opt)
 	var zero Git
 	if err == nil && git != zero {
-		return git, nil 
+		return git, nil
 	}
 
 	return nil, err

@@ -18,11 +18,15 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
+// FileSystemPath represents a FileSystem and Path pair. The Path is always valid on the
+// associated FileSystem, but is not guaranteed to be meaningful on the os disk or other
+// unrelated FileSystem instances.
 type FileSystemPath struct {
 	FileSystem filesys.FileSystem
 	Path       string
 }
 
+// String returns the path in string format.
 func (fsp FileSystemPath) String() string {
 	return fsp.Path
 }

@@ -189,7 +189,7 @@ func (u *gitOrigin) Fetch(ctx context.Context, dest string) (string, string, err
 		return "", "", err
 	}
 	defer os.RemoveAll(repoSpec.Dir)
-	if err := pkgutil.CopyPackageObsolete(repoSpec.AbsPath(), dest, true, pkg.All); err != nil {
+	if err := pkgutil.CopyPackage(types.DiskPath(repoSpec.AbsPath()), types.DiskPath(dest), true, pkg.All); err != nil {
 		return "", "", err
 	}
 
@@ -252,11 +252,11 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 
 	sourcePath := filepath.Join(r.Dir, r.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
-	if err := pkgutil.CopyPackageObsolete(sourcePath, dest, true, pkg.All); err != nil {
+	if err := pkgutil.CopyPackage(types.DiskPath(sourcePath), types.DiskPath(dest), true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(types.DiskPath(dest), types.DiskPath(sourcePath), false); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 

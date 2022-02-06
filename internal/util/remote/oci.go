@@ -179,15 +179,15 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	}
 
 	sourcePath := path.Join(dir, u.oci.Directory)
-	if err := pkgutil.CopyPackageObsolete(sourcePath, dest, true, pkg.All); err != nil {
+	if err := pkgutil.CopyPackage(types.DiskPath(sourcePath), types.DiskPath(dest), true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(types.DiskPath(dest), types.DiskPath(sourcePath), false); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateUpstreamLock(dest, u.BuildUpstreamLock(imageDigest.String())); err != nil {
+	if err := kptfileutil.UpdateUpstreamLock(types.DiskPath(dest), u.BuildUpstreamLock(imageDigest.String())); err != nil {
 		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
 

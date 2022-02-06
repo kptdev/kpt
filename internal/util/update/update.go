@@ -271,7 +271,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		}
 	}
 
-	if err := kptfileutil.UpdateUpstreamLock(p.UniquePath.String(), upstream.BuildUpstreamLock(commit)); err != nil {
+	if err := kptfileutil.UpdateUpstreamLock(types.DiskPath(p.UniquePath.String()), upstream.BuildUpstreamLock(commit)); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
@@ -325,7 +325,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// the package hierarchy and that package is the root.
 	case !originExists && !localExists && updatedExists:
 		pr.Printf("Adding package %q from upstream.\n", packageName(localPath))
-		if err := pkgutil.CopyPackageObsolete(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
+		if err := pkgutil.CopyPackage(types.DiskPath(updatedPath), types.DiskPath(localPath), !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 

@@ -82,11 +82,11 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := kptfileutil.UpdateKptfileWithoutOriginFS(dst.FileSystemPath, src.FileSystemPath, false); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(dst.FileSystemPath, src.FileSystemPath, false); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := kptfileutil.UpdateUpstreamLocationsFS(dst.FileSystemPath, src.Location); err != nil {
+	if err := kptfileutil.UpdateUpstreamLocations(dst.FileSystemPath, src.Location); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 

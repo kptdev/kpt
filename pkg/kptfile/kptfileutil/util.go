@@ -148,46 +148,7 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 // merge strategy, but where origin does not have any values.
 // If updateUpstream is true, the values from the upstream and upstreamLock
 // sections will also be copied into local.
-func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
-	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
-	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
-		}
-		localKf = &kptfilev1.KptFile{}
-	}
-
-	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
-	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(updatedPath), err)
-		}
-		updatedKf = &kptfilev1.KptFile{}
-	}
-
-	err = merge(localKf, updatedKf, &kptfilev1.KptFile{})
-	if err != nil {
-		return err
-	}
-
-	if updateUpstream {
-		updateUpstreamAndUpstreamLock(localKf, updatedKf)
-	}
-
-	err = WriteFile(localPath, localKf)
-	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
-	}
-	return nil
-}
-
-// UpdateKptfileWithoutOrigin updates the Kptfile in the package specified by
-// localPath with values from the package specified by updatedPath using a 3-way
-// merge strategy, but where origin does not have any values.
-// If updateUpstream is true, the values from the upstream and upstreamLock
-// sections will also be copied into local.
-func UpdateKptfileWithoutOriginFS(localPath, updatedPath paths.FileSystemPath, updateUpstream bool) error {
+func UpdateKptfileWithoutOrigin(localPath, updatedPath paths.FileSystemPath, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
 	localKf, err := pkg.ReadKptfile(localPath.FileSystem, localPath.Path)
 	if err != nil {
@@ -268,25 +229,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 	return nil
 }
 
-func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error {
-	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
-	// read KptFile cloned with the package if it exists
-	kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
-	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
-	}
-
-	// populate the cloneFrom values so we know where the package came from
-	kptfile.UpstreamLock = upstreamLock
-
-	err = WriteFile(path, kptfile)
-	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
-	}
-	return nil
-}
-
-func UpdateUpstreamLockFS(path paths.FileSystemPath, upstreamLock *kptfilev1.UpstreamLock) error {
+func UpdateUpstreamLock(path paths.FileSystemPath, upstreamLock *kptfilev1.UpstreamLock) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
 
 	// read KptFile cloned with the package if it exists
@@ -303,7 +246,7 @@ func UpdateUpstreamLockFS(path paths.FileSystemPath, upstreamLock *kptfilev1.Ups
 	return nil
 }
 
-func UpdateUpstreamLocationsFS(path paths.FileSystemPath, loc location.Location) error {
+func UpdateUpstreamLocations(path paths.FileSystemPath, loc location.Location) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
 
 	// read KptFile cloned with the package if it exists
@@ -339,7 +282,7 @@ func UpdateUpstreamLocationsFS(path paths.FileSystemPath, loc location.Location)
 // field in upstreamLock using the latest commit of the git repo given
 // by spec.
 func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
-	return UpdateUpstreamLock(path, &kptfilev1.UpstreamLock{
+	return UpdateUpstreamLock(types.DiskPath(path), &kptfilev1.UpstreamLock{
 		Type: kptfilev1.GitOrigin,
 		Git: &kptfilev1.GitLock{
 			Repo:      spec.OrgRepo,

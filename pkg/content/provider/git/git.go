@@ -60,13 +60,13 @@ func Open(ctx context.Context, ref location.Git) (_ *gitProvider, _ location.Ref
 		}
 	}()
 
-	// make clonedRef. repoSpec.Ref may different if "path/ref" matched a tag.
+	// repoSpec.Ref may different if "path/ref" matched a tag
 	clonedRef, err := mutate.Identifier(ref, repoSpec.Ref)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// make clonedLock. containes commit that was resolved.
+	// lock based on commit that was resolved
 	clonedLock, err := mutate.Lock(clonedRef, repoSpec.Commit)
 	if err != nil {
 		return nil, nil, err

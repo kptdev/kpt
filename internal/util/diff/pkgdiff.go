@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -108,7 +109,7 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 
 func pkgSet(pkgPath string) (sets.String, error) {
 	pkgFiles := sets.String{}
-	if err := pkgutil.WalkPackageObsolete(pkgPath, func(path string, info os.FileInfo, err error) error {
+	if err := pkgutil.WalkPackage(types.DiskPath(pkgPath), func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
