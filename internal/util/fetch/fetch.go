@@ -78,11 +78,11 @@ func (c Command) Run(ctx context.Context) error {
 	pr.Printf("Adding package %q.\n", src.Location)
 
 	// copy package from source to destination
-	if err := pkgutil.CopyPackageFS(src.FileSystemPath, dst.FileSystemPath, true, pkg.All); err != nil {
+	if err := pkgutil.CopyPackage(src.FileSystemPath, dst.FileSystemPath, true, pkg.All); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := kptfileutil.UpdateKptfileWithoutOriginFS(src.FileSystemPath, dst.FileSystemPath, false); err != nil {
+	if err := kptfileutil.UpdateKptfileWithoutOriginFS(dst.FileSystemPath, src.FileSystemPath, false); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 

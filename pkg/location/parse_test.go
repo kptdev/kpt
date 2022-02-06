@@ -276,7 +276,7 @@ func TestParseReference(t *testing.T) {
 				t.Error(err)
 			}
 			if !reflect.DeepEqual(gotJSON, wantJSON) {
-				t.Errorf("Parse() = %v, want %v", got, tt.want)
+				t.Errorf("Parse() = %s, want %s", gotJSON, wantJSON)
 			}
 		})
 	}

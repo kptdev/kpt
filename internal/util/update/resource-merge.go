@@ -110,7 +110,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
+		if err := pkgutil.CopyPackageObsolete(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 	// Package added locally
@@ -251,7 +251,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	const op errors.Op = "update.getSubDirsAndNonKrmFiles"
 	files := sets.String{}
 	dirs := sets.String{}
-	err := pkgutil.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
+	err := pkgutil.WalkPackageObsolete(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.E(op, errors.IO, err)
 		}

@@ -179,7 +179,7 @@ func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
 	}
 
 	sourcePath := path.Join(dir, u.oci.Directory)
-	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
+	if err := pkgutil.CopyPackageObsolete(sourcePath, dest, true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 

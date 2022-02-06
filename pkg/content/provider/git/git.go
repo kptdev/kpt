@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
 	"github.com/GoogleContainerTools/kpt/pkg/content/provider/dir"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 )
 
 type base interface {
@@ -59,8 +60,14 @@ func Open(ctx context.Context, ref location.Git) (_ *gitProvider, _ location.Ref
 		}
 	}()
 
-	// make lock reference for commit
-	lock, err := ref.SetLock(repoSpec.Commit)
+	// make clonedRef. repoSpec.Ref may different if "path/ref" matched a tag.
+	clonedRef, err := mutate.Identifier(ref, repoSpec.Ref)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// make clonedLock. containes commit that was resolved.
+	clonedLock, err := mutate.Lock(clonedRef, repoSpec.Commit)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -78,7 +85,7 @@ func Open(ctx context.Context, ref location.Git) (_ *gitProvider, _ location.Ref
 	return &gitProvider{
 		base:     dir,
 		repoSpec: repoSpec,
-	}, lock, nil
+	}, clonedLock, nil
 }
 
 func (p *gitProvider) Close() error {
