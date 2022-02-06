@@ -108,7 +108,7 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 
 func pkgSet(pkgPath string) (sets.String, error) {
 	pkgFiles := sets.String{}
-	if err := pkgutil.WalkPackage(pkgPath, func(path string, info os.FileInfo, err error) error {
+	if err := pkgutil.WalkPackageObsolete(pkgPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

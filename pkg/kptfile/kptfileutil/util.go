@@ -360,7 +360,7 @@ func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, erro
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.Git{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory, false),
+				Directory: toUpstreamDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 			},
 		}, nil
@@ -369,7 +369,7 @@ func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, erro
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.Oci{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory, true),
+				Directory: toUpstreamDirectory(ref.Directory, true),
 			},
 		}, nil
 	}
@@ -387,7 +387,7 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory, false),
+				Directory: toUpstreamDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 				Commit:    ref.Commit,
 			},
@@ -397,7 +397,7 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.OciLock{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory, true),
+				Directory: toUpstreamDirectory(ref.Directory, true),
 				Digest:    ref.Digest.Name(),
 			},
 		}, nil
@@ -406,14 +406,14 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 		fmt.Errorf("reference is not a supported upstream type"))
 }
 
-// toDirectory convert relative Reference sub-package locations to
-// the kptfilev1 absolute-within-repo conventions.
-func toDirectory(relPath string, omitDefault bool) string {
-	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
-		return absPath
+func toUpstreamDirectory(dir string, omitDefault bool) string {
+	if dir == "" || dir == "." || dir == "/" {
+		if omitDefault {
+			return ""
+		}
+		return "/"
 	}
-	// root location is default in kptfilev1
-	return ""
+	return dir
 }
 
 // NewReferenceFromUpstream creates location.Reference from kptfilev1.Upstream structures.
@@ -425,7 +425,7 @@ func NewReferenceFromUpstream(kf *kptfilev1.KptFile) (location.Reference, error)
 	case kptfilev1.GitOrigin:
 		return location.Git{
 			Repo:      u.Git.Repo,
-			Directory: fromDirectory(u.Git.Directory, false),
+			Directory: fromUpstreamDirectory(u.Git.Directory),
 			Ref:       u.Git.Ref,
 		}, nil
 	case kptfilev1.OciOrigin:
@@ -435,20 +435,19 @@ func NewReferenceFromUpstream(kf *kptfilev1.KptFile) (location.Reference, error)
 		}
 		return location.Oci{
 			Image:     image,
-			Directory: fromDirectory(u.Oci.Directory, true),
+			Directory: fromUpstreamDirectory(u.Oci.Directory),
 		}, nil
 	}
 	return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("upstream type is not supported"))
 }
 
-// fromDirectory convert kptfilev1 absolute-within-repo conventions to
+// fromUpstreamDirectory convert kptfilev1 absolute-within-repo conventions to
 // relative Reference sub-package locations
-func fromDirectory(relPath string, omitDefault bool) string {
-	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
-		return absPath
+func fromUpstreamDirectory(dir string) string {
+	if dir == "" || dir == "." || dir == "/" {
+		return "."
 	}
-	// root location is default in kptfilev1
-	return ""
+	return dir
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output

@@ -34,7 +34,7 @@ func ParseReference(location string, opts ...Option) (Reference, error) {
 		helpText = append(helpText, result.helpText...)
 	}
 
-	return nil, fmt.Errorf("unable to parse location: %v", helpText)
+	return nil, fmt.Errorf("unable to parse location: %s", strings.Join(helpText, "; "))
 }
 
 func startsWith(value string, prefix string) (string, bool) {
@@ -79,22 +79,25 @@ var StdioParser parser = func(value string, opt options) result {
 
 // GitParser enables standard parsing for the location.Git Reference type
 var GitParser parser = func(value string, opt options) result {
+	ref, err := parseGit(value, opt)
+	if err != nil {
+		return result{
+			helpText: []string{err.Error()},
+		}
+	}
+
 	return result{
-		ref:      parseGit(value, opt),
-		helpText: []string{},
+		ref: ref,
 	}
 }
 
 // OciParser enables standard parsing for the location.Oci Reference type
-var OciParser parser = func(value string, opt options) result {
-	ref, err := parseOci(value)
-	return result{
-		ref: ref,
-		err: err,
-		helpText: []string{
-			"OCI packages use 'oci://' prefix before standard image name",
-		},
+var OciParser parser = func(value string, opt options) (result result) {
+	if !strings.Contains(value, "oci://") {
+		result.helpText = append(result.helpText, "specify 'oci://' before image names")
 	}
+	result.ref, result.err = parseOci(value)
+	return
 }
 
 // DirParser enables standard parsing for the location.Dir Reference type

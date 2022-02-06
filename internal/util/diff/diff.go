@@ -153,7 +153,7 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
 
-	err = pkgutil.CopyPackage(c.Path, currPkg, true, pkg.Local)
+	err = pkgutil.CopyPackageObsolete(c.Path, currPkg, true, pkg.Local)
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}

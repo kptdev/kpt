@@ -32,9 +32,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
-// WalkPackage walks the package defined at src and provides a callback for
+// WalkPackageObsolete walks the package defined at src and provides a callback for
 // every folder and file. Any subpackages and the .git folder are excluded.
-func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
+func WalkPackageObsolete(src string, c func(string, os.FileInfo, error) error) error {
 	excludedDirs := make(map[string]bool)
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -68,9 +68,9 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 	})
 }
 
-// WalkPackageFS walks the package defined at src and provides a callback for
+// WalkPackage walks the package defined at src and provides a callback for
 // every folder and file. Any subpackages and the .git folder are excluded.
-func WalkPackageFS(src paths.FileSystemPath, c func(string, os.FileInfo, error) error) error {
+func WalkPackage(src paths.FileSystemPath, c func(string, os.FileInfo, error) error) error {
 	excludedDirs := make(map[string]bool)
 	return src.FileSystem.Walk(src.Path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -90,12 +90,9 @@ func WalkPackageFS(src paths.FileSystemPath, c func(string, os.FileInfo, error) 
 			}
 		}
 
-		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
-			if err != nil && !os.IsNotExist(err) {
-				return c(path, info, err)
-			}
-			if err == nil && path != src.Path {
+		if info.IsDir() && path != src.Path  {
+			hasKptfile := src.FileSystem.Exists(filepath.Join(src.Path, path, kptfilev1.KptFileName))
+			if hasKptfile {
 				excludedDirs[path] = true
 				return nil
 			}
@@ -104,15 +101,15 @@ func WalkPackageFS(src paths.FileSystemPath, c func(string, os.FileInfo, error) 
 	})
 }
 
-// CopyPackage copies the content of a single package from src to dst. If includeSubpackages
+// CopyPackageObsolete copies the content of a single package from src to dst. If includeSubpackages
 // is true, it will copy resources belonging to any subpackages.
-func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+func CopyPackageObsolete(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
 	subpackagesToCopy, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, src, matcher, true)
 	if err != nil {
 		return err
 	}
 
-	err = WalkPackage(src, func(path string, info os.FileInfo, err error) error {
+	err = WalkPackageObsolete(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -121,7 +118,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
 		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
 		copyTo := strings.TrimPrefix(path, src)
-		if copyTo == "/Kptfile" {
+		if copyTo == "/"+kptfilev1.KptFileName {
 			_, err := os.Stat(filepath.Join(dst, copyTo))
 			if err == nil {
 				return nil
@@ -177,7 +174,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 				return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
 			}
 
-			if copyTo == "/Kptfile" {
+			if copyTo == "/"+kptfilev1.KptFileName {
 				_, err := os.Stat(filepath.Join(dst, copyTo))
 				if err == nil {
 					return nil
@@ -207,13 +204,15 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 	return nil
 }
 
-func CopyPackageFS(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+// CopyPackage copies the content of a single package from src to dst. If includeSubpackages
+// is true, it will copy resources belonging to any subpackages.
+func CopyPackage(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
 	subpackagesToCopy, err := pkg.Subpackages(src.FileSystem, src.Path, matcher, true)
 	if err != nil {
 		return err
 	}
 
-	err = WalkPackageFS(src, func(path string, info os.FileInfo, err error) error {
+	err = WalkPackage(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -223,16 +222,11 @@ func CopyPackageFS(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher 
 		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
 		copyTo := strings.TrimPrefix(path, src.Path)
 
-		// TODO(oci) what does this do?
-		// if copyTo == "/Kptfile" {
-		// 	_, err := os.Stat(filepath.Join(dst.Path, copyTo))
-		// 	if err == nil {
-		// 		return nil
-		// 	}
-		// 	if !os.IsNotExist(err) {
-		// 		return err
-		// 	}
-		// }
+		if copyTo == "/"+kptfilev1.KptFileName {
+			if dst.FileSystem.Exists(filepath.Join(dst.Path, copyTo)) {
+				return nil
+			}
+		}
 
 		// make directories that don't exist
 		if info.IsDir() {
@@ -280,16 +274,11 @@ func CopyPackageFS(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher 
 				return dst.FileSystem.MkdirAll(filepath.Join(dst.Path, copyTo))
 			}
 
-			// TODO(oci) what does this do?
-			// if copyTo == "/Kptfile" {
-			// 	_, err := os.Stat(filepath.Join(dst, copyTo))
-			// 	if err == nil {
-			// 		return nil
-			// 	}
-			// 	if !os.IsNotExist(err) {
-			// 		return err
-			// 	}
-			// }
+			if copyTo == "/"+kptfilev1.KptFileName {
+				if dst.FileSystem.Exists(filepath.Join(dst.Path, copyTo)) {
+					return nil
+				}
+			}
 
 			// copy file by reading and writing it
 			b, err := src.FileSystem.ReadFile(filepath.Join(src.Path, copyTo))
@@ -318,7 +307,7 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 	// since we don't want to end up deleting directories that might
 	// contain a nested subpackage.
 	var dirs []string
-	if err := WalkPackage(path, func(p string, info os.FileInfo, err error) error {
+	if err := WalkPackageObsolete(path, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				return nil
@@ -490,4 +479,12 @@ func Exists(path string) (bool, error) {
 		return false, err
 	}
 	return !os.IsNotExist(err), nil
+}
+
+// DiskPath returns a FileSystemPath pair for paths exist on disk.
+func DiskPath(path string) paths.FileSystemPath {
+	return paths.FileSystemPath{
+		FileSystem: filesys.MakeFsOnDisk(),
+		Path: path,
+	}
 }

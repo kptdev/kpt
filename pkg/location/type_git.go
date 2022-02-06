@@ -82,16 +82,14 @@ func newGit(location string, opt options) (Git, error) {
 	}, nil
 }
 
-func parseGit(location string, opt options) Reference {
-	git, gitErr := newGit(location, opt)
+func parseGit(location string, opt options) (Reference, error) {
+	git, err := newGit(location, opt)
 	var zero Git
-	if gitErr == nil && git != zero {
-		return git
+	if err == nil && git != zero {
+		return git, nil 
 	}
 
-	// TODO - figure out which gitErr must be returned, and which simply mean "it's not a git path"
-
-	return nil
+	return nil, err
 }
 
 // String implements location.Reference

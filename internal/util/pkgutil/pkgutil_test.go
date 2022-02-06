@@ -84,7 +84,7 @@ func TestWalkPackage(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
 			var visited []string
-			if err := pkgutil.WalkPackage(pkgPath, func(s string, info os.FileInfo, err error) error {
+			if err := pkgutil.WalkPackageObsolete(pkgPath, func(s string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -369,7 +369,7 @@ func TestCopyPackage(t *testing.T) {
 				t.FailNow()
 			}
 
-			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
+			err = pkgutil.CopyPackageObsolete(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
