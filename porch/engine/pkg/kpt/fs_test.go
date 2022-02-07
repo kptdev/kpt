@@ -140,10 +140,10 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
       configMap:
         tier: db`
 
@@ -159,10 +159,10 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
       configMap:
         namespace: db
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
       configMap:
         app: backend`
 
@@ -175,13 +175,6 @@ metadata:
     tier: db
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      tier: db
-  template:
-    metadata:
-      labels:
-        tier: db
 ---
 apiVersion: custom.io/v1
 kind: Custom
@@ -203,15 +196,6 @@ metadata:
     tier: db
 spec:
   replicas: 3
-  selector:
-    matchLabels:
-      app: backend
-      tier: db
-  template:
-    metadata:
-      labels:
-        app: backend
-        tier: db
 `
 	fs := filesys.MakeFsInMemory()
 	if err := fs.MkdirAll("app/db"); err != nil {
@@ -234,6 +218,7 @@ spec:
 		PkgPath:         "/app",
 		ImagePullPolicy: fnruntime.IfNotPresentPull,
 		FileSystem:      fs,
+		Runtime:         &runtime{},
 	}
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -243,6 +228,7 @@ spec:
 	if res, err := fs.ReadFile("/app/resources.yaml"); err != nil {
 		t.Errorf("Failed to read file: %v", err)
 	} else if got, want := string(res), expectedAppResources; got != want {
+		println(got)
 		t.Errorf("unexpected file contents: got %q, want %q", got, want)
 	}
 
