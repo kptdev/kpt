@@ -281,7 +281,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		originAbsPath = types.FileSystemPath{
 			FileSystem: filesys.MakeFsInMemory(),
 			Path:       "/nil",
-		} 
+		}
 		if err := os.MkdirAll(originAbsPath, os.ModePerm); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}

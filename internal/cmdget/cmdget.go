@@ -17,9 +17,7 @@ package cmdget
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
@@ -29,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse/parseref"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
@@ -89,19 +88,14 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		}
 	}
 
-	upstream, err := location.ParseReference(
-		args[0],
+	upstream, destination, err := parseref.ParseArgs(
+		args,
 		location.WithContext(r.ctx),
 		location.WithParsers(location.GitParser, location.OciParser))
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	r.Get.Upstream = upstream
-
-	destination, err := getDest(args[1], upstream)
-	if err != nil {
-		return err
-	}
 
 	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(destination)
 	if err != nil {
@@ -120,33 +114,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	r.Get.UpdateStrategy = strategy
 	return nil
-}
-
-func getDest(dir string, ref location.Reference) (string, error) {
-	destination := filepath.Clean(dir)
-
-	f, err := os.Stat(destination)
-	if os.IsNotExist(err) {
-		parent := filepath.Dir(destination)
-		if _, err := os.Stat(parent); os.IsNotExist(err) {
-			// error -- fetch to directory where parent does not exist
-			return "", fmt.Errorf("parent directory %q does not exist", parent)
-		}
-		// fetch to a specific directory -- don't default the name
-		return destination, nil
-	}
-
-	if !f.IsDir() {
-		return "", fmt.Errorf("LOCAL_PKG_DEST must be a directory")
-	}
-
-	if name, ok := location.DefaultDirectoryName(ref); ok {
-		return filepath.Join(destination, name), nil
-	}
-
-	// this reference type does not provide a default name.
-	// the error message is a prompt to provide complete path to new dir.
-	return "", fmt.Errorf("destination directory already exists")
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {

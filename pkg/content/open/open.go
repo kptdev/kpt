@@ -75,7 +75,7 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 		}, nil
 	case location.Oci:
 		provider, lock, err := oci.Open(
-			ref, 
+			ref,
 			remote.WithAuthFromKeychain(gcrane.Keychain),
 			remote.WithContext(opt.ctx))
 		if err != nil {
@@ -90,7 +90,7 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 		}, nil
 	case location.OciLock:
 		provider, lock, err := oci.OpenLock(
-			ref, 
+			ref,
 			remote.WithAuthFromKeychain(gcrane.Keychain),
 			remote.WithContext(opt.ctx))
 		if err != nil {

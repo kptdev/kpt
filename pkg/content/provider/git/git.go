@@ -43,8 +43,7 @@ var _ content.Content = &gitProvider{}
 var _ extensions.FileSystemProvider = &gitProvider{}
 var _ extensions.FSProvider = &gitProvider{}
 
-
-func Open(ctx context.Context, ref location.Git) (content.Content,  location.ReferenceLock, error) {
+func Open(ctx context.Context, ref location.Git) (content.Content, location.ReferenceLock, error) {
 	repoSpec := &git.RepoSpec{
 		OrgRepo: ref.Repo,
 		Path:    filepath.Join("/", ref.Directory),
@@ -64,7 +63,7 @@ func OpenLock(ctx context.Context, ref location.GitLock) (content.Content, locat
 	return open(ctx, ref, repoSpec)
 }
 
-func open(ctx context.Context, ref location.Reference, repoSpec *git.RepoSpec) (_result content.Content, _ location.ReferenceLock, _err error)  {
+func open(ctx context.Context, ref location.Reference, repoSpec *git.RepoSpec) (_result content.Content, _ location.ReferenceLock, _err error) {
 
 	if err := remote.ClonerUsingGitExec(ctx, repoSpec); err != nil {
 		return nil, nil, err

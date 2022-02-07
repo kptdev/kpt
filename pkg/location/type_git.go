@@ -140,7 +140,7 @@ func (ref Git) Validate() error {
 }
 
 func (ref Git) Rel(target Reference) (string, error) {
-	if target, ok:=target.(Git); ok {
+	if target, ok := target.(Git); ok {
 		if ref.Repo != target.Repo {
 			return "", fmt.Errorf("target repo must match")
 		}
@@ -155,7 +155,7 @@ func (ref Git) Rel(target Reference) (string, error) {
 func canonical(dir string) string {
 	dir = filepath.Clean(dir)
 	if filepath.IsAbs(dir) {
-		if dir,err := filepath.Rel("/", dir); err == nil {
+		if dir, err := filepath.Rel("/", dir); err == nil {
 			return dir
 		}
 	}

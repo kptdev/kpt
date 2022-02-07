@@ -26,15 +26,18 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/open"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 )
 
 // Command fetches a package from a git repository, copies it to a local
 // directory, and expands any remote subpackages.
 type Command struct {
 	// Contains information about the upstraem package to fetch
-	Origin remote.Origin
+	Origin location.Reference
 
 	// Destination is the output directory to clone the package to.  Defaults to the name of the package --
 	// either the base repo name, or the base subdirectory name.
@@ -45,6 +48,7 @@ type Command struct {
 func (c Command) Run(ctx context.Context) error {
 	const op errors.Op = "pull.Run"
 	pr := printer.FromContextOrDie(ctx)
+	opts := open.Options(open.WithContext(ctx))
 
 	if err := (&c).DefaultValues(); err != nil {
 		return errors.E(op, err)
@@ -61,23 +65,40 @@ func (c Command) Run(ctx context.Context) error {
 
 	pr.Printf("Pulling origin %s\n", c.Origin.String())
 
-	// TODO(oci-support) need to understand abs path for kpt pkg pull from git
-	_, digest, err := c.Origin.Fetch(ctx, c.Destination)
+	src, err := open.FileSystem(c.Origin, opts)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
+	defer src.Close()
 
-	pr.Printf("Pulled digest %s\n", digest)
+	pr.Printf("Pulled digest %s\n", src.ReferenceLock)
 
-	kf, err := pkg.ReadKptfile(types.DiskPath(c.Destination))
+	dst, err := open.FileSystem(location.Dir{Directory: c.Destination}, opts)
 	if err != nil {
 		return errors.E(op, types.UniquePath(c.Destination), err)
 	}
+	defer dst.Close()
 
-	kf.Origin = c.Origin.Build(digest)
-	err = kptfileutil.WriteFile(c.Destination, kf)
-	if err != nil {
-		return cleanUpDirAndError(c.Destination, err)
+	if err := pkgutil.CopyPackage(src.FileSystemPath, dst.FileSystemPath, true, pkg.All); err != nil {
+		return errors.E(op, types.UniquePath(c.Destination), err)
+	}
+
+	if kf, err := pkg.ReadKptfile(dst.FileSystemPath); err == nil {
+		lock, err := kptfileutil.NewUpstreamLockFromReferenceLock(src.ReferenceLock)
+		if err != nil {
+			return errors.E(op, types.UniquePath(c.Destination), err)
+		}
+
+		kf.Origin = &kptfilev1.Origin{
+			Type: lock.Type,
+			Git:  lock.Git,
+			Oci:  lock.Oci,
+		}
+
+		err = kptfileutil.WriteFileFS(dst.FileSystemPath, kf)
+		if err != nil {
+			return errors.E(op, types.UniquePath(c.Destination), err)
+		}
 	}
 
 	return nil
@@ -97,13 +118,4 @@ func (c *Command) DefaultValues() error {
 	}
 
 	return nil
-}
-
-func cleanUpDirAndError(destination string, err error) error {
-	const op errors.Op = "pull.Run"
-	rmErr := os.RemoveAll(destination)
-	if rmErr != nil {
-		return errors.E(op, types.UniquePath(destination), err, rmErr)
-	}
-	return errors.E(op, types.UniquePath(destination), err)
 }

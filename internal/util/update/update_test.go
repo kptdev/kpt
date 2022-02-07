@@ -21,7 +21,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -811,37 +810,9 @@ func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
 			}
 			expectedPath := tc.expectedLocal.ExpandPkgWithName(t,
 				g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
-			if !testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true) {
-
-				os.MkdirAll(filepath.Join("bin", t.Name(), "expected"), os.ModePerm)
-				copy(expectedPath, filepath.Join("bin", t.Name(), "expected"))
-
-				os.MkdirAll(filepath.Join("bin", t.Name(), "actual"), os.ModePerm)
-				copy(g.LocalWorkspace.FullPackagePath(), filepath.Join("bin", t.Name(), "actual"))
-
-				_ = t.Name()
-			}
+			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
 		})
 	}
-}
-
-func copy(source, destination string) error {
-    var err error = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
-        var relPath string = strings.Replace(path, source, "", 1)
-        if relPath == "" {
-            return nil
-        }
-        if info.IsDir() {
-            return os.Mkdir(filepath.Join(destination, relPath), 0755)
-        } else {
-            var data, err1 = ioutil.ReadFile(filepath.Join(source, relPath))
-            if err1 != nil {
-                return err1
-            }
-            return ioutil.WriteFile(filepath.Join(destination, relPath), data, 0777)
-        }
-    })
-    return err
 }
 
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag

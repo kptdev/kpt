@@ -58,7 +58,7 @@ func open(name name.Reference, ref location.Reference, options ...remote.Option)
 		// return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
 	}
 
-	lock, err := locationmutate.Lock(ref, "sha256:" + imageDigestHash.Hex)
+	lock, err := locationmutate.Lock(ref, "sha256:"+imageDigestHash.Hex)
 	if err != nil {
 		return nil, nil, err
 	}

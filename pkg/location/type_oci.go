@@ -154,7 +154,7 @@ func (ref Oci) Type() string {
 }
 
 func (ref Oci) Rel(target Reference) (string, error) {
-	if target, ok:=target.(Oci); ok {
+	if target, ok := target.(Oci); ok {
 		if ref.Image != target.Image {
 			return "", fmt.Errorf("target image %q must match %q", target.Image, ref.Image)
 		}
