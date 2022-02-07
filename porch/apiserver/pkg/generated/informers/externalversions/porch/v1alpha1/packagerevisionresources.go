@@ -31,7 +31,7 @@ import (
 )
 
 // PackageRevisionResourcesInformer provides access to a shared informer and lister for
-// PackageRevisionResourceses.
+// PackageRevisionResources.
 type PackageRevisionResourcesInformer interface {
 	Informer() cache.SharedIndexInformer
 	Lister() v1alpha1.PackageRevisionResourcesLister
@@ -60,13 +60,13 @@ func NewFilteredPackageRevisionResourcesInformer(client versioned.Interface, nam
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.PorchV1alpha1().PackageRevisionResourceses(namespace).List(context.TODO(), options)
+				return client.PorchV1alpha1().PackageRevisionResources(namespace).List(context.TODO(), options)
 			},
 			WatchFunc: func(options v1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.PorchV1alpha1().PackageRevisionResourceses(namespace).Watch(context.TODO(), options)
+				return client.PorchV1alpha1().PackageRevisionResources(namespace).Watch(context.TODO(), options)
 			},
 		},
 		&porchv1alpha1.PackageRevisionResources{},

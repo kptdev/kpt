@@ -26,8 +26,8 @@ type Interface interface {
 	Functions() FunctionInformer
 	// PackageRevisions returns a PackageRevisionInformer.
 	PackageRevisions() PackageRevisionInformer
-	// PackageRevisionResourceses returns a PackageRevisionResourcesInformer.
-	PackageRevisionResourceses() PackageRevisionResourcesInformer
+	// PackageRevisionResources returns a PackageRevisionResourcesInformer.
+	PackageRevisionResources() PackageRevisionResourcesInformer
 }
 
 type version struct {
@@ -51,7 +51,7 @@ func (v *version) PackageRevisions() PackageRevisionInformer {
 	return &packageRevisionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// PackageRevisionResourceses returns a PackageRevisionResourcesInformer.
-func (v *version) PackageRevisionResourceses() PackageRevisionResourcesInformer {
+// PackageRevisionResources returns a PackageRevisionResourcesInformer.
+func (v *version) PackageRevisionResources() PackageRevisionResourcesInformer {
 	return &packageRevisionResourcesInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
