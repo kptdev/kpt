@@ -62,6 +62,16 @@ Error: The ResourceGroup CRD was not found in the cluster. Please install it eit
 Error: Inventory information has already been added to the package Kptfile. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
 `
 
+	//nolint:lll
+	invInfoInRGAlreadyExistsMsg = `
+Error: Inventory information has already been added to the package ResourceGroup object. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
+`
+
+	//nolint:lll
+	invInfoInKfAlreadyExistsMsg = `
+Error: Inventory information has already been added to the package Kptfile object. Please consider migrating to a standalone resourcegroup object using the 'kpt live migrate' command.
+`
+
 	multipleInvInfoMsg = `
 Error: Multiple Kptfile resources with inventory information found. Please make sure at most one Kptfile resource contains inventory information.
 `
@@ -132,6 +142,24 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, map[string]interface{}{
 				"err": *invExistsError,
+			}),
+		}, true
+	}
+
+	var invInfoInRGAlreadyExistsError *cmdliveinit.InvInRGExistsError
+	if errors.As(err, &invInfoInRGAlreadyExistsError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(invInfoInRGAlreadyExistsMsg, map[string]interface{}{
+				"err": *invInfoInRGAlreadyExistsError,
+			}),
+		}, true
+	}
+
+	var invInKfExistsError *cmdliveinit.InvInKfExistsError
+	if errors.As(err, &invInKfExistsError) {
+		return ResolvedResult{
+			Message: ExecuteTemplate(invInfoInKfAlreadyExistsMsg, map[string]interface{}{
+				"err": *invInKfExistsError,
 			}),
 		}, true
 	}
