@@ -105,11 +105,13 @@ vet: $(MODULES)
 fmt: $(MODULES)
 	@for f in $(^D); do (cd $$f; echo "Formatting $$f"; gofmt -s -w .); done
 
+PORCH = $(BUILDDIR)/porch
+
 .PHONY: run-local
-run-local:
+run-local: porch
 	KUBECONFIG=$(KUBECONFIG) kubectl apply -f hack/local/localconfig.yaml
 	KUBECONFIG=$(KUBECONFIG) kubectl apply -f controllers/pkg/apis/porch/v1alpha1/
-	cd apiserver; go run ./cmd/porch \
+	$(PORCH) \
 	--secure-port 9443 \
 	--standalone-debug-mode \
 	--kubeconfig="$(KUBECONFIG)" \
@@ -122,7 +124,7 @@ run-jaeger:
 
 .PHONY: porch
 porch:
-	cd apiserver; go build ./cmd/porch
+	cd apiserver; go build -o $(PORCH) ./cmd/porch
 
 .PHONY: fix-headers
 fix-headers:
