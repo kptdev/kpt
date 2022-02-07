@@ -543,7 +543,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
 			}
 
-			paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, pkgPaths...)
+			paths, err := pkgutil.FindSubpackagesForPathsObsolete(pkg.Local, true, pkgPaths...)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

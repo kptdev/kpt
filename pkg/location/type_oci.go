@@ -153,6 +153,16 @@ func (ref Oci) Type() string {
 	return "oci"
 }
 
+func (ref Oci) Rel(target Reference) (string, error) {
+	if target, ok:=target.(Oci); ok {
+		if ref.Image != target.Image {
+			return "", fmt.Errorf("target image %q must match %q", target.Image, ref.Image)
+		}
+		return filepath.Rel(ref.Directory, target.Directory)
+	}
+	return "", fmt.Errorf("reference %q is of type %q", target, target.Type())
+}
+
 // GetDefaultDirectoryName is called from location.DefaultDirectoryName
 func (ref Oci) GetDefaultDirectoryName() (string, bool) {
 	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), true

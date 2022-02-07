@@ -20,6 +20,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -30,10 +31,30 @@ import (
 // to all resources in the package
 type AddMergeComment struct{}
 
-// Process invokes AddMergeComment kyaml filter on the resources in input packages paths
-func Process(paths ...string) error {
+// ProcessObsolete invokes AddMergeComment kyaml filter on the resources in input packages paths
+func ProcessObsolete(paths ...string) error {
 	for _, path := range paths {
 		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
+		amc := &AddMergeComment{}
+		err := kio.Pipeline{
+			Inputs:  []kio.Reader{inout},
+			Filters: []kio.Filter{kio.FilterAll(amc)},
+			Outputs: []kio.Writer{inout},
+		}.Execute()
+		if err != nil {
+			// this should be a best effort, do not error if this step fails
+			// https://github.com/GoogleContainerTools/kpt/issues/2559
+			return nil
+		}
+	}
+	return nil
+}
+
+// ProcessObsolete invokes AddMergeComment kyaml filter on the resources in input packages paths
+func Process(paths ...types.FileSystemPath) error {
+	for _, path := range paths {
+		inout := &kio.LocalPackageReadWriter{PackagePath: path.Path, PreserveSeqIndent: true, WrapBareSeqNode: true}
+		inout.FileSystem.Set(path.FileSystem)
 		amc := &AddMergeComment{}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},
@@ -85,7 +106,7 @@ func ProcessWithCleanup(path string) (string, func(), error) {
 		return "", nil, err
 	}
 
-	err = Process(expected)
+	err = ProcessObsolete(expected)
 	if err != nil {
 		return "", nil, err
 	}

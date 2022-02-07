@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -38,7 +39,6 @@ import (
 	assertnow "gotest.tools/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -130,11 +130,11 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSou
 
 		// Read the Kptfiles and set the Commit field to an empty
 		// string before we compare.
-		pkg1kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg1Path))
+		pkg1kf, err := pkg.ReadKptfile(types.DiskPath(filepath.Dir(pkg1Path)))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg2kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg2Path))
+		pkg2kf, err := pkg.ReadKptfile(types.DiskPath(filepath.Dir(pkg2Path)))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -642,12 +642,12 @@ func replaceData(repo, data string) error {
 		// For Kptfiles we want to keep the Upstream section if the Kptfile
 		// in the data directory doesn't already include one.
 		if filepath.Base(path) == "Kptfile" {
-			dataKptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(path))
+			dataKptfile, err := pkg.ReadKptfile(types.DiskPath(filepath.Dir(path)))
 			if err != nil {
 				return err
 			}
 			repoKptfileDir := filepath.Dir(filepath.Join(repo, rel))
-			repoKptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, repoKptfileDir)
+			repoKptfile, err := pkg.ReadKptfile(types.DiskPath(repoKptfileDir))
 			if err != nil {
 				return err
 			}

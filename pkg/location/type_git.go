@@ -48,6 +48,7 @@ var _ Reference = Git{}
 var _ extensions.IdentifierGetter = Git{}
 var _ extensions.DefaultDirectoryNameGetter = Git{}
 var _ extensions.DefaultIdentifierGetter = Git{}
+var _ extensions.RelPather = Git{}
 
 type GitLock struct {
 	Git
@@ -63,6 +64,7 @@ var _ extensions.IdentifierGetter = GitLock{}
 var _ extensions.LockGetter = GitLock{}
 var _ extensions.DefaultDirectoryNameGetter = GitLock{}
 var _ extensions.DefaultIdentifierGetter = GitLock{}
+var _ extensions.RelPather = GitLock{}
 
 func NewGit(location string, opts ...Option) (Git, error) {
 	return newGit(location, makeOptions(opts...))
@@ -110,11 +112,6 @@ func (ref Git) String() string {
 	return gitString(ref.Repo, ref.Directory, ref.Ref)
 }
 
-// String implements location.ReferenceLock
-func (ref GitLock) String() string {
-	return gitString(ref.Repo, ref.Directory, ref.Commit)
-}
-
 func gitString(repo, dir, identifier string) string {
 	if dir != "" && dir != "/" && dir != "." {
 		return fmt.Sprintf("%s/%s@%s", repo, dir, identifier)
@@ -140,6 +137,29 @@ func (ref Git) Validate() error {
 		return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
 	}
 	return nil
+}
+
+func (ref Git) Rel(target Reference) (string, error) {
+	if target, ok:=target.(Git); ok {
+		if ref.Repo != target.Repo {
+			return "", fmt.Errorf("target repo must match")
+		}
+		if ref.Ref != target.Ref {
+			return "", fmt.Errorf("target ref must match")
+		}
+		return filepath.Rel(canonical(ref.Directory), canonical(target.Directory))
+	}
+	return "", fmt.Errorf("reference %q of type %q is not relative", target, target.Type())
+}
+
+func canonical(dir string) string {
+	dir = filepath.Clean(dir)
+	if filepath.IsAbs(dir) {
+		if dir,err := filepath.Rel("/", dir); err == nil {
+			return dir
+		}
+	}
+	return dir
 }
 
 // GetDefaultDirectoryName is called from location.DefaultDirectoryName

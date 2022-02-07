@@ -77,3 +77,14 @@ func DiskPath(path string) FileSystemPath {
 		Path:       path,
 	}
 }
+
+func Join(path FileSystemPath, paths ...string) FileSystemPath {
+	return FileSystemPath{
+		FileSystem: path.FileSystem,
+		Path:       filepath.Join(append([]string{path.Path}, paths...)...),
+	}
+}
+
+func AsUniquePath(path FileSystemPath) UniquePath {
+	return UniquePath(path.Path)
+}

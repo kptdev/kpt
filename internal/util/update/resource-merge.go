@@ -17,22 +17,23 @@ package update
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/copyutil"
 	pkgdiff "github.com/GoogleContainerTools/kpt/internal/util/diff"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/io/ioutil"
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 // ResourceMergeUpdater updates a package by fetching the original and updated source
@@ -44,7 +45,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	if !options.IsRoot {
 		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(options.LocalPath), err)
+			return errors.E(op, types.AsUniquePath(options.LocalPath), err)
 		}
 
 		// If the upstream information in local has changed from origin, it
@@ -61,7 +62,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true,
 		options.LocalPath, options.UpdatedPath, options.OriginPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, types.AsUniquePath(options.LocalPath), err)
 	}
 
 	// Update each package and subpackage. Parent package is updated before
@@ -77,7 +78,7 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 
 		err := u.updatePackage(subPkgPath, localSubPkgPath, updatedSubPkgPath, originalSubPkgPath, isRootPkg)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 	}
 	return nil
@@ -86,32 +87,32 @@ func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
 // updatePackage updates the package in the location specified by localPath
 // using the provided paths to the updated version of the package and the
 // original version of the package.
-func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
+func (u ResourceMergeUpdater) updatePackage(subPkgPath string, localPath, updatedPath, originalPath types.FileSystemPath, isRootPkg bool) error {
 	const op errors.Op = "update.updatePackage"
 	localExists, err := pkgutil.Exists(localPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	updatedExists, err := pkgutil.Exists(updatedPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	originalExists, err := pkgutil.Exists(originalPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	switch {
 	// Check if subpackage has been added both in upstream and in local
 	case !originalExists && localExists && updatedExists:
-		return errors.E(op, types.UniquePath(localPath),
+		return errors.E(op, types.AsUniquePath(localPath),
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(types.DiskPath(updatedPath), types.DiskPath(localPath), !isRootPkg, pkg.None); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 	// Package added locally
 	case !originalExists && localExists && !updatedExists:
@@ -128,16 +129,16 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 		// Check the diff. If there are local changes, we keep the subpackage.
 		diff, err := pkgdiff.PkgDiff(originalPath, localPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 		if diff.Len() == 0 {
 			if err := os.RemoveAll(localPath); err != nil {
-				return errors.E(op, types.UniquePath(localPath), err)
+				return errors.E(op, types.AsUniquePath(localPath), err)
 			}
 		}
 	default:
 		if err := u.mergePackage(localPath, updatedPath, originalPath, subPkgPath, isRootPkg); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 	}
 	return nil
@@ -145,10 +146,10 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 
 // mergePackage merge a package. It does a 3-way merge by using the provided
 // paths to the local, updated and original versions of the package.
-func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath, _ string, isRootPkg bool) error {
+func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath types.FileSystemPath, _ string, isRootPkg bool) error {
 	const op errors.Op = "update.mergePackage"
 	if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originalPath, !isRootPkg); err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	// merge the Resources: original + updated + dest => dest
@@ -161,32 +162,32 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 		IncludeSubPackages: false,
 	}.Merge()
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	if err := ReplaceNonKRMFiles(updatedPath, originalPath, localPath); err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 	return nil
 }
 
 // replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,
 // it also deletes non KRM files and sub dirs which are present in localDir and not in updatedDir
-func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
+func ReplaceNonKRMFiles(updatedDir, originalDir, localDir types.FileSystemPath) error {
 	const op errors.Op = "update.ReplaceNonKRMFiles"
 	updatedSubDirs, updatedFiles, err := getSubDirsAndNonKrmFiles(updatedDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, types.AsUniquePath(localDir), err)
 	}
 
 	originalSubDirs, originalFiles, err := getSubDirsAndNonKrmFiles(originalDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, types.AsUniquePath(localDir), err)
 	}
 
 	localSubDirs, localFiles, err := getSubDirsAndNonKrmFiles(localDir)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localDir), err)
+		return errors.E(op, types.AsUniquePath(localDir), err)
 	}
 
 	// identify all non KRM files modified locally, to leave them untouched
@@ -199,7 +200,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		}
 		same, err := compareFiles(filepath.Join(originalDir, file), filepath.Join(localDir, file))
 		if err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, types.AsUniquePath(localDir), err)
 		}
 		if !same {
 			// local file has been modified
@@ -210,7 +211,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		// remove the file from local if it is not modified and is deleted from updated upstream
 		if !updatedFiles.Has(file) {
 			if err = os.Remove(filepath.Join(localDir, file)); err != nil {
-				return errors.E(op, types.UniquePath(localDir), err)
+				return errors.E(op, types.AsUniquePath(localDir), err)
 			}
 		}
 	}
@@ -218,7 +219,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 	// make sure local has all sub-dirs present in updated
 	for _, dir := range updatedSubDirs.List() {
 		if err = os.MkdirAll(filepath.Join(localDir, dir), 0700); err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, types.AsUniquePath(localDir), err)
 		}
 	}
 
@@ -230,7 +231,7 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 		}
 		err = copyutil.SyncFile(filepath.Join(updatedDir, file), filepath.Join(localDir, file))
 		if err != nil {
-			return errors.E(op, types.UniquePath(localDir), err)
+			return errors.E(op, types.AsUniquePath(localDir), err)
 		}
 	}
 
@@ -247,28 +248,28 @@ func ReplaceNonKRMFiles(updatedDir, originalDir, localDir string) error {
 
 // getSubDirsAndNonKrmFiles returns the list of all non git sub dirs and, non git+non KRM files
 // in the root directory
-func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
+func getSubDirsAndNonKrmFiles(root types.FileSystemPath) (sets.String, sets.String, error) {
 	const op errors.Op = "update.getSubDirsAndNonKrmFiles"
 	files := sets.String{}
 	dirs := sets.String{}
-	err := pkgutil.WalkPackage(types.DiskPath(root), func(path string, info os.FileInfo, err error) error {
+	err := pkgutil.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.E(op, errors.IO, err)
 		}
 
 		if info.IsDir() {
-			path = strings.TrimPrefix(path, root)
+			path = strings.TrimPrefix(path, root.Path)
 			if len(path) > 0 {
 				dirs.Insert(path)
 			}
 			return nil
 		}
-		isKrm, err := isKrmFile(path)
+		isKrm, err := isKrmFile(types.FileSystemPath{FileSystem: root.FileSystem, Path: path})
 		if err != nil {
 			return errors.E(op, err)
 		}
 		if !isKrm {
-			path = strings.TrimPrefix(path, root)
+			path = strings.TrimPrefix(path, root.Path)
 			if len(path) > 0 && !strings.Contains(path, ".git") {
 				files.Insert(path)
 			}
@@ -285,7 +286,7 @@ var krmFilesGlob = append([]string{kptfilev1.KptFileName}, kio.DefaultMatch...)
 
 // isKrmFile checks if the file pointed to by the path is a yaml file (including
 // the Kptfile).
-func isKrmFile(path string) (bool, error) {
+func isKrmFile(path types.FileSystemPath) (bool, error) {
 	const op errors.Op = "update.isKrmFile"
 	for _, g := range krmFilesGlob {
 		if match, err := filepath.Match(g, filepath.Base(path)); err != nil {
@@ -298,7 +299,7 @@ func isKrmFile(path string) (bool, error) {
 }
 
 // compareFiles returns true if src file content is equal to dst file content
-func compareFiles(src, dst string) (bool, error) {
+func compareFiles(src, dst types.FileSystemPath) (bool, error) {
 	const op errors.Op = "update.compareFiles"
 	b1, err := ioutil.ReadFile(src)
 	if err != nil {

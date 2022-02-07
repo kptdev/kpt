@@ -19,6 +19,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
@@ -141,7 +142,7 @@ func TestPkgDiff(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			pkg1Dir := test.pkg1.ExpandPkg(t, testutil.EmptyReposInfo)
 			pkg2Dir := test.pkg2.ExpandPkg(t, testutil.EmptyReposInfo)
-			diff, err := PkgDiff(pkg1Dir, pkg2Dir)
+			diff, err := PkgDiff(types.DiskPath(pkg1Dir), types.DiskPath(pkg2Dir))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

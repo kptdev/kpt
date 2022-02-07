@@ -23,6 +23,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -144,9 +145,9 @@ func TestMerge3_Nested_packages(t *testing.T) {
 			local := test.local.ExpandPkg(t, testutil.EmptyReposInfo)
 			expected := test.expected.ExpandPkg(t, testutil.EmptyReposInfo)
 			err := merge.Merge3{
-				OriginalPath:       original,
-				UpdatedPath:        updated,
-				DestPath:           local,
+				OriginalPath:       types.DiskPath(original),
+				UpdatedPath:        types.DiskPath(updated),
+				DestPath:           types.DiskPath(local),
 				MergeOnPath:        true,
 				IncludeSubPackages: test.includeSubPackages,
 			}.Merge()
@@ -610,9 +611,9 @@ spec:
 			}
 
 			err = merge.Merge3{
-				OriginalPath: filepath.Join(dir, "originalDir"),
-				UpdatedPath:  filepath.Join(dir, "updatedDir"),
-				DestPath:     filepath.Join(dir, "localDir"),
+				OriginalPath: types.Join(types.DiskPath(dir), "originalDir"),
+				UpdatedPath:  types.Join(types.DiskPath(dir), "updatedDir"),
+				DestPath:     types.Join(types.DiskPath(dir), "localDir"),
 				MergeOnPath:  true,
 			}.Merge()
 			if tc.errMsg == "" {

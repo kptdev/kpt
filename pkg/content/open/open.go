@@ -49,7 +49,6 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 				Reference: ref,
 			},
 		}, nil
-	case location.GitLock:
 	case location.Git:
 		provider, lock, err := git.Open(opt.ctx, ref)
 		if err != nil {
@@ -62,9 +61,38 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 				ReferenceLock: lock,
 			},
 		}, nil
-	case location.OciLock:
+	case location.GitLock:
+		provider, lock, err := git.OpenLock(opt.ctx, ref)
+		if err != nil {
+			return open{}, err
+		}
+		return open{
+			Content: provider,
+			Location: location.Location{
+				Reference:     ref,
+				ReferenceLock: lock,
+			},
+		}, nil
 	case location.Oci:
-		provider, lock, err := oci.Open(ref, remote.WithAuthFromKeychain(gcrane.Keychain))
+		provider, lock, err := oci.Open(
+			ref, 
+			remote.WithAuthFromKeychain(gcrane.Keychain),
+			remote.WithContext(opt.ctx))
+		if err != nil {
+			return open{}, err
+		}
+		return open{
+			Content: provider,
+			Location: location.Location{
+				Reference:     ref,
+				ReferenceLock: lock,
+			},
+		}, nil
+	case location.OciLock:
+		provider, lock, err := oci.OpenLock(
+			ref, 
+			remote.WithAuthFromKeychain(gcrane.Keychain),
+			remote.WithContext(opt.ctx))
 		if err != nil {
 			return open{}, err
 		}

@@ -29,9 +29,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/google/go-containerregistry/pkg/crane"
@@ -158,40 +156,6 @@ func (u *ociOrigin) Fetch(ctx context.Context, dest string) (string, string, err
 		return "", "", errors.E(op, errors.OCI, types.UniquePath(dest), err)
 	}
 	return path.Join(dest, u.oci.Directory), imageDigest.Name(), nil
-}
-
-func (u *ociUpstream) CloneUpstream(ctx context.Context, dest string) error {
-	const op errors.Op = "remote.FetchUpstreamClone"
-	// pr := printer.FromContextOrDie(ctx)
-
-	// We need to create a temp directory where we can copy the content of the repo.
-	// During update, we need to checkout multiple versions of the same repo, so
-	// we can't do merges directly from the cache.
-	dir, err := ioutil.TempDir("", "kpt-get-")
-	if err != nil {
-		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
-	}
-	defer os.RemoveAll(dir)
-
-	imageDigest, err := pullAndExtract(u.oci.Image, dir, remote.WithContext(ctx), remote.WithAuthFromKeychain(gcrane.Keychain))
-	if err != nil {
-		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
-	}
-
-	sourcePath := path.Join(dir, u.oci.Directory)
-	if err := pkgutil.CopyPackage(types.DiskPath(sourcePath), types.DiskPath(dest), true, pkg.All); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
-	}
-
-	if err := kptfileutil.UpdateKptfileWithoutOrigin(types.DiskPath(dest), types.DiskPath(sourcePath), false); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
-	}
-
-	if err := kptfileutil.UpdateUpstreamLock(types.DiskPath(dest), u.BuildUpstreamLock(imageDigest.String())); err != nil {
-		return errors.E(op, errors.OCI, types.UniquePath(dest), err)
-	}
-
-	return nil
 }
 
 func (u *ociOrigin) Push(ctx context.Context, source string, kptfile *kptfilev1.KptFile) (digest string, err error) {

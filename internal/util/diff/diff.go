@@ -33,7 +33,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // DiffType represents type of comparison to be performed.
@@ -119,7 +118,7 @@ type Command struct {
 func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
-	kptFile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, c.Path)
+	kptFile, err := pkg.ReadKptfile(types.DiskPath(c.Path))
 	if err != nil {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
@@ -281,7 +280,7 @@ type defaultPkgDiffer struct {
 
 func (d *defaultPkgDiffer) Diff(pkgs ...string) error {
 	// add merge comments before comparing so that there are no unwanted diffs
-	if err := addmergecomment.Process(pkgs...); err != nil {
+	if err := addmergecomment.ProcessObsolete(pkgs...); err != nil {
 		return err
 	}
 	for _, pkg := range pkgs {

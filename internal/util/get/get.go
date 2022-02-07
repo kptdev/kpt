@@ -75,10 +75,9 @@ func (c Command) Run(ctx context.Context) error {
 
 	kf := kptfileutil.DefaultKptfile(c.Name)
 
-	if kf.Upstream, err = kptfileutil.NewUpstreamFromReference(c.Upstream); err != nil {
+	if kf.Upstream, err = kptfileutil.NewUpstreamFromReference(c.Upstream, c.UpdateStrategy); err != nil {
 		return errors.E(op, err)
 	}
-	kf.Upstream.UpdateStrategy = c.UpdateStrategy
 
 	err = kptfileutil.WriteFile(c.Destination, kf)
 	if err != nil {
@@ -89,6 +88,7 @@ func (c Command) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
 		return cleanUpDirAndError(c.Destination, err)

@@ -15,17 +15,20 @@
 package merge
 
 import (
-	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
-	"sigs.k8s.io/kustomize/kyaml/pathutil"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 const (
@@ -42,9 +45,9 @@ const (
 // of a package differs between original, upstream and destination, the
 // boundaries in destination will be used.
 type Merge3 struct {
-	OriginalPath       string
-	UpdatedPath        string
-	DestPath           string
+	OriginalPath       types.FileSystemPath
+	UpdatedPath        types.FileSystemPath
+	DestPath           types.FileSystemPath
 	MatchFilesGlob     []string
 	MergeOnPath        bool
 	IncludeSubPackages bool
@@ -65,26 +68,28 @@ func (m Merge3) Merge() error {
 
 	var inputs []kio.Reader
 	dest := &kio.LocalPackageReadWriter{
-		PackagePath:        m.DestPath,
+		PackagePath:        m.DestPath.Path,
 		MatchFilesGlob:     m.MatchFilesGlob,
 		SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceDest},
 		IncludeSubpackages: m.IncludeSubPackages,
 		PackageFileName:    kptfilev1.KptFileName,
 		PreserveSeqIndent:  true,
 		WrapBareSeqNode:    true,
+		FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: m.DestPath.FileSystem},
 	}
 	inputs = append(inputs, dest)
 
 	// Read the original package
 	inputs = append(inputs, PruningLocalPackageReader{
 		LocalPackageReader: kio.LocalPackageReader{
-			PackagePath:        m.OriginalPath,
+			PackagePath:        m.OriginalPath.Path,
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceOriginal},
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
 			PreserveSeqIndent:  true,
 			WrapBareSeqNode:    true,
+			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: m.OriginalPath.FileSystem},
 		},
 		Exclusions: relPaths,
 	})
@@ -92,13 +97,14 @@ func (m Merge3) Merge() error {
 	// Read the updated package
 	inputs = append(inputs, PruningLocalPackageReader{
 		LocalPackageReader: kio.LocalPackageReader{
-			PackagePath:        m.UpdatedPath,
+			PackagePath:        m.UpdatedPath.Path,
 			MatchFilesGlob:     m.MatchFilesGlob,
 			SetAnnotations:     map[string]string{mergeSourceAnnotation: mergeSourceUpdated},
 			IncludeSubpackages: m.IncludeSubPackages,
 			PackageFileName:    kptfilev1.KptFileName,
 			PreserveSeqIndent:  true,
 			WrapBareSeqNode:    true,
+			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: m.UpdatedPath.FileSystem},
 		},
 		Exclusions: relPaths,
 	})
@@ -119,7 +125,7 @@ func (m Merge3) Merge() error {
 
 func (m Merge3) findExclusions() ([]string, error) {
 	var relPaths []string
-	paths, err := pathutil.DirsWithFile(m.DestPath, kptfilev1.KptFileName, true)
+	paths, err := dirsWithFile(m.DestPath, kptfilev1.KptFileName, true)
 	if err != nil {
 		return relPaths, err
 	}
@@ -135,6 +141,36 @@ func (m Merge3) findExclusions() ([]string, error) {
 		relPaths = append(relPaths, rel)
 	}
 	return relPaths, nil
+}
+
+// dirsWithFile takes the root directory path and returns all the paths of
+// sub-directories(including itself) which contain file with input fileName
+// at top level if recurse is true
+func dirsWithFile(root types.FileSystemPath, fileName string, recurse bool) ([]string, error) {
+	var res []string
+	if !recurse {
+		// check if the file with fileName is present in root and return it
+		// else return empty list
+		_, err := os.Stat(filepath.Join(root, fileName))
+		if !os.IsNotExist(err) {
+			res = append(res, filepath.Clean(root).Path)
+		}
+		return res, nil
+	}
+	err := filepath.Walk(root,
+		func(path types.FileSystemPath, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if filepath.Base(path) == fileName {
+				res = append(res, filepath.Dir(path.Path))
+			}
+			return nil
+		})
+	if err != nil {
+		return res, err
+	}
+	return res, nil
 }
 
 // PruningLocalPackageReader implements the Reader interface. It is similar

@@ -157,7 +157,7 @@ spec:
 				t.FailNow()
 			}
 
-			err = Process(baseDir)
+			err = ProcessObsolete(baseDir)
 			if test.errMsg != "" {
 				if !assert.NotNil(t, err) {
 					t.FailNow()

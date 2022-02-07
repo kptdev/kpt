@@ -20,15 +20,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 )
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
-}
-
-type ReferenceLock interface {
-	Reference
-}
+type Reference = extensions.Reference
+type ReferenceLock = extensions.ReferenceLock
 
 func Identifier(ref Reference) (string, bool) {
 	if ref, ok := ref.(extensions.IdentifierGetter); ok {
@@ -42,6 +35,17 @@ func Lock(ref ReferenceLock) (string, bool) {
 		return ref.GetLock()
 	}
 	return "", false
+}
+
+// Rel will return a relative path if one reference is a sub-package
+// location in another. The usage is similar to filepath.Rel. The
+// comparison is strict, meaning all criteria other than the directory
+// component (like repo, ref, image, tag, etc.) must be equal.
+func Rel(baseref Reference, targref Reference) (string, error) {
+	if baseref, ok := baseref.(extensions.RelPather); ok {
+		return baseref.Rel(targref)
+	}
+	return "", fmt.Errorf("not supported")
 }
 
 // DefaultIdentifier returns the suggested identifier to use

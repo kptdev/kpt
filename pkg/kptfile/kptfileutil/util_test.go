@@ -347,7 +347,7 @@ pipeline: {}
 				}
 			}()
 
-			err := UpdateKptfile(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
+			err := UpdateKptfileObsolete(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

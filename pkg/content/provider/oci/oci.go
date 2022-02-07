@@ -19,8 +19,11 @@ import (
 	"io"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
+	locationmutate "github.com/GoogleContainerTools/kpt/pkg/location/mutate"
+	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -34,8 +37,16 @@ type ociProvider struct {
 
 var _ extensions.FileSystemProvider = &ociProvider{}
 
-func Open(ref location.Oci, options ...remote.Option) (*ociProvider, location.ReferenceLock, error) {
-	image, err := remote.Image(ref.Image, options...)
+func Open(ref location.Oci, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
+	return open(ref.Image, ref, options...)
+}
+
+func OpenLock(ref location.OciLock, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
+	return open(ref.Digest, ref, options...)
+}
+
+func open(name name.Reference, ref location.Reference, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
+	image, err := remote.Image(name, options...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -47,7 +58,7 @@ func Open(ref location.Oci, options ...remote.Option) (*ociProvider, location.Re
 		// return nil, errors.E(op, fmt.Errorf("error calculating image digest: %w", err))
 	}
 
-	lock, err := ref.SetLock("sha256:" + imageDigestHash.Hex)
+	lock, err := locationmutate.Lock(ref, "sha256:" + imageDigestHash.Hex)
 	if err != nil {
 		return nil, nil, err
 	}

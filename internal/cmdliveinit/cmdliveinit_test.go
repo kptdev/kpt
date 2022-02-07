@@ -13,12 +13,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 var (
@@ -294,7 +294,7 @@ func TestCmd_Run(t *testing.T) {
 			// Otherwise, validate the kptfile values and/or resourcegroup values.
 			var actualInv kptfilev1.Inventory
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, w.WorkspaceDirectory)
+			kf, err := pkg.ReadKptfile(types.DiskPath(w.WorkspaceDirectory))
 			assert.NoError(t, err)
 
 			switch tc.rgfilename {

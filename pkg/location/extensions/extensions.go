@@ -1,6 +1,19 @@
 package extensions
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
+
+type Reference interface {
+	fmt.Stringer
+	Type() string
+	Validate() error
+}
+
+type ReferenceLock interface {
+	Reference
+}
 
 type IdentifierGetter interface {
 	GetIdentifier() (string, bool)
@@ -21,4 +34,12 @@ type DefaultDirectoryNameGetter interface {
 // suggest a default Identifier.
 type DefaultIdentifierGetter interface {
 	GetDefaultIdentifier(ctx context.Context) (string, error)
+}
+
+// RelPather is present on Reference types that
+// will return a relative path if one reference is a sub-package
+// location in another. The comparison is strict, meaning all criteria
+// other than the directory component (like repo, ref, image, tag, etc.) must be equal.
+type RelPather interface {
+	Rel(targref Reference) (string, error)
 }

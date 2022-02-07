@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -28,12 +29,12 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
@@ -260,7 +261,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			expectedErr: "local package files have been modified",
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
 				upstreamRepo := writer.Repos[testutil.Upstream]
-				f, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
+				f, err := pkg.ReadKptfile(types.DiskPath(filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName)))
 				if err != nil {
 					return "", err
 				}
@@ -810,9 +811,37 @@ func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
 			}
 			expectedPath := tc.expectedLocal.ExpandPkgWithName(t,
 				g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
-			testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true)
+			if !testutil.KptfileAwarePkgEqual(t, expectedPath, g.LocalWorkspace.FullPackagePath(), true) {
+
+				os.MkdirAll(filepath.Join("bin", t.Name(), "expected"), os.ModePerm)
+				copy(expectedPath, filepath.Join("bin", t.Name(), "expected"))
+
+				os.MkdirAll(filepath.Join("bin", t.Name(), "actual"), os.ModePerm)
+				copy(g.LocalWorkspace.FullPackagePath(), filepath.Join("bin", t.Name(), "actual"))
+
+				_ = t.Name()
+			}
 		})
 	}
+}
+
+func copy(source, destination string) error {
+    var err error = filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+        var relPath string = strings.Replace(path, source, "", 1)
+        if relPath == "" {
+            return nil
+        }
+        if info.IsDir() {
+            return os.Mkdir(filepath.Join(destination, relPath), 0755)
+        } else {
+            var data, err1 = ioutil.ReadFile(filepath.Join(source, relPath))
+            if err1 != nil {
+                return err1
+            }
+            return ioutil.WriteFile(filepath.Join(destination, relPath), data, 0777)
+        }
+    })
+    return err
 }
 
 // TestCommand_Run_toTagRef verifies the package contents are set to the contents of the tag
@@ -2038,7 +2067,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 
 				expectedPath := result.expectedLocal.ExpandPkgWithName(t,
 					g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
-				kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, expectedPath)
+				kf, err := pkg.ReadKptfile(types.DiskPath(expectedPath))
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
@@ -3774,7 +3803,7 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			// expectedLocal.
 			err = ioutil.WriteFile(filepath.Join(updated, "new.yaml"), []byte("a: b"), 0600)
 			assert.NoError(t, err)
-			err = ReplaceNonKRMFiles(updated, original, local)
+			err = ReplaceNonKRMFiles(types.DiskPath(updated), types.DiskPath(original), types.DiskPath(local))
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
 			tg.AssertEqual(t, local, filepath.Join(expectedLocal), false)
