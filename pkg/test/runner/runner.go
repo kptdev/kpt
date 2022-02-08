@@ -73,9 +73,11 @@ func NewRunner(t *testing.T, testCase TestCase, c string) (*Runner, error) {
 	}
 	kptBin, err := getKptBin()
 	if err != nil {
-		return nil, fmt.Errorf("failed to find kpt binary: %w", err)
+		t.Logf("failed to find kpt binary: %v", err)
 	}
-	t.Logf("Using kpt binary: %s", kptBin)
+	if kptBin != "" {
+		t.Logf("Using kpt binary: %s", kptBin)
+	}
 	return &Runner{
 		pkgName:  filepath.Base(testCase.Path),
 		testCase: testCase,
