@@ -161,63 +161,6 @@ func CopyPackage(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher pk
 	return nil
 }
 
-func RemovePackageContentObsolete(path string, removeRootKptfile bool) error {
-	// Walk the package (while ignoring subpackages) and delete all files.
-	// We capture the paths to any subdirectories in the package so we
-	// can handle those later. We can't do it while walking the package
-	// since we don't want to end up deleting directories that might
-	// contain a nested subpackage.
-	var dirs []string
-	if err := WalkPackage(types.DiskPath(path), func(p string, info os.FileInfo, err error) error {
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-
-		if info.IsDir() {
-			if p != path {
-				dirs = append(dirs, p)
-			}
-			return nil
-		}
-
-		if p == filepath.Join(path, kptfilev1.KptFileName) && !removeRootKptfile {
-			return nil
-		}
-
-		return os.Remove(p)
-	}); err != nil {
-		return err
-	}
-
-	// Delete any of the directories in the package that are
-	// empty. We start with the most deeply nested directories
-	// so we can just check every directory for files/directories.
-	sort.Slice(dirs, SubPkgFirstSorter(dirs))
-	for _, p := range dirs {
-		f, err := os.Open(p)
-		if err != nil {
-			return err
-		}
-		// List up to one file or folder in the directory.
-		_, err = f.Readdirnames(1)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		// If the returned error is EOF, it means the folder
-		// was empty and we can remove it.
-		if err == io.EOF {
-			err = os.RemoveAll(p)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func RemovePackageContent(path types.FileSystemPath, removeRootKptfile bool) error {
 	// Walk the package (while ignoring subpackages) and delete all files.
 	// We capture the paths to any subdirectories in the package so we
@@ -307,27 +250,6 @@ func SubPkgFirstSorter(paths []string) func(i, j int) bool {
 	return func(i, j int) bool {
 		return !sorter(i, j)
 	}
-}
-
-// FindSubpackagesForPathsObsolete traverses the provided package paths
-// and finds all subpackages using the provided pkgLocatorFunc
-func FindSubpackagesForPathsObsolete(matcher pkg.SubpackageMatcher, recurse bool, pkgPaths ...string) ([]string, error) {
-	uniquePaths := make(map[string]bool)
-	for _, path := range pkgPaths {
-		paths, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, path, matcher, recurse)
-		if err != nil {
-			return []string{}, err
-		}
-		for _, p := range paths {
-			uniquePaths[p] = true
-		}
-	}
-	paths := []string{}
-	for p := range uniquePaths {
-		paths = append(paths, p)
-	}
-	sort.Slice(paths, RootPkgFirstSorter(paths))
-	return paths, nil
 }
 
 // FindSubpackagesForPaths traverses the provided package paths

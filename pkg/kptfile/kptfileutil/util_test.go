@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -347,7 +348,7 @@ pipeline: {}
 				}
 			}()
 
-			err := UpdateKptfileObsolete(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
+			err := UpdateKptfile(types.DiskPath(dirs["local"]), types.DiskPath(dirs["updated"]), types.DiskPath(dirs["origin"]), tc.updateUpstream)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

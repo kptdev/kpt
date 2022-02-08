@@ -181,53 +181,6 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath paths.FileSystemPath, upd
 	return nil
 }
 
-// UpdateKptfileObsolete updates the Kptfile in the package specified by localPath with
-// values from the packages specified in updatedPath using the package specified
-// by originPath as the common ancestor.
-// If updateUpstream is true, the values from the upstream and upstreamLock
-// sections will also be copied into local.
-func UpdateKptfileObsolete(localPath, updatedPath, originPath string, updateUpstream bool) error {
-	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := pkg.ReadKptfile(types.DiskPath(localPath))
-	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
-		}
-		localKf = &kptfilev1.KptFile{}
-	}
-
-	updatedKf, err := pkg.ReadKptfile(types.DiskPath(updatedPath))
-	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
-		}
-		updatedKf = &kptfilev1.KptFile{}
-	}
-
-	originKf, err := pkg.ReadKptfile(types.DiskPath(originPath))
-	if err != nil {
-		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
-		}
-		originKf = &kptfilev1.KptFile{}
-	}
-
-	err = merge(localKf, updatedKf, originKf)
-	if err != nil {
-		return err
-	}
-
-	if updateUpstream {
-		updateUpstreamAndUpstreamLock(localKf, updatedKf)
-	}
-
-	err = WriteFile(localPath, localKf)
-	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
-	}
-	return nil
-}
-
 // UpdateKptfile updates the Kptfile in the package specified by localPath with
 // values from the packages specified in updatedPath using the package specified
 // by originPath as the common ancestor.
