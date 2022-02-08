@@ -20,7 +20,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
-	"github.com/google/go-cmp/cmp"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -120,7 +119,6 @@ spec:
 	}
 }
 
-// TODO: Make this test work by uncommenting the portions
 func TestMemFSRenderSubpkgs(t *testing.T) {
 	appResources := `apiVersion: apps/v1
 kind: Deployment
@@ -149,6 +147,25 @@ pipeline:
       configMap:
         tier: db`
 
+	dbResources := `apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  replicas: 3`
+	dbKptfile := `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: db
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+      configMap:
+        namespace: db
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
+      configMap:
+        app: backend`
+
 	expectedAppResources := `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -169,14 +186,31 @@ metadata:
 spec:
   image: nginx:1.2.3
 `
+	expectedDbResources := `apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: staging
+  labels:
+    app: backend
+    tier: db
+spec:
+  replicas: 3
+`
 	fs := filesys.MakeFsInMemory()
-	if err := fs.MkdirAll("app"); err != nil {
-		t.Errorf(`MkdirAll("a/b/c") failed %v`, err)
+	if err := fs.MkdirAll("app/db"); err != nil {
+		t.Errorf(`MkdirAll("app/db") failed %v`, err)
 	}
 	if err := fs.WriteFile("/app/resources.yaml", []byte(appResources)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
 	if err := fs.WriteFile("/app/Kptfile", []byte(appKptfile)); err != nil {
+		t.Errorf("Failed to write file: %v", err)
+	}
+	if err := fs.WriteFile("/app/db/resources.yaml", []byte(dbResources)); err != nil {
+		t.Errorf("Failed to write file: %v", err)
+	}
+	if err := fs.WriteFile("/app/db/Kptfile", []byte(dbKptfile)); err != nil {
 		t.Errorf("Failed to write file: %v", err)
 	}
 
@@ -191,12 +225,16 @@ spec:
 		t.Errorf("Failed to render: %v", err)
 	}
 
-	rr, _ := fs.ReadFile("/app/resources.yaml")
-	println(string(rr))
-
 	if res, err := fs.ReadFile("/app/resources.yaml"); err != nil {
 		t.Errorf("Failed to read file: %v", err)
 	} else if got, want := string(res), expectedAppResources; got != want {
-		t.Errorf("unexpected file contents: got %q, want %q\n%s", got, want, cmp.Diff(want, got))
+		println(got)
+		t.Errorf("unexpected file contents: got %q, want %q", got, want)
+	}
+
+	if res, err := fs.ReadFile("/app/db/resources.yaml"); err != nil {
+		t.Errorf("Failed to read file: %v", err)
+	} else if got, want := string(res), expectedDbResources; got != want {
+		t.Errorf("unexpected file contents: got %q, want %q", got, want)
 	}
 }
