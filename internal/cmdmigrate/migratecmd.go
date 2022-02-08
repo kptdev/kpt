@@ -6,16 +6,20 @@ package cmdmigrate
 import (
 	"bytes"
 	"context"
-	"errors"
+	goerrors "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -39,10 +43,12 @@ type MigrateRunner struct {
 	dir             string
 	dryRun          bool
 	name            string
+	rgFile          string
 	force           bool
 	rgInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
 	cmInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
 	cmLoader        manifestreader.ManifestLoader
+	cmNotMigrated   bool // flag to determine if migration from ConfigMap has occurred
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
@@ -96,6 +102,15 @@ func NewCommand(ctx context.Context, f util.Factory, cmLoader manifestreader.Man
 // Run executes the migration from the ConfigMap based inventory to the ResourceGroup
 // based inventory.
 func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
+	// Use ResourceGroup file for inventory logic if the resourcegroup file
+	// is set directly. For this feature gate, the resourcegroup must be directly set
+	// through our tests since we are not exposing this through the command surface as a
+	// flag, currently. When we promote this, the resourcegroup filename can be empty and
+	// the default filename value will be inferred/used.
+	if mr.rgFile != "" {
+		return mr.runLiveMigrateWithRGFile(reader, args)
+	}
+
 	// Validate the number of arguments.
 	if len(args) > 1 {
 		return fmt.Errorf("too many arguments; migrate requires one directory argument (or stdin)")
@@ -383,4 +398,177 @@ func rgInvClient(factory util.Factory) (inventory.InventoryClient, error) {
 
 func cmInvClient(factory util.Factory) (inventory.InventoryClient, error) {
 	return inventory.NewInventoryClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap)
+}
+
+// func runLiveMigrateWithRGFile is a modified version of MigrateRunner.Run that stores the
+// package inventory information in a separate resourcegroup file. The logic for this is branched into
+// a separate function to enable feature gating.
+func (mr *MigrateRunner) runLiveMigrateWithRGFile(reader io.Reader, args []string) error {
+	// Validate the number of arguments.
+	if len(args) > 1 {
+		return fmt.Errorf("too many arguments; migrate requires one directory argument (or stdin)")
+	}
+	// Validate argument is a directory.
+	if len(args) == 1 {
+		var err error
+		mr.dir, err = config.NormalizeDir(args[0])
+		if err != nil {
+			return err
+		}
+	}
+	// Store the stdin bytes if necessary so they can be used twice.
+	var stdinBytes []byte
+	var err error
+	if len(args) == 0 {
+		stdinBytes, err = ioutil.ReadAll(reader)
+		if err != nil {
+			return err
+		}
+		if len(stdinBytes) == 0 {
+			return fmt.Errorf("no arguments means stdin has data; missing bytes on stdin")
+		}
+	}
+
+	// Apply the ResourceGroup CRD to the cluster, ignoring if it already exists.
+	if err := mr.applyCRD(); err != nil {
+		return err
+	}
+
+	// Check if we need to migrate from ConfigMap to ResourceGroup.
+	if err := mr.migrateCMToRG(stdinBytes, args); err != nil {
+		return err
+	}
+
+	// Migrate from Kptfile instead.
+	if mr.cmNotMigrated {
+		return mr.migrateKptfileToRG(args)
+	}
+
+	return nil
+}
+
+// migrateKptfileToRG extracts inventory information from a package's Kptfile
+// into an external resourcegroup file.
+func (mr *MigrateRunner) migrateKptfileToRG(args []string) error {
+	const op errors.Op = "migratecmd.migrateKptfileToRG"
+	klog.V(4).Infoln("attempting to migrate from Kptfile inventory")
+	fmt.Fprint(mr.ioStreams.Out, "  reading existing Kptfile...")
+	if !mr.dryRun {
+		dir := args[0]
+		p, err := pkg.New(dir)
+		if err != nil {
+			return err
+		}
+		kf, err := p.Kptfile()
+		if err != nil {
+			return err
+		}
+
+		if _, err := kptfileutil.ValidateInventory(kf.Inventory); err != nil {
+			// Invalid Kptfile.
+			return err
+		}
+
+		// Make sure resourcegroup file does not exist.
+		_, rgFileErr := os.Stat(filepath.Join(dir, mr.rgFile))
+		switch {
+		case rgFileErr == nil:
+			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
+		case err != nil && !goerrors.Is(err, os.ErrNotExist):
+			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		}
+
+		err = (&cmdliveinit.ConfigureInventoryInfo{
+			Pkg:         p,
+			Factory:     mr.factory,
+			Quiet:       true,
+			Name:        kf.Inventory.Name,
+			InventoryID: kf.Inventory.InventoryID,
+			RGFileName:  mr.rgFile,
+			Force:       true,
+		}).Run(mr.ctx)
+
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	return nil
+}
+
+// migrateCMToRG migrates from ConfigMap to resourcegroup object.
+func (mr *MigrateRunner) migrateCMToRG(stdinBytes []byte, args []string) error {
+	// Create the inventory clients for reading inventories based on RG and
+	// ConfigMap.
+	rgInvClient, err := mr.rgInvClientFunc(mr.factory)
+	if err != nil {
+		return err
+	}
+	cmInvClient, err := mr.cmInvClientFunc(mr.factory)
+	if err != nil {
+		return err
+	}
+	// Retrieve the current ConfigMap inventory objects.
+	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
+	if err != nil {
+		if _, ok := err.(inventory.NoInventoryObjError); ok {
+			// No ConfigMap inventory means the migration has already run before.
+			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
+			mr.cmNotMigrated = true
+			return nil
+		}
+		klog.V(4).Infof("error retrieving ConfigMap inventory object: %s", err)
+		return err
+	}
+	cmInventoryID := cmInvObj.ID()
+	klog.V(4).Infof("previous inventoryID: %s", cmInventoryID)
+	// Create ResourceGroup object file locallly (e.g. namespace, name, id).
+	if err := mr.createRGfile(mr.ctx, args, cmInventoryID); err != nil {
+		return err
+	}
+	cmObjs, err := mr.retrieveInvObjs(cmInvClient, cmInvObj)
+	if err != nil {
+		return err
+	}
+	if len(cmObjs) > 0 {
+		// Migrate the ConfigMap inventory objects to a ResourceGroup custom resource.
+		if err = mr.migrateObjs(rgInvClient, cmObjs, bytes.NewReader(stdinBytes), args); err != nil {
+			return err
+		}
+		// Delete the old ConfigMap inventory object.
+		if err = mr.deleteConfigMapInv(cmInvClient, cmInvObj); err != nil {
+			return err
+		}
+	}
+	return mr.deleteConfigMapFile()
+}
+
+// createRGfile writes the inventory information into the resourcegroup object.
+func (mr *MigrateRunner) createRGfile(ctx context.Context, args []string, prevID string) error {
+	fmt.Fprint(mr.ioStreams.Out, "  creating ResourceGroup object file...")
+	if !mr.dryRun {
+		p, err := pkg.New(args[0])
+		if err != nil {
+			return err
+		}
+		err = (&cmdliveinit.ConfigureInventoryInfo{
+			Pkg:         p,
+			Factory:     mr.factory,
+			Quiet:       true,
+			InventoryID: prevID,
+			RGFileName:  mr.rgFile,
+			Force:       mr.force,
+		}).Run(ctx)
+
+		if err != nil {
+			var invExistsError *cmdliveinit.InvExistsError
+			if errors.As(err, &invExistsError) {
+				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
+			} else {
+				return err
+			}
+		}
+	}
+	fmt.Fprint(mr.ioStreams.Out, "success\n")
+	return nil
 }
