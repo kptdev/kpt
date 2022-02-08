@@ -27,11 +27,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/push"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -126,15 +124,15 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 
 	if r.Origin != "" {
-		_, err := parse.ParseArgs(r.ctx, []string{r.Origin, path}, parse.Options{
-			SetOci: func(oci *kptfilev1.Oci) error {
-				r.Push.Origin = remote.NewOciOrigin(oci)
-				return nil
-			},
-		})
+		ref, err := location.ParseReference(
+			r.Origin,
+			location.WithContext(r.ctx),
+			location.WithParsers(location.GitParser, location.OciParser),
+		)
 		if err != nil {
 			return err
 		}
+		r.Push.Origin = ref
 	}
 
 	return nil

@@ -27,10 +27,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse/parseref"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -87,20 +87,15 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
-		SetGit: func(git *kptfilev1.Git) error {
-			r.Get.Git = git
-			r.Get.Upstream = remote.NewGitUpstream(git)
-			return nil
-		},
-		SetOci: func(oci *kptfilev1.Oci) error {
-			r.Get.Upstream = remote.NewOciUpstream(oci)
-			return nil
-		},
-	})
+
+	upstream, destination, err := parseref.ParseArgs(
+		args,
+		location.WithContext(r.ctx),
+		location.WithParsers(location.GitParser, location.OciParser))
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
+	r.Get.Upstream = upstream
 
 	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(destination)
 	if err != nil {

@@ -18,21 +18,25 @@ package update
 import (
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/copyutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/open"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 // PkgNotGitRepoError is the error type returned if the package being updated is not inside
@@ -61,15 +65,15 @@ type UpdateOptions struct {
 	RelPackagePath string
 
 	// LocalPath is the absolute path to the package on the local fork.
-	LocalPath string
+	LocalPath types.FileSystemPath
 
 	// OriginPath is the absolute path to the package in the on-disk clone
 	// of the origin ref of the repo.
-	OriginPath string
+	OriginPath types.FileSystemPath
 
 	// UpdatedPath is the absolute path to the package in the on-disk clone
 	// of the updated ref of the repo.
-	UpdatedPath string
+	UpdatedPath types.FileSystemPath
 
 	// IsRoot is true if the package is the root, i.e. the clones of
 	// updated and origin were fetched based on the information in the
@@ -114,23 +118,28 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 
-	rootUps, err := remote.NewUpstream(rootKf)
+	rootUpstream, err := kptfileutil.NewReferenceFromUpstream(rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must have an upstream reference: %v", err))
 	}
 
-	originalRootKfRef, err := rootUps.Ref()
-	if err != nil {
-		return errors.E(op, u.Pkg.UniquePath, err)
-	}
+	originalRootUpstream := rootUpstream
 	if u.Ref != "" {
-		if err := rootUps.SetRef(u.Ref); err != nil {
+		rootUpstream, err = mutate.Identifier(rootUpstream, u.Ref)
+		if err != nil {
 			return errors.E(op, u.Pkg.UniquePath, err)
 		}
 	}
-	if u.Strategy != "" {
-		rootKf.Upstream.UpdateStrategy = u.Strategy
+	strategy := u.Strategy
+	if strategy == "" {
+		strategy = rootKf.Upstream.UpdateStrategy
 	}
+
+	rootKf.Upstream, err = kptfileutil.NewUpstreamFromReference(rootUpstream, strategy)
+	if err != nil {
+		return errors.E(op, u.Pkg.UniquePath, err)
+	}
+
 	err = kptfileutil.WriteFile(u.Pkg.UniquePath.String(), rootKf)
 	if err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
@@ -161,10 +170,10 @@ func (u Command) Run(ctx context.Context) error {
 				return errors.E(op, p.UniquePath, err)
 			}
 
-			if subUps, err := remote.NewUpstream(subKf); err == nil {
+			if subUps, err := kptfileutil.NewReferenceFromUpstream(subKf); err == nil {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
-				if remote.ShouldUpdateSubPkgRef(subUps, rootUps, originalRootKfRef) {
+				if shouldUpdateSubPkgRef(originalRootUpstream, subUps) {
 					if err := updateSubKf(subKf, subUps, u.Ref, u.Strategy); err != nil {
 						return errors.E(op, subPkg.UniquePath, err)
 					}
@@ -179,23 +188,44 @@ func (u Command) Run(ctx context.Context) error {
 	pr.Printf("\nUpdated %d package(s).\n", packageCount)
 
 	// finally, make sure that the merge comments are added to all resources in the updated package
-	if err := addmergecomment.Process(string(u.Pkg.UniquePath)); err != nil {
+	if err := addmergecomment.Process(types.DiskPath(u.Pkg.UniquePath.String())); err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	return nil
 }
 
+func shouldUpdateSubPkgRef(rootPkgUpstream, subPkgUpstream location.Reference) bool {
+	rel, err := location.Rel(rootPkgUpstream, subPkgUpstream)
+	if err != nil {
+		// locations are unrelated, e.g. different type, repo, ref, etc.
+		return false
+	}
+	// should update if sub-package points to directory of root location
+	return !strings.HasPrefix(rel, "../")
+}
+
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Upstream, ref string, strategy kptfilev1.UpdateStrategyType) error {
+func updateSubKf(subKf *kptfilev1.KptFile, subUpstream location.Reference, ref string, strategy kptfilev1.UpdateStrategyType) error {
 	// check if explicit ref provided
 	if ref != "" {
-		if err := subUps.SetRef(ref); err != nil {
+		new, err := mutate.Identifier(subUpstream, ref)
+		if err != nil {
 			return err
 		}
+		subUpstream = new
 	}
-	if strategy != "" {
-		subKf.Upstream.UpdateStrategy = strategy
+
+	// keep existing strategy if not provided
+	if strategy == "" {
+		strategy = subKf.Upstream.UpdateStrategy
 	}
+
+	// create and assign
+	new, err := kptfileutil.NewUpstreamFromReference(subUpstream, strategy)
+	if err != nil {
+		return err
+	}
+	subKf.Upstream = new
 	return nil
 }
 
@@ -204,41 +234,55 @@ func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Upstream, ref string, s
 // recursively traverse the hierarchy to add/update/delete packages.
 func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	const op errors.Op = "update.updateRootPackage"
+	opts := open.Options(open.WithContext(ctx))
+
 	kf, err := p.Kptfile()
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 
+	var localAbsPath, updatedAbsPath, originAbsPath types.FileSystemPath
+
 	pr := printer.FromContextOrDie(ctx)
 	pr.PrintPackage(p, !(p == u.Pkg))
 
-	upstream, err := remote.NewUpstream(kf)
+	ref, err := kptfileutil.NewReferenceFromUpstream(kf)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 
-	updatedTmpPath, err := os.MkdirTemp("", "kpt-updated-")
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-	defer os.RemoveAll(updatedTmpPath)
+	localAbsPath = types.DiskPath(p.UniquePath.String())
 
-	pr.Printf("Fetching upstream from %s\n", upstream.String())
-	updatedAbsPath, commit, err := upstream.FetchUpstream(ctx, updatedTmpPath)
+	pr.Printf("Fetching upstream from %s\n", ref)
+	updated, err := open.FileSystem(ref, opts)
 	if err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
-
-	originTmpPath, err := os.MkdirTemp("", "kpt-origin-")
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-	defer os.RemoveAll(originTmpPath)
-	originAbsPath := originTmpPath
+	defer updated.Close()
+	updatedAbsPath = updated.FileSystemPath
 
 	if kf.UpstreamLock != nil {
-		pr.Printf("Fetching origin from %s\n", upstream.LockedString())
-		if originAbsPath, err = upstream.FetchUpstreamLock(ctx, originTmpPath); err != nil {
+		lock, err := kptfileutil.NewReferenceLockFromUpstreamLock(kf)
+		if err != nil {
+			return errors.E(op, p.UniquePath, err)
+		}
+
+		pr.Printf("Fetching origin from %s\n", lock)
+		origin, err := open.FileSystem(lock, opts)
+		if err != nil {
+			return errors.E(op, p.UniquePath, err)
+		}
+		defer origin.Close()
+
+		originAbsPath = origin.FileSystemPath
+	} else {
+		// point to empty virtual path in a way that
+		// supports filesystem operations
+		originAbsPath = types.FileSystemPath{
+			FileSystem: filesys.MakeFsInMemory(),
+			Path:       "/nil",
+		}
+		if err := os.MkdirAll(originAbsPath, os.ModePerm); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 	}
@@ -248,9 +292,9 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 
 	for s.Len() > 0 {
 		relPath := s.Pop()
-		localPath := filepath.Join(p.UniquePath.String(), relPath)
-		updatedPath := filepath.Join(updatedAbsPath, relPath)
-		originPath := filepath.Join(originAbsPath, relPath)
+		localPath := types.Join(localAbsPath, relPath)
+		updatedPath := types.Join(updatedAbsPath, relPath)
+		originPath := types.Join(originAbsPath, relPath)
 
 		isRoot := false
 		if relPath == "." {
@@ -267,11 +311,11 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 			return errors.E(op, p.UniquePath, err)
 		}
 		for _, path := range paths {
-			s.Push(filepath.Join(relPath, path))
+			s.Push(filepath.JoinRel(relPath, path))
 		}
 	}
 
-	if err := kptfileutil.UpdateUpstreamLock(p.UniquePath.String(), upstream.BuildUpstreamLock(commit)); err != nil {
+	if err := kptfileutil.UpdateUpstreamLock(localAbsPath, updated.ReferenceLock); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
@@ -283,30 +327,30 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 // The last parameter tells if this package is the root, i.e. the package
 // from which we got the information about upstream and origin.
 //nolint:gocyclo
-func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updatedPath, originPath string, isRootPkg bool) error {
+func (u Command) updatePackage(ctx context.Context, subPkgPath string, localPath, updatedPath, originPath types.FileSystemPath, isRootPkg bool) error {
 	const op errors.Op = "update.updatePackage"
 	pr := printer.FromContextOrDie(ctx)
 
-	localExists, err := pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, localPath)
+	localExists, err := pkg.IsPackageDir(localPath.FileSystem, localPath.Path)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	// We need to handle the root package special here, since the copies
 	// from updated and origin might not have a Kptfile at the root.
 	updatedExists := isRootPkg
 	if !isRootPkg {
-		updatedExists, err = pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, updatedPath)
+		updatedExists, err = pkg.IsPackageDir(updatedPath.FileSystem, updatedPath.Path)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(updatedPath.String()), err)
 		}
 	}
 
 	originExists := isRootPkg
 	if !isRootPkg {
-		originExists, err = pkg.IsPackageDir(filesys.FileSystemOrOnDisk{}, originPath)
+		originExists, err = pkg.IsPackageDir(originPath.FileSystem, originPath.Path)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(originPath.String()), err)
 		}
 	}
 
@@ -317,7 +361,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// can't make a sane merge here, so we treat it as an error.
 	case !originExists && localExists && updatedExists:
 		pr.Printf("Package %q added in both local and upstream.\n", packageName(localPath))
-		return errors.E(op, types.UniquePath(localPath),
+		return errors.E(op, types.AsUniquePath(localPath),
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 
 	// Package added in upstream. We just copy the package. If the package
@@ -326,7 +370,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	case !originExists && !localExists && updatedExists:
 		pr.Printf("Adding package %q from upstream.\n", packageName(localPath))
 		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 
 	// Package added locally, so no action needed.
@@ -348,37 +392,37 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 		// Check the diff. If there are local changes, we keep the subpackage.
 		diff, err := copyutil.Diff(originPath, localPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 		if diff.Len() == 0 {
 			pr.Printf("Deleting package %q from local since it is removed in upstream.\n", packageName(localPath))
 			if err := os.RemoveAll(localPath); err != nil {
-				return errors.E(op, types.UniquePath(localPath), err)
+				return errors.E(op, types.AsUniquePath(localPath), err)
 			}
 		} else {
 			pr.Printf("Package %q deleted from upstream, but keeping local since it has changes.\n", packageName(localPath))
 		}
 	default:
 		if err := u.mergePackage(ctx, localPath, updatedPath, originPath, subPkgPath, isRootPkg); err != nil {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 	}
 	return nil
 }
 
-func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, originPath, relPath string, isRootPkg bool) error {
+func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, originPath types.FileSystemPath, relPath string, isRootPkg bool) error {
 	const op errors.Op = "update.mergePackage"
 	pr := printer.FromContextOrDie(ctx)
 	// at this point, the localPath, updatedPath and originPath exists and are about to be merged
 	// make sure that the merge comments are added to all of them so that they are merged accurately
 	if err := addmergecomment.Process(localPath, updatedPath, originPath); err != nil {
-		return errors.E(op, types.UniquePath(localPath),
+		return errors.E(op, types.AsUniquePath(localPath),
 			fmt.Errorf("failed to add merge comments %q", err.Error()))
 	}
 	updatedUnfetched, err := pkg.IsPackageUnfetched(updatedPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 		// For root packages, there might not be a Kptfile in the upstream repo.
 		updatedUnfetched = false
@@ -387,7 +431,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 	originUnfetched, err := pkg.IsPackageUnfetched(originPath)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) || !isRootPkg {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.AsUniquePath(localPath), err)
 		}
 		// For root packages, there might not be a Kptfile in origin.
 		originUnfetched = false
@@ -408,18 +452,18 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		// to determine if they share the common upstream and then fetch origin
 		// using the common commit SHA. But this is a very advanced scenario,
 		// so we just return the error for now.
-		return errors.E(op, types.UniquePath(localPath), fmt.Errorf("no origin available for package"))
+		return errors.E(op, types.AsUniquePath(localPath), fmt.Errorf("no origin available for package"))
 	default:
 		// Both exists, so just go ahead as normal.
 	}
 
-	pkgKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	pkgKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 	updater, found := strategies[pkgKf.Upstream.UpdateStrategy]
 	if !found {
-		return errors.E(op, types.UniquePath(localPath),
+		return errors.E(op, types.AsUniquePath(localPath),
 			fmt.Errorf("unrecognized update strategy %s", u.Strategy))
 	}
 	pr.Printf("Updating package %q with strategy %q.\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
@@ -430,12 +474,12 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 		OriginPath:     originPath,
 		IsRoot:         isRootPkg,
 	}); err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	return nil
 }
 
-func packageName(path string) string {
+func packageName(path types.FileSystemPath) string {
 	return filepath.Base(path)
 }
