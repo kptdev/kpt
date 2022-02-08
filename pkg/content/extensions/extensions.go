@@ -46,3 +46,8 @@ type ReaderProvider interface {
 	Content
 	ProvideReader() (kio.Reader, error)
 }
+
+type RealPathProvider interface {
+	Content
+	ProvideRealPath() (string, error)
+}

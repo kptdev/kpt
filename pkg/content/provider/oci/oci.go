@@ -18,6 +18,7 @@ import (
 	"archive/tar"
 	"io"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
@@ -32,20 +33,21 @@ import (
 
 type ociProvider struct {
 	image v1.Image
+	dir   string
 	fsys  filesys.FileSystem
 }
 
 var _ extensions.FileSystemProvider = &ociProvider{}
 
 func Open(ref location.Oci, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
-	return open(ref.Image, ref, options...)
+	return open(ref.Image, ref.Directory, ref, options...)
 }
 
 func OpenLock(ref location.OciLock, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
-	return open(ref.Digest, ref, options...)
+	return open(ref.Digest, ref.Directory, ref, options...)
 }
 
-func open(name name.Reference, ref location.Reference, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
+func open(name name.Reference, dir string, ref location.Reference, options ...remote.Option) (content.Content, location.ReferenceLock, error) {
 	image, err := remote.Image(name, options...)
 	if err != nil {
 		return nil, nil, err
@@ -65,6 +67,7 @@ func open(name name.Reference, ref location.Reference, options ...remote.Option)
 
 	return &ociProvider{
 		image: image,
+		dir:   dir,
 	}, lock, nil
 }
 
@@ -79,7 +82,7 @@ func (p *ociProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
 
 	fsys := filesys.MakeFsInMemory()
 
-	if err := pullAndExtract(p.image, fsys, "/"); err != nil {
+	if err := pullAndExtract(p.image, p.dir, fsys, "/"); err != nil {
 		return nil, "", err
 	}
 
@@ -90,7 +93,7 @@ func (p *ociProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
 // pullAndExtract uses current credentials (gcloud auth) to pull and
 // extract (untar) image files to target directory. The desired version or digest must
 // be in the imageName, and the resolved image sha256 digest is returned.
-func pullAndExtract(image v1.Image, fsys filesys.FileSystem, dir string) error {
+func pullAndExtract(image v1.Image, srcDir string, fsys filesys.FileSystem, dstDir string) error {
 	// const op errors.Op = "oci.pullAndExtract"
 
 	// Stream image files as if single tar (merged layers)
@@ -108,7 +111,14 @@ func pullAndExtract(image v1.Image, fsys filesys.FileSystem, dir string) error {
 		if err != nil {
 			return err
 		}
-		path := filepath.Join(dir, hdr.Name)
+
+		relPath, err := filepath.Rel(srcDir, hdr.Name)
+		if err != nil || strings.HasPrefix(relPath, "..") {
+			// skip because hdr.Name not contained under srcDir
+			continue
+		}
+
+		path := filepath.Join(dstDir, relPath)
 		switch {
 		case hdr.FileInfo().IsDir():
 			if err := fsys.MkdirAll(path); err != nil {

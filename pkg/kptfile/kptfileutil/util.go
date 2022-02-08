@@ -56,7 +56,7 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 }
 
 func WriteFileFS(dir paths.FileSystemPath, k *kptfilev1.KptFile) error {
-	const op errors.Op = "kptfileutil.WriteFile"
+	const op errors.Op = "kptfileutil.WriteFileFS"
 	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
 		return err

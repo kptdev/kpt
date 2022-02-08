@@ -44,6 +44,10 @@ var IsNotExist = os.IsNotExist
 
 var ErrNotExist = os.ErrNotExist // "file does not exist"
 
+func Stdout() *os.File {
+	return os.Stdout
+}
+
 // Stat returns a FileInfo describing the named file.
 // If there is an error, it will be of type *PathError.
 func Stat(name types.FileSystemPath) (FileInfo, error) {
@@ -90,6 +94,13 @@ func Remove(path types.FileSystemPath) error {
 // and returns nil.
 func MkdirAll(path types.FileSystemPath, perm FileMode) error {
 	return path.FileSystem.MkdirAll(path.Path)
+}
+
+// Mkdir creates a new directory with the specified name and permission
+// bits (before umask).
+// If there is an error, it will be of type *PathError.
+func Mkdir(path types.FileSystemPath, perm FileMode) error {
+	return path.FileSystem.Mkdir(path.Path)
 }
 
 type info struct {

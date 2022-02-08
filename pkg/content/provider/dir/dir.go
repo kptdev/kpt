@@ -18,8 +18,10 @@ import (
 	"io/fs"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -28,9 +30,14 @@ type dirProvider struct {
 	path string
 }
 
+type tempProvider struct {
+	dirProvider
+}
+
 var _ content.Content = &dirProvider{}
 var _ extensions.FileSystemProvider = &dirProvider{}
 var _ extensions.FSProvider = &dirProvider{}
+var _ extensions.RealPathProvider = &dirProvider{}
 
 func Open(ref location.Dir) (*dirProvider, error) {
 	return &dirProvider{
@@ -38,8 +45,41 @@ func Open(ref location.Dir) (*dirProvider, error) {
 	}, nil
 }
 
+type MkdirTempResult struct {
+	content.Content
+	types.FileSystemPath
+}
+
+func MkdirTemp(pattern string) (MkdirTempResult, error) {
+	path, err := os.MkdirTemp("", pattern)
+	if err != nil {
+		return MkdirTempResult{}, err
+	}
+	temp := &tempProvider{
+		dirProvider{
+			path: path,
+		},
+	}
+	fsys, path, err := temp.ProvideFileSystem()
+	if err != nil {
+		temp.Close()
+		return MkdirTempResult{}, err
+	}
+	return MkdirTempResult{
+		Content: temp,
+		FileSystemPath: paths.FileSystemPath{
+			FileSystem: fsys,
+			Path:       path,
+		},
+	}, nil
+}
+
 func (p *dirProvider) Close() error {
 	return nil
+}
+
+func (p *tempProvider) Close() error {
+	return os.RemoveAll(p.path)
 }
 
 func (p *dirProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
@@ -48,4 +88,8 @@ func (p *dirProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
 
 func (p *dirProvider) ProvideFS() (fs.FS, error) {
 	return os.DirFS(p.path), nil
+}
+
+func (p *dirProvider) ProvideRealPath() (string, error) {
+	return p.path, nil
 }
