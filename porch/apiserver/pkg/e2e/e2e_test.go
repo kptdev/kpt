@@ -105,7 +105,7 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 			Title:       "Porch Test Repository",
 			Description: "Porch Test Repository Description",
 			Type:        configapi.RepositoryTypeGit,
-			Content:     "PackageRevision",
+			Content:     configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
 				Repo:   t.ptc.Git.Repo,
 				Branch: "main",
@@ -136,7 +136,7 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 			Title:       "Function Repository",
 			Description: "Test Function Repository",
 			Type:        configapi.RepositoryTypeOCI,
-			Content:     "Function",
+			Content:     configapi.RepositoryContentFunction,
 			Oci: &configapi.OciRepository{
 				Registry: "gcr.io/kpt-fn",
 			},
@@ -157,5 +157,40 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 
 	if got := len(list.Items); got == 0 {
 		t.Errorf("Found no functions in gcr.io/kpt-fn repository; expected at least one")
+	}
+}
+
+func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
+	const repo = "https://github.com/platkrm/demo-blueprints"
+	t.CreateF(ctx, &configapi.Repository{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "demp-blueprints",
+			Namespace: t.namespace,
+		},
+		Spec: configapi.RepositorySpec{
+			Title:   "Public Git Repository",
+			Type:    configapi.RepositoryTypeGit,
+			Content: configapi.RepositoryContentPackage,
+			Git: &configapi.GitRepository{
+				Repo:   repo,
+				Branch: "main",
+			},
+		},
+	})
+
+	t.Cleanup(func() {
+		t.DeleteL(ctx, &configapi.Repository{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "demp-blueprints",
+				Namespace: t.namespace,
+			},
+		})
+	})
+
+	var list porchapi.PackageRevisionList
+	t.ListE(ctx, &list)
+
+	if got := len(list.Items); got == 0 {
+		t.Errorf("Found no package revisions in %s; expected at least one", repo)
 	}
 }

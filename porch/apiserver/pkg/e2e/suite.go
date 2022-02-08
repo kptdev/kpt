@@ -99,7 +99,7 @@ func (pt *TestSuite) Initialize(ctx context.Context, t *testing.T) {
 	if c, err := client.New(cfg, client.Options{
 		Scheme: scheme,
 	}); err != nil {
-		t.Fatalf("Failed to initialize k8s client: %v", err)
+		t.Fatalf("Failed to initialize k8s client (%s): %v", cfg.Host, err)
 	} else {
 		pt.client = c
 	}
