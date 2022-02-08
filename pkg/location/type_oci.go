@@ -15,30 +15,50 @@
 package location
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
 type Oci struct {
-	Image     name.Reference
+	// Image is the tag or digest location of the package.
+	Image name.Reference
+
+	// Directory is a relative path inside the image's file
+	// system for sub-package references.
 	Directory string
+
+	// original is the value before parsing, it is returned
+	// by String() to improve round-trip accuracy.
+	original string
 }
 
 var _ Reference = Oci{}
-var _ DirectoryNameDefaulter = Oci{}
+var _ extensions.IdentifierGetter = Oci{}
+var _ extensions.DefaultDirectoryNameGetter = Oci{}
+var _ extensions.DefaultIdentifierGetter = Oci{}
 
 type OciLock struct {
 	Oci
+
+	// Digest is the locked, digest location. It is determined
+	// when the Oci.Image is used to pull the remote contents
+	// from an image registry.
 	Digest name.Reference
 }
 
 var _ Reference = OciLock{}
 var _ ReferenceLock = OciLock{}
+var _ extensions.IdentifierGetter = OciLock{}
+var _ extensions.LockGetter = OciLock{}
+var _ extensions.DefaultDirectoryNameGetter = OciLock{}
+var _ extensions.DefaultIdentifierGetter = OciLock{}
 
 func NewOci(location string, opts ...Option) (Oci, error) {
 
@@ -66,17 +86,20 @@ func NewOci(location string, opts ...Option) (Oci, error) {
 				return Oci{
 					Image:     repo.Tag(ref.TagStr()),
 					Directory: dir,
+					original:  location,
 				}, nil
 			case name.Digest:
 				return Oci{
 					Image:     repo.Digest(ref.DigestStr()),
 					Directory: dir,
+					original:  location,
 				}, nil
 			}
 		}
 		return Oci{
 			Image:     ref,
 			Directory: ".",
+			original:  location,
 		}, nil
 	}
 
@@ -92,12 +115,28 @@ func parseOci(value string) (Reference, error) {
 
 // Type implements location.Reference
 func (ref Oci) String() string {
-	return fmt.Sprintf("type:oci image:%q directory:%q", ref.Image, ref.Directory)
+	if ref.original != "" {
+		return ref.original
+	}
+	return ociString(ref.Image, ref.Directory)
 }
 
 // Type implements location.ReferenceLock
 func (ref OciLock) String() string {
-	return fmt.Sprintf("%v digest:%q", ref.Oci, ref.Digest)
+	return ociString(ref.Digest, ref.Directory)
+}
+
+func ociString(image name.Reference, directory string) string {
+	if directory != "" && directory != "." && directory != "/" {
+		if image, ok := image.(name.Tag); ok {
+			return fmt.Sprintf("oci://%s//%s:%s", image.Context().Name(), directory, image.TagStr())
+		}
+		if image, ok := image.(name.Digest); ok {
+			return fmt.Sprintf("oci://%s//%s@%s", image.Context().Name(), directory, image.DigestStr())
+		}
+		return fmt.Sprintf("oci://%s//%s", image.Context().Name(), directory)
+	}
+	return fmt.Sprintf("oci://%s", image)
 }
 
 // Validate implements location.Reference
@@ -114,9 +153,27 @@ func (ref Oci) Type() string {
 	return "oci"
 }
 
+func (ref Oci) Rel(target Reference) (string, error) {
+	if target, ok := target.(Oci); ok {
+		if ref.Image != target.Image {
+			return "", fmt.Errorf("target image %q must match %q", target.Image, ref.Image)
+		}
+		return filepath.Rel(ref.Directory, target.Directory)
+	}
+	return "", fmt.Errorf("reference %q is of type %q", target, target.Type())
+}
+
 // GetDefaultDirectoryName is called from location.DefaultDirectoryName
 func (ref Oci) GetDefaultDirectoryName() (string, bool) {
-	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), false
+	return path.Base(path.Join(path.Clean(ref.Image.Context().Name()), path.Clean(ref.Directory))), true
+}
+
+func (ref Oci) GetDefaultIdentifier(ctx context.Context) (string, error) {
+	return "latest", nil
+}
+
+func (ref Oci) GetIdentifier() (string, bool) {
+	return ref.Image.Identifier(), true
 }
 
 // SetIdentifier is called from mutate.Identifier
@@ -125,6 +182,13 @@ func (ref Oci) SetIdentifier(identifier string) (Reference, error) {
 		Image:     ref.Image.Context().Tag(identifier),
 		Directory: ref.Directory,
 	}, nil
+}
+
+func (ref OciLock) GetLock() (string, bool) {
+	if d, ok := ref.Digest.(name.Digest); ok {
+		return d.DigestStr(), true
+	}
+	return "", false
 }
 
 // SetLock is called from mutate.Lock

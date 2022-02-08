@@ -15,13 +15,16 @@
 package location
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 )
 
 type Git struct {
@@ -35,10 +38,17 @@ type Git struct {
 
 	// Ref can be a Git branch, tag, or a commit SHA-1.
 	Ref string
+
+	// original is the value before parsing, it is returned
+	// by String() to improve round-trip accuracy
+	original string
 }
 
 var _ Reference = Git{}
-var _ DirectoryNameDefaulter = Git{}
+var _ extensions.IdentifierGetter = Git{}
+var _ extensions.DefaultDirectoryNameGetter = Git{}
+var _ extensions.DefaultIdentifierGetter = Git{}
+var _ extensions.RelPather = Git{}
 
 type GitLock struct {
 	Git
@@ -48,7 +58,13 @@ type GitLock struct {
 	Commit string
 }
 
+var _ Reference = GitLock{}
 var _ ReferenceLock = GitLock{}
+var _ extensions.IdentifierGetter = GitLock{}
+var _ extensions.LockGetter = GitLock{}
+var _ extensions.DefaultDirectoryNameGetter = GitLock{}
+var _ extensions.DefaultIdentifierGetter = GitLock{}
+var _ extensions.RelPather = GitLock{}
 
 func NewGit(location string, opts ...Option) (Git, error) {
 	return newGit(location, makeOptions(opts...))
@@ -74,29 +90,33 @@ func newGit(location string, opt options) (Git, error) {
 		Repo:      gitTarget.Repo,
 		Directory: dir,
 		Ref:       gitTarget.Ref,
+		original:  location,
 	}, nil
 }
 
-func parseGit(location string, opt options) Reference {
-	git, gitErr := newGit(location, opt)
+func parseGit(location string, opt options) (Reference, error) {
+	git, err := newGit(location, opt)
 	var zero Git
-	if gitErr == nil && git != zero {
-		return git
+	if err == nil && git != zero {
+		return git, nil
 	}
 
-	// TODO - figure out which gitErr must be returned, and which simply mean "it's not a git path"
-
-	return nil
+	return nil, err
 }
 
 // String implements location.Reference
 func (ref Git) String() string {
-	return fmt.Sprintf("type:git repo:%q ref:%q directory:%q", ref.Repo, ref.Ref, ref.Directory)
+	if ref.original != "" {
+		return ref.original
+	}
+	return gitString(ref.Repo, ref.Directory, ref.Ref)
 }
 
-// String implements location.ReferenceLock
-func (ref GitLock) String() string {
-	return fmt.Sprintf("%v commit:%q", ref.Git, ref.Commit)
+func gitString(repo, dir, identifier string) string {
+	if dir != "" && dir != "/" && dir != "." {
+		return fmt.Sprintf("%s/%s@%s", repo, dir, identifier)
+	}
+	return fmt.Sprintf("%s@%s", repo, identifier)
 }
 
 // Type implements location.Reference
@@ -119,12 +139,51 @@ func (ref Git) Validate() error {
 	return nil
 }
 
+func (ref Git) Rel(target Reference) (string, error) {
+	if target, ok := target.(Git); ok {
+		if ref.Repo != target.Repo {
+			return "", fmt.Errorf("target repo must match")
+		}
+		if ref.Ref != target.Ref {
+			return "", fmt.Errorf("target ref must match")
+		}
+		return filepath.Rel(canonical(ref.Directory), canonical(target.Directory))
+	}
+	return "", fmt.Errorf("reference %q of type %q is not relative", target, target.Type())
+}
+
+func canonical(dir string) string {
+	dir = filepath.Clean(dir)
+	if filepath.IsAbs(dir) {
+		if dir, err := filepath.Rel("/", dir); err == nil {
+			return dir
+		}
+	}
+	return dir
+}
+
 // GetDefaultDirectoryName is called from location.DefaultDirectoryName
 func (ref Git) GetDefaultDirectoryName() (string, bool) {
 	repo := ref.Repo
 	repo = strings.TrimSuffix(repo, "/")
 	repo = strings.TrimSuffix(repo, ".git")
 	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), true
+}
+
+func (ref Git) GetDefaultIdentifier(ctx context.Context) (string, error) {
+	gur, err := gitutil.NewGitUpstreamRepo(ctx, ref.Repo)
+	if err != nil {
+		return "", err
+	}
+	b, err := gur.GetDefaultBranch(ctx)
+	if err != nil {
+		return "", err
+	}
+	return b, nil
+}
+
+func (ref Git) GetIdentifier() (string, bool) {
+	return ref.Ref, true
 }
 
 // SetIdentifier is called from mutate.Identifier
@@ -134,6 +193,10 @@ func (ref Git) SetIdentifier(name string) (Reference, error) {
 		Directory: ref.Directory,
 		Ref:       name,
 	}, nil
+}
+
+func (ref GitLock) GetLock() (string, bool) {
+	return ref.Commit, true
 }
 
 // SetLock is called from mutate.Lock

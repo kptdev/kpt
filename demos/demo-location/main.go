@@ -44,7 +44,7 @@ func main() {
 
 	example(
 		"oci example",
-		"oci://us-docker.pkg.dev/my-project-id/my-repo-name/my-blueprint:draft",
+		"oci://us-docker.pkg.dev/my-project-id/my-repo-name/my-blueprint//nodepools/primary:draft",
 		"example",
 		"sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
 		opts,
@@ -150,7 +150,7 @@ func run(arg string, identifier string, lock string, opts ...location.Option) er
 	if err != nil {
 		return err
 	}
-	fmt.Printf("parsed: {%v}\n", parsed)
+	fmt.Printf("parsed: %s\n", parsed)
 
 	var changed location.Reference
 	if identifier != "" {
@@ -159,7 +159,7 @@ func run(arg string, identifier string, lock string, opts ...location.Option) er
 		if err != nil {
 			return err
 		}
-		fmt.Printf("changed: {%v}\n", changed)
+		fmt.Printf("changed: %s\n", changed)
 	} else {
 		changed = parsed
 	}
@@ -170,7 +170,7 @@ func run(arg string, identifier string, lock string, opts ...location.Option) er
 		if err != nil {
 			return err
 		}
-		fmt.Printf("locked: {%v}\n", locked)
+		fmt.Printf("locked: %s\n", locked)
 	}
 
 	return nil
@@ -212,7 +212,7 @@ var CustomParser = location.NewParser(
 
 // string when reference appears in console and log messages
 func (ref CustomLocation) String() string {
-	return fmt.Sprint(" WhereItIs:", ref.WhereItIs, " LabelOrVersionString:", ref.LabelOrVersionString)
+	return fmt.Sprintf("custom:%s:%s", ref.WhereItIs, ref.LabelOrVersionString)
 }
 
 func (ref CustomLocation) Type() string {
@@ -225,7 +225,7 @@ func (ref CustomLocation) Validate() error {
 
 // string when reference appears in console and log messages
 func (ref CustomLocationLock) String() string {
-	return fmt.Sprint(" WhereItIs:", ref.WhereItIs, " LabelOrVersionString:", ref.LabelOrVersionString, " UniqueIDString:", ref.UniqueIDString)
+	return fmt.Sprintf("custom:%s:%s@%s", ref.WhereItIs, ref.LabelOrVersionString, ref.UniqueIDString)
 }
 
 // return location with only the identifier changed

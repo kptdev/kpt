@@ -14,14 +14,60 @@
 
 package location
 
-import "fmt"
+import (
+	"fmt"
 
-type Reference interface {
-	fmt.Stringer
-	Type() string
-	Validate() error
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
+)
+
+type Reference = extensions.Reference
+type ReferenceLock = extensions.ReferenceLock
+
+func Identifier(ref Reference) (string, bool) {
+	if ref, ok := ref.(extensions.IdentifierGetter); ok {
+		return ref.GetIdentifier()
+	}
+	return "", false
 }
 
-type ReferenceLock interface {
-	Reference
+func Lock(ref ReferenceLock) (string, bool) {
+	if ref, ok := ref.(extensions.LockGetter); ok {
+		return ref.GetLock()
+	}
+	return "", false
+}
+
+// Rel will return a relative path if one reference is a sub-package
+// location in another. The usage is similar to filepath.Rel. The
+// comparison is strict, meaning all criteria other than the directory
+// component (like repo, ref, image, tag, etc.) must be equal.
+func Rel(baseref Reference, targref Reference) (string, error) {
+	if baseref, ok := baseref.(extensions.RelPather); ok {
+		return baseref.Rel(targref)
+	}
+	return "", fmt.Errorf("not supported")
+}
+
+// DefaultIdentifier returns the suggested identifier to use
+// for a reference location when one is not provided. This may
+// be a default tag name like "latest", or a default branch name
+// like "main". Some locations may attempt to obtain the default
+// identifier by communicating with the remote provider.
+func DefaultIdentifier(ref Reference, opts ...Option) (string, error) {
+	if ref, ok := ref.(extensions.DefaultIdentifierGetter); ok {
+		opt := makeOptions(opts...)
+		return ref.GetDefaultIdentifier(opt.ctx)
+	}
+	return "", fmt.Errorf("not supported")
+}
+
+// DefaultDirectoryName returns the suggested local directory name to
+// create when a package from a remove reference is cloned or pulled.
+// Returns an empty string and false if the Reference type does not have
+// anything path-like to suggest from.
+func DefaultDirectoryName(ref Reference) (string, bool) {
+	if ref, ok := ref.(extensions.DefaultDirectoryNameGetter); ok {
+		return ref.GetDefaultDirectoryName()
+	}
+	return "", false
 }
