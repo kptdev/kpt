@@ -16,13 +16,15 @@
 package update_test
 
 import (
-	"path/filepath"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	. "github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 func TestUpdate_Replace(t *testing.T) {
@@ -174,9 +176,9 @@ func TestUpdate_Replace(t *testing.T) {
 
 			err := updater.Update(UpdateOptions{
 				RelPackagePath: tc.relPackagePath,
-				OriginPath:     filepath.Join(origin, tc.relPackagePath),
-				LocalPath:      filepath.Join(local, tc.relPackagePath),
-				UpdatedPath:    filepath.Join(updated, tc.relPackagePath),
+				OriginPath:     filepath.Join(types.DiskPath(origin), tc.relPackagePath),
+				LocalPath:      filepath.Join(types.DiskPath(local), tc.relPackagePath),
+				UpdatedPath:    filepath.Join(types.DiskPath(updated), tc.relPackagePath),
 				IsRoot:         tc.isRoot,
 			})
 			if !assert.NoError(t, err) {

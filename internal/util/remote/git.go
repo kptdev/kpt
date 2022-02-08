@@ -29,242 +29,37 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/otiai10/copy"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-type gitUpstream struct {
-	git     *kptfilev1.Git
-	gitLock *kptfilev1.GitLock
-}
+// // cloneAndCopy fetches the provided repo and copies the content into the
+// // directory specified by dest. The provided name is set as `metadata.name`
+// // of the Kptfile of the package.
+// func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
+// 	const op errors.Op = "fetch.cloneAndCopy"
+// 	pr := printer.FromContextOrDie(ctx)
 
-var _ Upstream = &gitUpstream{}
+// 	err := ClonerUsingGitExec(ctx, r)
+// 	if err != nil {
+// 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
+// 	}
+// 	defer os.RemoveAll(r.Dir)
 
-type gitOrigin struct {
-	git *kptfilev1.GitLock
-}
+// 	sourcePath := filepath.Join(r.Dir, r.Path)
+// 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
+// 	if err := pkgutil.CopyPackage(types.DiskPath(sourcePath), types.DiskPath(dest), true, pkg.All); err != nil {
+// 		return errors.E(op, types.UniquePath(dest), err)
+// 	}
 
-var _ Origin = &gitOrigin{}
+// 	if err := kptfileutil.UpdateKptfileWithoutOrigin(types.DiskPath(dest), types.DiskPath(sourcePath), false); err != nil {
+// 		return errors.E(op, types.UniquePath(dest), err)
+// 	}
 
-func NewGitUpstream(git *kptfilev1.Git) Upstream {
-	return &gitUpstream{
-		git: git,
-	}
-}
-
-func NewGitOrigin(git *kptfilev1.Git) Origin {
-	return &gitOrigin{
-		git: &kptfilev1.GitLock{
-			Repo:      git.Repo,
-			Directory: git.Directory,
-			Ref:       git.Ref,
-		},
-	}
-}
-
-func (u *gitUpstream) String() string {
-	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
-}
-
-func (u *gitUpstream) LockedString() string {
-	return fmt.Sprintf("%s@%s", u.gitLock.Repo, u.gitLock.Ref)
-}
-
-func (u *gitOrigin) String() string {
-	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
-}
-
-func (u *gitOrigin) LockedString() string {
-	return fmt.Sprintf("%s@%s", u.git.Repo, u.git.Ref)
-}
-
-func (u *gitUpstream) Validate() error {
-	const op errors.Op = "remote.Validate"
-	g := u.git
-	if g != nil {
-		if len(g.Repo) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
-		}
-		if len(g.Ref) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
-		}
-		if len(g.Directory) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-		}
-	}
-	return nil
-}
-
-func (u *gitOrigin) Validate() error {
-	const op errors.Op = "remote.Validate"
-	g := u.git
-	if g != nil {
-		if len(g.Repo) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify repo"))
-		}
-		if len(g.Ref) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify ref"))
-		}
-		if len(g.Directory) == 0 {
-			return errors.E(op, errors.MissingParam, fmt.Errorf("must specify directory"))
-		}
-	}
-	return nil
-}
-
-func (u *gitUpstream) BuildUpstream() *kptfilev1.Upstream {
-	repoDir := u.git.Directory
-	if !strings.HasSuffix(repoDir, "file://") {
-		repoDir = filepath.Join(path.Split(repoDir))
-	}
-	u.git.Directory = repoDir
-
-	return &kptfilev1.Upstream{
-		Type: kptfilev1.GitOrigin,
-		Git:  u.git,
-	}
-}
-
-func (u *gitUpstream) BuildUpstreamLock(digest string) *kptfilev1.UpstreamLock {
-	u.gitLock = &kptfilev1.GitLock{
-		Repo:      u.git.Repo,
-		Directory: u.git.Directory,
-		Ref:       u.git.Ref,
-		Commit:    digest,
-	}
-	return &kptfilev1.UpstreamLock{
-		Type: kptfilev1.GitOrigin,
-		Git:  u.gitLock,
-	}
-}
-
-func (u *gitOrigin) Build(digest string) *kptfilev1.Origin {
-	return &kptfilev1.Origin{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.GitLock{
-			Repo:      u.git.Repo,
-			Directory: u.git.Directory,
-			Ref:       u.git.Ref,
-			Commit:    digest,
-		},
-	}
-}
-
-func (u *gitUpstream) FetchUpstream(ctx context.Context, dest string) (string, string, error) {
-	repoSpec := &git.RepoSpec{
-		OrgRepo: u.git.Repo,
-		Path:    u.git.Directory,
-		Ref:     u.git.Ref,
-		Dir:     dest,
-	}
-	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
-		return "", "", err
-	}
-	return path.Join(repoSpec.Dir, repoSpec.Path), repoSpec.Commit, nil
-}
-
-func (u *gitUpstream) FetchUpstreamLock(ctx context.Context, dest string) (string, error) {
-	repoSpec := &git.RepoSpec{
-		OrgRepo: u.gitLock.Repo,
-		Path:    u.gitLock.Directory,
-		Ref:     u.gitLock.Commit,
-		Dir:     dest,
-	}
-	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
-		return "", err
-	}
-	return path.Join(repoSpec.Dir, repoSpec.Path), nil
-}
-
-func (u *gitOrigin) Fetch(ctx context.Context, dest string) (string, string, error) {
-	repoSpec := &git.RepoSpec{
-		OrgRepo: u.git.Repo,
-		Path:    u.git.Directory,
-		Ref:     u.git.Ref,
-	}
-	if err := ClonerUsingGitExec(ctx, repoSpec); err != nil {
-		return "", "", err
-	}
-	defer os.RemoveAll(repoSpec.Dir)
-	if err := pkgutil.CopyPackage(repoSpec.AbsPath(), dest, true, pkg.All); err != nil {
-		return "", "", err
-	}
-
-	return dest, repoSpec.Commit, nil
-}
-
-func (u *gitUpstream) CloneUpstream(ctx context.Context, dest string) error {
-	repoSpec := &git.RepoSpec{
-		OrgRepo: u.git.Repo,
-		Path:    u.git.Directory,
-		Ref:     u.git.Ref,
-	}
-	return cloneAndCopy(ctx, repoSpec, dest)
-}
-
-func (u *gitOrigin) Push(ctx context.Context, dest string, kptfile *kptfilev1.KptFile) (digest string, err error) {
-	return "", fmt.Errorf("git push not implemented")
-}
-
-func (u *gitUpstream) Ref() (string, error) {
-	return u.git.Ref, nil
-}
-
-func (u *gitUpstream) SetRef(ref string) error {
-	u.git.Ref = ref
-	return nil
-}
-
-func (u *gitOrigin) Ref() (string, error) {
-	return u.git.Ref, nil
-}
-
-func (u *gitOrigin) SetRef(ref string) error {
-	u.git.Ref = ref
-	return nil
-}
-
-// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
-// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
-func (u *gitUpstream) ShouldUpdateSubPkgRef(rootUpstream Upstream, originalRootKfRef string) bool {
-	root, ok := rootUpstream.(*gitUpstream)
-	return ok &&
-		u.git.Repo == root.git.Repo &&
-		u.git.Ref == originalRootKfRef &&
-		strings.HasPrefix(path.Clean(u.git.Directory), path.Clean(root.git.Directory))
-}
-
-// cloneAndCopy fetches the provided repo and copies the content into the
-// directory specified by dest. The provided name is set as `metadata.name`
-// of the Kptfile of the package.
-func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
-	const op errors.Op = "fetch.cloneAndCopy"
-	pr := printer.FromContextOrDie(ctx)
-
-	err := ClonerUsingGitExec(ctx, r)
-	if err != nil {
-		return errors.E(op, errors.Git, types.UniquePath(dest), err)
-	}
-	defer os.RemoveAll(r.Dir)
-
-	sourcePath := filepath.Join(r.Dir, r.Path)
-	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
-	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
-	}
-
-	if err := kptfileutil.UpdateKptfileWithoutOrigin(dest, sourcePath, false); err != nil {
-		return errors.E(op, types.UniquePath(dest), err)
-	}
-
-	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, r); err != nil {
-		return errors.E(op, errors.Git, types.UniquePath(dest), err)
-	}
-	return nil
-}
+// 	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, r); err != nil {
+// 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
+// 	}
+// 	return nil
+// }
 
 // ClonerUsingGitExec uses a local git install, as opposed
 // to say, some remote API, to obtain a local clone of
@@ -357,7 +152,7 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 
 	// Verify that if a Kptfile exists in the package, it contains the correct
 	// version of the Kptfile.
-	_, err = pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
+	_, err = pkg.ReadKptfile(types.DiskPath(pkgPath))
 	if err != nil {
 		// A Kptfile isn't required, so it is fine if there is no Kptfile.
 		if errors.Is(err, os.ErrNotExist) {

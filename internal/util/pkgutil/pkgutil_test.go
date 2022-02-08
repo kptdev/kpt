@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
@@ -84,7 +85,7 @@ func TestWalkPackage(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
 			var visited []string
-			if err := pkgutil.WalkPackage(pkgPath, func(s string, info os.FileInfo, err error) error {
+			if err := pkgutil.WalkPackage(types.DiskPath(pkgPath), func(s string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -369,7 +370,7 @@ func TestCopyPackage(t *testing.T) {
 				t.FailNow()
 			}
 
-			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
+			err = pkgutil.CopyPackage(types.DiskPath(pkgPath), types.DiskPath(dest), tc.copyRootKptfile, tc.subpackageMatcher)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -537,9 +538,9 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			var pkgPaths []string
+			var pkgPaths []types.FileSystemPath
 			for _, p := range tc.pkgs {
-				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
+				pkgPaths = append(pkgPaths, types.DiskPath(p.ExpandPkg(t, testutil.EmptyReposInfo)))
 			}
 
 			paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, pkgPaths...)

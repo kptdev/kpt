@@ -15,13 +15,13 @@
 package update
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 // Updater updates a package to a new upstream version.
@@ -34,7 +34,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 	const op errors.Op = "update.Update"
 	paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, types.AsUniquePath(options.LocalPath), err)
 	}
 
 	for _, p := range append([]string{"."}, paths...) {
@@ -46,7 +46,7 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
 		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 
 		// If the package doesn't exist in updated, we make sure it is
@@ -54,16 +54,16 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 		// the content of the package into local.
 		_, err = os.Stat(updatedSubPkgPath)
 		if err != nil && !os.IsNotExist(err) {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 		if os.IsNotExist(err) {
 			if err = os.RemoveAll(localSubPkgPath); err != nil {
-				return errors.E(op, types.UniquePath(localSubPkgPath), err)
+				return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 			}
 		} else {
 
 			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
-				return errors.E(op, types.UniquePath(localSubPkgPath), err)
+				return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 			}
 		}
 	}

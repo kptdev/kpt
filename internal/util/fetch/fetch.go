@@ -20,8 +20,13 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content"
+	"github.com/GoogleContainerTools/kpt/pkg/content/open"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
 )
 
 // Command takes the upstream information in the Kptfile at the path for the
@@ -34,6 +39,8 @@ type Command struct {
 // Run runs the Command.
 func (c Command) Run(ctx context.Context) error {
 	const op errors.Op = "fetch.Run"
+	pr := printer.FromContextOrDie(ctx)
+
 	kf, err := c.Pkg.Kptfile()
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("no Kptfile found"))
@@ -43,14 +50,52 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	ups, err := remote.NewUpstream(kf)
+	// upstream source location
+	srcRef, err := kptfileutil.NewReferenceFromUpstream(kf)
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := ups.CloneUpstream(ctx, c.Pkg.UniquePath.String()); err != nil {
+	// open upstream as filesystem
+	src, err := open.FileSystem(srcRef, open.WithContext(ctx))
+	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
+	defer src.Close()
+
+	// destination package location
+	dstRef := location.Dir{
+		Directory: c.Pkg.UniquePath.String(),
+	}
+
+	// open destination as filesystem
+	dst, err := open.FileSystem(dstRef)
+	if err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+	defer dst.Close()
+
+	pr.Printf("Adding package %q.\n", src.Location)
+
+	// copy package from source to destination
+	if err := pkgutil.CopyPackage(src.FileSystemPath, dst.FileSystemPath, true, pkg.All); err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	if err := kptfileutil.UpdateKptfileWithoutOrigin(dst.FileSystemPath, src.FileSystemPath, false); err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	if err := kptfileutil.UpdateUpstreamLocations(dst.FileSystemPath, src.Location); err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	result, err := content.Commit(dst)
+	if err != nil {
+		return errors.E(op, c.Pkg.UniquePath, err)
+	}
+
+	pr.Printf("Updated %q.\n", result)
 
 	return nil
 }

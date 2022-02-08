@@ -16,14 +16,15 @@ package pkgutil
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -33,15 +34,15 @@ import (
 
 // WalkPackage walks the package defined at src and provides a callback for
 // every folder and file. Any subpackages and the .git folder are excluded.
-func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
+func WalkPackage(src paths.FileSystemPath, c func(string, os.FileInfo, error) error) error {
 	excludedDirs := make(map[string]bool)
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+	return src.FileSystem.Walk(src.Path, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return c(path, info, err)
 		}
 		// don't copy the .git dir
-		if path != src {
-			rel := strings.TrimPrefix(path, src)
+		if path != src.Path {
+			rel := strings.TrimPrefix(path, src.Path)
 			if copyutil.IsDotGitFolder(rel) {
 				return nil
 			}
@@ -53,12 +54,9 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 			}
 		}
 
-		if info.IsDir() {
-			_, err := os.Stat(filepath.Join(path, kptfilev1.KptFileName))
-			if err != nil && !os.IsNotExist(err) {
-				return c(path, info, err)
-			}
-			if err == nil && path != src {
+		if info.IsDir() && path != src.Path {
+			hasKptfile := src.FileSystem.Exists(filepath.Join(path, kptfilev1.KptFileName))
+			if hasKptfile {
 				excludedDirs[path] = true
 				return nil
 			}
@@ -69,8 +67,8 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 
 // CopyPackage copies the content of a single package from src to dst. If includeSubpackages
 // is true, it will copy resources belonging to any subpackages.
-func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
-	subpackagesToCopy, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, src, matcher, true)
+func CopyPackage(src, dst paths.FileSystemPath, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+	subpackagesToCopy, err := pkg.Subpackages(src.FileSystem, src.Path, matcher, true)
 	if err != nil {
 		return err
 	}
@@ -83,32 +81,28 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 		// path is an absolute path, rather than a path relative to src.
 		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
 		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
-		copyTo := strings.TrimPrefix(path, src)
+		copyTo := strings.TrimPrefix(path, src.Path)
 		if copyTo == "/Kptfile" {
-			_, err := os.Stat(filepath.Join(dst, copyTo))
-			if err == nil {
+			if dst.FileSystem.Exists(filepath.Join(dst.Path, copyTo)) {
 				return nil
-			}
-			if !os.IsNotExist(err) {
-				return err
 			}
 		}
 
 		// make directories that don't exist
 		if info.IsDir() {
-			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+			return dst.FileSystem.MkdirAll(filepath.Join(dst.Path, copyTo))
 		}
 
-		if path == filepath.Join(src, kptfilev1.KptFileName) && !copyRootKptfile {
+		if path == filepath.Join(src.Path, kptfilev1.KptFileName) && !copyRootKptfile {
 			return nil
 		}
 
 		// copy file by reading and writing it
-		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		b, err := src.FileSystem.ReadFile(filepath.Join(src.Path, copyTo))
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		err = dst.FileSystem.WriteFile(filepath.Join(dst.Path, copyTo), b)
 		if err != nil {
 			return err
 		}
@@ -121,41 +115,37 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 	}
 
 	for _, subpackage := range subpackagesToCopy {
-		subpackageSrc := filepath.Join(src, subpackage)
+		subpackageSrc := filepath.Join(src.Path, subpackage)
 		// subpackageDest := filepath.Join(dst, strings.TrimPrefix(subpackage, src))
-		err = filepath.Walk(subpackageSrc, func(path string, info os.FileInfo, err error) error {
+		err = src.FileSystem.Walk(subpackageSrc, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 			// don't copy the .git dir
-			if path != src {
+			if path != src.Path {
 				rel := strings.TrimPrefix(path, subpackageSrc)
 				if copyutil.IsDotGitFolder(rel) {
 					return nil
 				}
 			}
 
-			copyTo := strings.TrimPrefix(path, src)
+			copyTo := strings.TrimPrefix(path, src.Path)
 			if info.IsDir() {
-				return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+				return dst.FileSystem.MkdirAll(filepath.Join(dst.Path, copyTo))
 			}
 
-			if copyTo == "/Kptfile" {
-				_, err := os.Stat(filepath.Join(dst, copyTo))
-				if err == nil {
+			if copyTo == "/"+kptfilev1.KptFileName {
+				if dst.FileSystem.Exists(filepath.Join(dst.Path, copyTo)) {
 					return nil
-				}
-				if !os.IsNotExist(err) {
-					return err
 				}
 			}
 
 			// copy file by reading and writing it
-			b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+			b, err := src.FileSystem.ReadFile(filepath.Join(src.Path, copyTo))
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+			err = dst.FileSystem.WriteFile(filepath.Join(dst.Path, copyTo), b)
 			if err != nil {
 				return err
 			}
@@ -170,7 +160,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 	return nil
 }
 
-func RemovePackageContent(path string, removeRootKptfile bool) error {
+func RemovePackageContent(path types.FileSystemPath, removeRootKptfile bool) error {
 	// Walk the package (while ignoring subpackages) and delete all files.
 	// We capture the paths to any subdirectories in the package so we
 	// can handle those later. We can't do it while walking the package
@@ -186,13 +176,13 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 		}
 
 		if info.IsDir() {
-			if p != path {
+			if p != path.Path {
 				dirs = append(dirs, p)
 			}
 			return nil
 		}
 
-		if p == filepath.Join(path, kptfilev1.KptFileName) && !removeRootKptfile {
+		if p == filepath.Join(path.Path, kptfilev1.KptFileName) && !removeRootKptfile {
 			return nil
 		}
 
@@ -263,10 +253,10 @@ func SubPkgFirstSorter(paths []string) func(i, j int) bool {
 
 // FindSubpackagesForPaths traverses the provided package paths
 // and finds all subpackages using the provided pkgLocatorFunc
-func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPaths ...string) ([]string, error) {
+func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPaths ...types.FileSystemPath) ([]string, error) {
 	uniquePaths := make(map[string]bool)
 	for _, path := range pkgPaths {
-		paths, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, path, matcher, recurse)
+		paths, err := pkg.Subpackages(path.FileSystem, path.Path, matcher, recurse)
 		if err != nil {
 			return []string{}, err
 		}
@@ -327,7 +317,7 @@ func RoundTripKptfilesInPkg(pkgPath string) error {
 	pkgsPaths = append(pkgsPaths, pkgPath)
 
 	for _, pkgPath := range pkgsPaths {
-		kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
+		kf, err := pkg.ReadKptfile(types.DiskPath(pkgPath))
 		if err != nil {
 			// do not throw error if formatting fails
 			return err
@@ -343,10 +333,6 @@ func RoundTripKptfilesInPkg(pkgPath string) error {
 
 // Exists returns true if a file or directory exists on the provided path,
 // and false otherwise.
-func Exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err != nil && !os.IsNotExist(err) {
-		return false, err
-	}
-	return !os.IsNotExist(err), nil
+func Exists(path types.FileSystemPath) (bool, error) {
+	return path.FileSystem.Exists(path.Path), nil
 }

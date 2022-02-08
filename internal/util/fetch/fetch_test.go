@@ -24,11 +24,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -61,7 +61,7 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1.Git, strate
 }
 
 func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
-	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, workspace.FullPackagePath())
+	kf, err := pkg.ReadKptfile(types.DiskPath(workspace.FullPackagePath()))
 	if err != nil {
 		return err
 	}

@@ -29,8 +29,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"github.com/google/go-containerregistry/pkg/name"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
@@ -50,6 +51,21 @@ func WriteFile(dir string, k *kptfilev1.KptFile) error {
 	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+	return nil
+}
+
+func WriteFileFS(dir paths.FileSystemPath, k *kptfilev1.KptFile) error {
+	const op errors.Op = "kptfileutil.WriteFileFS"
+	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		return err
+	}
+
+	// fyi: perm is ignored if the file already exists
+	err = dir.FileSystem.WriteFile(filepath.Join(dir.Path, kptfilev1.KptFileName), b)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir.String()), err)
 	}
 	return nil
 }
@@ -131,20 +147,20 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 // merge strategy, but where origin does not have any values.
 // If updateUpstream is true, the values from the upstream and upstreamLock
 // sections will also be copied into local.
-func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
+func UpdateKptfileWithoutOrigin(localPath, updatedPath paths.FileSystemPath, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(localPath.Path), err)
 		}
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := pkg.ReadKptfile(updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(updatedPath), err)
+			return errors.E(op, types.UniquePath(updatedPath.Path), err)
 		}
 		updatedKf = &kptfilev1.KptFile{}
 	}
@@ -158,9 +174,9 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
-	err = WriteFile(localPath, localKf)
+	err = WriteFileFS(localPath, localKf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.UniquePath(localPath.Path), err)
 	}
 	return nil
 }
@@ -170,28 +186,28 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 // by originPath as the common ancestor.
 // If updateUpstream is true, the values from the upstream and upstreamLock
 // sections will also be copied into local.
-func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
+func UpdateKptfile(localPath, updatedPath, originPath types.FileSystemPath, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(localPath.String()), err)
 		}
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := pkg.ReadKptfile(updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(localPath.String()), err)
 		}
 		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	originKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
+	originKf, err := pkg.ReadKptfile(originPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
-			return errors.E(op, types.UniquePath(localPath), err)
+			return errors.E(op, types.UniquePath(localPath.String()), err)
 		}
 		originKf = &kptfilev1.KptFile{}
 	}
@@ -205,27 +221,67 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		updateUpstreamAndUpstreamLock(localKf, updatedKf)
 	}
 
-	err = WriteFile(localPath, localKf)
+	err = WriteFileFS(localPath, localKf)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.UniquePath(localPath.String()), err)
 	}
 	return nil
 }
 
-func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error {
+func UpdateUpstreamLock(path paths.FileSystemPath, lock location.ReferenceLock) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLock"
+
 	// read KptFile cloned with the package if it exists
-	kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
+	kptfile, err := pkg.ReadKptfile(path)
 	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
+		return errors.E(op, types.UniquePath(path.String()), err)
 	}
 
-	// populate the cloneFrom values so we know where the package came from
-	kptfile.UpstreamLock = upstreamLock
+	if lock == nil {
+		kptfile.UpstreamLock = nil
+	} else {
+		kptfile.UpstreamLock, err = NewUpstreamLockFromReferenceLock(lock)
+		if err != nil {
+			return errors.E(op, types.UniquePath(path.String()), err)
+		}
+	}
 
-	err = WriteFile(path, kptfile)
+	if err := WriteFileFS(path, kptfile); err != nil {
+		return errors.E(op, types.UniquePath(path.Path), err)
+	}
+	return nil
+}
+
+func UpdateUpstreamLocations(path paths.FileSystemPath, loc location.Location) error {
+	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
+
+	// read KptFile cloned with the package if it exists
+	kptfile, err := pkg.ReadKptfile(path)
 	if err != nil {
-		return errors.E(op, types.UniquePath(path), err)
+		return errors.E(op, err)
+	}
+
+	// preserve existing kptfile.Upstream.Strategy if present
+	var strategy kptfilev1.UpdateStrategyType
+	if kptfile.Upstream != nil {
+		strategy = kptfile.Upstream.UpdateStrategy
+	}
+
+	// create and assign upstream
+	kptfile.Upstream, err = NewUpstreamFromReference(loc.Reference, strategy)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// create and assign upstreamLock
+	kptfile.UpstreamLock, err = NewUpstreamLockFromReferenceLock(loc.ReferenceLock)
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	// write Kptfile back to original location
+	if err := WriteFileFS(path, kptfile); err != nil {
+		return errors.E(op, err)
 	}
 	return nil
 }
@@ -235,20 +291,19 @@ func UpdateUpstreamLock(path string, upstreamLock *kptfilev1.UpstreamLock) error
 // field in upstreamLock using the latest commit of the git repo given
 // by spec.
 func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
-	return UpdateUpstreamLock(path, &kptfilev1.UpstreamLock{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.GitLock{
+	return UpdateUpstreamLock(types.DiskPath(path), location.GitLock{
+		Git: location.Git{
 			Repo:      spec.OrgRepo,
-			Directory: spec.Path,
+			Directory: spec.Dir,
 			Ref:       spec.Ref,
-			Commit:    spec.Commit,
 		},
+		Commit: spec.Commit,
 	})
 }
 
 // NewUpstreamFromReference creates kptfilev1.Upstream structures from supported
 // location types. The kptfile upstream supports specific, well-known types.
-func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, error) {
+func NewUpstreamFromReference(ref location.Reference, updateStrategy kptfilev1.UpdateStrategyType) (*kptfilev1.Upstream, error) {
 	const op errors.Op = "kptfileutil.NewUpstreamFromReference"
 	switch ref := ref.(type) {
 	case location.Git:
@@ -256,17 +311,19 @@ func NewUpstreamFromReference(ref location.Reference) (*kptfilev1.Upstream, erro
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.Git{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory, false),
+				Directory: toUpstreamDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 			},
+			UpdateStrategy: updateStrategy,
 		}, nil
 	case location.Oci:
 		return &kptfilev1.Upstream{
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.Oci{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory, true),
+				Directory: toUpstreamDirectory(ref.Directory, true),
 			},
+			UpdateStrategy: updateStrategy,
 		}, nil
 	}
 	return nil, errors.E(op, errors.InvalidParam,
@@ -283,7 +340,7 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      ref.Repo,
-				Directory: toDirectory(ref.Directory, false),
+				Directory: toUpstreamDirectory(ref.Directory, false),
 				Ref:       ref.Ref,
 				Commit:    ref.Commit,
 			},
@@ -293,7 +350,7 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 			Type: kptfilev1.OciOrigin,
 			Oci: &kptfilev1.OciLock{
 				Image:     ref.Image.Name(),
-				Directory: toDirectory(ref.Directory, true),
+				Directory: toUpstreamDirectory(ref.Directory, true),
 				Digest:    ref.Digest.Name(),
 			},
 		}, nil
@@ -302,14 +359,89 @@ func NewUpstreamLockFromReferenceLock(ref location.ReferenceLock) (*kptfilev1.Up
 		fmt.Errorf("reference is not a supported upstream type"))
 }
 
-// toDirectory convert relative Reference sub-package locations to
-// the kptfilev1 absolute-within-repo conventions.
-func toDirectory(relPath string, omitDefault bool) string {
-	if absPath := filepath.Join("/", relPath); absPath != "/" || !omitDefault {
-		return absPath
+func toUpstreamDirectory(dir string, omitDefault bool) string {
+	if dir == "" || dir == "." || dir == "/" {
+		if omitDefault {
+			return ""
+		}
+		return "/"
 	}
-	// root location is default in kptfilev1
-	return ""
+	return dir
+}
+
+// NewReferenceFromUpstream creates location.Reference from kptfilev1.Upstream structures.
+// The kptfile upstream supports specific, well-known types.
+func NewReferenceFromUpstream(kf *kptfilev1.KptFile) (location.Reference, error) {
+	const op errors.Op = "kptfileutil.NewReferenceFromUpstream"
+	u := kf.Upstream
+	if u == nil {
+		return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("kptfile upstream must be present"))
+	}
+	switch kf.Upstream.Type {
+	case kptfilev1.GitOrigin:
+		return location.Git{
+			Repo:      u.Git.Repo,
+			Directory: fromUpstreamDirectory(u.Git.Directory),
+			Ref:       u.Git.Ref,
+		}, nil
+	case kptfilev1.OciOrigin:
+		image, err := name.ParseReference(u.Oci.Image)
+		if err != nil {
+			return nil, err
+		}
+		return location.Oci{
+			Image:     image,
+			Directory: fromUpstreamDirectory(u.Oci.Directory),
+		}, nil
+	}
+	return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("upstream type is not supported"))
+}
+
+// NewReferenceLockFromUpstreamLock creates location.ReferenceLock from kptfilev1.UpstreamLock structures.
+// The kptfile upstream supports specific, well-known types.
+func NewReferenceLockFromUpstreamLock(kf *kptfilev1.KptFile) (location.Reference, error) {
+	const op errors.Op = "kptfileutil.NewReferenceLockFromUpstreamLock"
+	u := kf.UpstreamLock
+	if u == nil {
+		return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("kptfile upstreamLock must be present"))
+	}
+	switch u.Type {
+	case kptfilev1.GitOrigin:
+		return location.GitLock{
+			Git: location.Git{
+				Repo:      u.Git.Repo,
+				Directory: fromUpstreamDirectory(u.Git.Directory),
+				Ref:       u.Git.Ref,
+			},
+			Commit: u.Git.Commit,
+		}, nil
+	case kptfilev1.OciOrigin:
+		image, err := name.ParseReference(u.Oci.Image)
+		if err != nil {
+			return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("oci image invalid"))
+		}
+		digest, err := name.ParseReference(u.Oci.Digest)
+		if err != nil {
+			return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("oci digest invalid"))
+		}
+		return location.OciLock{
+			Oci: location.Oci{
+				Image:     image,
+				Directory: fromUpstreamDirectory(u.Oci.Directory),
+			},
+			Digest: digest,
+		}, nil
+	}
+	return nil, errors.E(op, errors.InvalidParam, fmt.Errorf("upstream type is not supported"))
+}
+
+// fromUpstreamDirectory convert kptfilev1 absolute-within-repo conventions to
+// relative Reference sub-package locations
+func fromUpstreamDirectory(dir string) string {
+	if dir == "" || dir == "." || dir == "/" {
+		return "."
+	}
+	return dir
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output

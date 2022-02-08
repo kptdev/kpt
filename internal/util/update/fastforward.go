@@ -16,8 +16,6 @@ package update
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -26,8 +24,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
 // Updater updates a package to a new upstream version.
@@ -48,20 +48,20 @@ func (u FastForwardUpdater) Update(options UpdateOptions) error {
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.
 	if err := u.checkForLocalChanges(options.LocalPath, options.OriginPath); err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, types.AsUniquePath(options.LocalPath), err)
 	}
 
 	if err := (&ReplaceUpdater{}).Update(options); err != nil {
-		return errors.E(op, types.UniquePath(options.LocalPath), err)
+		return errors.E(op, types.AsUniquePath(options.LocalPath), err)
 	}
 	return nil
 }
 
-func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {
+func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath types.FileSystemPath) error {
 	const op errors.Op = "update.checkForLocalChanges"
 	found, err := pkgutil.Exists(originalPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 	if !found {
 		return nil
@@ -69,7 +69,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 
 	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, localPath, originalPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, types.AsUniquePath(localPath), err)
 	}
 	aggDiff := sets.String{}
 	for _, subPkgPath := range append([]string{"."}, subPkgPaths...) {
@@ -78,11 +78,11 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 
 		localExists, err := pkgutil.Exists(localSubPkgPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 		originalExists, err := pkgutil.Exists(originalSubPkgPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 		if !originalExists || !localExists {
 			aggDiff.Insert("%s (Package)", subPkgPath)
@@ -90,7 +90,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		}
 		d, err := pkgdiff.PkgDiff(localSubPkgPath, originalSubPkgPath)
 		if err != nil {
-			return errors.E(op, types.UniquePath(localSubPkgPath), err)
+			return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 		}
 		// If the original package didn't have a Kptfile, one was created
 		// in local, but we don't consider that a change unless the user
@@ -98,7 +98,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		if d.Has(kptfilev1.KptFileName) && subPkgPath == "." {
 			hasDiff, err := hasKfDiff(localSubPkgPath, originalSubPkgPath)
 			if err != nil {
-				return errors.E(op, types.UniquePath(localSubPkgPath), err)
+				return errors.E(op, types.AsUniquePath(localSubPkgPath), err)
 			}
 			if !hasDiff {
 				d = d.Difference(kptfileSet)
@@ -108,18 +108,18 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		aggDiff.Insert(d.List()...)
 	}
 	if aggDiff.Len() > 0 {
-		return errors.E(op, types.UniquePath(localPath), fmt.Sprintf(
+		return errors.E(op, types.AsUniquePath(localPath), fmt.Sprintf(
 			"local package files have been modified: %v.\n  use a different update --strategy.",
 			aggDiff.List()))
 	}
 	return nil
 }
 
-func hasKfDiff(localPath, orgPath string) (bool, error) {
+func hasKfDiff(localPath, orgPath types.FileSystemPath) (bool, error) {
 	const op errors.Op = "update.hasKfDiff"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := pkg.ReadKptfile(localPath)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(localPath), err)
+		return false, errors.E(op, types.AsUniquePath(localPath), err)
 	}
 	localKf.Upstream = nil
 	localKf.UpstreamLock = nil
@@ -132,21 +132,21 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 			// is just the minimal Kptfile generated automatically.
 			isDefault, err := isDefaultKptfile(localKf, filepath.Base(localPath))
 			if err != nil {
-				return false, errors.E(op, types.UniquePath(localPath), err)
+				return false, errors.E(op, types.AsUniquePath(localPath), err)
 			}
 			return !isDefault, nil
 		}
-		return false, errors.E(op, types.UniquePath(localPath), err)
+		return false, errors.E(op, types.AsUniquePath(localPath), err)
 	}
-	orgKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, orgPath)
+	orgKf, err := pkg.ReadKptfile(orgPath)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(localPath), err)
+		return false, errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	orgKf.Name = localKf.Name
 	equal, err := kptfileutil.Equal(localKf, orgKf)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(localPath), err)
+		return false, errors.E(op, types.AsUniquePath(localPath), err)
 	}
 
 	return !equal, nil

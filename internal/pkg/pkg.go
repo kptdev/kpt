@@ -167,7 +167,7 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := ReadKptfile(p.fsys, p.UniquePath.String())
+		kf, err := ReadKptfile(types.DiskPath(p.UniquePath.String()))
 		if err != nil {
 			return nil, err
 		}
@@ -182,11 +182,11 @@ func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 // of Kptfile in code. One option is to follow Kubernetes approach to
 // have an internal version of Kptfile that all the code uses. In that case,
 // we will have to implement pieces for IO/Conversion with right interfaces.
-func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
-	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
+func ReadKptfile(p types.FileSystemPath) (*kptfilev1.KptFile, error) {
+	f, err := p.FileSystem.Open(filepath.Join(p.Path, kptfilev1.KptFileName))
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: types.AsUniquePath(p),
 			Err:  err,
 		}
 	}
@@ -195,7 +195,7 @@ func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
 	kf, err := DecodeKptfile(f)
 	if err != nil {
 		return nil, &KptfileError{
-			Path: types.UniquePath(p),
+			Path: types.AsUniquePath(p),
 			Err:  err,
 		}
 	}
@@ -408,7 +408,7 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				kf, err := ReadKptfile(fsys, path)
+				kf, err := ReadKptfile(types.FileSystemPath{FileSystem: fsys, Path: path})
 				if err != nil {
 					return errors.E(op, types.UniquePath(path), err)
 				}
@@ -461,8 +461,8 @@ func IsPackageDir(fsys filesys.FileSystem, path string) (bool, error) {
 // but no UpstreamLock. For local packages that doesn't have Upstream
 // information, it will always return false.
 // If a Kptfile is not found on the provided path, an error will be returned.
-func IsPackageUnfetched(path string) (bool, error) {
-	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
+func IsPackageUnfetched(path types.FileSystemPath) (bool, error) {
+	kf, err := ReadKptfile(path)
 	if err != nil {
 		return false, err
 	}

@@ -16,21 +16,22 @@ package diff
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/io/ioutil"
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
+	"github.com/GoogleContainerTools/kpt/internal/migration/path/filepath"
 )
 
-func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
+func PkgDiff(pkg1, pkg2 types.FileSystemPath) (sets.String, error) {
 	pkg1Files, err := pkgSet(pkg1)
 	if err != nil {
 		return sets.String{}, err
@@ -44,7 +45,10 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 	diff := pkg1Files.SymmetricDifference(pkg2Files)
 
 	for _, f := range pkg1Files.Intersection(pkg2Files).List() {
-		fi, err := os.Stat(filepath.Join(pkg1, f))
+		f1 := filepath.Join(pkg1, f)
+		f2 := filepath.Join(pkg2, f)
+
+		fi, err := os.Stat(f1)
 		if err != nil {
 			return diff, err
 		}
@@ -53,7 +57,7 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 			continue
 		}
 
-		fileName := filepath.Base(f)
+		fileName := filepath.Base(f1)
 		if fileName == kptfilev1.KptFileName {
 			equal, err := kptfilesEqual(pkg1, pkg2, f)
 			if err != nil {
@@ -63,11 +67,11 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 				diff.Insert(f)
 			}
 		} else {
-			b1, err := ioutil.ReadFile(filepath.Join(pkg1, f))
+			b1, err := ioutil.ReadFile(f1)
 			if err != nil {
 				return diff, err
 			}
-			b2, err := ioutil.ReadFile(filepath.Join(pkg2, f))
+			b2, err := ioutil.ReadFile(f2)
 			if err != nil {
 				return diff, err
 			}
@@ -79,12 +83,12 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 	return diff, nil
 }
 
-func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
-	pkg1Kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(pkg1, filepath.Dir(filePath)))
+func kptfilesEqual(pkg1, pkg2 types.FileSystemPath, filePath string) (bool, error) {
+	pkg1Kf, err := pkg.ReadKptfile(filepath.Join(pkg1, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
-	pkg2Kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(pkg2, filepath.Dir(filePath)))
+	pkg2Kf, err := pkg.ReadKptfile(filepath.Join(pkg2, filepath.Dir(filePath)))
 	if err != nil {
 		return false, err
 	}
@@ -106,7 +110,7 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 	return bytes.Equal(pkg1Bytes, pkg2Bytes), nil
 }
 
-func pkgSet(pkgPath string) (sets.String, error) {
+func pkgSet(pkgPath types.FileSystemPath) (sets.String, error) {
 	pkgFiles := sets.String{}
 	if err := pkgutil.WalkPackage(pkgPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

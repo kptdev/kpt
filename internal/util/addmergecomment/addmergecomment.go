@@ -16,14 +16,16 @@ package addmergecomment
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/copyutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
-	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/internal/migration/io/ioutil"
+	"github.com/GoogleContainerTools/kpt/internal/migration/os"
 )
 
 // AddMergeComment adds merge comments with format "kpt-merge: namespace/name"
@@ -31,9 +33,10 @@ import (
 type AddMergeComment struct{}
 
 // Process invokes AddMergeComment kyaml filter on the resources in input packages paths
-func Process(paths ...string) error {
+func Process(paths ...types.FileSystemPath) error {
 	for _, path := range paths {
-		inout := &kio.LocalPackageReadWriter{PackagePath: path, PreserveSeqIndent: true, WrapBareSeqNode: true}
+		inout := &kio.LocalPackageReadWriter{PackagePath: path.Path, PreserveSeqIndent: true, WrapBareSeqNode: true}
+		inout.FileSystem.Set(path.FileSystem)
 		amc := &AddMergeComment{}
 		err := kio.Pipeline{
 			Inputs:  []kio.Reader{inout},
@@ -75,19 +78,19 @@ func (amc *AddMergeComment) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 // ProcessWithCleanup copies the input directory contents to
 // new temp directory and adds merge comment to the resources in directory
 // it also returns the cleanup function to clean the created temp directory
-func ProcessWithCleanup(path string) (string, func(), error) {
+func ProcessWithCleanup(path types.FileSystemPath) (types.FileSystemPath, func(), error) {
 	expected, err := ioutil.TempDir("", "")
 	if err != nil {
-		return "", nil, err
+		return types.FileSystemPath{}, nil, err
 	}
 	err = copyutil.CopyDir(path, expected)
 	if err != nil {
-		return "", nil, err
+		return types.FileSystemPath{}, nil, err
 	}
 
 	err = Process(expected)
 	if err != nil {
-		return "", nil, err
+		return types.FileSystemPath{}, nil, err
 	}
 
 	clean := func() {

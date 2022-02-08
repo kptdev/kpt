@@ -20,21 +20,20 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // PkgHasUpdatedUpstream checks if the the local package has different
 // upstream information than origin.
-func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
+func PkgHasUpdatedUpstream(local, origin types.FileSystemPath) (bool, error) {
 	const op errors.Op = "update.PkgHasUpdatedUpstream"
-	originKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, origin)
+	originKf, err := pkg.ReadKptfile(origin)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(local), err)
+		return false, errors.E(op, types.AsUniquePath(local), err)
 	}
 
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, local)
+	localKf, err := pkg.ReadKptfile(local)
 	if err != nil {
-		return false, errors.E(op, types.UniquePath(local), err)
+		return false, errors.E(op, types.AsUniquePath(local), err)
 	}
 
 	// If the upstream information in local has changed from origin, it

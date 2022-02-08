@@ -24,8 +24,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 	"github.com/Masterminds/semver"
 )
 
@@ -39,7 +39,7 @@ type Command struct {
 	Ref string
 
 	// Contains information about the package origin
-	Origin remote.Origin
+	Origin location.Reference
 
 	// Increment determines is the version portion of the reference should be increased
 	Increment bool
@@ -57,30 +57,31 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, err)
 	}
 
-	path := c.Pkg.UniquePath.String()
 	kf, err := c.Pkg.Kptfile()
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
 	if c.Origin == nil {
-		c.Origin, err = remote.NewOrigin(kf)
+		// c.Origin, err = remote.NewOrigin(kf)
+		err = fmt.Errorf("TODO(oci-support) persist origin value")
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("package must have an origin reference: %v", err))
 		}
 	}
 
 	if c.Ref != "" {
-		if err := c.Origin.SetRef(c.Ref); err != nil {
-			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
+		c.Origin, err = mutate.Identifier(c.Origin, c.Ref)
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %w", err))
 		}
 	}
 
 	if c.Increment {
 		// TODO(oci-support) move this logic into a util with test coverage
-		ref, err := c.Origin.Ref()
-		if err != nil {
-			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information: %v", err))
+		ref, ok := location.Identifier(c.Origin)
+		if !ok {
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information"))
 		}
 
 		prefix := ""
@@ -116,9 +117,11 @@ func (c Command) Run(ctx context.Context) error {
 
 		pr.Printf("Incrementing %s to %s\n", ref, buf.String())
 
-		if err := c.Origin.SetRef(buf.String()); err != nil {
+		new, err := mutate.Identifier(c.Origin, buf.String())
+		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
 		}
+		c.Origin = new
 	}
 
 	// the kptfile pushed in the package does not have origin data
@@ -129,20 +132,23 @@ func (c Command) Run(ctx context.Context) error {
 
 	pr.Printf("Pushing origin %s\n", c.Origin.String())
 
-	digest, err := c.Origin.Push(ctx, path, kf)
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
-	}
+	// digest, err := c.Origin.Push(ctx, path, kf)
+	// if err != nil {
+	// 	return errors.E(op, c.Pkg.UniquePath, err)
+	// }
 
-	pr.Printf("Pushed digest %s\n", digest)
+	// pr.Printf("Pushed digest %s\n", digest)
 
-	kf.Origin = c.Origin.Build(digest)
-	err = kptfileutil.WriteFile(path, kf)
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
-	}
+	// kf.Origin = c.Origin.Build(digest)
+	// err = kptfileutil.WriteFile(path, kf)
+	// if err != nil {
+	// 	return errors.E(op, c.Pkg.UniquePath, err)
+	// }
 
-	return nil
+	// return nil
+
+	// TODO(oci-support) push
+	return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("not implemented"))
 }
 
 // DefaultValues sets values to the default values if they were unspecified

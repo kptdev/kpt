@@ -19,6 +19,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // UniquePath represents absolute unique OS-defined path to the package directory on the filesystem.
@@ -60,4 +63,28 @@ type DisplayPath string
 // Empty returns true if the DisplayPath is empty
 func (u DisplayPath) Empty() bool {
 	return len(u) == 0
+}
+
+// FileSystemPath represents a FileSystem and Path pair. The Path is always valid on the
+// associated FileSystem, but is not guaranteed to be meaningful on the os disk or other
+// unrelated FileSystem instances.
+type FileSystemPath = paths.FileSystemPath
+
+// DiskPath returns a FileSystemPath pair for a location on the os disk.
+func DiskPath(path string) FileSystemPath {
+	return FileSystemPath{
+		FileSystem: filesys.MakeFsOnDisk(),
+		Path:       path,
+	}
+}
+
+func Join(path FileSystemPath, paths ...string) FileSystemPath {
+	return FileSystemPath{
+		FileSystem: path.FileSystem,
+		Path:       filepath.Join(append([]string{path.Path}, paths...)...),
+	}
+}
+
+func AsUniquePath(path FileSystemPath) UniquePath {
+	return UniquePath(path.Path)
 }
