@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -157,7 +158,7 @@ spec:
 				t.FailNow()
 			}
 
-			err = ProcessObsolete(baseDir)
+			err = Process(types.DiskPath(baseDir))
 			if test.errMsg != "" {
 				if !assert.NotNil(t, err) {
 					t.FailNow()

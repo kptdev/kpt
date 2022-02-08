@@ -16,10 +16,9 @@ package ioutil
 
 import (
 	"io/fs"
-	"path/filepath"
+	"io/ioutil"
 
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // ReadFile reads the file named by filename and returns the contents.
@@ -53,13 +52,20 @@ func WriteFile(filename types.FileSystemPath, data []byte, perm fs.FileMode) err
 //
 // As of Go 1.17, this function simply calls os.MkdirTemp.
 func TempDir(dir, pattern string) (name types.FileSystemPath, err error) {
-	if dir == "" {
-		dir = "/inmemory/tmp"
-	}
-	dir = filepath.Join("/", dir)
+	// TODO(dejardin) would be nice to have inmemory TempDir, but this wasn't compat enouch
+	// if dir == "" {
+	// 	dir = "/inmemory/tmp"
+	// }
+	// dir = filepath.Join("/", dir)
 
-	name.FileSystem = filesys.MakeFsInMemory()
-	name.Path = dir
-	err = name.FileSystem.MkdirAll(name.Path)
-	return
+	// name.FileSystem = filesys.MakeFsInMemory()
+	// name.Path = dir
+	// err = name.FileSystem.MkdirAll(name.Path)
+	// return
+
+	path, err := ioutil.TempDir(dir, pattern)
+	if err != nil {
+		return types.FileSystemPath{}, err
+	}
+	return types.DiskPath(path), nil
 }

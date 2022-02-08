@@ -538,12 +538,12 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			var pkgPaths []string
+			var pkgPaths []types.FileSystemPath
 			for _, p := range tc.pkgs {
-				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
+				pkgPaths = append(pkgPaths, types.DiskPath(p.ExpandPkg(t, testutil.EmptyReposInfo)))
 			}
 
-			paths, err := pkgutil.FindSubpackagesForPathsObsolete(pkg.Local, true, pkgPaths...)
+			paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, pkgPaths...)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

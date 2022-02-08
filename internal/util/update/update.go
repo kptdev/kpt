@@ -188,7 +188,7 @@ func (u Command) Run(ctx context.Context) error {
 	pr.Printf("\nUpdated %d package(s).\n", packageCount)
 
 	// finally, make sure that the merge comments are added to all resources in the updated package
-	if err := addmergecomment.ProcessObsolete(string(u.Pkg.UniquePath)); err != nil {
+	if err := addmergecomment.Process(types.DiskPath(u.Pkg.UniquePath.String())); err != nil {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	return nil

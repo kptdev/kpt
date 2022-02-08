@@ -148,3 +148,41 @@ func deleteFile(path types.FileSystemPath) error {
 	}
 	return os.Remove(path)
 }
+
+// CopyDir copies a src directory to a dst directory.  CopyDir skips copying the .git directory from the src.
+func CopyDir(src types.FileSystemPath, dst types.FileSystemPath) error {
+	return filepath.Walk(src, func(path types.FileSystemPath, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// don't copy the .git dir
+		if path != src {
+			rel := strings.TrimPrefix(path.Path, src.Path)
+			if copyutil.IsDotGitFolder(rel) {
+				return nil
+			}
+		}
+
+		// path is an absolute path, rather than a path relative to src.
+		// e.g. if src is /path/to/package, then path might be /path/to/package/and/sub/dir
+		// we need the path relative to src `and/sub/dir` when we are copying the files to dest.
+		copyTo := strings.TrimPrefix(path.Path, src.Path)
+
+		// make directories that don't exist
+		if info.IsDir() {
+			return os.MkdirAll(filepath.Join(dst, copyTo), info.Mode())
+		}
+
+		// copy file by reading and writing it
+		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

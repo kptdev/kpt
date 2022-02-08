@@ -457,18 +457,6 @@ func IsPackageDir(fsys filesys.FileSystem, path string) (bool, error) {
 	return true, nil
 }
 
-// IsPackageUnfetchedObsolete returns true if a package has Upstream information,
-// but no UpstreamLock. For local packages that doesn't have Upstream
-// information, it will always return false.
-// If a Kptfile is not found on the provided path, an error will be returned.
-func IsPackageUnfetchedObsolete(path string) (bool, error) {
-	kf, err := ReadKptfile(types.DiskPath(path))
-	if err != nil {
-		return false, err
-	}
-	return kf.Upstream != nil && kf.UpstreamLock == nil, nil
-}
-
 // IsPackageUnfetched returns true if a package has Upstream information,
 // but no UpstreamLock. For local packages that doesn't have Upstream
 // information, it will always return false.

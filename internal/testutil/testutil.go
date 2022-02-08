@@ -170,12 +170,12 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 	// get set of filenames in the package source
 	var newSourceDir string
 	if addMergeCommentsToSource {
-		dir, clean, err := addmergecomment.ProcessWithCleanup(sourceDir)
+		dir, clean, err := addmergecomment.ProcessWithCleanup(types.DiskPath(sourceDir))
 		defer clean()
 		if err != nil {
 			return sets.String{}, err
 		}
-		newSourceDir = dir
+		newSourceDir = dir.Path
 	}
 	if newSourceDir != "" {
 		sourceDir = newSourceDir
