@@ -25,9 +25,9 @@ import (
 func Reader(content Content) (kio.Reader, error) {
 	switch content := content.(type) {
 	case extensions.ReaderProvider:
-		return content.ProvideReader()
+		return content.Reader()
 	case extensions.FileSystemProvider:
-		fsys, path, err := content.ProvideFileSystem()
+		fsys, path, err := content.FileSystem()
 		if err != nil {
 			return nil, err
 		}

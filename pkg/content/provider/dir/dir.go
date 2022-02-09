@@ -89,14 +89,10 @@ func (p *tempProvider) Close() error {
 	return os.RemoveAll(p.path)
 }
 
-func (p *dirProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
+func (p *dirProvider) FileSystem() (filesys.FileSystem, string, error) {
 	return filesys.MakeFsOnDisk(), p.path, nil
 }
 
-func (p *dirProvider) ProvideFS() (fs.FS, error) {
+func (p *dirProvider) FS() (fs.FS, error) {
 	return os.DirFS(p.path), nil
-}
-
-func (p *dirProvider) ProvideRealPath() (string, error) {
-	return p.path, nil
 }

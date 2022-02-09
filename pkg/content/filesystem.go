@@ -24,7 +24,7 @@ import (
 func FileSystem(content Content) (paths.FileSystemPath, error) {
 	switch content := content.(type) {
 	case extensions.FileSystemProvider:
-		fsys, path, err := content.ProvideFileSystem()
+		fsys, path, err := content.FileSystem()
 		return paths.FileSystemPath{
 			FileSystem: fsys,
 			Path:       path,

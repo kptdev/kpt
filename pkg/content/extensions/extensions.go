@@ -34,15 +34,15 @@ type ChangeCommitter interface {
 
 type FileSystemProvider interface {
 	Content
-	ProvideFileSystem() (filesys.FileSystem, string, error)
+	FileSystem() (filesys.FileSystem, string, error)
 }
 
 type FSProvider interface {
 	Content
-	ProvideFS() (fs.FS, error)
+	FS() (fs.FS, error)
 }
 
 type ReaderProvider interface {
 	Content
-	ProvideReader() (kio.Reader, error)
+	Reader() (kio.Reader, error)
 }
