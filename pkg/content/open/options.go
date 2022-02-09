@@ -17,7 +17,8 @@ package open
 import "context"
 
 type options struct {
-	ctx context.Context
+	ctx       context.Context
+	providers []ContentProvider
 }
 
 func makeOptions(opts ...Option) options {
@@ -43,5 +44,13 @@ func Options(opts ...Option) Option {
 func WithContext(ctx context.Context) Option {
 	return func(opt *options) {
 		opt.ctx = ctx
+	}
+}
+
+// WithProviders option adds support for additional Reference location
+// types, or replaces the default Content strategy for built-in Reference types.
+func WithProviders(openers ...ContentProvider) Option {
+	return func(opt *options) {
+		opt.providers = append(opt.providers, openers...)
 	}
 }

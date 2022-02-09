@@ -15,7 +15,9 @@
 package open
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 
 	"github.com/GoogleContainerTools/kpt/pkg/content"
@@ -29,145 +31,189 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
-type open struct {
-	content.Content
-	location.Location
+var (
+	ErrUnknownReference = errors.New("unknown reference type")
+)
+
+type ContentResult struct {
+	io.Closer
+	Content       content.Content
+	Reference     location.Reference
+	ReferenceLock location.ReferenceLock
 }
 
-func Content(ref location.Reference, opts ...Option) (open, error) {
+// Content returns an initialized content.Content for the given
+// location.Reference address. The resolved location.ReferenceLock address
+// is also returned for locations that support immutable history.
+// Close must be called on the result Content to ensure proper cleanup of
+// temporary resources.
+func Content(ref location.Reference, opts ...Option) (ContentResult, error) {
 	opt := makeOptions(opts...)
 
-	// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) custom opener as an ...Option
+	for _, provider := range opt.providers {
+		content, refNew, refLock, err := provider.Content(opt.ctx, ref)
+		if err != nil {
+			if errors.Is(err, ErrUnknownReference) {
+				continue
+			}
+			return ContentResult{}, fmt.Errorf("error opening content %q: %w", ref, err)
+		}
+		return ContentResult{
+			Closer:        content,
+			Content:       content,
+			Reference:     refNew,
+			ReferenceLock: refLock,
+		}, nil
+	}
 
 	switch ref := ref.(type) {
 	case location.Dir:
-		provider, err := dir.Open(ref)
+		c, err := dir.Open(ref)
 		if err != nil {
-			return open{}, err
+			return ContentResult{}, err
 		}
-		return open{
-			Content: provider,
-			Location: location.Location{
-				Reference: ref,
-			},
+		return ContentResult{
+			Closer:    c,
+			Content:   c,
+			Reference: ref,
 		}, nil
 	case location.Git:
-		provider, lock, err := git.Open(opt.ctx, ref)
+		c, lock, err := git.Open(opt.ctx, ref)
 		if err != nil {
-			return open{}, err
+			return ContentResult{}, err
 		}
-		return open{
-			Content: provider,
-			Location: location.Location{
-				Reference:     ref,
-				ReferenceLock: lock,
-			},
+		return ContentResult{
+			Closer:        c,
+			Content:       c,
+			Reference:     ref,
+			ReferenceLock: lock,
 		}, nil
 	case location.GitLock:
-		provider, lock, err := git.OpenLock(opt.ctx, ref)
+		c, lock, err := git.OpenLock(opt.ctx, ref)
 		if err != nil {
-			return open{}, err
+			return ContentResult{}, err
 		}
-		return open{
-			Content: provider,
-			Location: location.Location{
-				Reference:     ref,
-				ReferenceLock: lock,
-			},
+		return ContentResult{
+			Closer:        c,
+			Content:       c,
+			Reference:     ref,
+			ReferenceLock: lock,
 		}, nil
 	case location.Oci:
 		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) pass through options for build-in openers like oci
 
-		provider, lock, err := oci.Open(
+		c, lock, err := oci.Open(
 			ref,
 			remote.WithAuthFromKeychain(gcrane.Keychain),
 			remote.WithContext(opt.ctx))
 		if err != nil {
-			return open{}, err
+			return ContentResult{}, err
 		}
-		return open{
-			Content: provider,
-			Location: location.Location{
-				Reference:     ref,
-				ReferenceLock: lock,
-			},
+		return ContentResult{
+			Closer:        c,
+			Content:       c,
+			Reference:     ref,
+			ReferenceLock: lock,
 		}, nil
 	case location.OciLock:
-		provider, lock, err := oci.OpenLock(
+		c, lock, err := oci.OpenLock(
 			ref,
 			remote.WithAuthFromKeychain(gcrane.Keychain),
 			remote.WithContext(opt.ctx))
 		if err != nil {
-			return open{}, err
+			return ContentResult{}, err
 		}
-		return open{
-			Content: provider,
-			Location: location.Location{
-				Reference:     ref,
-				ReferenceLock: lock,
-			},
+		return ContentResult{
+			Closer:        c,
+			Content:       c,
+			Reference:     ref,
+			ReferenceLock: lock,
 		}, nil
 	}
 
 	// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) have an additional case
 	// in the switch for custom Reference types that implement a ContentOpener extension
 
-	return open{}, fmt.Errorf("not supported")
+	return ContentResult{}, fmt.Errorf("error opening content %q: %w", ref, ErrUnknownReference)
 }
 
-type openFS struct {
-	content.Content
-	location.Location
-	FS fs.FS
+type FSResult struct {
+	io.Closer
+	Content       content.Content
+	Reference     location.Reference
+	ReferenceLock location.ReferenceLock
+	FS            fs.FS
 }
 
-func FS(ref location.Reference, opts ...Option) (openFS, error) {
-	open, err := Content(ref, opts...)
+func FS(ref location.Reference, opts ...Option) (FSResult, error) {
+	r, err := Content(ref, opts...)
 	if err != nil {
-		return openFS{}, err
+		return FSResult{}, err
 	}
-	fsys, err := content.FS(open.Content)
+	fsys, err := content.FS(r.Content)
 	if err != nil {
-		open.Close()
-		return openFS{}, err
+		r.Content.Close()
+		return FSResult{}, err
 	}
-	return openFS{open.Content, open.Location, fsys}, nil
+	return FSResult{
+		Closer:        r.Closer,
+		Content:       r.Content,
+		Reference:     r.Reference,
+		ReferenceLock: r.ReferenceLock,
+		FS:            fsys,
+	}, nil
 }
 
-type openFileSystem struct {
-	content.Content
-	location.Location
+type FileSystemResult struct {
+	io.Closer
+	Content       content.Content
+	Reference     location.Reference
+	ReferenceLock location.ReferenceLock
 	paths.FileSystemPath
 }
 
-func FileSystem(ref location.Reference, opts ...Option) (openFileSystem, error) {
-	open, err := Content(ref, opts...)
+func FileSystem(ref location.Reference, opts ...Option) (FileSystemResult, error) {
+	r, err := Content(ref, opts...)
 	if err != nil {
-		return openFileSystem{}, err
+		return FileSystemResult{}, err
 	}
-	path, err := content.FileSystem(open.Content)
+	fsp, err := content.FileSystem(r.Content)
 	if err != nil {
-		open.Close()
-		return openFileSystem{}, err
+		r.Content.Close()
+		return FileSystemResult{}, err
 	}
-	return openFileSystem{open.Content, open.Location, path}, nil
+	return FileSystemResult{
+		Closer:         r.Closer,
+		Content:        r.Content,
+		Reference:      r.Reference,
+		ReferenceLock:  r.ReferenceLock,
+		FileSystemPath: fsp,
+	}, nil
 }
 
-type openReader struct {
-	content.Content
-	location.Location
-	Reader kio.Reader
+type ReaderResult struct {
+	io.Closer
+	Content       content.Content
+	Reference     location.Reference
+	ReferenceLock location.ReferenceLock
+	Reader        kio.Reader
 }
 
-func Reader(ref location.Reference, opts ...Option) (openReader, error) {
-	open, err := Content(ref, opts...)
+func Reader(ref location.Reference, opts ...Option) (ReaderResult, error) {
+	r, err := Content(ref, opts...)
 	if err != nil {
-		return openReader{}, err
+		return ReaderResult{}, err
 	}
-	reader, err := content.Reader(open.Content)
+	reader, err := content.Reader(r.Content)
 	if err != nil {
-		open.Close()
-		return openReader{}, err
+		r.Close()
+		return ReaderResult{}, err
 	}
-	return openReader{open.Content, open.Location, reader}, nil
+	return ReaderResult{
+		Closer:        r.Closer,
+		Content:       r.Content,
+		Reference:     r.Reference,
+		ReferenceLock: r.ReferenceLock,
+		Reader:        reader,
+	}, nil
 }

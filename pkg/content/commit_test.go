@@ -12,25 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package location
+package content
 
 import (
-	"fmt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type Location struct {
-	Reference     Reference
-	ReferenceLock ReferenceLock
+func TestCommitNotSupported(t *testing.T) {
+	// arrange
+	c := &testContent{}
+
+	// act
+	ref, lock, err := Commit(c)
+
+	// assert
+	assert.Nil(t, ref)
+	assert.Nil(t, lock)
+	assert.ErrorIs(t, err, ErrNotCommittable)
+	assert.Equal(t, "invalid *content.testContent operation: not committable", err.Error())
 }
 
-var _ fmt.Stringer = Location{}
-
-func (p Location) String() string {
-	if p.ReferenceLock != nil {
-		return p.ReferenceLock.String()
-	}
-	if p.Reference != nil {
-		return p.Reference.String()
-	}
-	return fmt.Sprintf("%v", nil)
+type testContent struct {
 }
+
+func (testContent) Close() error {
+	return nil
+}
+
+var _ Content = &testContent{}
