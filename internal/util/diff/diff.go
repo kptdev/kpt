@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/open"
 	"github.com/GoogleContainerTools/kpt/pkg/content/provider/dir"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -145,16 +146,20 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// Create a staging directory to store all compared packages
-	stagingDirectory, err := dir.MkdirTemp("kpt-")
+	temp, err := dir.Temp("kpt-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
 	}
-	defer stagingDirectory.Close()
+	defer temp.Close()
+	stagingDirectory, err := content.FileSystem(temp)
+	if err != nil {
+		return errors.Errorf("failed to create stage dir: %v", err)
+	}
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
 	localPkgName := NameStagingDirectory(LocalPackageSource, upstreamIdentifier)
-	currPkg, err := stageDirectory(stagingDirectory.FileSystemPath, localPkgName)
+	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
@@ -164,7 +169,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 	// get the upstreamPkg at current version
 	upstreamPkgName := NameStagingDirectory(RemotePackageSource, upstreamIdentifier)
-	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, stagingDirectory.FileSystemPath, upstreamPkgName, upstream)
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, stagingDirectory, upstreamPkgName, upstream)
 	if err != nil {
 		return err
 	}
@@ -196,7 +201,7 @@ func (c *Command) Run(ctx context.Context) error {
 			return err
 		}
 		upstreamTargetPkgName := NameStagingDirectory(TargetRemotePackageSource, c.Ref)
-		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, stagingDirectory.FileSystemPath, upstreamTargetPkgName, upstreamTarget)
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, stagingDirectory, upstreamTargetPkgName, upstreamTarget)
 		if err != nil {
 			return err
 		}
