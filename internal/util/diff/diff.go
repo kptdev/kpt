@@ -32,7 +32,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/content/provider/dir"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
-	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 
 	"github.com/GoogleContainerTools/kpt/internal/migration/os"
@@ -139,7 +138,7 @@ func (c *Command) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Errorf("upstream required: %v", err)
 	}
-	upstreamIdentifier, ok := location.Identifier(upstream)
+	upstreamRev, ok := location.GetRevision(upstream)
 	if !ok {
 		return errors.Errorf("upstream ref required: %w", errors.Errorf("identified not supported by %v", upstream))
 	}
@@ -153,7 +152,7 @@ func (c *Command) Run(ctx context.Context) error {
 
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
-	localPkgName := NameStagingDirectory(LocalPackageSource, upstreamIdentifier)
+	localPkgName := NameStagingDirectory(LocalPackageSource, upstreamRev)
 	currPkg, err := stageDirectory(stagingDirectory.FileSystemPath, localPkgName)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
@@ -163,7 +162,7 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}
 	// get the upstreamPkg at current version
-	upstreamPkgName := NameStagingDirectory(RemotePackageSource, upstreamIdentifier)
+	upstreamPkgName := NameStagingDirectory(RemotePackageSource, upstreamRev)
 	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, stagingDirectory.FileSystemPath, upstreamPkgName, upstream)
 	if err != nil {
 		return err
@@ -177,12 +176,12 @@ func (c *Command) Run(ctx context.Context) error {
 			return err
 		}
 
-		defaultIdentifier, err := location.DefaultIdentifier(upstreamLock, location.WithContext(ctx))
+		defaultRev, err := location.DefaultRevision(upstreamLock, location.WithContext(ctx))
 		if err != nil {
 			return err
 		}
 
-		c.Ref = defaultIdentifier
+		c.Ref = defaultRev
 	}
 
 	var upstreamTarget location.Reference
@@ -191,7 +190,7 @@ func (c *Command) Run(ctx context.Context) error {
 		c.DiffType == DiffType3Way {
 
 		// get the upstream pkg at the target version
-		upstreamTarget, err = mutate.Identifier(upstream, c.Ref)
+		upstreamTarget, err = location.WithRevision(upstream, c.Ref)
 		if err != nil {
 			return err
 		}

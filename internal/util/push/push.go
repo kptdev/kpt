@@ -25,7 +25,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
-	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 	"github.com/Masterminds/semver"
 )
 
@@ -71,7 +70,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if c.Ref != "" {
-		c.Origin, err = mutate.Identifier(c.Origin, c.Ref)
+		c.Origin, err = location.WithRevision(c.Origin, c.Ref)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %w", err))
 		}
@@ -79,24 +78,24 @@ func (c Command) Run(ctx context.Context) error {
 
 	if c.Increment {
 		// TODO(oci-support) move this logic into a util with test coverage
-		ref, ok := location.Identifier(c.Origin)
+		rev, ok := location.GetRevision(c.Origin)
 		if !ok {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("missing origin version information"))
 		}
 
 		prefix := ""
-		if ref != "" && ref[:1] == "v" {
+		if rev != "" && rev[:1] == "v" {
 			prefix = "v"
 		}
 
-		dotParts := len(strings.SplitN(ref, ".", 3))
+		dotParts := len(strings.SplitN(rev, ".", 3))
 		if dotParts > 3 {
-			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("origin version '%s' has more than three dotted parts", ref))
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("origin version '%s' has more than three dotted parts", rev))
 		}
 
-		v, err := semver.NewVersion(ref)
+		v, err := semver.NewVersion(rev)
 		if err != nil {
-			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("unable to increment '%s': %v", ref, err))
+			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("unable to increment '%s': %v", rev, err))
 		}
 
 		var buf bytes.Buffer
@@ -115,9 +114,9 @@ func (c Command) Run(ctx context.Context) error {
 			fmt.Fprintf(&buf, "+%s", v.Metadata())
 		}
 
-		pr.Printf("Incrementing %s to %s\n", ref, buf.String())
+		pr.Printf("Incrementing %s to %s\n", rev, buf.String())
 
-		new, err := mutate.Identifier(c.Origin, buf.String())
+		new, err := location.WithRevision(c.Origin, buf.String())
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
 		}
