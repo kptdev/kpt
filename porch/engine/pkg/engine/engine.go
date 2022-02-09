@@ -28,12 +28,8 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
-	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"k8s.io/klog/v2"
 )
 
 type CaDEngine interface {
@@ -45,36 +41,12 @@ type CaDEngine interface {
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions) ([]repository.Function, error)
 }
 
-func NewCaDEngine(cache *cache.Cache, functionRunnerAddress string) (CaDEngine, error) {
-	runtime, err := createFunctionRuntime(functionRunnerAddress)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create function runtime: %w", err)
+func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
+	engine := &cadEngine{}
+	for _, opt := range opts {
+		opt.apply(engine)
 	}
-
-	return &cadEngine{
-		cache:    cache,
-		renderer: kpt.NewRenderer(),
-		runtime:  runtime,
-	}, nil
-}
-
-func createFunctionRuntime(address string) (kpt.FunctionRuntime, error) {
-	if address == "" {
-		klog.Warningf("Using simple kpt function runner (in-process)")
-		return kpt.NewSimpleFunctionRuntime(), nil
-	}
-
-	klog.Infof("Dialing grpc function runner %q", address)
-
-	cc, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial grpc function evaluator: %w", err)
-	}
-
-	return &grpcRuntime{
-		cc:     cc,
-		client: evaluator.NewFunctionEvaluatorClient(cc),
-	}, err
+	return engine, nil
 }
 
 type cadEngine struct {

@@ -162,8 +162,8 @@ func (c completedConfig) New() (*PorchServer, error) {
 
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory)
 	cad, err := engine.NewCaDEngine(
-		cache,
-		c.ExtraConfig.FunctionRunnerAddress,
+		engine.WithCache(cache),
+		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 	)
 
 	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)
