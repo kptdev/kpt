@@ -27,8 +27,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // PkgUpdateOpts are options for invoking kpt PkgUpdate
@@ -172,9 +174,9 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 
 		updateOptions := update.UpdateOptions{
 			RelPackagePath: relPath,
-			LocalPath:      localPath,
-			UpdatedPath:    updatedPath,
-			OriginPath:     originPath,
+			LocalPath:      diskPath(localPath),
+			UpdatedPath:    diskPath(updatedPath),
+			OriginPath:     diskPath(originPath),
 			IsRoot:         isRoot,
 		}
 		updater := update.ResourceMergeUpdater{}
@@ -197,4 +199,15 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 	}
 
 	return nil
+}
+
+// diskPath is an expediant way to get a paths.FileSystemPath from a dir absolute path.
+//
+// an alternative is `d, err := dir.Open(path)` where the returned value can be used
+// in more ways like `fsp, err := content.FileSystem(d)` and `reader, err := content.Reader(d)`
+func diskPath(path string) paths.FileSystemPath {
+	return paths.FileSystemPath{
+		FileSystem: filesys.MakeFsOnDisk(),
+		Path:       path,
+	}
 }
