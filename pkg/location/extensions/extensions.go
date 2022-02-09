@@ -30,11 +30,11 @@ type ReferenceLock interface {
 }
 
 // Revisable is present on Reference types that
-// support location.GetRevision and location.WithRevision.
+// support location.GetRevision and location.SetRevision.
 type Revisable interface {
 	Reference
 	GetRevision() (string, bool)
-	WithRevision(revision string) (Reference, error)
+	SetRevision(revision string) (Reference, error)
 }
 
 // DefaultRevisionProvider is present on Reference types that

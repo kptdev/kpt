@@ -24,7 +24,7 @@ import (
 )
 
 //nolint:scopelint
-func TestWithRevision(t *testing.T) {
+func TestSetRevision(t *testing.T) {
 	type args struct {
 		ref      Reference
 		revision string
@@ -36,7 +36,7 @@ func TestWithRevision(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "OciWithRevision",
+			name: "OciSetRevision",
 			args: args{
 				ref: Oci{
 					Image:     name.MustParseReference("my-registry.io/name:original"),
@@ -51,7 +51,7 @@ func TestWithRevision(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "GitWithRevision",
+			name: "GitSetRevision",
 			args: args{
 				ref: Git{
 					Repo:      "repo",
@@ -68,7 +68,7 @@ func TestWithRevision(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "CustomWithRevision",
+			name: "CustomSetRevision",
 			args: args{
 				ref: custom{
 					Place: "place",
@@ -85,13 +85,13 @@ func TestWithRevision(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := WithRevision(tt.args.ref, tt.args.revision)
+			got, err := SetRevision(tt.args.ref, tt.args.revision)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("WithRevision() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SetRevision() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("WithRevision() = %v, want %v", got, tt.want)
+				t.Errorf("SetRevision() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -124,7 +124,7 @@ func (ref custom) Validate() error {
 func (ref custom) GetRevision() (string, bool) {
 	return ref.Label, true
 }
-func (ref custom) WithRevision(revision string) (Reference, error) {
+func (ref custom) SetRevision(revision string) (Reference, error) {
 	return custom{
 		Place: ref.Place,
 		Label: revision,
