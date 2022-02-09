@@ -176,7 +176,7 @@ func (ref Oci) GetRevision() (string, bool) {
 	return ref.Image.Identifier(), true
 }
 
-func (ref Oci) WithRevision(revision string) (Reference, error) {
+func (ref Oci) SetRevision(revision string) (Reference, error) {
 	return Oci{
 		Image:     ref.Image.Context().Tag(revision),
 		Directory: ref.Directory,

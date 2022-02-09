@@ -186,8 +186,7 @@ func (ref Git) GetRevision() (string, bool) {
 	return ref.Ref, true
 }
 
-// SetIdentifier is called from mutate.Identifier
-func (ref Git) WithRevision(revision string) (Reference, error) {
+func (ref Git) SetRevision(revision string) (Reference, error) {
 	return Git{
 		Repo:      ref.Repo,
 		Directory: ref.Directory,

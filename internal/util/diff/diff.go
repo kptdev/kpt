@@ -195,7 +195,7 @@ func (c *Command) Run(ctx context.Context) error {
 		c.DiffType == DiffType3Way {
 
 		// get the upstream pkg at the target version
-		upstreamTarget, err = location.WithRevision(upstream, c.Ref)
+		upstreamTarget, err = location.SetRevision(upstream, c.Ref)
 		if err != nil {
 			return err
 		}

@@ -129,7 +129,7 @@ func main() {
 	}
 	fmt.Printf("ref: %v\n", ref)
 
-	updated, _ := location.WithRevision(ref, "preview")
+	updated, _ := location.SetRevision(ref, "preview")
 	fmt.Printf("updated: %v\n", updated)
 
 	locked, _ := mutate.Lock(updated, "98510723450981325098375013")
@@ -156,7 +156,7 @@ func run(arg string, revision string, lock string, opts ...location.Option) erro
 	var changed location.Reference
 	if revision != "" {
 		// changing reference's pkg revision field
-		changed, err = location.WithRevision(parsed, revision)
+		changed, err = location.SetRevision(parsed, revision)
 		if err != nil {
 			return err
 		}
@@ -229,14 +229,14 @@ func (ref CustomLocationLock) String() string {
 	return fmt.Sprintf("custom:%s:%s@%s", ref.WhereItIs, ref.LabelOrVersionString, ref.UniqueIDString)
 }
 
-// WithRevision returns the value that may be branch/label/version/tag/etc
+// GetRevision returns the value that may be branch/label/version/tag/etc
 func (ref CustomLocation) GetRevision() (string, bool) {
 	return ref.LabelOrVersionString, true
 }
 
-// return location with only the revision changed depending on location,
+// SetRevision returns location with only the revision changed depending on location,
 // the exact meaning may be branch/label/version/tag/etc
-func (ref CustomLocation) WithRevision(labelOrVersion string) (location.Reference, error) {
+func (ref CustomLocation) SetRevision(labelOrVersion string) (location.Reference, error) {
 	return CustomLocation{
 		WhereItIs:            ref.WhereItIs,
 		LabelOrVersionString: labelOrVersion,

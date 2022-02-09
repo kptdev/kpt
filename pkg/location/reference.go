@@ -35,14 +35,14 @@ func GetRevision(ref Reference) (string, bool) {
 	return "", false
 }
 
-// WithRevision returns a new Reference where the property that
+// SetRevision returns a new Reference where the property that
 // identifies the branch, tag, or label has been replaced with value given.
 // Typical revision values are often a semantic name like 'draft', 'main', 'prod', or a
 // string representation of a version. The specifics of how the revision is
 // mapped to storage depends on the type of reference.
-func WithRevision(ref Reference, revision string) (Reference, error) {
+func SetRevision(ref Reference, revision string) (Reference, error) {
 	if ref, ok := ref.(extensions.Revisable); ok {
-		return ref.WithRevision(revision)
+		return ref.SetRevision(revision)
 	}
 	return nil, fmt.Errorf("changing revision not supported for reference: %v", ref)
 }

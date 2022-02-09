@@ -70,7 +70,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	if c.Ref != "" {
-		c.Origin, err = location.WithRevision(c.Origin, c.Ref)
+		c.Origin, err = location.SetRevision(c.Origin, c.Ref)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %w", err))
 		}
@@ -116,7 +116,7 @@ func (c Command) Run(ctx context.Context) error {
 
 		pr.Printf("Incrementing %s to %s\n", rev, buf.String())
 
-		new, err := location.WithRevision(c.Origin, buf.String())
+		new, err := location.SetRevision(c.Origin, buf.String())
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, fmt.Errorf("error updating ref: %v", err))
 		}
