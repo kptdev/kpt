@@ -30,6 +30,7 @@ func FileSystem(content Content) (paths.FileSystemPath, error) {
 			Path:       path,
 		}, err
 	default:
+		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2764) add additional cases with adapters
 		return paths.FileSystemPath{}, fmt.Errorf("not implemented")
 	}
 }

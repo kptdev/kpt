@@ -38,6 +38,7 @@ func Reader(content Content) (kio.Reader, error) {
 			FileSystem: filesys.FileSystemOrOnDisk{FileSystem: fsys},
 		}, err
 	default:
+		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2764) add additional cases with adapters
 		return nil, fmt.Errorf("not implemented")
 	}
 }

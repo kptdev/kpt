@@ -26,6 +26,7 @@ func FS(content Content) (fs.FS, error) {
 	case extensions.FSProvider:
 		return content.ProvideFS()
 	default:
+		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2764) add additional cases with adapters
 		return nil, fmt.Errorf("not implemented")
 	}
 }
