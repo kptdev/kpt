@@ -134,7 +134,7 @@ func openContent(ctx context.Context, ref location.Reference) error {
 	}
 	defer src.Close()
 
-	fmt.Printf("opened %v\n", src.Location)
+	fmt.Printf("opened %v\n", src.Reference)
 	return nil
 }
 

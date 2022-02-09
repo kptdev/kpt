@@ -75,7 +75,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 	defer dst.Close()
 
-	pr.Printf("Adding package %q.\n", src.Location)
+	pr.Printf("Adding package %q.\n", src.Reference)
 
 	// copy package from source to destination
 	if err := pkgutil.CopyPackage(src.FileSystemPath, dst.FileSystemPath, true, pkg.All); err != nil {

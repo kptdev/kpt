@@ -29,7 +29,7 @@ type Content interface {
 
 type ChangeCommitter interface {
 	Content
-	CommitChanges() (location.Location, error)
+	CommitChanges() (location.Reference, location.ReferenceLock, error)
 }
 
 type FileSystemProvider interface {

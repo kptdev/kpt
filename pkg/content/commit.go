@@ -15,15 +15,22 @@
 package content
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
 )
 
-func Commit(content Content) (location.Location, error) {
+var (
+	ErrNotCommittable = errors.New("not committable")
+)
+
+func Commit(content Content) (location.Reference, location.ReferenceLock, error) {
 	switch content := content.(type) {
 	case extensions.ChangeCommitter:
 		return content.CommitChanges()
 	default:
-		return location.Location{}, nil
+		return nil, nil, fmt.Errorf("invalid %T operation: %w", content, ErrNotCommittable)
 	}
 }
