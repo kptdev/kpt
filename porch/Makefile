@@ -90,7 +90,7 @@ generate: $(MODULES)
 
 .PHONY: tidy
 tidy: $(MODULES)
-	@for f in $(^D); do (cd $$f; echo "Tidying $$f"; go mod tidy) || exit 1; done
+	@for f in $(^D); do (cd $$f; echo "Tidying $$f"; go mod tidy -compat=1.17) || exit 1; done
 
 .PHONY: test
 test: $(MODULES)
