@@ -134,11 +134,11 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 			packageCount += 1
 			pr.PrintPackage(p, !(p == rootPkg))
 
-			ref, err := kptfileutil.NewReferenceFromUpstream(kf)
+			upstream, err := kptfileutil.NewReferenceFromUpstream(kf)
 			if err != nil {
 				return errors.E(op, p.UniquePath, err)
 			}
-			pr.Printf("Fetching %s\n", ref.String())
+			pr.Printf("Fetching %s\n", upstream.String())
 
 			err = (&fetch.Command{
 				Pkg: p,
