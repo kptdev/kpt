@@ -80,7 +80,7 @@ func open(ctx context.Context, ref location.Reference, repoSpec *git.RepoSpec) (
 	}()
 
 	// repoSpec.Ref may different if "path/ref" matched a tag
-	clonedRef, err := mutate.Identifier(ref, repoSpec.Ref)
+	clonedRef, err := location.WithRevision(ref, repoSpec.Ref)
 	if err != nil {
 		return nil, nil, err
 	}
