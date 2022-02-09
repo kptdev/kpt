@@ -20,7 +20,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/content"
 	"github.com/GoogleContainerTools/kpt/pkg/content/extensions"
-	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -36,7 +35,6 @@ type tempProvider struct {
 var _ content.Content = &dirProvider{}
 var _ extensions.FileSystemProvider = &dirProvider{}
 var _ extensions.FSProvider = &dirProvider{}
-var _ extensions.RealPathProvider = &dirProvider{}
 
 func Open(ref location.Dir) (*dirProvider, error) {
 	return &dirProvider{
@@ -44,32 +42,42 @@ func Open(ref location.Dir) (*dirProvider, error) {
 	}, nil
 }
 
-type MkdirTempResult struct {
+// TempResult is the return value of the dir.Temp function
+type TempResult struct {
+	// Content is the open temporary directory. A call to
+	// content.FileSystem() function may be used to access
+	// the information it contains.
+	//
+	// Close must be called on the Content instance to remove
+	// the temporary directory.
 	content.Content
-	paths.FileSystemPath
+
+	// AbsolutePath is the actual location of the
+	// temporary directory. It may be used as a normal
+	// path in OS api calls and passed to other processes
+	// in path arguments.
+	AbsolutePath string
 }
 
-func MkdirTemp(pattern string) (MkdirTempResult, error) {
+// Temp creates a temporary directory by calling
+// os.MkdirTemp and returns the open content.Content
+// as well as the AbsolutePath.
+//
+// Close() must be called on the returned Content
+// in order to remove the temporary directory.
+func Temp(pattern string) (TempResult, error) {
 	path, err := os.MkdirTemp("", pattern)
 	if err != nil {
-		return MkdirTempResult{}, err
+		return TempResult{}, err
 	}
 	temp := &tempProvider{
 		dirProvider{
 			path: path,
 		},
 	}
-	fsys, path, err := temp.ProvideFileSystem()
-	if err != nil {
-		temp.Close()
-		return MkdirTempResult{}, err
-	}
-	return MkdirTempResult{
-		Content: temp,
-		FileSystemPath: paths.FileSystemPath{
-			FileSystem: fsys,
-			Path:       path,
-		},
+	return TempResult{
+		Content:      temp,
+		AbsolutePath: path,
 	}, nil
 }
 
