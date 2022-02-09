@@ -20,6 +20,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
 	"github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/registry/porch"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -74,6 +76,8 @@ type Config struct {
 // PorchServer contains state for a Kubernetes cluster master/api server.
 type PorchServer struct {
 	GenericAPIServer *genericapiserver.GenericAPIServer
+	coreClient       client.WithWatch
+	cache            *cache.Cache
 }
 
 type completedConfig struct {
@@ -151,28 +155,37 @@ func (c completedConfig) New() (*PorchServer, error) {
 		return nil, err
 	}
 
-	s := &PorchServer{
-		GenericAPIServer: genericServer,
-	}
-
 	coreClient, err := c.getCoreClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build client for core apiserver: %w", err)
 	}
 
-	porchGroup, err := porch.NewRESTStorage(
-		Scheme, Codecs, c.GenericConfig.RESTOptionsGetter, coreClient,
-		c.ExtraConfig.CacheDirectory, c.ExtraConfig.FunctionRunnerAddress)
+	cache := cache.NewCache(c.ExtraConfig.CacheDirectory)
+	cad, err := engine.NewCaDEngine(
+		cache,
+		c.ExtraConfig.FunctionRunnerAddress,
+	)
+
+	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)
 	if err != nil {
 		return nil, err
 	}
 
+	s := &PorchServer{
+		GenericAPIServer: genericServer,
+		coreClient:       coreClient,
+		cache:            cache,
+	}
+
 	// Install the groups.
-	if err := s.GenericAPIServer.InstallAPIGroups(
-		&porchGroup,
-	); err != nil {
+	if err := s.GenericAPIServer.InstallAPIGroups(&porchGroup); err != nil {
 		return nil, err
 	}
 
 	return s, nil
+}
+
+func (s *PorchServer) Run(stopCh <-chan struct{}) error {
+	porch.RunBackground(s.coreClient, s.cache, stopCh)
+	return s.GenericAPIServer.PrepareRun().Run(stopCh)
 }

@@ -15,30 +15,17 @@
 package porch
 
 import (
-	"context"
-
 	"github.com/GoogleContainerTools/kpt/porch/api/porch"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
-	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	genericregistry "k8s.io/apiserver/pkg/registry/generic"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, restOptionsGetter genericregistry.RESTOptionsGetter,
-	coreClient client.WithWatch, cacheDirectory string, functionRunnerAddress string) (genericapiserver.APIGroupInfo, error) {
-
-	c := cache.NewCache(cacheDirectory)
-	cad, err := engine.NewCaDEngine(c, functionRunnerAddress)
-
-	if err != nil {
-		return genericapiserver.APIGroupInfo{}, err
-	}
-
+func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad engine.CaDEngine, coreClient client.WithWatch) (genericapiserver.APIGroupInfo, error) {
 	packageRevisions := &packageRevisions{
 		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisions")),
 		packageCommon: packageCommon{
@@ -72,13 +59,6 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, rest
 			"functions":                functions,
 		},
 	}
-
-	b := background{
-		coreClient: coreClient,
-		cache:      c,
-	}
-	ctx := context.Background() // TODO: support cancellation
-	go b.RunForever(ctx)
 
 	return group, nil
 }

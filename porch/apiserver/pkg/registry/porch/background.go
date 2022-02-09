@@ -28,14 +28,23 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 )
 
+func RunBackground(coreClient client.WithWatch, cache *cache.Cache, stopCh <-chan struct{}) {
+	b := background{
+		coreClient: coreClient,
+		cache:      cache,
+	}
+	ctx := context.Background()
+	go b.run(ctx, stopCh)
+}
+
 // background manages background tasks
 type background struct {
 	coreClient client.WithWatch
 	cache      *cache.Cache
 }
 
-// RunForever will run until ctx is done
-func (b *background) RunForever(ctx context.Context) {
+// run will run until ctx is done or stopCh is closed
+func (b *background) run(ctx context.Context, stopCh <-chan struct{}) {
 	klog.Infof("Background routine starting ...")
 
 	// Repository watch.
@@ -101,6 +110,10 @@ loop:
 			} else {
 				klog.Infof("Background routine exiting; context done")
 			}
+			break loop
+
+		case <-stopCh:
+			klog.Info("Background routine exiting; stop channel closed")
 			break loop
 		}
 	}

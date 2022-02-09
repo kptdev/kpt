@@ -206,7 +206,7 @@ func (o PorchServerOptions) RunPorchServer(stopCh <-chan struct{}) error {
 		})
 	}
 
-	return server.GenericAPIServer.PrepareRun().Run(stopCh)
+	return server.Run(stopCh)
 }
 
 func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {
