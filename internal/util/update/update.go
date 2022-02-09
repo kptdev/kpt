@@ -194,6 +194,8 @@ func (u Command) Run(ctx context.Context) error {
 	return nil
 }
 
+// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
+// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
 func shouldUpdateSubPkgRef(rootPkgUpstream, subPkgUpstream location.Reference) bool {
 	rel, err := location.Rel(rootPkgUpstream, subPkgUpstream)
 	if err != nil {
