@@ -51,7 +51,7 @@ type GitRepository interface {
 	GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
-func OpenRepository(name, namespace string, spec *configapi.GitRepository, resolver repository.CredentialResolver, root string) (GitRepository, error) {
+func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, resolver repository.CredentialResolver, root string) (GitRepository, error) {
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 
@@ -64,8 +64,7 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, resol
 		}
 
 		if secret := spec.SecretRef.Name; secret != "" && resolver != nil {
-			// TODO: pass Context into OpenRepository
-			auth, err = resolveCredential(context.TODO(), namespace, secret, resolver)
+			auth, err = resolveCredential(ctx, namespace, secret, resolver)
 			if err != nil {
 				return nil, err
 			}

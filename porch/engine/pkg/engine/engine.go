@@ -33,7 +33,7 @@ import (
 )
 
 type CaDEngine interface {
-	OpenRepository(repositorySpec *configapi.Repository) (repository.Repository, error)
+	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
@@ -62,12 +62,12 @@ type mutation interface {
 	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
 }
 
-func (cad *cadEngine) OpenRepository(repositorySpec *configapi.Repository) (repository.Repository, error) {
-	return cad.cache.OpenRepository(repositorySpec)
+func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {
+	return cad.cache.OpenRepository(ctx, repositorySpec)
 }
 
 func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj)
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 }
 
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj)
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {
-	repo, err := cad.cache.OpenRepository(repositoryObj)
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 }
 
 func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj)
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func updateDraft(ctx context.Context, draft repository.PackageDraft, baseResourc
 }
 
 func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj)
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
 	}
