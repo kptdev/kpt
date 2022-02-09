@@ -36,7 +36,7 @@ var _ content.Content = &dirProvider{}
 var _ extensions.FileSystemProvider = &dirProvider{}
 var _ extensions.FSProvider = &dirProvider{}
 
-func Open(ref location.Dir) (*dirProvider, error) {
+func Open(ref location.Dir) (content.Content, error) {
 	return &dirProvider{
 		path: ref.Directory,
 	}, nil
@@ -50,7 +50,7 @@ type TempResult struct {
 	//
 	// Close must be called on the Content instance to remove
 	// the temporary directory.
-	content.Content
+	Content content.Content
 
 	// AbsolutePath is the actual location of the
 	// temporary directory. It may be used as a normal
@@ -81,18 +81,18 @@ func Temp(pattern string) (TempResult, error) {
 	}, nil
 }
 
-func (p *dirProvider) Close() error {
+func (p dirProvider) Close() error {
 	return nil
 }
 
-func (p *tempProvider) Close() error {
+func (p tempProvider) Close() error {
 	return os.RemoveAll(p.path)
 }
 
-func (p *dirProvider) FileSystem() (filesys.FileSystem, string, error) {
+func (p dirProvider) FileSystem() (filesys.FileSystem, string, error) {
 	return filesys.MakeFsOnDisk(), p.path, nil
 }
 
-func (p *dirProvider) FS() (fs.FS, error) {
+func (p dirProvider) FS() (fs.FS, error) {
 	return os.DirFS(p.path), nil
 }

@@ -150,8 +150,8 @@ func (c *Command) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
 	}
-	defer temp.Close()
-	stagingDirectory, err := content.FileSystem(temp)
+	defer temp.Content.Close()
+	stagingDirectory, err := content.FileSystem(temp.Content)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
 	}

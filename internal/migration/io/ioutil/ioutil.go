@@ -52,7 +52,7 @@ func WriteFile(filename types.FileSystemPath, data []byte, perm fs.FileMode) err
 //
 // As of Go 1.17, this function simply calls os.MkdirTemp.
 func TempDir(dir, pattern string) (name types.FileSystemPath, err error) {
-	// TODO(dejardin) would be nice to have inmemory TempDir, but this wasn't compat enouch
+	// TODO(dejardin) would be nice to have inmemory TempDir, but this wasn't compat enough
 	// if dir == "" {
 	// 	dir = "/inmemory/tmp"
 	// }

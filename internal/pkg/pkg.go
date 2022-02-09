@@ -30,6 +30,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/pkg/content/paths"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -167,7 +168,10 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := ReadKptfile(types.DiskPath(p.UniquePath.String()))
+		kf, err := ReadKptfile(paths.FileSystemPath{
+			FileSystem: p.fsys,
+			Path:       p.UniquePath.String(),
+		})
 		if err != nil {
 			return nil, err
 		}

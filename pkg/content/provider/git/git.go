@@ -99,10 +99,9 @@ func open(ctx context.Context, ref location.Reference, repoSpec *git.RepoSpec) (
 	})
 	if err != nil {
 		return nil, nil, err
-
 	}
 	return &gitProvider{
-		base:     dir,
+		base:     dir.(base),
 		repoSpec: repoSpec,
 	}, clonedLock, nil
 }
