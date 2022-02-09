@@ -86,16 +86,16 @@ func (c Command) Run(ctx context.Context) error {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	if err := kptfileutil.UpdateUpstreamLocations(dst.FileSystemPath, src.Location); err != nil {
+	if err := kptfileutil.UpdateUpstreamLocations(dst.FileSystemPath, src.Reference, src.ReferenceLock); err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	result, err := content.Commit(dst)
-	if err != nil {
+	_, lock, err := content.Commit(dst)
+	if err != nil && !errors.Is(err, content.ErrNotCommittable) {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
 
-	pr.Printf("Updated %q.\n", result)
+	pr.Printf("Updated %q.\n", lock)
 
 	return nil
 }

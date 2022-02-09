@@ -149,7 +149,10 @@ func (c *Command) Run(ctx context.Context) error {
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
 	}
-	defer temp.Content.Close()
+	// Cleanup staged content after diff. Ignore cleanup if debugging.
+	if !c.Debug {
+		defer temp.Content.Close()
+	}
 	stagingDirectory, err := content.FileSystem(temp.Content)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
@@ -207,7 +210,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	if c.Debug {
-		fmt.Fprintf(c.Output, "diffing currPkg:   %v\nupstreamPkg:       %v\nupstreamTargetPkg: %v\n",
+		fmt.Fprintf(c.Output, "diffing currPkg: %v, upstreamPkg: %v, upstreamTargetPkg: %v \n",
 			currPkg, upstreamPkg, upstreamTargetPkg)
 	}
 
