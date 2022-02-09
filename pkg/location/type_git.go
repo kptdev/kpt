@@ -45,9 +45,9 @@ type Git struct {
 }
 
 var _ Reference = Git{}
-var _ extensions.IdentifierGetter = Git{}
+var _ extensions.Revisable = Git{}
 var _ extensions.DefaultDirectoryNameGetter = Git{}
-var _ extensions.DefaultIdentifierGetter = Git{}
+var _ extensions.DefaultRevisionProvider = Git{}
 var _ extensions.RelPather = Git{}
 
 type GitLock struct {
@@ -60,10 +60,10 @@ type GitLock struct {
 
 var _ Reference = GitLock{}
 var _ ReferenceLock = GitLock{}
-var _ extensions.IdentifierGetter = GitLock{}
+var _ extensions.Revisable = GitLock{}
 var _ extensions.LockGetter = GitLock{}
 var _ extensions.DefaultDirectoryNameGetter = GitLock{}
-var _ extensions.DefaultIdentifierGetter = GitLock{}
+var _ extensions.DefaultRevisionProvider = GitLock{}
 var _ extensions.RelPather = GitLock{}
 
 func NewGit(location string, opts ...Option) (Git, error) {
@@ -112,11 +112,11 @@ func (ref Git) String() string {
 	return gitString(ref.Repo, ref.Directory, ref.Ref)
 }
 
-func gitString(repo, dir, identifier string) string {
-	if dir != "" && dir != "/" && dir != "." {
-		return fmt.Sprintf("%s/%s@%s", repo, dir, identifier)
+func gitString(repo, directory, ref string) string {
+	if directory != "" && directory != "/" && directory != "." {
+		return fmt.Sprintf("%s/%s@%s", repo, directory, ref)
 	}
-	return fmt.Sprintf("%s@%s", repo, identifier)
+	return fmt.Sprintf("%s@%s", repo, ref)
 }
 
 // Type implements location.Reference
@@ -170,7 +170,7 @@ func (ref Git) GetDefaultDirectoryName() (string, bool) {
 	return path.Base(path.Join(path.Clean(repo), path.Clean(ref.Directory))), true
 }
 
-func (ref Git) GetDefaultIdentifier(ctx context.Context) (string, error) {
+func (ref Git) DefaultRevision(ctx context.Context) (string, error) {
 	gur, err := gitutil.NewGitUpstreamRepo(ctx, ref.Repo)
 	if err != nil {
 		return "", err
@@ -182,16 +182,16 @@ func (ref Git) GetDefaultIdentifier(ctx context.Context) (string, error) {
 	return b, nil
 }
 
-func (ref Git) GetIdentifier() (string, bool) {
+func (ref Git) GetRevision() (string, bool) {
 	return ref.Ref, true
 }
 
 // SetIdentifier is called from mutate.Identifier
-func (ref Git) SetIdentifier(name string) (Reference, error) {
+func (ref Git) WithRevision(revision string) (Reference, error) {
 	return Git{
 		Repo:      ref.Repo,
 		Directory: ref.Directory,
-		Ref:       name,
+		Ref:       revision,
 	}, nil
 }
 

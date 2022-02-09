@@ -29,8 +29,18 @@ type ReferenceLock interface {
 	Reference
 }
 
-type IdentifierGetter interface {
-	GetIdentifier() (string, bool)
+// Revisable is present on Reference types that
+// support location.GetRevision and location.WithRevision.
+type Revisable interface {
+	Reference
+	GetRevision() (string, bool)
+	WithRevision(revision string) (Reference, error)
+}
+
+// DefaultRevisionProvider is present on Reference types that
+// support location.DefaultRevision.
+type DefaultRevisionProvider interface {
+	DefaultRevision(ctx context.Context) (string, error)
 }
 
 type LockGetter interface {
@@ -42,12 +52,6 @@ type LockGetter interface {
 type DefaultDirectoryNameGetter interface {
 	// GetDefaultDirectoryName implements the location.DefaultDirectoryName() method
 	GetDefaultDirectoryName() (string, bool)
-}
-
-// DefaultIdentifierGetter is present on Reference types that
-// suggest a default Identifier.
-type DefaultIdentifierGetter interface {
-	GetDefaultIdentifier(ctx context.Context) (string, error)
 }
 
 // RelPather is present on Reference types that

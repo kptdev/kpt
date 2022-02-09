@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 )
 
@@ -128,7 +129,7 @@ func main() {
 	}
 	fmt.Printf("ref: %v\n", ref)
 
-	updated, _ := mutate.Identifier(ref, "preview")
+	updated, _ := location.WithRevision(ref, "preview")
 	fmt.Printf("updated: %v\n", updated)
 
 	locked, _ := mutate.Lock(updated, "98510723450981325098375013")
@@ -136,15 +137,15 @@ func main() {
 	fmt.Println()
 }
 
-func example(caption string, arg string, identifier string, lock string, opts ...location.Option) {
+func example(caption string, arg string, revision string, lock string, opts ...location.Option) {
 	fmt.Printf("%s %q\n", caption, arg)
-	if err := run(arg, identifier, lock, opts...); err != nil {
+	if err := run(arg, revision, lock, opts...); err != nil {
 		fmt.Printf("example error: %v\n", err)
 	}
 	fmt.Println()
 }
 
-func run(arg string, identifier string, lock string, opts ...location.Option) error {
+func run(arg string, revision string, lock string, opts ...location.Option) error {
 	// parse arg to a reference
 	parsed, err := location.ParseReference(arg, opts...)
 	if err != nil {
@@ -153,9 +154,9 @@ func run(arg string, identifier string, lock string, opts ...location.Option) er
 	fmt.Printf("parsed: %s\n", parsed)
 
 	var changed location.Reference
-	if identifier != "" {
-		// changing reference's pkg identifier field
-		changed, err = mutate.Identifier(parsed, identifier)
+	if revision != "" {
+		// changing reference's pkg revision field
+		changed, err = location.WithRevision(parsed, revision)
 		if err != nil {
 			return err
 		}
@@ -176,7 +177,7 @@ func run(arg string, identifier string, lock string, opts ...location.Option) er
 	return nil
 }
 
-// example of providing a custom location that supports branch/tag identifier and locking to a unique id.
+// example of providing a custom location that supports branch/tag revision and locking to a unique id.
 // the meaning of the fields in the struct are entirely specific to the location type.
 
 type CustomLocation struct {
@@ -192,7 +193,7 @@ type CustomLocationLock struct {
 // compile-time check that duck types are correct
 var _ location.Reference = CustomLocation{}
 var _ location.ReferenceLock = CustomLocationLock{}
-var _ mutate.IdentifierSetter = CustomLocation{}
+var _ extensions.Revisable = CustomLocation{}
 var _ mutate.LockSetter = CustomLocation{}
 
 var CustomParser = location.NewParser(
@@ -228,9 +229,14 @@ func (ref CustomLocationLock) String() string {
 	return fmt.Sprintf("custom:%s:%s@%s", ref.WhereItIs, ref.LabelOrVersionString, ref.UniqueIDString)
 }
 
-// return location with only the identifier changed
-// depending on location, the exact meaning may be branch/label/version/tag/etc
-func (ref CustomLocation) SetIdentifier(labelOrVersion string) (location.Reference, error) {
+// WithRevision returns the value that may be branch/label/version/tag/etc
+func (ref CustomLocation) GetRevision() (string, bool) {
+	return ref.LabelOrVersionString, true
+}
+
+// return location with only the revision changed depending on location,
+// the exact meaning may be branch/label/version/tag/etc
+func (ref CustomLocation) WithRevision(labelOrVersion string) (location.Reference, error) {
 	return CustomLocation{
 		WhereItIs:            ref.WhereItIs,
 		LabelOrVersionString: labelOrVersion,

@@ -23,11 +23,41 @@ import (
 type Reference = extensions.Reference
 type ReferenceLock = extensions.ReferenceLock
 
-func Identifier(ref Reference) (string, bool) {
-	if ref, ok := ref.(extensions.IdentifierGetter); ok {
-		return ref.GetIdentifier()
+// GetRevision returns the string value used to identify
+// which branch or tag is referenced.
+// Typical revision values are often a semantic name like 'draft', 'main', 'prod', or a
+// string representation of a version. The specifics of how the revision is
+// mapped to storage depends on the type of reference.
+func GetRevision(ref Reference) (string, bool) {
+	if ref, ok := ref.(extensions.Revisable); ok {
+		return ref.GetRevision()
 	}
 	return "", false
+}
+
+// WithRevision returns a new Reference where the property that
+// identifies the branch, tag, or label has been replaced with value given.
+// Typical revision values are often a semantic name like 'draft', 'main', 'prod', or a
+// string representation of a version. The specifics of how the revision is
+// mapped to storage depends on the type of reference.
+func WithRevision(ref Reference, revision string) (Reference, error) {
+	if ref, ok := ref.(extensions.Revisable); ok {
+		return ref.WithRevision(revision)
+	}
+	return nil, fmt.Errorf("changing revision not supported for reference: %v", ref)
+}
+
+// DefaultRevision returns the suggested revision to use
+// for a reference location when one is not provided. This may
+// be a default tag name like "latest", or a default branch name
+// like "main". Some locations may attempt to obtain the default
+// revision by communicating with the remote provider.
+func DefaultRevision(ref Reference, opts ...Option) (string, error) {
+	if ref, ok := ref.(extensions.DefaultRevisionProvider); ok {
+		opt := makeOptions(opts...)
+		return ref.DefaultRevision(opt.ctx)
+	}
+	return "", fmt.Errorf("not supported")
 }
 
 func Lock(ref ReferenceLock) (string, bool) {
@@ -44,19 +74,6 @@ func Lock(ref ReferenceLock) (string, bool) {
 func Rel(baseref Reference, targref Reference) (string, error) {
 	if baseref, ok := baseref.(extensions.RelPather); ok {
 		return baseref.Rel(targref)
-	}
-	return "", fmt.Errorf("not supported")
-}
-
-// DefaultIdentifier returns the suggested identifier to use
-// for a reference location when one is not provided. This may
-// be a default tag name like "latest", or a default branch name
-// like "main". Some locations may attempt to obtain the default
-// identifier by communicating with the remote provider.
-func DefaultIdentifier(ref Reference, opts ...Option) (string, error) {
-	if ref, ok := ref.(extensions.DefaultIdentifierGetter); ok {
-		opt := makeOptions(opts...)
-		return ref.GetDefaultIdentifier(opt.ctx)
 	}
 	return "", fmt.Errorf("not supported")
 }

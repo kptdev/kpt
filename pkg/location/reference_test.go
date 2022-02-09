@@ -12,95 +12,86 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mutate
+package location
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/pkg/location"
+	"github.com/GoogleContainerTools/kpt/pkg/location/extensions"
 	"github.com/google/go-containerregistry/pkg/name"
 )
 
 //nolint:scopelint
-func TestSetLock(t *testing.T) {
+func TestWithRevision(t *testing.T) {
 	type args struct {
-		ref  location.Reference
-		lock string
+		ref      Reference
+		revision string
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    location.ReferenceLock
+		want    Reference
 		wantErr bool
 	}{
 		{
-			name: "OciWithLock",
+			name: "OciWithRevision",
 			args: args{
-				ref: location.Oci{
+				ref: Oci{
 					Image:     name.MustParseReference("my-registry.io/name:original"),
 					Directory: "sub/directory",
 				},
-				lock: "sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
+				revision: "updated",
 			},
-			want: location.OciLock{
-				Oci: location.Oci{
-					Image:     name.MustParseReference("my-registry.io/name:original"),
-					Directory: "sub/directory",
-				},
-				Digest: name.MustParseReference("my-registry.io/name@sha256:9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba"),
+			want: Oci{
+				Image:     name.MustParseReference("my-registry.io/name:updated"),
+				Directory: "sub/directory",
 			},
 			wantErr: false,
 		},
 		{
-			name: "GitWithLock",
+			name: "GitWithRevision",
 			args: args{
-				ref: location.Git{
+				ref: Git{
 					Repo:      "repo",
 					Directory: "sub/directory",
 					Ref:       "original",
 				},
-				lock: "9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
+				revision: "updated",
 			},
-			want: location.GitLock{
-				Git: location.Git{
-					Repo:      "repo",
-					Directory: "sub/directory",
-					Ref:       "original",
-				},
-				Commit: "9f6ca9562c5e7bd8bb53d736a2869adc27529eb202996dfefb804ec2c95237ba",
+			want: Git{
+				Repo:      "repo",
+				Directory: "sub/directory",
+				Ref:       "updated",
 			},
 			wantErr: false,
 		},
 		{
-			name: "CustomWithLock",
+			name: "CustomWithRevision",
 			args: args{
 				ref: custom{
 					Place: "place",
 					Label: "label",
 				},
-				lock: "lock",
+				revision: "new-label",
 			},
-			want: customLock{
-				custom: custom{
-					Place: "place",
-					Label: "label",
-				},
-				Lock: "lock",
+			want: custom{
+				Place: "place",
+				Label: "new-label",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Lock(tt.args.ref, tt.args.lock)
+			got, err := WithRevision(tt.args.ref, tt.args.revision)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("WithLock() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("WithRevision() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("WithLock() = %v, want %v", got, tt.want)
+				t.Errorf("WithRevision() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -110,6 +101,8 @@ type custom struct {
 	Place string
 	Label string
 }
+
+var _ extensions.Revisable = custom{}
 
 type customLock struct {
 	custom
@@ -128,7 +121,17 @@ func (ref custom) Validate() error {
 	return nil
 }
 
-func (ref custom) SetLock(lock string) (location.ReferenceLock, error) {
+func (ref custom) GetRevision() (string, bool) {
+	return ref.Label, true
+}
+func (ref custom) WithRevision(revision string) (Reference, error) {
+	return custom{
+		Place: ref.Place,
+		Label: revision,
+	}, nil
+}
+
+func (ref custom) SetLock(lock string) (ReferenceLock, error) {
 	return customLock{
 		custom: ref,
 		Lock:   lock,
