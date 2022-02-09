@@ -18,42 +18,33 @@ import (
 	"context"
 	"fmt"
 
-	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	core "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func resolveRepositorySecret(ctx context.Context, coreClient client.Reader, spec *configapi.Repository) (map[string][]byte, error) {
-	var secretName string
-
-	switch spec.Spec.Type {
-	case configapi.RepositoryTypeOCI:
-		oci := spec.Spec.Oci
-		if oci != nil {
-			secretName = oci.SecretRef.Name
-		}
-
-	case configapi.RepositoryTypeGit:
-		git := spec.Spec.Git
-		if git != nil {
-			secretName = git.SecretRef.Name
-		}
-
-	default:
-		return nil, fmt.Errorf("unrecognized repository type: %q", spec.Spec.Type)
+func NewCredentialResolver(coreClient client.Reader) repository.CredentialResolver {
+	return &secretResolver{
+		coreClient: coreClient,
 	}
+}
 
-	if secretName == "" {
-		return nil, nil
-	}
+type secretResolver struct {
+	coreClient client.Reader
+}
 
+var _ repository.CredentialResolver = &secretResolver{}
+
+func (r *secretResolver) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
 	var secret core.Secret
-	if err := coreClient.Get(ctx, client.ObjectKey{
-		Namespace: spec.Namespace,
-		Name:      secretName,
+	if err := r.coreClient.Get(ctx, client.ObjectKey{
+		Namespace: namespace,
+		Name:      name,
 	}, &secret); err != nil {
-		return nil, err
+		return repository.Credential{}, fmt.Errorf("cannot resolve credentials in a secret %s/%s: %w", namespace, name, err)
 	}
 
-	return secret.Data, nil
+	return repository.Credential{
+		Data: secret.Data,
+	}, nil
 }

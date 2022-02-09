@@ -106,10 +106,11 @@ func TestGitPackageRoundTrip(t *testing.T) {
 	spec := &configapi.GitRepository{
 		Repo: gitServerURL,
 	}
-	authOpts := repository.AuthOptions{}
+
+	var credentialResolver repository.CredentialResolver
 	root := filepath.Join(tempdir, "work")
 
-	repo, err := OpenRepository(name, namespace, spec, authOpts, root)
+	repo, err := OpenRepository(name, namespace, spec, credentialResolver, root)
 	if err != nil {
 		t.Fatalf("failed to open repository: %v", err)
 	}
@@ -161,7 +162,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 
 	// We reopen to refetch
 	// TODO: This is pretty hacky...
-	repo, err = OpenRepository(name, namespace, spec, authOpts, root)
+	repo, err = OpenRepository(name, namespace, spec, credentialResolver, root)
 	if err != nil {
 		t.Fatalf("failed to open repository: %v", err)
 	}

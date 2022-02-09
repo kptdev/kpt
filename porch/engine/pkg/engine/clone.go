@@ -81,8 +81,8 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	defer os.RemoveAll(dir)
 
 	// TODO: Add support for authentication.
-	var auth repository.AuthOptions = nil
-	r, err := git.OpenRepository("", "", &spec, auth, dir)
+	var credentialResolver repository.CredentialResolver = nil
+	r, err := git.OpenRepository("", "", &spec, credentialResolver, dir)
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot clone Git repository: %w", err)
 	}

@@ -93,10 +93,15 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), d.draft.Name().String()))
 	klog.Infof("pushing refspec %v", refSpec)
 
+	auth, err := d.parent.getAuthMethod(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+
 	if err := d.parent.repo.Push(&git.PushOptions{
 		RemoteName:        "origin",
 		RefSpecs:          []config.RefSpec{refSpec},
-		Auth:              d.parent.auth,
+		Auth:              auth,
 		RequireRemoteRefs: []config.RefSpec{},
 	}); err != nil {
 		return nil, fmt.Errorf("failed to push to git: %w", err)

@@ -92,7 +92,7 @@ loop:
 					bookmark = repository.ResourceVersion
 					klog.Infof("Bookmark: %q", bookmark)
 				} else {
-					b.updateCache(ctx, event.Type, repository, b.coreClient)
+					b.updateCache(ctx, event.Type, repository)
 				}
 			} else {
 				klog.V(5).Infof("Received unexpected watch event Object: %T", event.Object)
@@ -119,11 +119,11 @@ loop:
 	}
 }
 
-func (b *background) updateCache(ctx context.Context, event watch.EventType, repository *configapi.Repository, reader client.Reader) error {
+func (b *background) updateCache(ctx context.Context, event watch.EventType, repository *configapi.Repository) error {
 	switch event {
 	case watch.Added:
 		klog.Infof("Repository added: %s:%s", repository.ObjectMeta.Namespace, repository.ObjectMeta.Name)
-		return b.cacheRepository(ctx, reader, repository)
+		return b.cacheRepository(ctx, repository)
 	case watch.Modified:
 		klog.Infof("Repository modified: %s:%s", repository.ObjectMeta.Namespace, repository.ObjectMeta.Name)
 		// TODO: implement
@@ -144,18 +144,14 @@ func (b *background) runOnce(ctx context.Context) error {
 	}
 
 	for i := range repositories.Items {
-		b.cacheRepository(ctx, b.coreClient, &repositories.Items[i])
+		b.cacheRepository(ctx, &repositories.Items[i])
 	}
 
 	return nil
 }
 
-func (b *background) cacheRepository(ctx context.Context, reader client.Reader, repo *configapi.Repository) error {
-	secret, err := resolveRepositorySecret(ctx, reader, repo)
-	if err != nil {
-		return fmt.Errorf("error resolving secret: %w", err)
-	}
-	if _, err := b.cache.OpenRepository(repo, secret); err != nil {
+func (b *background) cacheRepository(ctx context.Context, repo *configapi.Repository) error {
+	if _, err := b.cache.OpenRepository(repo); err != nil {
 		return fmt.Errorf("error opening repository: %w", err)
 	}
 	return nil

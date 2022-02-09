@@ -51,17 +51,26 @@ type GitRepository interface {
 	GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
-func OpenRepository(name, namespace string, spec *configapi.GitRepository, authOpts repository.AuthOptions, root string) (GitRepository, error) {
+func OpenRepository(name, namespace string, spec *configapi.GitRepository, resolver repository.CredentialResolver, root string) (GitRepository, error) {
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
-	auth := createAuth(authOpts)
 
 	var repo *gogit.Repository
+	var auth transport.AuthMethod
 
 	if fi, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
 			return nil, err
 		}
+
+		if secret := spec.SecretRef.Name; secret != "" && resolver != nil {
+			// TODO: pass Context into OpenRepository
+			auth, err = resolveCredential(context.TODO(), namespace, secret, resolver)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		opts := gogit.CloneOptions{
 			URL:        spec.Repo,
 			Auth:       auth,
@@ -106,33 +115,41 @@ func OpenRepository(name, namespace string, spec *configapi.GitRepository, authO
 	}
 
 	return &gitRepository{
-		name:      name,
-		namespace: namespace,
-		repo:      repo,
-		auth:      auth,
+		name:               name,
+		namespace:          namespace,
+		repo:               repo,
+		secret:             spec.SecretRef.Name,
+		credentialResolver: resolver,
+		cachedCredentials:  auth,
 	}, nil
 }
 
-func createAuth(auth repository.AuthOptions) transport.AuthMethod {
-	if auth == nil {
-		return nil
+func resolveCredential(ctx context.Context, namespace, name string, resolver repository.CredentialResolver) (transport.AuthMethod, error) {
+	cred, err := resolver.ResolveCredential(ctx, namespace, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain credential from secret %s/%s: %w", namespace, name, err)
 	}
-	if username, uok := auth["username"]; uok {
-		if token, tok := auth["token"]; tok {
-			return &http.BasicAuth{
-				Username: string(username),
-				Password: string(token),
-			}
-		}
+
+	username := cred.Data["username"]
+	password, ok := cred.Data["password"]
+	if !ok {
+		// Try "token" for back-compat; TODO: remove
+		password = cred.Data["token"]
 	}
-	return nil
+
+	return &http.BasicAuth{
+		Username: string(username),
+		Password: string(password),
+	}, nil
 }
 
 type gitRepository struct {
-	name      string
-	namespace string
-	repo      *gogit.Repository
-	auth      transport.AuthMethod
+	name               string
+	namespace          string
+	secret             string
+	repo               *gogit.Repository
+	cachedCredentials  transport.AuthMethod
+	credentialResolver repository.CredentialResolver
 }
 
 func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {
@@ -237,6 +254,11 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 		return nil, fmt.Errorf("cannot find draft package branch %q: %w", refName, err)
 	}
 
+	auth, err := r.getAuthMethod(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+
 	approvedName := createApprovedRefName(path, revision)
 
 	newRef := plumbing.NewHashReference(approvedName, oldRef.Hash())
@@ -244,7 +266,7 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 	options := &git.PushOptions{
 		RemoteName:        "origin",
 		RefSpecs:          []config.RefSpec{},
-		Auth:              r.auth,
+		Auth:              auth,
 		RequireRemoteRefs: []config.RefSpec{},
 	}
 
@@ -522,4 +544,18 @@ func (r *gitRepository) dumpAllRefs() {
 			klog.Infof("branch %#v", branch.Name())
 		}
 	}
+}
+
+func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod, error) {
+	if r.cachedCredentials == nil {
+		if r.secret != "" {
+			if auth, err := resolveCredential(ctx, r.namespace, r.secret, r.credentialResolver); err != nil {
+				return nil, err
+			} else {
+				r.cachedCredentials = auth
+			}
+		}
+	}
+
+	return r.cachedCredentials, nil
 }

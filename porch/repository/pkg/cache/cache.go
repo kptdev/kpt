@@ -37,19 +37,21 @@ import (
 // * We Cache flattened tar files in <cacheDir>/oci/ (so we don't need to pull to read resources)
 // * We poll the repositories (every minute) and Cache the discovered images in memory.
 type Cache struct {
-	mutex        sync.Mutex
-	repositories map[string]*cachedRepository
-	cacheDir     string
+	mutex              sync.Mutex
+	repositories       map[string]*cachedRepository
+	cacheDir           string
+	credentialResolver repository.CredentialResolver
 }
 
-func NewCache(cacheDir string) *Cache {
+func NewCache(cacheDir string, credentialResolver repository.CredentialResolver) *Cache {
 	return &Cache{
-		repositories: make(map[string]*cachedRepository),
-		cacheDir:     cacheDir,
+		repositories:       make(map[string]*cachedRepository),
+		cacheDir:           cacheDir,
+		credentialResolver: credentialResolver,
 	}
 }
 
-func (c *Cache) OpenRepository(repositorySpec *configapi.Repository, auth repository.AuthOptions) (*cachedRepository, error) {
+func (c *Cache) OpenRepository(repositorySpec *configapi.Repository) (*cachedRepository, error) {
 	switch repositoryType := repositorySpec.Spec.Type; repositoryType {
 	case configapi.RepositoryTypeOCI:
 		ociSpec := repositorySpec.Spec.Oci
@@ -90,7 +92,7 @@ func (c *Cache) OpenRepository(repositorySpec *configapi.Repository, auth reposi
 
 		cr := c.repositories[key]
 		if cr == nil {
-			if r, err := git.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, gitSpec, auth, filepath.Join(c.cacheDir, "git")); err != nil {
+			if r, err := git.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, gitSpec, c.credentialResolver, filepath.Join(c.cacheDir, "git")); err != nil {
 				return nil, err
 			} else {
 				cr = newRepository(key, r)
