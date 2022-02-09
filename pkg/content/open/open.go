@@ -37,6 +37,8 @@ type open struct {
 func Content(ref location.Reference, opts ...Option) (open, error) {
 	opt := makeOptions(opts...)
 
+	// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) custom opener as an ...Option
+
 	switch ref := ref.(type) {
 	case location.Dir:
 		provider, err := dir.Open(ref)
@@ -74,6 +76,8 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 			},
 		}, nil
 	case location.Oci:
+		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) pass through options for build-in openers like oci
+
 		provider, lock, err := oci.Open(
 			ref,
 			remote.WithAuthFromKeychain(gcrane.Keychain),
@@ -104,6 +108,10 @@ func Content(ref location.Reference, opts ...Option) (open, error) {
 			},
 		}, nil
 	}
+
+	// TODO(https://github.com/GoogleContainerTools/kpt/issues/2765) have an additional case
+	// in the switch for custom Reference types that implement a ContentOpener extension
+
 	return open{}, fmt.Errorf("not supported")
 }
 

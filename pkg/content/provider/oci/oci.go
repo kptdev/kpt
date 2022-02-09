@@ -75,7 +75,7 @@ func (p *ociProvider) Close() error {
 	return nil
 }
 
-func (p *ociProvider) ProvideFileSystem() (filesys.FileSystem, string, error) {
+func (p *ociProvider) FileSystem() (filesys.FileSystem, string, error) {
 	if p.fsys != nil {
 		return p.fsys, "/", nil
 	}
