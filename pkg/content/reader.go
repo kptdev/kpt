@@ -25,9 +25,9 @@ import (
 func Reader(content Content) (kio.Reader, error) {
 	switch content := content.(type) {
 	case extensions.ReaderProvider:
-		return content.ProvideReader()
+		return content.Reader()
 	case extensions.FileSystemProvider:
-		fsys, path, err := content.ProvideFileSystem()
+		fsys, path, err := content.FileSystem()
 		if err != nil {
 			return nil, err
 		}
@@ -38,6 +38,7 @@ func Reader(content Content) (kio.Reader, error) {
 			FileSystem: filesys.FileSystemOrOnDisk{FileSystem: fsys},
 		}, err
 	default:
+		// TODO(https://github.com/GoogleContainerTools/kpt/issues/2764) add additional cases with adapters
 		return nil, fmt.Errorf("not implemented")
 	}
 }
