@@ -252,7 +252,7 @@ func UpdateUpstreamLock(path paths.FileSystemPath, lock location.ReferenceLock) 
 	return nil
 }
 
-func UpdateUpstreamLocations(path paths.FileSystemPath, loc location.Location) error {
+func UpdateUpstreamLocations(path paths.FileSystemPath, upstream location.Reference, upstreamLock location.ReferenceLock) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFS"
 
 	// read KptFile cloned with the package if it exists
@@ -268,13 +268,13 @@ func UpdateUpstreamLocations(path paths.FileSystemPath, loc location.Location) e
 	}
 
 	// create and assign upstream
-	kptfile.Upstream, err = NewUpstreamFromReference(loc.Reference, strategy)
+	kptfile.Upstream, err = NewUpstreamFromReference(upstream, strategy)
 	if err != nil {
 		return errors.E(op, err)
 	}
 
 	// create and assign upstreamLock
-	kptfile.UpstreamLock, err = NewUpstreamLockFromReferenceLock(loc.ReferenceLock)
+	kptfile.UpstreamLock, err = NewUpstreamLockFromReferenceLock(upstreamLock)
 	if err != nil {
 		return errors.E(op, err)
 	}
