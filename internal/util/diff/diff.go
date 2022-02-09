@@ -158,7 +158,7 @@ func (c *Command) Run(ctx context.Context) error {
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
 	localPkgName := NameStagingDirectory(LocalPackageSource, upstreamRev)
-	currPkg, err := stageDirectory(stagingDirectory.FileSystemPath, localPkgName)
+	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
@@ -168,7 +168,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 	// get the upstreamPkg at current version
 	upstreamPkgName := NameStagingDirectory(RemotePackageSource, upstreamRev)
-	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, stagingDirectory.FileSystemPath, upstreamPkgName, upstream)
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx, stagingDirectory, upstreamPkgName, upstream)
 	if err != nil {
 		return err
 	}

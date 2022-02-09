@@ -32,7 +32,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/content/open"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/location"
-	"github.com/GoogleContainerTools/kpt/pkg/location/mutate"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/GoogleContainerTools/kpt/internal/migration/os"
@@ -125,7 +124,7 @@ func (u Command) Run(ctx context.Context) error {
 
 	originalRootUpstream := rootUpstream
 	if u.Ref != "" {
-		rootUpstream, err = mutate.Identifier(rootUpstream, u.Ref)
+		rootUpstream, err = location.SetRevision(rootUpstream, u.Ref)
 		if err != nil {
 			return errors.E(op, u.Pkg.UniquePath, err)
 		}
@@ -207,10 +206,10 @@ func shouldUpdateSubPkgRef(rootPkgUpstream, subPkgUpstream location.Reference) b
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUpstream location.Reference, ref string, strategy kptfilev1.UpdateStrategyType) error {
+func updateSubKf(subKf *kptfilev1.KptFile, subUpstream location.Reference, revision string, strategy kptfilev1.UpdateStrategyType) error {
 	// check if explicit ref provided
-	if ref != "" {
-		new, err := mutate.Identifier(subUpstream, ref)
+	if revision != "" {
+		new, err := location.SetRevision(subUpstream, revision)
 		if err != nil {
 			return err
 		}
