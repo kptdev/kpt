@@ -151,7 +151,7 @@ func (b *background) runOnce(ctx context.Context) error {
 }
 
 func (b *background) cacheRepository(ctx context.Context, repo *configapi.Repository) error {
-	if _, err := b.cache.OpenRepository(repo); err != nil {
+	if _, err := b.cache.OpenRepository(ctx, repo); err != nil {
 		return fmt.Errorf("error opening repository: %w", err)
 	}
 	return nil

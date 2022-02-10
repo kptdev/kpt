@@ -50,7 +50,7 @@ func (r *packageCommon) listPackages(ctx context.Context, callback func(p reposi
 	for i := range repositories.Items {
 		repositoryObj := &repositories.Items[i]
 
-		repository, err := r.cad.OpenRepository(repositoryObj)
+		repository, err := r.cad.OpenRepository(ctx, repositoryObj)
 		if err != nil {
 			return err
 		}
@@ -88,7 +88,7 @@ func (r *packageCommon) getPackage(ctx context.Context, name string) (repository
 		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
 	}
 
-	repository, err := r.cad.OpenRepository(&repositoryObj)
+	repository, err := r.cad.OpenRepository(ctx, &repositoryObj)
 	if err != nil {
 		return nil, err
 	}

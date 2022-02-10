@@ -15,6 +15,7 @@
 package cache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -51,7 +52,7 @@ func NewCache(cacheDir string, credentialResolver repository.CredentialResolver)
 	}
 }
 
-func (c *Cache) OpenRepository(repositorySpec *configapi.Repository) (*cachedRepository, error) {
+func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (*cachedRepository, error) {
 	switch repositoryType := repositorySpec.Spec.Type; repositoryType {
 	case configapi.RepositoryTypeOCI:
 		ociSpec := repositorySpec.Spec.Oci
@@ -92,7 +93,7 @@ func (c *Cache) OpenRepository(repositorySpec *configapi.Repository) (*cachedRep
 
 		cr := c.repositories[key]
 		if cr == nil {
-			if r, err := git.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, gitSpec, c.credentialResolver, filepath.Join(c.cacheDir, "git")); err != nil {
+			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, c.credentialResolver, filepath.Join(c.cacheDir, "git")); err != nil {
 				return nil, err
 			} else {
 				cr = newRepository(key, r)
