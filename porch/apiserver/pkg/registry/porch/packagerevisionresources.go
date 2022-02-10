@@ -139,12 +139,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	secret, err := resolveRepositorySecret(ctx, r.coreClient, &repositoryObj)
-	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("cannot resolve repository auth secret: %v", err))
-	}
-
-	rev, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, secret, oldPackage, oldObj, newObj)
+	rev, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, oldPackage, oldObj, newObj)
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}

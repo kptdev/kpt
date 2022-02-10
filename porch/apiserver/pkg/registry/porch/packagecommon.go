@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -51,13 +50,7 @@ func (r *packageCommon) listPackages(ctx context.Context, callback func(p reposi
 	for i := range repositories.Items {
 		repositoryObj := &repositories.Items[i]
 
-		secret, err := resolveRepositorySecret(ctx, r.coreClient, repositoryObj)
-		if err != nil {
-			klog.Warningf("cannot resolve repository auth secret: %w", err)
-			continue
-		}
-
-		repository, err := r.cad.OpenRepository(repositoryObj, secret)
+		repository, err := r.cad.OpenRepository(repositoryObj)
 		if err != nil {
 			return err
 		}
@@ -95,12 +88,7 @@ func (r *packageCommon) getPackage(ctx context.Context, name string) (repository
 		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
 	}
 
-	secret, err := resolveRepositorySecret(ctx, r.coreClient, &repositoryObj)
-	if err != nil {
-		return nil, fmt.Errorf("cannot resolve repository auth secret: %w", err)
-	}
-
-	repository, err := r.cad.OpenRepository(&repositoryObj, secret)
+	repository, err := r.cad.OpenRepository(&repositoryObj)
 	if err != nil {
 		return nil, err
 	}

@@ -33,12 +33,12 @@ import (
 )
 
 type CaDEngine interface {
-	OpenRepository(repositorySpec *configapi.Repository, auth repository.AuthOptions) (repository.Repository, error)
-	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, obj *api.PackageRevision) (repository.PackageRevision, error)
-	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
-	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
-	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, obj repository.PackageRevision) error
-	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions) ([]repository.Function, error)
+	OpenRepository(repositorySpec *configapi.Repository) (repository.Repository, error)
+	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
+	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
+	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
+	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj repository.PackageRevision) error
+	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
 }
 
 func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
@@ -50,9 +50,10 @@ func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
 }
 
 type cadEngine struct {
-	cache    *cache.Cache
-	renderer fn.Renderer
-	runtime  fn.FunctionRuntime
+	cache              *cache.Cache
+	renderer           fn.Renderer
+	runtime            fn.FunctionRuntime
+	credentialResolver repository.CredentialResolver
 }
 
 var _ CaDEngine = &cadEngine{}
@@ -61,12 +62,12 @@ type mutation interface {
 	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
 }
 
-func (cad *cadEngine) OpenRepository(repositorySpec *configapi.Repository, auth repository.AuthOptions) (repository.Repository, error) {
-	return cad.cache.OpenRepository(repositorySpec, auth)
+func (cad *cadEngine) OpenRepository(repositorySpec *configapi.Repository) (repository.Repository, error) {
+	return cad.cache.OpenRepository(repositorySpec)
 }
 
-func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, obj *api.PackageRevision) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj, auth)
+func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
+	repo, err := cad.cache.OpenRepository(repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +129,8 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	}
 }
 
-func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj, auth)
+func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+	repo, err := cad.cache.OpenRepository(repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +192,8 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	return updateDraft(ctx, draft, resources, mutations)
 }
 
-func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision) error {
-	repo, err := cad.cache.OpenRepository(repositoryObj, auth)
+func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {
+	repo, err := cad.cache.OpenRepository(repositoryObj)
 	if err != nil {
 		return err
 	}
@@ -204,8 +205,8 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 	return nil
 }
 
-func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj, auth)
+func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
+	repo, err := cad.cache.OpenRepository(repositoryObj)
 	if err != nil {
 		return nil, err
 	}
@@ -253,8 +254,8 @@ func updateDraft(ctx context.Context, draft repository.PackageDraft, baseResourc
 	return draft.Close(ctx)
 }
 
-func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository, auth repository.AuthOptions) ([]repository.Function, error) {
-	repo, err := cad.cache.OpenRepository(repositoryObj, auth)
+func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error) {
+	repo, err := cad.cache.OpenRepository(repositoryObj)
 	if err != nil {
 		return nil, err
 	}

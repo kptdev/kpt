@@ -126,12 +126,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	secret, err := resolveRepositorySecret(ctx, r.coreClient, &repositoryObj)
-	if err != nil {
-		return nil, apierrors.NewBadRequest(fmt.Sprintf("cannot resolve repository auth secret: %v", err))
-	}
-
-	rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, secret, obj)
+	rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, obj)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
@@ -199,12 +194,7 @@ func (r *packageRevisions) Update(ctx context.Context, name string, objInfo rest
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	secret, err := resolveRepositorySecret(ctx, r.coreClient, &repositoryObj)
-	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("cannot resolve repository auth secret: %v", err))
-	}
-
-	rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, secret, oldPackage, oldObj, newObj)
+	rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldPackage, oldObj, newObj)
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
@@ -268,12 +258,7 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	secret, err := resolveRepositorySecret(ctx, r.coreClient, &repositoryObj)
-	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("cannot resolve repository auth secret: %v", err))
-	}
-
-	if err := r.cad.DeletePackageRevision(ctx, &repositoryObj, secret, oldPackage); err != nil {
+	if err := r.cad.DeletePackageRevision(ctx, &repositoryObj, oldPackage); err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
 

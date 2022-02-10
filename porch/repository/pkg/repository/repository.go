@@ -20,8 +20,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 )
 
-type AuthOptions map[string][]byte
-
 // TODO: 	"sigs.k8s.io/kustomize/kyaml/filesys" FileSystem?
 type PackageResources struct {
 	Contents map[string]string
@@ -68,4 +66,13 @@ type Repository interface {
 type FunctionRepository interface {
 	// TODO: Should repository understand functions, or just packages (and function is just a package in an OCI repo?)
 	ListFunctions(ctx context.Context) ([]Function, error)
+}
+
+type Credential struct {
+	// TODO: support different credential types
+	Data map[string][]byte
+}
+
+type CredentialResolver interface {
+	ResolveCredential(ctx context.Context, namespace, name string) (Credential, error)
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/klog/v2"
@@ -73,6 +74,13 @@ func WithSimpleFunctionRuntime() EngineOption {
 func WithRenderer(renderer fn.Renderer) EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
 		engine.renderer = renderer
+		return nil
+	})
+}
+
+func WithCredentialResolver(resolver repository.CredentialResolver) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.credentialResolver = resolver
 		return nil
 	})
 }

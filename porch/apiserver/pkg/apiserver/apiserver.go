@@ -160,10 +160,13 @@ func (c completedConfig) New() (*PorchServer, error) {
 		return nil, fmt.Errorf("failed to build client for core apiserver: %w", err)
 	}
 
-	cache := cache.NewCache(c.ExtraConfig.CacheDirectory)
+	credentialResolver := porch.NewCredentialResolver(coreClient)
+
+	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, credentialResolver)
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
 		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
+		engine.WithCredentialResolver(credentialResolver),
 	)
 
 	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)

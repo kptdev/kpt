@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -72,12 +71,7 @@ func (f *functions) List(ctx context.Context, options *metainternalversion.ListO
 
 	for i := range repositories.Items {
 		repo := &repositories.Items[i]
-		secret, err := resolveRepositorySecret(ctx, f.coreClient, repo)
-		if err != nil {
-			klog.Warningf("cannot resolve repository auth secret: %v", err)
-			continue
-		}
-		fns, err := f.cad.ListFunctions(ctx, repo, secret)
+		fns, err := f.cad.ListFunctions(ctx, repo)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list repository %s functions: %w", repositories.Items[i].Name, err)
 		}
@@ -112,13 +106,8 @@ func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOpt
 		return nil, fmt.Errorf("cannot find repository %q", repositoryKey)
 	}
 
-	secret, err := resolveRepositorySecret(ctx, f.coreClient, &repository)
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO: implement get to avoid listing
-	fns, err := f.cad.ListFunctions(ctx, &repository, secret)
+	fns, err := f.cad.ListFunctions(ctx, &repository)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list repository %s functions: %w", repository.Name, err)
 	}
