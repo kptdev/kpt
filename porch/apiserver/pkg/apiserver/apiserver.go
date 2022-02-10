@@ -15,6 +15,7 @@
 package apiserver
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
@@ -188,7 +189,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 	return s, nil
 }
 
-func (s *PorchServer) Run(stopCh <-chan struct{}) error {
-	porch.RunBackground(s.coreClient, s.cache, stopCh)
-	return s.GenericAPIServer.PrepareRun().Run(stopCh)
+func (s *PorchServer) Run(ctx context.Context) error {
+	porch.RunBackground(ctx, s.coreClient, s.cache)
+	return s.GenericAPIServer.PrepareRun().Run(ctx.Done())
 }

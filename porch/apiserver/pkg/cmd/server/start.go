@@ -15,6 +15,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -80,7 +81,7 @@ func NewPorchServerOptions(out, errOut io.Writer) *PorchServerOptions {
 
 // NewCommandStartPorchServer provides a CLI handler for 'start master' command
 // with a default PorchServerOptions.
-func NewCommandStartPorchServer(defaults *PorchServerOptions, stopCh <-chan struct{}) *cobra.Command {
+func NewCommandStartPorchServer(ctx context.Context, defaults *PorchServerOptions) *cobra.Command {
 	o := *defaults
 	cmd := &cobra.Command{
 		Short: "Launch a porch API server",
@@ -92,7 +93,7 @@ func NewCommandStartPorchServer(defaults *PorchServerOptions, stopCh <-chan stru
 			if err := o.Validate(args); err != nil {
 				return err
 			}
-			if err := o.RunPorchServer(stopCh); err != nil {
+			if err := o.RunPorchServer(ctx); err != nil {
 				return err
 			}
 			return nil
@@ -187,7 +188,7 @@ func (o *PorchServerOptions) Config() (*apiserver.Config, error) {
 }
 
 // RunPorchServer starts a new PorchServer given PorchServerOptions
-func (o PorchServerOptions) RunPorchServer(stopCh <-chan struct{}) error {
+func (o PorchServerOptions) RunPorchServer(ctx context.Context) error {
 	config, err := o.Config()
 	if err != nil {
 		return err
@@ -206,7 +207,7 @@ func (o PorchServerOptions) RunPorchServer(stopCh <-chan struct{}) error {
 		})
 	}
 
-	return server.Run(stopCh)
+	return server.Run(ctx)
 }
 
 func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {

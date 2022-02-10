@@ -48,10 +48,10 @@ func run() int {
 	http.DefaultTransport = otelhttp.NewTransport(http.DefaultClient.Transport)
 	http.DefaultClient.Transport = http.DefaultTransport
 
-	stopCh := genericapiserver.SetupSignalHandler()
+	ctx := genericapiserver.SetupSignalContext()
 
 	options := server.NewPorchServerOptions(os.Stdout, os.Stderr)
-	cmd := server.NewCommandStartPorchServer(options, stopCh)
+	cmd := server.NewCommandStartPorchServer(ctx, options)
 	code := cli.Run(cmd)
 	return code
 }
