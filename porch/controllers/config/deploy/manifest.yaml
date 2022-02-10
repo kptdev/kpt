@@ -49,6 +49,11 @@ spec:
       - name: porch-controllers
         # Update to the image of your porch-controllers build.
         image: gcr.io/example-google-project-id/porch-controllers:latest
+        env:
+        - name: GCP_PROJECT_ID
+          value: example-google-project-id
+        - name: HACK_ENABLE_LOOPBACK
+          value: "1"
 
 ---
 

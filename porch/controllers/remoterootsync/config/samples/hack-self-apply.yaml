@@ -23,4 +23,7 @@ spec:
   - apiVersion: container.cnrm.cloud.google.com/v1beta1
     kind: ContainerCluster
     name: loopback! # TODO: This is a hack used during development, remove once we are more end-to-end enabled.
-  template: {}
+  template:
+    oci:
+      #repository: us-west1-docker.pkg.dev/example-google-project-id/deployment/myfirstnginx:v1
+      repository: us-west1-docker.pkg.dev/example-google-project-id/packages/porch:v0.0.1

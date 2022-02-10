@@ -32,6 +32,6 @@ spec:
       serviceAccountName: apiserver
       containers:
       - name: porch-server
-        # Update image to the image of your apiserver build.
-        image: UPDATE_ME # for example: gcr.io/my-gcp-project/porch:0.0.1
+        # Update image to the image of your porch apiserver build.
+        image: gcr.io/example-google-project-id/porch:latest
         imagePullPolicy: Always

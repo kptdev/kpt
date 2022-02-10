@@ -12,15 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: porch-controllers-self-apply
+rules:
+- apiGroups:
+  - ""
+  - "apps"
+  - "rbac.authorization.k8s.io"
+  - "authentication.k8s.io"
+  - "authorization.k8s.io"
+  - "apiregistration.k8s.io"
+  - "admissionregistration.k8s.io"
+  - "flowcontrol.apiserver.k8s.io"
+  - "mutatingwebhookconfigurations"
+  - "validatingwebhookconfigurations"
+  resources: ["*"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sample-apiserver-clusterrolebinding
+  name: porch-system:porch-controllers:porch-controllers-self-apply
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: aggregated-apiserver-clusterrole
+  name: porch-controllers-self-apply
 subjects:
 - kind: ServiceAccount
-  name: apiserver
+  name: porch-controllers
   namespace: porch-system

@@ -23,5 +23,5 @@ spec:
   content: PackageRevision
   type: oci
   oci:
-    # TODO: Update with your OCI repository.
-    registry: us-west1-docker.pkg.dev/mmaly-bc-1/blueprints
+    # Replace with your OCI repository.
+    registry: us-west1-docker.pkg.dev/example-google-project-id/packages
