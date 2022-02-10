@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: apiserver
+  namespace: porch-system
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,5 +42,20 @@ spec:
       containers:
       - name: porch-server
         # Update image to the image of your porch apiserver build.
-        image: gcr.io/example-google-project-id/porch:latest
+        image: gcr.io/example-google-project-id/porch-server:latest
         imagePullPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: porch-system
+spec:
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    apiserver: "true"

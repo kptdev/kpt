@@ -15,6 +15,7 @@
 KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
+DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
 MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
 
 # GCP project to use for development
@@ -162,3 +163,17 @@ apply-dev-config:
 
 	# TODO: Replace with kpt function
 	cat config/samples/deployment-repository.yaml | sed -e s/example-google-project-id/${GCP_PROJECT_ID}/g | kubectl apply -f -
+
+.PHONY: deployment-config
+deployment-config:
+	rm -rf $(DEPLOYCONFIGDIR) || true
+	mkdir -p $(DEPLOYCONFIGDIR)
+	cp $(CURDIR)/hack/Deploy-Kustomization-Template $(DEPLOYCONFIGDIR)/Kustomization
+	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/function-runner:latest=$(IMAGE_REPO)/function-runner:$(IMAGE_TAG)"
+	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/porch-server:latest=$(IMAGE_REPO)/porch:$(IMAGE_TAG)"
+	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/porch-controllers:latest=$(IMAGE_REPO)/porch-controllers:$(IMAGE_TAG)"
+	kustomize build $(DEPLOYCONFIGDIR) -o $(DEPLOYCONFIGDIR)/deploy.yaml
+
+.PHONY: push-and-deploy
+push-and-deploy: push-images deployment-config
+	kubectl apply -f $(DEPLOYCONFIGDIR)/deploy.yaml
