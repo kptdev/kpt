@@ -1,3 +1,0 @@
-resources:
-- ./remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml
-- ./pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml
