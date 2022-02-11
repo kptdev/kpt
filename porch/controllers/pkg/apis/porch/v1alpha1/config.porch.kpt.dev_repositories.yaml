@@ -67,7 +67,7 @@ spec:
                   branch:
                     description: Name of the branch containig the packages. Finalized
                       packages will be committed to this branch (if the repository
-                      allows write access).
+                      allows write access). If unspecified, defaults to "main".
                     type: string
                   directory:
                     description: Directory within the Git repository where the packages
@@ -85,10 +85,10 @@ spec:
                           be located in the same namespace as the resource containing
                           the reference.
                         type: string
+                    required:
+                    - name
                     type: object
                 required:
-                - branch
-                - directory
                 - repo
                 type: object
               mutators:
@@ -139,6 +139,8 @@ spec:
                           be located in the same namespace as the resource containing
                           the reference.
                         type: string
+                    required:
+                    - name
                     type: object
                 required:
                 - registry
@@ -161,7 +163,7 @@ spec:
                       branch:
                         description: Name of the branch containig the packages. Finalized
                           packages will be committed to this branch (if the repository
-                          allows write access).
+                          allows write access). If unspecified, defaults to "main".
                         type: string
                       directory:
                         description: Directory within the Git repository where the
@@ -181,10 +183,10 @@ spec:
                               to be located in the same namespace as the resource
                               containing the reference.
                             type: string
+                        required:
+                        - name
                         type: object
                     required:
-                    - branch
-                    - directory
                     - repo
                     type: object
                   oci:
@@ -203,6 +205,8 @@ spec:
                               to be located in the same namespace as the resource
                               containing the reference.
                             type: string
+                        required:
+                        - name
                         type: object
                     required:
                     - registry

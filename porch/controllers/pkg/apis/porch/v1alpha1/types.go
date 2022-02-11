@@ -86,10 +86,10 @@ type GitRepository struct {
 	// Address of the Git repository, for example:
 	//   `https://github.com/GoogleCloudPlatform/blueprints.git`
 	Repo string `json:"repo"`
-	// Name of the branch containig the packages. Finalized packages will be committed to this branch (if the repository allows write access).
-	Branch string `json:"branch"`
+	// Name of the branch containig the packages. Finalized packages will be committed to this branch (if the repository allows write access). If unspecified, defaults to "main".
+	Branch string `json:"branch,omitempty"`
 	// Directory within the Git repository where the packages are stored. A subdirectory of this directory containing a Kptfile is considered a package. If unspecified, defaults to root directory.
-	Directory string `json:"directory"`
+	Directory string `json:"directory,omitempty"`
 	// Reference to secret containing authentication credentials.
 	SecretRef SecretRef `json:"secretRef,omitempty"`
 }
@@ -124,7 +124,7 @@ type RepositoryRef struct {
 
 type SecretRef struct {
 	// Name of the secret. The secret is expected to be located in the same namespace as the resource containing the reference.
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 type FunctionEval struct {
