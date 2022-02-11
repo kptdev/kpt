@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 object object:headerFile="../../../../hack/boilerplate.go.txt" paths="./..."
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 object object:headerFile="../../../../hack/boilerplate.go.txt" paths="./..."
 
 var (
 	// GroupVersion is group version used to register these objects

@@ -18,7 +18,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.7.0
+    controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
   name: repositories.config.porch.kpt.dev
 spec:
@@ -49,7 +49,7 @@ spec:
             type: object
           spec:
             description: "RepositorySpec defines the desired state of Repository \n
-              Notes:  * deployment repository - in KRM API ConfigSync would be configured
+              Notes: * deployment repository - in KRM API ConfigSync would be configured
               directly? (or via this API)"
             properties:
               content:
@@ -75,7 +75,7 @@ spec:
                       is considered a package. If unspecified, defaults to root directory.
                     type: string
                   repo:
-                    description: 'Address of the Git repository, for example:   `https://github.com/GoogleCloudPlatform/blueprints.git`'
+                    description: 'Address of the Git repository, for example: `https://github.com/GoogleCloudPlatform/blueprints.git`'
                     type: string
                   secretRef:
                     description: Reference to secret containing authentication credentials.
@@ -172,7 +172,8 @@ spec:
                           to root directory.
                         type: string
                       repo:
-                        description: 'Address of the Git repository, for example:   `https://github.com/GoogleCloudPlatform/blueprints.git`'
+                        description: 'Address of the Git repository, for example:
+                          `https://github.com/GoogleCloudPlatform/blueprints.git`'
                         type: string
                       secretRef:
                         description: Reference to secret containing authentication
