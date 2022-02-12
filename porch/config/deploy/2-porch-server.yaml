@@ -44,6 +44,8 @@ spec:
         # Update image to the image of your porch apiserver build.
         image: gcr.io/example-google-project-id/porch-server:latest
         imagePullPolicy: Always
+        args:
+        - --function-runner=function-runner:9445
 
 ---
 
