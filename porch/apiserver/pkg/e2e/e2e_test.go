@@ -164,7 +164,7 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	const repo = "https://github.com/platkrm/demo-blueprints"
 	t.CreateF(ctx, &configapi.Repository{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demp-blueprints",
+			Name:      "demo-blueprints",
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
@@ -181,7 +181,7 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "demp-blueprints",
+				Name:      "demo-blueprints",
 				Namespace: t.namespace,
 			},
 		})
