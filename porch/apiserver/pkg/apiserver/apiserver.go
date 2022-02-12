@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/registry/porch"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,11 +164,14 @@ func (c completedConfig) New() (*PorchServer, error) {
 
 	credentialResolver := porch.NewCredentialResolver(coreClient)
 
+	renderer := kpt.NewRenderer()
+
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, credentialResolver)
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
 		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
+		engine.WithRenderer(renderer),
 	)
 
 	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)
