@@ -165,6 +165,57 @@ func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, app
 	}
 	// TODO: SetStatusCondition should return an indiciation if anything has changes
 
+	return updateAggregateStatus(subject)
+}
+
+func updateAggregateStatus(subject *api.RemoteRootSyncSet) bool {
+	// TODO: Verify that all targets are accounted for
+
+	applied := make(map[string]int32)
+	ready := make(map[string]int32)
+
+	targetCount := int32(0)
+	for _, status := range subject.Status.Targets {
+		targetCount++
+		appliedCondition := meta.FindStatusCondition(status.Conditions, "Applied")
+		if appliedCondition == nil {
+			applied["UnknownStatus"]++
+		} else {
+			applied[appliedCondition.Reason]++
+		}
+		readyCondition := meta.FindStatusCondition(status.Conditions, "Ready")
+		if appliedCondition == nil {
+			ready["UnknownStatus"]++
+		} else {
+			ready[readyCondition.Reason]++
+		}
+	}
+
+	conditions := &subject.Status.AggregatedStatus.Conditions
+	if applied["UpdateInProgress"] > 0 {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "UpdateInProgress"})
+	} else if applied["Error"] > 0 {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Error"})
+	} else if applied["Applied"] >= targetCount {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "Applied"})
+	} else {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Applied", Status: metav1.ConditionTrue, Reason: "UnknownStatus"})
+	}
+
+	if ready["UpdateInProgress"] > 0 {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "UpdateInProgress"})
+	} else if ready["WaitingForReady"] > 0 {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "WaitingForReady"})
+	} else if ready["Ready"] >= targetCount {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "Ready"})
+	} else {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "UnknownStatus"})
+	}
+
+	subject.Status.AggregatedStatus.Targets = targetCount
+	subject.Status.AggregatedStatus.Applied = applied["Applied"]
+	subject.Status.AggregatedStatus.Ready = ready["Ready"]
+
 	return true
 }
 
