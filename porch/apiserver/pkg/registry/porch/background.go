@@ -84,6 +84,8 @@ loop:
 			if !eventOk {
 				klog.Errorf("Watch event stream closed. Will restart watch from bookmark %q", bookmark)
 				watcher.Stop()
+				// Avoid busy-spinning
+				time.Sleep(1 * time.Second)
 				events = nil
 				watcher = nil
 			} else if repository, ok := event.Object.(*configapi.Repository); ok {
