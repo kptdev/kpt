@@ -169,6 +169,9 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)
 	if err != nil {

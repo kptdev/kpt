@@ -44,7 +44,9 @@ type CaDEngine interface {
 func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
 	engine := &cadEngine{}
 	for _, opt := range opts {
-		opt.apply(engine)
+		if err := opt.apply(engine); err != nil {
+			return nil, err
+		}
 	}
 	return engine, nil
 }
