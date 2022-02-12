@@ -186,5 +186,8 @@ deployment-config:
 	  "newTag=$(IMAGE_TAG)"
 
 .PHONY: push-and-deploy
-push-and-deploy: push-images deployment-config
+push-and-deploy: push-images deploy
+
+.PHONY: deploy
+deploy: deployment-config
 	kubectl apply -f $(DEPLOYCONFIGDIR)
