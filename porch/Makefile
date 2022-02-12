@@ -15,6 +15,7 @@
 KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
+DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
 MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
 
 # GCP project to use for development
@@ -162,3 +163,28 @@ apply-dev-config:
 
 	# TODO: Replace with kpt function
 	cat config/samples/deployment-repository.yaml | sed -e s/example-google-project-id/${GCP_PROJECT_ID}/g | kubectl apply -f -
+
+.PHONY: deployment-config
+deployment-config:
+	rm -rf $(DEPLOYCONFIGDIR) || true
+	mkdir -p $(DEPLOYCONFIGDIR)/crd
+	cp ./controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsyncsets.yaml
+	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsync-role.yaml
+	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/crd/repositories.yaml
+	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/function-runner:latest" \
+	  "newName=$(IMAGE_REPO)/function-runner" \
+	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/porch-server:latest" \
+	  "newName=$(IMAGE_REPO)/porch" \
+	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
+	  "newName=$(IMAGE_REPO)/porch-controllers" \
+	  "newTag=$(IMAGE_TAG)"
+
+.PHONY: push-and-deploy
+push-and-deploy: push-images deployment-config
+	kubectl apply -f $(DEPLOYCONFIGDIR)
