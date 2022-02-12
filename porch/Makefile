@@ -188,3 +188,7 @@ deployment-config:
 .PHONY: push-and-deploy
 push-and-deploy: push-images deployment-config
 	kubectl apply -f $(DEPLOYCONFIGDIR)
+
+.PHONY: utils
+utils:
+	go build -o .build/bin/kpt-porch ./utils/cmd/kpt-porch/
