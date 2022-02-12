@@ -184,7 +184,16 @@ deployment-config:
 	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
 	  "newName=$(IMAGE_REPO)/porch-controllers" \
 	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
+	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-server --match-namespace=porch-system -- \
+		"iam.gke.io/gcp-service-account=porch-server@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
+	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-controllers --match-namespace=porch-system -- \
+		"iam.gke.io/gcp-service-account=porch-sync@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
+
+.PHONY: deploy
+deploy: deployment-config
+	kubectl apply -f $(DEPLOYCONFIGDIR)
 
 .PHONY: push-and-deploy
-push-and-deploy: push-images deployment-config
-	kubectl apply -f $(DEPLOYCONFIGDIR)
+push-and-deploy: push-images deploy
