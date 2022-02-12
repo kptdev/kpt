@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -41,11 +42,17 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		return repository.PackageResources{}, nil, err
 	}
 
-	if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
-		PkgPath: pkgPath,
-		Runtime: m.runtime,
-	}); err != nil {
-		return repository.PackageResources{}, nil, err
+	if pkgPath == "" {
+		// We need this for the no-resources case
+		// TODO: we should handle this better
+		klog.Warningf("skipping render as no package was found")
+	} else {
+		if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+			PkgPath: pkgPath,
+			Runtime: m.runtime,
+		}); err != nil {
+			return repository.PackageResources{}, nil, err
+		}
 	}
 
 	result, err := readResources(fs)
