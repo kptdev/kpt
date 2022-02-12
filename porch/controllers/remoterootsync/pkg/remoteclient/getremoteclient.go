@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os/exec"
 	"regexp"
 
 	container "cloud.google.com/go/container/apiv1"
@@ -142,41 +141,7 @@ func GetGKERESTConfig(ctx context.Context, cluster *unstructured.Unstructured) (
 	return restConfig, nil
 }
 
-func HasGcloud() (bool, error) {
-	_, err := exec.LookPath("gcloud")
-	if err == nil {
-		return true, nil
-	}
-
-	if execError, ok := err.(*exec.Error); ok {
-		if execError.Err == exec.ErrNotFound {
-			return false, nil
-		}
-	}
-
-	return false, fmt.Errorf("error finding gcloud: %w", err)
-}
-
 func GetGcloudAccessToken(ctx context.Context) (*oauth2.Token, error) {
-	// Note: Not all tools support specifying the access token, so
-	// the user still needs to log in with ADC.  e.g. terraform
-	// https://github.com/hashicorp/terraform/issues/21680
-	useGcloudDefaultLogin := true
-
-	if !useGcloudDefaultLogin {
-		return nil, nil
-	}
-
-	hasGcloud, err := HasGcloud()
-	if err != nil {
-		return nil, err
-	}
-
-	if !hasGcloud {
-		fmt.Print("gcloud not found in PATH, cannot use gcloud credentials")
-		return nil, nil
-	}
-
 	accessToken, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get default access-token from gcloud: %w", err)
