@@ -167,13 +167,24 @@ apply-dev-config:
 .PHONY: deployment-config
 deployment-config:
 	rm -rf $(DEPLOYCONFIGDIR) || true
-	mkdir -p $(DEPLOYCONFIGDIR)
-	cp $(CURDIR)/hack/Deploy-Kustomization-Template $(DEPLOYCONFIGDIR)/Kustomization
-	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/function-runner:latest=$(IMAGE_REPO)/function-runner:$(IMAGE_TAG)"
-	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/porch-server:latest=$(IMAGE_REPO)/porch:$(IMAGE_TAG)"
-	cd $(DEPLOYCONFIGDIR); kustomize edit set image "gcr.io/example-google-project-id/porch-controllers:latest=$(IMAGE_REPO)/porch-controllers:$(IMAGE_TAG)"
-	kustomize build $(DEPLOYCONFIGDIR) -o $(DEPLOYCONFIGDIR)/deploy.yaml
+	mkdir -p $(DEPLOYCONFIGDIR)/crd
+	cp ./controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsyncsets.yaml
+	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsync-role.yaml
+	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/crd/repositories.yaml
+	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/function-runner:latest" \
+	  "newName=$(IMAGE_REPO)/function-runner" \
+	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/porch-server:latest" \
+	  "newName=$(IMAGE_REPO)/porch" \
+	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
+	  "newName=$(IMAGE_REPO)/porch-controllers" \
+	  "newTag=$(IMAGE_TAG)"
 
 .PHONY: push-and-deploy
 push-and-deploy: push-images deployment-config
-	kubectl apply -f $(DEPLOYCONFIGDIR)/deploy.yaml
+	kubectl apply -f $(DEPLOYCONFIGDIR)
