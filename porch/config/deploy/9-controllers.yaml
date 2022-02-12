@@ -64,6 +64,9 @@ rules:
 - apiGroups: ["config.cloud.google.com"]
   resources: ["remoterootsyncsets/status"]
   verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["container.cnrm.cloud.google.com"]
+  resources: ["containerclusters"]
+  verbs: ["get", "list", "watch"]
 
 ---
 

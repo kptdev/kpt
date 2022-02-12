@@ -34,6 +34,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+//+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
+
 // GetCCRESTConfig builds a rest.Config for accessing the config controller cluster,
 // this is a tmp workaround.
 func GetCCRESTConfig(ctx context.Context, cluster *unstructured.Unstructured) (*rest.Config, error) {
