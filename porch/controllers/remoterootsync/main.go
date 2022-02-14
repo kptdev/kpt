@@ -14,7 +14,7 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.4.1 crd:preserveUnknownFields=false rbac:roleName=configmanagement-operator webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd rbac:roleName=configmanagement-operator webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 import (
 	"context"
