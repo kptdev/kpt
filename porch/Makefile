@@ -168,9 +168,9 @@ apply-dev-config:
 deployment-config:
 	rm -rf $(DEPLOYCONFIGDIR) || true
 	mkdir -p $(DEPLOYCONFIGDIR)/crd
-	cp ./controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsyncsets.yaml
-	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/crd/remoterootsync-role.yaml
-	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/crd/repositories.yaml
+	cp ./controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml $(DEPLOYCONFIGDIR)/0-remoterootsyncsets.yaml
+	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/0-remoterootsync-role.yaml
+	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/0-repositories.yaml
 	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
 	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
 	  "name=gcr.io/example-google-project-id/function-runner:latest" \
@@ -184,7 +184,16 @@ deployment-config:
 	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
 	  "newName=$(IMAGE_REPO)/porch-controllers" \
 	  "newTag=$(IMAGE_TAG)"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
+	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-server --match-namespace=porch-system -- \
+		"iam.gke.io/gcp-service-account=porch-server@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
+	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-controllers --match-namespace=porch-system -- \
+		"iam.gke.io/gcp-service-account=porch-sync@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
+
+.PHONY: deploy
+deploy: deployment-config
+	kubectl apply -R -f $(DEPLOYCONFIGDIR)
 
 .PHONY: push-and-deploy
-push-and-deploy: push-images deployment-config
-	kubectl apply -f $(DEPLOYCONFIGDIR)
+push-and-deploy: push-images deploy

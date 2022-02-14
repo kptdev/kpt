@@ -16,7 +16,7 @@
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: apiserver
+  name: porch-server
   namespace: porch-system
 
 ---
@@ -38,7 +38,7 @@ spec:
       labels:
         apiserver: "true"
     spec:
-      serviceAccountName: apiserver
+      serviceAccountName: porch-server
       containers:
       - name: porch-server
         # Update image to the image of your porch apiserver build.
