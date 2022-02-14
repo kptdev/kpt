@@ -741,23 +741,28 @@ func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	}
 	defer f.Close()
 
-	rg := &rgfilev1alpha1.ResourceGroup{}
-	c, err := io.ReadAll(f)
+	rg, err := DecodeRGFile(f)
 	if err != nil {
 		return nil, &RGError{
 			Path: types.UniquePath(path),
 			Err:  err,
 		}
 	}
+	return rg, nil
+}
+
+// DecodeRGFile converts a string reader into structured a ResourceGroup object.
+func DecodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
+	rg := &rgfilev1alpha1.ResourceGroup{}
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return rg, err
+	}
 
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err := d.Decode(rg); err != nil {
-		return nil, &RGError{
-			Path: types.UniquePath(path),
-			Err:  err,
-		}
+		return rg, err
 	}
 	return rg, nil
-
 }
