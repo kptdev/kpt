@@ -33,6 +33,7 @@ import (
 	"k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util"
+	"sigs.k8s.io/cli-utils/pkg/apis/actuation"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
@@ -63,31 +64,31 @@ type InventoryResourceGroup struct {
 	objMetas []object.ObjMetadata
 }
 
-func (icm *InventoryResourceGroup) Strategy() inventory.InventoryStrategy {
+func (icm *InventoryResourceGroup) Strategy() inventory.Strategy {
 	return inventory.NameStrategy
 }
 
-var _ inventory.Inventory = &InventoryResourceGroup{}
-var _ inventory.InventoryInfo = &InventoryResourceGroup{}
+var _ inventory.Storage = &InventoryResourceGroup{}
+var _ inventory.Info = &InventoryResourceGroup{}
 
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
 // an the Inventory interface.
-func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Inventory {
+func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Storage {
 	if obj != nil {
 		klog.V(4).Infof("wrapping Inventory obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
 	}
 	return &InventoryResourceGroup{inv: obj}
 }
 
-func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.InventoryInfo {
+func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.Info {
 	if obj != nil {
 		klog.V(4).Infof("wrapping InventoryInfo obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
 	}
 	return &InventoryResourceGroup{inv: obj}
 }
 
-func InvToUnstructuredFunc(inv inventory.InventoryInfo) *unstructured.Unstructured {
+func InvToUnstructuredFunc(inv inventory.Info) *unstructured.Unstructured {
 	switch invInfo := inv.(type) {
 	case *InventoryResourceGroup:
 		return invInfo.inv
@@ -168,7 +169,7 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 // Store is an Inventory interface function implemented to store
 // the object metadata in the wrapped ResourceGroup. Actual storing
 // happens in "GetObject".
-func (icm *InventoryResourceGroup) Store(objMetas object.ObjMetadataSet) error {
+func (icm *InventoryResourceGroup) Store(objMetas object.ObjMetadataSet, status []actuation.ObjectStatus) error {
 	icm.objMetas = objMetas
 	return nil
 }
@@ -332,8 +333,8 @@ func (rgi *ResourceGroupInstaller) InstallRG(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, applyRGTimeout)
 	return func() error {
 		defer cancel()
-		for e := range poller.Poll(ctx, objs, polling.Options{PollInterval: applyRGPollInterval}) {
-			switch e.EventType {
+		for e := range poller.Poll(ctx, objs, polling.PollOptions{PollInterval: applyRGPollInterval}) {
+			switch e.Type {
 			case pollevent.ErrorEvent:
 				return e.Error
 			case pollevent.ResourceUpdateEvent:

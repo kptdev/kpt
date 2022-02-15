@@ -22,7 +22,6 @@ import (
 	"k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/apply/poller"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/aggregator"
@@ -79,7 +78,7 @@ type Runner struct {
 	ctx           context.Context
 	Command       *cobra.Command
 	factory       util.Factory
-	invClientFunc func(util.Factory) (inventory.InventoryClient, error)
+	invClientFunc func(util.Factory) (inventory.Client, error)
 
 	period    time.Duration
 	pollUntil string
@@ -142,7 +141,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 
 	// Based on the inventory template manifest we look up the inventory
 	// from the live state using the inventory client.
-	identifiers, err := invClient.GetClusterObjs(invInfo, common.DryRunNone)
+	identifiers, err := invClient.GetClusterObjs(invInfo)
 	if err != nil {
 		return err
 	}
@@ -195,9 +194,8 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return fmt.Errorf("unknown value for pollUntil: %q", r.pollUntil)
 	}
 
-	eventChannel := statusPoller.Poll(ctx, identifiers, polling.Options{
+	eventChannel := statusPoller.Poll(ctx, identifiers, polling.PollOptions{
 		PollInterval: r.period,
-		UseCache:     true,
 	})
 
 	return printer.Print(eventChannel, identifiers, cancelFunc)
@@ -238,6 +236,6 @@ func pollerFactoryFunc(f util.Factory) (poller.Poller, error) {
 	return status.NewStatusPoller(f)
 }
 
-func invClient(f util.Factory) (inventory.InventoryClient, error) {
-	return inventory.NewInventoryClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+func invClient(f util.Factory) (inventory.Client, error) {
+	return inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 }

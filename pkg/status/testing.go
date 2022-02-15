@@ -19,12 +19,12 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
-	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/testutil"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/clusterreader/fake"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type fakeClusterReader struct {
-	testutil.NoopClusterReader
+	fake.NoopClusterReader
 
 	getResource *unstructured.Unstructured
 	getErr      error

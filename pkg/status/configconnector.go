@@ -16,11 +16,12 @@ package status
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,15 +40,17 @@ type ConfigConnectorStatusReader struct {
 	Mapper meta.RESTMapper
 }
 
+var _ engine.StatusReader = &ConfigConnectorStatusReader{}
+
 // Supports returns true for all Config Connector resources.
 func (c *ConfigConnectorStatusReader) Supports(gk schema.GroupKind) bool {
 	return strings.HasSuffix(gk.Group, "cnrm.cloud.google.com")
 }
 
-func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, id object.ObjMetadata) *event.ResourceStatus {
+func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, id object.ObjMetadata) (*event.ResourceStatus, error) {
 	gvk, err := toGVK(id.GroupKind, c.Mapper)
 	if err != nil {
-		return newUnknownResourceStatus(id, nil, err)
+		return newUnknownResourceStatus(id, nil, err), nil
 	}
 
 	key := types.NamespacedName{
@@ -59,57 +62,60 @@ func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader eng
 	u.SetGroupVersionKind(gvk)
 	err = reader.Get(ctx, key, &u)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			return newResourceStatus(id, status.NotFoundStatus, &u, "Resource not found")
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return nil, err
 		}
-		return newUnknownResourceStatus(id, nil, err)
+		if apierrors.IsNotFound(err) {
+			return newResourceStatus(id, status.NotFoundStatus, &u, "Resource not found"), nil
+		}
+		return newUnknownResourceStatus(id, nil, err), nil
 	}
 
 	return c.ReadStatusForObject(ctx, reader, &u)
 }
 
-func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ engine.ClusterReader, u *unstructured.Unstructured) *event.ResourceStatus {
+func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ engine.ClusterReader, u *unstructured.Unstructured) (*event.ResourceStatus, error) {
 	id := object.UnstructuredToObjMetadata(u)
 
 	// First check if the resource is in the process of being deleted.
 	deletionTimestamp, found, err := unstructured.NestedString(u.Object, "metadata", "deletionTimestamp")
 	if err != nil {
-		return newUnknownResourceStatus(id, u, err)
+		return newUnknownResourceStatus(id, u, err), nil
 	}
 	if found && deletionTimestamp != "" {
-		return newResourceStatus(id, status.TerminatingStatus, u, "Resource scheduled for deletion")
+		return newResourceStatus(id, status.TerminatingStatus, u, "Resource scheduled for deletion"), nil
 	}
 
 	// ensure that the meta generation is observed
 	generation, found, err := unstructured.NestedInt64(u.Object, "metadata", "generation")
 	if err != nil {
 		e := fmt.Errorf("looking up metadata.generation from resource: %w", err)
-		return newUnknownResourceStatus(id, u, e)
+		return newUnknownResourceStatus(id, u, e), nil
 	}
 	if !found {
 		e := fmt.Errorf("metadata.generation not found")
-		return newUnknownResourceStatus(id, u, e)
+		return newUnknownResourceStatus(id, u, e), nil
 	}
 
 	observedGeneration, found, err := unstructured.NestedInt64(u.Object, "status", "observedGeneration")
 	if err != nil {
 		e := fmt.Errorf("looking up status.observedGeneration from resource: %w", err)
-		return newUnknownResourceStatus(id, u, e)
+		return newUnknownResourceStatus(id, u, e), nil
 	}
 	if !found {
 		// We know that Config Connector resources uses the ObservedGeneration pattern, so consider it
 		// an error if it is not found.
 		e := fmt.Errorf("status.ObservedGeneration not found")
-		return newUnknownResourceStatus(id, u, e)
+		return newUnknownResourceStatus(id, u, e), nil
 	}
 	if generation != observedGeneration {
 		msg := fmt.Sprintf("%s generation is %d, but latest observed generation is %d", u.GetKind(), generation, observedGeneration)
-		return newResourceStatus(id, status.InProgressStatus, u, msg)
+		return newResourceStatus(id, status.InProgressStatus, u, msg), nil
 	}
 
 	obj, err := status.GetObjectWithConditions(u.Object)
 	if err != nil {
-		return newUnknownResourceStatus(id, u, err)
+		return newUnknownResourceStatus(id, u, err), nil
 	}
 
 	var readyCond status.BasicCondition
@@ -122,19 +128,19 @@ func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ e
 	}
 
 	if !foundCond {
-		return newResourceStatus(id, status.InProgressStatus, u, "Ready condition not set")
+		return newResourceStatus(id, status.InProgressStatus, u, "Ready condition not set"), nil
 	}
 
 	if readyCond.Status == v1.ConditionTrue {
-		return newResourceStatus(id, status.CurrentStatus, u, "Resource is Current")
+		return newResourceStatus(id, status.CurrentStatus, u, "Resource is Current"), nil
 	}
 
 	switch readyCond.Reason {
 	case "ManagementConflict", "UpdateFailed", "DeleteFailed", "DependencyInvalid":
-		return newResourceStatus(id, status.FailedStatus, u, readyCond.Message)
+		return newResourceStatus(id, status.FailedStatus, u, readyCond.Message), nil
 	}
 
-	return newResourceStatus(id, status.InProgressStatus, u, readyCond.Message)
+	return newResourceStatus(id, status.InProgressStatus, u, readyCond.Message), nil
 }
 
 func toGVK(gk schema.GroupKind, mapper meta.RESTMapper) (schema.GroupVersionKind, error) {

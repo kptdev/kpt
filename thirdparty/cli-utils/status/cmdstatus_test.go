@@ -88,7 +88,7 @@ func TestStatusCommand(t *testing.T) {
 			},
 			events: []pollevent.Event{
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: depObject,
 						Status:     status.InProgressStatus,
@@ -96,7 +96,7 @@ func TestStatusCommand(t *testing.T) {
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: stsObject,
 						Status:     status.CurrentStatus,
@@ -123,7 +123,7 @@ statefulset.apps/bar is Current: current
 			},
 			events: []pollevent.Event{
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: depObject,
 						Status:     status.InProgressStatus,
@@ -131,7 +131,7 @@ statefulset.apps/bar is Current: current
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: stsObject,
 						Status:     status.InProgressStatus,
@@ -139,7 +139,7 @@ statefulset.apps/bar is Current: current
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: stsObject,
 						Status:     status.CurrentStatus,
@@ -147,7 +147,7 @@ statefulset.apps/bar is Current: current
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: depObject,
 						Status:     status.CurrentStatus,
@@ -176,7 +176,7 @@ deployment.apps/foo is Current: current
 			},
 			events: []pollevent.Event{
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: stsObject,
 						Status:     status.NotFoundStatus,
@@ -184,7 +184,7 @@ deployment.apps/foo is Current: current
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: depObject,
 						Status:     status.NotFoundStatus,
@@ -212,7 +212,7 @@ deployment.apps/foo is NotFound: notFound
 			},
 			events: []pollevent.Event{
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: stsObject,
 						Status:     status.InProgressStatus,
@@ -220,7 +220,7 @@ deployment.apps/foo is NotFound: notFound
 					},
 				},
 				{
-					EventType: pollevent.ResourceUpdateEvent,
+					Type: pollevent.ResourceUpdateEvent,
 					Resource: &pollevent.ResourceStatus{
 						Identifier: depObject,
 						Status:     status.InProgressStatus,
@@ -251,8 +251,8 @@ deployment.apps/foo is InProgress: inProgress
 
 			var outBuf bytes.Buffer
 			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), tf)
-			runner.invClientFunc = func(f cmdutil.Factory) (inventory.InventoryClient, error) {
-				return inventory.NewFakeInventoryClient(tc.inventory), nil
+			runner.invClientFunc = func(f cmdutil.Factory) (inventory.Client, error) {
+				return inventory.NewFakeClient(tc.inventory), nil
 			}
 			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
@@ -291,7 +291,7 @@ type fakePoller struct {
 }
 
 func (f *fakePoller) Poll(ctx context.Context, _ object.ObjMetadataSet,
-	_ polling.Options) <-chan pollevent.Event {
+	_ polling.PollOptions) <-chan pollevent.Event {
 	eventChannel := make(chan pollevent.Event)
 	go func() {
 		defer close(eventChannel)
