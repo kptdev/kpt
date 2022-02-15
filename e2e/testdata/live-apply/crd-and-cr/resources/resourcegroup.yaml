@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: crd-and-cr
+  namespace: crd-and-cr
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: crd-and-cr

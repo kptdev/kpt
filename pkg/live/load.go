@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -36,6 +35,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+// inventoryIDfmt is the string format used for generating an inventoryID that is stored on the live cluster
+// if one is not provided when the user runs `kpt live init`. This format should be of `namespace-name`.
+const inventoryIDfmt = "%s-%s"
+
 // InventoryInfoValidationError is the error returned if validation of the
 // inventory information fails.
 type InventoryInfoValidationError struct {
@@ -47,78 +50,33 @@ func (e *InventoryInfoValidationError) Error() string {
 		strings.JoinStringsWithQuotes(e.Violations.Fields()))
 }
 
-// MultipleInventoryInfoError is the error returned if there are multiple
-// Kptfile resources in a stream which has inventory information.
-type MultipleInventoryInfoError struct{}
-
-func (e *MultipleInventoryInfoError) Error() string {
-	return "multiple inventory information found in package"
-}
-
-// NoInvInfoError is the error returned if there are no inventory information
-// provided in either a stream or locally.
-type NoInvInfoError struct{}
-
-func (e *NoInvInfoError) Error() string {
-	return "no inventory information was provided within the stream or package"
-}
-
 // Load reads resources either from disk or from an input stream. It filters
 // out resources that should be ignored and defaults the namespace for
 // namespace-scoped resources that doesn't have the namespace set. It also looks
-// for inventory information inside Kptfile resources.
+// for inventory information inside Kptfile or resourcegroup resources.
 // It returns the resources in unstructured format and the inventory information.
 // If no inventory information is found, that is not considered an error here.
-func Load(f util.Factory, path, rgfile string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func Load(f util.Factory, path string, stdIn io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	if path == "-" {
-		return loadFromStream(f, stdIn, rgfile)
+		return loadFromStream(f, stdIn)
 	}
-	return loadFromDisk(f, path, rgfile)
+	return loadFromDisk(f, path)
 }
 
 // loadFromStream reads resources from the provided reader and returns the
 // filtered resources and any inventory information found in Kptfile resources.
 // If there is more than one Kptfile in the stream with inventory information, that
 // is considered an error.
-func loadFromStream(f util.Factory, r io.Reader, rgfile string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
 	var stdInBuf bytes.Buffer
 	tee := io.TeeReader(r, &stdInBuf)
 
-	// Check if stream contains inventory info.
 	invInfo, err := readInvInfoFromStream(tee)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
 	}
-
-	// Check resourcegroup file for inventory information if file is specified.
-	if rgfile != "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, kptfilev1.Inventory{}, err
-		}
-
-		diskInv, err := readInvInfoFromDisk(cwd, rgfile)
-		if err != nil {
-			return nil, kptfilev1.Inventory{}, err
-		}
-
-		if diskInv.IsValid() && invInfo.IsValid() {
-			return nil, kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
-		}
-
-		if !diskInv.IsValid() && !invInfo.IsValid() {
-			return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
-		}
-
-		if diskInv.IsValid() {
-			invInfo = diskInv
-		}
-
-	}
-
-	// Stream does not contain a valid inventory and no local inventory does not exist, or is not valid.
 	if !invInfo.IsValid() {
-		return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
+		return nil, kptfilev1.Inventory{}, &pkg.InvInfoInvalid{}
 	}
 
 	ro, err := toReaderOptions(f)
@@ -155,16 +113,25 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 		return kptfilev1.Inventory{}, err
 	}
 
-	if len(invFilter.Inventories) > 1 ||
-		len(rgFilter.Inventories) > 1 ||
-		(len(invFilter.Inventories) > 0 && len(rgFilter.Inventories) > 0) {
-		return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+	// Ensure only exactly 1 inventory exists and surface the correct type of error.
+	// Multiple Kptfile inventories found.
+	if len(invFilter.Inventories) > 1 {
+		return kptfilev1.Inventory{}, &pkg.MultipleKfInv{}
+	}
+	// Multiple ResourceGroup inventories found.
+	if len(rgFilter.Inventories) > 1 {
+		return kptfilev1.Inventory{}, &pkg.MultipleResourceGroupsError{}
+	}
+	// Multiple inventories found in Kptfile and ResourceGroup objects.
+	if len(invFilter.Inventories) > 0 && len(rgFilter.Inventories) > 0 {
+		return kptfilev1.Inventory{}, &pkg.MultipleInventoryInfoError{}
 	}
 
+	// Inventory found within Kptfile.
 	if len(invFilter.Inventories) == 1 {
 		return *invFilter.Inventories[0], nil
 	}
-
+	// Inventory found with ResourceGroup object.
 	if len(rgFilter.Inventories) == 1 {
 		invID := rgFilter.Inventories[0].Labels[rgfilev1alpha1.RGInventoryIDLabel]
 		return kptfilev1.Inventory{
@@ -174,17 +141,22 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 		}, nil
 	}
 
-	return kptfilev1.Inventory{}, nil
+	// No inventories found in stream.
+	return kptfilev1.Inventory{}, &pkg.NoInvInfoError{}
 }
 
 // loadFromdisk reads resources from the provided directory and any subfolder.
 // It returns the filtered resources and any inventory information found in
 // Kptfile resources.
 // Only the Kptfile in the root directory will be checked for inventory information.
-func loadFromDisk(f util.Factory, path, rgfile string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
-	invInfo, err := readInvInfoFromDisk(path, rgfile)
+func loadFromDisk(f util.Factory, path string) ([]*unstructured.Unstructured, kptfilev1.Inventory, error) {
+	invInfo, err := readInvInfoFromDisk(path)
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
+	}
+
+	if !invInfo.IsValid() {
+		return nil, kptfilev1.Inventory{}, &pkg.InvInfoInvalid{}
 	}
 
 	ro, err := toReaderOptions(f)
@@ -203,7 +175,7 @@ func loadFromDisk(f util.Factory, path, rgfile string) ([]*unstructured.Unstruct
 	return objs, invInfo, nil
 }
 
-func readInvInfoFromDisk(path, rgfile string) (kptfilev1.Inventory, error) {
+func readInvInfoFromDisk(path string) (kptfilev1.Inventory, error) {
 	absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
 	if err != nil {
 		return kptfilev1.Inventory{}, err
@@ -213,52 +185,7 @@ func readInvInfoFromDisk(path, rgfile string) (kptfilev1.Inventory, error) {
 		return kptfilev1.Inventory{}, err
 	}
 
-	// Read Kptfile for inventory. We ignore errors if no local Kptfile as that could
-	// be provided via STDIN.
-	kf, err := p.Kptfile()
-	if rgfile == "" {
-		if err != nil && errors.Is(err, os.ErrNotExist) {
-			return kptfilev1.Inventory{}, nil
-		}
-		if err != nil {
-			return kptfilev1.Inventory{}, err
-		}
-	}
-
-	// Check if resourcegroup exists and use inventory info from there if provided.
-	if rgfile != "" {
-		rg, err := p.ReadRGFile(rgfile)
-		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			return kptfilev1.Inventory{}, nil
-		}
-
-		// Ensure we only have at most 1 instance of an inventory.
-		if kf != nil {
-			if kf.Inventory == nil && rg == nil {
-				return kptfilev1.Inventory{}, nil
-			}
-
-			if kf.Inventory != nil && rg != nil {
-				return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
-			}
-
-			if kf.Inventory != nil {
-				return *kf.Inventory, nil
-			}
-		}
-
-		return kptfilev1.Inventory{
-			Name:        rg.ObjectMeta.Name,
-			Namespace:   rg.ObjectMeta.Namespace,
-			InventoryID: rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel],
-		}, nil
-	}
-
-	if kf.Inventory == nil {
-		return kptfilev1.Inventory{}, nil
-	}
-
-	return *kf.Inventory, nil
+	return p.LocalInventory()
 }
 
 // InventoryFilter is an implementation of the yaml.Filter interface
@@ -369,6 +296,14 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 
 func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 	// Create and return ResourceGroup custom resource as inventory object.
+
+	// When inventoryID is not specified by the local resourcegroup, we generate one using
+	// depends-on annotation format that we store on the live cluster. This implementation detail
+	// is hidden from the local resourcegroup unless the one was explicitly generated by the client.
+	if inv.InventoryID == "" {
+		inv.InventoryID = fmt.Sprintf(inventoryIDfmt, inv.Namespace, inv.Name)
+	}
+
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
 	var inventoryObj = &unstructured.Unstructured{
 		Object: map[string]interface{}{

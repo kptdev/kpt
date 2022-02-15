@@ -328,8 +328,6 @@ type Inventory struct {
 }
 
 func (i Inventory) IsValid() bool {
-	// Name and Namespace are required inventory fields, so we check these 2 fields.
-	// InventoryID is an optional field since we only store it locally if the user
-	// specifies one.
-	return i.Name != "" && i.Namespace != ""
+	// Name, Namespace InventoryID are required inventory fields, so we check these 3 fields.
+	return i.Name != "" && i.Namespace != "" && i.InventoryID != ""
 }

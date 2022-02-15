@@ -19,7 +19,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -57,6 +56,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
+			expectedErrMsg: "no ResourceGroup object was provided within the stream or package",
 		},
 		"missing namespace for namespace scoped resources are defaulted": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -71,6 +71,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
+			expectedErrMsg: "no ResourceGroup object was provided within the stream or package",
 		},
 		"function config is excluded": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -80,7 +81,11 @@ func TestLoad_LocalDisk(t *testing.T) {
 							pkgbuilder.NewFunction("gcr.io/kpt-dev/func:latest").
 								WithConfigPath("cm.yaml"),
 						),
-				).
+				).WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+				Name:      "foo",
+				Namespace: "bar",
+				ID:        "foo-bar"},
+			)).
 				WithFile("cm.yaml", configMap).
 				WithSubPackages(
 					pkgbuilder.NewSubPkg("subpkg").
@@ -93,7 +98,12 @@ func TestLoad_LocalDisk(t *testing.T) {
 						).
 						WithFile("deployment.yaml", deploymentA),
 				),
-			namespace:    "foo",
+			namespace: "foo",
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
 			expectedObjs: []object.ObjMetadata{},
 		},
 		"inventory info is taken from the root Kptfile": {
@@ -196,7 +206,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}()
 
 			var buf bytes.Buffer
-			objs, inv, err := Load(tf, dir, tc.rgFile, &buf)
+			objs, inv, err := Load(tf, dir, &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -226,7 +236,6 @@ func TestLoad_StdIn(t *testing.T) {
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
 		rgFile         string
-		rgInStream     bool
 	}{
 		"no inventory among the resources": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -234,7 +243,7 @@ func TestLoad_StdIn(t *testing.T) {
 					pkgbuilder.NewKptfile(),
 				).
 				WithFile("deployment.yaml", deploymentA),
-			expectedErrMsg: "no inventory information was provided within the stream",
+			expectedErrMsg: "no ResourceGroup object was provided within the stream or package",
 		},
 		"missing namespace for namespace scoped resources are defaulted": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -325,55 +334,7 @@ func TestLoad_StdIn(t *testing.T) {
 						),
 				),
 			namespace:      "foo",
-			expectedErrMsg: "multiple inventory information found in package",
-		},
-		"Multiple inventories, stdin and local resourcegroup, is an error": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile().
-						WithInventory(pkgbuilder.Inventory{
-							Name:      "foo",
-							Namespace: "bar",
-							ID:        "foo-bar",
-						}),
-				).
-				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
-					Name:      "foo",
-					Namespace: "bar",
-					ID:        "foo-bar",
-				},
-				)),
-			expectedErrMsg: "multiple inventory information found in package",
-			rgFile:         rgfilev1alpha1.RGFileName,
-		},
-		"Inventory using local resourcegroup file": {
-			pkg: pkgbuilder.NewRootPkg().
-				WithKptfile(
-					pkgbuilder.NewKptfile(),
-				).
-				WithFile("cm.yaml", configMap).
-				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
-					Name:      "foo",
-					Namespace: "bar",
-					ID:        "foo-bar",
-				},
-				)),
-			namespace: "foo",
-			expectedInv: kptfile.Inventory{
-				Name:        "foo",
-				Namespace:   "bar",
-				InventoryID: "foo-bar",
-			},
-			expectedObjs: []object.ObjMetadata{
-				{
-					GroupKind: schema.GroupKind{
-						Kind: "ConfigMap",
-					},
-					Name:      "cm",
-					Namespace: "foo",
-				},
-			},
-			rgFile: rgfilev1alpha1.RGFileName,
+			expectedErrMsg: "multiple Kptfile inventories found in package",
 		},
 		"Inventory using STDIN resourcegroup file": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -402,7 +363,6 @@ func TestLoad_StdIn(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
-			rgInStream: true,
 		},
 		"Multiple inventories using STDIN resourcegroup and Kptfile is error": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -421,8 +381,7 @@ func TestLoad_StdIn(t *testing.T) {
 					ID:        "foo-bar",
 				},
 				)),
-			expectedErrMsg: "multiple inventory information found in package",
-			rgInStream:     true,
+			expectedErrMsg: "inventory was found in both Kptfile and ResourceGroup object",
 		},
 		"Non-valid inventory using STDIN Kptfile is error": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -433,7 +392,7 @@ func TestLoad_StdIn(t *testing.T) {
 						}),
 				).
 				WithFile("cm.yaml", configMap),
-			expectedErrMsg: "no inventory information was provided within the stream",
+			expectedErrMsg: "the provided ResourceGroup is not valid",
 		},
 		"Non-valid inventory in resourcegroup is error": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -445,7 +404,7 @@ func TestLoad_StdIn(t *testing.T) {
 					Name: "foo",
 				},
 				)),
-			expectedErrMsg: "no inventory information was provided within the stream or package",
+			expectedErrMsg: "the provided ResourceGroup is not valid",
 			rgFile:         rgfilev1alpha1.RGFileName,
 		},
 	}
@@ -472,14 +431,6 @@ func TestLoad_StdIn(t *testing.T) {
 						MatchFilesGlob:        append([]string{kptfile.KptFileName}, kio.DefaultMatch...),
 						IncludeSubpackages:    true,
 						WrapBareSeqNode:       true,
-						FileSkipFunc: func(rp string) bool {
-							// No skipping if we don't have a resourcegroup file, or we stream it in STDIN.
-							if tc.rgFile == "" || tc.rgInStream {
-								return false
-							}
-
-							return strings.Contains(rp, tc.rgFile)
-						},
 					},
 				},
 				Outputs: []kio.Writer{
@@ -492,15 +443,10 @@ func TestLoad_StdIn(t *testing.T) {
 				t.FailNow()
 			}
 
-			if tc.rgFile != "" {
-				os.Remove(filepath.Join(dir, kptfile.KptFileName))
-			}
+			os.Remove(filepath.Join(dir, kptfile.KptFileName))
+			os.Remove(filepath.Join(dir, tc.rgFile))
 
-			if tc.rgInStream {
-				os.Remove(filepath.Join(dir, tc.rgFile))
-			}
-
-			objs, inv, err := Load(tf, "-", tc.rgFile, &buf)
+			objs, inv, err := Load(tf, "-", &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {

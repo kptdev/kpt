@@ -2,7 +2,3 @@ apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: apply-depends-on
-inventory:
-  namespace: apply-depends-on
-  name: apply-depends-on
-  inventoryID: apply-depends-on

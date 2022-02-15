@@ -2,7 +2,3 @@ apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: install-rg-on-apply
-inventory:
-  namespace: install-rg-on-apply
-  name: install-rg-on-apply
-  inventoryID: install-rg-on-apply

@@ -117,6 +117,49 @@ func (rg *RGError) Unwrap() error {
 	return rg.Err
 }
 
+// MultipleResourceGroupsError is the error returned if there are multiple
+// inventories provided in a stream or package as ResourceGroup objects.
+type MultipleResourceGroupsError struct{}
+
+func (e *MultipleResourceGroupsError) Error() string {
+	return "multiple ResourceGroup objects found in package"
+}
+
+// MultipleKfInv is the error returned if there are multiple
+// inventories provided in a stream or package as ResourceGroup objects.
+type MultipleKfInv struct{}
+
+func (e *MultipleKfInv) Error() string {
+	return "multiple Kptfile inventories found in package"
+}
+
+// MultipleInventoryInfoError is the error returned if there are multiple
+// inventories provided in a stream or package contained with both Kptfile and
+// ResourceGroup objects.
+type MultipleInventoryInfoError struct{}
+
+func (e *MultipleInventoryInfoError) Error() string {
+	return "inventory was found in both Kptfile and ResourceGroup object"
+}
+
+// NoInvInfoError is the error returned if there are no inventory information
+// provided in either a stream or locally.
+type NoInvInfoError struct{}
+
+func (e *NoInvInfoError) Error() string {
+	return "no ResourceGroup object was provided within the stream or package"
+}
+
+type InvInfoInvalid struct{}
+
+func (e *InvInfoInvalid) Error() string {
+	return "the provided ResourceGroup is not valid"
+}
+
+//nolint:lll
+// warnInvInKptfile is the warning message when the inventory information is present within the Kptfile.
+const warnInvInKptfile = "[WARN] The resourcegroup file was not found... Using Kptfile to gather inventory information. We recommend migrating to a resourcegroup file for inventories. Please migrate with `kpt live migrate`."
+
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.
 type Pkg struct {
 	// fsys represents the FileSystem of the package, it may or may not be FileSystem on disk
@@ -708,9 +751,9 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 }
 
 // ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
-func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+func (p *Pkg) ReadRGFile(rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
-		rg, err := ReadRGFile(p.UniquePath.String(), filename)
+		rg, err := ReadRGFile(p.UniquePath.String(), rgfile)
 		if err != nil {
 			return nil, err
 		}
@@ -722,12 +765,29 @@ func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error)
 // TODO(rquitales): Consolidate both Kptfile and ResourceGroup file reading functions to use
 // shared logic/function.
 
-// ReadRGFile reads the KptFile in the given pkg.
-func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
-	f, err := os.Open(filepath.Join(path, filename))
+// ReadRGFile reads the resourcegroup inventory in the given pkg.
+func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
+	// Check to see if filename for ResourceGroup is a filepath, rather than being relative to the pkg path.
+	// If only a filename is provided, we assume that the resourcegroup file is relative to the pkg path.
+	var absPath string
+	if filepath.Base(rgfile) == rgfile {
+		absPath = filepath.Join(pkgPath, rgfile)
+	} else {
+		rgFilePath, _, err := pathutil.ResolveAbsAndRelPaths(rgfile)
+		if err != nil {
+			return nil, &RGError{
+				Path: types.UniquePath(rgfile),
+				Err:  err,
+			}
+		}
+
+		absPath = rgFilePath
+	}
+
+	f, err := os.Open(absPath)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(path),
+			Path: types.UniquePath(absPath),
 			Err:  err,
 		}
 	}
@@ -736,7 +796,7 @@ func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	rg, err := DecodeRGFile(f)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(path),
+			Path: types.UniquePath(absPath),
 			Err:  err,
 		}
 	}
@@ -757,4 +817,106 @@ func DecodeRGFile(in io.Reader) (*rgfilev1alpha1.ResourceGroup, error) {
 		return rg, err
 	}
 	return rg, nil
+}
+
+// LocalInventory returns the package inventory stored within a package. If more than one, or no inventories are
+// found, an error is returned instead.
+func (p *Pkg) LocalInventory() (kptfilev1.Inventory, error) {
+	const op errors.Op = "pkg.LocalInventory"
+
+	pkgReader := &kio.LocalPackageReader{
+		PackagePath:        string(p.UniquePath),
+		PackageFileName:    kptfilev1.KptFileName,
+		IncludeSubpackages: false,
+		MatchFilesGlob:     kio.MatchAll,
+		PreserveSeqIndent:  true,
+		SetAnnotations: map[string]string{
+			pkgPathAnnotation: string(p.UniquePath),
+		},
+		WrapBareSeqNode: true,
+		FileSystem: filesys.FileSystemOrOnDisk{
+			FileSystem: p.fsys,
+		},
+	}
+	resources, err := pkgReader.Read()
+	if err != nil {
+		return kptfilev1.Inventory{}, errors.E(op, p.UniquePath, err)
+	}
+
+	resources, err = filterResourceGroups(resources)
+	if err != nil {
+		return kptfilev1.Inventory{}, errors.E(op, p.UniquePath, err)
+	}
+
+	// Multiple ResourceGroups found.
+	if len(resources) > 1 {
+		return kptfilev1.Inventory{}, &MultipleResourceGroupsError{}
+	}
+
+	// Load Kptfile and check if we have any inventory information there.
+	var hasKptfile bool
+	hasKptfile, err = IsPackageDir(p.fsys, p.UniquePath.String())
+	if err != nil {
+		return kptfilev1.Inventory{}, errors.E(op, p.UniquePath, err)
+	}
+
+	if !hasKptfile {
+		// Return the ResourceGroup object as inventory.
+		if len(resources) == 1 {
+			return kptfilev1.Inventory{
+				Name:        resources[0].GetName(),
+				Namespace:   resources[0].GetNamespace(),
+				InventoryID: resources[0].GetLabels()[rgfilev1alpha1.RGInventoryIDLabel],
+			}, nil
+		}
+
+		// No inventory information found as ResourceGroup objects, and Kptfile does not exist.
+		return kptfilev1.Inventory{}, &NoInvInfoError{}
+	}
+
+	kf, err := p.Kptfile()
+	if err != nil {
+		return kptfilev1.Inventory{}, errors.E(op, p.UniquePath, err)
+	}
+
+	// No inventory found in either Kptfile or as ResourceGroup objects.
+	if kf.Inventory == nil && len(resources) == 0 {
+		return kptfilev1.Inventory{}, &NoInvInfoError{}
+	}
+
+	// Multiple inventories found, in both Kptfile and resourcegroup objects.
+	if kf.Inventory != nil && len(resources) > 0 {
+		return kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
+	}
+
+	// ResourceGroup stores the inventory and Kptfile does not contain inventory.
+	if len(resources) == 1 {
+		return kptfilev1.Inventory{
+			Name:        resources[0].GetName(),
+			Namespace:   resources[0].GetNamespace(),
+			InventoryID: resources[0].GetLabels()[rgfilev1alpha1.RGInventoryIDLabel],
+		}, nil
+	}
+
+	// Kptfile stores the inventory.
+	fmt.Println(warnInvInKptfile)
+	return *kf.Inventory, nil
+}
+
+// filterResourceGroups only retains ResourceGroup objects.
+func filterResourceGroups(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	for _, r := range input {
+		meta, err := r.GetMeta()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
+		}
+		// Filter out any non-ResourceGroup files.
+		if !(meta.APIVersion == rgfilev1alpha1.RGFileAPIVersion && meta.Kind == rgfilev1alpha1.RGFileKind) {
+			continue
+		}
+
+		output = append(output, r)
+	}
+
+	return output, nil
 }

@@ -83,7 +83,6 @@ type Runner struct {
 	output                string
 	inventoryPolicyString string
 	dryRun                bool
-	rgFile                string
 	printStatusEvents     bool
 
 	inventoryPolicy inventory.Policy
@@ -129,7 +128,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, r.rgFile, c.InOrStdin())
+	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

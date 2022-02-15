@@ -28,15 +28,6 @@ var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
-var kptfileStr = `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-inventory:
-  name: test-inventory-obj
-  namespace: test-inventory-namespace
-  inventoryID: test-inventory-label
-`
-
 var rgInvObj = &unstructured.Unstructured{
 	Object: map[string]interface{}{
 		"apiVersion": "kpt.dev/v1alpha1",
@@ -98,85 +89,6 @@ var pod2 = &unstructured.Unstructured{
 			"namespace": testNamespace,
 		},
 	},
-}
-
-func TestKptMigrate_updateKptfile(t *testing.T) {
-	testCases := map[string]struct {
-		kptfile string
-		dryRun  bool
-		isError bool
-	}{
-		"Missing Kptfile is an error": {
-			kptfile: "",
-			dryRun:  false,
-			isError: true,
-		},
-		"Kptfile with existing inventory and is not an error": {
-			kptfile: kptFileWithInventory,
-			dryRun:  false,
-			isError: false,
-		},
-		"Dry-run will not fill in inventory fields": {
-			kptfile: kptFile,
-			dryRun:  true,
-			isError: false,
-		},
-		"Kptfile will have inventory fields filled in": {
-			kptfile: kptFile,
-			dryRun:  false,
-			isError: false,
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			// Set up fake test factory
-			tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
-			defer tf.Cleanup()
-			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-
-			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-migrate-test")
-			assert.NoError(t, err)
-			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
-			assert.NoError(t, err)
-
-			ctx := fake.CtxWithDefaultPrinter()
-			// Create MigrateRunner and call "updateKptfile"
-			cmLoader := manifestreader.NewManifestLoader(tf)
-			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.dryRun = tc.dryRun
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
-				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
-			}
-			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
-			// Check if there should be an error
-			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
-				return
-			}
-			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			// Check the kptfile inventory section now has values.
-			if !tc.dryRun {
-				assert.Equal(t, inventoryNamespace, kf.Inventory.Namespace)
-				if len(kf.Inventory.Name) == 0 {
-					t.Errorf("inventory name not set in Kptfile")
-				}
-				if kf.Inventory.InventoryID != testInventoryID {
-					t.Errorf("inventory id not set in Kptfile: %s", kf.Inventory.InventoryID)
-				}
-			} else if kf.Inventory != nil {
-				t.Errorf("inventory shouldn't be set during dryrun")
-			}
-		})
-	}
 }
 
 func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
@@ -389,9 +301,10 @@ func TestKptMigrate_findResourceGroupInv(t *testing.T) {
 
 func TestKptMigrate_migrateObjs(t *testing.T) {
 	testCases := map[string]struct {
-		invObj  string
-		objs    []object.ObjMetadata
-		isError bool
+		invObj     string
+		objs       []object.ObjMetadata
+		isError    bool
+		rgFilename string
 	}{
 		"No objects to migrate is valid": {
 			invObj:  "",
@@ -399,27 +312,37 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			isError: false,
 		},
 		"One migrate object is valid": {
-			invObj:  kptfileStr,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"Multiple migrate objects are valid": {
-			invObj: kptfileStr,
+			invObj: resourceGroupInventory,
 			objs: []object.ObjMetadata{
 				object.UnstructuredToObjMetadata(pod1),
 				object.UnstructuredToObjMetadata(pod2),
 			},
-			isError: false,
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"Kptfile does not have inventory is valid": {
-			invObj:  kptFile,
-			objs:    []object.ObjMetadata{},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"One migrate object is valid with inventory in Kptfile": {
-			invObj:  kptFileWithInventory,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
+		},
+		"Migrate to ResourceGroup object with custom filename": {
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: "test-rg.yaml",
+			isError:    false,
 		},
 	}
 
@@ -435,6 +358,8 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			rgInvClient := inventory.NewFakeClient(tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			migrateRunner.rgFile = tc.rgFilename
+
 			err := migrateRunner.migrateObjs(rgInvClient, tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {

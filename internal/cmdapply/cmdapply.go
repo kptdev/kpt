@@ -108,7 +108,6 @@ type Runner struct {
 	pruneTimeout                 time.Duration
 	inventoryPolicyString        string
 	dryRun                       bool
-	rgFile                       string
 	printStatusEvents            bool
 
 	inventoryPolicy inventory.Policy
@@ -167,7 +166,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	objs, inv, err := live.Load(r.factory, path, r.rgFile, c.InOrStdin())
+	objs, inv, err := live.Load(r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

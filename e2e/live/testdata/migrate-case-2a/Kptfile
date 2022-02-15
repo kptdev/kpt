@@ -1,0 +1,11 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: test1
+upstream:
+  type: git
+  git:
+    repo: git@github.com:yuwenma/blueprint-helloworld
+    directory: /
+    ref: master
+
