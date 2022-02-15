@@ -59,7 +59,7 @@ Error: The ResourceGroup CRD was not found in the cluster. Please install it eit
 
 	//nolint:lll
 	invInfoAlreadyExistsMsg = `
-Error: Inventory information has already been added to the package Kptfile. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
+Error: Inventory information has already been added to the package. Changing it after a package has been applied to the cluster can lead to undesired results. Use the --force flag to suppress this error.
 `
 
 	//nolint:lll
@@ -78,7 +78,7 @@ Error: Multiple Kptfile resources with inventory information found. Please make 
 
 	//nolint:lll
 	inventoryInfoValidationMsg = `
-Error: The inventory information is not valid. Please update the information in the Kptfile or provide information with the command line flags. To generate the inventory information the first time, use the 'kpt live init' command.
+Error: The inventory information is not valid. Please update the information in the ResourceGroup file or provide information with the command line flags. To generate the inventory information the first time, use the 'kpt live init' command.
 
 Details:
 {{- range .err.Violations}}
