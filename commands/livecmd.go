@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
 	"github.com/GoogleContainerTools/kpt/internal/cmddestroy"
+	"github.com/GoogleContainerTools/kpt/internal/cmdinstallrg"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
@@ -56,7 +57,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams)
 	destroyCmd := cmddestroy.NewCommand(ctx, f, ioStreams)
 	statusCmd := status.NewCommand(ctx, f)
-	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
+	installRGCmd := cmdinstallrg.NewCommand(ctx, f, ioStreams)
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory

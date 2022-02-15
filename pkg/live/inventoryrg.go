@@ -22,25 +22,29 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/pkg/status"
+	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/pkg/apply/taskrunner"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/pkg/apply/cache"
-	"sigs.k8s.io/cli-utils/pkg/apply/event"
-	"sigs.k8s.io/cli-utils/pkg/apply/taskrunner"
+	"k8s.io/kubectl/pkg/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/polling"
+	pollevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
+	kstatus "sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
-	applyCRDTimeout      = 10 * time.Second
-	applyCRDPollInterval = 2 * time.Second
+	applyRGTimeout      = 10 * time.Second
+	applyRGPollInterval = 2 * time.Second
 )
 
 // ResourceGroupGVK is the group/version/kind of the custom
@@ -296,83 +300,83 @@ func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
 	return reflect.DeepEqual(liveSpec, latestspec)
 }
 
-// InstallResourceGroupCRD applies the custom resource definition for the
-// ResourceGroup by creating and running a TaskQueue of Tasks necessary.
-// The Tasks are 1) Apply CRD task, 2) Wait Task (for CRD to become
-// established), and 3) Reset RESTMapper task. Returns an error if
-// a non-"AlreadyExists" error is returned on the event channel.
-// Runs the CRD installation in a separate goroutine (timeout
-// ensures no hanging).
-func InstallResourceGroupCRD(factory cmdutil.Factory) error {
-	eventChannel := make(chan event.Event)
-	go func() {
-		defer close(eventChannel)
-		mapper, err := factory.ToRESTMapper()
-		if err != nil {
-			handleError(eventChannel, err)
-			return
-		}
-		crd, err := rgCRD(mapper)
-		if err != nil {
-			handleError(eventChannel, err)
-			return
-		}
-		// Create the task to apply the ResourceGroup CRD.
-		applyRGTask := NewApplyCRDTask(factory, crd)
-		objs := object.UnstructuredSetToObjMetadataSet([]*unstructured.Unstructured{crd})
-		// Create the tasks to apply the ResourceGroup CRD.
-		tasks := []taskrunner.Task{
-			applyRGTask,
-			taskrunner.NewWaitTask("wait-rg-crd", objs, taskrunner.AllCurrent,
-				applyCRDTimeout, mapper),
-		}
-		// Create the task queue channel, and send tasks in order into the channel.
-		taskQueue := make(chan taskrunner.Task, len(tasks))
-		for _, t := range tasks {
-			taskQueue <- t
-		}
-		statusPoller, err := status.NewStatusPoller(factory)
-		if err != nil {
-			handleError(eventChannel, err)
-			return
-		}
-		// Create a new cache map to hold the last known resource state & status
-		resourceCache := cache.NewResourceCacheMap()
-		// Run the task queue.
-		runner := taskrunner.NewTaskStatusRunner(objs, statusPoller, resourceCache)
-		err = runner.Run(context.Background(), taskQueue, eventChannel, taskrunner.Options{
-			PollInterval:     applyCRDPollInterval,
-			UseCache:         true,
-			EmitStatusEvents: true,
-		})
-		if err != nil {
-			handleError(eventChannel, err)
-			return
-		}
-	}()
-
-	// Return the error on the eventChannel if it exists; return
-	// closes the channel. "AlreadyExists" is NOT an error.
-	for e := range eventChannel {
-		if e.Type == event.ErrorType {
-			err := e.ErrorEvent.Err
-			if !apierrors.IsAlreadyExists(err) {
-				return err
-			}
-		}
-	}
-
-	return nil
+// ResourceGroupInstaller can install the ResourceGroup CRD into a cluster.
+type ResourceGroupInstaller struct {
+	Factory cmdutil.Factory
 }
 
-// handleError sends an error onto the event channel.
-func handleError(eventChannel chan event.Event, err error) {
-	eventChannel <- event.Event{
-		Type: event.ErrorType,
-		ErrorEvent: event.ErrorEvent{
-			Err: err,
-		},
+func (rgi *ResourceGroupInstaller) InstallRG(ctx context.Context) error {
+	poller, err := status.NewStatusPoller(rgi.Factory)
+	if err != nil {
+		return err
 	}
+
+	mapper, err := rgi.Factory.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+
+	crd, err := rgCRD(mapper)
+	if err != nil {
+		return err
+	}
+
+	if err := rgi.applyRG(crd); err != nil {
+		if apierrors.IsAlreadyExists(err) {
+			return nil
+		}
+		return err
+	}
+
+	objs := object.UnstructuredSetToObjMetadataSet([]*unstructured.Unstructured{crd})
+	ctx, cancel := context.WithTimeout(ctx, applyRGTimeout)
+	return func() error {
+		defer cancel()
+		for e := range poller.Poll(ctx, objs, polling.Options{PollInterval: applyRGPollInterval}) {
+			switch e.EventType {
+			case pollevent.ErrorEvent:
+				return e.Error
+			case pollevent.ResourceUpdateEvent:
+				if e.Resource.Status == kstatus.CurrentStatus {
+					// TODO: Replace this with a call to meta.MaybeResetRESTMapper
+					// once we update the k8s libraries.
+					m, err := taskrunner.ExtractDeferredDiscoveryRESTMapper(mapper)
+					if err != nil {
+						return err
+					}
+					m.Reset()
+					return nil
+				}
+			}
+		}
+		return nil
+	}()
+}
+
+func (rgi *ResourceGroupInstaller) applyRG(crd runtime.Object) error {
+	mapper, err := rgi.Factory.ToRESTMapper()
+	if err != nil {
+		return err
+	}
+	mapping, err := mapper.RESTMapping(crdGroupKind)
+	if err != nil {
+		return err
+	}
+	client, err := rgi.Factory.UnstructuredClientForMapping(mapping)
+	if err != nil {
+		return err
+	}
+
+	// Set the "last-applied-annotation" so future applies work correctly.
+	if err := util.CreateApplyAnnotation(crd, unstructured.UnstructuredJSONScheme); err != nil {
+		return err
+	}
+	// Apply the CRD to the cluster and ignore already exists error.
+	var clearResourceVersion = false
+	var emptyNamespace = ""
+	helper := resource.NewHelper(client, mapping)
+	_, err = helper.Create(emptyNamespace, clearResourceVersion, crd)
+	return err
 }
 
 // rgCRD returns the ResourceGroup CRD in Unstructured format or an error.

@@ -196,7 +196,10 @@ func (mr *MigrateRunner) applyCRD() error {
 		return nil
 	}
 	// Install the ResourceGroup CRD to the cluster.
-	err := live.InstallResourceGroupCRD(mr.factory)
+
+	err := (&live.ResourceGroupInstaller{
+		Factory: mr.factory,
+	}).InstallRG(mr.ctx)
 	if err == nil {
 		fmt.Fprintln(mr.ioStreams.Out, "success")
 	} else {
