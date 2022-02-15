@@ -33,6 +33,11 @@ functions:
     images:
     - gcr.io/kpt-fn/apply-setters@sha256:4d4295727183396f0c3c6a75d2560254c2f9041a39e95dc1e5beffeb49cc1a12
     - gcr.io/kpt-fn/apply-setters:v0.2.0
+  - function: apply-setters-v1
+    images:
+    - gcr.io/kpt-fn/apply-setters@sha256:d2a0219b24a47ebb4bf568d3ccf5bb0e7be2f3f94b28b0c3b1bed011a51d7c35
+    - gcr.io/kpt-fn/apply-setters:v0.1
+    - gcr.io/kpt-fn/apply-setters:v0.1.1
   - function: search-replace
     images:
     - gcr.io/kpt-fn/search-replace@sha256:6864b06bf654fbdff3efb666a0a75fa14da2ba405f33187b60648e0b74bc2272
