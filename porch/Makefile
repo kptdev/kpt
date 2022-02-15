@@ -141,12 +141,14 @@ push-images:
 	docker buildx build --push --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
 	make -C controllers/ push-image
 	make -C func/ push-image
+	make -C test/ push-image
 
 .PHONY: build-images
 build-images:
 	docker buildx build --load --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
 	make -C controllers/ build-image
 	make -C func/ build-image
+	make -C test/ build-image
 
 .PHONY: apply-dev-config
 apply-dev-config:
