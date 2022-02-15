@@ -91,7 +91,7 @@ kubectl get packagerevisions -oyaml
 kubectl get packagerevisionresources -oyaml
 ```
 
-Or create a pakcage revision:
+Or create a package revision:
 ```sh
 kubectl apply -f ./config/samples/bucket-label.yaml
 ```
