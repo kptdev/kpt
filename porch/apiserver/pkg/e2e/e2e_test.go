@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestE2E(t *testing.T) {
@@ -177,9 +178,16 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		Name:      "git:test-bucket:v1",
 	}, &resources)
 
-	// TODO: verify resources; current bug: resources returned are empty.
-	for k, v := range resources.Spec.Resources {
-		t.Logf("%s:\n%s\n\n", k, v)
+	bucket, ok := resources.Spec.Resources["bucket.yaml"]
+	if !ok {
+		t.Errorf("'bucket.yaml' not found among package resources")
+	}
+	node, err := yaml.Parse(bucket)
+	if err != nil {
+		t.Errorf("yaml.Parse(\"bucket.yaml\") failed: %v", err)
+	}
+	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
+		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
 	}
 }
 
