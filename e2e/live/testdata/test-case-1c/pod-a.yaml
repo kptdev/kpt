@@ -1,0 +1,14 @@
+# Copyright 2019 The Kubernetes Authors.
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-a
+  namespace: test-namespace
+  labels:
+    name: test-pod-label-foo
+spec:
+  containers:
+  - name: kubernetes-pause
+    image: k8s.gcr.io/pause:2.0

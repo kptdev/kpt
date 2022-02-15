@@ -60,7 +60,7 @@ func TestStatusCommand(t *testing.T) {
 	}{
 		"no inventory template": {
 			kptfileInv:     nil,
-			expectedErrMsg: "inventory failed validation",
+			expectedErrMsg: "no ResourceGroup object was provided within the stream or package",
 		},
 		"invalid value for pollUntil": {
 			pollUntil:      "doesNotExist",

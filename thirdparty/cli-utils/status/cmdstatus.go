@@ -84,7 +84,6 @@ type Runner struct {
 	pollUntil string
 	timeout   time.Duration
 	output    string
-	rgFile    string
 
 	pollerFactoryFunc func(util.Factory) (poller.Poller, error)
 }
@@ -124,7 +123,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	_, inv, err := live.Load(r.factory, path, r.rgFile, c.InOrStdin())
+	_, inv, err := live.Load(r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

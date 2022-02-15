@@ -28,15 +28,6 @@ var testNamespace = "test-inventory-namespace"
 var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
-var kptfileStr = `
-apiVersion: kpt.dev/v1
-kind: Kptfile
-inventory:
-  name: test-inventory-obj
-  namespace: test-inventory-namespace
-  inventoryID: test-inventory-label
-`
-
 var rgInvObj = &unstructured.Unstructured{
 	Object: map[string]interface{}{
 		"apiVersion": "kpt.dev/v1alpha1",
@@ -387,9 +378,10 @@ func TestKptMigrate_findResourceGroupInv(t *testing.T) {
 
 func TestKptMigrate_migrateObjs(t *testing.T) {
 	testCases := map[string]struct {
-		invObj  string
-		objs    []object.ObjMetadata
-		isError bool
+		invObj     string
+		objs       []object.ObjMetadata
+		isError    bool
+		rgFilename string
 	}{
 		"No objects to migrate is valid": {
 			invObj:  "",
@@ -397,27 +389,37 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			isError: false,
 		},
 		"One migrate object is valid": {
-			invObj:  kptfileStr,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"Multiple migrate objects are valid": {
-			invObj: kptfileStr,
+			invObj: resourceGroupInventory,
 			objs: []object.ObjMetadata{
 				object.UnstructuredToObjMetadata(pod1),
 				object.UnstructuredToObjMetadata(pod2),
 			},
-			isError: false,
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"Kptfile does not have inventory is valid": {
-			invObj:  kptFile,
-			objs:    []object.ObjMetadata{},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
 		},
 		"One migrate object is valid with inventory in Kptfile": {
-			invObj:  kptFileWithInventory,
-			objs:    []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
-			isError: false,
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: rgfilev1alpha1.RGFileName,
+			isError:    false,
+		},
+		"Migrate to ResourceGroup object with custom filename": {
+			invObj:     resourceGroupInventory,
+			objs:       []object.ObjMetadata{object.UnstructuredToObjMetadata(pod1)},
+			rgFilename: "test-rg.yaml",
+			isError:    false,
 		},
 	}
 
@@ -433,6 +435,8 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			rgInvClient := inventory.NewFakeClient(tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+			migrateRunner.rgFile = tc.rgFilename
+
 			err := migrateRunner.migrateObjs(rgInvClient, tc.objs, strings.NewReader(tc.invObj), []string{"-"})
 			// Check if there should be an error
 			if tc.isError {
