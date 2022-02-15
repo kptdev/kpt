@@ -173,6 +173,9 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	porchGroup, err := porch.NewRESTStorage(Scheme, Codecs, cad, coreClient)
 	if err != nil {
