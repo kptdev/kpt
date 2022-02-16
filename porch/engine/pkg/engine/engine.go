@@ -106,8 +106,10 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
 		}
 		return &clonePackageMutation{
-			task: task,
-			name: obj.Spec.PackageName,
+			task:               task,
+			namespace:          obj.Namespace,
+			name:               obj.Spec.PackageName,
+			credentialResolver: cad.credentialResolver,
 		}, nil
 
 	case api.TaskTypePatch:

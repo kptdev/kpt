@@ -30,8 +30,10 @@ import (
 )
 
 type clonePackageMutation struct {
-	task *api.Task
-	name string // package target name
+	task               *api.Task
+	namespace          string
+	name               string // package target name
+	credentialResolver repository.CredentialResolver
 }
 
 func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
@@ -72,6 +74,9 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 		Repo:      gitPackage.Repo,
 		Branch:    gitPackage.Ref,
 		Directory: gitPackage.Directory,
+		SecretRef: configapi.SecretRef{
+			Name: gitPackage.SecretRef.Name,
+		},
 	}
 
 	dir, err := ioutil.TempDir("", "clone-git-package-*")
@@ -80,8 +85,7 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	}
 	defer os.RemoveAll(dir)
 
-	// TODO: Add support for authentication.
-	var credentialResolver repository.CredentialResolver = nil
+	var credentialResolver repository.CredentialResolver = m.credentialResolver
 	r, err := git.OpenRepository(ctx, "", "", &spec, credentialResolver, dir)
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot clone Git repository: %w", err)
