@@ -169,16 +169,11 @@ func TestCloneGitBasicAuth(t *testing.T) {
 						Repo:      addr,
 						Ref:       "main",
 						Directory: "configmap",
-						SecretRef: v1alpha1.SecretRef{
-							Name: "git-credentials",
-						},
 					},
 				},
 			},
 		},
-		namespace:          "test-namespace",
-		name:               "test-configmap",
-		credentialResolver: cr{},
+		name: "test-configmap",
 	}
 
 	r, _, err := cpm.Apply(context.Background(), repository.PackageResources{})
