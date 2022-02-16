@@ -17,11 +17,15 @@ package live
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
@@ -37,6 +41,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 		expectedObjs   object.ObjMetadataSet
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
+		rgFile         string
 	}{
 		"no Kptfile in root package": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -160,6 +165,24 @@ func TestLoad_LocalDisk(t *testing.T) {
 				InventoryID: "foo-bar",
 			},
 		},
+		"Inventory information taken from resourcegroup": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+				Name:      "foo",
+				Namespace: "bar",
+				ID:        "foo-bar"},
+			)),
+			namespace:    "foo",
+			expectedObjs: []object.ObjMetadata{},
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
+			rgFile: "resourcegroup.yaml",
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -173,7 +196,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			}()
 
 			var buf bytes.Buffer
-			objs, inv, err := Load(tf, dir, &buf)
+			objs, inv, err := Load(tf, dir, tc.rgFile, &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -202,27 +225,27 @@ func TestLoad_StdIn(t *testing.T) {
 		expectedObjs   object.ObjMetadataSet
 		expectedInv    kptfile.Inventory
 		expectedErrMsg string
+		rgFile         string
+		rgInStream     bool
 	}{
-		"no Kptfile among the resources": {
+		"no inventory among the resources": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile(),
 				).
 				WithFile("deployment.yaml", deploymentA),
-			namespace: "foo",
-			expectedObjs: []object.ObjMetadata{
-				{
-					GroupKind: schema.GroupKind{
-						Group: "apps",
-						Kind:  "Deployment",
-					},
-					Name:      "test-deployment",
-					Namespace: "foo",
-				},
-			},
+			expectedErrMsg: "no inventory information was provided within the stream",
 		},
 		"missing namespace for namespace scoped resources are defaulted": {
 			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithInventory(pkgbuilder.Inventory{
+							Name:      "foo",
+							Namespace: "bar",
+							ID:        "foo-bar",
+						}),
+				).
 				WithFile("cm.yaml", configMap),
 			namespace: "foo",
 			expectedObjs: []object.ObjMetadata{
@@ -233,6 +256,11 @@ func TestLoad_StdIn(t *testing.T) {
 					Name:      "cm",
 					Namespace: "foo",
 				},
+			},
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
 			},
 		},
 		"inventory info is taken from the Kptfile": {
@@ -297,7 +325,128 @@ func TestLoad_StdIn(t *testing.T) {
 						),
 				),
 			namespace:      "foo",
-			expectedErrMsg: "multiple Kptfiles contains inventory information",
+			expectedErrMsg: "multiple inventory information found in package",
+		},
+		"Multiple inventories, stdin and local resourcegroup, is an error": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithInventory(pkgbuilder.Inventory{
+							Name:      "foo",
+							Namespace: "bar",
+							ID:        "foo-bar",
+						}),
+				).
+				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+					Name:      "foo",
+					Namespace: "bar",
+					ID:        "foo-bar",
+				},
+				)),
+			expectedErrMsg: "multiple inventory information found in package",
+			rgFile:         rgfilev1alpha1.RGFileName,
+		},
+		"Inventory using local resourcegroup file": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).
+				WithFile("cm.yaml", configMap).
+				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+					Name:      "foo",
+					Namespace: "bar",
+					ID:        "foo-bar",
+				},
+				)),
+			namespace: "foo",
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "foo",
+				},
+			},
+			rgFile: rgfilev1alpha1.RGFileName,
+		},
+		"Inventory using STDIN resourcegroup file": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).
+				WithFile("cm.yaml", configMap).
+				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+					Name:      "foo",
+					Namespace: "bar",
+					ID:        "foo-bar",
+				},
+				)),
+			namespace: "foo",
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "foo",
+				},
+			},
+			rgInStream: true,
+		},
+		"Multiple inventories using STDIN resourcegroup and Kptfile is error": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithInventory(pkgbuilder.Inventory{
+							Name:      "foo",
+							Namespace: "bar",
+							ID:        "foo-bar",
+						}),
+				).
+				WithFile("cm.yaml", configMap).
+				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+					Name:      "foo",
+					Namespace: "bar",
+					ID:        "foo-bar",
+				},
+				)),
+			expectedErrMsg: "multiple inventory information found in package",
+			rgInStream:     true,
+		},
+		"Non-valid inventory using STDIN Kptfile is error": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithInventory(pkgbuilder.Inventory{
+							Name: "foo",
+						}),
+				).
+				WithFile("cm.yaml", configMap),
+			expectedErrMsg: "no inventory information was provided within the stream",
+		},
+		"Non-valid inventory in resourcegroup is error": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).
+				WithFile("cm.yaml", configMap).
+				WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
+					Name: "foo",
+				},
+				)),
+			expectedErrMsg: "no inventory information was provided within the stream or package",
+			rgFile:         rgfilev1alpha1.RGFileName,
 		},
 	}
 
@@ -311,6 +460,9 @@ func TestLoad_StdIn(t *testing.T) {
 				_ = os.RemoveAll(dir)
 			}()
 
+			revert := testutil.Chdir(t, dir)
+			defer revert()
+
 			var buf bytes.Buffer
 			err := (&kio.Pipeline{
 				Inputs: []kio.Reader{
@@ -320,6 +472,14 @@ func TestLoad_StdIn(t *testing.T) {
 						MatchFilesGlob:        append([]string{kptfile.KptFileName}, kio.DefaultMatch...),
 						IncludeSubpackages:    true,
 						WrapBareSeqNode:       true,
+						FileSkipFunc: func(rp string) bool {
+							// No skipping if we don't have a resourcegroup file, or we stream it in STDIN.
+							if tc.rgFile == "" || tc.rgInStream {
+								return false
+							}
+
+							return strings.Contains(rp, tc.rgFile)
+						},
 					},
 				},
 				Outputs: []kio.Writer{
@@ -332,7 +492,15 @@ func TestLoad_StdIn(t *testing.T) {
 				t.FailNow()
 			}
 
-			objs, inv, err := Load(tf, "-", &buf)
+			if tc.rgFile != "" {
+				os.Remove(filepath.Join(dir, kptfile.KptFileName))
+			}
+
+			if tc.rgInStream {
+				os.Remove(filepath.Join(dir, tc.rgFile))
+			}
+
+			objs, inv, err := Load(tf, "-", tc.rgFile, &buf)
 
 			if tc.expectedErrMsg != "" {
 				if !assert.Error(t, err) {
@@ -376,12 +544,12 @@ func TestValidateInventory(t *testing.T) {
 			expectErr:           true,
 			expectedErrorFields: []string{"name"},
 		},
-		"inventory without id or namespace doesn't validate": {
+		"inventory namespace doesn't validate": {
 			inventory: kptfile.Inventory{
 				Name: "foo",
 			},
 			expectErr:           true,
-			expectedErrorFields: []string{"namespace", "inventoryID"},
+			expectedErrorFields: []string{"namespace"},
 		},
 	}
 
