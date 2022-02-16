@@ -8,6 +8,7 @@ import (
 	"io"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
@@ -22,6 +23,10 @@ var (
 		{
 			Group: kptfilev1.KptFileGroup,
 			Kind:  kptfilev1.KptFileKind,
+		},
+		{
+			Group: rgfilev1alpha1.RGFileGroup,
+			Kind:  rgfilev1alpha1.RGFileKind,
 		},
 	}
 )

@@ -26,6 +26,7 @@ import (
 	"text/template"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -92,11 +93,19 @@ var (
 type pkg struct {
 	Kptfile *Kptfile
 
+	RGFile *RGFile
+
 	resources []resourceInfoWithMutators
 
 	files map[string]string
 
 	subPkgs []*SubPkg
+}
+
+// WithRGFile configures the current package to have a resourcegroup file.
+func (rp *RootPkg) WithRGFile(rg *RGFile) *RootPkg {
+	rp.pkg.RGFile = rg
+	return rp
 }
 
 // withKptfile configures the current package to have a Kptfile. Only
@@ -300,6 +309,22 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 	return sp
 }
 
+// RGFile represents a minimal resourcegroup.
+type RGFile struct {
+	Name, Namespace, ID string
+}
+
+func NewRGFile() *RGFile {
+	return &RGFile{}
+}
+
+func (rg *RGFile) WithInventory(inv Inventory) *RGFile {
+	rg.Name = inv.Name
+	rg.Namespace = inv.Namespace
+	rg.ID = inv.ID
+	return rg
+}
+
 // Kptfile represents the Kptfile of a package.
 type Kptfile struct {
 	Upstream     *Upstream
@@ -476,6 +501,16 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 		}
 	}
 
+	if pkg.RGFile != nil {
+		content := buildRGFile(pkg)
+
+		err := ioutil.WriteFile(filepath.Join(pkgPath, rgfilev1alpha1.RGFileName),
+			[]byte(content), 0600)
+		if err != nil {
+			return err
+		}
+	}
+
 	for _, ri := range pkg.resources {
 		m := ri.resourceInfo.manifest
 		r := yaml.MustParse(m)
@@ -508,6 +543,23 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 		}
 	}
 	return nil
+}
+
+// buildRGFile creates a ResourceGroup inventory file.
+func buildRGFile(pkg *pkg) string {
+	tmp := rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
+	tmp.ObjectMeta.Name = pkg.RGFile.Name
+	tmp.ObjectMeta.Namespace = pkg.RGFile.Namespace
+	if pkg.RGFile.ID != "" {
+		tmp.ObjectMeta.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: pkg.RGFile.ID}
+	}
+
+	b, err := yaml.MarshalWithOptions(tmp, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		panic(err)
+	}
+
+	return string(b)
 }
 
 // TODO: Consider using the Kptfile struct for this instead of a template.
