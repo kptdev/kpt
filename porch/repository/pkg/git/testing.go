@@ -37,6 +37,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	Main plumbing.ReferenceName = "refs/heads/main"
+)
+
 // GitServer is a mock git server implementing "just enough" of the git protocol
 type GitServer struct {
 	repo *gogit.Repository
@@ -143,8 +147,30 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 			klog.Infof("skipping remote ref %q", name)
 			return nil
 		}
-		s := fmt.Sprintf("%s %s", ref.Hash().String(), name)
-		refs = append(refs, s)
+
+		var resolved *plumbing.Reference
+		switch ref.Type() {
+		case plumbing.SymbolicReference:
+			if r, err := s.repo.Reference(ref.Name(), true); err != nil {
+				klog.Warningf("Skippling unresolvable symbolic reference %q: %w", ref.Name(), err)
+				return nil
+			} else {
+				resolved = r
+			}
+		case plumbing.HashReference:
+			resolved = ref
+		default:
+			return fmt.Errorf("unexpected reference encountered: %s", ref)
+		}
+
+		s := fmt.Sprintf("%s %s", resolved.Hash().String(), name)
+
+		// https://git-scm.com/docs/http-protocol: HEAD SHOULD be first
+		if name == plumbing.HEAD {
+			refs = append([]string{s}, refs...)
+		} else {
+			refs = append(refs, s)
+		}
 		return nil
 	}); err != nil {
 		return fmt.Errorf("error iterating through references: %w", err)
@@ -550,9 +576,18 @@ func initRepo(repo *git.Repository) error {
 	}
 
 	{
-		ref := plumbing.NewHashReference("refs/heads/main", commitHash)
+		ref := plumbing.NewHashReference(Main, commitHash)
 		if err := repo.Storer.SetReference(ref); err != nil {
-			return fmt.Errorf("error setting reference: %w", err)
+			return fmt.Errorf("error setting reference %q: %w", Main, err)
+		}
+
+		// gogit uses suboptimal default reference name; delete it
+		repo.Storer.RemoveReference(plumbing.Master)
+
+		// create correct HEAD as a symbolic reference of main branch
+		head := plumbing.NewSymbolicReference(plumbing.HEAD, Main)
+		if err := repo.Storer.SetReference(head); err != nil {
+			return fmt.Errorf("error creating HEAD ref: %w", err)
 		}
 	}
 
