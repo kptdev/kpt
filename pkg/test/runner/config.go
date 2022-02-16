@@ -74,6 +74,9 @@ type TestCaseConfig struct {
 	// AllowExec determines if `fn render` needs to be invoked with `--allow-exec` flag
 	AllowExec bool `json:"allowExec,omitempty" yaml:"allowExec,omitempty"`
 
+	// ExcludeMetaResources determines if `fn render` needs to be invoked with `--exclude-meta-resources` flag
+	ExcludeMetaResources bool `json:"excludeMetaResources,omitempty" yaml:"excludeMetaResources,omitempty"`
+
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 

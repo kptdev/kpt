@@ -1,3 +1,32 @@
+diff --git a/Kptfile b/Kptfile
+index 9092fbf..dd65206 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app-with-db
++  namespace: staging
++  labels:
++    tier: db
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+diff --git a/db/Kptfile b/db/Kptfile
+index 8c0fd51..fa4480f 100644
+--- a/db/Kptfile
++++ b/db/Kptfile
+@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: db
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
 diff --git a/db/resources.yaml b/db/resources.yaml
 index ac1fd96..49fa8df 100644
 --- a/db/resources.yaml

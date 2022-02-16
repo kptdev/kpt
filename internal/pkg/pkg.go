@@ -486,7 +486,7 @@ func IsPackageUnfetched(path string) (bool, error) {
 }
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
-func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
+func (p *Pkg) LocalResources(excludeMetaResources bool) (resources []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.readResources"
 
 	hasKptfile, err := IsPackageDir(p.UniquePath.String())
@@ -496,16 +496,18 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	if !hasKptfile {
 		return nil, nil
 	}
-	pl, err := p.Pipeline()
-	if err != nil {
-		return nil, errors.E(op, p.UniquePath, err)
+
+	matchFilesGlob := kio.MatchAll
+	if !excludeMetaResources {
+		matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
 	}
 
+	matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
 	pkgReader := &kio.LocalPackageReader{
 		PackagePath:        string(p.UniquePath),
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
-		MatchFilesGlob:     kio.MatchAll,
+		MatchFilesGlob:     matchFilesGlob,
 		PreserveSeqIndent:  true,
 		SetAnnotations: map[string]string{
 			pkgPathAnnotation: string(p.UniquePath),
@@ -516,8 +518,9 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	if err != nil {
 		return resources, errors.E(op, p.UniquePath, err)
 	}
-	if !includeMetaResources {
-		resources, err = filterMetaResources(resources, pl)
+	if excludeMetaResources {
+		// filtering based on the GVK of Kptfile
+		resources, err = filterKptfile(resources)
 		if err != nil {
 			return resources, errors.E(op, p.UniquePath, err)
 		}
@@ -537,7 +540,7 @@ func (p *Pkg) ValidatePipeline() error {
 	}
 
 	// read all resources including function pipeline.
-	resources, err := p.LocalResources(true)
+	resources, err := p.LocalResources(false)
 	if err != nil {
 		return err
 	}
@@ -571,6 +574,22 @@ func (p *Pkg) ValidatePipeline() error {
 		}
 	}
 	return nil
+}
+
+// filterMetaResources filters kpt metadata files such as Kptfile, function configs.
+func filterKptfile(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	for _, r := range input {
+		meta, err := r.GetMeta()
+		if err != nil {
+			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
+		}
+		// filter out pkg metadata such as Kptfile
+		if strings.Contains(meta.APIVersion, "kpt.dev") && meta.Kind == "Kptfile" {
+			continue
+		}
+		output = append(output, r)
+	}
+	return output, nil
 }
 
 // filterMetaResources filters kpt metadata files such as Kptfile, function configs.

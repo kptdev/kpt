@@ -42,11 +42,12 @@ var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` 
 
 // Executor hydrates a given pkg.
 type Executor struct {
-	PkgPath         string
-	ResultsDirPath  string
-	Output          io.Writer
-	ImagePullPolicy fnruntime.ImagePullPolicy
-	AllowExec       bool
+	PkgPath              string
+	ResultsDirPath       string
+	Output               io.Writer
+	ImagePullPolicy      fnruntime.ImagePullPolicy
+	ExcludeMetaResources bool
+	AllowExec            bool
 }
 
 // Execute runs a pipeline.
@@ -62,11 +63,12 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:            root,
-		pkgs:            map[types.UniquePath]*pkgNode{},
-		fnResults:       fnresult.NewResultList(),
-		imagePullPolicy: e.ImagePullPolicy,
-		allowExec:       e.AllowExec,
+		root:                 root,
+		pkgs:                 map[types.UniquePath]*pkgNode{},
+		fnResults:            fnresult.NewResultList(),
+		imagePullPolicy:      e.ImagePullPolicy,
+		allowExec:            e.AllowExec,
+		encludeMetaResources: e.ExcludeMetaResources,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -92,12 +94,18 @@ func (e *Executor) Execute(ctx context.Context) error {
 	at := attribution.Attributor{Resources: hctx.root.resources, CmdGroup: "fn"}
 	at.Process()
 
+	includeMetaResources := true
 	if e.Output == nil {
+		matchFilesGlob := kio.MatchAll
+		if includeMetaResources {
+			matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
+		}
 		// the intent of the user is to modify resources in-place
 		pkgWriter := &kio.LocalPackageReadWriter{
 			PackagePath:        string(root.pkg.UniquePath),
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfilev1.KptFileName,
+			MatchFilesGlob:     matchFilesGlob,
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 		}
@@ -167,6 +175,10 @@ type hydrationContext struct {
 
 	// imagePullPolicy controls the image pulling behavior.
 	imagePullPolicy fnruntime.ImagePullPolicy
+
+	// indicate if package meta resources such as Kptfile
+	// to be excluded from the function in put during render.
+	encludeMetaResources bool
 
 	// allowExec determines if function binary executable are allowed
 	// to be run during pipeline execution. Running function binaries is a
@@ -293,7 +305,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(false)
+	currPkgResources, err := curr.pkg.LocalResources(hctx.encludeMetaResources)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
