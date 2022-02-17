@@ -35,6 +35,10 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 		},
 	}
 
+	packageRevisionsApproval := &packageRevisionsApproval{
+		revisions: packageRevisions,
+	}
+
 	packageRevisionResources := &packageRevisionResources{
 		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisionresources")),
 		packageCommon: packageCommon{
@@ -54,9 +58,10 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 
 	group.VersionedResourcesStorageMap = map[string]map[string]rest.Storage{
 		"v1alpha1": {
-			"packagerevisions":         packageRevisions,
-			"packagerevisionresources": packageRevisionResources,
-			"functions":                functions,
+			"packagerevisions":          packageRevisions,
+			"packagerevisions/approval": packageRevisionsApproval,
+			"packagerevisionresources":  packageRevisionResources,
+			"functions":                 functions,
 		},
 	}
 

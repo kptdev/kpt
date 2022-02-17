@@ -138,3 +138,14 @@ func (c *FakePackageRevisions) Patch(ctx context.Context, name string, pt types.
 	}
 	return obj.(*v1alpha1.PackageRevision), err
 }
+
+// UpdateApproval takes the representation of a packageRevision and updates it. Returns the server's representation of the packageRevision, and an error, if there is any.
+func (c *FakePackageRevisions) UpdateApproval(ctx context.Context, packageRevisionName string, packageRevision *v1alpha1.PackageRevision, opts v1.UpdateOptions) (result *v1alpha1.PackageRevision, err error) {
+	obj, err := c.Fake.
+		Invokes(testing.NewUpdateSubresourceAction(packagerevisionsResource, "approval", c.ns, packageRevision), &v1alpha1.PackageRevision{})
+
+	if obj == nil {
+		return nil, err
+	}
+	return obj.(*v1alpha1.PackageRevision), err
+}
