@@ -17,12 +17,14 @@ package live
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/pkg/status"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"
@@ -242,6 +244,56 @@ func ResourceGroupCRDApplied(factory cmdutil.Factory) bool {
 		return false
 	}
 	return true
+}
+
+// ResourceGroupCRDMatched checks if the ResourceGroup CRD
+// in the cluster matches the CRD in the kpt binary.
+func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
+	mapper, err := factory.ToRESTMapper()
+	if err != nil {
+		klog.V(4).Infof("error retrieving RESTMapper when checking ResourceGroup CRD: %s\n", err)
+		return false
+	}
+	crd, err := rgCRD(mapper)
+	if err != nil {
+		klog.V(7).Infof("failed to get ResourceGroup CRD from string: %s", err)
+		return false
+	}
+
+	dc, err := factory.DynamicClient()
+	if err != nil {
+		klog.V(7).Infof("error getting the dynamic client: %s\n", err)
+		return false
+	}
+
+	mapping, err := mapper.RESTMapping(crdGroupKind)
+	if err != nil {
+		klog.V(7).Infof("Failed to get mapping of CRD type: %s", err)
+		return false
+	}
+
+	liveCRD, err := dc.Resource(mapping.Resource).Get(context.TODO(), "resourcegroups.kpt.dev", metav1.GetOptions{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: crd.GetAPIVersion(),
+			Kind:       "CustomResourceDefinition",
+		},
+	})
+	if err != nil {
+		klog.V(7).Infof("error getting the ResourceGroup CRD from cluster: %s\n", err)
+		return false
+	}
+
+	liveSpec, _, err := unstructured.NestedMap(liveCRD.Object, "spec")
+	if err != nil {
+		klog.V(7).Infof("error getting the ResourceGroup CRD spec from cluster: %s\n", err)
+		return false
+	}
+	latestspec, _, err := unstructured.NestedMap(crd.Object, "spec")
+	if err != nil {
+		klog.V(7).Infof("error getting the ResourceGroup CRD spec from string: %s\n", err)
+		return false
+	}
+	return reflect.DeepEqual(liveSpec, latestspec)
 }
 
 // InstallResourceGroupCRD applies the custom resource definition for the
@@ -510,6 +562,10 @@ spec:
                 description: ResourceStatus contains the status of a given resource
                   uniquely identified by its group, kind, name and namespace.
                 properties:
+                  actuation:
+                    description: actuation indicates whether actuation has been
+                      performed yet and how it went.
+                    type: string
                   conditions:
                     items:
                       properties:
@@ -545,8 +601,18 @@ spec:
                     type: string
                   namespace:
                     type: string
+                  reconcile:
+                    description: reconcile indicates whether reconciliation has
+                      been performed yet and how it went.
+                    type: string
+                  sourceHash:
+                    type: string
                   status:
                     description: Status describes the status of a resource
+                    type: string
+                  strategy:
+                    description: strategy indicates the method of actuation (apply
+                      or delete) used or planned to be used.
                     type: string
                 required:
                 - group
@@ -716,6 +782,10 @@ spec:
                   description: ResourceStatus contains the status of a given resource
                     uniquely identified by its group, kind, name and namespace.
                   properties:
+                    actuation:
+                      description: actuation indicates whether actuation has been
+                        performed yet and how it went.
+                      type: string
                     conditions:
                       items:
                         properties:
@@ -751,8 +821,18 @@ spec:
                       type: string
                     namespace:
                       type: string
+                    reconcile:
+                      description: reconcile indicates whether reconciliation has
+                        been performed yet and how it went.
+                      type: string
+                    sourceHash:
+                      type: string
                     status:
                       description: Status describes the status of a resource
+                      type: string
+                    strategy:
+                      description: strategy indicates the method of actuation (apply
+                        or delete) used or planned to be used.
                       type: string
                   required:
                   - group
