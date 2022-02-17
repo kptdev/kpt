@@ -26,6 +26,9 @@
 			"path": "."
 		},
 		{
+			"path": "test",
+		},
+		{
 			"name": "kpt",
 			"path": ".."
 		}
