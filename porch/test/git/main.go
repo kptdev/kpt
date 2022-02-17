@@ -25,6 +25,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	gogit "github.com/go-git/go-git/v5"
+	"k8s.io/klog/v2"
 )
 
 var (
@@ -72,7 +73,7 @@ func run(dirs []string) error {
 
 	go func() {
 		if err := server.ListenAndServe(ctx, fmt.Sprintf(":%d", *port), addressChannel); err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "Listen failed: %v", err)
+			klog.Fatalf("Listen failed: %v", err)
 		}
 	}()
 
