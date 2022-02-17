@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/gcrane"
@@ -107,7 +106,7 @@ type ociPackageDraft struct {
 
 	parent *ociRepository
 
-	tasks []v1alpha1.Task
+	tasks []api.Task
 
 	base      v1.Image
 	tag       name.Tag

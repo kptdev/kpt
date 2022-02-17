@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"github.com/go-git/go-git/v5"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -258,7 +257,7 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 
 	newRef := plumbing.NewHashReference(approvedName, oldRef.Hash())
 
-	options := &git.PushOptions{
+	options := &gogit.PushOptions{
 		RemoteName:        "origin",
 		RefSpecs:          []config.RefSpec{},
 		Auth:              auth,

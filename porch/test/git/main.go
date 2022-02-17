@@ -42,7 +42,7 @@ func main() {
 
 func run(dirs []string) error {
 	if len(dirs) != 1 {
-		return fmt.Errorf("Expected one path to Git directory to serve. Got %d", len(dirs))
+		return fmt.Errorf("expected one path to Git directory to serve. Got %d", len(dirs))
 	}
 
 	dir := dirs[0]
@@ -80,8 +80,8 @@ func run(dirs []string) error {
 	address := <-addressChannel
 	fmt.Fprintf(os.Stderr, "Listening on %s\n", address)
 
-	wait := make(chan os.Signal)
-	signal.Notify(wait, os.Interrupt, os.Kill)
+	wait := make(chan os.Signal, 1)
+	signal.Notify(wait, os.Interrupt)
 
 	<-wait
 

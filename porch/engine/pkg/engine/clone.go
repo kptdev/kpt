@@ -61,7 +61,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 }
 
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context) (repository.PackageResources, error) {
-	return repository.PackageResources{}, errors.New("Clone from Registered Repository is not implemented")
+	return repository.PackageResources{}, errors.New("clone from Registered Repository is not implemented")
 }
 
 func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api.GitPackage) (repository.PackageResources, error) {
@@ -118,5 +118,5 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 }
 
 func (m *clonePackageMutation) cloneFromOci(ctx context.Context, ociPackage *api.OciPackage) (repository.PackageResources, error) {
-	return repository.PackageResources{}, errors.New("Clone from OCI is not implemented")
+	return repository.PackageResources{}, errors.New("clone from OCI is not implemented")
 }

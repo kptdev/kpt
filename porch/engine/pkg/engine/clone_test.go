@@ -47,6 +47,9 @@ func createRepoWithContents(t *testing.T, contentDir string) *gogit.Repository {
 	}
 
 	if err := filepath.Walk(contentDir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() {
 			return nil
 		} else if !info.Mode().IsRegular() {
