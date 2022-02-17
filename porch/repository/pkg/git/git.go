@@ -205,14 +205,12 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 	}
 
 	return &gitPackageDraft{
-		gitPackageRevision: gitPackageRevision{
-			parent:   r,
-			path:     obj.Spec.PackageName,
-			revision: obj.Spec.Revision,
-			updated:  time.Now(),
-			draft:    head,
-			sha:      main.Hash(),
-		},
+		parent:   r,
+		path:     obj.Spec.PackageName,
+		revision: obj.Spec.Revision,
+		updated:  time.Now(),
+		draft:    head,
+		sha:      main.Hash(),
 	}, nil
 }
 
@@ -234,15 +232,13 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 	}
 
 	return &gitPackageDraft{
-		gitPackageRevision: gitPackageRevision{
-			parent:   r,
-			path:     oldGitPackage.path,
-			revision: oldGitPackage.revision,
-			updated:  rev.updated,
-			draft:    rev.draft,
-			tree:     rev.tree,
-			sha:      rev.sha,
-		},
+		parent:   r,
+		path:     oldGitPackage.path,
+		revision: oldGitPackage.revision,
+		updated:  rev.updated,
+		draft:    rev.draft,
+		tree:     rev.tree,
+		sha:      rev.sha,
 	}, nil
 }
 

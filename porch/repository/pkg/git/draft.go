@@ -34,7 +34,13 @@ import (
 )
 
 type gitPackageDraft struct {
-	gitPackageRevision
+	parent   *gitRepository
+	path     string
+	revision string
+	updated  time.Time
+	draft    *plumbing.Reference
+	tree     plumbing.Hash
+	sha      plumbing.Hash // Current version of the package (commit sha)
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
@@ -84,7 +90,17 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 	if err := d.parent.repo.Storer.SetReference(head); err != nil {
 		return err
 	}
+
+	// Find package's tree sha
+	if packageTree, ok := dirs[d.path]; ok {
+		d.tree = packageTree.Hash
+	} else {
+		// package contents do not exist (deleted, not yet cretated)
+		d.tree = plumbing.Hash{}
+	}
+
 	d.draft = head
+	d.sha = commit
 	return nil
 }
 
@@ -107,8 +123,15 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 		return nil, fmt.Errorf("failed to push to git: %w", err)
 	}
 
-	// TODO: return Revision only.
-	return d, nil
+	return &gitPackageRevision{
+		parent:   d.parent,
+		path:     d.path,
+		revision: d.revision,
+		updated:  d.updated,
+		draft:    d.draft,
+		tree:     d.tree,
+		sha:      d.draft.Hash(),
+	}, nil
 }
 
 func storeBlob(store storer.EncodedObjectStorer, value string) (plumbing.Hash, error) {
@@ -219,7 +242,14 @@ func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree,
 	if err := tree.Encode(eo); err != nil {
 		return plumbing.Hash{}, err
 	}
-	return store.SetEncodedObject(eo)
+
+	treeHash, err := store.SetEncodedObject(eo)
+	if err != nil {
+		return plumbing.Hash{}, err
+	}
+
+	tree.Hash = treeHash
+	return treeHash, nil
 }
 
 func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, change *v1alpha1.Task) (plumbing.Hash, error) {
