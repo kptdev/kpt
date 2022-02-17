@@ -7,6 +7,7 @@ require (
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/engine v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
+	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
@@ -23,6 +24,7 @@ require (
 	k8s.io/client-go v0.23.3
 	k8s.io/component-base v0.23.3
 	k8s.io/klog/v2 v2.40.1
+	k8s.io/kube-aggregator v0.23.3
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704
 	sigs.k8s.io/controller-runtime v0.11.0
@@ -71,7 +73,6 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
-	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f // indirect
 	github.com/go-logr/logr v1.2.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect

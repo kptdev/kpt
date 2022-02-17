@@ -25,6 +25,7 @@ import (
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func TestE2E(t *testing.T) {
@@ -37,11 +38,12 @@ func Run(suite interface{}, t *testing.T) {
 	ctx := context.Background()
 
 	t.Run(st.Elem().Name(), func(t *testing.T) {
-		if init, ok := suite.(Initializer); ok {
-			init.Initialize(ctx, t)
-		}
-
 		var ts *TestSuite = sv.Elem().FieldByName("TestSuite").Addr().Interface().(*TestSuite)
+
+		ts.T = t
+		if init, ok := suite.(Initializer); ok {
+			init.Initialize(ctx)
+		}
 
 		for i, max := 0, st.NumMethod(); i < max; i++ {
 			m := st.Method(i)
@@ -61,13 +63,17 @@ type PorchSuite struct {
 
 var _ Initializer = &PorchSuite{}
 
+func (p *PorchSuite) Initialize(ctx context.Context) {
+	p.TestSuite.Initialize(ctx)
+}
+
 func (t *PorchSuite) TestGitRepository(ctx context.Context) {
-	if t.ptc.Git.Repo == "" {
-		t.Skipf("Skipping TestGitRepository; no Git repository specified.")
-	}
+	config := t.CreateGitRepo()
 
 	var secret string
-	if t.ptc.Git.Username != "" || t.ptc.Git.Token != "" {
+
+	// Create auth secret if necessary
+	if config.Username != "" || config.Password != "" {
 		const credSecret = "git-repository-auth"
 		immutable := true
 		t.CreateF(ctx, &coreapi.Secret{
@@ -77,17 +83,17 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 			},
 			Immutable: &immutable,
 			Data: map[string][]byte{
-				"username": []byte(t.ptc.Git.Username),
-				"token":    []byte(t.ptc.Git.Token),
+				"username": []byte(config.Username),
+				"password": []byte(config.Password),
 			},
 			// TODO: Store as SecretTypeBasicAuth ?
-			Type: coreapi.SecretTypeOpaque,
+			Type: coreapi.SecretTypeBasicAuth,
 		})
 
 		secret = credSecret
 
 		t.Cleanup(func() {
-			t.DeleteL(ctx, &coreapi.Secret{
+			t.DeleteE(ctx, &coreapi.Secret{
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      credSecret,
 					Namespace: t.namespace,
@@ -96,6 +102,7 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		})
 	}
 
+	// Register repository
 	t.CreateF(ctx, &configapi.Repository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "git",
@@ -107,8 +114,9 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 			Type:        configapi.RepositoryTypeGit,
 			Content:     configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
-				Repo:   t.ptc.Git.Repo,
-				Branch: "main",
+				Repo:      config.Repo,
+				Branch:    config.Branch,
+				Directory: config.Directory,
 				SecretRef: configapi.SecretRef{
 					Name: secret,
 				},
@@ -117,13 +125,62 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	})
 
 	t.Cleanup(func() {
-		t.DeleteL(ctx, &configapi.Repository{
+		t.DeleteE(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "git",
 				Namespace: t.namespace,
 			},
 		})
 	})
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git:test-bucket:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-bucket",
+			Revision:       "v1",
+			RepositoryName: "git",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "bucket-blueprint-v0.4.3",
+								Directory: "catalog/bucket",
+							},
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-namespace:v0.2.0",
+						ConfigMap: map[string]string{
+							"namespace": "bucket-namespace",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git:test-bucket:v1",
+	}, &resources)
+
+	// TODO: verify resources; current bug: resources returned are empty.
+	for k, v := range resources.Spec.Resources {
+		t.Logf("%s:\n%s\n\n", k, v)
+	}
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
@@ -193,4 +250,8 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	if got := len(list.Items); got == 0 {
 		t.Errorf("Found no package revisions in %s; expected at least one", repo)
 	}
+}
+
+func (t *PorchSuite) TestDevPorch(ctx context.Context) {
+	t.IsUsingDevPorch()
 }
