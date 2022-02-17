@@ -16,6 +16,7 @@ package cmdutil
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
@@ -72,4 +73,17 @@ type NoResourceGroupCRDError struct{}
 
 func (*NoResourceGroupCRDError) Error() string {
 	return "type ResourceGroup not found"
+}
+
+// ResourceGroupCRDNotLatestError is an error type that will be used when a
+// cluster has a ResourceGroup CRD that doesn't match the
+// latest declaration.
+type ResourceGroupCRDNotLatestError struct{
+	Err error
+}
+
+func (e *ResourceGroupCRDNotLatestError) Error() string {
+	return fmt.Sprintf(
+		"Type ResourceGroup CRD needs update. Please make sure you have the permission " +
+			"to update CRD then run `kpt live install-resource-group`.\n %v",  e.Err)
 }

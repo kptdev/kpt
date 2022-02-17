@@ -201,11 +201,19 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 	dryRunStrategy common.DryRunStrategy) error {
 	if r.installCRD {
 		f := r.factory
-		// Only install the ResourceGroup CRD if it is not already installed.
-		if err := cmdutil.VerifyResourceGroupCRD(f); err != nil {
-			err = cmdutil.InstallResourceGroupCRD(r.ctx, f)
-			if err != nil {
+		// Install the ResourceGroup CRD if it is not already installed
+		// or if the ResourceGroup CRD doesn't match the CRD in the
+		// kpt binary.
+		err := cmdutil.VerifyResourceGroupCRD(f)
+		if err != nil {
+			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return err
+			}
+		} else if !live.ResourceGroupCRDMatched(f) {
+			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
+				return &cmdutil.ResourceGroupCRDNotLatestError{
+					Err: err,
+				}
 			}
 		}
 	}
