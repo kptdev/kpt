@@ -13,6 +13,7 @@
 # limitations under the License.
 
 FROM gcr.io/kpt-fn/apply-setters:v0.2.0 as apply-setters
+FROM gcr.io/kpt-fn/apply-setters:v0.1.1 as apply-setters-v1
 FROM gcr.io/kpt-fn/ensure-name-substring:v0.1.1 as ensure-name-substring
 FROM gcr.io/kpt-fn/search-replace:v0.2.0 as search-replace
 FROM gcr.io/kpt-fn/set-annotations:v0.1.4 as set-annotations
@@ -31,6 +32,7 @@ RUN cd ./func ; go build -v -o /server ./server
 FROM alpine:3.15
 
 COPY --from=apply-setters          /usr/local/bin/function /functions/apply-setters
+COPY --from=apply-setters-v1       /usr/local/bin/function /functions/apply-setters-v1
 COPY --from=ensure-name-substring  /usr/local/bin/function /functions/ensure-name-substring
 COPY --from=search-replace         /usr/local/bin/function /functions/search-replace
 COPY --from=set-annotations        /usr/local/bin/function /functions/set-annotations
