@@ -45,6 +45,8 @@ type PackageRevisionInterface interface {
 	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.PackageRevisionList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
 	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.PackageRevision, err error)
+	UpdateApproval(ctx context.Context, packageRevisionName string, packageRevision *v1alpha1.PackageRevision, opts v1.UpdateOptions) (*v1alpha1.PackageRevision, error)
+
 	PackageRevisionExpansion
 }
 
@@ -187,6 +189,21 @@ func (c *packageRevisions) Patch(ctx context.Context, name string, pt types.Patc
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(data).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateApproval takes the top resource name and the representation of a packageRevision and updates it. Returns the server's representation of the packageRevision, and an error, if there is any.
+func (c *packageRevisions) UpdateApproval(ctx context.Context, packageRevisionName string, packageRevision *v1alpha1.PackageRevision, opts v1.UpdateOptions) (result *v1alpha1.PackageRevision, err error) {
+	result = &v1alpha1.PackageRevision{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("packagerevisions").
+		Name(packageRevisionName).
+		SubResource("approval").
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(packageRevision).
 		Do(ctx).
 		Into(result)
 	return
