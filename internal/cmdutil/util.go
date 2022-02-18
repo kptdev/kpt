@@ -34,7 +34,9 @@ import (
 func InstallResourceGroupCRD(ctx context.Context, f util.Factory) error {
 	pr := printer.FromContextOrDie(ctx)
 	pr.Printf("installing inventory ResourceGroup CRD.\n")
-	err := live.InstallResourceGroupCRD(f)
+	err := (&live.ResourceGroupInstaller{
+		Factory: f,
+	}).InstallRG(ctx)
 	if err != nil {
 		return &ResourceGroupCRDInstallError{
 			Err: err,
@@ -78,12 +80,12 @@ func (*NoResourceGroupCRDError) Error() string {
 // ResourceGroupCRDNotLatestError is an error type that will be used when a
 // cluster has a ResourceGroup CRD that doesn't match the
 // latest declaration.
-type ResourceGroupCRDNotLatestError struct{
+type ResourceGroupCRDNotLatestError struct {
 	Err error
 }
 
 func (e *ResourceGroupCRDNotLatestError) Error() string {
 	return fmt.Sprintf(
-		"Type ResourceGroup CRD needs update. Please make sure you have the permission " +
-			"to update CRD then run `kpt live install-resource-group`.\n %v",  e.Err)
+		"Type ResourceGroup CRD needs update. Please make sure you have the permission "+
+			"to update CRD then run `kpt live install-resource-group`.\n %v", e.Err)
 }
