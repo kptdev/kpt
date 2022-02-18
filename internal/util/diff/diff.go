@@ -28,9 +28,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -111,8 +112,8 @@ type Command struct {
 	// PkgDiffer specifies package differ
 	PkgDiffer PkgDiffer
 
-	// Contains information about the upstream package to fetch
-	Upstream remote.Upstream
+	// PkgGetter specifies packaging sourcing adapter
+	PkgGetter PkgGetter
 }
 
 func (c *Command) Run(ctx context.Context) error {
@@ -121,15 +122,6 @@ func (c *Command) Run(ctx context.Context) error {
 	kptFile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, c.Path)
 	if err != nil {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
-	}
-
-	c.Upstream, err = remote.NewUpstream(kptFile)
-	if err != nil {
-		return errors.Errorf("upstream required: %v", err)
-	}
-	upstreamRef, err := c.Upstream.Ref()
-	if err != nil {
-		return errors.Errorf("upstream ref required: %v", err)
 	}
 
 	// Create a staging directory to store all compared packages
@@ -147,7 +139,7 @@ func (c *Command) Run(ctx context.Context) error {
 	// Stage current package
 	// This prevents prepareForDiff from modifying the local package
 	localPkgName := NameStagingDirectory(LocalPackageSource,
-		upstreamRef)
+		kptFile.Upstream.Git.Ref)
 	currPkg, err := stageDirectory(stagingDirectory, localPkgName)
 	if err != nil {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
@@ -159,11 +151,14 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// get the upstreamPkg at current version
-	upstreamPkgName, err := stageDirectory(stagingDirectory, NameStagingDirectory(RemotePackageSource, upstreamRef))
-	if err != nil {
-		return err
-	}
-	upstreamPkg, _, err := c.Upstream.FetchUpstream(ctx, upstreamPkgName)
+	upstreamPkgName := NameStagingDirectory(RemotePackageSource,
+		kptFile.Upstream.Git.Ref)
+	upstreamPkg, err := c.PkgGetter.GetPkg(ctx,
+		stagingDirectory,
+		upstreamPkgName,
+		kptFile.Upstream.Git.Repo,
+		kptFile.Upstream.Git.Directory,
+		kptFile.Upstream.Git.Ref)
 	if err != nil {
 		return err
 	}
@@ -171,18 +166,13 @@ func (c *Command) Run(ctx context.Context) error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		switch kptFile.UpstreamLock.Type {
-		case kptfilev1.GitOrigin:
-			gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
-			if err != nil {
-				return err
-			}
-			c.Ref, err = gur.GetDefaultBranch(ctx)
-			if err != nil {
-				return err
-			}
-		case kptfilev1.OciOrigin:
-			c.Ref = "latest"
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
+		if err != nil {
+			return err
+		}
+		c.Ref, err = gur.GetDefaultBranch(ctx)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -190,14 +180,13 @@ func (c *Command) Run(ctx context.Context) error {
 		c.DiffType == DiffTypeCombined ||
 		c.DiffType == DiffType3Way {
 		// get the upstream pkg at the target version
-		upstreamTargetPkgName, err := stageDirectory(stagingDirectory, NameStagingDirectory(TargetRemotePackageSource, c.Ref))
-		if err != nil {
-			return err
-		}
-		if err := c.Upstream.SetRef(c.Ref); err != nil {
-			return err
-		}
-		upstreamTargetPkg, _, err = c.Upstream.FetchUpstream(ctx, upstreamTargetPkgName)
+		upstreamTargetPkgName := NameStagingDirectory(TargetRemotePackageSource,
+			c.Ref)
+		upstreamTargetPkg, err = c.PkgGetter.GetPkg(ctx, stagingDirectory,
+			upstreamTargetPkgName,
+			kptFile.Upstream.Git.Repo,
+			kptFile.Upstream.Git.Directory,
+			c.Ref)
 		if err != nil {
 			return err
 		}
@@ -242,6 +231,9 @@ func (c *Command) Validate() error {
 func (c *Command) DefaultValues() {
 	if c.Output == nil {
 		c.Output = os.Stdout
+	}
+	if c.PkgGetter == nil {
+		c.PkgGetter = defaultPkgGetter{}
 	}
 	if c.PkgDiffer == nil {
 		c.PkgDiffer = &defaultPkgDiffer{
@@ -329,6 +321,52 @@ func (d *defaultPkgDiffer) prepareForDiff(dir string) error {
 		}
 	}
 	return nil
+}
+
+// PkgGetter knows how to fetch a package given a git repo, path and ref.
+type PkgGetter interface {
+	GetPkg(ctx context.Context, stagingDir, targetDir, repo, path, ref string) (dir string, err error)
+}
+
+// defaultPkgGetter uses fetch.Command abstraction to implement PkgGetter.
+type defaultPkgGetter struct{}
+
+// GetPkg checks out a repository into a temporary directory for diffing
+// and returns the directory containing the checked out package or an error.
+// repo is the git repository the package was cloned from.  e.g. https://
+// path is the sub directory of the git repository that the package was cloned from
+// ref is the git ref the package was cloned from
+func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, repo, path, ref string) (string, error) {
+	dir, err := stageDirectory(stagingDir, targetDir)
+	if err != nil {
+		return dir, err
+	}
+
+	name := filepath.Base(dir)
+	kf := kptfileutil.DefaultKptfile(name)
+	kf.Upstream = &kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
+			Repo:      repo,
+			Directory: path,
+			Ref:       ref,
+		},
+	}
+	err = kptfileutil.WriteFile(dir, kf)
+	if err != nil {
+		return dir, err
+	}
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, dir)
+	if err != nil {
+		return dir, err
+	}
+
+	cmdGet := &fetch.Command{
+		Pkg: p,
+	}
+	err = cmdGet.Run(ctx)
+	return dir, err
 }
 
 // stageDirectory creates a subdirectory of the provided path for temporary operations

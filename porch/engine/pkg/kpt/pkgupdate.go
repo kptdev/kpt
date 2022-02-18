@@ -23,8 +23,8 @@ import (
 
 	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -86,7 +86,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// 	return errors.E(op, p.UniquePath, err)
 		// }
 		updated := *upstream
-		if err := remote.ClonerUsingGitExec(ctx, &updated); err != nil {
+		if err := fetch.ClonerUsingGitExec(ctx, &updated); err != nil {
 			return err
 		}
 		defer os.RemoveAll(updated.AbsPath())
@@ -102,7 +102,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 			// if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			// 	return errors.E(op, p.UniquePath, err)
 			// }
-			if err := remote.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
+			if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 				return err //errors.E(op, p.UniquePath, err)
 			}
 			originDir = originRepoSpec.AbsPath()

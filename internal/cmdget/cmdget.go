@@ -29,7 +29,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -41,7 +40,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:        "get {REPO_URI[.git]/PKG_PATH[@VERSION]|IMAGE:TAG} [LOCAL_DEST_DIRECTORY]",
+		Use:        "get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY]",
 		Args:       cobra.MinimumNArgs(1),
 		Short:      docs.GetShort,
 		Long:       docs.GetShort + "\n" + docs.GetLong,
@@ -87,29 +86,20 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	destination, err := parse.ParseArgs(r.ctx, args, parse.Options{
-		SetGit: func(git *kptfilev1.Git) error {
-			r.Get.Git = git
-			r.Get.Upstream = remote.NewGitUpstream(git)
-			return nil
-		},
-		SetOci: func(oci *kptfilev1.Oci) error {
-			r.Get.Upstream = remote.NewOciUpstream(oci)
-			return nil
-		},
-	})
+	t, err := parse.GitParseArgs(r.ctx, args)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 
-	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(destination)
+	r.Get.Git = &t.Git
+	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(t.Destination)
 	if err != nil {
 		return err
 	}
 
 	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(destination), err)
+		return errors.E(op, types.UniquePath(t.Destination), err)
 	}
 	r.Get.Destination = string(p.UniquePath)
 

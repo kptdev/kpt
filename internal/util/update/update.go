@@ -18,16 +18,20 @@ package update
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/git"
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/remote"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
@@ -114,19 +118,13 @@ func (u Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 
-	rootUps, err := remote.NewUpstream(rootKf)
-	if err != nil {
-		return errors.E(op, u.Pkg.UniquePath, fmt.Errorf("package must have an upstream reference: %v", err))
+	if rootKf.Upstream == nil || rootKf.Upstream.Git == nil {
+		return errors.E(op, u.Pkg.UniquePath,
+			fmt.Errorf("package must have an upstream reference"))
 	}
-
-	originalRootKfRef, err := rootUps.Ref()
-	if err != nil {
-		return errors.E(op, u.Pkg.UniquePath, err)
-	}
+	originalRootKfRef := rootKf.Upstream.Git.Ref
 	if u.Ref != "" {
-		if err := rootUps.SetRef(u.Ref); err != nil {
-			return errors.E(op, u.Pkg.UniquePath, err)
-		}
+		rootKf.Upstream.Git.Ref = u.Ref
 	}
 	if u.Strategy != "" {
 		rootKf.Upstream.UpdateStrategy = u.Strategy
@@ -161,14 +159,13 @@ func (u Command) Run(ctx context.Context) error {
 				return errors.E(op, p.UniquePath, err)
 			}
 
-			if subUps, err := remote.NewUpstream(subKf); err == nil {
+			if subKf.Upstream != nil && subKf.Upstream.Git != nil {
 				// update subpackage kf ref/strategy if current pkg is a subpkg of root pkg or is root pkg
 				// and if original root pkg ref matches the subpkg ref
-				if remote.ShouldUpdateSubPkgRef(subUps, rootUps, originalRootKfRef) {
-					if err := updateSubKf(subKf, subUps, u.Ref, u.Strategy); err != nil {
-						return errors.E(op, subPkg.UniquePath, err)
-					}
-					if err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf); err != nil {
+				if shouldUpdateSubPkgRef(subKf, rootKf, originalRootKfRef) {
+					updateSubKf(subKf, u.Ref, u.Strategy)
+					err = kptfileutil.WriteFile(subPkg.UniquePath.String(), subKf)
+					if err != nil {
 						return errors.E(op, subPkg.UniquePath, err)
 					}
 				}
@@ -186,17 +183,55 @@ func (u Command) Run(ctx context.Context) error {
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
-func updateSubKf(subKf *kptfilev1.KptFile, subUps remote.Upstream, ref string, strategy kptfilev1.UpdateStrategyType) error {
+func updateSubKf(subKf *kptfilev1.KptFile, ref string, strategy kptfilev1.UpdateStrategyType) {
 	// check if explicit ref provided
 	if ref != "" {
-		if err := subUps.SetRef(ref); err != nil {
-			return err
-		}
+		subKf.Upstream.Git.Ref = ref
 	}
 	if strategy != "" {
 		subKf.Upstream.UpdateStrategy = strategy
 	}
-	return nil
+}
+
+// shouldUpdateSubPkgRef checks if subpkg ref should be updated.
+// This is true if pkg has the same upstream repo, upstream directory is within or equal to root pkg directory and original root pkg ref matches the subpkg ref.
+func shouldUpdateSubPkgRef(subKf, rootKf *kptfilev1.KptFile, originalRootKfRef string) bool {
+	return subKf.Upstream.Git.Repo == rootKf.Upstream.Git.Repo &&
+		subKf.Upstream.Git.Ref == originalRootKfRef &&
+		strings.HasPrefix(path.Clean(subKf.Upstream.Git.Directory), path.Clean(rootKf.Upstream.Git.Directory))
+}
+
+// repoClone is an interface that represents a clone of a repo on the local
+// disk.
+type repoClone interface {
+	AbsPath() string
+}
+
+// newNilRepoClone creates a new nilRepoClone that implements the repoClone
+// interface
+func newNilRepoClone() (*nilRepoClone, error) {
+	const op errors.Op = "update.newNilRepoClone"
+	dir, err := ioutil.TempDir("", "kpt-empty-")
+	if err != nil {
+		return nil, errors.E(op, errors.IO, fmt.Errorf("errors creating a temporary directory: %w", err))
+	}
+	return &nilRepoClone{
+		dir: dir,
+	}, nil
+}
+
+// nilRepoClone is an implementation of the repoClone interface, but that
+// just represents an empty directory. This simplifies the logic for update
+// since we don't have to special case situations where we don't have
+// upstream and/or origin.
+type nilRepoClone struct {
+	dir string
+}
+
+// AbsPath returns the absolute path to the local directory for the repo. For
+// the nilRepoClone, this will always be an empty directory.
+func (nrc *nilRepoClone) AbsPath() string {
+	return nrc.dir
 }
 
 // updateRootPackage updates a local package. It will use the information
@@ -212,36 +247,30 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	pr := printer.FromContextOrDie(ctx)
 	pr.PrintPackage(p, !(p == u.Pkg))
 
-	upstream, err := remote.NewUpstream(kf)
-	if err != nil {
+	g := kf.Upstream.Git
+	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
+	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+	if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
+	defer os.RemoveAll(updated.AbsPath())
 
-	updatedTmpPath, err := os.MkdirTemp("", "kpt-updated-")
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-	defer os.RemoveAll(updatedTmpPath)
-
-	pr.Printf("Fetching upstream from %s\n", upstream.String())
-	updatedAbsPath, commit, err := upstream.FetchUpstream(ctx, updatedTmpPath)
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-
-	originTmpPath, err := os.MkdirTemp("", "kpt-origin-")
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-	defer os.RemoveAll(originTmpPath)
-	originAbsPath := originTmpPath
-
+	var origin repoClone
 	if kf.UpstreamLock != nil {
-		pr.Printf("Fetching origin from %s\n", upstream.LockedString())
-		if originAbsPath, err = upstream.FetchUpstreamLock(ctx, originTmpPath); err != nil {
+		gLock := kf.UpstreamLock.Git
+		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
+		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
+		if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
+			return errors.E(op, p.UniquePath, err)
+		}
+		origin = originRepoSpec
+	} else {
+		origin, err = newNilRepoClone()
+		if err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 	}
+	defer os.RemoveAll(origin.AbsPath())
 
 	s := stack.New()
 	s.Push(".")
@@ -249,8 +278,8 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	for s.Len() > 0 {
 		relPath := s.Pop()
 		localPath := filepath.Join(p.UniquePath.String(), relPath)
-		updatedPath := filepath.Join(updatedAbsPath, relPath)
-		originPath := filepath.Join(originAbsPath, relPath)
+		updatedPath := filepath.Join(updated.AbsPath(), relPath)
+		originPath := filepath.Join(origin.AbsPath(), relPath)
 
 		isRoot := false
 		if relPath == "." {
@@ -271,7 +300,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		}
 	}
 
-	if err := kptfileutil.UpdateUpstreamLock(p.UniquePath.String(), upstream.BuildUpstreamLock(commit)); err != nil {
+	if err := kptfileutil.UpdateUpstreamLockFromGit(p.UniquePath.String(), updated); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
