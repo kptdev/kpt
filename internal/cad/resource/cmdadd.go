@@ -1,9 +1,8 @@
-package cad
+package resource
 
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/cad"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -27,6 +26,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const gcloudName = "./gcloud-config.yaml"
@@ -39,33 +39,107 @@ func (r *Setter) GetGcloudFnConfigPath() string {
 // THis will be supported by variant constructor
 var IncludeMetaResourcesFlag = true
 
-func NewSetter(ctx context.Context) *Setter {
+func NewAdd(ctx context.Context) *Setter {
 	r := &Setter{ctx: ctx}
 	c := &cobra.Command{
-		Use:   "set [--kind=namespace] [--pkg=redis-bucket]",
-		Short: `make the KRM resource(s) available in the local package`,
+		Use:   "resource [--kind=namespace] [--context=false]",
+		Short: `Add the KRM resource(s) in the local package`,
 		Example: `
   # Set the package resources to the same namespace
-  $ editor set -k=namespace
+  $ kpt editor add resource --kind=namespace
 `,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 	}
 
-	c.Flags().StringVarP(&r.kind, "kind", "k", "", "KRM resource `Kind`")
+	c.Flags().StringVarP(&r.kind, "kind", "k", "", "Kubernetes core resource `Kind`")
 	c.RegisterFlagCompletionFunc("kind", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return kubectlKinds, cobra.ShellCompDirectiveDefault
+		return cad.ResourceKinds(), cobra.ShellCompDirectiveDefault
 	})
 
-	c.Flags().StringVarP(&r.pkg, "pkg", "p", "",
-		"the package name of KRM resources")
+	c.Flags().StringVarP(&r.context, "context", "c", "", "KRM resources correlated to existing `kind`")
+	c.RegisterFlagCompletionFunc("context", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return r.GetContextFromSourceLocal(args), cobra.ShellCompDirectiveDefault
+	})
 	r.Command = c
 	return r
 }
 
+func (s *Setter) GetContextFromSourceLocal(args []string) []string {
+	var inputs []kio.Reader
+	matchFilesGlob := kio.MatchAll
+	if IncludeMetaResourcesFlag {
+		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
+	}
+	if len(args) == 0 {
+		// no pkg path specified, default to current working dir
+		wd, err := os.Getwd()
+		if err != nil {
+			// return err
+		}
+		s.Dest = wd
+	} else {
+		// resolve and validate the provided path
+		s.Dest = args[0]
+	}
+	var err error
+	s.Dest, err = argutil.ResolveSymlink(s.ctx, s.Dest)
+	if err != nil {
+		return nil
+	}
+	resolvedPath, err := argutil.ResolveSymlink(s.ctx, s.Dest)
+	if err != nil {
+		return nil
+	}
+	functionConfigFilter, err := pkg.FunctionConfigFilterFunc(types.UniquePath(resolvedPath), IncludeMetaResourcesFlag)
+	if err != nil {
+		return nil
+	}
+	inputs = append(inputs, kio.LocalPackageReader{
+		PackagePath:        resolvedPath,
+		MatchFilesGlob:     matchFilesGlob,
+		FileSkipFunc:       functionConfigFilter,
+		PreserveSeqIndent:  true,
+		PackageFileName:    kptfile.KptFileName,
+		IncludeSubpackages: true,
+		WrapBareSeqNode:    true,
+	})
+	var outputs []kio.Writer
+	var writer bytes.Buffer
+	outputs = append(outputs, kio.ByteWriter{
+		Writer:           &writer,
+		FunctionConfig:   nil,
+		ClearAnnotations: []string{kioutil.IndexAnnotation, kioutil.PathAnnotation}, // nolint:staticcheck
+	})
+
+	resourceReader := &ResoureReader{}
+	err = kio.Pipeline{Inputs: inputs, Filters: []kio.Filter{resourceReader}, Outputs: outputs}.Execute()
+	if e := runner.HandleError(s.ctx, err); e != nil {
+		return nil
+	}
+	resourceFromCtx := []string{}
+	for _, r := range resourceReader.KindLists {
+		if rs, ok := cad.ResourceContextMap[r]; ok {
+			resourceFromCtx = append(resourceFromCtx, rs...)
+		}
+	}
+	return resourceFromCtx
+}
+
+type ResoureReader struct {
+	KindLists []string
+}
+
+func (r *ResoureReader) Filter(o []*yaml.RNode) ([]*yaml.RNode, error) {
+	for _, rn := range o {
+		r.KindLists = append(r.KindLists, strings.ToLower(rn.GetKind()))
+	}
+	return o, nil
+}
+
 type Setter struct {
-	kind string
-	pkg  string
+	kind    string
+	context string
 
 	// The kpt package directory
 	Dest      string
@@ -76,8 +150,8 @@ type Setter struct {
 }
 
 func (r *Setter) preRunE(c *cobra.Command, args []string) error {
-	if r.kind == "" && r.pkg == "" {
-		return fmt.Errorf("must specify a flag `kind` or a `pkg`")
+	if r.kind == "" && r.context == "" {
+		return fmt.Errorf("must specify either `kind` or `context` flag")
 	}
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
@@ -102,14 +176,14 @@ func (r *Setter) preRunE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Setter) fromKubeclCreate() (string, error) {
-	name := r.GetDefaultName()
-	if name == "" {
-		return "", nil
-	}
+func (r *Setter) fromKubectlCreate(kind string) (string, error) {
 	var out, errout bytes.Buffer
-
-	cmd := exec.Command("kubectl", "create", r.kind, name, "--dry-run=client", "-oyaml")
+	args := []string{"create", kind, cad.PlaceHolder, "--dry-run=client", "-oyaml"}
+	flagArgs := cad.ResourceKindArgs(kind)
+	if flagArgs != nil {
+		args = append(args, flagArgs...)
+	}
+	cmd := exec.Command("kubectl", args...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
 	err := cmd.Run()
@@ -136,19 +210,7 @@ func (r *Setter) getFunctionSpec(execPath string) (*runtimeutil.FunctionSpec, []
 	return fn, execArgs, nil
 }
 
-// Should be changed to variant constructor.
-func (r *Setter) GetDefaultName() string {
-	kindToName := map[string]string{
-		"namespace": r.kf.Name,
-	}
-	if r.kind != "" {
-		if name, ok := kindToName[r.kind]; ok {
-			return name
-		}
-	}
-	return ""
-}
-
+/*
 // 	GetExeFnsPath choose which kpt fn executable(s) to run for the given `Kind`.
 //	The mapping between fn and resource `kind` will be done by function/pkg discovery mechanism.
 // TODO: run multiple fn execs in series (like render pipeline)
@@ -159,7 +221,7 @@ func GetExeFnsPath(kind string) string {
 	}
 	// cache location unspecified, use UserHomeDir/.kpt/repos
 	dir, _ = os.UserHomeDir()
-	execName, ok := BuiltinTransformers[kind]
+	execName, ok := cad.BuiltinTransformers[kind]
 	if !ok {
 		return ""
 	}
@@ -169,31 +231,24 @@ func GetExeFnsPath(kind string) string {
 	}
 	return execPath
 }
+*/
 
-func (r *Setter) runE(c *cobra.Command, _ []string) error {
-	var inputs []kio.Reader
-	// Leverage kubectl to create k8s Resource (caveat, name is required --> r.kf.name )
+func (r *Setter) runE(c *cobra.Command, args []string) error {
+	var kind string
 	if r.kind != "" {
-		krmResources, err := r.fromKubeclCreate()
-		if err != nil {
-			return err
-		}
-		if krmResources != "" {
-			reader := strings.NewReader(krmResources)
-			inputs = append(inputs, &kio.ByteReader{Reader: reader})
-		}
+		kind = r.kind
+	} else {
+		kind = r.context
 	}
-	// find the fn exec that should mutate/validate this `kind` resource.
-	execPath := GetExeFnsPath(r.kind)
-	if execPath == "" {
-		// TODO: write resource to pkg dir.
-		return nil
-	}
-	fnSpec, execArgs, err := r.getFunctionSpec(execPath)
+	krmResources, err := r.fromKubectlCreate(kind)
 	if err != nil {
 		return err
 	}
-
+	var inputs []kio.Reader
+	if krmResources != "" {
+		reader := strings.NewReader(krmResources)
+		inputs = append(inputs, &kio.ByteReader{Reader: reader})
+	}
 	matchFilesGlob := kio.MatchAll
 	if IncludeMetaResourcesFlag {
 		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
@@ -236,10 +291,13 @@ func (r *Setter) runE(c *cobra.Command, _ []string) error {
 	output = &OutContent
 
 	runFns := runfn.RunFns{
-		Ctx:                   r.ctx,
-		Function:              fnSpec,
-		ExecArgs:              execArgs,
-		OriginalExec:          execPath,
+		Ctx: r.ctx,
+		/*
+			Function:              fnSpec,
+			ExecArgs:              execArgs,
+			OriginalExec:          execPath,
+
+		*/
 		Output:                output,
 		Input:                 nil,
 		KIOReaders:            inputs,
