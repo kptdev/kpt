@@ -17,7 +17,6 @@
 		- [3.6 Creating a Package](book/03-packages/06-creating-a-package.md)
 		- [3.7 Composing a Package](book/03-packages/07-composing-a-package.md)
 		- [3.8 Publishing a Package](book/03-packages/08-publishing-a-package.md)
-		- TODO(oci-support) Add to existing sections. Introduce new section specifically for Artifact Registry.
 	- [4 Using Functions](book/04-using-functions/)
 		- [4.1 Declarative Function Execution](book/04-using-functions/01-declarative-function-execution.md)
 		- [4.2 Imperative Function Execution](book/04-using-functions/02-imperative-function-execution.md)
@@ -47,8 +46,6 @@
       - [init](reference/cli/pkg/init/)
       - [tree](reference/cli/pkg/tree/)
       - [update](reference/cli/pkg/update/)
-      - [pull](reference/cli/pkg/pull/)
-      - [push](reference/cli/pkg/push/)
     - [fn](reference/cli/fn/)
       - [render](reference/cli/fn/render/)
       - [eval](reference/cli/fn/eval/)

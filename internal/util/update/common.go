@@ -40,7 +40,7 @@ func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
 	// If the upstream information in local has changed from origin, it
 	// means the user had updated the package independently and we don't
 	// want to override it.
-	if !reflect.DeepEqual(localKf.Upstream, originKf.Upstream) {
+	if !reflect.DeepEqual(localKf.Upstream.Git, originKf.Upstream.Git) {
 		return true, nil
 	}
 	return false, nil
