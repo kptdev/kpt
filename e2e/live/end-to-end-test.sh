@@ -129,7 +129,30 @@ function downloadPreviousKpt {
   fi
   tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   mv kpt $BIN_DIR/previouskpt
-  echo "Downloading latest kpt binary...SUCCESS"
+  echo "Downloading previous kpt binary...SUCCESS"
+  rm kpt.tar.gz LICENSES.txt lib.zip
+  set +e
+}
+
+function downloadKpt1.0 {
+  set -e
+  echo "Downloading v1.0.0-beta.13 kpt binary..."
+  uname="$(uname -s)"
+  if [[ "$uname" == "Linux" ]]
+  then
+    echo "Running on Linux"
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.13/kpt_linux_amd64-1.0.0-beta.13.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+  elif [[ "$uname" == "Darwin" ]]
+  then
+    echo "Running on Darwin"
+      curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.13/kpt_darwin_amd64-1.0.0-beta.13.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    else
+      echo "ERROR: Unknown OS $uname"
+      exit 1
+  fi
+  tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+  mv kpt $BIN_DIR/kpt1.0.0
+  echo "Downloading 1.0.0 kpt binary...SUCCESS"
   rm kpt.tar.gz LICENSES.txt lib.zip
   set +e
 }
@@ -409,6 +432,7 @@ echo
 buildKpt
 
 downloadPreviousKpt
+downloadKpt1.0
 
 echo
 set +e                          # Do not stop the test for errors
@@ -834,6 +858,70 @@ assertPodNotExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
 assertPodExists "pod-d" "test-rg-namespace"
+printResult
+
+###########################################################
+#  Test Update ResourceGroup CRD during apply
+###########################################################
+
+createTestSuite
+waitForDefaultServiceAccount
+
+# This test first applies a kpt package with kpt1.0.0,
+# which uses the previous ResourceGroup CRD.
+# Then it re-apply the same kpt package with the built kpt,
+# which uses a new ResourceGroup CRD.
+# It updates the ResourceGroup CRD and apply/prune works as expected.
+echo "Testing apply with kpt 1.0.0 and re-apply/prune with built kpt"
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt1.0.0 live apply -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt1.0.0 live apply - > $OUTPUT_DIR/status 2>&1
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+printResult
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - > $OUTPUT_DIR/status 2>&1
+assertContains "namespace/stdin-test-namespace unchanged"
+assertContains "pod/pod-a unchanged"
+assertContains "pod/pod-b unchanged"
+assertContains "pod/pod-c unchanged"
+printResult
+echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - > $OUTPUT_DIR/status 2>&1
+assertContains "pod/pod-a deleted"
+assertContains "pod/pod-b deleted"
+assertContains "pod/pod-c deleted"
+assertContains "4 resource(s) deleted, 0 skipped"
+printResult
+
+# Test: don't have permission to update the ResourceGroup CRD
+# should see an error message
+echo "Testing updating ResourceGroup CRD during apply"
+echo "Apply the previous ResourceGroup CRD"
+${BIN_DIR}/kpt1.0.0 live install-resource-group > $OUTPUT_DIR/status 2>&1
+echo "kubectl apply -f e2e/live/testdata/update-rg-crd"
+# Setup: create a service account and bind a Role to it so it has administrative
+# privileges on the "test" namespace, but no permissions to Get or Update CRD.
+kubectl apply -f e2e/live/testdata/rbac-error-step-1 > $OUTPUT_DIR/status
+assertContains "namespace/rbac-error created"
+assertContains "rolebinding.rbac.authorization.k8s.io/admin created"
+assertContains "serviceaccount/user created"
+wait 2
+
+# Setup: use the service account just created. It does not have permissions
+# on the default namespace, so it will give a permissions error on apply
+# for anything attempted to apply to the default namespace.
+kubectl config set-credentials user --token="$(kubectl get secrets -ojsonpath='{.data.token}' \
+  "$(kubectl get sa user -ojsonpath='{.secrets[0].name}')" \
+  | base64 -d)" > $OUTPUT_DIR/status
+kubectl config set-context kind-kind:user --cluster=kind-kind --user=user > $OUTPUT_DIR/status
+kubectl config use-context kind-kind:user > $OUTPUT_DIR/status
+wait 2
+
+# Attempt to apply a kpt package. It fails with an error message.
+${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status 2>&1
+assertContains "error: Type ResourceGroup CRD needs update."
 printResult
 
 # Clean-up the k8s cluster

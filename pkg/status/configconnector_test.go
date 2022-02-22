@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -169,7 +169,8 @@ metadata:
 				Mapper: fakeMapper,
 			}
 
-			res := statusReader.ReadStatus(context.Background(), fakeClusterReader, object.UnstructuredToObjMetadata(obj))
+			res, err := statusReader.ReadStatus(context.Background(), fakeClusterReader, object.UnstructuredToObjMetadata(obj))
+			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedStatus, res.Status)
 		})
 	}

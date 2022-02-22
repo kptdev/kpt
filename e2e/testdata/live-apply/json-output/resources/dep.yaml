@@ -18,7 +18,7 @@ metadata:
   name: nginx
   namespace: json-output
   annotations:
-    config.kubernetes.io/depends-on: apps/namespaces/json-output/ConfigMap/cm
+    config.kubernetes.io/depends-on: /namespaces/json-output/ConfigMap/cm
 spec:
   replicas: 1
   selector:

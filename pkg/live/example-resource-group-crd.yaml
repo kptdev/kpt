@@ -150,6 +150,10 @@ spec:
                 description: ResourceStatus contains the status of a given resource
                   uniquely identified by its group, kind, name and namespace.
                 properties:
+                  actuation:
+                    description: actuation indicates whether actuation has been
+                      performed yet and how it went.
+                    type: string
                   conditions:
                     items:
                       properties:
@@ -185,8 +189,18 @@ spec:
                     type: string
                   namespace:
                     type: string
+                  reconcile:
+                    description: reconcile indicates whether reconciliation has
+                      been performed yet and how it went.
+                    type: string
+                  sourceHash:
+                    type: string
                   status:
                     description: Status describes the status of a resource
+                    type: string
+                  strategy:
+                    description: strategy indicates the method of actuation (apply
+                      or delete) used or planned to be used.
                     type: string
                 required:
                 - group

@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
 	"github.com/GoogleContainerTools/kpt/internal/cmddestroy"
+	"github.com/GoogleContainerTools/kpt/internal/cmdinstallrg"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
@@ -32,7 +33,6 @@ import (
 	"k8s.io/klog/v2"
 	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
-	"sigs.k8s.io/cli-utils/pkg/util/factory"
 )
 
 func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
@@ -56,7 +56,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams)
 	destroyCmd := cmddestroy.NewCommand(ctx, f, ioStreams)
 	statusCmd := status.NewCommand(ctx, f)
-	installRGCmd := GetInstallRGRunner(f, ioStreams).Command
+	installRGCmd := cmdinstallrg.NewCommand(ctx, f, ioStreams)
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 
 	// Add the migrate command to change from ConfigMap to ResourceGroup inventory
@@ -76,14 +76,8 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
-	// Use the CachingRESTClientGetter to make sure the same RESTMapper is shared
-	// across all kpt live functionality. This is needed to properly invalidate the
-	// RESTMapper cache when CRDs have been installed in the cluster.
-	cachingConfigFlags := &factory.CachingRESTClientGetter{
-		Delegate: kubeConfigFlags,
-	}
 	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
-		Delegate:  cachingConfigFlags,
+		Delegate:  kubeConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
 	}
 	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)

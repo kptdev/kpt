@@ -331,7 +331,7 @@ func toReaderOptions(f util.Factory) (manifestreader.ReaderOptions, error) {
 
 // ToInventoryInfo takes the information in the provided inventory object and
 // return an InventoryResourceGroup implementation of the InventoryInfo interface.
-func ToInventoryInfo(inventory kptfilev1.Inventory) (inventory.InventoryInfo, error) {
+func ToInventoryInfo(inventory kptfilev1.Inventory) (inventory.Info, error) {
 	if err := validateInventory(inventory); err != nil {
 		return nil, err
 	}

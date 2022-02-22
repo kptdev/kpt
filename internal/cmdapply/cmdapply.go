@@ -95,7 +95,7 @@ func NewCommand(ctx context.Context, factory util.Factory,
 type Runner struct {
 	ctx        context.Context
 	Command    *cobra.Command
-	PreProcess func(info inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error)
+	PreProcess func(info inventory.Info, strategy common.DryRunStrategy) (inventory.Policy, error)
 	ioStreams  genericclioptions.IOStreams
 	factory    util.Factory
 
@@ -111,10 +111,10 @@ type Runner struct {
 	rgFile                       string
 	printStatusEvents            bool
 
-	inventoryPolicy inventory.InventoryPolicy
+	inventoryPolicy inventory.Policy
 	prunePropPolicy v1.DeletionPropagation
 
-	applyRunner func(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
+	applyRunner func(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 		dryRunStrategy common.DryRunStrategy) error
 }
 
@@ -197,22 +197,30 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return r.applyRunner(r, invInfo, objs, dryRunStrategy)
 }
 
-func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.Unstructured,
+func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 	dryRunStrategy common.DryRunStrategy) error {
 	if r.installCRD {
 		f := r.factory
-		// Only install the ResourceGroup CRD if it is not already installed.
-		if err := cmdutil.VerifyResourceGroupCRD(f); err != nil {
-			err = cmdutil.InstallResourceGroupCRD(r.ctx, f)
-			if err != nil {
+		// Install the ResourceGroup CRD if it is not already installed
+		// or if the ResourceGroup CRD doesn't match the CRD in the
+		// kpt binary.
+		err := cmdutil.VerifyResourceGroupCRD(f)
+		if err != nil {
+			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return err
+			}
+		} else if !live.ResourceGroupCRDMatched(f) {
+			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
+				return &cmdutil.ResourceGroupCRDNotLatestError{
+					Err: err,
+				}
 			}
 		}
 	}
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 	if err != nil {
 		return err
 	}
@@ -222,15 +230,16 @@ func runApply(r *Runner, invInfo inventory.InventoryInfo, objs []*unstructured.U
 		return err
 	}
 
-	applier, err := apply.NewApplier(r.factory, invClient)
+	applier, err := apply.NewApplierBuilder().
+		WithFactory(r.factory).
+		WithInventoryClient(invClient).
+		WithStatusPoller(statusPoller).
+		Build()
 	if err != nil {
 		return err
 	}
-	// TODO(mortent): See if we can improve this. Having to change the Applier after it has been
-	// created feels a bit awkward.
-	applier.StatusPoller = statusPoller
 
-	ch := applier.Run(r.ctx, invInfo, objs, apply.Options{
+	ch := applier.Run(r.ctx, invInfo, objs, apply.ApplierOptions{
 		ServerSideOptions:      r.serverSideOptions,
 		PollInterval:           r.period,
 		ReconcileTimeout:       r.reconcileTimeout,
