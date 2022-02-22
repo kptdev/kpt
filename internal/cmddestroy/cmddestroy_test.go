@@ -34,7 +34,7 @@ func TestCmd(t *testing.T) {
 		args                []string
 		namespace           string
 		inventory           *kptfilev1.Inventory
-		destroyCallbackFunc func(*testing.T, inventory.InventoryInfo)
+		destroyCallbackFunc func(*testing.T, inventory.Info)
 		expectedErrorMsg    string
 	}{
 		"invalid inventory policy": {
@@ -42,7 +42,7 @@ func TestCmd(t *testing.T) {
 				"--inventory-policy", "noSuchPolicy",
 			},
 			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, _ inventory.InventoryInfo) {
+			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
 				t.FailNow()
 			},
 			expectedErrorMsg: "inventory policy must be one of strict, adopt",
@@ -52,7 +52,7 @@ func TestCmd(t *testing.T) {
 				"--output", "foo",
 			},
 			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, _ inventory.InventoryInfo) {
+			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
 				t.FailNow()
 			},
 			expectedErrorMsg: "unknown output type \"foo\"",
@@ -68,7 +68,7 @@ func TestCmd(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 			namespace: "testns",
-			destroyCallbackFunc: func(t *testing.T, inv inventory.InventoryInfo) {
+			destroyCallbackFunc: func(t *testing.T, inv inventory.Info) {
 				assert.Equal(t, "my-ns", inv.Namespace())
 				assert.Equal(t, "my-name", inv.Name())
 				assert.Equal(t, "my-inv-id", inv.ID())
@@ -93,7 +93,7 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
-			runner.destroyRunner = func(_ *Runner, inv inventory.InventoryInfo, _ common.DryRunStrategy) error {
+			runner.destroyRunner = func(_ *Runner, inv inventory.Info, _ common.DryRunStrategy) error {
 				tc.destroyCallbackFunc(t, inv)
 				return nil
 			}

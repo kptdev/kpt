@@ -76,7 +76,7 @@ func NewCommand(ctx context.Context, factory util.Factory,
 type Runner struct {
 	ctx        context.Context
 	Command    *cobra.Command
-	PreProcess func(info inventory.InventoryInfo, strategy common.DryRunStrategy) (inventory.InventoryPolicy, error)
+	PreProcess func(info inventory.Info, strategy common.DryRunStrategy) (inventory.Policy, error)
 	ioStreams  genericclioptions.IOStreams
 	factory    util.Factory
 
@@ -86,11 +86,11 @@ type Runner struct {
 	rgFile                string
 	printStatusEvents     bool
 
-	inventoryPolicy inventory.InventoryPolicy
+	inventoryPolicy inventory.Policy
 
 	// TODO(mortent): This is needed for now since we don't have a good way to
 	// stub out the Destroyer with an interface for testing purposes.
-	destroyRunner func(r *Runner, inv inventory.InventoryInfo, strategy common.DryRunStrategy) error
+	destroyRunner func(r *Runner, inv inventory.Info, strategy common.DryRunStrategy) error
 }
 
 // preRunE validates the inventoryPolicy and the output type.
@@ -155,10 +155,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	return r.destroyRunner(r, invInfo, dryRunStrategy)
 }
 
-func runDestroy(r *Runner, inv inventory.InventoryInfo, dryRunStrategy common.DryRunStrategy) error {
+func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewInventoryClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 	if err != nil {
 		return err
 	}

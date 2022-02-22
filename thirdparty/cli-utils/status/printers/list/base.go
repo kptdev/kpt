@@ -57,7 +57,7 @@ func (ep *BaseListPrinter) Print(ch <-chan pollevent.Event, identifiers []object
 }
 
 func (ep *BaseListPrinter) printStatusEvent(se pollevent.Event) error {
-	switch se.EventType {
+	switch se.Type {
 	case pollevent.ResourceUpdateEvent:
 		id := se.Resource.Identifier
 		return ep.Formatter.FormatStatusEvent(event.StatusEvent{

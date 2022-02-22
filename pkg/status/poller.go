@@ -26,9 +26,11 @@ func NewStatusPoller(f util.Factory) (*polling.StatusPoller, error) {
 		return nil, err
 	}
 
-	return polling.NewStatusPollerFromFactory(f, []engine.StatusReader{
-		&ConfigConnectorStatusReader{
-			Mapper: mapper,
+	return polling.NewStatusPollerFromFactory(f, polling.Options{
+		CustomStatusReaders: []engine.StatusReader{
+			&ConfigConnectorStatusReader{
+				Mapper: mapper,
+			},
 		},
 	})
 }

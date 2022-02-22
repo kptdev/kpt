@@ -30,9 +30,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"k8s.io/component-base/cli"
 	"k8s.io/klog/v2"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"k8s.io/kubectl/pkg/util/logs"
 )
 
 func main() {
@@ -50,10 +50,6 @@ func runMain() int {
 	ctx := context.Background()
 
 	cmd := run.GetMain(ctx)
-	logs.InitLogs()
-	defer func() {
-		logs.FlushLogs()
-	}()
 
 	// Enable commandline flags for klog.
 	// logging will help in collecting debugging information from users
@@ -65,7 +61,7 @@ func runMain() int {
 	_ = logFlags.Set("alsologtostderr", "true")
 	cmd.Flags().AddGoFlagSet(&logFlags)
 
-	err = cmd.Execute()
+	err = cli.RunNoErrOutput(cmd)
 	if err != nil {
 		return handleErr(cmd, err)
 	}

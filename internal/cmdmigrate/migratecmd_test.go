@@ -146,8 +146,8 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
-				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
+				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			err = migrateRunner.updateKptfile(ctx, []string{dir}, testInventoryID)
 			// Check if there should be an error
@@ -245,8 +245,8 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			migrateRunner.rgFile = tc.rgFilename
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
-				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
+				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			err = migrateRunner.migrateKptfileToRG([]string{dir})
 			// Check if there should be an error
@@ -319,8 +319,8 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.InventoryClient, error) {
-				return inventory.NewFakeInventoryClient([]object.ObjMetadata{}), nil
+			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
+				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})
 			// Check if there should be an error
@@ -431,7 +431,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 
 			ctx := fake.CtxWithDefaultPrinter()
 			// Create MigrateRunner and call "retrieveConfigMapInv"
-			rgInvClient := inventory.NewFakeInventoryClient(tc.objs)
+			rgInvClient := inventory.NewFakeClient(tc.objs)
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			err := migrateRunner.migrateObjs(rgInvClient, tc.objs, strings.NewReader(tc.invObj), []string{"-"})
@@ -444,7 +444,7 @@ func TestKptMigrate_migrateObjs(t *testing.T) {
 			}
 			assert.NoError(t, err)
 			// Retrieve the objects stored by the inventory client and validate.
-			migratedObjs, err := rgInvClient.GetClusterObjs(nil, common.DryRunNone)
+			migratedObjs, err := rgInvClient.GetClusterObjs(nil)
 			assert.NoError(t, err)
 			if len(tc.objs) != len(migratedObjs) {
 				t.Errorf("expected num migrated objs (%d), got (%d)", len(tc.objs), len(migratedObjs))

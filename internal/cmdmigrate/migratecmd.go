@@ -45,8 +45,8 @@ type MigrateRunner struct {
 	name            string
 	rgFile          string
 	force           bool
-	rgInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
-	cmInvClientFunc func(util.Factory) (inventory.InventoryClient, error)
+	rgInvClientFunc func(util.Factory) (inventory.Client, error)
+	cmInvClientFunc func(util.Factory) (inventory.Client, error)
 	cmLoader        manifestreader.ManifestLoader
 	cmNotMigrated   bool // flag to determine if migration from ConfigMap has occurred
 }
@@ -239,7 +239,7 @@ func (mr *MigrateRunner) updateKptfile(ctx context.Context, args []string, prevI
 
 // retrieveConfigMapInv retrieves the ConfigMap inventory object or
 // an error if one occurred.
-func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.InventoryInfo, error) {
+func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (inventory.Info, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve the current ConfigMap inventory...")
 	cmReader, err := mr.cmLoader.ManifestReader(reader, args[0])
 	if err != nil {
@@ -266,10 +266,10 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 // retrieveInvObjs returns the object references from the passed
 // inventory object by querying the inventory object in the cluster,
 // or an error if one occurred.
-func (mr *MigrateRunner) retrieveInvObjs(cmInvClient inventory.InventoryClient,
-	invObj inventory.InventoryInfo) ([]object.ObjMetadata, error) {
+func (mr *MigrateRunner) retrieveInvObjs(cmInvClient inventory.Client,
+	invObj inventory.Info) ([]object.ObjMetadata, error) {
 	fmt.Fprint(mr.ioStreams.Out, "  retrieve ConfigMap inventory objs...")
-	cmObjs, err := cmInvClient.GetClusterObjs(invObj, mr.dryRunStrategy())
+	cmObjs, err := cmInvClient.GetClusterObjs(invObj)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func (mr *MigrateRunner) retrieveInvObjs(cmInvClient inventory.InventoryClient,
 // migrateObjs stores the passed objects in the ResourceGroup inventory
 // object and applies the inventory object to the cluster. Returns
 // an error if one occurred.
-func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
+func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.Client,
 	cmObjs []object.ObjMetadata, reader io.Reader, args []string) error {
 	if err := validateParams(reader, args); err != nil {
 		return err
@@ -324,8 +324,8 @@ func (mr *MigrateRunner) migrateObjs(rgInvClient inventory.InventoryClient,
 
 // deleteConfigMapInv removes the passed inventory object from the
 // cluster. Returns an error if one occurred.
-func (mr *MigrateRunner) deleteConfigMapInv(cmInvClient inventory.InventoryClient,
-	invObj inventory.InventoryInfo) error {
+func (mr *MigrateRunner) deleteConfigMapInv(cmInvClient inventory.Client,
+	invObj inventory.Info) error {
 	fmt.Fprint(mr.ioStreams.Out, "  deleting old ConfigMap inventory object...")
 	if err := cmInvClient.DeleteInventoryObj(invObj, mr.dryRunStrategy()); err != nil {
 		return err
@@ -395,12 +395,12 @@ func validateParams(reader io.Reader, args []string) error {
 	return nil
 }
 
-func rgInvClient(factory util.Factory) (inventory.InventoryClient, error) {
-	return inventory.NewInventoryClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+func rgInvClient(factory util.Factory) (inventory.Client, error) {
+	return inventory.NewClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc)
 }
 
-func cmInvClient(factory util.Factory) (inventory.InventoryClient, error) {
-	return inventory.NewInventoryClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap)
+func cmInvClient(factory util.Factory) (inventory.Client, error) {
+	return inventory.NewClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap)
 }
 
 // func runLiveMigrateWithRGFile is a modified version of MigrateRunner.Run that stores the

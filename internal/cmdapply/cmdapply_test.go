@@ -35,7 +35,7 @@ func TestCmd(t *testing.T) {
 		args              []string
 		namespace         string
 		inventory         *kptfilev1.Inventory
-		applyCallbackFunc func(*testing.T, *Runner, inventory.InventoryInfo)
+		applyCallbackFunc func(*testing.T, *Runner, inventory.Info)
 		expectedErrorMsg  string
 	}{
 		"invalid inventory policy": {
@@ -43,7 +43,7 @@ func TestCmd(t *testing.T) {
 				"--inventory-policy", "noSuchPolicy",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, _ *Runner, _ inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, _ *Runner, _ inventory.Info) {
 				t.FailNow()
 			},
 			expectedErrorMsg: "inventory policy must be one of strict, adopt",
@@ -53,7 +53,7 @@ func TestCmd(t *testing.T) {
 				"--output", "foo",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, _ *Runner, _ inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, _ *Runner, _ inventory.Info) {
 				t.FailNow()
 			},
 			expectedErrorMsg: "unknown output type \"foo\"",
@@ -69,7 +69,7 @@ func TestCmd(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, _ *Runner, inv inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, _ *Runner, inv inventory.Info) {
 				assert.Equal(t, "my-ns", inv.Namespace())
 				assert.Equal(t, "my-name", inv.Name())
 				assert.Equal(t, "my-inv-id", inv.ID())
@@ -83,7 +83,7 @@ func TestCmd(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.Info) {
 				assert.True(t, r.installCRD)
 			},
 		},
@@ -97,7 +97,7 @@ func TestCmd(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.Info) {
 				assert.True(t, r.dryRun)
 				assert.False(t, r.installCRD)
 			},
@@ -114,7 +114,7 @@ func TestCmd(t *testing.T) {
 				InventoryID: "my-inv-id",
 			},
 			namespace: "testns",
-			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.InventoryInfo) {
+			applyCallbackFunc: func(t *testing.T, r *Runner, _ inventory.Info) {
 				assert.True(t, r.dryRun)
 				assert.True(t, r.installCRD)
 			},
@@ -138,7 +138,7 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
-			runner.applyRunner = func(_ *Runner, inv inventory.InventoryInfo,
+			runner.applyRunner = func(_ *Runner, inv inventory.Info,
 				_ []*unstructured.Unstructured, _ common.DryRunStrategy) error {
 				tc.applyCallbackFunc(t, runner, inv)
 				return nil

@@ -19,6 +19,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/cli-utils/pkg/apis/actuation"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
@@ -107,7 +108,7 @@ func TestLoadStore(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			wrapped := WrapInventoryObj(tc.inv)
-			_ = wrapped.Store(tc.objs)
+			_ = wrapped.Store(tc.objs, []actuation.ObjectStatus{})
 			invStored, err := wrapped.GetObject()
 			if tc.isError {
 				if err == nil {
