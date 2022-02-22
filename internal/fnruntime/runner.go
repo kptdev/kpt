@@ -19,7 +19,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -31,7 +30,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/google/shlex"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -42,11 +43,12 @@ import (
 // NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewRunner(
-	ctx context.Context, f *kptfilev1.Function,
+	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, displayResourceCount bool) (kio.Filter, error) {
+	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
+	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
-	config, err := newFnConfig(f, pkgPath)
+	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err
 	}
@@ -63,38 +65,48 @@ func NewRunner(
 	}
 
 	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
-	switch {
-	case f.Image != "":
-		cfn := &ContainerFn{
-			Path:            pkgPath,
-			Image:           f.Image,
-			ImagePullPolicy: imagePullPolicy,
-			Ctx:             ctx,
-			FnResult:        fnResult,
+
+	if runtime != nil {
+		if runner, err := runtime.GetRunner(ctx, f); err != nil {
+			return nil, fmt.Errorf("function runtime failed to evaluate function %q", f.Image)
+		} else if runner != nil {
+			fltr.Run = runner.Run
 		}
-		fltr.Run = cfn.Run
-	case f.Exec != "":
-		var execArgs []string
-		// assuming exec here
-		s, err := shlex.Split(f.Exec)
-		if err != nil {
-			return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+	}
+	if fltr.Run == nil {
+		switch {
+		case f.Image != "":
+			cfn := &ContainerFn{
+				Path:            pkgPath,
+				Image:           f.Image,
+				ImagePullPolicy: imagePullPolicy,
+				Ctx:             ctx,
+				FnResult:        fnResult,
+			}
+			fltr.Run = cfn.Run
+		case f.Exec != "":
+			var execArgs []string
+			// assuming exec here
+			s, err := shlex.Split(f.Exec)
+			if err != nil {
+				return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+			}
+			execPath := f.Exec
+			if len(s) > 0 {
+				execPath = s[0]
+			}
+			if len(s) > 1 {
+				execArgs = s[1:]
+			}
+			eFn := &ExecFn{
+				Path:     execPath,
+				Args:     execArgs,
+				FnResult: fnResult,
+			}
+			fltr.Run = eFn.Run
+		default:
+			return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 		}
-		execPath := f.Exec
-		if len(s) > 0 {
-			execPath = s[0]
-		}
-		if len(s) > 1 {
-			execArgs = s[1:]
-		}
-		eFn := &ExecFn{
-			Path:     execPath,
-			Args:     execArgs,
-			FnResult: fnResult,
-		}
-		fltr.Run = eFn.Run
-	default:
-		return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 	}
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
 }
@@ -457,7 +469,7 @@ func (ri *multiLineFormatter) String() string {
 	return b.String()
 }
 
-func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
+func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
 	var fn errors.Fn = errors.Fn(f.Image)
 
@@ -465,7 +477,7 @@ func newFnConfig(f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, 
 	switch {
 	case f.ConfigPath != "":
 		path := filepath.Join(string(pkgPath), f.ConfigPath)
-		file, err := os.Open(path)
+		file, err := fsys.Open(path)
 		if err != nil {
 			return nil, errors.E(op, fn,
 				fmt.Errorf("missing function config %q", f.ConfigPath))

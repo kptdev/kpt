@@ -31,9 +31,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
 	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/stack"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -91,7 +93,11 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	p, err := pkg.New(c.Destination)
+	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(c.Destination)
+	if err != nil {
+		return err
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absDestPath)
 	if err != nil {
 		return cleanUpDirAndError(c.Destination, err)
 	}

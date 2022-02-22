@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
@@ -116,7 +117,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 
 func hasKfDiff(localPath, orgPath string) (bool, error) {
 	const op errors.Op = "update.hasKfDiff"
-	localKf, err := pkg.ReadKptfile(localPath)
+	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -137,7 +138,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 		}
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
-	orgKf, err := pkg.ReadKptfile(orgPath)
+	orgKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, orgPath)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}

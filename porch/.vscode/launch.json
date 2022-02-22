@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/apiserver/cmd/porch/main.go",
+            "args": [
+                "--secure-port=9443",
+                "--v=7",
+                "--standalone-debug-mode",
+                "--kubeconfig=${workspaceFolder}/hack/local/kubeconfig",
+                "--cache-directory=${workspaceFolder}/.cache",
+                "--function-runner=192.168.8.202:9445"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch Func Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/func/client/main.go",
+            "args": [
+                "--address=192.168.8.202:9445",
+                "--package=${workspaceFolder}/func/config/",
+                "--image=gcr.io/kpt-fn/set-namespace:v0.2.0",
+                "--",
+                "namespace=foo"
+            ]
+        }
+    ]
+}

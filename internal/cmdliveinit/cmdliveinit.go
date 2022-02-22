@@ -21,14 +21,16 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
+	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -60,7 +62,7 @@ func (i *InvInKfExistsError) Error() string {
 	return "inventory information already set within Kptfile for package"
 }
 
-func NewRunner(ctx context.Context, factory cmdutil.Factory,
+func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	ioStreams genericclioptions.IOStreams) *Runner {
 	r := &Runner{
 		ctx:       ctx,
@@ -84,7 +86,7 @@ func NewRunner(ctx context.Context, factory cmdutil.Factory,
 	return r
 }
 
-func NewCommand(ctx context.Context, f cmdutil.Factory,
+func NewCommand(ctx context.Context, f k8scmdutil.Factory,
 	ioStreams genericclioptions.IOStreams) *cobra.Command {
 	return NewRunner(ctx, f, ioStreams).Command
 }
@@ -93,7 +95,7 @@ type Runner struct {
 	ctx     context.Context
 	Command *cobra.Command
 
-	factory     cmdutil.Factory
+	factory     k8scmdutil.Factory
 	ioStreams   genericclioptions.IOStreams
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
@@ -119,7 +121,12 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	p, err := pkg.New(dir)
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(dir)
+	if err != nil {
+		return err
+	}
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
 	if err != nil {
 		return errors.E(op, err)
 	}
@@ -143,7 +150,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 // the inventory information in the Kptfile.
 type ConfigureInventoryInfo struct {
 	Pkg     *pkg.Pkg
-	Factory cmdutil.Factory
+	Factory k8scmdutil.Factory
 	Quiet   bool
 
 	Name        string

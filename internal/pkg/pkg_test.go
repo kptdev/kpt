@@ -25,8 +25,10 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -82,7 +84,9 @@ func TestNewPkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, test.workingDir))
 			defer revert()
-			p, err := New(test.inputPath)
+			absInputPath, _, err := pathutil.ResolveAbsAndRelPaths(test.inputPath)
+			assert.NoError(t, err)
+			p, err := New(filesys.FileSystemOrOnDisk{}, absInputPath)
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(p.DisplayPath))
 		})
@@ -166,14 +170,20 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
 			defer revert()
-			parent, err := New(test.pkgPath)
+			absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.pkgPath)
+			assert.NoError(t, err)
+			parent, err := New(filesys.FileSystemOrOnDisk{}, absPkgPath)
 			assert.NoError(t, err)
 			if test.rootPkgParentDirPath != "" {
-				rootPkg, err := New(test.rootPkgParentDirPath)
+				absRootPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.rootPkgParentDirPath)
+				assert.NoError(t, err)
+				rootPkg, err := New(filesys.FileSystemOrOnDisk{}, absRootPkgPath)
 				assert.NoError(t, err)
 				parent.rootPkgParentDirPath = string(rootPkg.UniquePath)
 			}
-			subPkg, err := New(test.subPkgPath)
+			absSubPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(test.subPkgPath)
+			assert.NoError(t, err)
+			subPkg, err := New(filesys.FileSystemOrOnDisk{}, absSubPkgPath)
 			assert.NoError(t, err)
 			err = parent.adjustDisplayPathForSubpkg(subPkg)
 			assert.NoError(t, err)
@@ -407,7 +417,11 @@ func TestDirectSubpackages(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, nil)
 			defer os.RemoveAll(pkgPath)
-			p, err := New(pkgPath)
+			absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(pkgPath)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+			p, err := New(filesys.FileSystemOrOnDisk{}, absPkgPath)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -593,7 +607,7 @@ func TestSubpackages(t *testing.T) {
 				for _, matcher := range v.matcher {
 					for _, recursive := range v.recursive {
 						t.Run(fmt.Sprintf("matcher:%s-recursive:%t", matcher, recursive), func(t *testing.T) {
-							paths, err := Subpackages(pkgPath, matcher, recursive)
+							paths, err := Subpackages(filesys.FileSystemOrOnDisk{}, pkgPath, matcher, recursive)
 							if !assert.NoError(t, err) {
 								t.FailNow()
 							}
@@ -636,7 +650,7 @@ func TestSubpackages_symlinks(t *testing.T) {
 		t.FailNow()
 	}
 
-	paths, err := Subpackages(pkgPath, All, true)
+	paths, err := Subpackages(filesys.FileSystemOrOnDisk{}, pkgPath, All, true)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -759,7 +773,7 @@ func TestFunctionConfigFilePaths(t *testing.T) {
 			for _, v := range tc.cases {
 				v := v
 				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
-					paths, err := FunctionConfigFilePaths(types.UniquePath(pkgPath), v.recursive)
+					paths, err := FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, types.UniquePath(pkgPath), v.recursive)
 					if !assert.NoError(t, err) {
 						t.FailNow()
 					}

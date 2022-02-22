@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
@@ -30,6 +31,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -202,7 +204,11 @@ func loadFromDisk(f util.Factory, path, rgfile string) ([]*unstructured.Unstruct
 }
 
 func readInvInfoFromDisk(path, rgfile string) (kptfilev1.Inventory, error) {
-	p, err := pkg.New(path)
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
+	if err != nil {
+		return kptfilev1.Inventory{}, err
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
 	if err != nil {
 		return kptfilev1.Inventory{}, err
 	}
