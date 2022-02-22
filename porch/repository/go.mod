@@ -10,7 +10,7 @@ require (
 	github.com/google/go-containerregistry v0.8.0
 	go.opentelemetry.io/otel v0.20.0
 	go.opentelemetry.io/otel/trace v0.20.0
-	k8s.io/apimachinery v0.23.3
+	k8s.io/apimachinery v0.23.2
 	k8s.io/klog/v2 v2.40.1
 )
 
