@@ -50,7 +50,8 @@ type RunFns struct {
 	FnConfig *yaml.RNode
 
 	// Input can be set to read the Resources from Input rather than from a directory
-	Input io.Reader
+	Input      io.Reader
+	KIOReaders []kio.Reader
 
 	// Network enables network access for functions that declare it
 	Network bool
@@ -140,7 +141,9 @@ func (r RunFns) getNodesAndFilters() (
 		}
 	}
 
-	if r.Input == nil {
+	if r.KIOReaders != nil {
+		p.Inputs = r.KIOReaders
+	} else if r.Input == nil {
 		p.Inputs = []kio.Reader{outputPkg}
 	} else {
 		p.Inputs = []kio.Reader{&kio.ByteReader{Reader: r.Input, PreserveSeqIndent: true, WrapBareSeqNode: true}}

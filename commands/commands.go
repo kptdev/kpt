@@ -35,8 +35,8 @@ func GetKptCommands(ctx context.Context, name, version string) []*cobra.Command 
 	fnCmd := GetFnCommand(ctx, name)
 	pkgCmd := GetPkgCommand(ctx, name)
 	liveCmd := GetLiveCommand(ctx, name, version)
-
-	c = append(c, pkgCmd, fnCmd, liveCmd)
+	editorCmd := EditorCommand(ctx, name)
+	c = append(c, pkgCmd, fnCmd, liveCmd, editorCmd)
 
 	// apply cross-cutting issues to commands
 	NormalizeCommand(c...)
