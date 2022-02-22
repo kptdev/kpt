@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 kind: ServiceAccount
 apiVersion: v1
 metadata:
@@ -20,7 +19,6 @@ metadata:
   namespace: porch-system
 
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,14 +37,29 @@ spec:
         apiserver: "true"
     spec:
       serviceAccountName: porch-server
+      volumes:
+        - name: cache-volume
+          emptyDir: {}
       containers:
-      - name: porch-server
-        # Update image to the image of your porch apiserver build.
-        image: gcr.io/example-google-project-id/porch-server:latest
-        imagePullPolicy: Always
+        - name: porch-server
+          # Update image to the image of your porch apiserver build.
+          image: gcr.io/example-google-project-id/porch-server:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "1000m"
+          volumeMounts:
+            - mountPath: /cache
+              name: cache-volume
+          args:
+            - --function-runner=function-runner:9445
+            - --cache-directory=/cache
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -54,8 +67,8 @@ metadata:
   namespace: porch-system
 spec:
   ports:
-  - port: 443
-    protocol: TCP
-    targetPort: 443
+    - port: 443
+      protocol: TCP
+      targetPort: 443
   selector:
     apiserver: "true"

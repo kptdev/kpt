@@ -28,14 +28,20 @@ spec:
         app: function-runner
     spec:
       containers:
-      - name: function-runner
-        image: gcr.io/example-google-project-id/function-runner:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 9445
+        - name: function-runner
+          image: gcr.io/example-google-project-id/function-runner:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9445
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "125m"
+            limits:
+              memory: "64Mi"
+              cpu: "500m"
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -45,6 +51,6 @@ spec:
   selector:
     app: function-runner
   ports:
-  - port: 9445
-    protocol: TCP
-    targetPort: 9445
+    - port: 9445
+      protocol: TCP
+      targetPort: 9445

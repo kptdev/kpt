@@ -61,8 +61,9 @@ For Git:
   ```sh
   kubectl create secret generic git-repository-auth \
     --namespace=default \
+    --type=kubernetes.io/basic-auth \
     --from-literal=username=<GitHub username> \
-    --from-literal=token=<GitHub Personal Access Token>
+    --from-literal=password=<GitHub Personal Access Token>
   ```
 * Update the [git-repository.yaml](./config/samples/git-repository.yaml) with your repository address
 * Register the repository:

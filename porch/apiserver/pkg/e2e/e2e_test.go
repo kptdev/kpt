@@ -87,7 +87,6 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				"username": []byte(config.Username),
 				"password": []byte(config.Password),
 			},
-			// TODO: Store as SecretTypeBasicAuth ?
 			Type: coreapi.SecretTypeBasicAuth,
 		})
 
