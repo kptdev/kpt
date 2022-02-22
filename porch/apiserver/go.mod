@@ -31,16 +31,6 @@ require (
 	sigs.k8s.io/kustomize/kyaml v0.13.3
 )
 
-replace (
-	github.com/GoogleContainerTools/kpt => ../../
-	github.com/GoogleContainerTools/kpt/porch/api => ../api
-	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
-	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
-	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
-	github.com/GoogleContainerTools/kpt/porch/func => ../func
-	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
-)
-
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
@@ -163,4 +153,14 @@ require (
 	sigs.k8s.io/kustomize/api v0.11.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+replace (
+	github.com/GoogleContainerTools/kpt => ../../
+	github.com/GoogleContainerTools/kpt/porch/api => ../api
+	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
+	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
+	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
+	github.com/GoogleContainerTools/kpt/porch/func => ../func
+	github.com/GoogleContainerTools/kpt/porch/repository => ../repository
 )
