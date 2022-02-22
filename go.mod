@@ -8,11 +8,11 @@ require (
 	github.com/google/go-cmp v0.5.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
-	github.com/otiai10/copy v1.6.0
+	github.com/otiai10/copy v1.7.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
-	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca
+	github.com/xlab/treeprint v1.1.0
 	golang.org/x/mod v0.5.1
 	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.23.2

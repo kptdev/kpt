@@ -33,6 +33,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // DiffType represents type of comparison to be performed.
@@ -118,7 +119,7 @@ type Command struct {
 func (c *Command) Run(ctx context.Context) error {
 	c.DefaultValues()
 
-	kptFile, err := pkg.ReadKptfile(c.Path)
+	kptFile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, c.Path)
 	if err != nil {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
@@ -356,7 +357,7 @@ func (pg defaultPkgGetter) GetPkg(ctx context.Context, stagingDir, targetDir, re
 		return dir, err
 	}
 
-	p, err := pkg.New(dir)
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, dir)
 	if err != nil {
 		return dir, err
 	}

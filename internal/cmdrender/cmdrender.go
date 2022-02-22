@@ -27,7 +27,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/render"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // NewRunner returns a command runner
@@ -108,12 +111,17 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		// capture the content to be written
 		output = &outContent
 	}
-	executor := Executor{
-		PkgPath:         r.pkgPath,
+	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(r.pkgPath)
+	if err != nil {
+		return err
+	}
+	executor := render.Renderer{
+		PkgPath:         absPkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
 		AllowExec:       r.allowExec,
+		FileSystem:      filesys.FileSystemOrOnDisk{},
 	}
 	if err := executor.Execute(r.ctx); err != nil {
 		return err

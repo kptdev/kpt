@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 var (
@@ -293,7 +294,7 @@ func TestCmd_Run(t *testing.T) {
 			// Otherwise, validate the kptfile values and/or resourcegroup values.
 			var actualInv kptfilev1.Inventory
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(w.WorkspaceDirectory)
+			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, w.WorkspaceDirectory)
 			assert.NoError(t, err)
 
 			switch tc.rgfilename {

@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/object"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 var testNamespace = "test-inventory-namespace"
@@ -158,7 +159,7 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(dir)
+			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -257,7 +258,7 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(dir)
+			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

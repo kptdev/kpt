@@ -1,0 +1,11 @@
+# Kustomization file template used to create Porch deployment configuration
+# The file is instantiated from ../.build/deploy so paths are relative to that location.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+- ../../controllers
+- ../../config/deploy
+images:
+- name: gcr.io/example-google-project-id/function-runner:latest
+- name: gcr.io/example-google-project-id/porch-controllers:latest
+- name: gcr.io/example-google-project-id/porch-server:latest

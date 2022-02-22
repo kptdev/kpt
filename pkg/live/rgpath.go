@@ -7,9 +7,11 @@ import (
 	"encoding/json"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -29,13 +31,17 @@ type ResourceGroupPathManifestReader struct {
 // Kptfile data. If unable to generate the ResourceGroup inventory
 // object from the Kptfile, it is NOT an error.
 func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, error) {
-	p, err := pkg.New(r.PkgPath)
+	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(r.PkgPath)
+	if err != nil {
+		return nil, err
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPkgPath)
 	if err != nil {
 		return nil, err
 	}
 
 	// Lookup all files referenced by all subpackages.
-	fcPaths, err := pkg.FunctionConfigFilePaths(p.UniquePath, true)
+	fcPaths, err := pkg.FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, p.UniquePath, true)
 	if err != nil {
 		return nil, err
 	}
