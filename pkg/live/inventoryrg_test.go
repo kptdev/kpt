@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/apis/actuation"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
 
@@ -74,9 +75,10 @@ var testPod = object.ObjMetadata{
 
 func TestLoadStore(t *testing.T) {
 	tests := map[string]struct {
-		inv     *unstructured.Unstructured
-		objs    []object.ObjMetadata
-		isError bool
+		inv       *unstructured.Unstructured
+		objs      []object.ObjMetadata
+		objStatus []actuation.ObjectStatus
+		isError   bool
 	}{
 		"Nil inventory is error": {
 			inv:     nil,
@@ -89,18 +91,60 @@ func TestLoadStore(t *testing.T) {
 			isError: false,
 		},
 		"Simple test": {
-			inv:     inventoryObj,
-			objs:    []object.ObjMetadata{testPod},
+			inv:  inventoryObj,
+			objs: []object.ObjMetadata{testPod},
+			objStatus: []actuation.ObjectStatus{
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testPod),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationPending,
+					Reconcile:       actuation.ReconcilePending,
+				},
+			},
 			isError: false,
 		},
 		"Test two objects": {
-			inv:     inventoryObj,
-			objs:    []object.ObjMetadata{testDeployment, testService},
+			inv:  inventoryObj,
+			objs: []object.ObjMetadata{testDeployment, testService},
+			objStatus: []actuation.ObjectStatus{
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testDeployment),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationSucceeded,
+					Reconcile:       actuation.ReconcileSucceeded,
+				},
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testService),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationSucceeded,
+					Reconcile:       actuation.ReconcileSucceeded,
+				},
+			},
 			isError: false,
 		},
 		"Test three objects": {
-			inv:     inventoryObj,
-			objs:    []object.ObjMetadata{testDeployment, testService, testPod},
+			inv:  inventoryObj,
+			objs: []object.ObjMetadata{testDeployment, testService, testPod},
+			objStatus: []actuation.ObjectStatus{
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testDeployment),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationSucceeded,
+					Reconcile:       actuation.ReconcileSucceeded,
+				},
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testService),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationSucceeded,
+					Reconcile:       actuation.ReconcileSucceeded,
+				},
+				{
+					ObjectReference: inventory.ObjectReferenceFromObjMetadata(testPod),
+					Strategy:        actuation.ActuationStrategyApply,
+					Actuation:       actuation.ActuationPending,
+					Reconcile:       actuation.ReconcilePending,
+				},
+			},
 			isError: false,
 		},
 	}
@@ -108,7 +152,7 @@ func TestLoadStore(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			wrapped := WrapInventoryObj(tc.inv)
-			_ = wrapped.Store(tc.objs, []actuation.ObjectStatus{})
+			_ = wrapped.Store(tc.objs, tc.objStatus)
 			invStored, err := wrapped.GetObject()
 			if tc.isError {
 				if err == nil {
@@ -128,6 +172,13 @@ func TestLoadStore(t *testing.T) {
 			}
 			if !objs.Equal(tc.objs) {
 				t.Fatalf("expected inventory objs (%v), got (%v)", tc.objs, objs)
+			}
+			resourceStatus, _, err := unstructured.NestedSlice(invStored.Object, "status", "resourceStatuses")
+			if err != nil {
+				t.Fatalf("unexpected error %v received", err)
+			}
+			if len(resourceStatus) != len(tc.objStatus) {
+				t.Fatalf("expected %d resource status but got %d", len(tc.objStatus), len(resourceStatus))
 			}
 		})
 	}
