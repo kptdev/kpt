@@ -9,9 +9,10 @@ All kpt commands follow this general synopsis:
 
 kpt functionality is divided into three command groups:
 
-| Group  | Description                                                           |
-| ------ | --------------------------------------------------------------------- |
-| [pkg]  | get, update, and describe packages with resources.                    |
-| [fn]   | generate, transform, validate packages using containerized functions. |
-| [live] | deploy local configuration packages to a cluster.                     |
+| Group   | Description                                                           |
+| ------- | --------------------------------------------------------------------- |
+| [pkg]   | get, update, and describe packages with resources.                    |
+| [fn]    | generate, transform, validate packages using containerized functions. |
+| [live]  | deploy local configuration packages to a cluster.                     |
+| [alpha] | commands currently in alpha and might change without notice.          |
 `
