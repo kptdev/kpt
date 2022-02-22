@@ -26,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-git/go-git/v5"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -448,7 +447,7 @@ func (p *objectWalker) walkObjectTree(hash plumbing.Hash) error {
 	// Fetch the object.
 	obj, err := object.GetObject(p.Storer, hash)
 	if err != nil {
-		return fmt.Errorf("Getting object %s failed: %v", hash, err)
+		return fmt.Errorf("getting object %s failed: %v", hash, err)
 	}
 	// Walk all children depending on object type.
 	switch obj := obj.(type) {
@@ -488,13 +487,13 @@ func (p *objectWalker) walkObjectTree(hash plumbing.Hash) error {
 		return p.walkObjectTree(obj.Target)
 	default:
 		// Error out on unhandled object types.
-		return fmt.Errorf("Unknown object %s %s %T\n", obj.ID(), obj.Type(), obj)
+		return fmt.Errorf("unknown object %s %s %T", obj.ID(), obj.Type(), obj)
 	}
 	return nil
 }
 
 // initRepo is a helper that creates a first commit, ensuring the repo is not empty.
-func initRepo(repo *git.Repository) error {
+func initRepo(repo *gogit.Repository) error {
 	store := repo.Storer
 
 	var objectHash plumbing.Hash

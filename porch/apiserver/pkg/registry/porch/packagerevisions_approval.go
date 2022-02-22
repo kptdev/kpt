@@ -51,6 +51,6 @@ func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options
 // may allow updates creates the object - they should set the created boolean
 // to true.
 func (a *packageRevisionsApproval) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
-	forceAllowCreate = false // do not allow create on update
-	return a.revisions.Update(ctx, name, objInfo, createValidation, updateValidation, forceAllowCreate, options)
+	allowCreate := false // do not allow create on update
+	return a.revisions.Update(ctx, name, objInfo, createValidation, updateValidation, allowCreate, options)
 }

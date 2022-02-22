@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -185,7 +184,7 @@ func (r *packageRevisions) Update(ctx context.Context, name string, objInfo rest
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
 
-	var repositoryObj v1alpha1.Repository
+	var repositoryObj configapi.Repository
 	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
