@@ -47,11 +47,10 @@ spec:
           imagePullPolicy: Always
           resources:
             requests:
-              memory: "64Mi"
+              memory: "256Mi"
               cpu: "250m"
             limits:
-              memory: "128Mi"
-              cpu: "1000m"
+              memory: "512Mi"
           volumeMounts:
             - mountPath: /cache
               name: cache-volume
