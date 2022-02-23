@@ -68,7 +68,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		fnResults:            fnresult.NewResultList(),
 		imagePullPolicy:      e.ImagePullPolicy,
 		allowExec:            e.AllowExec,
-		encludeMetaResources: e.ExcludeMetaResources,
+		excludeMetaResources: e.ExcludeMetaResources,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -178,7 +178,7 @@ type hydrationContext struct {
 
 	// indicate if package meta resources such as Kptfile
 	// to be excluded from the function in put during render.
-	encludeMetaResources bool
+	excludeMetaResources bool
 
 	// allowExec determines if function binary executable are allowed
 	// to be run during pipeline execution. Running function binaries is a
@@ -305,7 +305,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(hctx.encludeMetaResources)
+	currPkgResources, err := curr.pkg.LocalResources(hctx.excludeMetaResources)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
