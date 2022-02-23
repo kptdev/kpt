@@ -485,12 +485,37 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 			Name:      "git-server",
 		}, &server)
 		if server.Status.AvailableReplicas > 0 {
-			t.Logf("Git server is up ...")
+			t.Logf("git server is up")
 			break
 		}
 
 		if time.Now().After(giveUp) {
-			t.Fatalf("git server failed to start: %s", server)
+			t.Fatalf("git server failed to start: %s", &server)
+			return GitConfig{}
+		}
+	}
+
+	t.Logf("Waiting for git-serever-service to be ready ...")
+
+	// Check the Endpoint resource for readiness
+	giveUp = time.Now().Add(time.Minute)
+
+	for {
+		time.Sleep(5 * time.Second)
+
+		var endpoint coreapi.Endpoints
+		err := t.client.Get(ctx, client.ObjectKey{
+			Namespace: t.namespace,
+			Name:      "git-server-service",
+		}, &endpoint)
+
+		if err == nil && endpointIsReady(&endpoint) {
+			t.Logf("git-server-service is ready")
+			break
+		}
+
+		if time.Now().After(giveUp) {
+			t.Fatalf("git-server0-service not ready on time: %s", &endpoint)
 			return GitConfig{}
 		}
 	}
@@ -500,4 +525,21 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 		Branch:    "main",
 		Directory: "/",
 	}
+}
+
+func endpointIsReady(endpoints *coreapi.Endpoints) bool {
+	if len(endpoints.Subsets) == 0 {
+		return false
+	}
+	for _, s := range endpoints.Subsets {
+		if len(s.Addresses) == 0 {
+			return false
+		}
+		for _, a := range s.Addresses {
+			if a.IP == "" {
+				return false
+			}
+		}
+	}
+	return true
 }
