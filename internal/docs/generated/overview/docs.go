@@ -7,7 +7,7 @@ All kpt commands follow this general synopsis:
 
   kpt <group> <command> <positional args> [PKG_PATH] [flags]
 
-kpt functionality is divided into three command groups:
+kpt functionality is divided into following command groups:
 
 | Group   | Description                                                           |
 | ------- | --------------------------------------------------------------------- |
