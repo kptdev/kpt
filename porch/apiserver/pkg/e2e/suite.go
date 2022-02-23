@@ -515,7 +515,7 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 		}
 
 		if time.Now().After(giveUp) {
-			t.Fatalf("git-server0-service not ready on time: %s", &endpoint)
+			t.Fatalf("git-server-service not ready on time: %s", &endpoint)
 			return GitConfig{}
 		}
 	}
