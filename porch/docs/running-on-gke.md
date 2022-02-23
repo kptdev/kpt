@@ -44,7 +44,11 @@ IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy
 Create some example repositories / packages:
 
 ```
+# Create artifact-registry repos etc
 make apply-dev-config
+# Push a sample hello-world app
+make -C config/samples/apps/hello-server push-image
+# Create a package for the sample hello-world app
 ./config/samples/create-deployment-package.sh
 ```
 

@@ -21,9 +21,9 @@ apiVersion: porch.kpt.dev/v1alpha1
 kind: PackageRevision
 metadata:
   namespace: default
-  name: "deployment:myfirstnginx:v1"
+  name: "deployment:helloserver:v1"
 spec:
-  packageName: myfirstnginx
+  packageName: helloserver
   revision: v1
   repository: deployment
   tasks:
@@ -32,12 +32,19 @@ spec:
       upstreamRef:
         type: git
         git:
-          repo: https://github.com/GoogleContainerTools/kpt
-          ref: v0.7
-          directory: package-examples/nginx
+          repo: https://github.com/justinsb/kpt
+          ref: main_integration
+          directory: porch/config/samples/apps/hello-server/k8s
 EOF
 
-kubectl get packagerevision -n default deployment:myfirstnginx:v1 -oyaml
+kubectl get packagerevision -n default deployment:helloserver:v1 -oyaml
 
-kubectl get packagerevisionresources -n default deployment:myfirstnginx:v1 -oyaml
+kubectl get packagerevisionresources -n default deployment:helloserver:v1 -oyaml
 
+# Update the package in-place
+GCP_PROJECT_ID=$(gcloud config get-value project)
+kubectl get packagerevisionresources -n default deployment:helloserver:v1 -oyaml | \
+  sed -e s/example-google-project-id/${GCP_PROJECT_ID}/g | \
+  kubectl replace -f -
+
+kubectl get packagerevisionresources -n default deployment:helloserver:v1 -oyaml
