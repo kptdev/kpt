@@ -1,3 +1,24 @@
+diff --git a/out/Kptfile b/out/Kptfile
+new file mode 100644
+index 0000000..c237afd
+--- /dev/null
++++ b/out/Kptfile
+@@ -0,0 +1,15 @@
++apiVersion: kpt.dev/v1
++kind: Kptfile
++metadata:
++  name: app
++  namespace: staging
++  labels:
++    tier: backend
++pipeline:
++  mutators:
++    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
++      configMap:
++        namespace: staging
++    - image: gcr.io/kpt-fn/set-labels:v0.1.4
++      configMap:
++        tier: backend
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
 index 0000000..a9dd224

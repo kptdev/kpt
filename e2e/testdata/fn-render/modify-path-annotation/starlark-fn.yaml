@@ -11,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: update-path
+  annotations:
+    config.kubernetes.io/local-config: "true"
 source: |
   for r in ctx.resource_list["items"]:
     if r["kind"] == "Deployment":

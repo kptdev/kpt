@@ -15,6 +15,8 @@ apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: httpbin-gen
+  annotations:
+    config.kubernetes.io/local-config: "true"
 source: |-
   httpbin_deployment = {
      "apiVersion": "apps/v1",

@@ -362,6 +362,10 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--allow-exec")
 			}
 
+			if r.testCase.Config.ExcludeMetaResources {
+				kptArgs = append(kptArgs, "--exclude-meta-resources")
+			}
+
 			if r.testCase.Config.DisableOutputTruncate {
 				kptArgs = append(kptArgs, "--truncate-output=false")
 			}

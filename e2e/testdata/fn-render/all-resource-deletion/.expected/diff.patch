@@ -1,3 +1,31 @@
+diff --git a/Kptfile b/Kptfile
+index fd49fcf..f9ae49b 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app
++  namespace: staging
++  labels:
++    tier: backend
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/starlark:v0.2.1
+diff --git a/delete-all.yaml b/delete-all.yaml
+index 724d0cf..c2e665d 100644
+--- a/delete-all.yaml
++++ b/delete-all.yaml
+@@ -17,6 +17,9 @@ metadata:
+   name: delete-all
+   annotations:
+     config.kubernetes.io/local-config: "true"
++  namespace: staging
++  labels:
++    tier: backend
+ source: |-
+   # delete all resources
+   ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
 index 737526e..0000000

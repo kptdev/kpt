@@ -15,20 +15,23 @@ apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: httpbin-gen
+  annotations:
+    config.kubernetes.io/local-config: "true"
 source: |-
   def change_path_index(resources):
+    # This function does the following:
+    #   1. Renames x.yaml to y.yaml
+    #   2. Swaps the positions (index) of resources in x.yaml
     for r in resources:
       pathElems = r["metadata"]["annotations"]["internal.config.kubernetes.io/path"].split("/")
-      if pathElems[-1] == "y.yaml":
-        return
+      if pathElems[-1] == "x.yaml":
+        pathElems[-1] = "y.yaml"
+        r["metadata"]["annotations"]["internal.config.kubernetes.io/path"] = "/".join(pathElems)
 
-      pathElems[-1] = "y.yaml"
-      r["metadata"]["annotations"]["internal.config.kubernetes.io/path"] = "/".join(pathElems)
-
-      index = r["metadata"]["annotations"]["internal.config.kubernetes.io/index"]
-      if index == "0":
-        r["metadata"]["annotations"]["internal.config.kubernetes.io/index"] = "1"
-      else:
-        r["metadata"]["annotations"]["internal.config.kubernetes.io/index"] = "0"
+        index = r["metadata"]["annotations"]["internal.config.kubernetes.io/index"]
+        if index == "0":
+          r["metadata"]["annotations"]["internal.config.kubernetes.io/index"] = "1"
+        else:
+          r["metadata"]["annotations"]["internal.config.kubernetes.io/index"] = "0"
 
   change_path_index(ctx.resource_list["items"])
