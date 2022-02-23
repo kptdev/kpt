@@ -26,6 +26,8 @@ require (
 	sigs.k8s.io/controller-runtime v0.10.1
 	sigs.k8s.io/kustomize/api v0.11.1
 	sigs.k8s.io/kustomize/kyaml v0.13.3
+	
+	gopkg.in/ini.v1 v1.66.4
 )
 
 require (

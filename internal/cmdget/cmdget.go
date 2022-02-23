@@ -49,6 +49,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
+	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
+		"is this a deployment instance")
 	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1.ResourceMerge),
 		"update strategy that should be used when updating this package -- must be one of: "+
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
@@ -64,10 +66,11 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function
 type Runner struct {
-	ctx      context.Context
-	Get      get.Command
-	Command  *cobra.Command
-	strategy string
+	ctx                  context.Context
+	Get                  get.Command
+	Command              *cobra.Command
+	strategy             string
+	isDeploymentInstance bool
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -101,6 +104,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 	r.Get.UpdateStrategy = strategy
+	r.Get.IsDeploymentInstance = r.isDeploymentInstance
 	return nil
 }
 

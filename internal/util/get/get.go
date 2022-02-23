@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdhook"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -49,6 +50,10 @@ type Command struct {
 
 	// Name is the name to give the package.  Defaults to the destination.
 	Name string
+
+	// IsDeploymentInstance indicates if the package is forked for deployment.
+	// If forked package has defined deploy hooks, those will be executed post fork.
+	IsDeploymentInstance bool
 
 	// UpdateStrategy is the strategy that will be configured in the package
 	// Kptfile. This determines how changes will be merged when updating the
@@ -109,6 +114,19 @@ func (c Command) Run(ctx context.Context) error {
 		Filters: []kio.Filter{kio.FilterAll(amc), kio.FilterAll(at)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
+
+	if c.IsDeploymentInstance {
+		pr := printer.FromContextOrDie(ctx)
+		pr.Printf("\nCustomizing package for deployment.\n")
+		hookCmd := cmdhook.Executor{
+			Hook:    "deploy",
+			PkgPath: c.Destination,
+		}
+		if err := hookCmd.Execute(ctx); err != nil && !errors.Is(err, cmdhook.ErrHookNotFound) {
+			return err
+		}
+		pr.Printf("\nCustomized package for deployment.\n")
+	}
 
 	return nil
 }
