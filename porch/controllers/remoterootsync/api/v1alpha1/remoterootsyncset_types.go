@@ -20,6 +20,11 @@ import (
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="AppliedCount",type=integer,JSONPath=`.status.aggregated.applied`
+//+kubebuilder:printcolumn:name="ReadyCount",type=integer,JSONPath=`.status.aggregated.ready`
+//+kubebuilder:printcolumn:name="Total",type=integer,JSONPath=`.status.aggregated.total`
+//+kubebuilder:printcolumn:name="Applied",type=string,JSONPath=`.status.aggregated.conditions[?(@.type=='Applied')].reason`
+//+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.aggregated.conditions[?(@.type=='Ready')].reason`
 
 // RemoteRootSyncSet represents applying a package to multiple target clusters.
 // In future, this should use ConfigSync, but while we're iterating on OCI/porch support,
@@ -95,11 +100,20 @@ func (o *OCISpec) GetRepository() string {
 
 // RootSyncSetStatus defines the observed state of RootSyncSet
 type RemoteRootSyncSetStatus struct {
-	Targets []TargetStatus `json:"targets,omitempty"`
+	Targets          []TargetStatus   `json:"targets,omitempty"`
+	AggregatedStatus AggregatedStatus `json:"aggregated,omitempty"`
 }
 
 type TargetStatus struct {
 	Ref ClusterRef `json:"ref,omitempty"`
+	// Conditions describes the reconciliation state of the object.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+}
+
+type AggregatedStatus struct {
+	Targets int32 `json:"total"`
+	Applied int32 `json:"applied"`
+	Ready   int32 `json:"ready"`
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
