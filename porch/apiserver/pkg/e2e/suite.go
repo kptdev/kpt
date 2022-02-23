@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -32,9 +33,11 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"gopkg.in/yaml.v2"
+	appsv1 "k8s.io/api/apps/v1"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 	aggregatorv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -153,8 +156,7 @@ func (t *TestSuite) CreateGitRepo() GitConfig {
 		return createLocalGitServer(t.T)
 	} else {
 		// Deploy Git server via k8s client.
-		t.Fatal("Creatig git server on k8s not yet supported.")
-		return GitConfig{}
+		return t.createInClusterGitServer()
 	}
 }
 
@@ -247,6 +249,7 @@ func createClientScheme(t *testing.T) *runtime.Scheme {
 		configapi.AddToScheme,
 		coreapi.AddToScheme,
 		aggregatorv1.AddToScheme,
+		appsv1.AddToScheme,
 	}) {
 		if err := api(scheme); err != nil {
 			t.Fatalf("Failed to initialize test k8s api client")
@@ -354,5 +357,147 @@ func createInitialCommit(t *testing.T, repo *gogit.Repository) {
 	head := plumbing.NewHashReference(plumbing.ReferenceName("refs/heads/main"), commitHash)
 	if err := repo.Storer.SetReference(head); err != nil {
 		t.Fatalf("Failed to set refs/heads/main to commit sha %s", commitHash)
+	}
+}
+
+func inferGitServerImage(porchImage string) string {
+	slash := strings.LastIndex(porchImage, "/")
+	repo := porchImage[:slash+1]
+	image := porchImage[slash+1:]
+	colon := strings.LastIndex(image, ":")
+	tag := image[colon+1:]
+
+	return repo + "git-server:" + tag
+}
+
+func (t *TestSuite) createInClusterGitServer() GitConfig {
+	ctx := context.TODO()
+
+	// Determine git-server image name. Use the same container registry and tag as the Porch server,
+	// replacing base image name with `git-server`. TODO: Make configurable?
+
+	var porch appsv1.Deployment
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: "porch-system",
+		Name:      "porch-server",
+	}, &porch)
+
+	gitImage := inferGitServerImage(porch.Spec.Template.Spec.Containers[0].Image)
+
+	var replicas int32 = 1
+	var selector = strings.ReplaceAll(t.Name(), "/", "_")
+
+	t.CreateF(ctx, &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-server",
+			Namespace: t.namespace,
+			Annotations: map[string]string{
+				"kpt.dev/porch-test": t.Name(),
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"git-server": selector,
+				},
+			},
+			Template: coreapi.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"git-server": selector,
+					},
+				},
+				Spec: coreapi.PodSpec{
+					Containers: []coreapi.Container{
+						{
+							Name:  "git-server",
+							Image: gitImage,
+							Args:  []string{},
+							Ports: []coreapi.ContainerPort{
+								{
+									ContainerPort: 8080,
+									Protocol:      coreapi.ProtocolTCP,
+								},
+							},
+							ImagePullPolicy: coreapi.PullIfNotPresent,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	t.Cleanup(func() {
+		t.DeleteE(ctx, &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "git-server",
+				Namespace: t.namespace,
+			},
+		})
+	})
+
+	t.CreateF(ctx, &coreapi.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-server-service",
+			Namespace: t.namespace,
+			Annotations: map[string]string{
+				"kpt.dev/porch-test": t.Name(),
+			},
+		},
+		Spec: coreapi.ServiceSpec{
+			Ports: []coreapi.ServicePort{
+				{
+					Protocol: coreapi.ProtocolTCP,
+					Port:     8080,
+					TargetPort: intstr.IntOrString{
+						Type:   intstr.Int,
+						IntVal: 8080,
+					},
+				},
+			},
+			Selector: map[string]string{
+				"git-server": selector,
+			},
+		},
+	})
+
+	t.Cleanup(func() {
+		t.DeleteE(ctx, &coreapi.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "git-server-service",
+				Namespace: t.namespace,
+			},
+		})
+	})
+
+	t.Logf("Waiting for git-server to start ...")
+
+	// Wait a minute for git server to start up.
+	giveUp := time.Now().Add(time.Minute)
+
+	for {
+		time.Sleep(5 * time.Second)
+
+		var server appsv1.Deployment
+		t.GetF(ctx, client.ObjectKey{
+			Namespace: t.namespace,
+			Name:      "git-server",
+		}, &server)
+		if server.Status.AvailableReplicas > 0 {
+			t.Logf("Git server is up ...")
+			break
+		}
+
+		if time.Now().After(giveUp) {
+			t.Fatalf("git server failed to start: %s", server)
+			return GitConfig{}
+		}
+	}
+
+	return GitConfig{
+		Repo:      fmt.Sprintf("http://git-server-service.%s.svc.cluster.local:8080", t.namespace),
+		Branch:    "main",
+		Directory: "/",
 	}
 }

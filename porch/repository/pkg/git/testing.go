@@ -151,7 +151,7 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 		switch ref.Type() {
 		case plumbing.SymbolicReference:
 			if r, err := s.repo.Reference(ref.Name(), true); err != nil {
-				klog.Warningf("Skippling unresolvable symbolic reference %q: %w", ref.Name(), err)
+				klog.Warningf("Skipping unresolvable symbolic reference %q: %v", ref.Name(), err)
 				return nil
 			} else {
 				resolved = r

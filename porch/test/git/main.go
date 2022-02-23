@@ -18,13 +18,17 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"k8s.io/klog/v2"
 )
 
@@ -41,11 +45,22 @@ func main() {
 }
 
 func run(dirs []string) error {
-	if len(dirs) != 1 {
-		return fmt.Errorf("expected one path to Git directory to serve. Got %d", len(dirs))
-	}
+	var dir string
 
-	dir := dirs[0]
+	switch len(dirs) {
+	case 0:
+		var err error
+		dir, err = ioutil.TempDir("", "repo-*")
+		if err != nil {
+			return fmt.Errorf("failed to create temporary directory for git repository: %w", err)
+		}
+
+	case 1:
+		dir = dirs[0]
+
+	default:
+		return fmt.Errorf("can server only one git repository, not %d", len(dirs))
+	}
 
 	var repo *gogit.Repository
 	var err error
@@ -59,6 +74,12 @@ func run(dirs []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to initialize git repository %q: %w", dir, err)
 		}
+		if err := createEmptyCommit(repo); err != nil {
+			return err
+		}
+
+		// Delete go-git default branch
+		_ = repo.Storer.RemoveReference(plumbing.Master)
 	}
 
 	server, err := git.NewGitServer(repo)
@@ -84,6 +105,57 @@ func run(dirs []string) error {
 	signal.Notify(wait, os.Interrupt)
 
 	<-wait
+
+	return nil
+}
+
+func createEmptyCommit(repo *gogit.Repository) error {
+	store := repo.Storer
+	// Create first commit using empty tree.
+	emptyTree := object.Tree{}
+	encodedTree := store.NewEncodedObject()
+	if err := emptyTree.Encode(encodedTree); err != nil {
+		return fmt.Errorf("failed to encode initial empty commit tree: %w", err)
+	}
+
+	treeHash, err := store.SetEncodedObject(encodedTree)
+	if err != nil {
+		return fmt.Errorf("failed to create initial empty commit tree: %w", err)
+	}
+
+	sig := object.Signature{
+		Name:  "Git Server",
+		Email: "git-server@kpt.dev",
+		When:  time.Now(),
+	}
+
+	commit := object.Commit{
+		Author:       sig,
+		Committer:    sig,
+		Message:      "Empty Commit",
+		TreeHash:     treeHash,
+		ParentHashes: []plumbing.Hash{}, // No parents
+	}
+
+	encodedCommit := store.NewEncodedObject()
+	if err := commit.Encode(encodedCommit); err != nil {
+		return fmt.Errorf("failed to encode initial empty commit: %w", err)
+	}
+
+	commitHash, err := store.SetEncodedObject(encodedCommit)
+	if err != nil {
+		return fmt.Errorf("failed to create initial empty commit: %w", err)
+	}
+
+	main := plumbing.NewHashReference(plumbing.ReferenceName("refs/heads/main"), commitHash)
+	if err := repo.Storer.SetReference(main); err != nil {
+		return fmt.Errorf("failed to set refs/heads/main to commit sha %s: %w", commitHash, err)
+	}
+
+	head := plumbing.NewSymbolicReference(plumbing.HEAD, "refs/heads/main")
+	if err := repo.Storer.SetReference(head); err != nil {
+		return fmt.Errorf("failed to set HEAD to refs/heads/main: %w", err)
+	}
 
 	return nil
 }
