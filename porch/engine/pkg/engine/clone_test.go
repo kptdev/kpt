@@ -99,7 +99,7 @@ func createRepoWithContents(t *testing.T, contentDir string) *gogit.Repository {
 
 	main := plumbing.NewHashReference(plumbing.ReferenceName("refs/heads/main"), hash)
 	if err := repo.Storer.SetReference(main); err != nil {
-		t.Fatalf("Failed to set refs/heads/main to commit sha %s", hash)
+		t.Fatalf("Failed to set refs/heads/main to commit sha %s: %v", hash, err)
 	}
 	head := plumbing.NewSymbolicReference(plumbing.HEAD, "refs/heads/main")
 	if err := repo.Storer.SetReference(head); err != nil {
