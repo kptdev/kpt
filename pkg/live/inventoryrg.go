@@ -60,8 +60,9 @@ var ResourceGroupGVK = schema.GroupVersionKind{
 // the Inventory and InventoryInfo interface. This wrapper loads and stores the
 // object metadata (inventory) to and from the wrapped ResourceGroup.
 type InventoryResourceGroup struct {
-	inv      *unstructured.Unstructured
-	objMetas []object.ObjMetadata
+	inv       *unstructured.Unstructured
+	objMetas  []object.ObjMetadata
+	objStatus []actuation.ObjectStatus
 }
 
 func (icm *InventoryResourceGroup) Strategy() inventory.Strategy {
@@ -171,6 +172,7 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 // happens in "GetObject".
 func (icm *InventoryResourceGroup) Store(objMetas object.ObjMetadataSet, status []actuation.ObjectStatus) error {
 	icm.objMetas = objMetas
+	icm.objStatus = status
 	return nil
 }
 
@@ -179,6 +181,10 @@ func (icm *InventoryResourceGroup) Store(objMetas object.ObjMetadataSet, status 
 func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, error) {
 	if icm.inv == nil {
 		return nil, fmt.Errorf("inventory info is nil")
+	}
+	objStatusMap := map[object.ObjMetadata]actuation.ObjectStatus{}
+	for _, s := range icm.objStatus {
+		objStatusMap[inventory.ObjMetadataFromObjectReference(s.ObjectReference)] = s
 	}
 	klog.V(4).Infof("getting inventory resource group")
 	// Create a slice of Resources as empty Interface
@@ -193,6 +199,25 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 			"name":      objMeta.Name,
 		})
 	}
+	klog.V(4).Infof("Creating list of %d resources status", len(icm.objMetas))
+	var objStatus []interface{}
+	for _, objMeta := range icm.objMetas {
+		status, found := objStatusMap[objMeta]
+		if found {
+			klog.V(4).Infof("storing inventory obj refercence and its status: %s/%s", objMeta.Namespace, objMeta.Name)
+			objStatus = append(objStatus, map[string]interface{}{
+				"group":     objMeta.GroupKind.Group,
+				"kind":      objMeta.GroupKind.Kind,
+				"namespace": objMeta.Namespace,
+				"name":      objMeta.Name,
+				"status":    "Unknown",
+				"strategy":  status.Strategy.String(),
+				"actuation": status.Actuation.String(),
+				"reconcile": status.Reconcile.String(),
+			})
+		}
+	}
+
 	// Create the inventory object by copying the template.
 	invCopy := icm.inv.DeepCopy()
 	// Adds or clears the inventory ObjMetadata to the ResourceGroup "spec.resources" section
@@ -200,10 +225,23 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 		klog.V(4).Infoln("clearing inventory resources")
 		unstructured.RemoveNestedField(invCopy.UnstructuredContent(),
 			"spec", "resources")
+		unstructured.RemoveNestedField(invCopy.UnstructuredContent(),
+			"status", "resourceStatuses")
 	} else {
 		klog.V(4).Infof("storing inventory (%d) resources", len(objs))
 		err := unstructured.SetNestedSlice(invCopy.UnstructuredContent(),
 			objs, "spec", "resources")
+		if err != nil {
+			return nil, err
+		}
+		err = unstructured.SetNestedSlice(invCopy.UnstructuredContent(),
+			objStatus, "status", "resourceStatuses")
+		if err != nil {
+			return nil, err
+		}
+		generation := invCopy.GetGeneration()
+		err = unstructured.SetNestedField(invCopy.UnstructuredContent(),
+			generation, "status", "observedGeneration")
 		if err != nil {
 			return nil, err
 		}
