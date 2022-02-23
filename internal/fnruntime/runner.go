@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -45,7 +46,7 @@ import (
 func NewRunner(
 	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
+	imagePullPolicy ImagePullPolicy, setPkgPathAnnotation, displayResourceCount bool,
 	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
 	config, err := newFnConfig(fsys, f, pkgPath)
@@ -74,41 +75,46 @@ func NewRunner(
 		}
 	}
 	if fltr.Run == nil {
-		switch {
-		case f.Image != "":
-			cfn := &ContainerFn{
-				Path:            pkgPath,
-				Image:           f.Image,
-				ImagePullPolicy: imagePullPolicy,
-				Ctx:             ctx,
-				FnResult:        fnResult,
+		if f.Image == "builtins/gen-pkg-context" {
+			pkgCtxGenerator := &builtins.PackageContextGenerator{}
+			fltr.Run = pkgCtxGenerator.Run
+		} else {
+			switch {
+			case f.Image != "":
+				cfn := &ContainerFn{
+					Path:            pkgPath,
+					Image:           f.Image,
+					ImagePullPolicy: imagePullPolicy,
+					Ctx:             ctx,
+					FnResult:        fnResult,
+				}
+				fltr.Run = cfn.Run
+			case f.Exec != "":
+				var execArgs []string
+				// assuming exec here
+				s, err := shlex.Split(f.Exec)
+				if err != nil {
+					return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+				}
+				execPath := f.Exec
+				if len(s) > 0 {
+					execPath = s[0]
+				}
+				if len(s) > 1 {
+					execArgs = s[1:]
+				}
+				eFn := &ExecFn{
+					Path:     execPath,
+					Args:     execArgs,
+					FnResult: fnResult,
+				}
+				fltr.Run = eFn.Run
+			default:
+				return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 			}
-			fltr.Run = cfn.Run
-		case f.Exec != "":
-			var execArgs []string
-			// assuming exec here
-			s, err := shlex.Split(f.Exec)
-			if err != nil {
-				return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
-			}
-			execPath := f.Exec
-			if len(s) > 0 {
-				execPath = s[0]
-			}
-			if len(s) > 1 {
-				execArgs = s[1:]
-			}
-			eFn := &ExecFn{
-				Path:     execPath,
-				Args:     execArgs,
-				FnResult: fnResult,
-			}
-			fltr.Run = eFn.Run
-		default:
-			return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
+	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, setPkgPathAnnotation, displayResourceCount)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function

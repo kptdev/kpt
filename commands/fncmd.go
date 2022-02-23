@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdfndoc"
+	"github.com/GoogleContainerTools/kpt/internal/cmdhook"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrender"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdeval"
@@ -47,6 +48,7 @@ func GetFnCommand(ctx context.Context, name string) *cobra.Command {
 	functions.AddCommand(
 		cmdeval.EvalCommand(ctx, name),
 		cmdrender.NewCommand(ctx, name),
+		cmdhook.NewCommand(ctx, name),
 		cmdfndoc.NewCommand(ctx, name),
 		cmdsource.NewCommand(ctx, name),
 		cmdsink.NewCommand(ctx, name),
