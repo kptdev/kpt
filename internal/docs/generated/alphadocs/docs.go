@@ -5,3 +5,36 @@ var AlphaShort = `This command is currently in alpha and might change without no
 var AlphaLong = `
 The ` + "`" + `alpha` + "`" + ` command group contains subcommands which are in alpha and might change without notice.
 `
+
+var RepoShort = `[Alpha] Manage package repositories.`
+var RepoLong = `
+[Alpha] The ` + "`" + `repo` + "`" + ` command group contains subcommands for managing package repositories.
+`
+
+var RegShort = `Registers a package repository with Package Orchestrator.`
+var RegLong = `
+  kpt alpha repo reg[ister] REPOSITORY [flags]
+
+Args:
+
+  REPOSITORY:
+    Address of the repository to register. Required argument.
+
+Flags:
+
+  --description
+    Brief description of the package repository.
+  
+  --name
+    Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
+  
+  --title
+    Title of the package repository.
+  
+  --repo-username
+    Username for repository authentication.
+  
+  --repo-password
+    Password for repository authentication.
+  
+`

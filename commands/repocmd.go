@@ -16,16 +16,22 @@ package commands
 
 import (
 	"context"
+	"flag"
+	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdreg"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
 )
 
-func GetAlphaCommand(ctx context.Context, name, version string) *cobra.Command {
-	alpha := &cobra.Command{
-		Use:   "alpha",
-		Short: alphadocs.AlphaShort,
-		Long:  alphadocs.AlphaLong,
+func NewRepoCommand(ctx context.Context, version string) *cobra.Command {
+	repo := &cobra.Command{
+		Use:     "repo",
+		Aliases: []string{},
+		Short:   alphadocs.RepoShort,
+		Long:    alphadocs.RepoLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
@@ -39,9 +45,21 @@ func GetAlphaCommand(ctx context.Context, name, version string) *cobra.Command {
 		Hidden: true,
 	}
 
-	alpha.AddCommand(
-		NewRepoCommand(ctx, version),
+	pf := repo.PersistentFlags()
+
+	kubeflags := genericclioptions.NewConfigFlags(true)
+	kubeflags.AddFlags(pf)
+
+	kubeflags.WrapConfigFn = func(rc *rest.Config) *rest.Config {
+		rc.UserAgent = fmt.Sprintf("kpt/%s", version)
+		return rc
+	}
+
+	pf.AddGoFlagSet(flag.CommandLine)
+
+	repo.AddCommand(
+		cmdreg.NewCommand(ctx, kubeflags),
 	)
 
-	return alpha
+	return repo
 }
