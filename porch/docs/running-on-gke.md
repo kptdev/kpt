@@ -25,7 +25,7 @@ gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
     --role "roles/artifactregistry.repoAdmin"
 gcloud iam service-accounts add-iam-policy-binding porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
     --role roles/iam.workloadIdentityUser \
-    --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[porch-system/apiserver]"
+    --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[porch-system/porch-server]"
 
 gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
     --member "serviceAccount:porch-sync@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
