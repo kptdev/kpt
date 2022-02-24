@@ -33,6 +33,17 @@
                 "--",
                 "namespace=foo"
             ]
+        },
+        {
+            "name": "Launch kpt",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/../main.go",
+            "args": [
+                "alpha", "repo", "register", "--namespace=default", "https://github.com/platkrm/martin-blueprints.git@main"
+            ],
+            "cwd": "${workspaceFolder}/.."
         }
     ]
 }

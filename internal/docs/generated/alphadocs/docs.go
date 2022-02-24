@@ -5,3 +5,8 @@ var AlphaShort = `This command is currently in alpha and might change without no
 var AlphaLong = `
 The ` + "`" + `alpha` + "`" + ` command group contains subcommands which are in alpha and might change without notice.
 `
+
+var RepoShort = `[Alpha] Manage package repositories.`
+var RepoLong = `
+[Alpha] The ` + "`" + `repo` + "`" + ` command group contains subcommands for managing package repositories.
+`
