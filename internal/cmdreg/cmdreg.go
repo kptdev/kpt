@@ -16,6 +16,7 @@ package cmdreg
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
@@ -23,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/spf13/cobra"
+	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -50,6 +52,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.title, "title", "", "Title of the package repository.")
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
 	c.Flags().StringVar(&r.description, "description", "", "Brief description of the package repository.")
+	c.Flags().StringVar(&r.username, "repo-username", "", "Username for repository authentication.")
+	c.Flags().StringVar(&r.password, "repo-password", "", "Password for repository authentication.")
 
 	return r
 }
@@ -68,6 +72,8 @@ type runner struct {
 	title       string
 	name        string
 	description string
+	username    string
+	password    string
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -123,7 +129,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Repo:      t.Repo,
 			Branch:    t.Ref,
 			Directory: t.Directory,
-			// TODO: support private repositories; accept username, password, create secret
 		}
 
 		if r.name == "" {
@@ -131,7 +136,39 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := r.client.Create(r.ctx, &configapi.Repository{
+	if r.username != "" || r.password != "" {
+		secretName := fmt.Sprintf("%s-auth", r.name)
+		if err := apply(r.ctx, r.client, &coreapi.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: coreapi.SchemeGroupVersion.Identifier(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: *r.cfg.Namespace,
+			},
+			Data: map[string][]byte{
+				"username": []byte(r.username),
+				"password": []byte(r.password),
+			},
+			Type: coreapi.SecretTypeBasicAuth,
+		}); err != nil {
+			return errors.E(op, err)
+		}
+
+		if git != nil {
+			git.SecretRef.Name = secretName
+		}
+		if oci != nil {
+			oci.SecretRef.Name = secretName
+		}
+	}
+
+	if err := apply(r.ctx, r.client, &configapi.Repository{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Repository",
+			APIVersion: configapi.GroupVersion.Identifier(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      r.name,
 			Namespace: *r.cfg.Namespace,
@@ -156,6 +193,7 @@ func createScheme() (*runtime.Scheme, error) {
 
 	for _, api := range (runtime.SchemeBuilder{
 		configapi.AddToScheme,
+		coreapi.AddToScheme,
 	}) {
 		if err := api(scheme); err != nil {
 			return nil, err
@@ -167,4 +205,9 @@ func createScheme() (*runtime.Scheme, error) {
 func lastSegment(path string) string {
 	path = strings.TrimRight(path, "/")
 	return path[strings.LastIndex(path, "/")+1:]
+}
+
+func apply(ctx context.Context, api client.Client, obj client.Object) error {
+	//	api.Create(ctx, obj)
+	return api.Patch(ctx, obj, client.Apply, client.FieldOwner("kubectl"))
 }

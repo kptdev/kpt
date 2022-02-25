@@ -3,6 +3,7 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.0

@@ -38,3 +38,19 @@ Flags:
     Password for repository authentication.
   
 `
+
+var RpkgShort = `[Alpha] Manage packages in package repositories.`
+var RpkgLong = `
+[Alpha] The ` + "`" + `rpkg` + "`" + ` command group contains subcommands for managing packages in repositories.
+`
+
+var ListShort = `Lists packages in registered repositories.`
+var ListLong = `
+  kpt alpha rpkg list [flags]
+
+Flags:
+
+  --name
+    Name of the packages to list. Any package whose name contains this value will be included in the results.
+  
+`
