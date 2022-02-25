@@ -10,16 +10,15 @@ description: >
     Reads package resources.
 -->
 
-`res` reads resources from a package and writes them in [Function Specification]
-wire format to `stdout`. `res` can be used in place of `source` where the package
-is in a registered package repository instead of on the local disk.
+`res` reads resources from a package and writes them into a directory (if specified), or
+into a [Function Specification] wire format to `stdout`.
 
 ### Synopsis
 
 <!--mdtogo:Long-->
 
 ```
-kpt alpha rpkg res[ources] PACKAGE
+kpt alpha rpkg res[ources] PACKAGE [DIR]
 ```
 
 #### Args
@@ -27,6 +26,10 @@ kpt alpha rpkg res[ources] PACKAGE
 ```
 PACKAGE:
   Name of the package containing the resources.
+
+DIR:
+  Optional path to a local directory to write resources to. The directory must not already exist.
+
 ```
 
 #### Flags

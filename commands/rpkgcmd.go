@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdlist"
 	"github.com/GoogleContainerTools/kpt/internal/cmdres"
+	"github.com/GoogleContainerTools/kpt/internal/cmdstore"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -61,6 +62,7 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 	repo.AddCommand(
 		cmdlist.NewCommand(ctx, kubeflags),
 		cmdres.NewCommand(ctx, kubeflags),
+		cmdstore.NewCommand(ctx, kubeflags),
 	)
 
 	return repo

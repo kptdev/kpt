@@ -57,12 +57,36 @@ Flags:
 
 var ResShort = `Reads package resources.`
 var ResLong = `
-  kpt alpha rpkg res[ources] PACKAGE
+  kpt alpha rpkg res[ources] PACKAGE [DIR]
 
 Args:
 
   PACKAGE:
     Name of the package containing the resources.
+  
+  DIR:
+    Optional path to a local directory to write resources to. The directory must not already exist.
+  
+
+Flags:
+
+  --namespace
+    Namespace containing the package.
+  
+`
+
+var StoreShort = `Stores package resources into a remote package.`
+var StoreLong = `
+  kpt alpha rpkg store PACKAGE [DIR]
+
+Args:
+
+  PACKAGE:
+    Name of the package where to store the resources.
+  
+  DIR:
+    Optional path to a local directory to read resources from.
+  
 
 Flags:
 

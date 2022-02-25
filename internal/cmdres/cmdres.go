@@ -16,12 +16,15 @@ package cmdres
 
 import (
 	"context"
+	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
@@ -38,7 +41,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "res PACKAGE",
+		Use:        "res PACKAGE [DIR]",
 		Aliases:    []string{"resources", "read"},
 		SuggestFor: []string{},
 		Short:      alphadocs.ResShort,
@@ -103,10 +106,44 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
+	if len(args) > 1 {
+		if err := writeToDir(resources.Spec.Resources, args[1]); err != nil {
+			return errors.E(op, err)
+		}
+	} else {
+		if err := writeToWriter(resources.Spec.Resources, r.printer.OutStream()); err != nil {
+			return errors.E(op, err)
+		}
+	}
+	return nil
+}
+
+func writeToDir(resources map[string]string, dir string) error {
+	if err := cmdutil.CheckDirectoryNotPresent(dir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	for k, v := range resources {
+		f := filepath.Join(dir, k)
+		d := filepath.Dir(f)
+		if err := os.MkdirAll(d, 0755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(f, []byte(v), 0644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func writeToWriter(resources map[string]string, out io.Writer) error {
 	inputs := []kio.Reader{}
 
 	// Create kio readers
-	for k, v := range resources.Spec.Resources {
+	for k, v := range resources {
 		if !includeFile(k) {
 			continue
 		}
@@ -124,7 +161,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		Inputs: inputs,
 		Outputs: []kio.Writer{
 			kio.ByteWriter{
-				Writer:                r.printer.OutStream(),
+				Writer:                out,
 				KeepReaderAnnotations: true,
 				WrappingKind:          kio.ResourceListKind,
 				WrappingAPIVersion:    kio.ResourceListAPIVersion,
