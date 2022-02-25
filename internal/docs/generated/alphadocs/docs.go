@@ -54,3 +54,19 @@ Flags:
     Name of the packages to list. Any package whose name contains this value will be included in the results.
   
 `
+
+var ResShort = `Reads package resources.`
+var ResLong = `
+  kpt alpha rpkg res[ources] PACKAGE
+
+Args:
+
+  PACKAGE:
+    Name of the package containing the resources.
+
+Flags:
+
+  --namespace
+    Namespace containing the package.
+  
+`
