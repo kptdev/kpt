@@ -163,6 +163,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 	}
 
 	credentialResolver := porch.NewCredentialResolver(coreClient)
+	referenceResolver := porch.NewReferenceResolver(coreClient)
 
 	renderer := kpt.NewRenderer()
 
@@ -172,6 +173,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
+		engine.WithReferenceResolver(referenceResolver),
 	)
 	if err != nil {
 		return nil, err
