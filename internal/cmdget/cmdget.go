@@ -57,6 +57,11 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
+
+	c.Flags().BoolVar(&r.localGcloudConfig, "local-gcloud", false, "pull local gcloud config as default package value.")
+	_ = c.RegisterFlagCompletionFunc("local-gcloud", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
+	})
 	return r
 }
 
@@ -66,10 +71,11 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function
 type Runner struct {
-	ctx      context.Context
-	Get      get.Command
-	Command  *cobra.Command
-	strategy string
+	ctx               context.Context
+	Get               get.Command
+	Command           *cobra.Command
+	strategy          string
+	localGcloudConfig bool
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -108,6 +114,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 	r.Get.UpdateStrategy = strategy
+	r.Get.EnableDefaultGcloud = r.localGcloudConfig
 	return nil
 }
 

@@ -512,6 +512,5 @@ data: {}
 		}
 		return configNode, nil
 	}
-	// no need to return ConfigMap if no config given
 	return nil, nil
 }

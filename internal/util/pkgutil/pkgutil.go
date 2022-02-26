@@ -31,6 +31,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 )
 
+const (
+	GcloudConfigFile = "gcloud-config.yaml"
+	GcloudMetaName   = "gcloud-config.kpt.dev"
+)
+
 // WalkPackage walks the package defined at src and provides a callback for
 // every folder and file. Any subpackages and the .git folder are excluded.
 func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
