@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdhook"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/hook"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -124,7 +124,7 @@ func (c Command) Run(ctx context.Context) error {
 	if c.IsDeploymentInstance {
 		pr := printer.FromContextOrDie(ctx)
 		pr.Printf("\nCustomizing package for deployment.\n")
-		hookCmd := cmdhook.Executor{
+		hookCmd := hook.Executor{
 			PkgPath: c.Destination,
 		}
 		builtinHooks := []kptfilev1.Function{
@@ -132,7 +132,7 @@ func (c Command) Run(ctx context.Context) error {
 				Image: "builtins/gen-pkg-context",
 			},
 		}
-		if err := hookCmd.Execute(ctx, builtinHooks); err != nil && !errors.Is(err, cmdhook.ErrHookNotFound) {
+		if err := hookCmd.Execute(ctx, builtinHooks); err != nil && !errors.Is(err, hook.ErrHookNotFound) {
 			return err
 		}
 		pr.Printf("\nCustomized package for deployment.\n")

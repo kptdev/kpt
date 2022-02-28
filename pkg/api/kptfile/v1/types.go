@@ -57,9 +57,6 @@ type KptFile struct {
 
 	// Inventory contains parameters for the inventory object used in apply.
 	Inventory *Inventory `yaml:"inventory,omitempty" json:"inventory,omitempty"`
-
-	// (Experimental) Hooks for generating contexts
-	Hooks map[string][]Function `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 }
 
 // OriginType defines the type of origin for a package.

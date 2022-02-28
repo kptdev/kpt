@@ -272,7 +272,6 @@ func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	localKf.Info = mergedKf.Info
 	localKf.Pipeline = mergedKf.Pipeline
 	localKf.Inventory = mergedKf.Inventory
-	localKf.Hooks = mergedKf.Hooks
 	return nil
 }
 

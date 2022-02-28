@@ -1,4 +1,4 @@
-package cmdhook
+package hook
 
 import (
 	"context"
