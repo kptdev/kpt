@@ -83,7 +83,7 @@ start-function-runner:
 	  --network=porch \
 	  --ip 192.168.8.202 \
 	  --name function-runner \
-	  gcr.io/$(GCP_PROJECT_ID)/function-runner:latest
+	  gcr.io/$(GCP_PROJECT_ID)/function-runner:$(IMAGE_TAG)
 
 .PHONY: generate
 generate: $(MODULES)
