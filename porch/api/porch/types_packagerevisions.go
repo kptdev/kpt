@@ -124,6 +124,14 @@ type GitPackage struct {
 
 	// Directory within the Git repository where the packages are stored. A subdirectory of this directory containing a Kptfile is considered a package.
 	Directory string `json:"directory"`
+
+	// Reference to secret containing authentication credentials. Optional.
+	SecretRef SecretRef `json:"secretRef,omitempty"`
+}
+
+type SecretRef struct {
+	// Name of the secret. The secret is expected to be located in the same namespace as the resource containing the reference.
+	Name string `json:"name"`
 }
 
 // OciPackage describes a repository compatible with the Open Coutainer Registry standard.

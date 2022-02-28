@@ -48,6 +48,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":          schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":        schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                    schema_porch_api_porch_v1alpha1_SecretRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                     schema_porch_api_porch_v1alpha1_Selector(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task":                         schema_porch_api_porch_v1alpha1_Task(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage":              schema_porch_api_porch_v1alpha1_UpstreamPackage(ref),
@@ -425,10 +426,19 @@ func schema_porch_api_porch_v1alpha1_GitPackage(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
+					"secretRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Reference to secret containing authentication credentials. Optional.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef"),
+						},
+					},
 				},
 				Required: []string{"repo", "ref", "directory"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef"},
 	}
 }
 
@@ -804,6 +814,27 @@ func schema_porch_api_porch_v1alpha1_RepositoryRef(ref common.ReferenceCallback)
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Name of the Repository resource referenced.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_SecretRef(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name of the secret. The secret is expected to be located in the same namespace as the resource containing the reference.",
 							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",

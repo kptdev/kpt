@@ -43,13 +43,23 @@ const (
 // GitServer is a mock git server implementing "just enough" of the git protocol
 type GitServer struct {
 	repo *gogit.Repository
+
+	// Basic auth
+	username string
+	password string
 }
 
 // NewGitServer constructs a GitServer backed by the specified repo.
-func NewGitServer(repo *gogit.Repository) (*GitServer, error) {
-	return &GitServer{
+func NewGitServer(repo *gogit.Repository, opts ...GitServerOption) (*GitServer, error) {
+	gs := &GitServer{
 		repo: repo,
-	}, nil
+	}
+
+	for _, opt := range opts {
+		opt.apply(gs)
+	}
+
+	return gs, nil
 }
 
 // ListenAndServe starts the git server on "listen".
@@ -98,6 +108,14 @@ func (s *GitServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // serveRequest is the main dispatcher for http requests.
 func (s *GitServer) serveRequest(w http.ResponseWriter, r *http.Request) error {
+	if s.username != "" || s.password != "" {
+		username, password, ok := r.BasicAuth()
+		if !ok || username != s.username || password != s.password {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return nil
+		}
+	}
+
 	path := r.URL.Path
 	if path == "/info/refs" {
 		return s.serveGitInfoRefs(w, r)
@@ -565,4 +583,25 @@ func (w *PacketLineWriter) WriteZeroPacketLine() {
 	}
 
 	klog.V(4).Infof("writing pktline 0000")
+}
+
+// Options
+
+type GitServerOption interface {
+	apply(*GitServer)
+}
+
+type optionBasicAuth struct {
+	username, password string
+}
+
+func (o *optionBasicAuth) apply(s *GitServer) {
+	s.username, s.password = o.username, o.password
+}
+
+func WithBasicAuth(username, password string) GitServerOption {
+	return &optionBasicAuth{
+		username: username,
+		password: password,
+	}
 }

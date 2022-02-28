@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -111,8 +112,8 @@ func createRepoWithContents(t *testing.T, contentDir string) *gogit.Repository {
 	return repo
 }
 
-func startGitServer(t *testing.T, repo *gogit.Repository) string {
-	server, err := git.NewGitServer(repo)
+func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerOption) string {
+	server, err := git.NewGitServer(repo, opts...)
 	if err != nil {
 		t.Fatalf("Failed to create git server: %v", err)
 	}
@@ -143,13 +144,31 @@ func startGitServer(t *testing.T, repo *gogit.Repository) string {
 	return fmt.Sprintf("http://%s", address)
 }
 
-type cr struct{}
+type credentialResolver struct {
+	username, password string
+}
 
-func (cr) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
+func randomString(n int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, n)
+	for i := range result {
+		result[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(result)
+}
+
+func randomCredentials() *credentialResolver {
+	return &credentialResolver{
+		username: randomString(30),
+		password: randomString(30),
+	}
+}
+
+func (r *credentialResolver) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
 	return repository.Credential{
 		Data: map[string][]byte{
-			"username": []byte(""),
-			"password": []byte(""),
+			"username": []byte(r.username),
+			"password": []byte(r.password),
 		},
 	}, nil
 }
@@ -159,8 +178,10 @@ func TestCloneGitBasicAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to find testdata: %v", err)
 	}
+
+	auth := randomCredentials()
 	repo := createRepoWithContents(t, testdata)
-	addr := startGitServer(t, repo)
+	addr := startGitServer(t, repo, git.WithBasicAuth(auth.username, auth.password))
 
 	cpm := clonePackageMutation{
 		task: &v1alpha1.Task{
@@ -172,12 +193,27 @@ func TestCloneGitBasicAuth(t *testing.T) {
 						Repo:      addr,
 						Ref:       "main",
 						Directory: "configmap",
+						SecretRef: v1alpha1.SecretRef{
+							Name: "git-credentials",
+						},
 					},
 				},
 			},
 		},
-		name: "test-configmap",
+		namespace: "test-namespace",
+		name:      "test-configmap",
+		credentialResolver: &credentialResolver{
+			username: "",
+			password: "",
+		},
 	}
+
+	_, _, err = cpm.Apply(context.Background(), repository.PackageResources{})
+	if err == nil {
+		t.Errorf("Expected error (unauthorized); got none")
+	}
+
+	cpm.credentialResolver = auth
 
 	r, _, err := cpm.Apply(context.Background(), repository.PackageResources{})
 	if err != nil {

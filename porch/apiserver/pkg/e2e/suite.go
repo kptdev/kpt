@@ -54,7 +54,7 @@ type GitConfig struct {
 	Branch    string   `json:"branch"`
 	Directory string   `json:"directory"`
 	Username  string   `json:"username"`
-	Password  Password `json:"token"`
+	Password  Password `json:"password"`
 }
 
 type OciConfig struct {
