@@ -215,10 +215,7 @@ func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree,
 
 	entries := tree.Entries
 	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].Mode == entries[j].Mode {
-			return entries[i].Name < entries[j].Name
-		}
-		return entries[i].Mode == filemode.Dir // Directories before files
+		return entrySortKey(&entries[i]) < entrySortKey(&entries[j])
 	})
 
 	// Store all child trees and get their hashes
@@ -250,6 +247,14 @@ func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree,
 
 	tree.Hash = treeHash
 	return treeHash, nil
+}
+
+// Git sorts tree entries as though directories have '/' appended to them.
+func entrySortKey(e *object.TreeEntry) string {
+	if e.Mode == filemode.Dir {
+		return e.Name + "/"
+	}
+	return e.Name
 }
 
 func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, change *v1alpha1.Task) (plumbing.Hash, error) {
