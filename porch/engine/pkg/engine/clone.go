@@ -85,7 +85,7 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	}
 	defer os.RemoveAll(dir)
 
-	var credentialResolver repository.CredentialResolver = m.credentialResolver
+	credentialResolver := m.credentialResolver
 	r, err := git.OpenRepository(ctx, "", "", &spec, credentialResolver, dir)
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot clone Git repository: %w", err)

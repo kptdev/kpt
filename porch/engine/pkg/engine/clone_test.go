@@ -144,7 +144,7 @@ func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerO
 	return fmt.Sprintf("http://%s", address)
 }
 
-type cr struct {
+type credentialResolver struct {
 	username, password string
 }
 
@@ -157,14 +157,14 @@ func randomString(n int) string {
 	return string(result)
 }
 
-func randomCredentials() *cr {
-	return &cr{
+func randomCredentials() *credentialResolver {
+	return &credentialResolver{
 		username: randomString(30),
 		password: randomString(30),
 	}
 }
 
-func (r *cr) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
+func (r *credentialResolver) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
 	return repository.Credential{
 		Data: map[string][]byte{
 			"username": []byte(r.username),
@@ -202,7 +202,7 @@ func TestCloneGitBasicAuth(t *testing.T) {
 		},
 		namespace: "test-namespace",
 		name:      "test-configmap",
-		credentialResolver: &cr{
+		credentialResolver: &credentialResolver{
 			username: "",
 			password: "",
 		},
