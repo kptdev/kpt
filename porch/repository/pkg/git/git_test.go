@@ -17,17 +17,22 @@ package git
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/filemode"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"k8s.io/klog/v2"
 )
 
@@ -177,4 +182,105 @@ func TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("resources did not match expected; got %v, want %v", resources.Spec.Resources, wantResources)
 		}
 	}
+}
+
+// initRepo is a helper that creates a first commit, ensuring the repo is not empty.
+func initRepo(repo *gogit.Repository) error {
+	store := repo.Storer
+
+	var objectHash plumbing.Hash
+	{
+		data := []byte("This is a test repo")
+		eo := store.NewEncodedObject()
+		eo.SetType(plumbing.BlobObject)
+		eo.SetSize(int64(len(data)))
+
+		w, err := eo.Writer()
+		if err != nil {
+			return fmt.Errorf("error creating object writer: %w", err)
+		}
+
+		if _, err = w.Write(data); err != nil {
+			w.Close()
+			return fmt.Errorf("error writing object data: %w", err)
+		}
+		if err := w.Close(); err != nil {
+			return fmt.Errorf("error closing object data: %w", err)
+		}
+
+		if h, err := store.SetEncodedObject(eo); err != nil {
+			return fmt.Errorf("error storing object: %w", err)
+		} else {
+			objectHash = h
+		}
+	}
+
+	var treeHash plumbing.Hash
+	{
+		tree := object.Tree{}
+
+		te := object.TreeEntry{
+			Name: "README.md",
+			Mode: filemode.Regular,
+			Hash: objectHash,
+		}
+		tree.Entries = append(tree.Entries, te)
+
+		eo := store.NewEncodedObject()
+		if err := tree.Encode(eo); err != nil {
+			return fmt.Errorf("error encoding tree: %w", err)
+		}
+		if h, err := store.SetEncodedObject(eo); err != nil {
+			return fmt.Errorf("error storing tree: %w", err)
+		} else {
+			treeHash = h
+		}
+	}
+
+	var commitHash plumbing.Hash
+	{
+		now := time.Now()
+		commit := &object.Commit{
+			Author: object.Signature{
+				Name:  "Porch Author",
+				Email: "author@kpt.dev",
+				When:  now,
+			},
+			Committer: object.Signature{
+				Name:  "Porch Committer",
+				Email: "committer@kpt.dev",
+				When:  now,
+			},
+			Message:  "First commit",
+			TreeHash: treeHash,
+		}
+
+		eo := store.NewEncodedObject()
+		if err := commit.Encode(eo); err != nil {
+			return fmt.Errorf("error encoding commit: %w", err)
+		}
+		if h, err := store.SetEncodedObject(eo); err != nil {
+			return fmt.Errorf("error storing commit: %w", err)
+		} else {
+			commitHash = h
+		}
+	}
+
+	{
+		ref := plumbing.NewHashReference(Main, commitHash)
+		if err := repo.Storer.SetReference(ref); err != nil {
+			return fmt.Errorf("error setting reference %q: %w", Main, err)
+		}
+
+		// gogit uses suboptimal default reference name; delete it
+		repo.Storer.RemoveReference(plumbing.Master)
+
+		// create correct HEAD as a symbolic reference of main branch
+		head := plumbing.NewSymbolicReference(plumbing.HEAD, Main)
+		if err := repo.Storer.SetReference(head); err != nil {
+			return fmt.Errorf("error creating HEAD ref: %w", err)
+		}
+	}
+
+	return nil
 }
