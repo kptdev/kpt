@@ -25,5 +25,5 @@ spec:
     name: loopback! # TODO: This is a hack used during development, remove once we are more end-to-end enabled.
   template:
     oci:
-      #repository: us-west1-docker.pkg.dev/example-google-project-id/deployment/myfirstnginx:v1
-      repository: us-west1-docker.pkg.dev/example-google-project-id/packages/porch:v0.0.1
+      #repository: us-west1-docker.pkg.dev/example-google-project-id/packages/porch:v0.0.1
+      repository: us-west1-docker.pkg.dev/example-google-project-id/deployment/helloserver:v1
