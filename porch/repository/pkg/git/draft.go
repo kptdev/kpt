@@ -115,10 +115,10 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	}
 
 	if err := d.parent.repo.Push(&git.PushOptions{
-		RemoteName:        "origin",
-		RefSpecs:          []config.RefSpec{refSpec},
-		Auth:              auth,
-		RequireRemoteRefs: []config.RefSpec{},
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{refSpec},
+		Auth:       auth,
+		Force:      true, // TODO: implement conflict recovery.
 	}); err != nil {
 		return nil, fmt.Errorf("failed to push to git: %w", err)
 	}
