@@ -40,6 +40,8 @@ RUN CGO_ENABLED=0 go build -v \
   k8s.io/client-go/discovery/cached
 
 WORKDIR /workspace
+COPY internal/ internal/
+COPY pkg/ pkg/
 COPY porch/api/ porch/api/
 COPY porch/controllers/ porch/controllers/
 COPY porch/repository/ porch/repository/
