@@ -22,7 +22,7 @@ make -C "${REPO_ROOT}/porch" fix-all
 
 changes=$(git status --porcelain || true)
 if [ -n "${changes}" ]; then
-  echo "ERROR: some files changes, please run `make fixup`"
+  echo "ERROR: some files changed, please run 'make -C porch fix-all'"
   echo "changed files:"
   printf "%s" "${changes}\n"
   echo "git diff:"
