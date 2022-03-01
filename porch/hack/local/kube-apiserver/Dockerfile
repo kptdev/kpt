@@ -15,7 +15,7 @@
 FROM golang:1.17-bullseye as builder
 
 WORKDIR /workspace/src
-RUN git clone https://github.com/kubernetes/kubernetes --branch v1.23.1 --depth=1
+RUN git clone https://github.com/kubernetes/kubernetes --branch v1.23.2 --depth=1
 WORKDIR /workspace/src/kubernetes
 RUN apt-get update && apt-get install --yes rsync
 RUN make generated_files
