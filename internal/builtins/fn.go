@@ -2,6 +2,8 @@ package builtins
 
 import (
 	"io"
+	"path"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -14,8 +16,11 @@ import (
 const pkgContextFile = "package-context.yaml"
 const pkgContextName = "kptfile.kpt.dev"
 
-type PackageContextGenerator struct {
-}
+// PackageContextGenerator is a built-in KRM function that generates
+// a KRM object that contains package context information that can be
+// used by functions such as `set-namespace` to customize package with
+// minimal configuration.
+type PackageContextGenerator struct{}
 
 func (pc *PackageContextGenerator) Run(r io.Reader, w io.Writer) error {
 	rw := &kio.ByteReadWriter{
@@ -27,34 +32,51 @@ func (pc *PackageContextGenerator) Run(r io.Reader, w io.Writer) error {
 }
 
 func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList) error {
-	pkgContextAlreadyExists := false
+	var err error
+	pkgContexts := map[string]*yaml.RNode{}
+	var updatedResources []*yaml.RNode
+
 	for _, resource := range resourceList.Items {
-		if resource.GetName() == pkgContextName &&
-			resource.GetApiVersion() == "v1" &&
-			resource.GetKind() == "ConfigMap" {
-			pkgContextAlreadyExists = true
-			break
+		gvk := resid.GvkFromNode(resource)
+		resourcePath, _, err := kioutil.GetFileAnnotations(resource)
+		if err != nil {
+			return err
 		}
+		if gvk.Kind == "Kptfile" && gvk.ApiVersion() == "kpt.dev/v1" {
+			pkgContext, err := pkgContextResource(resource)
+			if err != nil {
+				return err
+			}
+			pkgContextFilepath, _, err := kioutil.GetFileAnnotations(pkgContext)
+			if err != nil {
+				return err
+			}
+			pkgContexts[pkgContextFilepath] = pkgContext
+		}
+
+		if gvk.Kind == "ConfigMap" &&
+			gvk.ApiVersion() == "v1" &&
+			strings.HasSuffix(resourcePath, pkgContextFile) {
+			// skip adding pkg contexts
+			continue
+		}
+		updatedResources = append(updatedResources, resource)
 	}
 
-	if !pkgContextAlreadyExists {
-		kf := getKptFile(resourceList)
-		if kf == nil {
-			// Strange: kptfile is missing
-			// may be function was run without --include-meta-resources
-			return nil
+	for _, resource := range pkgContexts {
+		updatedResources = append(updatedResources, resource)
+	}
+
+	resourceList.Items = updatedResources
+
+	if err != nil {
+		resourceList.Results = framework.Results{
+			&framework.Result{
+				Message:  err.Error(),
+				Severity: framework.Error,
+			},
 		}
-		pkgContext, err := pkgContextNode(kf)
-		if err != nil {
-			resourceList.Results = framework.Results{
-				&framework.Result{
-					Message:  err.Error(),
-					Severity: framework.Error,
-				},
-			}
-			return resourceList.Results
-		}
-		resourceList.Items = append(resourceList.Items, pkgContext)
+		return resourceList.Results
 	}
 	// Notify users the gcloud context is stored in `gcloud-config.yaml`.
 	resourceList.Results = append(resourceList.Results, &framework.Result{
@@ -65,20 +87,8 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 	return nil
 }
 
-func getKptFile(rl *framework.ResourceList) *yaml.RNode {
-	for _, resource := range rl.Items {
-		gvk := resid.GvkFromNode(resource)
-		if gvk.Kind == "Kptfile" && gvk.ApiVersion() == "kpt.dev/v1" {
-			// return the first Kptfile resource
-			// TODO(droot): Add support for nested packages
-			return resource
-		}
-	}
-	return nil
-}
-
 // NewGcloudConfigNode creates a `GcloudConfig` RNode resource.
-func pkgContextNode(kf *yaml.RNode) (*yaml.RNode, error) {
+func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
 	cm := yaml.MustParse(`
 apiVersion: v1
 kind: ConfigMap
@@ -90,9 +100,13 @@ data: {}
 	if err := cm.SetName(pkgContextName); err != nil {
 		return nil, err
 	}
+	kptfilePath, _, err := kioutil.GetFileAnnotations(kf)
+	if err != nil {
+		return nil, err
+	}
 	annotations := map[string]string{
 		filters.LocalConfigAnnotation: "true",
-		kioutil.PathAnnotation:        pkgContextFile,
+		kioutil.PathAnnotation:        path.Join(path.Dir(kptfilePath), pkgContextFile),
 	}
 	// This resource is pseudo resource and not expected to be deployed to a cluster.
 	if err := cm.SetAnnotations(annotations); err != nil {

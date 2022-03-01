@@ -94,7 +94,7 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 			types.UniquePath(e.PkgPath),
 			e.fnResults,
 			e.ImagePullPolicy,
-			true,
+			false,
 			false,
 			e.Runtime)
 		if err != nil {
