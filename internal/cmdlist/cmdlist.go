@@ -18,7 +18,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -29,6 +28,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const listLong string = `
+kpt alpha rpkg list [flags]
+
+Flags:
+
+--name
+	Name of the packages to list. Any package whose name contains this value will be included in the results.
+
+`
+
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx: ctx,
@@ -38,8 +47,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "list",
 		Aliases:    []string{},
 		SuggestFor: []string{},
-		Short:      alphadocs.ListShort,
-		Long:       alphadocs.ListLong,
+		Short:      "Lists packages in registered repositories.",
+		Long:       listLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,

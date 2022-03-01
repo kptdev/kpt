@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
@@ -31,6 +30,33 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const regLong = `
+kpt alpha repo reg[ister] REPOSITORY [flags]
+
+Args:
+
+REPOSITORY:
+	Address of the repository to register. Required argument.
+
+Flags:
+
+--description
+	Brief description of the package repository.
+
+--name
+	Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
+
+--title
+	Title of the package repository.
+
+--repo-username
+	Username for repository authentication.
+
+--repo-password
+	Password for repository authentication.
+
+`
+
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx: ctx,
@@ -40,8 +66,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "reg REPOSITORY",
 		Aliases:    []string{"register"},
 		SuggestFor: []string{},
-		Short:      alphadocs.RegShort,
-		Long:       alphadocs.RegLong,
+		Short:      "Registers a package repository with Package Orchestrator.",
+		Long:       regLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,

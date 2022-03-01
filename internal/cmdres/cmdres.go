@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -35,6 +34,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
+const resLong = `
+kpt alpha rpkg res[ources] PACKAGE [DIR]
+
+Args:
+
+PACKAGE:
+	Name of the package containing the resources.
+
+DIR:
+	Optional path to a local directory to write resources to. The directory must not already exist.
+
+
+Flags:
+
+--namespace
+	Namespace containing the package.
+
+`
+
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx: ctx,
@@ -44,8 +62,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "res PACKAGE [DIR]",
 		Aliases:    []string{"resources", "read"},
 		SuggestFor: []string{},
-		Short:      alphadocs.ResShort,
-		Long:       alphadocs.ResLong,
+		Short:      "Reads package resources.",
+		Long:       resLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,

@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdlist"
 	"github.com/GoogleContainerTools/kpt/internal/cmdres"
 	"github.com/GoogleContainerTools/kpt/internal/cmdstore"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -32,8 +31,8 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 	repo := &cobra.Command{
 		Use:     "rpkg",
 		Aliases: []string{"rpackage"},
-		Short:   alphadocs.RpkgShort,
-		Long:    alphadocs.RpkgLong,
+		Short:   "[Alpha] Manage packages in package repositories.",
+		Long:    "[Alpha] The `rpkg` command group contains subcommands for managing packages in repositories.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {

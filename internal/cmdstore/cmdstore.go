@@ -24,7 +24,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -38,6 +37,25 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const storeLong = `
+kpt alpha rpkg store PACKAGE [DIR]
+
+Args:
+
+PACKAGE:
+	Name of the package where to store the resources.
+
+DIR:
+	Optional path to a local directory to read resources from.
+
+
+Flags:
+
+--namespace
+	Namespace containing the package.
+
+`
+
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx: ctx,
@@ -47,8 +65,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "store PACKAGE [DIR]",
 		Aliases:    []string{},
 		SuggestFor: []string{},
-		Short:      alphadocs.StoreShort,
-		Long:       alphadocs.StoreLong,
+		Short:      "Stores package resources into a remote package.",
+		Long:       storeLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
