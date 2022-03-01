@@ -129,11 +129,7 @@ func resolveCredential(ctx context.Context, namespace, name string, resolver rep
 	}
 
 	username := cred.Data["username"]
-	password, ok := cred.Data["password"]
-	if !ok {
-		// Try "token" for back-compat; TODO: remove
-		password = cred.Data["token"]
-	}
+	password := cred.Data["password"]
 
 	return &http.BasicAuth{
 		Username: string(username),
