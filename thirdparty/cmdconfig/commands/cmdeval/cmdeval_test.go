@@ -14,11 +14,15 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
 
@@ -460,6 +464,98 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err = r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.RunFns.Path)
+}
+
+func TestAddImageToKptfile(t *testing.T) {
+	testCases := map[string]struct {
+		Pipeline         *kptfilev1.Pipeline
+		Image            string
+		FnConfigPath     string
+		FnDataItems      []string
+		ExpectedStdout   string
+		ExpectedPipeline *kptfilev1.Pipeline
+	}{
+		"Add Image with ConfigMap": {
+			Pipeline: &kptfilev1.Pipeline{
+				Mutators: []kptfilev1.Function{
+					{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}},
+					{Name: "fake-fn2", Image: "fake-fn2", ConfigPath: "fake-path2"},
+				},
+			},
+			Image:          "fake-fn3",
+			FnDataItems:    []string{"cfg=fake-cfg3"},
+			ExpectedStdout: "image is added to Kptfile\n",
+			ExpectedPipeline: &kptfilev1.Pipeline{
+				Mutators: []kptfilev1.Function{
+					{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}},
+					{Name: "fake-fn2", Image: "fake-fn2", ConfigPath: "fake-path2"},
+					{Name: "fake-fn3", Image: "fake-fn3", ConfigMap: map[string]string{"cfg": "fake-cfg3"}},
+				},
+			},
+		},
+		"Add Image with ConfigPath": {
+			Pipeline: &kptfilev1.Pipeline{
+				Mutators: []kptfilev1.Function{
+					{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}},
+					{Name: "fake-fn2", Image: "fake-fn2", ConfigPath: "fake-path2"},
+				},
+			},
+			Image:          "fake-fn3",
+			FnConfigPath:   "fake-path3",
+			ExpectedStdout: "image is added to Kptfile\n",
+			ExpectedPipeline: &kptfilev1.Pipeline{
+				Mutators: []kptfilev1.Function{
+					{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}},
+					{Name: "fake-fn2", Image: "fake-fn2", ConfigPath: "fake-path2"},
+					{Name: "fake-fn3", Image: "fake-fn3", ConfigPath: "fake-path3"},
+				},
+			},
+		},
+
+		"Kptfile not exist": {
+			Pipeline:         nil,
+			ExpectedStdout:   "image not added: Kptfile not exists\n",
+			ExpectedPipeline: nil,
+		},
+		"Image already exist": {
+			Pipeline: &kptfilev1.Pipeline{Mutators: []kptfilev1.Function{
+				{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}}},
+			},
+			Image:          "fake-fn1",
+			FnDataItems:    []string{"cfg=fake-cfg1"},
+			ExpectedStdout: "skip adding image: already exists in Kptfile\n",
+			ExpectedPipeline: &kptfilev1.Pipeline{Mutators: []kptfilev1.Function{
+				{Name: "fake-fn1", Image: "fake-fn1", ConfigMap: map[string]string{"cfg": "fake-cfg1"}}},
+			},
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			// Setup
+			w, clean := testutil.SetupWorkspace(t)
+			defer clean()
+			if tc.Pipeline != nil {
+				kf := kptfileutil.DefaultKptfile(filepath.Base(w.WorkspaceDirectory))
+				kf.Pipeline = tc.Pipeline
+				testutil.AddKptfileToWorkspace(t, w, kf)
+			}
+			revert := testutil.Chdir(t, w.WorkspaceDirectory)
+			defer revert()
+			var outBuf bytes.Buffer
+			r := GetEvalFnRunner(fake.CtxWithPrinter(&outBuf, &outBuf), "kpt")
+			r.Image = tc.Image
+			r.dataItems = tc.FnDataItems
+			r.FnConfigPath = tc.FnConfigPath
+			// test
+			r.SaveFnToKptfile()
+			assert.Equal(t, strings.TrimSpace(tc.ExpectedStdout), strings.TrimSpace(outBuf.String()))
+			actualKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.Dest)
+			if tc.ExpectedPipeline != nil {
+				assert.NoError(t, err)
+				assert.Equal(t, actualKf.Pipeline.String(), tc.ExpectedPipeline.String())
+			}
+		})
+	}
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
