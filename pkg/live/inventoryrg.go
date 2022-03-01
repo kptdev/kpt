@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/pkg/status"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/pkg/apply/taskrunner"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -377,14 +376,9 @@ func (rgi *ResourceGroupInstaller) InstallRG(ctx context.Context) error {
 				return e.Error
 			case pollevent.ResourceUpdateEvent:
 				if e.Resource.Status == kstatus.CurrentStatus {
-					// TODO: Replace this with a call to meta.MaybeResetRESTMapper
-					// once we update the k8s libraries.
-					m, err := taskrunner.ExtractDeferredDiscoveryRESTMapper(mapper)
-					if err != nil {
-						return err
+					if !meta.MaybeResetRESTMapper(mapper) {
+						return fmt.Errorf("failed to reset RESTMapper: %T", mapper)
 					}
-					m.Reset()
-					return nil
 				}
 			}
 		}
