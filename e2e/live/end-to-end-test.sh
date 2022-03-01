@@ -108,6 +108,14 @@ shift $((OPTIND-1))
 [ "${1:-}" = "--" ] && shift
 
 ###########################################################################
+#  Colors
+###########################################################################
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+###########################################################################
 #  Helper functions
 ###########################################################################
 
@@ -124,12 +132,12 @@ function downloadPreviousKpt {
     echo "Running on Darwin"
     curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.2/kpt_darwin_amd64-0.39.2.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   else
-    echo "ERROR: Unknown OS $uname"
+    echo -e "${RED}ERROR${NC}: Unknown OS $uname"
     exit 1
   fi
   tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   mv kpt $BIN_DIR/previouskpt
-  echo "Downloading previous kpt binary...SUCCESS"
+  echo -e "Downloading previous kpt binary...${GREEN}SUCCESS${NC}"
   rm kpt.tar.gz LICENSES.txt lib.zip
   set +e
 }
@@ -147,12 +155,12 @@ function downloadKpt1.0 {
     echo "Running on Darwin"
       curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.13/kpt_darwin_amd64-1.0.0-beta.13.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
     else
-      echo "ERROR: Unknown OS $uname"
+      echo -e "${RED}ERROR${NC}: Unknown OS $uname"
       exit 1
   fi
   tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   mv kpt $BIN_DIR/kpt1.0.0
-  echo "Downloading 1.0.0 kpt binary...SUCCESS"
+  echo -e "Downloading 1.0.0 kpt binary...${GREEN}SUCCESS${NC}"
   rm kpt.tar.gz LICENSES.txt lib.zip
   set +e
 }
@@ -167,7 +175,7 @@ function buildKpt {
 	go version
 	echo "Building kpt locally..."
 	go build -o $BIN_DIR -v . > $OUTPUT_DIR/kptbuild 2>&1
-	echo "Building kpt locally...SUCCESS"
+	echo -e "Building kpt locally...${GREEN}SUCCESS${NC}"
 
     else
 	echo "Building kpt using dependencies at HEAD..."
@@ -177,32 +185,32 @@ function buildKpt {
 	mkdir -p $KPT_SRC_DIR
 	echo "Downloading kpt repository at HEAD..."
 	git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-	echo "Downloading kpt repository at HEAD...SUCCESS"
+	echo -e "Downloading kpt repository at HEAD...${GREEN}SUCCESS${NC}"
 	# Clone cli-utils repository into source directory
 	CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"
 	mkdir -p $CLI_UTILS_SRC_DIR
 	echo "Downloading cli-utils repository at HEAD..."
 	git clone https://github.com/kubernetes-sigs/cli-utils ${CLI_UTILS_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-	echo "Downloading cli-utils repository at HEAD...SUCCESS"
+	echo -e "Downloading cli-utils repository at HEAD...${GREEN}SUCCESS${NC}"
 	# Clone kustomize respository into source directory
 	KUSTOMIZE_SRC_DIR="${SRC_DIR}/sigs.k8s.io/kustomize"
 	mkdir -p $KUSTOMIZE_SRC_DIR
 	echo "Downloading kustomize repository at HEAD..."
 	git clone https://github.com/kubernetes-sigs/kustomize ${KUSTOMIZE_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
-	echo "Downloading kustomize repository at HEAD...SUCCESS"
+	echo -e "Downloading kustomize repository at HEAD...${GREEN}SUCCESS${NC}"
 	# Tell kpt to build using the locally downloaded dependencies
 	echo "Updating kpt/go.mod to reference locally downloaded repositories..."
 	echo -e "\n\nreplace sigs.k8s.io/cli-utils => ../../../sigs.k8s.io/cli-utils" >> ${KPT_SRC_DIR}/go.mod
 	echo -e "replace sigs.k8s.io/kustomize/cmd/config => ../../../sigs.k8s.io/kustomize/cmd/config" >> ${KPT_SRC_DIR}/go.mod
 	echo -e "replace sigs.k8s.io/kustomize/kyaml => ../../../sigs.k8s.io/kustomize/kyaml\n" >> ${KPT_SRC_DIR}/go.mod
-	echo "Updating kpt/go.mod to reference locally downloaded repositories...SUCCESS"
+	echo -e "Updating kpt/go.mod to reference locally downloaded repositories...${GREEN}SUCCESS${NC}"
 	# Build kpt using the cloned directories
 	export GOPATH=${TMP_DIR}
 	echo "Building kpt..."
 	(cd -- ${KPT_SRC_DIR} && go build -o $BIN_DIR -v . > ${OUTPUT_DIR}/kptbuild)
-	echo "Building kpt...SUCCESS"
+	echo -e "Building kpt...${GREEN}SUCCESS${NC}"
 	echo
-	echo "Building kpt using dependencies at HEAD...SUCCESS"
+	echo -e "Building kpt using dependencies at HEAD...${GREEN}SUCCESS${NC}"
     fi
     set +e
 }
@@ -216,13 +224,13 @@ function createTestSuite {
     # Create the k8s cluster
     echo "Deleting kind cluster..."
     kind delete cluster > /dev/null 2>&1
-    echo "Deleting kind cluster...SUCCESS"
+    echo -e "Deleting kind cluster...${GREEN}SUCCESS${NC}"
     echo "Creating kind cluster..."
     kind create cluster --image=kindest/node:v${K8S_VERSION} > $OUTPUT_DIR/k8sstartup 2>&1
     kubectl wait node/kind-control-plane --for condition=ready --timeout=2m
-    echo "Creating kind cluster...SUCCESS"
+    echo -e "Creating kind cluster...${GREEN}SUCCESS${NC}"
     echo
-    echo "Setting Up Test Suite...SUCCESS"
+    echo -e "Setting Up Test Suite...${GREEN}SUCCESS${NC}"
     echo
     set +e
 }
@@ -390,12 +398,12 @@ function assertPodNotExists {
 # printResult prints the results of the previous assert statements
 function printResult {
     if [ -f $OUTPUT_DIR/errors ]; then
-	echo "ERROR"
+	echo -e "${RED}ERROR${NC}"
 	cat $OUTPUT_DIR/errors
 	echo
 	rm -f $OUTPUT_DIR/errors
     else
-	echo "SUCCESS"
+	echo -e "${GREEN}SUCCESS${NC}"
     fi
     echo
 }
@@ -933,7 +941,13 @@ cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1b
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
 kind delete cluster
-echo "FINISHED"
+echo -e "Cleaning up cluster...${GREEN}SUCCESS${NC}"
 
 # Return error code if tests have failed
-exit $HAS_TEST_FAILURE
+if [[ ${HAS_TEST_FAILURE} -gt 0 ]]; then
+    echo -e "${RED}ERROR: E2E Tests Failed${NC}"
+    exit ${HAS_TEST_FAILURE}
+else
+    echo -e "${GREEN}SUCCESS: E2E Tests Passed${NC}"
+    exit 0
+fi
