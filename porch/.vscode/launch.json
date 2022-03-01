@@ -44,6 +44,17 @@
                 "--",
                 "namespace=foo"
             ]
+        },
+        {
+            "name": "Launch kpt",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/../main.go",
+            "args": [
+                "alpha", "rpkg", "list", "--namespace=default"
+            ],
+            "cwd": "${workspaceFolder}/.."
         }
     ]
 }
