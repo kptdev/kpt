@@ -1,4 +1,4 @@
-# Running ok GKE
+# Running on GKE
 
 Create a GKE cluster:
 
