@@ -14,7 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -o nounset -o errexit -o pipefail
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -22,10 +26,15 @@ make -C "${REPO_ROOT}/porch" fix-all
 
 changes=$(git status --porcelain || true)
 if [ -n "${changes}" ]; then
-  echo "ERROR: some files changed, please run 'make -C porch fix-all'"
-  echo "changed files:"
+  echo
+  echo -e "${RED}ERROR: required changes detected, please run 'make -C porch fix-all'${NC}"
+  echo
+  echo -e "${RED}FILE CHANGES:${NC}"
   printf "%s" "${changes}\n"
-  echo "git diff:"
+  echo
+  echo -e "${RED}GIT DIFF:${NC}"
   git --no-pager diff
   exit 1
+else
+  echo -e "${GREEN}SUCCESS: No changes required${NC}"
 fi
