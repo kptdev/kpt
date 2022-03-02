@@ -23,7 +23,7 @@ require (
 	k8s.io/component-base v0.23.2
 	k8s.io/klog/v2 v2.30.0
 	k8s.io/kubectl v0.23.2
-	sigs.k8s.io/cli-utils v0.28.1
+	sigs.k8s.io/cli-utils v0.29.1
 	sigs.k8s.io/controller-runtime v0.11.0
 	sigs.k8s.io/kustomize/api v0.11.1
 	sigs.k8s.io/kustomize/kyaml v0.13.3
