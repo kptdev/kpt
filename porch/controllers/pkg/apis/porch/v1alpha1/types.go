@@ -53,6 +53,8 @@ type RepositorySpec struct {
 	Title string `json:"title,omitempty"`
 	// User-friendly description of the repository
 	Description string `json:"description,omitempty"`
+	// The repository is a deployment repository; final packages in this repository are deployment ready.
+	Deployment bool `json:"deployment"`
 	// Type of the repository (i.e. git, OCI)
 	Type RepositoryType `json:"type,omitempty"`
 	// Content stored in the repository (i.e. Function, PackageRevision - the literal values correspond to the API resource names).
