@@ -80,8 +80,21 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	var mutations []mutation
-	for i := range obj.Spec.Tasks {
-		task := &obj.Spec.Tasks[i]
+
+	// Unless first task is Init or Clone, insert Init to create an empty package.
+	tasks := obj.Spec.Tasks
+	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
+		mutations = append(mutations, &initPackageMutation{
+			name: obj.Spec.PackageName,
+			spec: api.PackageInitTaskSpec{
+				Subpackage:  "",
+				Description: fmt.Sprintf("%s description", obj.Spec.PackageName),
+			},
+		})
+	}
+
+	for i := range tasks {
+		task := &tasks[i]
 		mutation, err := cad.mapTaskToMutation(ctx, obj, task)
 		if err != nil {
 			return nil, err
@@ -102,6 +115,14 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task) (mutation, error) {
 	switch task.Type {
+	case api.TaskTypeInit:
+		if task.Init == nil {
+			return nil, fmt.Errorf("init not set for task of type %q", task.Type)
+		}
+		return &initPackageMutation{
+			name: obj.Spec.PackageName,
+			spec: *task.Init,
+		}, nil
 	case api.TaskTypeClone:
 		if task.Clone == nil {
 			return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
