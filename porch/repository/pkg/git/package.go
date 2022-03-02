@@ -20,6 +20,7 @@ import (
 	"io"
 	"time"
 
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -110,4 +111,28 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			Resources: resources,
 		},
 	}, nil
+}
+
+func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	repo, err := p.parent.getRepo()
+	if err != nil {
+		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock: %w", err)
+	}
+
+	return kptfile.Upstream{
+			Type: kptfile.GitOrigin,
+			Git: &kptfile.Git{
+				Repo:      repo,
+				Directory: p.path,
+				Ref:       p.revision,
+			},
+		}, kptfile.UpstreamLock{
+			Type: kptfile.GitOrigin,
+			Git: &kptfile.GitLock{
+				Repo:      repo,
+				Directory: p.path,
+				Ref:       p.revision,
+				Commit:    p.sha.String(),
+			},
+		}, nil
 }

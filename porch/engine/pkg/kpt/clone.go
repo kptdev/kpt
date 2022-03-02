@@ -24,7 +24,7 @@ import (
 )
 
 // TODO: Accept a virtual filesystem or other package abstraction
-func UpdateUpstreamFromGit(kptfileContents string, name string, lock kptfilev1.GitLock) (string, error) {
+func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) (string, error) {
 
 	kptfile, err := internalpkg.DecodeKptfile(strings.NewReader(kptfileContents))
 	if err != nil {
@@ -32,15 +32,8 @@ func UpdateUpstreamFromGit(kptfileContents string, name string, lock kptfilev1.G
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kptfile.UpstreamLock = &kptfilev1.UpstreamLock{
-		Type: kptfilev1.GitOrigin,
-		Git: &kptfilev1.GitLock{
-			Repo:      lock.Repo,
-			Directory: lock.Directory,
-			Ref:       lock.Ref,
-			Commit:    lock.Commit,
-		},
-	}
+	kptfile.UpstreamLock = &lock
+	kptfile.Upstream = &upstream
 	kptfile.Name = name
 
 	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
@@ -49,4 +42,20 @@ func UpdateUpstreamFromGit(kptfileContents string, name string, lock kptfilev1.G
 	}
 
 	return string(b), nil
+}
+
+// TODO: accept a virtual filesystem
+func UpdateKptfileUpstream(name string, contents map[string]string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) error {
+	kptfile, found := contents[kptfilev1.KptFileName]
+	if !found {
+		return fmt.Errorf("package %q is missing Kptfile", name)
+	}
+
+	kptfile, err := UpdateUpstream(kptfile, name, upstream, lock)
+	if err != nil {
+		return fmt.Errorf("failed to update package upstream: %w", err)
+	}
+
+	contents[kptfilev1.KptFileName] = kptfile
+	return nil
 }

@@ -634,3 +634,12 @@ func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod
 
 	return r.cachedCredentials, nil
 }
+
+func (r *gitRepository) getRepo() (string, error) {
+	origin, err := r.repo.Remote("origin")
+	if err != nil {
+		return "", fmt.Errorf("cannot determine repository origin: %w", err)
+	}
+
+	return origin.Config().URLs[0], nil
+}

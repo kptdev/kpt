@@ -3,11 +3,13 @@ module github.com/GoogleContainerTools/kpt/porch/apiserver
 go 1.17
 
 require (
+	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/engine v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
+	github.com/google/go-cmp v0.5.7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0
@@ -34,7 +36,6 @@ require (
 require (
 	cloud.google.com/go v0.99.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
-	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0 // indirect
 	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000 // indirect
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect
@@ -73,7 +74,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-containerregistry v0.8.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

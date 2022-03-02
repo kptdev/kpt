@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -33,19 +34,23 @@ type clonePackageMutation struct {
 	task               *api.Task
 	namespace          string
 	name               string // package target name
+	cad                CaDEngine
 	credentialResolver repository.CredentialResolver
+	referenceResolver  ReferenceResolver
 }
 
 func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	var cloned repository.PackageResources
 	var err error
 
-	if m.task.Clone.Upstream.UpstreamRef.Name != "" {
-		cloned, err = m.cloneFromRegisteredRepository(ctx)
+	if ref := m.task.Clone.Upstream.UpstreamRef; ref.Name != "" {
+		cloned, err = m.cloneFromRegisteredRepository(ctx, ref)
 	} else if git := m.task.Clone.Upstream.Git; git != nil {
 		cloned, err = m.cloneFromGit(ctx, git)
 	} else if oci := m.task.Clone.Upstream.Oci; oci != nil {
 		cloned, err = m.cloneFromOci(ctx, oci)
+	} else {
+		err = errors.New("invalid clone source (neither of git, oci, nor upstream were specified)")
 	}
 
 	if err != nil {
@@ -62,8 +67,55 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	return cloned, m.task, nil
 }
 
-func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context) (repository.PackageResources, error) {
-	return repository.PackageResources{}, errors.New("clone from Registered Repository is not implemented")
+func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref api.PackageRevisionRef) (repository.PackageResources, error) {
+	parsed, err := parseUpstreamRef(ref.Name)
+	if err != nil {
+		return repository.PackageResources{}, err
+	}
+	var resolved configapi.Repository
+	if err := m.referenceResolver.ResolveReference(ctx, m.namespace, parsed.repo, &resolved); err != nil {
+		return repository.PackageResources{}, fmt.Errorf("cannot find repository %s/%s: %w", m.namespace, parsed.repo, err)
+	}
+
+	open, err := m.cad.OpenRepository(ctx, &resolved)
+	if err != nil {
+		return repository.PackageResources{}, err
+	}
+
+	revisions, err := open.ListPackageRevisions(ctx)
+	if err != nil {
+		return repository.PackageResources{}, err
+	}
+
+	var revision repository.PackageRevision
+	for _, rev := range revisions {
+		if rev.Name() == ref.Name {
+			revision = rev
+			break
+		}
+	}
+	if revision == nil {
+		return repository.PackageResources{}, fmt.Errorf("cannot find package revision %q", ref.Name)
+	}
+
+	resources, err := revision.GetResources(ctx)
+	if err != nil {
+		return repository.PackageResources{}, fmt.Errorf("cannot read contents of package %q: %w", ref.Name, err)
+	}
+
+	upstream, lock, err := revision.GetUpstreamLock()
+	if err != nil {
+		return repository.PackageResources{}, fmt.Errorf("cannot determine upstream lock for package %q: %w", ref.Name, err)
+	}
+
+	// Update Kptfile
+	if err := kpt.UpdateKptfileUpstream(m.name, resources.Spec.Resources, upstream, lock); err != nil {
+		return repository.PackageResources{}, fmt.Errorf("failed to apply upstream lock to pakcage %q: %w", ref.Name, err)
+	}
+
+	return repository.PackageResources{
+		Contents: resources.Spec.Resources,
+	}, nil
 }
 
 func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api.GitPackage) (repository.PackageResources, error) {
@@ -104,17 +156,19 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	contents := resources.Spec.Resources
 
 	// Update Kptfile
-	kptfile, found := contents[v1.KptFileName]
-	if !found {
-		return repository.PackageResources{}, fmt.Errorf("package %s@%s is not valid; missing Kptfile", gitPackage.Directory, gitPackage.Ref)
+	if err := kpt.UpdateKptfileUpstream(m.name, contents, v1.Upstream{
+		Type: v1.GitOrigin,
+		Git: &v1.Git{
+			Repo:      lock.Repo,
+			Directory: lock.Directory,
+			Ref:       lock.Ref,
+		},
+	}, v1.UpstreamLock{
+		Type: v1.GitOrigin,
+		Git:  &lock,
+	}); err != nil {
+		return repository.PackageResources{}, fmt.Errorf("failed to clone package %s@%s: %w", gitPackage.Directory, gitPackage.Ref, err)
 	}
-
-	kptfile, err = kpt.UpdateUpstreamFromGit(kptfile, m.name, lock)
-	if err != nil {
-		return repository.PackageResources{}, err
-	}
-
-	contents[v1.KptFileName] = kptfile
 
 	return repository.PackageResources{
 		Contents: contents,
@@ -123,4 +177,16 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 
 func (m *clonePackageMutation) cloneFromOci(ctx context.Context, ociPackage *api.OciPackage) (repository.PackageResources, error) {
 	return repository.PackageResources{}, errors.New("clone from OCI is not implemented")
+}
+
+type parsedRef struct {
+	repo, pkg, version string
+}
+
+func parseUpstreamRef(ref string) (parsedRef, error) {
+	first, last := strings.Index(ref, ":"), strings.LastIndex(ref, ":")
+	if first == last {
+		return parsedRef{}, fmt.Errorf("invalid package name %q", ref)
+	}
+	return parsedRef{repo: ref[:first], pkg: ref[first+1 : last], version: ref[last+1:]}, nil
 }

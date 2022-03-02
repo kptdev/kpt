@@ -17,6 +17,7 @@ package repository
 import (
 	"context"
 
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 )
 
@@ -34,6 +35,7 @@ type PackageRevision interface {
 	GetPackageRevision() (*v1alpha1.PackageRevision, error)
 	// TODO: return PackageResources or filesystem abstraction?
 	GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error)
+	GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
 type PackageDraft interface {
