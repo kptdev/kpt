@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
@@ -296,4 +297,8 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			Tasks:          p.tasks,
 		},
 	}, nil
+}
+
+func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.Name())
 }

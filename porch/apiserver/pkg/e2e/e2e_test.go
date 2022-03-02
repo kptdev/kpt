@@ -20,13 +20,20 @@ import (
 	"strings"
 	"testing"
 
+	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+)
+
+const (
+	testBlueprintsRepo = "https://github.com/platkrm/test-blueprints.git"
 )
 
 func TestE2E(t *testing.T) {
@@ -188,6 +195,111 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
 	}
+
+	// Register Upstream Repository
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+
+	var pr porchapi.PackageRevisionResourcesList
+	t.ListE(ctx, &pr)
+
+	// Ensure basens package exists
+	const name = "test-blueprints:basens:v1"
+	found := false
+	for _, r := range pr.Items {
+		if r.Name == name {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("Repository %q doesn't contain package %q", testBlueprintsRepo, name)
+	}
+
+	// Create PackageRevision from upstream repo
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git:istions:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "istions",
+			Revision:       "v1",
+			RepositoryName: "git",
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeClone,
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							UpstreamRef: porchapi.PackageRevisionRef{
+								Name: "test-blueprints:basens:v1", // Clone from basens/v1
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get istions resources
+	var istions porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git:istions:v1",
+	}, &istions)
+
+	kptfileContents, ok := istions.Spec.Resources[kptfilev1.KptFileName]
+	if !ok {
+		t.Fatalf("Kptfile not found in the git:istions:v1 package (cloned from %s/%s)", testBlueprintsRepo, "basens/v1")
+	}
+
+	kptfile, err := internalpkg.DecodeKptfile(strings.NewReader(kptfileContents))
+	if err != nil {
+		t.Fatalf("Cannot decode Kptfile (%s): %v", kptfileContents, err)
+	}
+
+	if got, want := kptfile.Name, "istions"; got != want {
+		t.Errorf("istions package Kptfile.metadata.name: got %q, want %q", got, want)
+	}
+
+	if kptfile.UpstreamLock == nil {
+		t.Fatalf("istions package upstreamLock is missing")
+	}
+	if kptfile.UpstreamLock.Git == nil {
+		t.Errorf("istions package upstreamLock.git is missing")
+	}
+	if kptfile.UpstreamLock.Git.Commit == "" {
+		t.Errorf("isions package upstreamLock.gkti.commit is missing")
+	}
+
+	// Remove commit from comparison
+	got := kptfile.UpstreamLock
+	got.Git.Commit = ""
+
+	want := &kptfilev1.UpstreamLock{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.GitLock{
+			Repo:      testBlueprintsRepo,
+			Directory: "basens",
+			Ref:       "v1",
+		},
+	}
+	if !cmp.Equal(want, got) {
+		t.Errorf("unexpected upstreamlock returned (-want, +got) %s", cmp.Diff(want, got))
+	}
+
+	// Check Upstream
+	if got, want := kptfile.Upstream, (&kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
+			Repo:      testBlueprintsRepo,
+			Directory: "basens",
+			Ref:       "v1",
+		},
+	}); !cmp.Equal(want, got) {
+		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
+	}
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
@@ -225,10 +337,24 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 }
 
 func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
-	const repo = "https://github.com/platkrm/demo-blueprints"
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "demo-blueprints")
+
+	var list porchapi.PackageRevisionList
+	t.ListE(ctx, &list)
+
+	if got := len(list.Items); got == 0 {
+		t.Errorf("Found no package revisions in %s; expected at least one", testBlueprintsRepo)
+	}
+}
+
+func (t *PorchSuite) TestDevPorch(ctx context.Context) {
+	t.IsUsingDevPorch()
+}
+
+func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
 	t.CreateF(ctx, &configapi.Repository{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-blueprints",
+			Name:      name,
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
@@ -245,20 +371,9 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "demo-blueprints",
+				Name:      name,
 				Namespace: t.namespace,
 			},
 		})
 	})
-
-	var list porchapi.PackageRevisionList
-	t.ListE(ctx, &list)
-
-	if got := len(list.Items); got == 0 {
-		t.Errorf("Found no package revisions in %s; expected at least one", repo)
-	}
-}
-
-func (t *PorchSuite) TestDevPorch(ctx context.Context) {
-	t.IsUsingDevPorch()
 }

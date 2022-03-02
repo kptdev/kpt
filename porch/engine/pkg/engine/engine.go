@@ -110,7 +110,9 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			task:               task,
 			namespace:          obj.Namespace,
 			name:               obj.Spec.PackageName,
+			cad:                cad,
 			credentialResolver: cad.credentialResolver,
+			referenceResolver:  cad.referenceResolver,
 		}, nil
 
 	case api.TaskTypePatch:
