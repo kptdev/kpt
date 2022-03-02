@@ -404,9 +404,9 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 	rev := ref.Name().String()
 	switch {
 	case strings.HasPrefix(rev, refTagsPrefix):
-		revision = rev[len(refTagsPrefix):]
+		revision = strings.TrimPrefix(rev, refTagsPrefix)
 	case strings.HasPrefix(rev, refHeadsPrefix):
-		revision = rev[len(refHeadsPrefix):]
+		revision = strings.TrimPrefix(rev, refHeadsPrefix)
 	default:
 		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
 	}
@@ -515,9 +515,8 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 	name := tag.Name().String()
 	if !strings.HasPrefix(name, refTagsPrefix) {
 		return nil, fmt.Errorf("invalid tag ref name: %q", name)
-	} else {
-		name = name[len(refTagsPrefix):]
 	}
+	name = strings.TrimPrefix(name, refTagsPrefix)
 	slash := strings.LastIndex(name, "/")
 
 	if slash < 0 {
@@ -543,11 +542,12 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 		return nil, nil
 	}
 
-	if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err == nil {
-		if !kptfileEntry.Mode.IsRegular() {
-			klog.Warningf("Skippping %q: cannot find Kptfile: %w", name, err)
-			return nil, nil
-		}
+	if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err != nil {
+		klog.Warningf("Skipping %q: Kptfile not found: %w", name, err)
+		return nil, nil
+	} else if !kptfileEntry.Mode.IsRegular() {
+		klog.Warningf("Skippping %q: Kptfile is not a file", name)
+		return nil, nil
 	}
 
 	return []repository.PackageRevision{
