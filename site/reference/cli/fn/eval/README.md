@@ -132,9 +132,9 @@ fn-args:
   If not specified, no result files are written to the local filesystem.
 
 --save, s:
-  Save the function image and fn-config to Kptfile (declarative form). This flag will only 
-  add the function after `kpt fn eval` successfully executes. This flag should be used 
-  together with --image flag, and the function should be declarative and give idempotent results. 
+  Save the function and its configurations to Kptfile (declarative form). This flag will only 
+  add the function after `kpt fn eval` successfully executes. This flag should be declarative 
+  and give idempotent results. 
   
 ```
 
