@@ -85,6 +85,13 @@ func WithCredentialResolver(resolver repository.CredentialResolver) EngineOption
 	})
 }
 
+func WithReferenceResolver(resolver ReferenceResolver) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.referenceResolver = resolver
+		return nil
+	})
+}
+
 func createFunctionRuntime(address string) (kpt.FunctionRuntime, error) {
 	if address == "" {
 		return nil, fmt.Errorf("address is required to instantiate gRPC function runtime")
