@@ -66,9 +66,22 @@ const (
 
 type Task struct {
 	Type  TaskType              `json:"type"`
+	Init  *PackageInitTaskSpec  `json:"init",omitempty"`
 	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
 	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
 	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
+}
+
+// PackageInitTaskSpec defines the package initialization task.
+type PackageInitTaskSpec struct {
+	// `Subpackage` is a directory path to a subpackage to initialize. If unspecified, the main package will be initialized.
+	Subpackage string `json:"subpackage,omitempty"`
+	// `Description` is a short description of the package.
+	Description string `json:"description,omitempty"`
+	// `Keywords` is a list of keywords describing the package.
+	Keywords []string `json:"keywords,omitempty"`
+	// `Site is a link to page with information about the package.
+	Site string `json:"site,omitempty"`
 }
 
 type PackageCloneTaskSpec struct {
@@ -78,15 +91,23 @@ type PackageCloneTaskSpec struct {
 	// `Upstream` is the reference to the upstream package to clone.
 	Upstream UpstreamPackage `json:"upstreamRef,omitempty"`
 
-	// // 	Defines which strategy should be used to update the package. It defaults to 'resource-merge'.
-	// 	//     * resource-merge: Perform a structural comparison of the original /
-	// 	//       updated resources, and merge the changes into the local package.
-	// 	//     * fast-forward: Fail without updating if the local package was modified
-	// 	//       since it was fetched.
-	// 	//     * force-delete-replace: Wipe all the local changes to the package and replace
-	// 	//       it with the remote version.
-	// 	Strategy PackageMergeStrategy `json:"strategy,omitempty"`
+	// 	Defines which strategy should be used to update the package. It defaults to 'resource-merge'.
+	//  * resource-merge: Perform a structural comparison of the original /
+	//    updated resources, and merge the changes into the local package.
+	//  * fast-forward: Fail without updating if the local package was modified
+	//    since it was fetched.
+	//  * force-delete-replace: Wipe all the local changes to the package and replace
+	//    it with the remote version.
+	Strategy PackageMergeStrategy `json:"strategy,omitempty"`
 }
+
+type PackageMergeStrategy string
+
+const (
+	ResourceMerge      PackageMergeStrategy = "resource-merge"
+	FastForward        PackageMergeStrategy = "fast-forward"
+	ForceDeleteReplace PackageMergeStrategy = "force-delete-replace"
+)
 
 type PackagePatchTaskSpec struct {
 	// TODO: We're going to need something better here to actually represent or reference the patch
