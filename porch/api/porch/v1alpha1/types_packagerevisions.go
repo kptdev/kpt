@@ -59,6 +59,7 @@ type PackageRevisionStatus struct {
 type TaskType string
 
 const (
+	TaskTypeInit  TaskType = "init"
 	TaskTypeClone TaskType = "clone"
 	TaskTypePatch TaskType = "patch"
 	TaskTypeEval  TaskType = "eval"
