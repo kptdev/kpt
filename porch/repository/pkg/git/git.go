@@ -43,6 +43,8 @@ const (
 	refMain plumbing.ReferenceName = "refs/heads/main"
 	// TODO: support customizable pattern of draft branches.
 	refDraftPrefix = "refs/heads/drafts/"
+	refTagsPrefix  = "refs/tags/"
+	refHeadsPrefix = "refs/heads/"
 )
 
 type GitRepository interface {
@@ -168,6 +170,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 
 	var main *plumbing.Reference
 	var drafts []repository.PackageRevision
+	var result []repository.PackageRevision
 
 	for {
 		ref, err := refs.Next()
@@ -185,16 +188,21 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 			}
 			drafts = append(drafts, draft)
+		} else if strings.HasPrefix(name.String(), refTagsPrefix) {
+			tagged, err := r.loadTaggedPackages(ref)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
+			}
+			result = append(result, tagged...)
 		}
 	}
 
-	var result []repository.PackageRevision
 	if main != nil {
-		// TODO: analyze tags too
-		result, err = r.discoverFinalizedPackages(main)
+		mainpkgs, err := r.discoverFinalizedPackages(main)
 		if err != nil {
 			return nil, err
 		}
+		result = append(result, mainpkgs...)
 	}
 
 	result = append(result, drafts...)
@@ -395,9 +403,9 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 	}, lock, nil
 }
 
-func (r *gitRepository) discoverFinalizedPackages(main *plumbing.Reference) ([]repository.PackageRevision, error) {
+func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]repository.PackageRevision, error) {
 	git := r.repo
-	commit, err := git.CommitObject(main.Hash())
+	commit, err := git.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
 	}
@@ -406,16 +414,27 @@ func (r *gitRepository) discoverFinalizedPackages(main *plumbing.Reference) ([]r
 		return nil, err
 	}
 
+	var revision string
+	rev := ref.Name().String()
+	switch {
+	case strings.HasPrefix(rev, refTagsPrefix):
+		revision = strings.TrimPrefix(rev, refTagsPrefix)
+	case strings.HasPrefix(rev, refHeadsPrefix):
+		revision = strings.TrimPrefix(rev, refHeadsPrefix)
+	default:
+		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
+	}
+
 	var result []repository.PackageRevision
 	if err := discoverPackagesInTree(git, tree, "", func(dir string, tree, kptfile plumbing.Hash) error {
 		result = append(result, &gitPackageRevision{
 			parent:   r,
 			path:     dir,
-			revision: "",
-			updated:  commit.Author.When, // TODO: this is inaccurate, pointing at the last commit in 'main'; rather we need time of the package's last commit/tag
+			revision: revision,
+			updated:  commit.Author.When,
 			draft:    nil,
 			tree:     tree,
-			sha:      main.Hash(),
+			sha:      ref.Hash(),
 		})
 		return nil
 	}); err != nil {
@@ -504,6 +523,58 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 	}
 	name, revision = suffix[:revIndex], suffix[revIndex+1:]
 	return name, revision, nil
+}
+
+func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repository.PackageRevision, error) {
+	name := tag.Name().String()
+	if !strings.HasPrefix(name, refTagsPrefix) {
+		return nil, fmt.Errorf("invalid tag ref name: %q", name)
+	}
+	name = strings.TrimPrefix(name, refTagsPrefix)
+	slash := strings.LastIndex(name, "/")
+
+	if slash < 0 {
+		// tag=<version>
+		return r.discoverFinalizedPackages(tag)
+	}
+
+	// tag=<package path>/version
+	path, revision := name[:slash], name[slash+1:]
+
+	commit, err := r.repo.CommitObject(tag.Hash())
+	if err != nil {
+		return nil, fmt.Errorf("cannot resolve tag %q to commit (corrupted repository?): %w", name, err)
+	}
+	tree, err := commit.Tree()
+	if err != nil {
+		return nil, fmt.Errorf("cannot resolve tag %q to tree (corrupted repository?): %w", name, err)
+	}
+
+	dirTree, err := tree.Tree(path)
+	if err != nil {
+		klog.Warningf("Skipping %q; cannot find %q (corrupted repository?): %w", name, path, err)
+		return nil, nil
+	}
+
+	if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err != nil {
+		klog.Warningf("Skipping %q: Kptfile not found: %w", name, err)
+		return nil, nil
+	} else if !kptfileEntry.Mode.IsRegular() {
+		klog.Warningf("Skippping %q: Kptfile is not a file", name)
+		return nil, nil
+	}
+
+	return []repository.PackageRevision{
+		&gitPackageRevision{
+			parent:   r,
+			path:     path,
+			revision: revision,
+			updated:  commit.Author.When,
+			draft:    nil,
+			tree:     dirTree.Hash,
+			sha:      tag.Hash(),
+		},
+	}, nil
 }
 
 func createDraftRefName(name, revision string) plumbing.ReferenceName {
