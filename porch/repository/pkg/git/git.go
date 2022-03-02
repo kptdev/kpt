@@ -57,7 +57,10 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	var repo *gogit.Repository
 	var auth transport.AuthMethod
 
-	if secret := spec.SecretRef.Name; secret != "" && resolver != nil {
+	if secret := spec.SecretRef.Name; secret != "" {
+		if resolver == nil {
+			return nil, fmt.Errorf("cannot resolve credentials in secret %q; no resolver", secret)
+		}
 		var err error
 		auth, err = resolveCredential(ctx, namespace, secret, resolver)
 		if err != nil {
