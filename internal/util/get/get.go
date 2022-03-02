@@ -132,7 +132,7 @@ func (c Command) Run(ctx context.Context) error {
 				Image: "builtins/gen-pkg-context",
 			},
 		}
-		if err := hookCmd.Execute(ctx, builtinHooks); err != nil && !errors.Is(err, hook.ErrHookNotFound) {
+		if err := hookCmd.Execute(ctx, builtinHooks); err != nil {
 			return err
 		}
 		pr.Printf("\nCustomized package for deployment.\n")
