@@ -50,7 +50,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	} else if oci := m.task.Clone.Upstream.Oci; oci != nil {
 		cloned, err = m.cloneFromOci(ctx, oci)
 	} else {
-		err = errors.New("invalid clone source (neither of git, oci, nor upstream were specified")
+		err = errors.New("invalid clone source (neither of git, oci, nor upstream were specified)")
 	}
 
 	if err != nil {
