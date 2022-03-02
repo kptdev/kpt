@@ -66,7 +66,7 @@ const (
 
 type Task struct {
 	Type  TaskType              `json:"type"`
-	Init  *PackageInitTaskSpec  `json:"init",omitempty"`
+	Init  *PackageInitTaskSpec  `json:"init,omitempty"`
 	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
 	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
 	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
