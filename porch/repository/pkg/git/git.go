@@ -57,22 +57,24 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	var repo *gogit.Repository
 	var auth transport.AuthMethod
 
+	if secret := spec.SecretRef.Name; secret != "" && resolver != nil {
+		var err error
+		auth, err = resolveCredential(ctx, namespace, secret, resolver)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if fi, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
 			return nil, err
-		}
-
-		if secret := spec.SecretRef.Name; secret != "" && resolver != nil {
-			auth, err = resolveCredential(ctx, namespace, secret, resolver)
-			if err != nil {
-				return nil, err
-			}
 		}
 
 		opts := gogit.CloneOptions{
 			URL:        spec.Repo,
 			Auth:       auth,
 			NoCheckout: true,
+			Tags:       gogit.AllTags,
 		}
 		isBare := true
 		r, err := gogit.PlainClone(dir, isBare, &opts)
@@ -94,21 +96,30 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, fmt.Errorf("cannot list remotes in %q: %w", spec.Repo, err)
 		}
 
-		found := false
+		remoteName := ""
 	outer:
 		for _, remote := range remotes {
 			cfg := remote.Config()
 			for _, url := range cfg.URLs {
 				if url == spec.Repo {
-					found = true
+					remoteName = cfg.Name
 					break outer
 				}
 			}
 		}
-		if !found {
+		if remoteName == "" {
 			// TODO: add remote?
 			return nil, fmt.Errorf("cannot clone git repository (remote not found): %q", spec.Repo)
 		}
+
+		// Fetch
+		if err := r.Fetch(&gogit.FetchOptions{
+			Auth: auth,
+			Tags: gogit.AllTags,
+		}); err != nil && err != gogit.NoErrAlreadyUpToDate {
+			return nil, fmt.Errorf("cannot fetch repository %q: %w", spec.Repo, err)
+		}
+
 		repo = r
 	}
 
