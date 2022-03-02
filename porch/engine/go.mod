@@ -110,7 +110,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/kubectl v0.23.2 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
-	sigs.k8s.io/cli-utils v0.29.1 // indirect
+	sigs.k8s.io/cli-utils v0.29.2 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/kustomize/api v0.11.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
