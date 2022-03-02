@@ -57,6 +57,10 @@ spec:
                   - the literal values correspond to the API resource names). TODO:
                   support repository with mixed content?'
                 type: string
+              deployment:
+                description: The repository is a deployment repository; final packages
+                  in this repository are deployment ready.
+                type: boolean
               description:
                 description: User-friendly description of the repository
                 type: string
@@ -260,6 +264,8 @@ spec:
                       type: string
                   type: object
                 type: array
+            required:
+            - deployment
             type: object
           status:
             description: RepositoryStatus defines the observed state of Repository
