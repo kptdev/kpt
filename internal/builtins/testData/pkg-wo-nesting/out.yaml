@@ -1,0 +1,33 @@
+apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items:
+- apiVersion: kpt.dev/v1
+  kind: Kptfile
+  metadata:
+    name: order-service
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'Kptfile'
+      internal.config.kubernetes.io/seqindent: 'compact'
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: example-ns
+    annotations:
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: 'ns.yaml'
+      internal.config.kubernetes.io/seqindent: 'compact'
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: kptfile.kpt.dev
+    annotations:
+      config.kubernetes.io/local-config: "true"
+      internal.config.kubernetes.io/path: 'package-context.yaml'
+  data:
+    name: order-service
+results:
+- message: generated package context
+  severity: info
+  file:
+    path: package-context.yaml

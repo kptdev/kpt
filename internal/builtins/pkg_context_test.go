@@ -16,256 +16,54 @@ package builtins
 
 import (
 	"bytes"
+	"io/ioutil"
+	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 )
 
 type test struct {
 	name   string
-	in     string
-	exp    string
+	dir    string
 	expErr error
 }
 
 func TestPkgContextGenerator(t *testing.T) {
-
 	tests := []test{
 		{
 			name: "pkg context should succeed on a non-nested package",
-			in: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-  - apiVersion: kpt.dev/v1
-    kind: Kptfile
-    metadata:
-      name: order-service
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'Kptfile'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: example-ns
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'ns.yaml'
-        internal.config.kubernetes.io/seqindent: 'compact'
-`,
-			exp: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-- apiVersion: kpt.dev/v1
-  kind: Kptfile
-  metadata:
-    name: order-service
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'Kptfile'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: example-ns
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'ns.yaml'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: kptfile.kpt.dev
-    annotations:
-      config.kubernetes.io/local-config: "true"
-      internal.config.kubernetes.io/path: 'package-context.yaml'
-  data:
-    name: order-service
-results:
-- message: generated package context
-  severity: info
-  file:
-    path: package-context.yaml
-`,
+			dir:  "pkg-wo-nesting",
 		},
 		{
 			name: "pkg context should generate on a non-nested package with existing package context",
-			in: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-  - apiVersion: kpt.dev/v1
-    kind: Kptfile
-    metadata:
-      name: order-service
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'Kptfile'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: example-ns
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'ns.yaml'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: kptfile.kpt.dev
-      annotations:
-        config.kubernetes.io/local-config: "true"
-        internal.config.kubernetes.io/path: 'package-context.yaml'
-    data:
-      name: order-service
-`,
-			exp: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-- apiVersion: kpt.dev/v1
-  kind: Kptfile
-  metadata:
-    name: order-service
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'Kptfile'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: example-ns
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'ns.yaml'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: kptfile.kpt.dev
-    annotations:
-      config.kubernetes.io/local-config: "true"
-      internal.config.kubernetes.io/path: 'package-context.yaml'
-  data:
-    name: order-service
-results:
-- message: generated package context
-  severity: info
-  file:
-    path: package-context.yaml
-`,
+			dir:  "pkg-with-existing-ctx",
 		},
 		{
 			name: "pkg context should succeed on package with nested package",
-			in: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-  - apiVersion: kpt.dev/v1
-    kind: Kptfile
-    metadata:
-      name: order-service
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'Kptfile'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: example-ns
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'ns.yaml'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: kpt.dev/v1
-    kind: Kptfile
-    metadata:
-      name: subpkg
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'subpkg/Kptfile'
-        internal.config.kubernetes.io/seqindent: 'compact'
-  - apiVersion: v1
-    kind: Namespace
-    metadata:
-      name: example-ns
-      annotations:
-        internal.config.kubernetes.io/index: '0'
-        internal.config.kubernetes.io/path: 'subpkg/ns.yaml'
-        internal.config.kubernetes.io/seqindent: 'compact'
-`,
-			exp: `apiVersion: config.kubernetes.io/v1
-kind: ResourceList
-items:
-- apiVersion: kpt.dev/v1
-  kind: Kptfile
-  metadata:
-    name: order-service
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'Kptfile'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: example-ns
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'ns.yaml'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: kpt.dev/v1
-  kind: Kptfile
-  metadata:
-    name: subpkg
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'subpkg/Kptfile'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: Namespace
-  metadata:
-    name: example-ns
-    annotations:
-      internal.config.kubernetes.io/index: '0'
-      internal.config.kubernetes.io/path: 'subpkg/ns.yaml'
-      internal.config.kubernetes.io/seqindent: 'compact'
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: kptfile.kpt.dev
-    annotations:
-      config.kubernetes.io/local-config: "true"
-      internal.config.kubernetes.io/path: 'package-context.yaml'
-  data:
-    name: order-service
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: kptfile.kpt.dev
-    annotations:
-      config.kubernetes.io/local-config: "true"
-      internal.config.kubernetes.io/path: 'subpkg/package-context.yaml'
-  data:
-    name: subpkg
-results:
-- message: generated package context
-  severity: info
-  file:
-    path: package-context.yaml
-- message: generated package context
-  severity: info
-  file:
-    path: subpkg/package-context.yaml
-`,
+			dir:  "pkg-with-nesting",
 		},
 	}
 
-	for _, test := range tests {
+	for i := range tests {
+		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
 			pkgCtxGenerator := &PackageContextGenerator{}
 			out := &bytes.Buffer{}
-			err := pkgCtxGenerator.Run(bytes.NewReader([]byte(test.in)), out)
+
+			in, err := ioutil.ReadFile(filepath.Join("testData", test.dir, "in.yaml"))
+			assert.NoError(t, err)
+
+			exp, err := ioutil.ReadFile(filepath.Join("testData", test.dir, "out.yaml"))
+			assert.NoError(t, err)
+
+			err = pkgCtxGenerator.Run(bytes.NewReader(in), out)
 			if err != test.expErr {
 				t.Errorf("exp: %v got: %v", test.expErr, err)
 			}
-			if out.String() != test.exp {
-				t.Errorf("got: %s exp: %s\n", out.String(), test.exp)
+			if diff := cmp.Diff(string(exp), out.String()); diff != "" {
+				t.Errorf("pkg context mistmach (-want +got):\n%s", diff)
 			}
 		})
 	}

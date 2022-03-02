@@ -25,7 +25,7 @@ import (
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"sigs.k8s.io/kustomize/api/filesys"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -109,8 +109,8 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 			types.UniquePath(e.PkgPath),
 			e.fnResults,
 			e.ImagePullPolicy,
-			false,
-			false,
+			false, /* do not set pkg annotations */
+			false, /* do not display resource */
 			e.Runtime)
 		if err != nil {
 			return nil, err

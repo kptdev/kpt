@@ -15,6 +15,7 @@
 package builtins
 
 import (
+	"fmt"
 	"io"
 	"path"
 
@@ -88,19 +89,16 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
 func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
-	cm := yaml.MustParse(`
+	cm := yaml.MustParse(fmt.Sprintf(`
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cm
+  name: %s
   annotations:
     config.kubernetes.io/local-config: "true"
-    internal.config.kubernetes.io/path: 'package-context.yaml'
 data: {}
-`)
-	if err := cm.SetName(pkgContextName); err != nil {
-		return nil, err
-	}
+`, pkgContextName))
+
 	kptfilePath, _, err := kioutil.GetFileAnnotations(kf)
 	if err != nil {
 		return nil, err
