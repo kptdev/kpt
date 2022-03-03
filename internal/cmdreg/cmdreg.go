@@ -49,6 +49,9 @@ Flags:
 --title
 	Title of the package repository.
 
+--deployment
+  Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.
+
 --repo-username
 	Username for repository authentication.
 
@@ -78,6 +81,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.title, "title", "", "Title of the package repository.")
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
 	c.Flags().StringVar(&r.description, "description", "", "Brief description of the package repository.")
+	c.Flags().BoolVar(&r.deployment, "deployment", false, "Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.")
 	c.Flags().StringVar(&r.username, "repo-username", "", "Username for repository authentication.")
 	c.Flags().StringVar(&r.password, "repo-password", "", "Password for repository authentication.")
 
@@ -98,6 +102,7 @@ type runner struct {
 	title       string
 	name        string
 	description string
+	deployment  bool
 	username    string
 	password    string
 }
@@ -204,6 +209,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Description: r.description,
 			Type:        rt,
 			Content:     configapi.RepositoryContentPackage,
+			Deployment:  r.deployment,
 			Git:         git,
 			Oci:         oci,
 		},
