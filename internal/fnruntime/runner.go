@@ -41,6 +41,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+const (
+	FuncGenPkgContext = "builtins/gen-pkg-context"
+)
+
 // NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewRunner(
@@ -75,7 +79,7 @@ func NewRunner(
 		}
 	}
 	if fltr.Run == nil {
-		if f.Image == "builtins/gen-pkg-context" {
+		if f.Image == FuncGenPkgContext {
 			pkgCtxGenerator := &builtins.PackageContextGenerator{}
 			fltr.Run = pkgCtxGenerator.Run
 		} else {

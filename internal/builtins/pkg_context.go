@@ -28,8 +28,15 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 )
 
-const pkgContextFile = "package-context.yaml"
-const pkgContextName = "kptfile.kpt.dev"
+const (
+	pkgContextFile = "package-context.yaml"
+	pkgContextName = "kptfile.kpt.dev"
+)
+
+var (
+	configMapGVK = resid.NewGvk("", "v1", "ConfigMap")
+	kptfileGVK   = resid.NewGvk(kptfilev1.KptFileGroup, kptfilev1.KptFileVersion, kptfilev1.KptFileKind)
+)
 
 // PackageContextGenerator is a built-in KRM function that generates
 // a KRM object that contains package context information that can be
@@ -37,6 +44,10 @@ const pkgContextName = "kptfile.kpt.dev"
 // minimal configuration.
 type PackageContextGenerator struct{}
 
+// Run function reads the function input `resourceList` from a given reader `r`
+// and writes the function output to the provided writer `w`.
+// Run implements the function signature defined in
+// sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil/FunctionFilter.Run.
 func (pc *PackageContextGenerator) Run(r io.Reader, w io.Writer) error {
 	rw := &kio.ByteReadWriter{
 		Reader:                r,
@@ -46,6 +57,7 @@ func (pc *PackageContextGenerator) Run(r io.Reader, w io.Writer) error {
 	return framework.Execute(pc, rw)
 }
 
+// Process implements framework.ResourceListProcessor interface.
 func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList) error {
 	var contextResources, updatedResources []*yaml.RNode
 
@@ -53,12 +65,14 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 	// - Filters out package context resources from the input resources
 	// - Generates a package context resource for each kpt package (i.e Kptfile)
 	for _, resource := range resourceList.Items {
-		if isPkgContext(resource) {
+		gvk := resid.GvkFromNode(resource)
+		if gvk.Equals(configMapGVK) && resource.GetName() == pkgContextName {
 			// drop existing package context resources
 			continue
 		}
 		updatedResources = append(updatedResources, resource)
-		if isKptfile(resource) {
+		if gvk.Equals(kptfileGVK) {
+			// it's a Kptfile, generate a corresponding package context
 			pkgContext, err := pkgContextResource(resource)
 			if err != nil {
 				resourceList.Results = framework.Results{
@@ -116,15 +130,4 @@ data: {}
 		"name": kf.GetName(),
 	})
 	return cm, nil
-}
-
-func isKptfile(resource *yaml.RNode) bool {
-	gvk := resid.GvkFromNode(resource)
-	return gvk.Kind == kptfilev1.KptFileName &&
-		gvk.ApiVersion() == kptfilev1.TypeMeta.APIVersion
-}
-
-func isPkgContext(resource *yaml.RNode) bool {
-	gvk := resid.GvkFromNode(resource)
-	return resource.GetName() == pkgContextName && gvk.Kind == "ConfigMap" && gvk.ApiVersion() == "v1"
 }
