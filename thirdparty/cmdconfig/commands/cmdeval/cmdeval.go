@@ -13,15 +13,19 @@ import (
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -46,6 +50,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return cmdutil.FetchFunctionImages(), cobra.ShellCompDirectiveDefault
 	})
+	r.Command.Flags().BoolVarP(
+		&r.SaveFn, "save", "s", false,
+		"save the function and its arguments to Kptfile")
 	r.Command.Flags().StringVar(
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
@@ -90,6 +97,7 @@ type EvalFnRunner struct {
 	OutContent           bytes.Buffer
 	FromStdin            bool
 	Image                string
+	SaveFn               bool
 	Exec                 string
 	FnConfigPath         string
 	RunFns               runfn.RunFns
@@ -102,6 +110,7 @@ type EvalFnRunner struct {
 	IncludeMetaResources bool
 	Ctx                  context.Context
 	Selector             kptfile.Selector
+	dataItems            []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -109,7 +118,82 @@ func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	return cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin, printer.FromContextOrDie(r.Ctx).OutStream())
+	if err = cmdutil.WriteFnOutput(r.Dest, r.OutContent.String(), r.FromStdin,
+		printer.FromContextOrDie(r.Ctx).OutStream()); err != nil {
+		return err
+	}
+	if r.SaveFn {
+		r.SaveFnToKptfile()
+	}
+	return nil
+}
+
+// NewFunction creates a Kptfile.Function object which has the evaluated fn configurations.
+// This object can be written to Kptfile `pipeline.mutators`.
+func (r *EvalFnRunner) NewFunction() *kptfile.Function {
+	newFn := &kptfile.Function{}
+	if r.Image != "" {
+		newFn.Image = r.Image
+		newFn.Name = r.Image
+	} else {
+		newFn.Exec = r.Exec
+		newFn.Name = r.Exec
+	}
+	if !r.Selector.IsEmpty() {
+		newFn.Selectors = []kptfile.Selector{r.Selector}
+	}
+	if r.FnConfigPath != "" {
+		_, relativePath, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
+		newFn.ConfigPath = relativePath
+	} else {
+		data := map[string]string{}
+		for i, s := range r.dataItems {
+			kv := strings.SplitN(s, "=", 2)
+			if i == 0 && len(kv) == 1 {
+				continue
+			}
+			data[kv[0]] = kv[1]
+		}
+		if len(data) != 0 {
+			newFn.ConfigMap = data
+		}
+	}
+	return newFn
+}
+
+// SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` list.
+func (r *EvalFnRunner) SaveFnToKptfile() {
+	pr := printer.FromContextOrDie(r.Ctx)
+	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.Dest)
+	if err != nil {
+		pr.Printf("function not added: Kptfile not exists\n")
+		return
+	}
+	// TODO(yuwenma): Right now we cannot tell if a function is a mutator or validator. Once kpt supports
+	// OCI images, we can add annotations to image and find out the function type from these annotations.
+	if kf.Pipeline == nil {
+		kf.Pipeline = &kptfile.Pipeline{}
+	}
+	if kf.Pipeline.Mutators == nil {
+		kf.Pipeline.Mutators = []kptfile.Function{}
+	} else {
+		for _, m := range kf.Pipeline.Mutators {
+			if m.Name == r.Image || m.Image == r.Image {
+				pr.Printf("skip adding image: already exists in Kptfile\n")
+				return
+			}
+			if m.Name == r.Exec || m.Exec == r.Exec {
+				pr.Printf("skip adding exec: already exists in Kptfile\n")
+				return
+			}
+		}
+	}
+	kf.Pipeline.Mutators = append(kf.Pipeline.Mutators, *r.NewFunction())
+	if err = kptfileutil.WriteFile(r.Dest, kf); err != nil {
+		pr.Printf("function is not added to Kptfile: %v\n", err)
+		return
+	}
+	pr.Printf("function is added to Kptfile\n")
 }
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit
@@ -257,11 +341,11 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(dataItems) > 0 && r.FnConfigPath != "" {
 		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
-
 	fnConfig, err := r.getCLIFunctionConfig(dataItems)
 	if err != nil {
 		return err
 	}
+	r.dataItems = dataItems
 	fnSpec, execArgs, err := r.getFunctionSpec()
 	if err != nil {
 		return err

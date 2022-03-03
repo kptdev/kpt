@@ -1,0 +1,46 @@
+diff --git a/Kptfile b/Kptfile
+index d9e2f05..3d2827b 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,3 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app
++pipeline:
++  mutators:
++    - exec: ./function.sh
++      configPath: fn-config.yaml
++      name: ./function.sh
+diff --git a/fn-config.yaml b/fn-config.yaml
+index b160cd1..4f69f62 100644
+--- a/fn-config.yaml
++++ b/fn-config.yaml
+@@ -11,7 +11,6 @@
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-
+ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+diff --git a/resources.yaml b/resources.yaml
+index 9e9c98f..9adc2f7 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,7 +15,7 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
+-  namespace: foo
++  namespace: bar
+ spec:
+   replicas: 3
+ ---
+@@ -23,6 +23,6 @@ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+   name: custom
+-  namespace: foo
++  namespace: bar
+ spec:
+   image: nginx:1.2.3
