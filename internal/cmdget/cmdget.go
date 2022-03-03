@@ -51,11 +51,11 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
-	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
-		"is this a deployment instance")
 	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1.ResourceMerge),
 		"update strategy that should be used when updating this package -- must be one of: "+
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
+	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
+		"(Experimental) indicates if this package will be deployed to a cluster.")
 	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
