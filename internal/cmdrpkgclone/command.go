@@ -40,13 +40,13 @@ Args:
 
 SOURCE_PACKAGE:
   Source package. Can be a reference to an OCI package, Git package, or an package resource name:
-	* oci://oci-repository/package-name
-	* http://git-repository.git/package-name
-	* repository:package:revision
+    * oci://oci-repository/package-name
+    * http://git-repository.git/package-name
+    * repository:package:revision
 
 TARGET:
   Target package name in the format: REPOSITORY[:PACKAGE[:REVISION]]
-	Example: package-repository:package-name:v1
+  Example: package-repository:package-name:v1
 
 Flags:
 

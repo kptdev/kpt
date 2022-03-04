@@ -46,16 +46,15 @@ kpt alpha rpkg push PACKAGE [DIR]
 Args:
 
 PACKAGE:
-	Name of the package where to push the resources.
+  Name of the package where to push the resources.
 
 DIR:
-	Optional path to a local directory to read resources from.
-
+  Optional path to a local directory to read resources from.
 
 Flags:
 
 --namespace
-	Namespace containing the package.
+  Namespace containing the package.
 
 `
 )
