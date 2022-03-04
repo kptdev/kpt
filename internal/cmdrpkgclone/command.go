@@ -176,6 +176,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	if targetPackageName.Revision == "" {
 		targetPackageName.Revision = "v1"
 	}
+	r.target = targetPackageName
 
 	return nil
 }
