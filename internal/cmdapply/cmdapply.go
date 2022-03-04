@@ -27,7 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/pkg/status"
 	"github.com/spf13/cobra"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
@@ -112,7 +112,7 @@ type Runner struct {
 	printStatusEvents            bool
 
 	inventoryPolicy inventory.Policy
-	prunePropPolicy v1.DeletionPropagation
+	prunePropPolicy metav1.DeletionPropagation
 
 	applyRunner func(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 		dryRunStrategy common.DryRunStrategy) error

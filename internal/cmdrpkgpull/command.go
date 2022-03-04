@@ -24,7 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -201,7 +201,7 @@ func createScheme() (*runtime.Scheme, error) {
 	return scheme, nil
 }
 
-var matchResourceContents = append(kio.MatchAll, v1.KptFileName)
+var matchResourceContents = append(kio.MatchAll, kptfilev1.KptFileName)
 
 func includeFile(path string) bool {
 	for _, m := range matchResourceContents {

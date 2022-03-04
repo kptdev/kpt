@@ -19,8 +19,8 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -87,22 +87,11 @@ type runner struct {
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = "cmdrpkgget.preRunE"
 
-	config, err := r.cfg.ToRESTConfig()
+	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
 	}
-
-	scheme, err := createScheme()
-	if err != nil {
-		return errors.E(op, err)
-	}
-
-	c, err := client.New(config, client.Options{Scheme: scheme})
-	if err != nil {
-		return errors.E(op, err)
-	}
-
-	r.client = c
+	r.client = client
 	return nil
 }
 
@@ -162,18 +151,4 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 func (r *runner) match(pr *porchapi.PackageRevision) bool {
 	return strings.Contains(pr.Name, r.name)
-}
-
-func createScheme() (*runtime.Scheme, error) {
-	scheme := runtime.NewScheme()
-
-	for _, api := range (runtime.SchemeBuilder{
-		porchapi.AddToScheme,
-		configapi.AddToScheme,
-	}) {
-		if err := api(scheme); err != nil {
-			return nil, err
-		}
-	}
-	return scheme, nil
 }
