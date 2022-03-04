@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +37,7 @@ func GetAlphaCommand(ctx context.Context, name, version string) *cobra.Command {
 			}
 			return cmd.Usage()
 		},
-		Hidden: true,
+		Hidden: porch.HidePorchCommands,
 	}
 
 	alpha.AddCommand(
