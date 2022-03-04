@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdlist
+package cmdrpkgget
 
 import (
 	"context"
@@ -29,12 +29,17 @@ import (
 )
 
 const listLong string = `
-kpt alpha rpkg list [flags]
+kpt alpha rpkg get [flags]
+
+Args:
+
+PACKAGE:
+  Name of the package revision to get.
 
 Flags:
 
 --name
-	Name of the packages to list. Any package whose name contains this value will be included in the results.
+	Name of the packages to get. Any package whose name contains this value will be included in the results.
 
 `
 
@@ -44,10 +49,10 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "list",
-		Aliases:    []string{},
+		Use:        "get",
+		Aliases:    []string{"list"},
 		SuggestFor: []string{},
-		Short:      "Lists packages in registered repositories.",
+		Short:      "Gets or lists packages in registered repositories.",
 		Long:       listLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
@@ -56,7 +61,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	r.Command = c
 
-	c.Flags().StringVar(&r.name, "name", "", "Name of the packages to list. Any package whose name contains this value will be included in the results.")
+	c.Flags().StringVar(&r.name, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
 
 	return r
 }
@@ -78,7 +83,8 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdlist.preRunE"
+	const op errors.Op = "cmdrpkgget.preRunE"
+
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {
 		return errors.E(op, err)
@@ -100,7 +106,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdlist.runE"
+	const op errors.Op = "cmdrpkgget.runE"
 
 	var list porchapi.PackageRevisionList
 	if err := r.client.List(r.ctx, &list); err != nil {

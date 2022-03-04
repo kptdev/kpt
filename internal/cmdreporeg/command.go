@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdreg
+package cmdreporeg
 
 import (
 	"context"
@@ -30,7 +30,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const regLong = `
+const (
+	command = "cmdreporeg"
+	longMsg = `
 kpt alpha repo reg[ister] REPOSITORY [flags]
 
 Args:
@@ -57,8 +59,8 @@ Flags:
 
 --repo-password
 	Password for repository authentication.
-
 `
+)
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
@@ -66,15 +68,14 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "reg REPOSITORY",
-		Aliases:    []string{"register"},
-		SuggestFor: []string{},
-		Short:      "Registers a package repository with Package Orchestrator.",
-		Long:       regLong,
-		Example:    "TODO",
-		PreRunE:    r.preRunE,
-		RunE:       r.runE,
-		Hidden:     true,
+		Hidden:  true,
+		Use:     "reg REPOSITORY",
+		Aliases: []string{"register"},
+		Short:   "Registers a package repository with Package Orchestrator.",
+		Long:    longMsg,
+		Example: "TODO",
+		PreRunE: r.preRunE,
+		RunE:    r.runE,
 	}
 	r.Command = c
 
@@ -108,7 +109,8 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdreg.preRunE"
+	const op errors.Op = command + ".preRunE"
+
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {
 		return errors.E(op, err)
@@ -129,7 +131,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdreg.runE"
+	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {
 		return errors.E(op, "repository is required positional argument")

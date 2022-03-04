@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdstore
+package cmdrpkgpush
 
 import (
 	"bytes"
@@ -37,13 +37,13 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const storeLong = `
-kpt alpha rpkg store PACKAGE [DIR]
+const pushLong = `
+kpt alpha rpkg push PACKAGE [DIR]
 
 Args:
 
 PACKAGE:
-	Name of the package where to store the resources.
+	Name of the package where to push the resources.
 
 DIR:
 	Optional path to a local directory to read resources from.
@@ -62,11 +62,11 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "store PACKAGE [DIR]",
-		Aliases:    []string{},
+		Use:        "push PACKAGE [DIR]",
+		Aliases:    []string{"sink", "write"},
 		SuggestFor: []string{},
-		Short:      "Stores package resources into a remote package.",
-		Long:       storeLong,
+		Short:      "Pushes package resources into a remote package.",
+		Long:       pushLong,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
@@ -89,7 +89,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdstore.preRunE"
+	const op errors.Op = "cmdrpkgpush.preRunE"
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {
 		return errors.E(op, err)
@@ -111,7 +111,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdstore.runE"
+	const op errors.Op = "cmdrpkgpush.runE"
 
 	if len(args) == 0 {
 		return errors.E(op, "PACKAGE is a required positional argument")

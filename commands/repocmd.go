@@ -19,7 +19,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdreg"
+	"github.com/GoogleContainerTools/kpt/internal/cmdreporeg"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -57,7 +57,7 @@ func NewRepoCommand(ctx context.Context, version string) *cobra.Command {
 	pf.AddGoFlagSet(flag.CommandLine)
 
 	repo.AddCommand(
-		cmdreg.NewCommand(ctx, kubeflags),
+		cmdreporeg.NewCommand(ctx, kubeflags),
 	)
 
 	return repo
