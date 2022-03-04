@@ -137,7 +137,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Registry: repository[6:],
 		}
 		if r.name == "" {
-			r.name = lastSegment(repository)
+			r.name = porch.LastSegment(repository)
 		}
 	} else {
 		rt = configapi.RepositoryTypeGit
@@ -153,7 +153,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 
 		if r.name == "" {
-			r.name = lastSegment(t.Repo)
+			r.name = porch.LastSegment(t.Repo)
 		}
 	}
 
@@ -208,11 +208,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func lastSegment(path string) string {
-	path = strings.TrimRight(path, "/")
-	return path[strings.LastIndex(path, "/")+1:]
 }
 
 func apply(ctx context.Context, api client.Client, obj client.Object) error {
