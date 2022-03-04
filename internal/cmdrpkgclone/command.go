@@ -80,7 +80,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Example: "kpt alpha rpkg clone git-repository:source-package:v2 target-repository:target-package-name:v1",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
-		Hidden:  true,
+		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command = c
 

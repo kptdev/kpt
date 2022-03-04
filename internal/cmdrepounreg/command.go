@@ -61,7 +61,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Example: "kpt alpha repo unregister registered-repository --keep-auth-secret",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
-		Hidden:  true,
+		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command = c
 

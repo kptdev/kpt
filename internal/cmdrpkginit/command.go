@@ -71,7 +71,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Example: "kpt alpha rpkg init target-repository:target-package-name:target-revision",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
-		Hidden:  true,
+		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command = c
 

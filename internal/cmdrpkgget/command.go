@@ -59,7 +59,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
-		Hidden:     true,
+		Hidden:     porch.HidePorchCommands,
 	}
 	r.Command = c
 
