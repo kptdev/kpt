@@ -57,7 +57,12 @@ func (r *packageRevisionResources) NamespaceScoped() bool {
 
 // List selects resources in the storage which match to the selector. 'options' can be nil.
 func (r *packageRevisionResources) List(ctx context.Context, options *metainternalversion.ListOptions) (runtime.Object, error) {
-	result := &api.PackageRevisionResourcesList{}
+	result := &api.PackageRevisionResourcesList{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevisionResourcesList",
+			APIVersion: api.SchemeGroupVersion.Identifier(),
+		},
+	}
 
 	if err := r.packageCommon.listPackages(ctx, func(p repository.PackageRevision) error {
 		item, err := p.GetResources(ctx)
