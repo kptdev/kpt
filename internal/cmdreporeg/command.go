@@ -68,7 +68,6 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Hidden:  true,
 		Use:     "reg REPOSITORY",
 		Aliases: []string{"register"},
 		Short:   "Registers a package repository with Package Orchestrator.",
@@ -76,6 +75,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Example: "TODO",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
+		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command = c
 

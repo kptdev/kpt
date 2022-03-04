@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkginit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpull"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpush"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -45,7 +46,7 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 			}
 			return cmd.Usage()
 		},
-		Hidden: true,
+		Hidden: porch.HidePorchCommands,
 	}
 
 	pf := repo.PersistentFlags()
