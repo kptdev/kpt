@@ -28,11 +28,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const listLong = `
+const (
+	command = "cmdrepoget"
+	longMsg = `
 kpt alpha repo get [flags]
 
 Lists repositories registered with Package Orchestrator.
 `
+)
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
 	return newRunner(ctx, rcg).Command
@@ -48,7 +51,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:     "get [REPOSITORY]",
 		Aliases: []string{"ls", "list"},
 		Short:   "Lists repositories registered with Package Orchestrator.",
-		Long:    listLong,
+		Long:    longMsg,
 		Example: "kpt alpha repo list --namespace default",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
@@ -72,7 +75,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrepoget.preRunE"
+	const op errors.Op = command + ".preRunE"
 	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
@@ -82,7 +85,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrepoget.runE"
+	const op errors.Op = command + ".runE"
 
 	var objs []runtime.Object
 

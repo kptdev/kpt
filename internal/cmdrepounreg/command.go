@@ -28,7 +28,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const unregLong = `
+const (
+	command = "cmdrepounreg"
+	longMsg = `
 kpt alpha repo unreg[ister] REPOSITORY [flags]
 
 Unregisters a package repository from Package Orchestrator.
@@ -43,6 +45,7 @@ Flags:
 --keep-auth-secret
 	Do not delete the repository authentication secret, if it exists.
 `
+)
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
 	return newRunner(ctx, rcg).Command
@@ -57,7 +60,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:     "unreg[ister] REPOSITORY [flags]",
 		Aliases: []string{"unregister"},
 		Short:   "Unregisters a package repository from Package Orchestrator.",
-		Long:    unregLong,
+		Long:    longMsg,
 		Example: "kpt alpha repo unregister registered-repository --keep-auth-secret",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
@@ -81,7 +84,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrepounreg.preRunE"
+	const op errors.Op = command + ".preRunE"
 	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
@@ -91,7 +94,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrepounreg.runE"
+	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {
 		return errors.E(op, fmt.Errorf("REPOSITORY is a required positional argument"))

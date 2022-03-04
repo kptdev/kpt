@@ -38,7 +38,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const pushLong = `
+const (
+	command = "cmdrpkgpush"
+	longMsg = `
 kpt alpha rpkg push PACKAGE [DIR]
 
 Args:
@@ -56,6 +58,7 @@ Flags:
 	Namespace containing the package.
 
 `
+)
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
@@ -67,7 +70,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Aliases:    []string{"sink", "write"},
 		SuggestFor: []string{},
 		Short:      "Pushes package resources into a remote package.",
-		Long:       pushLong,
+		Long:       longMsg,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
@@ -90,7 +93,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrpkgpush.preRunE"
+	const op errors.Op = command + ".preRunE"
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {
 		return errors.E(op, err)
@@ -112,7 +115,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrpkgpush.runE"
+	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {
 		return errors.E(op, "PACKAGE is a required positional argument")
