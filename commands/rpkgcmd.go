@@ -19,9 +19,9 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/cmdlist"
-	"github.com/GoogleContainerTools/kpt/internal/cmdres"
-	"github.com/GoogleContainerTools/kpt/internal/cmdstore"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgget"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpull"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpush"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -59,9 +59,9 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 	pf.AddGoFlagSet(flag.CommandLine)
 
 	repo.AddCommand(
-		cmdlist.NewCommand(ctx, kubeflags),
-		cmdres.NewCommand(ctx, kubeflags),
-		cmdstore.NewCommand(ctx, kubeflags),
+		cmdrpkgget.NewCommand(ctx, kubeflags),
+		cmdrpkgpull.NewCommand(ctx, kubeflags),
+		cmdrpkgpush.NewCommand(ctx, kubeflags),
 	)
 
 	return repo

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdres
+package cmdrpkgpull
 
 import (
 	"context"
@@ -35,7 +35,7 @@ import (
 )
 
 const resLong = `
-kpt alpha rpkg res[ources] PACKAGE [DIR]
+kpt alpha rpkg pull PACKAGE [DIR]
 
 Args:
 
@@ -59,8 +59,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "res PACKAGE [DIR]",
-		Aliases:    []string{"resources", "read"},
+		Use:        "pull PACKAGE [DIR]",
+		Aliases:    []string{"source", "read"},
 		SuggestFor: []string{},
 		Short:      "Reads package resources.",
 		Long:       resLong,
