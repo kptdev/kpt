@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.0
-	github.com/google/go-cmp v0.5.6
+	github.com/google/go-cmp v0.5.7
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/otiai10/copy v1.7.0
