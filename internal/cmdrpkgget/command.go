@@ -19,17 +19,18 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const listLong string = `
-kpt alpha rpkg get [flags]
+kpt alpha rpkg get [PACKAGE ...] [flags]
 
 Args:
 
@@ -45,8 +46,9 @@ Flags:
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
-		ctx: ctx,
-		cfg: rcg,
+		ctx:        ctx,
+		cfg:        rcg,
+		printFlags: get.NewGetPrintFlags(),
 	}
 	c := &cobra.Command{
 		Use:        "get",
@@ -61,8 +63,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	r.Command = c
 
+	// Create flags
 	c.Flags().StringVar(&r.name, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
-
+	r.printFlags.AddFlags(c)
 	return r
 }
 
@@ -76,10 +79,9 @@ type runner struct {
 	client  client.Client
 	Command *cobra.Command
 
-	printer printer.Printer
-
 	// Flags
-	name string
+	name       string
+	printFlags *get.PrintFlags
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -101,25 +103,58 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	r.client = c
-	r.printer = printer.FromContextOrDie(r.ctx)
 	return nil
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = "cmdrpkgget.runE"
 
-	var list porchapi.PackageRevisionList
-	if err := r.client.List(r.ctx, &list); err != nil {
+	var objs []runtime.Object
+
+	if len(args) > 0 {
+		for _, pkg := range args {
+			pr := &porchapi.PackageRevision{}
+			if err := r.client.Get(r.ctx, client.ObjectKey{
+				Namespace: *r.cfg.Namespace,
+				Name:      pkg,
+			}, pr); err != nil {
+				return errors.E(op, err)
+			}
+
+			// TODO: is the server not returning GVK?
+			pr.Kind = "PackageRevision"
+			pr.APIVersion = porchapi.SchemeGroupVersion.Identifier()
+
+			objs = append(objs, pr)
+		}
+	} else {
+		var list porchapi.PackageRevisionList
+		if err := r.client.List(r.ctx, &list); err != nil {
+			return errors.E(op, err)
+		}
+		for i := range list.Items {
+			pr := &list.Items[i]
+			if r.match(pr) {
+				objs = append(objs, pr)
+			}
+		}
+	}
+
+	printer, err := r.printFlags.ToPrinter()
+	if err != nil {
 		return errors.E(op, err)
 	}
 
-	// TODO: server-side filtering
+	w := printers.GetNewTabWriter(cmd.OutOrStdout())
 
-	for i := range list.Items {
-		pr := &list.Items[i]
-		if r.match(pr) {
-			r.printer.Printf("%s/%s   %s\n", pr.Namespace, pr.Name, pr.Spec.PackageName)
+	for _, obj := range objs {
+		if err := printer.PrintObj(obj, w); err != nil {
+			return errors.E(op, err)
 		}
+	}
+
+	if err := w.Flush(); err != nil {
+		return errors.E(op, err)
 	}
 
 	return nil
