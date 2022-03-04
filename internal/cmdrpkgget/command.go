@@ -29,7 +29,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const listLong string = `
+const (
+	command = "cmdrpkgget"
+	longMsg = `
 kpt alpha rpkg get [PACKAGE ...] [flags]
 
 Args:
@@ -43,6 +45,7 @@ Flags:
 	Name of the packages to get. Any package whose name contains this value will be included in the results.
 
 `
+)
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
@@ -55,7 +58,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Aliases:    []string{"list"},
 		SuggestFor: []string{},
 		Short:      "Gets or lists packages in registered repositories.",
-		Long:       listLong,
+		Long:       longMsg,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
@@ -85,7 +88,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrpkgget.preRunE"
+	const op errors.Op = command + ".preRunE"
 
 	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
@@ -96,7 +99,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdrpkgget.runE"
+	const op errors.Op = command + ".runE"
 
 	var objs []runtime.Object
 

@@ -35,7 +35,9 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
 
-const resLong = `
+const (
+	command = "cmdrpkgpull"
+	longMsg = `
 kpt alpha rpkg pull PACKAGE [DIR]
 
 Args:
@@ -53,6 +55,7 @@ Flags:
 	Namespace containing the package.
 
 `
+)
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
@@ -64,7 +67,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Aliases:    []string{"source", "read"},
 		SuggestFor: []string{},
 		Short:      "Reads package resources.",
-		Long:       resLong,
+		Long:       longMsg,
 		Example:    "TODO",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
@@ -87,7 +90,7 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdres.preRunE"
+	const op errors.Op = command + ".preRunE"
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {
 		return errors.E(op, err)
@@ -109,7 +112,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = "cmdres.runE"
+	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {
 		return errors.E(op, "PACKAGE is a required positional argument")
