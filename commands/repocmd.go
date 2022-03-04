@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdrepoget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdreporeg"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -58,6 +59,7 @@ func NewRepoCommand(ctx context.Context, version string) *cobra.Command {
 
 	repo.AddCommand(
 		cmdreporeg.NewCommand(ctx, kubeflags),
+		cmdrepoget.NewCommand(ctx, kubeflags),
 	)
 
 	return repo
