@@ -43,16 +43,16 @@ kpt alpha rpkg pull PACKAGE [DIR]
 Args:
 
 PACKAGE:
-	Name of the package containing the resources.
+  Name of the package containing the resources.
 
 DIR:
-	Optional path to a local directory to write resources to. The directory must not already exist.
+  Optional path to a local directory to write resources to. The directory must not already exist.
 
 
 Flags:
 
 --namespace
-	Namespace containing the package.
+  Namespace containing the package.
 
 `
 )

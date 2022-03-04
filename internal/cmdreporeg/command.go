@@ -38,27 +38,27 @@ kpt alpha repo reg[ister] REPOSITORY [flags]
 Args:
 
 REPOSITORY:
-	Address of the repository to register. Required argument.
+  Address of the repository to register. Required argument.
 
 Flags:
 
 --description
-	Brief description of the package repository.
+  Brief description of the package repository.
 
 --name
-	Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
+  Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
 
 --title
-	Title of the package repository.
+  Title of the package repository.
 
 --deployment
   Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.
 
 --repo-username
-	Username for repository authentication.
+  Username for repository authentication.
 
 --repo-password
-	Password for repository authentication.
+  Password for repository authentication.
 `
 )
 

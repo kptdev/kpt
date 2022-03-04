@@ -38,7 +38,7 @@ Args:
 
 PACKAGE:
   Target package name in the format: REPOSITORY:PACKAGE:REVISION
-	Example: package-repository:package-name:v1
+  Example: package-repository:package-name:v1
 
 
 Flags:
