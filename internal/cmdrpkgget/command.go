@@ -42,7 +42,7 @@ PACKAGE:
 Flags:
 
 --name
-	Name of the packages to get. Any package whose name contains this value will be included in the results.
+  Name of the packages to get. Any package whose name contains this value will be included in the results.
 
 `
 )

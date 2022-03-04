@@ -31,19 +31,19 @@ import (
 const (
 	command = "cmdrepounreg"
 	longMsg = `
-kpt alpha repo unreg[ister] REPOSITORY [flags]
+kpt alpha repo unreg REPOSITORY [flags]
 
 Unregisters a package repository from Package Orchestrator.
 
 Args:
 
 REPOSITORY:
-	Name of the registered repoisitory resource to unregister.
+  Name of the registered repoisitory resource to unregister.
 
 Flags:
 
 --keep-auth-secret
-	Do not delete the repository authentication secret, if it exists.
+  Do not delete the repository authentication secret, if it exists.
 `
 )
 
@@ -57,7 +57,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:     "unreg[ister] REPOSITORY [flags]",
+		Use:     "unreg REPOSITORY [flags]",
 		Aliases: []string{"unregister"},
 		Short:   "Unregisters a package repository from Package Orchestrator.",
 		Long:    longMsg,
