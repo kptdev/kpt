@@ -99,7 +99,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 				return errors.E(op, err)
 			}
 
-			// TODO: is the server not returning this?
 			repository.Kind = "Repository"
 			repository.APIVersion = configapi.GroupVersion.Identifier()
 
@@ -110,6 +109,8 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		if err := r.client.List(r.ctx, &repositories); err != nil {
 			return errors.E(op, err)
 		}
+		repositories.Kind = "RepositoryList"
+		repositories.APIVersion = configapi.GroupVersion.Identifier()
 		objs = append(objs, &repositories)
 	}
 
