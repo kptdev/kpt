@@ -113,7 +113,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 				return errors.E(op, err)
 			}
 
-			// TODO: is the server not returning GVK?
 			pr.Kind = "PackageRevision"
 			pr.APIVersion = porchapi.SchemeGroupVersion.Identifier()
 
@@ -124,10 +123,24 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		if err := r.client.List(r.ctx, &list); err != nil {
 			return errors.E(op, err)
 		}
+
+		list.Kind = "PackageRevisionList"
+		list.APIVersion = porchapi.SchemeGroupVersion.Identifier()
+
 		for i := range list.Items {
 			pr := &list.Items[i]
-			if r.match(pr) {
-				objs = append(objs, pr)
+			pr.Kind = "PackageRevision"
+			pr.APIVersion = porchapi.SchemeGroupVersion.Identifier()
+		}
+
+		if r.name == "" {
+			objs = append(objs, &list)
+		} else {
+			for i := range list.Items {
+				pr := &list.Items[i]
+				if r.match(pr) {
+					objs = append(objs, pr)
+				}
 			}
 		}
 	}
