@@ -50,7 +50,10 @@ func (p *gitPackageRevision) uid() types.UID {
 
 func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
 	return &v1alpha1.PackageRevision{
-		TypeMeta: metav1.TypeMeta{},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            p.Name(),
 			Namespace:       p.parent.namespace,
@@ -97,6 +100,10 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		}
 	}
 	return &v1alpha1.PackageRevisionResources{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevisionResources",
+			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            p.Name(),
 			Namespace:       p.parent.namespace,
