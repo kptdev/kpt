@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
@@ -218,7 +217,10 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 
 	// Create PackageRevision from upstream repo
 	t.CreateF(ctx, &porchapi.PackageRevision{
-		TypeMeta: metav1.TypeMeta{},
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "git:istions:v1",
 			Namespace: t.namespace,
@@ -249,20 +251,11 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		Name:      "git:istions:v1",
 	}, &istions)
 
-	kptfileContents, ok := istions.Spec.Resources[kptfilev1.KptFileName]
-	if !ok {
-		t.Fatalf("Kptfile not found in the git:istions:v1 package (cloned from %s/%s)", testBlueprintsRepo, "basens/v1")
-	}
-
-	kptfile, err := internalpkg.DecodeKptfile(strings.NewReader(kptfileContents))
-	if err != nil {
-		t.Fatalf("Cannot decode Kptfile (%s): %v", kptfileContents, err)
-	}
+	kptfile := t.ParseKptfileF(&istions)
 
 	if got, want := kptfile.Name, "istions"; got != want {
 		t.Errorf("istions package Kptfile.metadata.name: got %q, want %q", got, want)
 	}
-
 	if kptfile.UpstreamLock == nil {
 		t.Fatalf("istions package upstreamLock is missing")
 	}
@@ -299,6 +292,100 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		},
 	}); !cmp.Equal(want, got) {
 		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
+	}
+
+	{
+		// Create a new package via init, no task specified
+		const name = "git:empty-package:v1"
+		const description = "empty-package description"
+		const site = "https://kpt.dev/empty-package"
+
+		// Create a new package (via init)
+		t.CreateF(ctx, &porchapi.PackageRevision{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "PackageRevision",
+				APIVersion: porchapi.SchemeGroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: t.namespace,
+			},
+			Spec: porchapi.PackageRevisionSpec{
+				PackageName:    "empty-package",
+				Revision:       "v1",
+				RepositoryName: "git",
+			},
+		})
+
+		// Get the package
+		var newPackage porchapi.PackageRevisionResources
+		t.GetF(ctx, client.ObjectKey{
+			Namespace: t.namespace,
+			Name:      name,
+		}, &newPackage)
+
+		kptfile = t.ParseKptfileF(&newPackage)
+		if got, want := kptfile.Name, "empty-package"; got != want {
+			t.Fatalf("New package name: got %q, want %q", got, want)
+		}
+		if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
+			Description: description,
+		}); !cmp.Equal(want, got) {
+			t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
+		}
+	}
+
+	{
+		const name = "git:new-package:v1"
+		const description = "New Package"
+		const site = "https://kpt.dev/new-package"
+		keywords := []string{"test"}
+
+		// Create a new package (via init)
+		t.CreateF(ctx, &porchapi.PackageRevision{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "PackageRevision",
+				APIVersion: porchapi.SchemeGroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: t.namespace,
+			},
+			Spec: porchapi.PackageRevisionSpec{
+				PackageName:    "new-package",
+				Revision:       "v1",
+				RepositoryName: "git",
+				Tasks: []porchapi.Task{
+					{
+						Type: porchapi.TaskTypeInit,
+						Init: &porchapi.PackageInitTaskSpec{
+							Description: description,
+							Keywords:    keywords,
+							Site:        site,
+						},
+					},
+				},
+			},
+		})
+
+		// Get the package
+		var newPackage porchapi.PackageRevisionResources
+		t.GetF(ctx, client.ObjectKey{
+			Namespace: t.namespace,
+			Name:      name,
+		}, &newPackage)
+
+		kptfile = t.ParseKptfileF(&newPackage)
+		if got, want := kptfile.Name, "new-package"; got != want {
+			t.Fatalf("New package name: got %q, want %q", got, want)
+		}
+		if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
+			Site:        site,
+			Description: description,
+			Keywords:    keywords,
+		}); !cmp.Equal(want, got) {
+			t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
+		}
 	}
 }
 

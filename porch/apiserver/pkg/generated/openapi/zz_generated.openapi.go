@@ -979,7 +979,7 @@ func schema_porch_api_porch_v1alpha1_Task(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"type", "init"},
+				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{

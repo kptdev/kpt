@@ -26,6 +26,8 @@ import (
 	"testing"
 	"time"
 
+	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
@@ -542,4 +544,16 @@ func endpointIsReady(endpoints *coreapi.Endpoints) bool {
 		}
 	}
 	return true
+}
+
+func (t *TestSuite) ParseKptfileF(resources *porchapi.PackageRevisionResources) *kptfilev1.KptFile {
+	contents, ok := resources.Spec.Resources[kptfilev1.KptFileName]
+	if !ok {
+		t.Fatalf("Kptfile not found in %s/%s package", resources.Namespace, resources.Name)
+	}
+	kptfile, err := internalpkg.DecodeKptfile(strings.NewReader(contents))
+	if err != nil {
+		t.Fatalf("Cannot decode Kptfile (%s): %v", contents, err)
+	}
+	return kptfile
 }
