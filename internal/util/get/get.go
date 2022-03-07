@@ -25,8 +25,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/hook"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -53,10 +51,6 @@ type Command struct {
 
 	// Name is the name to give the package.  Defaults to the destination.
 	Name string
-
-	// IsDeploymentInstance indicates if the package is forked for deployment.
-	// If forked package has defined deploy hooks, those will be executed post fork.
-	IsDeploymentInstance bool
 
 	// UpdateStrategy is the strategy that will be configured in the package
 	// Kptfile. This determines how changes will be merged when updating the
@@ -121,23 +115,6 @@ func (c Command) Run(ctx context.Context) error {
 		Filters: []kio.Filter{kio.FilterAll(amc), kio.FilterAll(at)},
 		Outputs: []kio.Writer{inout},
 	}.Execute()
-
-	if c.IsDeploymentInstance {
-		pr := printer.FromContextOrDie(ctx)
-		pr.Printf("\nCustomizing package for deployment.\n")
-		hookCmd := hook.Executor{
-			PkgPath: c.Destination,
-		}
-		builtinHooks := []kptfilev1.Function{
-			{
-				Image: fnruntime.FuncGenPkgContext,
-			},
-		}
-		if err := hookCmd.Execute(ctx, builtinHooks); err != nil {
-			return err
-		}
-		pr.Printf("\nCustomized package for deployment.\n")
-	}
 
 	return nil
 }
