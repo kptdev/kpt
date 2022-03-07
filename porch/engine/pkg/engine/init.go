@@ -61,12 +61,12 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 		resources.Contents = map[string]string{}
 	}
 
-	path := path.Join(m.spec.Subpackage, kptfilev1.KptFileName)
-	if _, found := resources.Contents[path]; found {
+	kptfilePath := path.Join(m.spec.Subpackage, kptfilev1.KptFileName)
+	if _, found := resources.Contents[kptfilePath]; found {
 		return repository.PackageResources{}, nil, fmt.Errorf("package %q already initialized", m.name)
 	}
 
-	resources.Contents[kptfilev1.KptFileName] = string(b)
+	resources.Contents[kptfilePath] = string(b)
 
 	return resources, &api.Task{}, nil
 }
