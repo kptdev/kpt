@@ -15,5 +15,4 @@
 
 set -eo pipefail
 
-kpt fn source \
-  | kpt fn eval --exec ./function.sh
+kpt fn eval --exec ./function.sh
