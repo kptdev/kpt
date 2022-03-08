@@ -54,6 +54,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().StringVar(&r.strategy, "strategy", string(kptfilev1.ResourceMerge),
 		"update strategy that should be used when updating this package -- must be one of: "+
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
+	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
+		"(Experimental) indicates if this package will be deployed to a cluster.")
 	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
@@ -66,10 +68,11 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function
 type Runner struct {
-	ctx      context.Context
-	Get      get.Command
-	Command  *cobra.Command
-	strategy string
+	ctx                  context.Context
+	Get                  get.Command
+	Command              *cobra.Command
+	strategy             string
+	isDeploymentInstance bool
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -108,6 +111,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		return err
 	}
 	r.Get.UpdateStrategy = strategy
+	r.Get.IsDeploymentInstance = r.isDeploymentInstance
 	return nil
 }
 
