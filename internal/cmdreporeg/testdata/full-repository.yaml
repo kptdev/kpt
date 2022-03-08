@@ -1,0 +1,19 @@
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: Repository
+metadata:
+    creationTimestamp: null
+    name: repository-resource-name
+    namespace: repository-namespace
+spec:
+    content: PackageRevision
+    deployment: true
+    description: '"Test Repository Description"'
+    git:
+        branch: main-branch
+        directory: /catalog
+        repo: https://github.com/platkrm/test-blueprints
+        secretRef:
+            name: ""
+    title: '"Test Repository Title"'
+    type: git
+status: {}
