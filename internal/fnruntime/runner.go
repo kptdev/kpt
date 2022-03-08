@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -79,12 +80,10 @@ func NewRunner(
 	}
 	if fltr.Run == nil {
 		switch {
+		case f.Image == FuncGenPkgContext:
+			pkgCtxGenerator := &builtins.PackageContextGenerator{}
+			fltr.Run = pkgCtxGenerator.Run
 		case f.Image != "":
-			// if f.Image == FuncGenPkgContext {
-			// 	pkgCtxGenerator := &builtins.PackageContextGenerator{}
-			// 	fltr.Run = pkgCtxGenerator.Run
-			// 	break
-			// }
 			cfn := &ContainerFn{
 				Path:            pkgPath,
 				Image:           f.Image,

@@ -33,5 +33,4 @@ jobs:
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
-          make all
           make test-fn-eval T=exec-function-stderr
