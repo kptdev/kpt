@@ -72,6 +72,7 @@ func (e *Executor) Execute(ctx context.Context, hook []kptfilev1.Function) error
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: true,
 		WrapBareSeqNode:    true,
+		FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
 	}
 	mutators, err := e.fnChain(ctx, hook)
 	if err != nil {

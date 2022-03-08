@@ -25,7 +25,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/hook"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -130,7 +129,8 @@ func (c Command) Run(ctx context.Context) error {
 		}
 		builtinHooks := []kptfilev1.Function{
 			{
-				Image: fnruntime.FuncGenPkgContext,
+				// Image: fnruntime.FuncGenPkgContext,
+				Image: "builtins/gen-pkg-context",
 			},
 		}
 		if err := hookCmd.Execute(ctx, builtinHooks); err != nil {
