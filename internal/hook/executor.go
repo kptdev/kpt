@@ -110,7 +110,8 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 			types.UniquePath(e.PkgPath),
 			e.fnResults,
 			e.ImagePullPolicy,
-			false, /* do not display resource */
+			false, /* do not set package annotation */
+			false, /* do not display resource count */
 			e.Runtime)
 		if err != nil {
 			return nil, err

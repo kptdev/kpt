@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -49,7 +50,7 @@ const (
 func NewRunner(
 	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
 	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, displayResourceCount bool,
+	imagePullPolicy ImagePullPolicy, setPkgPathAnnotation, displayResourceCount bool,
 	runtime fn.FunctionRuntime) (kio.Filter, error) {
 
 	config, err := newFnConfig(fsys, f, pkgPath)
@@ -80,6 +81,11 @@ func NewRunner(
 	if fltr.Run == nil {
 		switch {
 		case f.Image != "":
+			if f.Image == FuncGenPkgContext {
+				pkgCtxGenerator := &builtins.PackageContextGenerator{}
+				fltr.Run = pkgCtxGenerator.Run
+				break
+			}
 			cfn := &ContainerFn{
 				Path:            pkgPath,
 				Image:           f.Image,
@@ -112,7 +118,7 @@ func NewRunner(
 			return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, true, displayResourceCount)
+	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, setPkgPathAnnotation, displayResourceCount)
 }
 
 // NewFunctionRunner returns a kio.Filter given a specification of a function
