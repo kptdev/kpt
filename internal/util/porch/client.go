@@ -18,7 +18,9 @@ import (
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	coreapi "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -34,7 +36,10 @@ func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
 		return nil, err
 	}
 
-	c, err := client.New(config, client.Options{Scheme: scheme})
+	c, err := client.New(config, client.Options{
+		Scheme: scheme,
+		Mapper: createRESTMapper(),
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -55,4 +60,32 @@ func createScheme() (*runtime.Scheme, error) {
 		}
 	}
 	return scheme, nil
+}
+
+func createRESTMapper() meta.RESTMapper {
+	rm := meta.NewDefaultRESTMapper([]schema.GroupVersion{
+		configapi.GroupVersion,
+		porchapi.SchemeGroupVersion,
+		coreapi.SchemeGroupVersion,
+	})
+
+	for _, r := range []struct {
+		kind             schema.GroupVersionKind
+		plural, singular string
+	}{
+		{kind: configapi.GroupVersion.WithKind("Repository"), plural: "repositories", singular: "repository"},
+		{kind: porchapi.SchemeGroupVersion.WithKind("PackageRevision"), plural: "packagerevisions", singular: "packagerevision"},
+		{kind: porchapi.SchemeGroupVersion.WithKind("PackageRevisionResources"), plural: "packagerevisionresources", singular: "packagerevisionresources"},
+		{kind: porchapi.SchemeGroupVersion.WithKind("Function"), plural: "functions", singular: "function"},
+		{kind: coreapi.SchemeGroupVersion.WithKind("Secret"), plural: "secrets", singular: "secret"},
+	} {
+		rm.AddSpecific(
+			r.kind,
+			r.kind.GroupVersion().WithResource(r.plural),
+			r.kind.GroupVersion().WithResource(r.singular),
+			meta.RESTScopeNamespace,
+		)
+	}
+
+	return rm
 }
