@@ -33,4 +33,5 @@ jobs:
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
-          make test-fn-eval T=exec-function-stderr
+          make all
+          make test-docker
