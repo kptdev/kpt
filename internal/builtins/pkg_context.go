@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	pkgContextFile = "package-context.yaml"
+	PkgContextFile = "package-context.yaml"
 	pkgContextName = "kptfile.kpt.dev"
 )
 
@@ -118,7 +118,7 @@ data: {}
 		return nil, err
 	}
 	annotations := map[string]string{
-		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), pkgContextFile),
+		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), PkgContextFile),
 	}
 
 	for k, v := range annotations {
@@ -130,4 +130,19 @@ data: {}
 		"name": kf.GetName(),
 	})
 	return cm, nil
+}
+
+// DummyPkgContext returns content for package context that contains
+// placeholder value for package name. This will be used to create
+// abstract blueprints.
+func DummyPkgContext() string {
+	return fmt.Sprintf(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: %s
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  name: example
+`, pkgContextName)
 }
