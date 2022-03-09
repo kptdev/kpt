@@ -44,7 +44,7 @@ spec:
         - name: porch-server
           # Update image to the image of your porch apiserver build.
           image: gcr.io/example-google-project-id/porch-server:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               memory: "256Mi"
