@@ -158,7 +158,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	pkgContextPath := filepath.Join(up, builtins.PkgContextFile)
 	if _, err = os.Stat(pkgContextPath); os.IsNotExist(err) {
 		pr.Printf("writing %s\n", filepath.Join(args[0], builtins.PkgContextFile))
-		if err := ioutil.WriteFile(pkgContextPath, []byte(builtins.DummyPkgContext()), 0644); err != nil {
+		if err := ioutil.WriteFile(pkgContextPath, []byte(builtins.AbstractPkgContext()), 0644); err != nil {
 			return err
 		}
 	}

@@ -82,7 +82,7 @@ Details: https://kpt.dev/reference/cli/live/
 
 	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", builtins.PkgContextFile))
 	assert.NoError(t, err)
-	assert.Equal(t, b, []byte(builtins.DummyPkgContext()))
+	assert.Equal(t, b, []byte(builtins.AbstractPkgContext()))
 }
 
 func TestCmd_currentDir(t *testing.T) {

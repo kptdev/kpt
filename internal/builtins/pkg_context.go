@@ -103,15 +103,7 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
 func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
-	cm := yaml.MustParse(fmt.Sprintf(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: %s
-  annotations:
-    config.kubernetes.io/local-config: "true"
-data: {}
-`, pkgContextName))
+	cm := yaml.MustParse(AbstractPkgContext())
 
 	kptfilePath, _, err := kioutil.GetFileAnnotations(kf)
 	if err != nil {
@@ -132,10 +124,10 @@ data: {}
 	return cm, nil
 }
 
-// DummyPkgContext returns content for package context that contains
+// AbstractPkgContext returns content for package context that contains
 // placeholder value for package name. This will be used to create
 // abstract blueprints.
-func DummyPkgContext() string {
+func AbstractPkgContext() string {
 	return fmt.Sprintf(`apiVersion: v1
 kind: ConfigMap
 metadata:
