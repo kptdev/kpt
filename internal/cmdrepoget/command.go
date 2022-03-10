@@ -106,7 +106,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		var repositories configapi.RepositoryList
-		if err := r.client.List(r.ctx, &repositories); err != nil {
+		if err := r.client.List(r.ctx, &repositories, client.InNamespace(*r.cfg.Namespace)); err != nil {
 			return errors.E(op, err)
 		}
 		repositories.Kind = "RepositoryList"

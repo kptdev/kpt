@@ -120,7 +120,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		var list porchapi.PackageRevisionList
-		if err := r.client.List(r.ctx, &list); err != nil {
+		if err := r.client.List(r.ctx, &list, client.InNamespace(*r.cfg.Namespace)); err != nil {
 			return errors.E(op, err)
 		}
 
