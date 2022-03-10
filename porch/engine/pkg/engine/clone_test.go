@@ -54,7 +54,7 @@ func createRepoWithContents(t *testing.T, contentDir string) *gogit.Repository {
 		if info.IsDir() {
 			return nil
 		} else if !info.Mode().IsRegular() {
-			return fmt.Errorf("irredular file object detected: %q (%s)", path, info.Mode())
+			return fmt.Errorf("irregular file object detected: %q (%s)", path, info.Mode())
 		}
 		rel, err := filepath.Rel(contentDir, path)
 		if err != nil {

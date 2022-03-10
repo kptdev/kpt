@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -34,7 +35,6 @@ import (
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,6 +44,7 @@ import (
 	aggregatorv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -556,4 +557,23 @@ func (t *TestSuite) ParseKptfileF(resources *porchapi.PackageRevisionResources) 
 		t.Fatalf("Cannot decode Kptfile (%s): %v", contents, err)
 	}
 	return kptfile
+}
+
+func (t *TestSuite) FindAndDecodeF(resources *porchapi.PackageRevisionResources, name string, value interface{}) {
+	contents, ok := resources.Spec.Resources[name]
+	if !ok {
+		t.Fatalf("Cannot find %q in %s/%s package", name, resources.Namespace, resources.Name)
+	}
+	var temp interface{}
+	d := yaml.NewDecoder(strings.NewReader(contents))
+	if err := d.Decode(&temp); err != nil {
+		t.Fatalf("Cannot decode yaml %q in %s/%s package: %v", name, resources.Namespace, resources.Name, err)
+	}
+	jsonData, err := json.Marshal(temp)
+	if err != nil {
+		t.Fatalf("json.Marshal failed: %v", err)
+	}
+	if err := json.Unmarshal(jsonData, value); err != nil {
+		t.Fatalf("json.Unmarshal failed; %v", err)
+	}
 }

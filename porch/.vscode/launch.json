@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch test function",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/apiserver/pkg/e2e",
+            "args": [
+                "-test.run",
+                "TestE2E/PorchSuite/TestCloneIntoDeploymentRepository"
+            ]
+        },
+        {
             "name": "Launch Server",
             "type": "go",
             "request": "launch",
