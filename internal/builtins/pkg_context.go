@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	pkgContextFile = "package-context.yaml"
+	PkgContextFile = "package-context.yaml"
 	pkgContextName = "kptfile.kpt.dev"
 )
 
@@ -103,22 +103,14 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
 func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
-	cm := yaml.MustParse(fmt.Sprintf(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: %s
-  annotations:
-    config.kubernetes.io/local-config: "true"
-data: {}
-`, pkgContextName))
+	cm := yaml.MustParse(AbstractPkgContext())
 
 	kptfilePath, _, err := kioutil.GetFileAnnotations(kf)
 	if err != nil {
 		return nil, err
 	}
 	annotations := map[string]string{
-		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), pkgContextFile),
+		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), PkgContextFile),
 	}
 
 	for k, v := range annotations {
@@ -130,4 +122,19 @@ data: {}
 		"name": kf.GetName(),
 	})
 	return cm, nil
+}
+
+// AbstractPkgContext returns content for package context that contains
+// placeholder value for package name. This will be used to create
+// abstract blueprints.
+func AbstractPkgContext() string {
+	return fmt.Sprintf(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: %s
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  name: example
+`, pkgContextName)
 }

@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/cmdinit"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
@@ -78,6 +79,10 @@ kpt live apply my-pkg --reconcile-timeout=2m --output=table
 '''
 Details: https://kpt.dev/reference/cli/live/
 `, "'", "`"), string(b))
+
+	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", builtins.PkgContextFile))
+	assert.NoError(t, err)
+	assert.Equal(t, b, []byte(builtins.AbstractPkgContext()))
 }
 
 func TestCmd_currentDir(t *testing.T) {
