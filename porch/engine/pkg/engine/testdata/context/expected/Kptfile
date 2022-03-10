@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: input
+  annotations:
+    config.kubernetes.io/path: 'Kptfile'
+info:
+  description: Builtin Function Test Package

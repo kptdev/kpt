@@ -16,6 +16,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -66,78 +67,19 @@ func Run(suite interface{}, t *testing.T) {
 
 type PorchSuite struct {
 	TestSuite
+	config GitConfig
 }
 
 var _ Initializer = &PorchSuite{}
 
 func (p *PorchSuite) Initialize(ctx context.Context) {
 	p.TestSuite.Initialize(ctx)
+	p.config = p.CreateGitRepo()
 }
 
 func (t *PorchSuite) TestGitRepository(ctx context.Context) {
-	config := t.CreateGitRepo()
-
-	var secret string
-
-	// Create auth secret if necessary
-	if config.Username != "" || config.Password != "" {
-		const credSecret = "git-repository-auth"
-		immutable := true
-		t.CreateF(ctx, &coreapi.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      credSecret,
-				Namespace: t.namespace,
-			},
-			Immutable: &immutable,
-			Data: map[string][]byte{
-				"username": []byte(config.Username),
-				"password": []byte(config.Password),
-			},
-			Type: coreapi.SecretTypeBasicAuth,
-		})
-
-		secret = credSecret
-
-		t.Cleanup(func() {
-			t.DeleteE(ctx, &coreapi.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      credSecret,
-					Namespace: t.namespace,
-				},
-			})
-		})
-	}
-
-	// Register repository
-	t.CreateF(ctx, &configapi.Repository{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git",
-			Namespace: t.namespace,
-		},
-		Spec: configapi.RepositorySpec{
-			Title:       "Porch Test Repository",
-			Description: "Porch Test Repository Description",
-			Type:        configapi.RepositoryTypeGit,
-			Content:     configapi.RepositoryContentPackage,
-			Git: &configapi.GitRepository{
-				Repo:      config.Repo,
-				Branch:    config.Branch,
-				Directory: config.Directory,
-				SecretRef: configapi.SecretRef{
-					Name: secret,
-				},
-			},
-		},
-	})
-
-	t.Cleanup(func() {
-		t.DeleteE(ctx, &configapi.Repository{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "git",
-				Namespace: t.namespace,
-			},
-		})
-	})
+	// Register the repository as 'git'
+	t.registerMainGitRepositoryF(ctx, "git")
 
 	// Create Package Revision
 	t.CreateF(ctx, &porchapi.PackageRevision{
@@ -194,7 +136,9 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
 	}
+}
 
+func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 	// Register Upstream Repository
 	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
 
@@ -215,6 +159,9 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		t.Errorf("Repository %q doesn't contain package %q", testBlueprintsRepo, name)
 	}
 
+	// Register the repository as 'downstream'
+	t.registerMainGitRepositoryF(ctx, "downstream")
+
 	// Create PackageRevision from upstream repo
 	t.CreateF(ctx, &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
@@ -222,13 +169,13 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git:istions:v1",
+			Name:      "downstream:istions:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "istions",
 			Revision:       "v1",
-			RepositoryName: "git",
+			RepositoryName: "downstream",
 			Tasks: []porchapi.Task{
 				{
 					Type: porchapi.TaskTypeClone,
@@ -248,7 +195,204 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	var istions porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "git:istions:v1",
+		Name:      "downstream:istions:v1",
+	}, &istions)
+
+	kptfile := t.ParseKptfileF(&istions)
+
+	if got, want := kptfile.Name, "istions"; got != want {
+		t.Errorf("istions package Kptfile.metadata.name: got %q, want %q", got, want)
+	}
+	if kptfile.UpstreamLock == nil {
+		t.Fatalf("istions package upstreamLock is missing")
+	}
+	if kptfile.UpstreamLock.Git == nil {
+		t.Errorf("istions package upstreamLock.git is missing")
+	}
+	if kptfile.UpstreamLock.Git.Commit == "" {
+		t.Errorf("isions package upstreamLock.gkti.commit is missing")
+	}
+
+	// Remove commit from comparison
+	got := kptfile.UpstreamLock
+	got.Git.Commit = ""
+
+	want := &kptfilev1.UpstreamLock{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.GitLock{
+			Repo:      testBlueprintsRepo,
+			Directory: "basens",
+			Ref:       "v1",
+		},
+	}
+	if !cmp.Equal(want, got) {
+		t.Errorf("unexpected upstreamlock returned (-want, +got) %s", cmp.Diff(want, got))
+	}
+
+	// Check Upstream
+	if got, want := kptfile.Upstream, (&kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
+			Repo:      testBlueprintsRepo,
+			Directory: "basens",
+			Ref:       "v1",
+		},
+	}); !cmp.Equal(want, got) {
+		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
+	}
+}
+
+func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
+	// Create a new package via init, no task specified
+	const repository = "git"
+	const name = repository + ":empty-package:v1"
+	const description = "empty-package description"
+	const site = "https://kpt.dev/empty-package"
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "empty-package",
+			Revision:       "v1",
+			RepositoryName: repository,
+		},
+	})
+
+	// Get the package
+	var newPackage porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &newPackage)
+
+	kptfile := t.ParseKptfileF(&newPackage)
+	if got, want := kptfile.Name, "empty-package"; got != want {
+		t.Fatalf("New package name: got %q, want %q", got, want)
+	}
+	if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
+		Description: description,
+	}); !cmp.Equal(want, got) {
+		t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
+	}
+}
+
+func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
+	const repository = "git"
+	const name = repository + ":new-package:v1"
+	const description = "New Package"
+	const site = "https://kpt.dev/new-package"
+	keywords := []string{"test"}
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "new-package",
+			Revision:       "v1",
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeInit,
+					Init: &porchapi.PackageInitTaskSpec{
+						Description: description,
+						Keywords:    keywords,
+						Site:        site,
+					},
+				},
+			},
+		},
+	})
+
+	// Get the package
+	var newPackage porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &newPackage)
+
+	kptfile := t.ParseKptfileF(&newPackage)
+	if got, want := kptfile.Name, "new-package"; got != want {
+		t.Fatalf("New package name: got %q, want %q", got, want)
+	}
+	if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
+		Site:        site,
+		Description: description,
+		Keywords:    keywords,
+	}); !cmp.Equal(want, got) {
+		t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
+	}
+}
+
+func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
+	const downstreamRepository = "deployment"
+	const downstreamPackage = "istions"
+	const downstreamName = downstreamRepository + ":" + downstreamPackage + ":v1"
+
+	// Register the deployment repository
+	t.registerMainGitRepositoryF(ctx, downstreamRepository, withDeployment())
+
+	// Register the upstream repository
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+
+	// TODO: Confirm that upstream package doesn't contain context
+
+	const upstreamPackage = "test-blueprints:basens:v1"
+
+	// Create PackageRevision from upstream repo
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      downstreamName,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    downstreamPackage,
+			Revision:       "v1",
+			RepositoryName: downstreamRepository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeClone,
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							UpstreamRef: porchapi.PackageRevisionRef{
+								Name: upstreamPackage, // Package to be cloned
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get istions resources
+	var istions porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      downstreamName,
 	}, &istions)
 
 	kptfile := t.ParseKptfileF(&istions)
@@ -294,98 +438,14 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
 	}
 
-	{
-		// Create a new package via init, no task specified
-		const name = "git:empty-package:v1"
-		const description = "empty-package description"
-		const site = "https://kpt.dev/empty-package"
-
-		// Create a new package (via init)
-		t.CreateF(ctx, &porchapi.PackageRevision{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "PackageRevision",
-				APIVersion: porchapi.SchemeGroupVersion.String(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: t.namespace,
-			},
-			Spec: porchapi.PackageRevisionSpec{
-				PackageName:    "empty-package",
-				Revision:       "v1",
-				RepositoryName: "git",
-			},
-		})
-
-		// Get the package
-		var newPackage porchapi.PackageRevisionResources
-		t.GetF(ctx, client.ObjectKey{
-			Namespace: t.namespace,
-			Name:      name,
-		}, &newPackage)
-
-		kptfile = t.ParseKptfileF(&newPackage)
-		if got, want := kptfile.Name, "empty-package"; got != want {
-			t.Fatalf("New package name: got %q, want %q", got, want)
-		}
-		if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
-			Description: description,
-		}); !cmp.Equal(want, got) {
-			t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
-		}
+	// Check generated context
+	var configmap coreapi.ConfigMap
+	t.FindAndDecodeF(&istions, "package-context.yaml", &configmap)
+	if got, want := configmap.Name, "kptfile.kpt.dev"; got != want {
+		t.Errorf("package context name: got %s, want %s", got, want)
 	}
-
-	{
-		const name = "git:new-package:v1"
-		const description = "New Package"
-		const site = "https://kpt.dev/new-package"
-		keywords := []string{"test"}
-
-		// Create a new package (via init)
-		t.CreateF(ctx, &porchapi.PackageRevision{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "PackageRevision",
-				APIVersion: porchapi.SchemeGroupVersion.String(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: t.namespace,
-			},
-			Spec: porchapi.PackageRevisionSpec{
-				PackageName:    "new-package",
-				Revision:       "v1",
-				RepositoryName: "git",
-				Tasks: []porchapi.Task{
-					{
-						Type: porchapi.TaskTypeInit,
-						Init: &porchapi.PackageInitTaskSpec{
-							Description: description,
-							Keywords:    keywords,
-							Site:        site,
-						},
-					},
-				},
-			},
-		})
-
-		// Get the package
-		var newPackage porchapi.PackageRevisionResources
-		t.GetF(ctx, client.ObjectKey{
-			Namespace: t.namespace,
-			Name:      name,
-		}, &newPackage)
-
-		kptfile = t.ParseKptfileF(&newPackage)
-		if got, want := kptfile.Name, "new-package"; got != want {
-			t.Fatalf("New package name: got %q, want %q", got, want)
-		}
-		if got, want := kptfile.Info, (&kptfilev1.PackageInfo{
-			Site:        site,
-			Description: description,
-			Keywords:    keywords,
-		}); !cmp.Equal(want, got) {
-			t.Fatalf("unexpected %s/%s package info (-want, +got) %s", newPackage.Namespace, newPackage.Name, cmp.Diff(want, got))
-		}
+	if got, want := configmap.Data["name"], "istions"; got != want {
+		t.Errorf("package context 'data.name': got %s, want %s", got, want)
 	}
 }
 
@@ -440,6 +500,10 @@ func (t *PorchSuite) TestDevPorch(ctx context.Context) {
 
 func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
 	t.CreateF(ctx, &configapi.Repository{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Repository",
+			APIVersion: configapi.GroupVersion.Identifier(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: t.namespace,
@@ -463,4 +527,104 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name stri
 			},
 		})
 	})
+}
+
+type repositoryOption func(*configapi.Repository)
+
+func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string, opts ...repositoryOption) {
+	config := t.config
+
+	var secret string
+	// Create auth secret if necessary
+	if config.Username != "" || config.Password != "" {
+		secret = fmt.Sprintf("%s-auth", name)
+		immutable := true
+		t.CreateF(ctx, &coreapi.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secret,
+				Namespace: t.namespace,
+			},
+			Immutable: &immutable,
+			Data: map[string][]byte{
+				"username": []byte(config.Username),
+				"password": []byte(config.Password),
+			},
+			Type: coreapi.SecretTypeBasicAuth,
+		})
+
+		t.Cleanup(func() {
+			t.DeleteE(ctx, &coreapi.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      secret,
+					Namespace: t.namespace,
+				},
+			})
+		})
+	}
+
+	repository := &configapi.Repository{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Repository",
+			APIVersion: configapi.GroupVersion.Identifier(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: t.namespace,
+		},
+		Spec: configapi.RepositorySpec{
+			Title:       "Porch Test Repository",
+			Description: "Porch Test Repository Description",
+			Type:        configapi.RepositoryTypeGit,
+			Content:     configapi.RepositoryContentPackage,
+			Git: &configapi.GitRepository{
+				Repo:      config.Repo,
+				Branch:    config.Branch,
+				Directory: config.Directory,
+				SecretRef: configapi.SecretRef{
+					Name: secret,
+				},
+			},
+		},
+	}
+
+	// Apply options
+	for _, o := range opts {
+		o(repository)
+	}
+
+	// Register repository
+	t.CreateF(ctx, repository)
+
+	t.Cleanup(func() {
+		t.DeleteE(ctx, &configapi.Repository{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: t.namespace,
+			},
+		})
+	})
+}
+
+func withDeployment() repositoryOption {
+	return func(r *configapi.Repository) {
+		r.Spec.Deployment = true
+	}
+}
+
+func withTitle(title string) repositoryOption {
+	return func(r *configapi.Repository) {
+		r.Spec.Title = title
+	}
+}
+
+func withType(t configapi.RepositoryType) repositoryOption {
+	return func(r *configapi.Repository) {
+		r.Spec.Type = t
+	}
+}
+
+func withContent(content configapi.RepositoryContent) repositoryOption {
+	return func(r *configapi.Repository) {
+		r.Spec.Content = content
+	}
 }

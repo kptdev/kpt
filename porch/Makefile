@@ -130,7 +130,7 @@ porch:
 .PHONY: fix-headers
 fix-headers:
 	# TODO: switch to google/addlicense once we have https://github.com/google/addlicense/pull/104
-	go run github.com/justinsb/addlicense@v1.0.1 -c "Google LLC" -l apache --ignore ".build/**" . 2>/dev/null
+	go run github.com/justinsb/addlicense@v1.0.1 -c "Google LLC" -l apache --ignore ".build/**" --ignore "**/testdata/**" . 2>/dev/null
 
 .PHONY: fix-all
 fix-all: fix-headers fmt tidy

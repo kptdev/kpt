@@ -1,0 +1,12 @@
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+  name: bucket-name
+  namespace: bucket-namespace
+  annotations:
+    cnrm.cloud.google.com/project-id: bucket-project
+spec:
+  storageClass: standard
+  uniformBucketLevelAccess: true
+  versioning:
+    enabled: false
