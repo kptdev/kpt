@@ -18,10 +18,30 @@ on:
     paths-ignore:
       - "docs/**"
       - "site/**"
-  pull_request:
+      - "demos/**"
+      - "Formula/**"
+      - "mdtogo/**"
+      - "package-examples/**"
+      - "release/**"
+      - "scripts/**"
+      - "commands/**"
+      - "internal/cmd**"
+      - "porch/docs/**"
+      - "porch/config/samples/**"
+pull_request:
     paths-ignore:
       - "docs/**"
       - "site/**"
+      - "demos/**"
+      - "Formula/**"
+      - "mdtogo/**"
+      - "package-examples/**"
+      - "release/**"
+      - "scripts/**"
+      - "commands/**"
+      - "internal/cmd**"
+      - "porch/docs/**"
+      - "porch/config/samples/**"
 
 jobs:
   tests:
