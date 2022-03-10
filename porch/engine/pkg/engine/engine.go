@@ -24,6 +24,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
@@ -96,6 +97,15 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	for i := range tasks {
 		task := &tasks[i]
 		mutation, err := cad.mapTaskToMutation(ctx, obj, task)
+		if err != nil {
+			return nil, err
+		}
+		mutations = append(mutations, mutation)
+	}
+
+	// If creating a package in a deployment repository, generate context
+	if repositoryObj.Spec.Deployment {
+		mutation, err := newBuiltinFunctionMutation(fnruntime.FuncGenPkgContext)
 		if err != nil {
 			return nil, err
 		}
