@@ -94,3 +94,10 @@ then run test suite against the Porch instance.
 * `make push-and-deploy`: builds, pushes Porch Docker images, creates deployment configuration, and deploys Porch
 * `make` or `make all`: builds and runs Porch [locally](./running-locally.md)
 * `make test`: runs tests
+
+## VSCode
+
+[VSCode](https://code.visualstudio.com/) works really well for editing and debugging.
+Because Porch is comprises of multiple go modules, there is a pre-configured
+multi-folder workspace in [porch.code-workspace](../porch.code-workspace).
+Open it in VSCode (File / Open Workspace from File) to use Workspace Folders.
