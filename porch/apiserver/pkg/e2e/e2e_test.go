@@ -143,7 +143,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
 
 	var pr porchapi.PackageRevisionResourcesList
-	t.ListE(ctx, &pr)
+	t.ListE(ctx, &pr, client.InNamespace(t.namespace))
 
 	// Ensure basens package exists
 	const name = "test-blueprints:basens:v1"
@@ -476,7 +476,7 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 	})
 
 	list := &porchapi.FunctionList{}
-	t.ListE(ctx, list)
+	t.ListE(ctx, list, client.InNamespace(t.namespace))
 
 	if got := len(list.Items); got == 0 {
 		t.Errorf("Found no functions in gcr.io/kpt-fn repository; expected at least one")
@@ -487,7 +487,7 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "demo-blueprints")
 
 	var list porchapi.PackageRevisionList
-	t.ListE(ctx, &list)
+	t.ListE(ctx, &list, client.InNamespace(t.namespace))
 
 	if got := len(list.Items); got == 0 {
 		t.Errorf("Found no package revisions in %s; expected at least one", testBlueprintsRepo)
