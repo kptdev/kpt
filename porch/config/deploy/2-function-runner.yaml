@@ -30,7 +30,7 @@ spec:
       containers:
         - name: function-runner
           image: gcr.io/example-google-project-id/function-runner:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9445
           resources:
