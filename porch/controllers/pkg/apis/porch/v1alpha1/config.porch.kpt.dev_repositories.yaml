@@ -264,8 +264,6 @@ spec:
                       type: string
                   type: object
                 type: array
-            required:
-            - deployment
             type: object
           status:
             description: RepositoryStatus defines the observed state of Repository
