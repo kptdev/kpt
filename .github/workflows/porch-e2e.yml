@@ -28,7 +28,7 @@ on:
       - "internal/cmd**"
       - "porch/docs/**"
       - "porch/config/samples/**"
-pull_request:
+  pull_request:
     paths-ignore:
       - "docs/**"
       - "site/**"
