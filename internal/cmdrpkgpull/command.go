@@ -19,6 +19,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -162,14 +163,19 @@ func writeToDir(resources map[string]string, dir string) error {
 }
 
 func writeToWriter(resources map[string]string, out io.Writer) error {
-	inputs := []kio.Reader{}
-
-	// Create kio readers
-	for k, v := range resources {
+	keys := make([]string, 0, len(resources))
+	for k := range resources {
 		if !includeFile(k) {
 			continue
 		}
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 
+	// Create kio readers
+	inputs := []kio.Reader{}
+	for _, k := range keys {
+		v := resources[k]
 		inputs = append(inputs, &kio.ByteReader{
 			Reader: strings.NewReader(v),
 			SetAnnotations: map[string]string{
@@ -187,6 +193,7 @@ func writeToWriter(resources map[string]string, out io.Writer) error {
 				KeepReaderAnnotations: true,
 				WrappingKind:          kio.ResourceListKind,
 				WrappingAPIVersion:    kio.ResourceListAPIVersion,
+				Sort:                  true,
 			},
 		},
 	}.Execute()

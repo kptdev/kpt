@@ -120,15 +120,16 @@ func startGitServer(t *testing.T, path string) string {
 	config := string(configBytes)
 	config = strings.ReplaceAll(config, "GIT_SERVER_IMAGE", gitServerImage)
 
+	t.Cleanup(func() {
+		porch.KubectlDeleteNamespace(t, testGitNamespace)
+	})
+
 	porch.KubectlApply(t, config)
 	porch.KubectlWaitForDeployment(t, testGitNamespace, "git-server")
 	porch.KubectlWaitForService(t, testGitNamespace, "git-server")
 	// TODO: kpt git address parsing is strange; the address constructed here is invalid
 	// but required nonetheless to satisfy kpt parsing.
 	porch.KubectlWaitForGitDNS(t, fmt.Sprintf("%s.git/@main", gitRepositoryAddress))
-	t.Cleanup(func() {
-		porch.KubectlDeleteNamespace(t, testGitNamespace)
-	})
 
 	return gitRepositoryAddress
 }

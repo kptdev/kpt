@@ -24,7 +24,7 @@ import (
 
 func GetGitServerImageName(t *testing.T) string {
 	cmd := exec.Command("kubectl", "get", "pods", "--selector=app=porch-server", "--namespace=porch-system",
-		"--output=jsonpath='{.items[*].spec.containers[*].image}'")
+		"--output=jsonpath={.items[*].spec.containers[*].image}")
 
 	var stderr bytes.Buffer
 	var stdout bytes.Buffer
@@ -37,11 +37,16 @@ func GetGitServerImageName(t *testing.T) string {
 	}
 
 	out := stdout.String()
+	t.Logf("Porch image query output: %s", out)
+
 	lines := strings.Split(out, "\n")
 	if len(lines) == 0 {
 		t.Fatalf("kubectl get pods didn't return any images: %s", out)
 	}
 	image := strings.TrimSpace(lines[0])
+	if image == "" {
+		t.Fatalf("Cannot determine Porch server image: output was %q", out)
+	}
 	return inferGitServerImage(image)
 }
 
@@ -153,7 +158,7 @@ func KubectlDeleteNamespace(t *testing.T, name string) {
 	cmd := exec.Command("kubectl", "delete", "namespace", name)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Failed to delete namespace %q: %v\n%s", name, err, string(out))
+		t.Logf("Failed to delete namespace %q: %v\n%s", name, err, string(out))
 	}
 	t.Log(string(out))
 }

@@ -61,5 +61,6 @@ commands:
             config.kubernetes.io/index: '0'
             internal.config.kubernetes.io/index: '0'
             internal.config.kubernetes.io/path: 'package-context.yaml'
+            config.kubernetes.io/path: 'package-context.yaml'
         data:
           name: test-package
