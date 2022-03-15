@@ -45,7 +45,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 
 	for _, n := range nodes {
 		// Note(droot): Since we stopped treating functionConfigs special
-		// explict-not-local-config probably doesn't have a use-case now
+		// explicit-not-local-config probably doesn't have a use-case now
 		// so removing it completely makes more sense now. Confirm with Morten.
 		if !isExplicitNotLocalConfig(n) {
 			continue
