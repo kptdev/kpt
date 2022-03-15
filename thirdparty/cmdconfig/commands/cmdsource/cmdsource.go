@@ -9,15 +9,12 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -99,14 +96,9 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(filesys.FileSystemOrOnDisk{}, types.UniquePath(resolvedPath), r.IncludeMetaResources)
-		if err != nil {
-			return err
-		}
 		inputs = append(inputs, kio.LocalPackageReader{
 			PackagePath:        resolvedPath,
 			MatchFilesGlob:     matchFilesGlob,
-			FileSkipFunc:       functionConfigFilter,
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,

@@ -70,3 +70,17 @@ index 7a494c9..a9dd224 100644
 +    tier: backend
  spec:
    image: nginx:1.2.3
+diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
+index 3de07cf..0d96dee 100644
+--- a/starlark-httpbin.yaml
++++ b/starlark-httpbin.yaml
+@@ -15,6 +15,9 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    tier: backend
+ source: |
+   # filter to return if resource is HTTPBin resource
+   def isHTTPBin(r):

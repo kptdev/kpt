@@ -19,7 +19,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
@@ -126,14 +125,9 @@ func (r RunFns) getNodesAndFilters() (
 		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	}
 	if r.Path != "" {
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(filesys.FileSystemOrOnDisk{}, r.uniquePath, r.IncludeMetaResources)
-		if err != nil {
-			return nil, nil, outputPkg, err
-		}
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:        string(r.uniquePath),
 			MatchFilesGlob:     matchFilesGlob,
-			FileSkipFunc:       functionConfigFilter,
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,

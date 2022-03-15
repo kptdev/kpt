@@ -1,3 +1,15 @@
+diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
+index aabf495..6883bc2 100644
+--- a/db/labelconfig.yaml
++++ b/db/labelconfig.yaml
+@@ -15,5 +15,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: label-config
++  labels:
++    tier: db
+ data:
+   tier: db
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..d22aec8 100644
 --- a/resources.yaml

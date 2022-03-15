@@ -6,12 +6,10 @@ package live
 import (
 	"encoding/json"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -35,20 +33,10 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	if err != nil {
 		return nil, err
 	}
-	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPkgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lookup all files referenced by all subpackages.
-	fcPaths, err := pkg.FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, p.UniquePath, true)
-	if err != nil {
-		return nil, err
-	}
 
 	var objs []*unstructured.Unstructured
 	nodes, err := (&kio.LocalPackageReader{
-		PackagePath:     r.PkgPath,
+		PackagePath:     absPkgPath,
 		WrapBareSeqNode: true,
 	}).Read()
 	if err != nil {
@@ -56,11 +44,10 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	}
 
 	for _, n := range nodes {
-		relPath, _, err := kioutil.GetFileAnnotations(n)
-		if err != nil {
-			return objs, err
-		}
-		if fcPaths.Has(relPath) && !isExplicitNotLocalConfig(n) {
+		// Note(droot): Since we stopped treating functionConfigs special
+		// explict-not-local-config probably doesn't have a use-case now
+		// so removing it completely makes more sense now. Confirm with Morten.
+		if !isExplicitNotLocalConfig(n) {
 			continue
 		}
 

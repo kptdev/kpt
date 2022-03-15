@@ -52,6 +52,21 @@ index ac1fd96..49fa8df 100644
 +      labels:
 +        app: backend
 +        tier: db
+diff --git a/db/starlark-httpbin.yaml b/db/starlark-httpbin.yaml
+index 5c7eea7..d5252a4 100644
+--- a/db/starlark-httpbin.yaml
++++ b/db/starlark-httpbin.yaml
+@@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
+ source: |-
+   httpbin_deployment = {
+      "apiVersion": "apps/v1",
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..ac4edf8 100644
 --- a/resources.yaml

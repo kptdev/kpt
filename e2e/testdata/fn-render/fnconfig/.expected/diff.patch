@@ -21,6 +21,19 @@ index ac1fd96..49fa8df 100644
 +      labels:
 +        app: backend
 +        tier: db
+diff --git a/labelconfig.yaml b/labelconfig.yaml
+index aabf495..0699001 100644
+--- a/labelconfig.yaml
++++ b/labelconfig.yaml
+@@ -15,5 +15,8 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: label-config
++  namespace: staging
++  labels:
++    tier: db
+ data:
+   tier: db
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..ac4edf8 100644
 --- a/resources.yaml

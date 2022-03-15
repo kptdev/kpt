@@ -1,25 +1,44 @@
-diff --git a/db/configmap_db-map.yaml b/db/configmap_db-map.yaml
-new file mode 100644
-index 0000000..7a0f3af
---- /dev/null
-+++ b/db/configmap_db-map.yaml
-@@ -0,0 +1,6 @@
-+apiVersion: v1
-+kind: ConfigMap
-+metadata:
-+  name: db-map
-+data:
-+  db-key: db-value
-diff --git a/def/configmap_parent-map.yaml b/def/configmap_parent-map.yaml
-new file mode 100644
-index 0000000..fd1e17d
---- /dev/null
-+++ b/def/configmap_parent-map.yaml
-@@ -0,0 +1,7 @@
-+apiVersion: v1
-+kind: ConfigMap
-+metadata:
-+  name: parent-map
-+  namespace: def
-+data:
-+  parent-key: parent-value
+diff --git a/db/fn-config.yaml b/db/fn-config.yaml
+index 66b0d31..7a0f3af 100644
+--- a/db/fn-config.yaml
++++ b/db/fn-config.yaml
+@@ -1,17 +1,3 @@
+-# Copyright 2021 Google LLC
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-
+ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+diff --git a/fn-config.yaml b/fn-config.yaml
+index f826968..fd1e17d 100644
+--- a/fn-config.yaml
++++ b/fn-config.yaml
+@@ -1,17 +1,3 @@
+-# Copyright 2021 Google LLC
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-
+ apiVersion: v1
+ kind: ConfigMap
+ metadata:

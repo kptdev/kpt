@@ -33,6 +33,21 @@ index 2270171..9dabb18 100644
 +    tier: backend
  spec:
    image: nginx:1.2.3
+diff --git a/db/statefulset-filter.yaml b/db/statefulset-filter.yaml
+index 7d006a8..155b19f 100644
+--- a/db/statefulset-filter.yaml
++++ b/db/statefulset-filter.yaml
+@@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: statefulset-filter
++  namespace: staging
++  labels:
++    app: backend
++    tier: backend
+ source: |
+   # filter to return if resource is statefulset kind
+   def isStatefulSet(r):
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
 index 44bfc6b..0000000
@@ -95,3 +110,17 @@ index 6590f6c..b5b54e0 100644
 +    metadata:
 +      labels:
 +        tier: backend
+diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
+index 3de07cf..0d96dee 100644
+--- a/starlark-httpbin.yaml
++++ b/starlark-httpbin.yaml
+@@ -15,6 +15,9 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    tier: backend
+ source: |
+   # filter to return if resource is HTTPBin resource
+   def isHTTPBin(r):
