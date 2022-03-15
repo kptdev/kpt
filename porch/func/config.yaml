@@ -15,8 +15,8 @@
 functions:
   - function: set-image
     images:
-    - gcr.io/kpt-fn/set-image@sha256:e37f0229141e0848f910ef5c783da1634e4e3cb82e1757fa848f53d14447f4a5
-    - gcr.io/kpt-fn/set-image:unstable
+    - gcr.io/kpt-fn/set-image@sha256:d07677591e5b39a56d44bafaba0d881e4f2ae25ed020dfa2ad002fb9e62d1508
+    - gcr.io/kpt-fn/set-image:v0.1.0
   - function: set-namespace
     images:
     - gcr.io/kpt-fn/set-namespace@sha256:7adc23986f97572d75af9aec6a7f74d60f7b9976227f43a75486633e7c539e6f

@@ -174,15 +174,15 @@ deployment-config:
 	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/0-remoterootsync-role.yaml
 	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/0-repositories.yaml
 	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
 	  "name=gcr.io/example-google-project-id/function-runner:latest" \
 	  "newName=$(IMAGE_REPO)/function-runner" \
 	  "newTag=$(IMAGE_TAG)"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
 	  "name=gcr.io/example-google-project-id/porch-server:latest" \
 	  "newName=$(IMAGE_REPO)/porch" \
 	  "newTag=$(IMAGE_TAG)"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:unstable -- \
+	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
 	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
 	  "newName=$(IMAGE_REPO)/porch-controllers" \
 	  "newTag=$(IMAGE_TAG)"
