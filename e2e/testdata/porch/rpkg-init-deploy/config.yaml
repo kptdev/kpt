@@ -1,0 +1,65 @@
+commands:
+  - args:
+      - alpha
+      - repo
+      - register
+      - --namespace=rpkg-init-deploy
+      - --name=git
+      - --deployment
+      - http://git-server.test-git-namespace.svc.cluster.local:8080.git/@main
+  - args:
+      - alpha
+      - repo
+      - get
+      - --namespace=rpkg-init-deploy
+      - --output=custom-columns=NAME:.metadata.name,DEPLOYMENT:.spec.deployment
+    stdout: |
+      NAME   DEPLOYMENT
+      git    true
+  - args:
+      - alpha
+      - rpkg
+      - init
+      - --namespace=rpkg-init-deploy
+      - --description
+      - Test Package Description
+      - --keywords=test,package
+      - --site
+      - http://kpt.dev/test-package
+      - git:test-package:v0
+  - args:
+      - alpha
+      - rpkg
+      - pull
+      - --namespace=rpkg-init-deploy
+      - git:test-package:v0
+    stdout: |
+      apiVersion: config.kubernetes.io/v1
+      kind: ResourceList
+      items:
+      - apiVersion: kpt.dev/v1
+        kind: Kptfile
+        metadata:
+          name: test-package
+          annotations:
+            config.kubernetes.io/path: 'Kptfile'
+            internal.config.kubernetes.io/path: 'Kptfile'
+            config.kubernetes.io/index: '0'
+            internal.config.kubernetes.io/index: '0'
+        info:
+          site: http://kpt.dev/test-package
+          description: Test Package Description
+          keywords:
+          - test
+          - package
+      - apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: kptfile.kpt.dev
+          annotations:
+            config.kubernetes.io/local-config: "true"
+            config.kubernetes.io/index: '0'
+            internal.config.kubernetes.io/index: '0'
+            internal.config.kubernetes.io/path: 'package-context.yaml'
+        data:
+          name: test-package

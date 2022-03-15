@@ -1,0 +1,42 @@
+commands:
+  - args:
+      - alpha
+      - repo
+      - register
+      - https://github.com/platkrm/test-blueprints.git
+      - --namespace=rpkg-get
+      - --description
+      - Test Blueprints
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - --namespace=rpkg-get
+      - test-blueprints:basens:v1
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
+    stdout: |
+      NAME                        PKG      REPO              REV
+      test-blueprints:basens:v1   basens   test-blueprints   v1
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - --namespace=rpkg-get
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
+    stdout: |
+      NAME                          PKG      REPO              REV
+      test-blueprints:basens:v1     basens   test-blueprints   v1
+      test-blueprints:empty:v1      empty    test-blueprints   v1
+      test-blueprints:basens:main   basens   test-blueprints   main
+      test-blueprints:empty:main    empty    test-blueprints   main
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - --namespace=rpkg-get
+      - --name=basens
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
+    stdout: |
+      NAME                          PKG      REPO              REV
+      test-blueprints:basens:v1     basens   test-blueprints   v1
+      test-blueprints:basens:main   basens   test-blueprints   main

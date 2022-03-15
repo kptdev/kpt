@@ -55,6 +55,17 @@
                 "alpha", "rpkg", "list", "--namespace=default"
             ],
             "cwd": "${workspaceFolder}/.."
+        },
+        {
+            "name": "Launch kpt e2e test",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/../e2e",
+            "args": [
+                "-test.run",
+                "TestPorch"
+            ]
         }
     ]
 }

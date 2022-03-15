@@ -1,0 +1,41 @@
+commands:
+  - args:
+      - alpha
+      - repo
+      - register
+      - https://github.com/platkrm/test-blueprints.git
+      - --namespace=repo-register
+      - --description
+      - Test Blueprints
+  - args:
+      - alpha
+      - repo
+      - get
+      - --namespace=repo-register
+      - --output=custom-columns=NAME:.metadata.name,ADDRESS:.spec.git.repo,BRANCH:.spec.git.branch,DIR:.spec.git.directory
+    stdout: |
+      NAME              ADDRESS                                      BRANCH   DIR
+      test-blueprints   https://github.com/platkrm/test-blueprints   main     /
+  - args:
+      - alpha
+      - repo
+      - get
+      - --namespace=repo-register
+      - --output=custom-columns=NAME:.metadata.name,CONTENT:.spec.content,DESC:.spec.description
+    stdout: |
+      NAME              CONTENT           DESC
+      test-blueprints   PackageRevision   Test Blueprints
+  - args:
+      - alpha
+      - repo
+      - unregister
+      - --namespace=repo-register
+      - test-blueprints
+  - args:
+      - alpha
+      - repo
+      - get
+      - --namespace=repo-register
+      - --output=custom-columns=NAME:.metadata.name
+    stdout: |
+      NAME
