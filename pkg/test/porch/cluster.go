@@ -23,7 +23,7 @@ import (
 )
 
 func GetGitServerImageName(t *testing.T) string {
-	cmd := exec.Command("kubectl", "get", "pods", "--selector=apiserver=true", "--namespace=porch-system",
+	cmd := exec.Command("kubectl", "get", "pods", "--selector=app=porch-server", "--namespace=porch-system",
 		"--output=jsonpath='{.items[*].spec.containers[*].image}'")
 
 	var stderr bytes.Buffer
