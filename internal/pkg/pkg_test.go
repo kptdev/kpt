@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
@@ -236,19 +235,6 @@ metadata:
 spec:
   replicas: 3 # {"$kpt-set":"replicas"}`,
 				`
-apiVersion: config.kpt.dev/v1
-Kind: FunctionPermission
-Metadata:
-  Name: functionPermission
-Spec:
-  Allow:
-  - imageName: gcr.io/my-project/*…..
-  Permissions:
-  - network
-  - mount
-  Disallow:
-  - Name: gcr.io/my-project/*`,
-				`
 apiVersion: custom.io/v1
 kind: Custom
 spec:
@@ -264,11 +250,6 @@ pipeline:
       configMap:
         replicas: 5
 `,
-				`
-apiVersion: kpt.dev/v1
-kind: Pipeline
-sources:
-  - "."`,
 			},
 			expected: []string{
 				`apiVersion: apps/v1
@@ -300,7 +281,7 @@ spec:
 				nodes = append(nodes, res)
 			}
 
-			filteredRes, err := filterMetaResources(nodes, nil)
+			filteredRes, err := filterMetaResources(nodes)
 			if err != nil {
 				t.Errorf("unexpected error in filtering meta resources: %v", err)
 			}
@@ -650,138 +631,6 @@ func TestSubpackages_symlinks(t *testing.T) {
 		t.FailNow()
 	}
 	assert.Equal(t, []string{"subpkg"}, paths)
-}
-
-func TestFunctionConfigFilePaths(t *testing.T) {
-	type variants struct {
-		recursive bool
-		expected  []string
-	}
-
-	testCases := map[string]struct {
-		pkg   *pkgbuilder.RootPkg
-		cases []variants
-	}{
-		"remote and local nested subpackages": {
-			// root
-			//  ├── remote-sub1 (remote)
-			//  │   ├── Kptfile
-			//  │   ├── fn-config.yaml
-			//  │   └── directory
-			//  │       └── remote-sub3 (remote)
-			//  │           ├── Kptfile
-			//  │           ├── fn-config2.yaml
-			//  │           └── fn-config1.yaml
-			//  └── local-sub1 (local)
-			//      ├── Kptfile
-			//      ├── fn-config.yaml
-			//      ├── directory
-			//      │   └── remote-sub3 (remote)
-			//      │       └── Kptfile
-			//      └── local-sub2 (local)
-			//          ├── fn-config.yaml
-			//          └── Kptfile
-			pkg: pkgbuilder.NewRootPkg().
-				WithSubPackages(
-					pkgbuilder.NewSubPkg("remote-sub1").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
-									"/", "main", string(kptfilev1.ResourceMerge)).
-								WithPipeline(
-									pkgbuilder.NewFunction("image").
-										WithConfigPath("fn-config.yaml"),
-								),
-						).
-						WithFile("fn-config.yaml", "I'm function config file.").
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("directory").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("remote-sub3").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)).
-												WithPipeline(
-													pkgbuilder.NewFunction("image").
-														WithConfigPath("fn-config1.yaml"),
-													pkgbuilder.NewFunction("image").
-														WithConfigPath("fn-config2.yaml"),
-												),
-										).
-										WithFile("fn-config1.yaml", "I'm function config file.").
-										WithFile("fn-config2.yaml", "I'm function config file."),
-								),
-						),
-					pkgbuilder.NewSubPkg("local-sub1").
-						WithKptfile(
-							pkgbuilder.NewKptfile().
-								WithPipeline(pkgbuilder.NewFunction("image").
-									WithConfigPath("fn-config.yaml")),
-						).
-						WithFile("fn-config.yaml", "I'm function config file.").
-						WithSubPackages(
-							pkgbuilder.NewSubPkg("directory").
-								WithSubPackages(
-									pkgbuilder.NewSubPkg("remote-sub3").
-										WithKptfile(
-											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
-													"/", "main", string(kptfilev1.ResourceMerge)),
-										),
-								),
-							pkgbuilder.NewSubPkg("local-sub2").
-								WithKptfile(
-									pkgbuilder.NewKptfile().
-										WithPipeline(pkgbuilder.NewFunction("image").
-											WithConfigPath("fn-config.yaml")),
-								).
-								WithFile("fn-config.yaml", "I'm function config file."),
-						),
-				),
-			cases: []variants{
-				{
-					recursive: true,
-					expected: []string{
-						"local-sub1/fn-config.yaml",
-						"local-sub1/local-sub2/fn-config.yaml",
-						"remote-sub1/directory/remote-sub3/fn-config1.yaml",
-						"remote-sub1/directory/remote-sub3/fn-config2.yaml",
-						"remote-sub1/fn-config.yaml",
-					},
-				},
-				{
-					recursive: false,
-					expected:  nil,
-				},
-			},
-		},
-	}
-
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			pkgPath := tc.pkg.ExpandPkg(t, nil)
-			defer func() {
-				_ = os.RemoveAll(pkgPath)
-			}()
-
-			for _, v := range tc.cases {
-				v := v
-				t.Run(fmt.Sprintf("recursive:%t", v.recursive), func(t *testing.T) {
-					paths, err := FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, types.UniquePath(pkgPath), v.recursive)
-					if !assert.NoError(t, err) {
-						t.FailNow()
-					}
-
-					pathsList := paths.List()
-					sort.Strings(pathsList)
-					sort.Strings(v.expected)
-
-					assert.Equal(t, v.expected, pathsList)
-				})
-			}
-		})
-	}
 }
 
 func Chdir(t *testing.T, path string) func() {
