@@ -54,3 +54,7 @@ functions:
     images:
     - gcr.io/kpt-fn/set-labels@sha256:0dfc3c8aba8b791d0c45fe7eafbc8cf3c5920a09f69848f46dcc270ae3423641
     - gcr.io/kpt-fn/set-labels:v0.1.5
+  - function: starlark
+    images:
+      - gcr.io/kpt-fn/starlark@sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a
+      - gcr.io/kpt-fn/starlark:v0.3.0
