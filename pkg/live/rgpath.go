@@ -109,6 +109,7 @@ const NoLocalConfigAnnoVal = "false"
 // isExplicitNotLocalConfig checks whether the resource has been explicitly
 // label as NOT being local config. It checks for the config.kubernetes.io/local-config
 // annotation with a value of "false".
+/*
 func isExplicitNotLocalConfig(n *yaml.RNode) bool {
 	if val, found := n.GetAnnotations()[filters.LocalConfigAnnotation]; found {
 		if val == NoLocalConfigAnnoVal {
@@ -116,7 +117,7 @@ func isExplicitNotLocalConfig(n *yaml.RNode) bool {
 		}
 	}
 	return false
-}
+} */
 
 // filterLocalConfig returns a new slice of Unstructured where all resources
 // that are designated as local config have been filtered out. It does this
