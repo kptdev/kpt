@@ -24,17 +24,15 @@ kind: Deployment
 metadata:
   name: porch-server
   namespace: porch-system
-  labels:
-    apiserver: "true"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      apiserver: "true"
+      app: porch-server
   template:
     metadata:
       labels:
-        apiserver: "true"
+        app: porch-server
     spec:
       serviceAccountName: porch-server
       volumes:
@@ -70,4 +68,4 @@ spec:
       protocol: TCP
       targetPort: 443
   selector:
-    apiserver: "true"
+    app: porch-server
