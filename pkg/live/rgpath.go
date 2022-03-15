@@ -47,9 +47,9 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		// Note(droot): Since we stopped treating functionConfigs special
 		// explicit-not-local-config probably doesn't have a use-case now
 		// so removing it completely makes more sense now. Confirm with Morten.
-		if !isExplicitNotLocalConfig(n) {
-			continue
-		}
+		// if !isExplicitNotLocalConfig(n) {
+		//	 continue
+		// }
 
 		if err := removeAnnotations(n, kioutil.IndexAnnotation, kioutil.LegacyIndexAnnotation); err != nil { // nolint:staticcheck
 			return objs, err

@@ -71,7 +71,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 				},
 			},
 		},
-		"Function config resources are ignored": {
+		"Function config resources are not ignored": {
 			manifests: map[string]string{
 				"Kptfile":           kptFileWithPipeline,
 				"pod-a.yaml":        podA,
@@ -80,6 +80,14 @@ func TestPathManifestReader_Read(t *testing.T) {
 			},
 			namespace: "test-namespace",
 			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Group: "",
+						Kind:  "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "test-namespace",
+				},
 				{
 					GroupKind: schema.GroupKind{
 						Kind: "Pod",
