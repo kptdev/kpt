@@ -1,3 +1,14 @@
+diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
+index b694d89..3798fad 100644
+--- a/db/labelconfig.yaml
++++ b/db/labelconfig.yaml
+@@ -17,5 +17,6 @@ metadata:
+   name: db-label-config
+   metadata:
+     config.kubernetes.io/local-config: "true"
++  namespace: staging
+ data:
+   namespace: db
 diff --git a/db/resources.yaml b/db/resources.yaml
 index ac1fd96..64ec0ee 100644
 --- a/db/resources.yaml
@@ -9,6 +20,17 @@ index ac1fd96..64ec0ee 100644
 +  namespace: staging
  spec:
    replicas: 3
+diff --git a/labelconfig.yaml b/labelconfig.yaml
+index 4736d6d..38c1e2f 100644
+--- a/labelconfig.yaml
++++ b/labelconfig.yaml
+@@ -17,5 +17,6 @@ metadata:
+   name: label-config
+   metadata:
+     config.kubernetes.io/local-config: "true"
++  namespace: staging
+ data:
+   tier: app
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..254b9cd 100644
 --- a/resources.yaml
