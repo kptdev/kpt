@@ -4,17 +4,18 @@ Create a GKE cluster:
 
 **Note**: We need the release-channel=rapid as we depend on k8s 1.22 (because of priority and fairness APIs moving to beta2)
 
-```
+```sh
 gcloud container clusters create-auto --region us-central1 --release-channel=rapid porch-dev
 ```
 
 Ensure you are targeting the GKE cluster:
-```
+```sh
 gcloud container clusters get-credentials --region us-central1 porch-dev
 ```
 
 Create service accounts and assign roles:
-```
+
+```sh
 GCP_PROJECT_ID=$(gcloud config get-value project)
 gcloud iam service-accounts create porch-server
 gcloud iam service-accounts create porch-sync
@@ -37,13 +38,13 @@ gcloud iam service-accounts add-iam-policy-binding porch-sync@${GCP_PROJECT_ID}.
 
 Build Porch, push images, and deploy porch server and controllers:
 
-```
+```sh
 IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy
 ```
 
 Create some example repositories / packages:
 
-```
+```sh
 # Create artifact-registry repos etc
 make apply-dev-config
 # Push a sample hello-world app
@@ -54,7 +55,7 @@ make -C config/samples/apps/hello-server push-image
 
 To test out remoterootsync self-applying:
 
-```
+```sh
 # Grant more RBAC permissions than are normally needed (equivalent to admin permissions)
 kubectl apply -f controllers/remoterootsync/config/samples/hack-self-apply-rbac.yaml
 
