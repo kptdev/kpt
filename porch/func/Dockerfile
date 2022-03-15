@@ -17,7 +17,7 @@ FROM gcr.io/kpt-fn/apply-setters:v0.1.1 as apply-setters-v1
 FROM gcr.io/kpt-fn/ensure-name-substring:v0.1.1 as ensure-name-substring
 FROM gcr.io/kpt-fn/search-replace:v0.2.0 as search-replace
 FROM gcr.io/kpt-fn/set-annotations:v0.1.4 as set-annotations
-FROM gcr.io/kpt-fn/set-image:unstable as set-image
+FROM gcr.io/kpt-fn/set-image:v0.1.0 as set-image
 FROM gcr.io/kpt-fn/set-labels:v0.1.5 as set-labels
 FROM gcr.io/kpt-fn/set-namespace:v0.2.0 as set-namespace
 FROM gcr.io/kpt-fn/set-project-id:v0.2.0 as set-project-id
