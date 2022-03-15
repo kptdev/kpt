@@ -38,7 +38,7 @@ func GetGitServerImageName(t *testing.T) string {
 
 	out := stdout.String()
 	lines := strings.Split(out, "\n")
-	if len(lines) <= 0 {
+	if len(lines) == 0 {
 		t.Fatalf("kubectl get pods didn't return any images: %s", out)
 	}
 	image := strings.TrimSpace(lines[0])
