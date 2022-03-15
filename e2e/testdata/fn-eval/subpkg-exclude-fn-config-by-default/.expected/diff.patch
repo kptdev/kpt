@@ -21,12 +21,12 @@ index ac1fd96..64ec0ee 100644
  spec:
    replicas: 3
 diff --git a/labelconfig.yaml b/labelconfig.yaml
-index 4736d6d..38c1e2f 100644
+index da1d551..2e12b49 100644
 --- a/labelconfig.yaml
 +++ b/labelconfig.yaml
 @@ -17,5 +17,6 @@ metadata:
    name: label-config
-   metadata:
+   annotations:
      config.kubernetes.io/local-config: "true"
 +  namespace: staging
  data:

@@ -15,7 +15,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: label-config
-  metadata:
+  annotations:
     config.kubernetes.io/local-config: "true"
 data:
   tier: app

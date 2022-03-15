@@ -1,6 +1,6 @@
 diff --git a/out/labelconfig.yaml b/out/labelconfig.yaml
 new file mode 100644
-index 0000000..38c1e2f
+index 0000000..2e12b49
 --- /dev/null
 +++ b/out/labelconfig.yaml
 @@ -0,0 +1,22 @@
@@ -21,7 +21,7 @@ index 0000000..38c1e2f
 +kind: ConfigMap
 +metadata:
 +  name: label-config
-+  metadata:
++  annotations:
 +    config.kubernetes.io/local-config: "true"
 +  namespace: staging
 +data:
