@@ -15,6 +15,8 @@ apiVersion: fn.kpt.dev/v1alpha1
 kind: StarlarkRun
 metadata:
   name: delete-all
-source: |
+  annotations:
+    config.kubernetes.io/local-config: "true"
+source: |-
   # delete all resources
-  ctx.resource_list["items"] = []
+  ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]

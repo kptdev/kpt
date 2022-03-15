@@ -1,29 +1,17 @@
 diff --git a/delete-all.yaml b/delete-all.yaml
-deleted file mode 100644
-index 841a88d..0000000
+index 724d0cf..c2e665d 100644
 --- a/delete-all.yaml
-+++ /dev/null
-@@ -1,20 +0,0 @@
--# Copyright 2021 Google LLC
--#
--# Licensed under the Apache License, Version 2.0 (the "License");
--# you may not use this file except in compliance with the License.
--# You may obtain a copy of the License at
--#
--#      http://www.apache.org/licenses/LICENSE-2.0
--#
--# Unless required by applicable law or agreed to in writing, software
--# distributed under the License is distributed on an "AS IS" BASIS,
--# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--# See the License for the specific language governing permissions and
--# limitations under the License.
--apiVersion: fn.kpt.dev/v1alpha1
--kind: StarlarkRun
--metadata:
--  name: delete-all
--source: |
--  # delete all resources
--  ctx.resource_list["items"] = []
++++ b/delete-all.yaml
+@@ -17,6 +17,9 @@ metadata:
+   name: delete-all
+   annotations:
+     config.kubernetes.io/local-config: "true"
++  namespace: staging
++  labels:
++    tier: backend
+ source: |-
+   # delete all resources
+   ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
 index 737526e..0000000
