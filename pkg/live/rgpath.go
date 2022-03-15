@@ -44,9 +44,12 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	}
 
 	for _, n := range nodes {
-		// Note(droot): Since we stopped treating functionConfigs special
+		// Note(droot): Since we stopped givign special treatment to functionConfigs
 		// explicit-not-local-config probably doesn't have a use-case now
-		// so removing it completely makes more sense now. Confirm with Morten.
+		// so removing it completely makes more sense now. Also, we can probably
+		// enable just presence of local-config annotation as a way to mark that
+		// config is local. Can get rid of confusion as pointed out in the
+		// issue --> https://github.com/GoogleContainerTools/kpt/issues/2767
 		// if !isExplicitNotLocalConfig(n) {
 		//	 continue
 		// }
@@ -105,19 +108,6 @@ func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) 
 }
 
 const NoLocalConfigAnnoVal = "false"
-
-// isExplicitNotLocalConfig checks whether the resource has been explicitly
-// label as NOT being local config. It checks for the config.kubernetes.io/local-config
-// annotation with a value of "false".
-/*
-func isExplicitNotLocalConfig(n *yaml.RNode) bool {
-	if val, found := n.GetAnnotations()[filters.LocalConfigAnnotation]; found {
-		if val == NoLocalConfigAnnoVal {
-			return true
-		}
-	}
-	return false
-} */
 
 // filterLocalConfig returns a new slice of Unstructured where all resources
 // that are designated as local config have been filtered out. It does this
