@@ -19,11 +19,15 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgapprove"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgclone"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgdel"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkginit"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpropose"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpull"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpush"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgreject"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -67,6 +71,10 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 		cmdrpkgpush.NewCommand(ctx, kubeflags),
 		cmdrpkgclone.NewCommand(ctx, kubeflags),
 		cmdrpkginit.NewCommand(ctx, kubeflags),
+		cmdrpkgpropose.NewCommand(ctx, kubeflags),
+		cmdrpkgapprove.NewCommand(ctx, kubeflags),
+		cmdrpkgreject.NewCommand(ctx, kubeflags),
+		cmdrpkgdel.NewCommand(ctx, kubeflags),
 	)
 
 	return repo
