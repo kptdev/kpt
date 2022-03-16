@@ -17,6 +17,7 @@ package internal
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os/exec"
@@ -32,6 +33,43 @@ import (
 type evaluator struct {
 	pb.UnimplementedFunctionEvaluatorServer
 
+	builtin *builtinEvaluator
+	exec    *executableEvaluator
+}
+
+func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluatorServer, error) {
+	builtinEval, err := newBuiltInEvaluator()
+	if err != nil {
+		return nil, err
+	}
+	execEval, err := newExecutableEvaluatorWithConfig(functions, config)
+	if err != nil {
+		return nil, err
+	}
+	return &evaluator{
+		builtin: builtinEval,
+		exec:    execEval,
+	}, nil
+}
+
+func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
+	// try to evaluate a KRM function in the following order:
+	// 1) builtin 2) executable 3) pod evaluator (not implemented yet)
+	resp, err := e.builtin.EvaluateFunction(ctx, req)
+	var ufe UnsupportedFunctionError
+	if !errors.As(err, &ufe) {
+		return nil, err
+	}
+	resp, err = e.exec.EvaluateFunction(ctx, req)
+	if errors.As(err, &ufe) {
+		return nil, status.Errorf(codes.NotFound, ufe.Error())
+	}
+	return resp, err
+}
+
+type executableEvaluator struct {
+	pb.UnimplementedFunctionEvaluatorServer
+
 	// Fast-path function cache
 	cache map[string]string
 }
@@ -45,7 +83,7 @@ type function struct {
 	Images   []string `yaml:"images"`
 }
 
-func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluatorServer, error) {
+func newExecutableEvaluatorWithConfig(functions string, config string) (*executableEvaluator, error) {
 	cache := map[string]string{}
 
 	if config != "" {
@@ -73,12 +111,12 @@ func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluat
 			}
 		}
 	}
-	return &evaluator{
+	return &executableEvaluator{
 		cache: cache,
 	}, nil
 }
 
-func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
+func (e *executableEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
 	binary, cached := e.cache[req.Image]
 	if !cached {
 		return nil, status.Errorf(codes.NotFound, "Unsupported function %q", req.Image)
@@ -103,4 +141,12 @@ func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFuncti
 		ResourceList: outbytes,
 		Log:          stderr.Bytes(),
 	}, nil
+}
+
+type UnsupportedFunctionError struct {
+	Image string
+}
+
+func (e UnsupportedFunctionError) Error() string {
+	return fmt.Sprintf("Unsupported function %q", e.Image)
 }
