@@ -33,6 +33,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/klog/v2"
 )
 
@@ -372,4 +373,50 @@ func TestListPackagesEmpty(t *testing.T) {
 	// if got, want := result.Spec.Type, v1alpha1.PackageRevisionTypeDraft; got != want {
 	// 	t.Errorf("Newly created package type: got %q, want %q", got, want)
 	// }
+}
+
+func TestListPackagesSimple(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "simple-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "empty"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+
+	want := map[string]bool{
+		"empty:empty:v1":   true,
+		"empty:basens:v1":  true,
+		"empty:basens:v2":  true,
+		"empty:istions:v1": true,
+		"empty:istions:v2": true,
+	}
+
+	got := map[string]bool{}
+	for _, r := range revisions {
+		got[r.Name()] = true
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("Package Revisions in simple-repository: (-want,+got): %s", cmp.Diff(want, got))
+	}
 }
