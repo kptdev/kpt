@@ -383,7 +383,7 @@ func TestListPackagesSimple(t *testing.T) {
 
 	ctx := context.Background()
 	const (
-		repositoryName = "empty"
+		repositoryName = "simple"
 		namespace      = "default"
 	)
 	var resolver repository.CredentialResolver
@@ -403,20 +403,89 @@ func TestListPackagesSimple(t *testing.T) {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
 
-	want := map[string]bool{
-		"empty:empty:v1":   true,
-		"empty:basens:v1":  true,
-		"empty:basens:v2":  true,
-		"empty:istions:v1": true,
-		"empty:istions:v2": true,
+	want := map[string]v1alpha1.PackageRevisionType{
+		"simple:empty:v1":   v1alpha1.PackageRevisionTypeFinal,
+		"simple:basens:v1":  v1alpha1.PackageRevisionTypeFinal,
+		"simple:basens:v2":  v1alpha1.PackageRevisionTypeFinal,
+		"simple:istions:v1": v1alpha1.PackageRevisionTypeFinal,
+		"simple:istions:v2": v1alpha1.PackageRevisionTypeFinal,
+
+		// TODO: may want to filter these out, for example by including only those package
+		// revisions from main branch that differ in content (their tree hash) from another
+		// taged revision of the package.
+		"simple:empty:main":   v1alpha1.PackageRevisionTypeFinal,
+		"simple:basens:main":  v1alpha1.PackageRevisionTypeFinal,
+		"simple:istions:main": v1alpha1.PackageRevisionTypeFinal,
 	}
 
-	got := map[string]bool{}
+	got := map[string]v1alpha1.PackageRevisionType{}
 	for _, r := range revisions {
-		got[r.Name()] = true
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+		}
+		got[r.Name()] = rev.Spec.Type
 	}
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("Package Revisions in simple-repository: (-want,+got): %s", cmp.Diff(want, got))
+	}
+}
+
+func TestListPackagesDrafts(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "drafts-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "drafts"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+
+	want := map[string]v1alpha1.PackageRevisionType{
+		"drafts:empty:v1":   v1alpha1.PackageRevisionTypeFinal,
+		"drafts:basens:v1":  v1alpha1.PackageRevisionTypeFinal,
+		"drafts:basens:v2":  v1alpha1.PackageRevisionTypeFinal,
+		"drafts:istions:v1": v1alpha1.PackageRevisionTypeFinal,
+		"drafts:istions:v2": v1alpha1.PackageRevisionTypeFinal,
+
+		"drafts:bucket:v1": v1alpha1.PackageRevisionTypeDraft,
+		"drafts:none:v1":   v1alpha1.PackageRevisionTypeDraft,
+
+		// TODO: filter main branch out? see above
+		"drafts:basens:main":  v1alpha1.PackageRevisionTypeFinal,
+		"drafts:empty:main":   v1alpha1.PackageRevisionTypeFinal,
+		"drafts:istions:main": v1alpha1.PackageRevisionTypeFinal,
+	}
+
+	got := map[string]v1alpha1.PackageRevisionType{}
+	for _, r := range revisions {
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+		}
+		got[r.Name()] = rev.Spec.Type
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("Package Revisions in drafts-repository: (-want,+got): %s", cmp.Diff(want, got))
 	}
 }

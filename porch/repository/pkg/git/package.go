@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -33,9 +34,9 @@ type gitPackageRevision struct {
 	path     string
 	revision string
 	updated  time.Time
-	draft    *plumbing.Reference
-	tree     plumbing.Hash
-	sha      plumbing.Hash // Current version of the package (commit sha)
+	ref      *plumbing.Reference // ref is the Git reference at which the package exists
+	tree     plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
+	commit   plumbing.Hash       // Current version of the package (commit sha)
 }
 
 var _ repository.PackageRevision = &gitPackageRevision{}
@@ -58,7 +59,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			Name:            p.Name(),
 			Namespace:       p.parent.namespace,
 			UID:             p.uid(),
-			ResourceVersion: p.sha.String(),
+			ResourceVersion: p.commit.String(),
 			CreationTimestamp: metav1.Time{
 				Time: p.updated,
 			},
@@ -67,6 +68,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			PackageName:    p.path,
 			Revision:       p.revision,
 			RepositoryName: p.parent.name,
+			Type:           p.getPackageRevisionType(),
 			Tasks:          []v1alpha1.Task{},
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
@@ -108,7 +110,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			Name:            p.Name(),
 			Namespace:       p.parent.namespace,
 			UID:             p.uid(),
-			ResourceVersion: p.sha.String(),
+			ResourceVersion: p.commit.String(),
 			CreationTimestamp: metav1.Time{
 				Time: p.updated,
 			},
@@ -139,7 +141,24 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 				Repo:      repo,
 				Directory: p.path,
 				Ref:       p.revision,
-				Commit:    p.sha.String(),
+				Commit:    p.commit.String(),
 			},
 		}, nil
+}
+
+func (p *gitPackageRevision) getPackageRevisionType() v1alpha1.PackageRevisionType {
+	switch {
+	case p.ref == nil || p.ref.Name().IsTag():
+		return v1alpha1.PackageRevisionTypeFinal
+	case strings.HasPrefix(p.ref.Name().String(), refDraftPrefix):
+		return v1alpha1.PackageRevisionTypeDraft
+	case strings.HasPrefix(p.ref.Name().String(), refProposedPrefix):
+		return v1alpha1.PackageRevisionTypeProposed
+	default:
+		return v1alpha1.PackageRevisionTypeFinal
+	}
+}
+
+func (p *gitPackageRevision) isDraft() bool {
+	return p.ref != nil && strings.HasPrefix(p.ref.Name().String(), refDraftPrefix)
 }

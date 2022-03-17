@@ -42,11 +42,12 @@ import (
 const (
 	refMain plumbing.ReferenceName = "refs/heads/main"
 	// TODO: support customizable pattern of draft branches.
-	refDraftPrefix = "refs/heads/drafts/"
-	refTagsPrefix  = "refs/tags/"
-	refHeadsPrefix = "refs/heads/"
-
-	origin = "origin"
+	refDraftPrefix        = "refs/heads/drafts/"
+	refProposedPrefix     = "refs/heads/proposed/"
+	refTagsPrefix         = "refs/tags/"
+	refHeadsPrefix        = "refs/heads/"
+	refRemoteBranchPrefix = "refs/remotes/origin/"
+	originName            = "origin"
 )
 
 type GitRepository interface {
@@ -59,19 +60,6 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 
 	var repo *gogit.Repository
-	var auth transport.AuthMethod
-	var remote *gogit.Remote
-
-	if secret := spec.SecretRef.Name; secret != "" {
-		if resolver == nil {
-			return nil, fmt.Errorf("cannot resolve credentials in secret %q; no resolver", secret)
-		}
-		var err error
-		auth, err = resolveCredential(ctx, namespace, secret, resolver)
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	if fi, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
@@ -85,14 +73,13 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		}
 
 		// Create Remote
-		remote, err = r.CreateRemote(&config.RemoteConfig{
-			Name: origin,
+		if _, err = r.CreateRemote(&config.RemoteConfig{
+			Name: originName,
 			URLs: []string{spec.Repo},
 			Fetch: []config.RefSpec{
-				config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, origin)),
+				config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, originName)),
 			},
-		})
-		if err != nil {
+		}); err != nil {
 			return nil, fmt.Errorf("error cloning git repository %q, cannot create remote: %v", spec.Repo, err)
 		}
 
@@ -106,68 +93,22 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, err
 		}
 
-		remotes, err := r.Remotes()
-		if err != nil {
-			return nil, fmt.Errorf("cannot list remotes in %q: %w", spec.Repo, err)
-		}
-
-		remote = findRemoteWithAddress(remotes, spec.Repo)
-		if remote == nil {
-			return nil, fmt.Errorf("cannot clone git repository (remote not found): %q", spec.Repo)
-		}
 		repo = r
 	}
 
-	// Fetch
-	switch err := repo.Fetch(&gogit.FetchOptions{
-		RemoteName: remote.Config().Name,
-		Auth:       auth,
-		Tags:       gogit.AllTags,
-	}); err {
-	case nil: // OK
-	case gogit.NoErrAlreadyUpToDate:
-	case transport.ErrEmptyRemoteRepository:
-
-	default:
-		return nil, fmt.Errorf("cannot fetch repository %q: %w", spec.Repo, err)
-	}
-
-	return &gitRepository{
+	repository := &gitRepository{
 		name:               name,
 		namespace:          namespace,
 		repo:               repo,
 		secret:             spec.SecretRef.Name,
 		credentialResolver: resolver,
-		cachedCredentials:  auth,
-	}, nil
-}
-
-func findRemoteWithAddress(remotes []*gogit.Remote, address string) *gogit.Remote {
-	for _, remote := range remotes {
-		cfg := remote.Config()
-		for _, url := range cfg.URLs {
-			if url == address {
-				return remote
-			}
-		}
-	}
-	// TODO: add remote?
-	return nil
-}
-
-func resolveCredential(ctx context.Context, namespace, name string, resolver repository.CredentialResolver) (transport.AuthMethod, error) {
-	cred, err := resolver.ResolveCredential(ctx, namespace, name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to obtain credential from secret %s/%s: %w", namespace, name, err)
 	}
 
-	username := cred.Data["username"]
-	password := cred.Data["password"]
+	if err := repository.update(ctx); err != nil {
+		return nil, err
+	}
 
-	return &http.BasicAuth{
-		Username: string(username),
-		Password: string(password),
-	}, nil
+	return repository, nil
 }
 
 type gitRepository struct {
@@ -196,16 +137,19 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 		}
 
 		name := ref.Name()
-		if name == refMain {
+		switch {
+		case name == refMain:
 			main = ref
 			continue
-		} else if strings.HasPrefix(name.String(), refDraftPrefix) {
+
+		case strings.HasPrefix(name.String(), refDraftPrefix):
 			draft, err := r.loadDraft(ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 			}
 			drafts = append(drafts, draft)
-		} else if strings.HasPrefix(name.String(), refTagsPrefix) {
+
+		case strings.HasPrefix(name.String(), refTagsPrefix):
 			tagged, err := r.loadTaggedPackages(ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
@@ -215,6 +159,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 	}
 
 	if main != nil {
+		// TODO: ignore packages that are unchanged in main branch, compared to a tagged version?
 		mainpkgs, err := r.discoverFinalizedPackages(main)
 		if err != nil {
 			return nil, err
@@ -243,8 +188,8 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		path:     obj.Spec.PackageName,
 		revision: obj.Spec.Revision,
 		updated:  time.Now(),
-		draft:    head,
-		sha:      base,
+		ref:      head,
+		commit:   base,
 	}, nil
 }
 
@@ -270,9 +215,9 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		path:     oldGitPackage.path,
 		revision: oldGitPackage.revision,
 		updated:  rev.updated,
-		draft:    rev.draft,
+		ref:      rev.ref,
 		tree:     rev.tree,
-		sha:      rev.sha,
+		commit:   rev.commit,
 	}, nil
 }
 
@@ -419,7 +364,7 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 		revision: version,
 		updated:  commit.Author.When,
 		tree:     treeHash,
-		sha:      hash,
+		commit:   hash,
 	}, lock, nil
 }
 
@@ -452,9 +397,9 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 			path:     dir,
 			revision: revision,
 			updated:  commit.Author.When,
-			draft:    nil,
+			ref:      ref,
 			tree:     tree,
-			sha:      ref.Hash(),
+			commit:   ref.Hash(),
 		})
 		return nil
 	}); err != nil {
@@ -489,13 +434,13 @@ func discoverPackagesInTree(r *gogit.Repository, tree *object.Tree, dir string, 
 	return nil
 }
 
-func (r *gitRepository) loadDraft(draft *plumbing.Reference) (*gitPackageRevision, error) {
-	name, revision, err := parseDraftName(draft)
+func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision, error) {
+	name, revision, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
 	}
 
-	commit, err := r.repo.CommitObject(draft.Hash())
+	commit, err := r.repo.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, fmt.Errorf("cannot resolve draft branch to commit (corrupted repository?): %w", err)
 	}
@@ -506,17 +451,21 @@ func (r *gitRepository) loadDraft(draft *plumbing.Reference) (*gitPackageRevisio
 
 	var packageTree plumbing.Hash
 
-	if dirTree, err := tree.Tree(name); err != nil {
-		if err != object.ErrEntryNotFound {
-			return nil, fmt.Errorf("draft package is not a directory (corrupted repository?): %w", err)
-		}
-	} else {
+	switch dirTree, err := tree.Tree(name); err {
+	case nil:
 		packageTree = dirTree.Hash
 		if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err == nil {
 			if !kptfileEntry.Mode.IsRegular() {
 				return nil, fmt.Errorf("found Kptfile which is not a regular file: %s", kptfileEntry.Mode)
 			}
 		}
+
+	case object.ErrDirectoryNotFound:
+	case object.ErrEntryNotFound:
+		// ok; empty package
+
+	default:
+		return nil, fmt.Errorf("error when looking for package in the repository: %w", err)
 	}
 
 	return &gitPackageRevision{
@@ -524,22 +473,27 @@ func (r *gitRepository) loadDraft(draft *plumbing.Reference) (*gitPackageRevisio
 		path:     name,
 		revision: revision,
 		updated:  commit.Author.When,
-		draft:    draft,
+		ref:      ref,
 		tree:     packageTree,
-		sha:      draft.Hash(),
+		commit:   ref.Hash(),
 	}, nil
 }
 
 func parseDraftName(draft *plumbing.Reference) (name, revision string, err error) {
-	draftBranch := draft.Name().String()
-	if !strings.HasPrefix(draftBranch, refDraftPrefix) {
-		return "", "", fmt.Errorf("invalid draft ref name: %q; expected prefix %q", draftBranch, refDraftPrefix)
+	refName := draft.Name().String()
+	var suffix string
+	switch {
+	case strings.HasPrefix(refName, refDraftPrefix):
+		suffix = strings.TrimPrefix(refName, refDraftPrefix)
+	case strings.HasPrefix(refName, refProposedPrefix):
+		suffix = strings.TrimPrefix(refName, refProposedPrefix)
+	default:
+		return "", "", fmt.Errorf("invalid draft ref name: %q", refName)
 	}
 
-	suffix := draftBranch[len(refDraftPrefix):]
 	revIndex := strings.LastIndex(suffix, "/")
 	if revIndex <= 0 {
-		return "", "", fmt.Errorf("invalid draft ref name; missing revision suffix: %q", draftBranch)
+		return "", "", fmt.Errorf("invalid draft ref name; missing revision suffix: %q", refName)
 	}
 	name, revision = suffix[:revIndex], suffix[revIndex+1:]
 	return name, revision, nil
@@ -590,9 +544,9 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 			path:     path,
 			revision: revision,
 			updated:  commit.Author.When,
-			draft:    nil,
+			ref:      nil,
 			tree:     dirTree.Hash,
-			sha:      tag.Hash(),
+			commit:   tag.Hash(),
 		},
 	}, nil
 }
@@ -641,6 +595,21 @@ func (r *gitRepository) dumpAllRefs() {
 	}
 }
 
+func resolveCredential(ctx context.Context, namespace, name string, resolver repository.CredentialResolver) (transport.AuthMethod, error) {
+	cred, err := resolver.ResolveCredential(ctx, namespace, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to obtain credential from secret %s/%s: %w", namespace, name, err)
+	}
+
+	username := cred.Data["username"]
+	password := cred.Data["password"]
+
+	return &http.BasicAuth{
+		Username: string(username),
+		Password: string(password),
+	}, nil
+}
+
 func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod, error) {
 	if r.cachedCredentials == nil {
 		if r.secret != "" {
@@ -662,4 +631,107 @@ func (r *gitRepository) getRepo() (string, error) {
 	}
 
 	return origin.Config().URLs[0], nil
+}
+
+func (r *gitRepository) update(ctx context.Context) error {
+	auth, err := r.getAuthMethod(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Fetch
+	switch err := r.repo.Fetch(&gogit.FetchOptions{
+		RemoteName: originName,
+		Auth:       auth,
+		Tags:       gogit.AllTags,
+	}); err {
+	case nil: // OK
+	case gogit.NoErrAlreadyUpToDate:
+	case transport.ErrEmptyRemoteRepository:
+
+	default:
+		return fmt.Errorf("cannot fetch repository %s/%s: %w", r.namespace, r.name, err)
+	}
+
+	// Create tracking branches for remotes
+	refs, err := r.repo.References()
+	if err != nil {
+		return fmt.Errorf("cannot identify repository remote references in %s/%s: %w", r.namespace, r.name, err)
+	}
+
+	// Collect remote and local branches. Both maps are indexed by the local reference name.
+	// remote references (refs/remotes/origin/...) are transformed to `refs/heads/...` to have
+	// both maps use matching keys.
+	remoteBranches := map[string]*plumbing.Reference{}
+	localBranches := map[string]*plumbing.Reference{}
+	for {
+		ref, err := refs.Next()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			klog.Warningf("Skipping reference during iteration on error: %v", err)
+			continue
+		}
+
+		name := ref.Name().String()
+		switch {
+		case strings.HasPrefix(name, refRemoteBranchPrefix):
+			branch := strings.TrimPrefix(name, refRemoteBranchPrefix)
+			remoteBranches[refHeadsPrefix+branch] = ref
+
+		case strings.HasPrefix(name, refHeadsPrefix):
+			localBranches[name] = ref
+		}
+	}
+
+	// TODO: Explore use of automatic branch tracking to do this.
+	// There may be risks involved such as automated rebase which may lead to incorrect results on the package.
+	// One possibility is to replay package history ... something to consider in the future.
+	for name, remoteRef := range remoteBranches {
+		localRef, ok := localBranches[name]
+
+		if !ok {
+			localRef = plumbing.NewHashReference(plumbing.ReferenceName(name), remoteRef.Hash())
+			// local branch doesn't exist. create it
+			if err := r.repo.Storer.SetReference(localRef); err != nil {
+				klog.Warningf("Skipping failed local ref %q: %v", name, err)
+			}
+		} else if remoteRef.Hash() != localRef.Hash() {
+			remoteCommit, err := r.repo.CommitObject(remoteRef.Hash())
+			if err != nil {
+				klog.Warningf("Skipping unresolvable remote reference %s: %v", remoteRef, err)
+				continue
+			}
+			localCommit, err := r.repo.CommitObject(localRef.Hash())
+			if err != nil {
+				klog.Warningf("Overwriting unresolvable local reference %s: %v", localRef, err)
+				new := plumbing.NewHashReference(localRef.Name(), remoteCommit.Hash)
+				if err := r.repo.Storer.SetReference(new); err != nil {
+					klog.Errorf("Failed to set local reference: %s to %s", new.Name(), new.Hash())
+				}
+				continue
+			}
+
+			// If local commit is ancestor of remote, fast-forward local commit to match
+			ancestor, err := localCommit.IsAncestor(remoteCommit)
+			if err != nil {
+				klog.Warningf("Failed to determine whether %s is ancestor of %s: %v", localRef, remoteRef, err)
+			}
+
+			// TODO: Better conflict resolution policy
+			if !ancestor {
+				klog.Warningf("Refusing to fast-forward %s which is not an ancestor of %s", localRef, remoteRef)
+				continue
+			}
+
+			klog.Infof("Fast-forwarding local branch %s to %s", localRef, remoteRef)
+			new := plumbing.NewHashReference(localRef.Name(), remoteCommit.Hash)
+			if err := r.repo.Storer.SetReference(new); err != nil {
+				klog.Errorf("Failed to fast-forward %s to %s, localRef, remoteRef")
+			}
+		}
+	}
+
+	return nil
 }

@@ -38,16 +38,16 @@ type gitPackageDraft struct {
 	path     string
 	revision string
 	updated  time.Time
-	draft    *plumbing.Reference
-	tree     plumbing.Hash
-	sha      plumbing.Hash // Current version of the package (commit sha)
+	ref      *plumbing.Reference // ref is the Git reference at which the package exists
+	tree     plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
+	commit   plumbing.Hash       // Current version of the package (commit sha)
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
 	var rootTree *object.Tree
-	baseCommit := d.draft.Hash()
+	baseCommit := d.ref.Hash()
 
 	if baseCommit.IsZero() {
 		// Empty repository
@@ -90,12 +90,12 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		return err
 	}
 
-	commit, err := storeCommit(d.parent.repo.Storer, d.draft.Hash(), treeHash, change)
+	commit, err := storeCommit(d.parent.repo.Storer, d.ref.Hash(), treeHash, change)
 	if err != nil {
 		return err
 	}
 
-	head := plumbing.NewHashReference(d.draft.Name(), commit)
+	head := plumbing.NewHashReference(d.ref.Name(), commit)
 	if err := d.parent.repo.Storer.SetReference(head); err != nil {
 		return err
 	}
@@ -108,14 +108,14 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		d.tree = plumbing.Hash{}
 	}
 
-	d.draft = head
-	d.sha = commit
+	d.ref = head
+	d.commit = commit
 	return nil
 }
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
-	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.draft.Name(), d.draft.Name().String()))
+	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.ref.Name(), d.ref.Name().String()))
 	klog.Infof("pushing refspec %v", refSpec)
 
 	auth, err := d.parent.getAuthMethod(ctx)
@@ -137,9 +137,9 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 		path:     d.path,
 		revision: d.revision,
 		updated:  d.updated,
-		draft:    d.draft,
+		ref:      d.ref,
 		tree:     d.tree,
-		sha:      d.draft.Hash(),
+		commit:   d.ref.Hash(),
 	}, nil
 }
 
