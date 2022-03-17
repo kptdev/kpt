@@ -43,8 +43,8 @@ type background struct {
 }
 
 const (
-	minReconnectDelay = 100 * time.Millisecond
-	maxReconnectDelay = 10 * time.Second
+	minReconnectDelay = 1 * time.Second
+	maxReconnectDelay = 30 * time.Second
 )
 
 // run will run until ctx is done
