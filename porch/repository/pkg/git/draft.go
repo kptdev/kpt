@@ -46,13 +46,22 @@ type gitPackageDraft struct {
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
-	parent, err := d.parent.repo.CommitObject(d.draft.Hash())
-	if err != nil {
-		return fmt.Errorf("cannot resolve parent commit hash to commit: %w", err)
-	}
-	root, err := parent.Tree()
-	if err != nil {
-		return fmt.Errorf("cannot resolve parent commit to root tree: %w", err)
+	var rootTree *object.Tree
+	baseCommit := d.draft.Hash()
+
+	if baseCommit.IsZero() {
+		// Empty repository
+		rootTree = &object.Tree{}
+	} else {
+		parent, err := d.parent.repo.CommitObject(baseCommit)
+		if err != nil {
+			return fmt.Errorf("cannot resolve parent commit hash to commit: %w", err)
+		}
+		root, err := parent.Tree()
+		if err != nil {
+			return fmt.Errorf("cannot resolve parent commit to root tree: %w", err)
+		}
+		rootTree = root
 	}
 
 	dirs := map[string]*object.Tree{
@@ -60,7 +69,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 			// Root tree; Copy over all entries
 			// TODO: Verify that on creation (first commit) the package directory doesn't exist.
 			// TODO: Verify that on subsequent commits, only the package's directory is being modified.
-			Entries: root.Entries,
+			Entries: rootTree.Entries,
 		},
 	}
 	for k, v := range new.Spec.Resources {

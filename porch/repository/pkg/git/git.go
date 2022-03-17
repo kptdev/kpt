@@ -45,6 +45,8 @@ const (
 	refDraftPrefix = "refs/heads/drafts/"
 	refTagsPrefix  = "refs/tags/"
 	refHeadsPrefix = "refs/heads/"
+
+	origin = "origin"
 )
 
 type GitRepository interface {
@@ -58,6 +60,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 
 	var repo *gogit.Repository
 	var auth transport.AuthMethod
+	var remote *gogit.Remote
 
 	if secret := spec.SecretRef.Name; secret != "" {
 		if resolver == nil {
@@ -75,17 +78,24 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, err
 		}
 
-		opts := gogit.CloneOptions{
-			URL:        spec.Repo,
-			Auth:       auth,
-			NoCheckout: true,
-			Tags:       gogit.AllTags,
-		}
 		isBare := true
-		r, err := gogit.PlainClone(dir, isBare, &opts)
+		r, err := gogit.PlainInit(dir, isBare)
 		if err != nil {
 			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}
+
+		// Create Remote
+		remote, err = r.CreateRemote(&config.RemoteConfig{
+			Name: origin,
+			URLs: []string{spec.Repo},
+			Fetch: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, origin)),
+			},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error cloning git repository %q, cannot create remote: %v", spec.Repo, err)
+		}
+
 		repo = r
 	} else if !fi.IsDir() {
 		// Internal error - corrupted cache.
@@ -101,31 +111,25 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, fmt.Errorf("cannot list remotes in %q: %w", spec.Repo, err)
 		}
 
-		remoteName := ""
-	outer:
-		for _, remote := range remotes {
-			cfg := remote.Config()
-			for _, url := range cfg.URLs {
-				if url == spec.Repo {
-					remoteName = cfg.Name
-					break outer
-				}
-			}
-		}
-		if remoteName == "" {
-			// TODO: add remote?
+		remote = findRemoteWithAddress(remotes, spec.Repo)
+		if remote == nil {
 			return nil, fmt.Errorf("cannot clone git repository (remote not found): %q", spec.Repo)
 		}
-
-		// Fetch
-		if err := r.Fetch(&gogit.FetchOptions{
-			Auth: auth,
-			Tags: gogit.AllTags,
-		}); err != nil && err != gogit.NoErrAlreadyUpToDate {
-			return nil, fmt.Errorf("cannot fetch repository %q: %w", spec.Repo, err)
-		}
-
 		repo = r
+	}
+
+	// Fetch
+	switch err := repo.Fetch(&gogit.FetchOptions{
+		RemoteName: remote.Config().Name,
+		Auth:       auth,
+		Tags:       gogit.AllTags,
+	}); err {
+	case nil: // OK
+	case gogit.NoErrAlreadyUpToDate:
+	case transport.ErrEmptyRemoteRepository:
+
+	default:
+		return nil, fmt.Errorf("cannot fetch repository %q: %w", spec.Repo, err)
 	}
 
 	return &gitRepository{
@@ -136,6 +140,19 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		credentialResolver: resolver,
 		cachedCredentials:  auth,
 	}, nil
+}
+
+func findRemoteWithAddress(remotes []*gogit.Remote, address string) *gogit.Remote {
+	for _, remote := range remotes {
+		cfg := remote.Config()
+		for _, url := range cfg.URLs {
+			if url == address {
+				return remote
+			}
+		}
+	}
+	// TODO: add remote?
+	return nil
 }
 
 func resolveCredential(ctx context.Context, namespace, name string, resolver repository.CredentialResolver) (transport.AuthMethod, error) {
@@ -211,12 +228,12 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 }
 
 func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
-	main, err := r.repo.Reference(refMain, true)
-	if err != nil {
-		return nil, err
+	var base plumbing.Hash
+	if main, err := r.repo.Reference(refMain, true); err == nil {
+		base = main.Hash()
 	}
 	ref := createDraftRefName(obj.Spec.PackageName, obj.Spec.Revision)
-	head := plumbing.NewHashReference(ref, main.Hash())
+	head := plumbing.NewHashReference(ref, base)
 	if err := r.repo.Storer.SetReference(head); err != nil {
 		return nil, err
 	}
@@ -227,7 +244,7 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		revision: obj.Spec.Revision,
 		updated:  time.Now(),
 		draft:    head,
-		sha:      main.Hash(),
+		sha:      base,
 	}, nil
 }
 
