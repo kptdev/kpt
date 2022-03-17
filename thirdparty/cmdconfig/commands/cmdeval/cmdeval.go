@@ -57,8 +57,6 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-	r.Command.Flags().BoolVarP(
-		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 	r.Command.Flags().BoolVar(
@@ -92,25 +90,24 @@ func EvalCommand(ctx context.Context, name string) *cobra.Command {
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
-	Command              *cobra.Command
-	Dest                 string
-	OutContent           bytes.Buffer
-	FromStdin            bool
-	Image                string
-	SaveFn               bool
-	Exec                 string
-	FnConfigPath         string
-	RunFns               runfn.RunFns
-	ResultsDir           string
-	ImagePullPolicy      string
-	Network              bool
-	Mounts               []string
-	Env                  []string
-	AsCurrentUser        bool
-	IncludeMetaResources bool
-	Ctx                  context.Context
-	Selector             kptfile.Selector
-	dataItems            []string
+	Command         *cobra.Command
+	Dest            string
+	OutContent      bytes.Buffer
+	FromStdin       bool
+	Image           string
+	SaveFn          bool
+	Exec            string
+	FnConfigPath    string
+	RunFns          runfn.RunFns
+	ResultsDir      string
+	ImagePullPolicy string
+	Network         bool
+	Mounts          []string
+	Env             []string
+	AsCurrentUser   bool
+	Ctx             context.Context
+	Selector        kptfile.Selector
+	dataItems       []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -394,22 +391,21 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
-		Ctx:                  r.Ctx,
-		Function:             fnSpec,
-		ExecArgs:             execArgs,
-		OriginalExec:         r.Exec,
-		Output:               output,
-		Input:                input,
-		Path:                 path,
-		Network:              r.Network,
-		StorageMounts:        storageMounts,
-		ResultsDir:           r.ResultsDir,
-		Env:                  r.Env,
-		AsCurrentUser:        r.AsCurrentUser,
-		FnConfig:             fnConfig,
-		FnConfigPath:         r.FnConfigPath,
-		IncludeMetaResources: r.IncludeMetaResources,
-		ImagePullPolicy:      cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
+		Ctx:             r.Ctx,
+		Function:        fnSpec,
+		ExecArgs:        execArgs,
+		OriginalExec:    r.Exec,
+		Output:          output,
+		Input:           input,
+		Path:            path,
+		Network:         r.Network,
+		StorageMounts:   storageMounts,
+		ResultsDir:      r.ResultsDir,
+		Env:             r.Env,
+		AsCurrentUser:   r.AsCurrentUser,
+		FnConfig:        fnConfig,
+		FnConfigPath:    r.FnConfigPath,
+		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,

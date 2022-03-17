@@ -83,10 +83,6 @@ type RunFns struct {
 	// function in the list.
 	ContinueOnEmptyResult bool
 
-	// IncludeMetaResources indicates will kpt add pkg meta resources such as
-	// Kptfile to the input resources to the function.
-	IncludeMetaResources bool
-
 	// ExecArgs are the arguments for exec commands
 	ExecArgs []string
 
@@ -120,10 +116,11 @@ func (r RunFns) getNodesAndFilters() (
 	// save the output dir because we will need it to write back
 	// the same one for reading must be used for writing if deleting Resources
 	var outputPkg *kio.LocalPackageReadWriter
+
 	matchFilesGlob := kio.MatchAll
-	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
-	}
+	// include Kptfile by default
+	matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
+
 	if r.Path != "" {
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:        string(r.uniquePath),

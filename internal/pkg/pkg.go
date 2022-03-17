@@ -482,9 +482,7 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	}
 
 	matchFilesGlob := kio.MatchAll
-	if includeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
-	}
+	matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
 
 	pkgReader := &kio.LocalPackageReader{
 		PackagePath:        string(p.UniquePath),

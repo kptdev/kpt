@@ -39,8 +39,6 @@ func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 		fmt.Sprintf("output resources are written to stdout in provided format. Allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
 		"path to function config file.")
-	c.Flags().BoolVar(&r.IncludeMetaResources,
-		"include-meta-resources", false, "include package meta resources in the command output")
 	r.Command = c
 	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
 	return r
@@ -52,13 +50,12 @@ func NewCommand(ctx context.Context, name string) *cobra.Command {
 
 // SourceRunner contains the run function
 type SourceRunner struct {
-	Output               string
-	WrapKind             string
-	WrapAPIVersion       string
-	FunctionConfig       string
-	Command              *cobra.Command
-	IncludeMetaResources bool
-	Ctx                  context.Context
+	Output         string
+	WrapKind       string
+	WrapAPIVersion string
+	FunctionConfig string
+	Command        *cobra.Command
+	Ctx            context.Context
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
@@ -84,9 +81,8 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 
 	var inputs []kio.Reader
 	matchFilesGlob := kio.MatchAll
-	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
-	}
+	// include meta resources by default
+	matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	for _, a := range args {
 		pkgPath, err := filepath.Abs(a)
 		if err != nil {

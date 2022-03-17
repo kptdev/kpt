@@ -208,7 +208,7 @@ func (r *Runner) runFnEval() error {
 			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
 			}
-			if r.testCase.Config.IncludeMetaResources {
+			if r.testCase.Config.EvalConfig.IncludeMetaResources {
 				kptArgs = append(kptArgs, "--include-meta-resources")
 			}
 			// args must be appended last
@@ -364,10 +364,6 @@ func (r *Runner) runFnRender() error {
 
 			if r.testCase.Config.DisableOutputTruncate {
 				kptArgs = append(kptArgs, "--truncate-output=false")
-			}
-
-			if r.testCase.Config.IncludeMetaResources {
-				kptArgs = append(kptArgs, "--include-meta-resources")
 			}
 			cmd = getCommand("", r.kptBin, kptArgs)
 		}

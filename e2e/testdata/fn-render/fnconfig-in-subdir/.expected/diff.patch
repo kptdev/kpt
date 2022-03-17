@@ -1,3 +1,16 @@
+diff --git a/Kptfile b/Kptfile
+index 122778a..b9df335 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app-with-db
++  labels:
++    tier: db
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-labels:v0.1
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
 index aabf495..6883bc2 100644
 --- a/db/labelconfig.yaml

@@ -68,10 +68,6 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
-
-	// IncludeMetaResources, if set to true, includes Kptfile in the input to the functions while
-	// rendering
-	IncludeMetaResources bool
 }
 
 // Execute runs a pipeline.
@@ -87,14 +83,13 @@ func (e *Renderer) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:                 root,
-		pkgs:                 map[types.UniquePath]*pkgNode{},
-		fnResults:            fnresult.NewResultList(),
-		imagePullPolicy:      e.ImagePullPolicy,
-		allowExec:            e.AllowExec,
-		fileSystem:           e.FileSystem,
-		runtime:              e.Runtime,
-		includeMetaResources: e.IncludeMetaResources,
+		root:            root,
+		pkgs:            map[types.UniquePath]*pkgNode{},
+		fnResults:       fnresult.NewResultList(),
+		imagePullPolicy: e.ImagePullPolicy,
+		allowExec:       e.AllowExec,
+		fileSystem:      e.FileSystem,
+		runtime:         e.Runtime,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -122,9 +117,9 @@ func (e *Renderer) Execute(ctx context.Context) error {
 
 	if e.Output == nil {
 		matchFilesGlob := kio.MatchAll
-		if e.IncludeMetaResources {
-			matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
-		}
+		// include meta resources by default
+		matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
+
 		// the intent of the user is to modify resources in-place
 		pkgWriter := &kio.LocalPackageReadWriter{
 			PackagePath:        string(root.pkg.UniquePath),
@@ -216,10 +211,6 @@ type hydrationContext struct {
 
 	// function runtime
 	runtime fn.FunctionRuntime
-
-	// includeMetaResources, if set to true, includes Kptfile in the input to the functions while
-	// rendering
-	includeMetaResources bool
 }
 
 //
@@ -337,7 +328,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(hctx.includeMetaResources)
+	currPkgResources, err := curr.pkg.LocalResources(true /* always include meta resources */)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}

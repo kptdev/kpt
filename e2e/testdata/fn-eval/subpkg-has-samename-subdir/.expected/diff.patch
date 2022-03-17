@@ -1,3 +1,25 @@
+diff --git a/Kptfile b/Kptfile
+index 701e0a1..f9b5995 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,5 +2,6 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: root-pkg
++  namespace: dev
+ info:
+   description: sample description
+diff --git a/pkg-a/Kptfile b/pkg-a/Kptfile
+index 1c0e1cc..e278c20 100644
+--- a/pkg-a/Kptfile
++++ b/pkg-a/Kptfile
+@@ -2,5 +2,6 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: pkg-a
++  namespace: dev
+ info:
+   description: sample description
 diff --git a/pkg-a/pkg-a/resources.yaml b/pkg-a/pkg-a/resources.yaml
 index 7a494c9..ba72b74 100644
 --- a/pkg-a/pkg-a/resources.yaml
