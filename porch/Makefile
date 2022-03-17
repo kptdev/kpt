@@ -16,7 +16,18 @@ KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
 DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
-MODULES = $(shell find . -path ./.build -prune -o -path ./.cache -prune -o -name 'go.mod' -print)
+
+# Modules are ordered in dependency order. A module precedes modules that depend on it.
+MODULES = \
+ config/samples/apps/hello-server \
+ func \
+ api \
+ controllers \
+ repository \
+ test \
+ controllers/remoterootsync \
+ engine \
+ apiserver
 
 # GCP project to use for development
 export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
@@ -86,25 +97,25 @@ start-function-runner:
 	  gcr.io/$(GCP_PROJECT_ID)/function-runner:$(IMAGE_TAG)
 
 .PHONY: generate
-generate: $(MODULES)
-	@for f in $(^D); do (cd $$f; echo "Generating $$f"; go generate -v ./...) || exit 1; done
+generate:
+	@for f in $(MODULES); do (cd $$f; echo "Generating $$f"; go generate -v ./...) || exit 1; done
 
 .PHONY: tidy
-tidy: $(MODULES)
-	@for f in $(^D); do (cd $$f; echo "Tidying $$f"; go mod tidy) || exit 1; done
+tidy:
+	@for f in $(MODULES); do (cd $$f; echo "Tidying $$f"; go mod tidy) || exit 1; done
 
 .PHONY: test
-test: $(MODULES)
-	@for f in $(^D); do (cd $$f; echo "Testing $$f"; go test ./...) || exit 1; done
+test:
+	@for f in $(MODULES); do (cd $$f; echo "Testing $$f"; go test ./...) || exit 1; done
 
 .PHONY: vet
-vet: $(MODULES)
-	@#for f in $(^D); do (cd $$f; echo "Checking $$f"; go run honnef.co/go/tools/cmd/staticcheck@latest ./...); done
-	@for f in $(^D); do (cd $$f; echo "Vetting $$f"; go vet ./...); done
+vet:
+	@#for f in $(MODULES); do (cd $$f; echo "Checking $$f"; go run honnef.co/go/tools/cmd/staticcheck@latest ./...); done
+	@for f in $(MODULES); do (cd $$f; echo "Vetting $$f"; go vet ./...) || exit 1; done
 
 .PHONY: fmt
-fmt: $(MODULES)
-	@for f in $(^D); do (cd $$f; echo "Formatting $$f"; gofmt -s -w .); done
+fmt:
+	@for f in $(MODULES); do (cd $$f; echo "Formatting $$f"; gofmt -s -w .); done
 
 PORCH = $(BUILDDIR)/porch
 
