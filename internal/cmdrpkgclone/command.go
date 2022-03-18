@@ -151,9 +151,11 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
-			Repo:      git.Repo,
-			Ref:       git.Ref,
-			Directory: git.Directory,
+			Repo: git.Repo,
+			Ref:  git.Ref,
+			// TODO: Temporary limitation of Porch server - it does not handle leading
+			// and trailing '/' in directory names. Can be removed when PR 2913 is merged.
+			Directory: strings.Trim(git.Directory, "/"),
 		}
 		// TODO: support authn
 		if targetPackageName.Package == "" {

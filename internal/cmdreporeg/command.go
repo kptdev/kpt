@@ -72,7 +72,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Aliases: []string{"register"},
 		Short:   "Registers a package repository with Package Orchestrator.",
 		Long:    longMsg,
-		Example: "TODO",
+		Example: "kpt alpha repo register https://github.com/platkrm/demo-blueprints.git --namespace=default",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

@@ -70,7 +70,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		SuggestFor: []string{},
 		Short:      "Pushes package resources into a remote package.",
 		Long:       longMsg,
-		Example:    "TODO",
+		Example:    "kpt alpha rpkg push repository:package:v1 ./package-directory",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,

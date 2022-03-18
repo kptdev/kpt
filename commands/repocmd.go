@@ -31,7 +31,7 @@ import (
 func NewRepoCommand(ctx context.Context, version string) *cobra.Command {
 	repo := &cobra.Command{
 		Use:     "repo",
-		Aliases: []string{},
+		Aliases: []string{"repository"},
 		Short:   "[Alpha] Manage package repositories.",
 		Long:    "[Alpha] The `repo` command group contains subcommands for managing package repositories.",
 		RunE: func(cmd *cobra.Command, args []string) error {

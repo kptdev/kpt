@@ -69,7 +69,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		SuggestFor: []string{},
 		Short:      "Reads package resources.",
 		Long:       longMsg,
-		Example:    "TODO",
+		Example:    "kpt alpha rpkg pull repository:package:v1 ./package-directory",
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,
