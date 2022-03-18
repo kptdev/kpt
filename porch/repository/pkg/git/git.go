@@ -136,12 +136,13 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 			break
 		}
 
-		name := ref.Name()
-		switch {
+		switch name := ref.Name(); {
 		case name == refMain:
 			main = ref
 			continue
 
+		case strings.HasPrefix(name.String(), refProposedPrefix):
+			fallthrough
 		case strings.HasPrefix(name.String(), refDraftPrefix):
 			draft, err := r.loadDraft(ref)
 			if err != nil {
