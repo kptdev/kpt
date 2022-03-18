@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -118,12 +119,18 @@ func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerO
 		t.Fatalf("Failed to create git server: %v", err)
 	}
 
+	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	t.Cleanup(func() {
+		cancel()
+		wg.Wait()
+	})
 
 	addressChannel := make(chan net.Addr)
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := server.ListenAndServe(ctx, "127.0.0.1:0", addressChannel)
 		if err != nil {
 			if err == http.ErrServerClosed {

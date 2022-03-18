@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -289,12 +290,18 @@ func createLocalGitServer(t *testing.T) GitConfig {
 		return GitConfig{}
 	}
 
+	var wg sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	t.Cleanup(func() {
+		cancel()
+		wg.Wait()
+	})
 
 	addressChannel := make(chan net.Addr)
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		err := server.ListenAndServe(ctx, "127.0.0.1:0", addressChannel)
 		if err != nil {
 			if err == http.ErrServerClosed {

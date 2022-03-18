@@ -33,6 +33,8 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/google/go-cmp/cmp"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -283,4 +285,287 @@ func initRepo(repo *gogit.Repository) error {
 	}
 
 	return nil
+}
+
+const Kptfile = `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: empty
+info:
+  description: Empty Package
+`
+
+func TestListPackagesEmpty(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "empty-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "empty"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+	if got, want := len(revisions), 0; got != want {
+		t.Errorf("Number of packges in empty repository: got %d, want %d", got, want)
+	}
+
+	// TODO: Enable the rest of the test when gogit can push into an empty repository.
+
+	// packageRevision := &v1alpha1.PackageRevision{
+	// 	ObjectMeta: metav1.ObjectMeta{
+	// 		Name:      "empty:test-packgae:v1",
+	// 		Namespace: namespace,
+	// 	},
+	// 	Spec: v1alpha1.PackageRevisionSpec{
+	// 		PackageName:    "test-package",
+	// 		Revision:       "v1",
+	// 		RepositoryName: repositoryName,
+	// 		Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
+	// 	},
+	// }
+
+	// // Create a package draft
+	// draft, err := git.CreatePackageRevision(ctx, packageRevision)
+	// if err != nil {
+	// 	t.Fatalf("CreatePackageRevision() failed: %v", err)
+	// }
+	// resources := &v1alpha1.PackageRevisionResources{
+	// 	Spec: v1alpha1.PackageRevisionResourcesSpec{
+	// 		Resources: map[string]string{
+	// 			"Kptfile": Kptfile,
+	// 		},
+	// 	},
+	// }
+	// if err := draft.UpdateResources(ctx, resources, &v1alpha1.Task{
+	// 	Type: v1alpha1.TaskTypeInit,
+	// 	Init: &v1alpha1.PackageInitTaskSpec{
+	// 		Description: "Empty Package",
+	// 	},
+	// }); err != nil {
+	// 	t.Fatalf("UpdateResources() failed: %v", err)
+	// }
+	// newRevision, err := draft.Close(ctx)
+	// if err != nil {
+	// 	t.Fatalf("draft.Close() failed: %v", err)
+	// }
+
+	// result, err := newRevision.GetPackageRevision()
+	// if err != nil {
+	// 	t.Fatalf("GetPackageRevision() failed: %v", err)
+	// }
+	// if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
+	// 	t.Errorf("Newly created package type: got %q, want %q", got, want)
+	// }
+}
+
+// trivial-repository.tar has a repon with a `main` branch and a single empty commit.
+func TestCreatePackageInTrivialRepository(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "trivial-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "trivial"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+	if got, want := len(revisions), 0; got != want {
+		t.Errorf("Number of packges in the trivial repository: got %d, want %d", got, want)
+	}
+
+	packageRevision := &v1alpha1.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "trivial:test-packgae:v1",
+			Namespace: namespace,
+		},
+		Spec: v1alpha1.PackageRevisionSpec{
+			PackageName:    "test-package",
+			Revision:       "v1",
+			RepositoryName: repositoryName,
+			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
+		},
+	}
+
+	// Create a package draft
+	draft, err := git.CreatePackageRevision(ctx, packageRevision)
+	if err != nil {
+		t.Fatalf("CreatePackageRevision() failed: %v", err)
+	}
+	resources := &v1alpha1.PackageRevisionResources{
+		Spec: v1alpha1.PackageRevisionResourcesSpec{
+			Resources: map[string]string{
+				"Kptfile": Kptfile,
+			},
+		},
+	}
+	if err := draft.UpdateResources(ctx, resources, &v1alpha1.Task{
+		Type: v1alpha1.TaskTypeInit,
+		Init: &v1alpha1.PackageInitTaskSpec{
+			Description: "Empty Package",
+		},
+	}); err != nil {
+		t.Fatalf("UpdateResources() failed: %v", err)
+	}
+	newRevision, err := draft.Close(ctx)
+	if err != nil {
+		t.Fatalf("draft.Close() failed: %v", err)
+	}
+
+	result, err := newRevision.GetPackageRevision()
+	if err != nil {
+		t.Fatalf("GetPackageRevision() failed: %v", err)
+	}
+	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
+		t.Errorf("Newly created package type: got %q, want %q", got, want)
+	}
+}
+
+func TestListPackagesSimple(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "simple-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "simple"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+
+	want := map[string]v1alpha1.PackageRevisionLifecycle{
+		"simple:empty:v1":   v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:basens:v1":  v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:basens:v2":  v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:istions:v1": v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:istions:v2": v1alpha1.PackageRevisionLifecycleFinal,
+
+		// TODO: may want to filter these out, for example by including only those package
+		// revisions from main branch that differ in content (their tree hash) from another
+		// taged revision of the package.
+		"simple:empty:main":   v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:basens:main":  v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:istions:main": v1alpha1.PackageRevisionLifecycleFinal,
+	}
+
+	got := map[string]v1alpha1.PackageRevisionLifecycle{}
+	for _, r := range revisions {
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+		}
+		got[r.Name()] = rev.Spec.Lifecycle
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("Package Revisions in simple-repository: (-want,+got): %s", cmp.Diff(want, got))
+	}
+}
+
+func TestListPackagesDrafts(t *testing.T) {
+	testdata := TestDataAbs(t, "testdata")
+	tempdir := CreateTestTempDir(t)
+	tarfile := filepath.Join(testdata, "drafts-repository.tar")
+	address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "drafts"
+		namespace      = "default"
+	)
+	var resolver repository.CredentialResolver
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+		SecretRef: configapi.SecretRef{},
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+
+	want := map[string]v1alpha1.PackageRevisionLifecycle{
+		"drafts:empty:v1":   v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:basens:v1":  v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:basens:v2":  v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:istions:v1": v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:istions:v2": v1alpha1.PackageRevisionLifecycleFinal,
+
+		"drafts:bucket:v1": v1alpha1.PackageRevisionLifecycleDraft,
+		"drafts:none:v1":   v1alpha1.PackageRevisionLifecycleDraft,
+
+		// TODO: filter main branch out? see above
+		"drafts:basens:main":  v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:empty:main":   v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:istions:main": v1alpha1.PackageRevisionLifecycleFinal,
+	}
+
+	got := map[string]v1alpha1.PackageRevisionLifecycle{}
+	for _, r := range revisions {
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+		}
+		got[r.Name()] = rev.Spec.Lifecycle
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("Package Revisions in drafts-repository: (-want,+got): %s", cmp.Diff(want, got))
+	}
 }
