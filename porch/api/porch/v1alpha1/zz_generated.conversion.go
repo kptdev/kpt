@@ -710,7 +710,7 @@ func autoConvert_v1alpha1_PackageRevisionSpec_To_porch_PackageRevisionSpec(in *P
 	out.PackageName = in.PackageName
 	out.Revision = in.Revision
 	out.RepositoryName = in.RepositoryName
-	out.Type = porch.PackageRevisionType(in.Type)
+	out.Lifecycle = porch.PackageRevisionLifecycle(in.Lifecycle)
 	out.Tasks = *(*[]porch.Task)(unsafe.Pointer(&in.Tasks))
 	return nil
 }
@@ -724,7 +724,7 @@ func autoConvert_porch_PackageRevisionSpec_To_v1alpha1_PackageRevisionSpec(in *p
 	out.PackageName = in.PackageName
 	out.Revision = in.Revision
 	out.RepositoryName = in.RepositoryName
-	out.Type = PackageRevisionType(in.Type)
+	out.Lifecycle = PackageRevisionLifecycle(in.Lifecycle)
 	out.Tasks = *(*[]Task)(unsafe.Pointer(&in.Tasks))
 	return nil
 }

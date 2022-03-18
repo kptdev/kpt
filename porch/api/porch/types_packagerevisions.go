@@ -40,12 +40,12 @@ type PackageRevisionList struct {
 	Items []PackageRevision
 }
 
-type PackageRevisionType string
+type PackageRevisionLifecycle string
 
 const (
-	PackageRevisionTypeDraft    PackageRevisionType = "draft"
-	PackageRevisionTypeProposed PackageRevisionType = "proposed"
-	PackageRevisionTypeFinal    PackageRevisionType = "final"
+	PackageRevisionLifecycleDraft    PackageRevisionLifecycle = "Draft"
+	PackageRevisionLifecycleProposed PackageRevisionLifecycle = "Proposed"
+	PackageRevisionLifecycleFinal    PackageRevisionLifecycle = "Final"
 )
 
 // PackageRevisionSpec defines the desired state of PackageRevision
@@ -54,7 +54,7 @@ type PackageRevisionSpec struct {
 	Revision       string `json:"revision,omitempty"`
 	RepositoryName string `json:"repository,omitempty"`
 
-	Type PackageRevisionType `json:"type,omitempty"`
+	Lifecycle PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 
 	Tasks []Task `json:"tasks,omitempty"`
 }
