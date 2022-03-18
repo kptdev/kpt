@@ -175,8 +175,13 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 
 func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
 	var base plumbing.Hash
-	if main, err := r.repo.Reference(refMain, true); err == nil {
+	switch main, err := r.repo.Reference(refMain, true); {
+	case err == nil:
 		base = main.Hash()
+	case err == plumbing.ErrReferenceNotFound:
+		// reference not found - empty repository. Package draft has no parent commit
+	default:
+		return nil, fmt.Errorf("error when resolving target branch for the package: %w", err)
 	}
 	ref := createDraftRefName(obj.Spec.PackageName, obj.Spec.Revision)
 	head := plumbing.NewHashReference(ref, base)
@@ -364,6 +369,7 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 		path:     path,
 		revision: version,
 		updated:  commit.Author.When,
+		ref:      nil,  // Cannot determine ref; this package will be considered final (immutable).
 		tree:     treeHash,
 		commit:   hash,
 	}, lock, nil
@@ -545,7 +551,7 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 			path:     path,
 			revision: revision,
 			updated:  commit.Author.When,
-			ref:      nil,
+			ref:      tag,
 			tree:     dirTree.Hash,
 			commit:   tag.Hash(),
 		},
@@ -696,20 +702,19 @@ func (r *gitRepository) update(ctx context.Context) error {
 			localRef = plumbing.NewHashReference(plumbing.ReferenceName(name), remoteRef.Hash())
 			// local branch doesn't exist. create it
 			if err := r.repo.Storer.SetReference(localRef); err != nil {
-				klog.Warningf("Skipping failed local ref %q: %v", name, err)
+				return fmt.Errorf("failed creating reference %q: %v", localRef, err)
 			}
 		} else if remoteRef.Hash() != localRef.Hash() {
 			remoteCommit, err := r.repo.CommitObject(remoteRef.Hash())
 			if err != nil {
-				klog.Warningf("Skipping unresolvable remote reference %s: %v", remoteRef, err)
-				continue
+				return fmt.Errorf("failed to resolve remote reference %s: %w", remoteRef, err)
 			}
 			localCommit, err := r.repo.CommitObject(localRef.Hash())
 			if err != nil {
 				klog.Warningf("Overwriting unresolvable local reference %s: %v", localRef, err)
 				new := plumbing.NewHashReference(localRef.Name(), remoteCommit.Hash)
 				if err := r.repo.Storer.SetReference(new); err != nil {
-					klog.Errorf("Failed to set local reference: %s to %s", new.Name(), new.Hash())
+					return fmt.Errorf("failed to set local reference: %s to %s", new.Name(), new.Hash())
 				}
 				continue
 			}

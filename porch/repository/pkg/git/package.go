@@ -68,7 +68,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			PackageName:    p.path,
 			Revision:       p.revision,
 			RepositoryName: p.parent.name,
-			Type:           p.getPackageRevisionType(),
+			Lifecycle:      p.getPackageRevisionLifecycle(),
 			Tasks:          []v1alpha1.Task{},
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
@@ -146,16 +146,16 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 		}, nil
 }
 
-func (p *gitPackageRevision) getPackageRevisionType() v1alpha1.PackageRevisionType {
+func (p *gitPackageRevision) getPackageRevisionLifecycle() v1alpha1.PackageRevisionLifecycle {
 	switch {
 	case p.ref == nil || p.ref.Name().IsTag():
-		return v1alpha1.PackageRevisionTypeFinal
+		return v1alpha1.PackageRevisionLifecycleFinal
 	case strings.HasPrefix(p.ref.Name().String(), refDraftPrefix):
-		return v1alpha1.PackageRevisionTypeDraft
+		return v1alpha1.PackageRevisionLifecycleDraft
 	case strings.HasPrefix(p.ref.Name().String(), refProposedPrefix):
-		return v1alpha1.PackageRevisionTypeProposed
+		return v1alpha1.PackageRevisionLifecycleProposed
 	default:
-		return v1alpha1.PackageRevisionTypeFinal
+		return v1alpha1.PackageRevisionLifecycleFinal
 	}
 }
 
