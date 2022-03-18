@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	gogit "github.com/go-git/go-git/v5"
@@ -61,11 +62,18 @@ func ServeGitRepository(t *testing.T, tarfile, tempdir string) string {
 		t.Fatalf("NewGitServer() failed: %v", err)
 	}
 
+	var wg sync.WaitGroup
+
 	serverAddressChannel := make(chan net.Addr)
 	ctx, cancel := context.WithCancel(context.Background())
-	t.Cleanup(cancel)
+	t.Cleanup(func() {
+		cancel()
+		wg.Wait()
+	})
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		if err := server.ListenAndServe(ctx, "127.0.0.1:0", serverAddressChannel); err != nil {
 			if ctx.Err() == nil {
 				t.Errorf("Git Server ListenAndServe failed: %v", err)
