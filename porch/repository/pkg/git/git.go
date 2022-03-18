@@ -320,6 +320,9 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 
 	var hash plumbing.Hash
 
+	// Trim leading and trailing slashes
+	path = strings.Trim(path, "/")
+
 	// Versions map to git tags in one of two ways:
 	//
 	// * directly (tag=version)- but then this means that all packages in the repo must be versioned together.
