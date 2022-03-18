@@ -369,7 +369,7 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 		path:     path,
 		revision: version,
 		updated:  commit.Author.When,
-		ref:      nil,  // Cannot determine ref; this package will be considered final (immutable).
+		ref:      nil, // Cannot determine ref; this package will be considered final (immutable).
 		tree:     treeHash,
 		commit:   hash,
 	}, lock, nil
