@@ -1,0 +1,15 @@
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: Repository
+metadata:
+    creationTimestamp: null
+    name: test-blueprints
+spec:
+    content: PackageRevision
+    git:
+        branch: main
+        directory: /
+        repo: https://github.com/platkrm/test-blueprints
+        secretRef:
+            name: test-blueprints-auth
+    type: git
+status: {}

@@ -18,10 +18,11 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 )
 
-func GetAlphaCommand(ctx context.Context, name string) *cobra.Command {
+func GetAlphaCommand(ctx context.Context, name, version string) *cobra.Command {
 	alpha := &cobra.Command{
 		Use:   "alpha",
 		Short: alphadocs.AlphaShort,
@@ -36,10 +37,13 @@ func GetAlphaCommand(ctx context.Context, name string) *cobra.Command {
 			}
 			return cmd.Usage()
 		},
-		Hidden: true,
+		Hidden: porch.HidePorchCommands,
 	}
 
-	// TODO: add individual commands
+	alpha.AddCommand(
+		NewRepoCommand(ctx, version),
+		NewRpkgCommand(ctx, version),
+	)
 
 	return alpha
 }

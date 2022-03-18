@@ -96,3 +96,5 @@ jobs:
       - name: e2e test
         run: go test -v .
         working-directory: ./porch/apiserver/pkg/e2e
+      - name: Porch CLI e2e test
+        run: make test-porch

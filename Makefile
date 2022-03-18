@@ -89,6 +89,9 @@ test-fn-eval: build
 test-live-apply: build
 	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
+test-porch: build
+	PATH=$(GOBIN):$(PATH) go test -v --count=1 --tags=porch ./e2e/
+
 vet:
 	go vet ./...
 
