@@ -24,3 +24,18 @@ subjects:
 - kind: ServiceAccount
   name: porch-server
   namespace: porch-system
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: porch-function-executor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: porch-function-executor
+subjects:
+- kind: ServiceAccount
+  name: porch-server
+  namespace: porch-functions-system

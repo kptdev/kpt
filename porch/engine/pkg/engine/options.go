@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type EngineOption interface {
@@ -48,7 +49,18 @@ func WithCache(cache *cache.Cache) EngineOption {
 
 func WithGRPCFunctionRuntime(address string) EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
-		runtime, err := createFunctionRuntime(address)
+		runtime, err := createGRPCFunctionRuntime(address)
+		if err != nil {
+			return fmt.Errorf("failed to create function runtime: %w", err)
+		}
+		engine.runtime = runtime
+		return nil
+	})
+}
+
+func WithKubeFunctionRuntime(coreClient client.Client, ns string) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		runtime, err := NewKubeFunctionRuntime(coreClient, ns)
 		if err != nil {
 			return fmt.Errorf("failed to create function runtime: %w", err)
 		}
@@ -92,7 +104,7 @@ func WithReferenceResolver(resolver ReferenceResolver) EngineOption {
 	})
 }
 
-func createFunctionRuntime(address string) (kpt.FunctionRuntime, error) {
+func createGRPCFunctionRuntime(address string) (kpt.FunctionRuntime, error) {
 	if address == "" {
 		return nil, fmt.Errorf("address is required to instantiate gRPC function runtime")
 	}

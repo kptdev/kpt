@@ -168,13 +168,21 @@ func (c completedConfig) New() (*PorchServer, error) {
 	renderer := kpt.NewRenderer()
 
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, credentialResolver)
-	cad, err := engine.NewCaDEngine(
+	options := []engine.EngineOption{
 		engine.WithCache(cache),
-		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),
-	)
+	}
+
+	if c.ExtraConfig.FunctionRunnerAddress != "" {
+		options = append(options, engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress))
+	} else {
+		ns := "porch-functions-system"
+		options = append(options, engine.WithKubeFunctionRuntime(coreClient, ns))
+	}
+
+	cad, err := engine.NewCaDEngine(options...)
 	if err != nil {
 		return nil, err
 	}
