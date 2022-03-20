@@ -19,6 +19,7 @@ metadata:
   namespace: default
 spec:
   title: Deployment
+  deployment: true
   description: Deployment Repository for testing Porch.
   content: PackageRevision # TODO: Deployment or similar?
   type: oci
