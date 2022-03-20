@@ -73,7 +73,7 @@ func NewRunner(
 
 	if runtime != nil {
 		if runner, err := runtime.GetRunner(ctx, f); err != nil {
-			return nil, fmt.Errorf("function runtime failed to evaluate function %q", f.Image)
+			return nil, fmt.Errorf("function runtime failed to evaluate function %q: %w", f.Image, err)
 		} else if runner != nil {
 			fltr.Run = runner.Run
 		}
