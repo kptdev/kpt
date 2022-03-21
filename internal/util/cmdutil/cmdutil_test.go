@@ -16,8 +16,6 @@ package cmdutil
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -267,18 +265,14 @@ metadata:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer os.RemoveAll(baseDir)
+			baseDir := t.TempDir()
 
 			if test.dest != "" && test.dest != Stdout && test.dest != Unwrap {
 				test.dest = filepath.Join(baseDir, test.dest)
 			}
 
 			// this method should create a directory and write the output if the dest is a directory path
-			err = WriteFnOutput(test.dest, test.content, test.fromStdin, &test.writer)
+			err := WriteFnOutput(test.dest, test.content, test.fromStdin, &test.writer)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

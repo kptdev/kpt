@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -49,15 +48,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	tempdir, err := ioutil.TempDir("", "")
-	if err != nil {
-		t.Fatalf("TempDir failed: %v", err)
-	}
-	defer func() {
-		if err := os.RemoveAll(tempdir); err != nil {
-			t.Errorf("RemoveAll(%q) failed: %v", tempdir, err)
-		}
-	}()
+	tempdir := t.TempDir()
 
 	// Start a mock git server
 	gitServerAddressChannel := make(chan net.Addr)

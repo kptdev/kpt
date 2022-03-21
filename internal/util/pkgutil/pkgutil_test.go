@@ -15,7 +15,6 @@
 package pkgutil_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -364,12 +363,9 @@ func TestCopyPackage(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
-			dest, err := ioutil.TempDir("", "kpt-")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			dest := t.TempDir()
 
-			err = pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
+			err := pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

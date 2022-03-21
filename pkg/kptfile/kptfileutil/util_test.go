@@ -16,7 +16,6 @@ package kptfileutil
 
 import (
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -63,12 +62,9 @@ func TestValidateInventory(t *testing.T) {
 }
 
 func TestUpdateKptfile(t *testing.T) {
-	writeKptfileToTemp := func(name string, content string) string {
-		dir, err := ioutil.TempDir("", name)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -338,14 +334,9 @@ pipeline: {}
 			}
 			dirs := make(map[string]string)
 			for n, content := range files {
-				dir := writeKptfileToTemp(n, content)
+				dir := writeKptfileToTemp(t, content)
 				dirs[n] = dir
 			}
-			defer func() {
-				for _, p := range dirs {
-					_ = os.RemoveAll(p)
-				}
-			}()
 
 			err := UpdateKptfile(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
 			if !assert.NoError(t, err) {

@@ -16,7 +16,6 @@ package pkg
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -77,10 +76,8 @@ func TestNewPkg(t *testing.T) {
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "")
-			defer os.RemoveAll(dir)
-			assert.NoError(t, err)
-			err = os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
+			dir := t.TempDir()
+			err := os.MkdirAll(filepath.Join(dir, "foo", "bar", "baz"), 0700)
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, test.workingDir))
 			defer revert()
@@ -163,10 +160,8 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "")
-			defer os.RemoveAll(dir)
-			assert.NoError(t, err)
-			err = os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
+			dir := t.TempDir()
+			err := os.MkdirAll(filepath.Join(dir, "rootPkgParentDir", "rootPkg", "subPkg", "nestedPkg"), 0700)
 			assert.NoError(t, err)
 			revert := Chdir(t, filepath.Join(dir, "rootPkgParentDir", test.workingDir))
 			defer revert()

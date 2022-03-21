@@ -183,8 +183,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 			}
 
 			// Set up the yaml manifests (including Kptfile) in temp dir.
-			dir, err := ioutil.TempDir("", "path-reader-test")
-			assert.NoError(t, err)
+			dir := t.TempDir()
 			for filename, content := range tc.manifests {
 				p := filepath.Join(dir, filename)
 				err := ioutil.WriteFile(p, []byte(content), 0600)
