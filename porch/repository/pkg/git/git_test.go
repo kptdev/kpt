@@ -327,53 +327,61 @@ func TestListPackagesEmpty(t *testing.T) {
 		t.Errorf("Number of packges in empty repository: got %d, want %d", got, want)
 	}
 
-	// TODO: Enable the rest of the test when gogit can push into an empty repository.
+	packageRevision := &v1alpha1.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "empty:test-packgae:v1",
+			Namespace: namespace,
+		},
+		Spec: v1alpha1.PackageRevisionSpec{
+			PackageName:    "test-package",
+			Revision:       "v1",
+			RepositoryName: repositoryName,
+			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
+		},
+	}
 
-	// packageRevision := &v1alpha1.PackageRevision{
-	// 	ObjectMeta: metav1.ObjectMeta{
-	// 		Name:      "empty:test-packgae:v1",
-	// 		Namespace: namespace,
-	// 	},
-	// 	Spec: v1alpha1.PackageRevisionSpec{
-	// 		PackageName:    "test-package",
-	// 		Revision:       "v1",
-	// 		RepositoryName: repositoryName,
-	// 		Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
-	// 	},
-	// }
+	// Create a package draft
+	draft, err := git.CreatePackageRevision(ctx, packageRevision)
+	if err != nil {
+		t.Fatalf("CreatePackageRevision() failed: %v", err)
+	}
+	resources := &v1alpha1.PackageRevisionResources{
+		Spec: v1alpha1.PackageRevisionResourcesSpec{
+			Resources: map[string]string{
+				"Kptfile": Kptfile,
+			},
+		},
+	}
+	if err := draft.UpdateResources(ctx, resources, &v1alpha1.Task{
+		Type: v1alpha1.TaskTypeInit,
+		Init: &v1alpha1.PackageInitTaskSpec{
+			Description: "Empty Package",
+		},
+	}); err != nil {
+		t.Fatalf("UpdateResources() failed: %v", err)
+	}
+	newRevision, err := draft.Close(ctx)
+	if err != nil {
+		t.Fatalf("draft.Close() failed: %v", err)
+	}
 
-	// // Create a package draft
-	// draft, err := git.CreatePackageRevision(ctx, packageRevision)
-	// if err != nil {
-	// 	t.Fatalf("CreatePackageRevision() failed: %v", err)
-	// }
-	// resources := &v1alpha1.PackageRevisionResources{
-	// 	Spec: v1alpha1.PackageRevisionResourcesSpec{
-	// 		Resources: map[string]string{
-	// 			"Kptfile": Kptfile,
-	// 		},
-	// 	},
-	// }
-	// if err := draft.UpdateResources(ctx, resources, &v1alpha1.Task{
-	// 	Type: v1alpha1.TaskTypeInit,
-	// 	Init: &v1alpha1.PackageInitTaskSpec{
-	// 		Description: "Empty Package",
-	// 	},
-	// }); err != nil {
-	// 	t.Fatalf("UpdateResources() failed: %v", err)
-	// }
-	// newRevision, err := draft.Close(ctx)
-	// if err != nil {
-	// 	t.Fatalf("draft.Close() failed: %v", err)
-	// }
+	result, err := newRevision.GetPackageRevision()
+	if err != nil {
+		t.Fatalf("GetPackageRevision() failed: %v", err)
+	}
+	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
+		t.Errorf("Newly created package type: got %q, want %q", got, want)
+	}
 
-	// result, err := newRevision.GetPackageRevision()
-	// if err != nil {
-	// 	t.Fatalf("GetPackageRevision() failed: %v", err)
-	// }
-	// if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
-	// 	t.Errorf("Newly created package type: got %q, want %q", got, want)
-	// }
+	// Verify
+	verify, err := gogit.PlainOpen(filepath.Join(tempdir, ".git"))
+	if err != nil {
+		t.Fatalf("Failed to open git repository for verification: %v", err)
+	}
+	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/v1")
+	if _, err = verify.Reference(draftRefName, true); err != nil {
+		t.Errorf("Failed to resolve %q references: %v", draftRefName, err)
+	}
 }
 
 // trivial-repository.tar has a repon with a `main` branch and a single empty commit.

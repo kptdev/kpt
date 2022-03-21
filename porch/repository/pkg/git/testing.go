@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -157,15 +158,13 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 	if err != nil {
 		return fmt.Errorf("failed to get git references: %w", err)
 	}
-	var refs []string
-	if err := it.ForEach(func(ref *plumbing.Reference) error {
-		name := ref.Name()
-		if name.IsRemote() {
-			klog.Infof("skipping remote ref %q", name)
-			return nil
-		}
 
+	// Find HEAD so we can return it first (https://git-scm.com/docs/http-protocol)
+	var head *plumbing.Reference
+	refs := map[string]*plumbing.Reference{} // Resolving symbolic refs will lead to dupes. De-dupe them.
+	if err := it.ForEach(func(ref *plumbing.Reference) error {
 		var resolved *plumbing.Reference
+		// Resolve symbolic references.
 		switch ref.Type() {
 		case plumbing.SymbolicReference:
 			if r, err := s.repo.Reference(ref.Name(), true); err != nil {
@@ -180,13 +179,15 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 			return fmt.Errorf("unexpected reference encountered: %s", ref)
 		}
 
-		s := fmt.Sprintf("%s %s", resolved.Hash().String(), name)
+		resolvedName := resolved.Name()
+		if resolvedName.IsRemote() {
+			klog.Infof("skipping remote ref %q", resolvedName)
+			return nil
+		}
 
-		// https://git-scm.com/docs/http-protocol: HEAD SHOULD be first
-		if name == plumbing.HEAD {
-			refs = append([]string{s}, refs...)
-		} else {
-			refs = append(refs, s)
+		refs[resolvedName.String()] = resolved
+		if ref.Name() == plumbing.HEAD {
+			head = resolved
 		}
 		return nil
 	}); err != nil {
@@ -202,14 +203,8 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 	gw.WriteLine("# service=" + serviceName)
 	gw.WriteZeroPacketLine()
 
-	for i, ref := range refs {
-		s := ref
-		if i == 0 {
-			// We attach capabilities to the first line
-			s += "\000" + strings.Join(capabilities, " ")
-		}
-		gw.WriteLine(s)
-	}
+	sorted := sortedRefs(refs, head)
+	writeRefs(gw, sorted, capabilities)
 
 	gw.WriteZeroPacketLine()
 
@@ -220,6 +215,47 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 	}
 
 	return nil
+}
+
+func sortedRefs(refs map[string]*plumbing.Reference, head *plumbing.Reference) []*plumbing.Reference {
+	sorted := make([]*plumbing.Reference, 0, len(refs))
+	for _, v := range refs {
+		sorted = append(sorted, v)
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		switch {
+		case sorted[i] == head:
+			return true
+		case sorted[j] == head:
+			return false
+		default:
+			return sorted[i].Name().String() < sorted[j].Name().String()
+		}
+	})
+	return sorted
+}
+
+func writeRefs(gw *PacketLineWriter, sorted []*plumbing.Reference, capabilities []string) {
+	// empty_list = PKT-LINE(zero-id SP "capabilities^{}" NUL cap-list LF)
+	if len(sorted) == 0 {
+		var zero plumbing.Hash
+		s := fmt.Sprintf("%s capabilities^{}\000%s", zero, strings.Join(capabilities, " "))
+		gw.WriteLine(s)
+		return
+	}
+
+	// non_empty_list  =  PKT-LINE(obj-id SP name NUL cap_list LF)
+	//   *ref_record
+	// ref_record      =  any_ref / peeled_ref
+	// any_ref         =  PKT-LINE(obj-id SP name LF)
+	for i, ref := range sorted {
+		s := fmt.Sprintf("%s %s", ref.Hash(), ref.Name())
+		if i == 0 {
+			// We attach capabilities to the first line
+			s += "\000" + strings.Join(capabilities, " ")
+		}
+		gw.WriteLine(s)
+	}
 }
 
 // serveGitUploadPack serves the git-upload-pack endpoint
