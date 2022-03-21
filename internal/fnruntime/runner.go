@@ -173,8 +173,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
+	printOpt := printer.NewOpt()
 	if err != nil {
-		printOpt := printer.NewOpt()
 		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		var fnErr *ExecError
@@ -184,9 +184,18 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		}
 		return nil, err
 	}
+	for _, result := range fr.fnResult.Results {
+		if result.Severity == framework.Error {
+			fr.fnResult.ExitCode = 1
+			pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
+			printFnResult(fr.ctx, fr.fnResult, printOpt)
+			printFnExecErr(fr.ctx, &ExecError{ExitCode: 1})
+			return nil, errors.ErrAlreadyHandled
+		}
+	}
 	if !fr.disableCLIOutput {
 		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
+		printFnResult(fr.ctx, fr.fnResult, printOpt)
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
@@ -221,20 +230,15 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		// function exec error. Revisit this if this turns out to be true.
 		return output, resultErr
 	}
-	if err != nil {
-		var execErr *ExecError
-		if goerrors.As(err, &execErr) {
-			fnResult.ExitCode = execErr.ExitCode
-			fnResult.Stderr = execErr.Stderr
-			fr.fnResults.ExitCode = 1
-		}
-		// accumulate the results
-		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
-		return output, err
+	var execErr *ExecError
+	if goerrors.As(err, &execErr) {
+		fnResult.ExitCode = execErr.ExitCode
+		fnResult.Stderr = execErr.Stderr
+		fr.fnResults.ExitCode = 1
 	}
-	fnResult.ExitCode = 0
+	// accumulate the results
 	fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
-	return output, nil
+	return output, err
 }
 
 func setPkgPathAnnotationIfNotExist(resources []*yaml.RNode, pkgPath types.UniquePath) error {
