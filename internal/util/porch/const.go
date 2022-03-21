@@ -15,4 +15,4 @@
 package porch
 
 // Controls whether the Package Orchestration CLI commands are hidden.
-const HidePorchCommands = false
+const HidePorchCommands = true
