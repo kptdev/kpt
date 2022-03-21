@@ -127,6 +127,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		"--network", string(network),
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
+		"--platform", "linux/amd64",
 	}
 
 	switch f.ImagePullPolicy {
