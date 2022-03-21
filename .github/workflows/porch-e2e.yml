@@ -71,10 +71,10 @@ jobs:
           image: ${{ matrix.image }}
       - name: Load Images
         run: |
-          kind load docker-image porch-kind/porch:${GITHUB_SHA:0:8}
+          kind load docker-image porch-kind/porch-server:${GITHUB_SHA:0:8}
           kind load docker-image porch-kind/porch-controllers:${GITHUB_SHA:0:8}
-          kind load docker-image porch-kind/function-runner:${GITHUB_SHA:0:8}
-          kind load docker-image porch-kind/git-server:${GITHUB_SHA:0:8}
+          kind load docker-image porch-kind/porch-function-runner:${GITHUB_SHA:0:8}
+          kind load docker-image porch-kind/test-git-server:${GITHUB_SHA:0:8}
       - name: Install Porch
         run: |
           echo ${KUBECONFIG}

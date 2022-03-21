@@ -15,12 +15,14 @@
 GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
 IMAGE_TAG  ?= latest
 IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
-IMAGE_NAME ?= test-git-server
+IMAGE_NAME ?= porch-server
+
+KPTDIR = $(abspath $(CURDIR)/../..)
 
 .PHONY: build-image
 build-image:
-	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f $(CURDIR)/Dockerfile ../..
+	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
 
 .PHONY: push-image
 push-image:
-	docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f $(CURDIR)/Dockerfile ../..
+	docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
