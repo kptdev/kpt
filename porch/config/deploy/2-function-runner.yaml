@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: function-runner
-          image: gcr.io/example-google-project-id/function-runner:latest
+          image: gcr.io/example-google-project-id/porch-function-runner:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 9445

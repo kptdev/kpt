@@ -22,6 +22,10 @@ import (
 	"time"
 )
 
+const (
+	TestGitServerImage = "test-git-server"
+)
+
 func GetGitServerImageName(t *testing.T) string {
 	cmd := exec.Command("kubectl", "get", "pods", "--selector=app=porch-server", "--namespace=porch-system",
 		"--output=jsonpath={.items[*].spec.containers[*].image}")
@@ -47,17 +51,17 @@ func GetGitServerImageName(t *testing.T) string {
 	if image == "" {
 		t.Fatalf("Cannot determine Porch server image: output was %q", out)
 	}
-	return inferGitServerImage(image)
+	return InferGitServerImage(image)
 }
 
-func inferGitServerImage(porchImage string) string {
+func InferGitServerImage(porchImage string) string {
 	slash := strings.LastIndex(porchImage, "/")
 	repo := porchImage[:slash+1]
 	image := porchImage[slash+1:]
 	colon := strings.LastIndex(image, ":")
 	tag := image[colon+1:]
 
-	return repo + "git-server:" + tag
+	return repo + TestGitServerImage + ":" + tag
 }
 
 func KubectlApply(t *testing.T, config string) {

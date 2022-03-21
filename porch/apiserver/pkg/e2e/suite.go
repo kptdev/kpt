@@ -30,6 +30,7 @@ import (
 
 	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	porchtest "github.com/GoogleContainerTools/kpt/pkg/test/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
@@ -370,16 +371,6 @@ func createInitialCommit(t *testing.T, repo *gogit.Repository) {
 	}
 }
 
-func inferGitServerImage(porchImage string) string {
-	slash := strings.LastIndex(porchImage, "/")
-	repo := porchImage[:slash+1]
-	image := porchImage[slash+1:]
-	colon := strings.LastIndex(image, ":")
-	tag := image[colon+1:]
-
-	return repo + "git-server:" + tag
-}
-
 func (t *TestSuite) createInClusterGitServer() GitConfig {
 	ctx := context.TODO()
 
@@ -392,7 +383,7 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 		Name:      "porch-server",
 	}, &porch)
 
-	gitImage := inferGitServerImage(porch.Spec.Template.Spec.Containers[0].Image)
+	gitImage := porchtest.InferGitServerImage(porch.Spec.Template.Spec.Containers[0].Image)
 
 	var replicas int32 = 1
 	var selector = strings.ReplaceAll(t.Name(), "/", "_")

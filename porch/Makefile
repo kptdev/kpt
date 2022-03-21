@@ -34,6 +34,11 @@ export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
 export IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
 export IMAGE_TAG ?= latest
 
+PORCH_SERVER_IMAGE ?= porch-server
+PORCH_FUNCTION_RUNNER_IMAGE ?= porch-function-runner
+PORCH_CONTROLLERS_IMAGE ?= porch-controllers
+TEST_GIT_SERVER_IMAGE ?= test-git-server
+
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver start-function-runner run-local
 
@@ -87,14 +92,14 @@ start-kube-apiserver:
 
 .PHONY: start-function-runner
 start-function-runner:
-	$(MAKE) -C ./func build-image
+	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" $(MAKE) -C ./func build-image
 	docker stop function-runner || true
 	docker rm -f function-runner || true
 	docker run --detach \
 	  --network=porch \
 	  --ip 192.168.8.202 \
 	  --name function-runner \
-	  gcr.io/$(GCP_PROJECT_ID)/function-runner:$(IMAGE_TAG)
+	  $(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)
 
 .PHONY: generate
 generate:
@@ -146,20 +151,19 @@ fix-headers:
 .PHONY: fix-all
 fix-all: fix-headers fmt tidy
 
-KPTDIR = $(abspath $(CURDIR)/..)
 .PHONY: push-images
 push-images:
-	docker buildx build --push --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
-	make -C controllers/ push-image
-	make -C func/ push-image
-	make -C test/ push-image
+	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ push-image
+	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ push-image
+	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" make -C func/ push-image
+	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ push-image
 
 .PHONY: build-images
 build-images:
-	docker buildx build --load --tag "$(IMAGE_REPO)/porch:$(IMAGE_TAG)" -f "${CURDIR}/hack/Dockerfile" "${KPTDIR}"
-	make -C controllers/ build-image
-	make -C func/ build-image
-	make -C test/ build-image
+	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ build-image
+	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ build-image
+	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" make -C func/ build-image
+	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ build-image
 
 .PHONY: apply-dev-config
 apply-dev-config:
@@ -186,16 +190,16 @@ deployment-config:
 	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/0-repositories.yaml
 	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
 	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
-	  "name=gcr.io/example-google-project-id/function-runner:latest" \
-	  "newName=$(IMAGE_REPO)/function-runner" \
+	  "name=gcr.io/example-google-project-id/porch-function-runner:latest" \
+	  "newName=$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE)" \
 	  "newTag=$(IMAGE_TAG)"
 	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
 	  "name=gcr.io/example-google-project-id/porch-server:latest" \
-	  "newName=$(IMAGE_REPO)/porch" \
+	  "newName=$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE)" \
 	  "newTag=$(IMAGE_TAG)"
 	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
 	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
-	  "newName=$(IMAGE_REPO)/porch-controllers" \
+	  "newName=$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE)" \
 	  "newTag=$(IMAGE_TAG)"
 	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
 	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-server --match-namespace=porch-system -- \
