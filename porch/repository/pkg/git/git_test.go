@@ -327,8 +327,6 @@ func TestListPackagesEmpty(t *testing.T) {
 		t.Errorf("Number of packges in empty repository: got %d, want %d", got, want)
 	}
 
-	// TODO: Enable the rest of the test when gogit can push into an empty repository.
-
 	packageRevision := &v1alpha1.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "empty:test-packgae:v1",
