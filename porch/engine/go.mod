@@ -5,8 +5,6 @@ go 1.17
 require (
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/go-git/go-billy/v5 v5.3.1
@@ -119,8 +117,6 @@ require (
 
 replace (
 	github.com/GoogleContainerTools/kpt => ../../
-	github.com/GoogleContainerTools/kpt/porch/api => ../api
-	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/func => ../func
 	github.com/GoogleContainerTools/kpt/porch/kpt => ../kpt
 	github.com/GoogleContainerTools/kpt/porch/repository => ../repository

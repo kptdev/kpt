@@ -21,8 +21,6 @@ DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
 MODULES = \
  config/samples/apps/hello-server \
  func \
- api \
- controllers \
  repository \
  test \
  controllers/remoterootsync \

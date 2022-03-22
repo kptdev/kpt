@@ -17,8 +17,6 @@ require (
 replace (
 	github.com/GoogleContainerTools/kpt => ../../../
 	github.com/GoogleContainerTools/kpt/porch => ../../
-	github.com/GoogleContainerTools/kpt/porch/api => ../../api
-	github.com/GoogleContainerTools/kpt/porch/controllers => ../../controllers
 	github.com/GoogleContainerTools/kpt/porch/repository => ../../repository
 	github.com/googleapis/gnostic v0.5.6 => github.com/googleapis/gnostic v0.5.5
 )
@@ -32,8 +30,6 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000 // indirect
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

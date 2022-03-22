@@ -21,17 +21,11 @@ WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 # and so that source changes don't invalidate our downloaded layer
 
 COPY go.mod go.sum ./
-COPY porch/api/go.mod porch/api/go.sum porch/api/
-COPY porch/controllers/go.mod porch/controllers/go.sum porch/controllers/
 COPY porch/repository/go.mod porch/repository/go.sum porch/repository/
 COPY porch/test/go.mod porch/test/go.sum porch/test/
 
 RUN echo "Downloading root modules ..." \
  && go mod download
-RUN echo "Downloading api modules ..." \
- && cd porch/api && go mod download
-RUN echo "Downloading controllers modules ..." \
- && cd porch/controllers && go mod download
 RUN echo "Downloading repository modules ..." \
  && cd porch/repository && go mod download
 RUN echo "Downloading test modules ..." \

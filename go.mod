@@ -3,8 +3,6 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.0
 	github.com/google/go-cmp v0.5.7
@@ -23,6 +21,7 @@ require (
 	k8s.io/apimachinery v0.23.2
 	k8s.io/cli-runtime v0.23.2
 	k8s.io/client-go v0.23.2
+	k8s.io/code-generator v0.23.2
 	k8s.io/component-base v0.23.2
 	k8s.io/klog/v2 v2.40.1
 	k8s.io/kubectl v0.23.2
@@ -47,6 +46,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
@@ -67,7 +67,6 @@ require (
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kr/pretty v0.2.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
@@ -94,19 +93,16 @@ require (
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
+	golang.org/x/tools v0.1.6-0.20210820212750-d4cc65f0b2ff // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	k8s.io/gengo v0.0.0-20210813121822-485abfe95c7c // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-replace (
-	github.com/GoogleContainerTools/kpt/porch/api => ./porch/api
-	github.com/GoogleContainerTools/kpt/porch/controllers => ./porch/controllers
 )

@@ -16,8 +16,6 @@ FROM golang:1.17-bullseye as builder
 
 WORKDIR /workspace
 COPY go.mod go.sum ./
-COPY porch/api/go.mod porch/api/go.sum porch/api/
-COPY porch/controllers/go.mod porch/controllers/go.sum porch/controllers/
 COPY porch/controllers/remoterootsync/go.mod porch/controllers/remoterootsync/go.sum porch/controllers/remoterootsync/
 COPY porch/repository/go.mod porch/repository/go.sum porch/repository/
 

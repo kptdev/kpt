@@ -4,8 +4,6 @@ go 1.17
 
 require (
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/engine v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
@@ -158,8 +156,6 @@ require (
 
 replace (
 	github.com/GoogleContainerTools/kpt => ../../
-	github.com/GoogleContainerTools/kpt/porch/api => ../api
-	github.com/GoogleContainerTools/kpt/porch/apiserver => ./
 	github.com/GoogleContainerTools/kpt/porch/controllers => ../controllers
 	github.com/GoogleContainerTools/kpt/porch/engine => ../engine
 	github.com/GoogleContainerTools/kpt/porch/func => ../func
