@@ -238,7 +238,10 @@ data: {}
 			if len(kv) != 2 {
 				return nil, fmt.Errorf("args must have keys and values separated by =")
 			}
-			err := dataField.PipeE(yaml.SetField(kv[0], yaml.NewScalarRNode(kv[1])))
+			// When we are using a ConfigMap as the functionConfig, we should create
+			// the node with type string instead of creating a scalar node. Because
+			// a scalar node might be parsed as int, float or bool later.
+			err := dataField.PipeE(yaml.SetField(kv[0], yaml.NewStringRNode(kv[1])))
 			if err != nil {
 				return nil, err
 			}
