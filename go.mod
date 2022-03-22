@@ -3,8 +3,8 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-00010101000000-000000000000
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee
+	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.0
 	github.com/google/go-cmp v0.5.7
@@ -104,9 +104,4 @@ require (
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-replace (
-	github.com/GoogleContainerTools/kpt/porch/api => ./porch/api
-	github.com/GoogleContainerTools/kpt/porch/controllers => ./porch/controllers
 )

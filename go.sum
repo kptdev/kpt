@@ -68,6 +68,10 @@ github.com/Azure/go-autorest/tracing v0.6.0/go.mod h1:+vhtPC754Xsa23ID7GlGsrdKBp
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee h1:Y4cNN/nJx2egsGadJbozqTslveMem9EC29uUtGi6ggk=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee/go.mod h1:yo0K0CqcOMyN8nPjuW+2kVz7uDLjCvL9hur6VMdeVdk=
+github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee h1:t61LBgyb6OOdY35vNdSjB2YESa3QjLR03FbiooUJ/n0=
+github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee/go.mod h1:ZLrogcsqAlrJDFtg8hvZ4aYVzZfY+YIXExDmtbI+lyA=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd h1:sjQovDkwrZp8u+gxLtPgKGjk5hCxuy2hrRejBTA9xFU=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
