@@ -31,7 +31,10 @@ import (
 	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchtest "github.com/GoogleContainerTools/kpt/pkg/test/porch"
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
+	porchclient "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	gogit "github.com/go-git/go-git/v5"
@@ -84,6 +87,7 @@ type TestSuite struct {
 	*testing.T
 	kubeconfig *rest.Config
 	client     client.Client
+	clientset  versioned.Interface
 
 	namespace string // K8s namespace for this test run
 	local     bool   // Tests running against local dev porch
@@ -114,6 +118,12 @@ func (t *TestSuite) Initialize(ctx context.Context) {
 	} else {
 		t.client = c
 		t.kubeconfig = cfg
+	}
+
+	if cs, err := porchclient.NewForConfig(cfg); err != nil {
+		t.Fatalf("Failed to initialize Porch clientset: %v", err)
+	} else {
+		t.clientset = cs
 	}
 
 	t.local = t.IsUsingDevPorch()
@@ -191,8 +201,27 @@ func (c *TestSuite) delete(ctx context.Context, obj client.Object, opts []client
 	}
 }
 
-// update(ctx context.Context, obj Object, opts ...UpdateOption) error
-// patch(ctx context.Context, obj Object, patch Patch, opts ...PatchOption) error
+func (t *TestSuite) update(ctx context.Context, obj client.Object, opts []client.UpdateOption, eh ErrorHandler) {
+	if err := t.client.Update(ctx, obj, opts...); err != nil {
+		eh("failed to update resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+	}
+}
+
+func (t *TestSuite) patch(ctx context.Context, obj client.Object, patch client.Patch, opts []client.PatchOption, eh ErrorHandler) {
+	if err := t.client.Patch(ctx, obj, patch, opts...); err != nil {
+		eh("failed to patch resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+	}
+}
+
+func (t *TestSuite) updateApproval(ctx context.Context, obj *v1alpha1.PackageRevision, opts metav1.UpdateOptions, eh ErrorHandler) *v1alpha1.PackageRevision {
+	if res, err := t.clientset.PorchV1alpha1().PackageRevisions(obj.Namespace).UpdateApproval(ctx, obj.Name, obj, opts); err != nil {
+		eh("failed to update approval of %s/%s: %v", obj.Namespace, obj.Name, err)
+		return nil
+	} else {
+		return res
+	}
+}
+
 // deleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error
 
 func (t *TestSuite) GetE(ctx context.Context, key client.ObjectKey, obj client.Object) {
@@ -222,8 +251,26 @@ func (t *TestSuite) DeleteL(ctx context.Context, obj client.Object, opts ...clie
 	t.delete(ctx, obj, opts, t.Logf)
 }
 
-// Update(ctx context.Context, obj Object, opts ...UpdateOption) error
-// Patch(ctx context.Context, obj Object, patch Patch, opts ...PatchOption) error
+func (t *TestSuite) UpdateF(ctx context.Context, obj client.Object, opts ...client.UpdateOption) {
+	t.update(ctx, obj, opts, t.Fatalf)
+}
+
+func (t *TestSuite) UpdateE(ctx context.Context, obj client.Object, opts ...client.UpdateOption) {
+	t.update(ctx, obj, opts, t.Errorf)
+}
+
+func (t *TestSuite) PatchF(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) {
+	t.patch(ctx, obj, patch, opts, t.Fatalf)
+}
+
+func (t *TestSuite) PatchE(ctx context.Context, obj client.Object, patch client.Patch, opts ...client.PatchOption) {
+	t.patch(ctx, obj, patch, opts, t.Errorf)
+}
+
+func (t *TestSuite) UpdateApprovalF(ctx context.Context, pr *v1alpha1.PackageRevision, opts metav1.UpdateOptions) *v1alpha1.PackageRevision {
+	return t.updateApproval(ctx, pr, opts, t.Fatalf)
+}
+
 // DeleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error
 
 func readTestConfig(t *testing.T) PorchTestConfig {

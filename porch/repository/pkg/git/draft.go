@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"sort"
 	"strings"
 	"time"
 
@@ -27,96 +26,126 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/filemode"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/storer"
+	"github.com/go-git/go-git/v5/storage"
 	"k8s.io/klog/v2"
 )
 
 type gitPackageDraft struct {
-	parent   *gitRepository
-	path     string
-	revision string
-	updated  time.Time
-	ref      *plumbing.Reference // ref is the Git reference at which the package exists
-	tree     plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
-	commit   plumbing.Hash       // Current version of the package (commit sha)
+	parent    *gitRepository
+	path      string
+	revision  string
+	lifecycle v1alpha1.PackageRevisionLifecycle // New value of the package revision lifecycle
+	updated   time.Time
+	ref       *plumbing.Reference // ref is the Git reference at which the package exists
+	tree      plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
+	commit    plumbing.Hash       // Current version of the package (commit sha)
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
-	var rootTree *object.Tree
-	baseCommit := d.ref.Hash()
+	ch, err := newCommitHelper(d.parent.repo.Storer, d.ref.Hash(), d.path, plumbing.ZeroHash)
 
-	if baseCommit.IsZero() {
-		// Empty repository
-		rootTree = &object.Tree{}
-	} else {
-		parent, err := d.parent.repo.CommitObject(baseCommit)
-		if err != nil {
-			return fmt.Errorf("cannot resolve parent commit hash to commit: %w", err)
-		}
-		root, err := parent.Tree()
-		if err != nil {
-			return fmt.Errorf("cannot resolve parent commit to root tree: %w", err)
-		}
-		rootTree = root
-	}
-
-	dirs := map[string]*object.Tree{
-		"": {
-			// Root tree; Copy over all entries
-			// TODO: Verify that on creation (first commit) the package directory doesn't exist.
-			// TODO: Verify that on subsequent commits, only the package's directory is being modified.
-			Entries: rootTree.Entries,
-		},
-	}
 	for k, v := range new.Spec.Resources {
-		hash, err := storeBlob(d.parent.repo.Storer, v)
-		if err != nil {
-			return err
-		}
-
-		// TODO: decide whether paths should include package directory or not.
-		p := path.Join(d.path, k)
-		if err := storeBlobHashInTrees(dirs, p, hash); err != nil {
-			return err
-		}
+		ch.storeFile(path.Join(d.path, k), v)
 	}
 
-	treeHash, err := storeTrees(d.parent.repo.Storer, dirs, "")
+	message := fmt.Sprintf("Intermittent commit: %s", change.Type)
+	commitHash, packageTree, err := ch.commit(message, d.path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to commit package: %w", err)
 	}
 
-	commit, err := storeCommit(d.parent.repo.Storer, d.ref.Hash(), treeHash, change)
-	if err != nil {
-		return err
-	}
-
-	head := plumbing.NewHashReference(d.ref.Name(), commit)
+	head := plumbing.NewHashReference(d.ref.Name(), commitHash)
 	if err := d.parent.repo.Storer.SetReference(head); err != nil {
 		return err
 	}
 
-	// Find package's tree sha
-	if packageTree, ok := dirs[d.path]; ok {
-		d.tree = packageTree.Hash
-	} else {
-		// package contents do not exist (deleted, not yet cretated)
-		d.tree = plumbing.Hash{}
-	}
-
+	d.tree = packageTree
 	d.ref = head
-	d.commit = commit
+	d.commit = commitHash
+	return nil
+}
+
+func (d *gitPackageDraft) UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error {
+	d.lifecycle = new
 	return nil
 }
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
-	refSpec := config.RefSpec(fmt.Sprintf("%s:%s", d.ref.Name(), d.ref.Name().String()))
-	klog.Infof("pushing refspec %v", refSpec)
+	remoteRef := refMain // TODO: support  branches registered with repository
+	// RefSpec(s) to push to the origin
+	pushRefSpecs := []config.RefSpec{}
+	// References to clean up (delete) locally and remotely after successful push
+	cleanup := map[plumbing.ReferenceName]bool{}
+	refNames := createPackageRefNames(d.path, d.revision)
+	repo := d.parent.repo
+
+	switch d.lifecycle {
+	case v1alpha1.PackageRevisionLifecycleFinal:
+		// Finalize the package revision. Commit it to main branch.
+		commitHash, newTreeHash, err := d.commitPackageToMain(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create Tag
+		switch _, err := repo.Storer.Reference(refNames.final); err {
+		case nil:
+			// Tag exists, cannot overwrite
+			return nil, fmt.Errorf("another instance of finalized package %s:%s:%s already exists", d.parent.name, d.path, d.revision)
+		case plumbing.ErrReferenceNotFound:
+			// Tag does not yet exist
+		}
+
+		newRef, err := setReference(repo.Storer, refNames.final, commitHash)
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize package: %v", err)
+		}
+
+		pushRefSpecs = append(
+			pushRefSpecs,
+			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, remoteRef)),      // Push new main
+			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, refNames.final)), // Push the tag
+		)
+
+		if d.ref != nil {
+			cleanup[d.ref.Name()] = true
+		}
+		// also make sure to clean up draft and proposed refs for this package, if they exist.
+		cleanup[refNames.draft] = true
+		cleanup[refNames.proposed] = true
+
+		// Update package draft
+		d.commit = commitHash
+		d.tree = newTreeHash
+		d.ref = newRef
+
+	case v1alpha1.PackageRevisionLifecycleProposed:
+		newRef, err := setReference(repo.Storer, refNames.proposed, d.commit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update package lifecycle to \"proposed\": %v", err)
+		}
+		// Push the package revision into a proposed branch.
+		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", d.commit, refNames.proposed)))
+		cleanup[refNames.draft] = true
+
+		// Update package referemce (commit and tree hash stay the same)
+		d.ref = newRef
+
+	case v1alpha1.PackageRevisionLifecycleDraft:
+		newRef, err := setReference(repo.Storer, refNames.draft, d.commit)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update package draft: %v", err)
+		}
+		// Push the package revision into a draft branch.
+		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", d.commit, refNames.draft)))
+		cleanup[refNames.proposed] = true // In case client downgraded packaget to draft from proposed
+
+		// Update package referemce (commit and tree hash stay the same)
+		d.ref = newRef
+	}
 
 	auth, err := d.parent.getAuthMethod(ctx)
 	if err != nil {
@@ -124,12 +153,42 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	}
 
 	if err := d.parent.repo.Push(&git.PushOptions{
-		RemoteName: "origin",
-		RefSpecs:   []config.RefSpec{refSpec},
+		RemoteName: originName,
+		RefSpecs:   pushRefSpecs,
 		Auth:       auth,
 		Force:      true, // TODO: implement conflict recovery.
 	}); err != nil {
 		return nil, fmt.Errorf("failed to push to git: %w", err)
+	}
+
+	deleteRemotes := []config.RefSpec{}
+	// Cleanup local and remote branches
+	for rn := range cleanup {
+		switch err := d.parent.repo.Storer.RemoveReference(rn); err {
+		case nil, plumbing.ErrReferenceNotFound:
+			// These are OK.
+
+		default:
+			return nil, err
+		}
+
+		// Check if its corresponding remote exists locally
+		if strings.HasPrefix(rn.String(), refHeadsPrefix) {
+			remote := plumbing.NewRemoteReferenceName("origin", strings.TrimPrefix(rn.String(), refHeadsPrefix))
+			if _, err := d.parent.repo.Reference(remote, true); err == nil {
+				deleteRemotes = append(deleteRemotes, config.RefSpec(fmt.Sprintf(":%s", rn.String())))
+			}
+		}
+	}
+
+	if len(deleteRemotes) > 0 {
+		if err := d.parent.repo.Push(&git.PushOptions{
+			RemoteName: "origin",
+			RefSpecs:   deleteRemotes,
+			Auth:       auth,
+		}); err != nil {
+			klog.Errorf("Failed to clean up remote branches: %v", err)
+		}
 	}
 
 	return &gitPackageRevision{
@@ -143,153 +202,85 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	}, nil
 }
 
-func storeBlob(store storer.EncodedObjectStorer, value string) (plumbing.Hash, error) {
-	data := []byte(value)
-	eo := store.NewEncodedObject()
-	eo.SetType(plumbing.BlobObject)
-	eo.SetSize(int64(len(data)))
+func (d *gitPackageDraft) commitPackageToMain(ctx context.Context) (commitHash, newPackageTreeHash plumbing.Hash, err error) {
+	localRef := refMain // TODO: add support for the branch provided at repository registration
+	remoteRef := refMain
 
-	w, err := eo.Writer()
+	var zero plumbing.Hash
+	auth, err := d.parent.getAuthMethod(ctx)
 	if err != nil {
-		return plumbing.Hash{}, err
+		return zero, zero, fmt.Errorf("failed to obtain git credentials: %w", err)
 	}
 
-	_, err = w.Write(data)
-	w.Close()
+	repo := d.parent.repo
+
+	// Fetch main
+	switch err := repo.Fetch(&git.FetchOptions{
+		RemoteName: "origin",
+		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", localRef, remoteRef))},
+		Auth:       auth,
+		Tags:       git.AllTags,
+	}); err {
+	case nil, git.NoErrAlreadyUpToDate:
+		// ok
+	default:
+		return zero, zero, fmt.Errorf("failed to fetch remote repository: %w", err)
+	}
+
+	// Find localTarget branch
+	localTarget, err := repo.Reference(localRef, true)
 	if err != nil {
-		return plumbing.Hash{}, err
+		// TODO: handle empty repositories - NotFound error
+		return zero, zero, fmt.Errorf("failed to find 'main' branch: %w", err)
 	}
-	return store.SetEncodedObject(eo)
-}
-
-func split(path string) (string, string) {
-	i := strings.LastIndex(path, "/")
-	if i >= 0 {
-		return path[:i], path[i+1:]
-	}
-	return "", path
-}
-
-func ensureTree(trees map[string]*object.Tree, fullPath string) *object.Tree {
-	if tree, ok := trees[fullPath]; ok {
-		return tree
-	}
-
-	dir, base := split(fullPath)
-	parent := ensureTree(trees, dir)
-
-	te := object.TreeEntry{
-		Name: base,
-		Mode: filemode.Dir,
-	}
-
-	for ei, ev := range parent.Entries {
-		// Replace whole subtrees modified by the package contents.
-		if ev.Name == te.Name && !ev.Hash.IsZero() {
-			parent.Entries[ei] = te
-			goto added
-		}
-	}
-	// Append a new entry
-	parent.Entries = append(parent.Entries, te)
-
-added:
-	tree := &object.Tree{}
-	trees[fullPath] = tree
-	return tree
-}
-
-func storeBlobHashInTrees(trees map[string]*object.Tree, fullPath string, hash plumbing.Hash) error {
-	dir, file := split(fullPath)
-
-	if file == "" {
-		return fmt.Errorf("invalid resource path: %q; no file name", fullPath)
-	}
-
-	tree := ensureTree(trees, dir)
-	tree.Entries = append(tree.Entries, object.TreeEntry{
-		Name: file,
-		Mode: filemode.Regular,
-		Hash: hash,
-	})
-
-	return nil
-}
-
-func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree, treePath string) (plumbing.Hash, error) {
-	tree, ok := trees[treePath]
-	if !ok {
-		return plumbing.Hash{}, fmt.Errorf("failed to find a tree %q", treePath)
-	}
-
-	entries := tree.Entries
-	sort.Slice(entries, func(i, j int) bool {
-		return entrySortKey(&entries[i]) < entrySortKey(&entries[j])
-	})
-
-	// Store all child trees and get their hashes
-	for i := range entries {
-		e := &entries[i]
-		if e.Mode != filemode.Dir {
-			continue
-		}
-		if !e.Hash.IsZero() {
-			continue
-		}
-
-		hash, err := storeTrees(store, trees, path.Join(treePath, e.Name))
-		if err != nil {
-			return plumbing.Hash{}, err
-		}
-		e.Hash = hash
-	}
-
-	eo := store.NewEncodedObject()
-	if err := tree.Encode(eo); err != nil {
-		return plumbing.Hash{}, err
-	}
-
-	treeHash, err := store.SetEncodedObject(eo)
+	headCommit, err := repo.CommitObject(localTarget.Hash())
 	if err != nil {
-		return plumbing.Hash{}, err
+		return zero, zero, fmt.Errorf("failed to resolve main branch to commit: %w", err)
+	}
+	headRoot, err := headCommit.Tree()
+	if err != nil {
+		// TODO: handle empty repositories
+		return zero, zero, fmt.Errorf("failed to get main commit tree; %w", err)
+	}
+	packagePath := d.path
+	packageTree := d.tree
+	if packageEntry, err := headRoot.FindEntry(packagePath); err == nil {
+		if packageEntry.Hash != packageTree {
+			return zero, zero, fmt.Errorf("internal error: package tree consistency check failed: %s != %s", packageEntry.Hash, packageTree)
+		}
 	}
 
-	tree.Hash = treeHash
-	return treeHash, nil
+	// TODO: Check for out-of-band update of the package in main branch
+	// (compare package tree in target branch and common base)
+	ch, err := newCommitHelper(repo.Storer, headCommit.Hash, packagePath, packageTree)
+	if err != nil {
+		return zero, zero, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
+	}
+	message := fmt.Sprintf("Approve %s", packagePath)
+	commitHash, newPackageTreeHash, err = ch.commit(message, packagePath)
+	if err != nil {
+		return zero, zero, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
+	}
+
+	return commitHash, newPackageTreeHash, nil
 }
 
-// Git sorts tree entries as though directories have '/' appended to them.
-func entrySortKey(e *object.TreeEntry) string {
-	if e.Mode == filemode.Dir {
-		return e.Name + "/"
-	}
-	return e.Name
+type packageRefs struct {
+	draft, proposed, final plumbing.ReferenceName
 }
 
-func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, change *v1alpha1.Task) (plumbing.Hash, error) {
-	now := time.Now()
-	commit := &object.Commit{
-		Author: object.Signature{
-			Name:  "Porch Author",
-			Email: "author@kpt.dev",
-			When:  now,
-		},
-		Committer: object.Signature{
-			Name:  "Porch Committer",
-			Email: "committer@kpt.dev",
-			When:  now,
-		},
-		Message:  fmt.Sprintf("Intermittent commit: %s", change.Type),
-		TreeHash: tree,
+func createPackageRefNames(name, revision string) packageRefs {
+	return packageRefs{
+		draft:    createDraftRefName(name, revision),
+		proposed: createProposedRefName(name, revision),
+		final:    createFinalRefName(name, revision),
 	}
+}
 
-	if !parent.IsZero() {
-		commit.ParentHashes = []plumbing.Hash{parent}
+func setReference(storer storage.Storer, name plumbing.ReferenceName, hash plumbing.Hash) (*plumbing.Reference, error) {
+	ref := plumbing.NewHashReference(name, hash)
+	if err := storer.SetReference(ref); err != nil {
+		return nil, err
 	}
-
-	eo := store.NewEncodedObject()
-	if err := commit.Encode(eo); err != nil {
-		return plumbing.Hash{}, err
-	}
-	return store.SetEncodedObject(eo)
+	return ref, nil
 }

@@ -26,6 +26,8 @@ import (
 	"testing"
 
 	gogit "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func TestDataAbs(t *testing.T, rel string) string {
@@ -49,13 +51,19 @@ func CreateTestTempDir(t *testing.T) string {
 	return tempdir
 }
 
-func ServeGitRepository(t *testing.T, tarfile, tempdir string) string {
+func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.Repository {
 	extractTar(t, tarfile, tempdir)
 
 	git, err := gogit.PlainOpen(filepath.Join(tempdir, ".git"))
 	if err != nil {
 		t.Fatalf("Failed to open Git Repository extracted from %q: %v", tarfile, err)
 	}
+
+	return git
+}
+
+func ServeGitRepository(t *testing.T, tarfile, tempdir string) string {
+	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
 
 	server, err := NewGitServer(git)
 	if err != nil {
@@ -129,4 +137,45 @@ func saveToFile(t *testing.T, path string, src io.Reader) {
 	if _, err := io.Copy(dst, src); err != nil {
 		t.Fatalf("Copy from tar to %q failed: %v", path, err)
 	}
+}
+
+func resolveReference(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) *plumbing.Reference {
+	ref, err := repo.Reference(name, true)
+	if err != nil {
+		t.Fatalf("Failed to resolve %q: %v", name, err)
+	}
+	return ref
+}
+
+func getCommitObject(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *object.Commit {
+	commit, err := repo.CommitObject(hash)
+	if err != nil {
+		t.Fatalf("Failed to find commit object for %q: %v", hash, err)
+	}
+	return commit
+}
+
+func getCommitTree(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *object.Tree {
+	commit := getCommitObject(t, repo, hash)
+	tree, err := commit.Tree()
+	if err != nil {
+		t.Fatalf("Failed to get tree from commit %q: %v", hash, err)
+	}
+	return tree
+}
+
+func findTreeEntry(t *testing.T, tree *object.Tree, path string) *object.TreeEntry {
+	entry, err := tree.FindEntry(path)
+	if err != nil {
+		t.Fatalf("Failed to find path %q in tree %q: %v", path, tree.Hash, err)
+	}
+	return entry
+}
+
+func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
+	file, err := tree.File(path)
+	if err != nil {
+		t.Fatalf("Failed to find file %q under the root commit tree %q: %v", path, tree.Hash, err)
+	}
+	return file
 }

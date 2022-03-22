@@ -42,12 +42,13 @@ import (
 const (
 	refMain plumbing.ReferenceName = "refs/heads/main"
 	// TODO: support customizable pattern of draft branches.
-	refDraftPrefix        = "refs/heads/drafts/"
-	refProposedPrefix     = "refs/heads/proposed/"
-	refTagsPrefix         = "refs/tags/"
-	refHeadsPrefix        = "refs/heads/"
-	refRemoteBranchPrefix = "refs/remotes/origin/"
-	originName            = "origin"
+	refDraftPrefix                               = "refs/heads/drafts/"
+	refProposedPrefix                            = "refs/heads/proposed/"
+	refTagsPrefix                                = "refs/tags/"
+	refHeadsPrefix                               = "refs/heads/"
+	refRemoteBranchPrefix                        = "refs/remotes/origin/"
+	refOriginMain         plumbing.ReferenceName = refRemoteBranchPrefix + "main"
+	originName                                   = "origin"
 )
 
 type GitRepository interface {
@@ -205,10 +206,14 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		return nil, fmt.Errorf("cannot update non-git package %T", old)
 	}
 
-	refName := createDraftRefName(oldGitPackage.path, oldGitPackage.revision)
-	head, err := r.repo.Reference(refName, true)
+	ref := oldGitPackage.ref
+	if ref == nil {
+		return nil, fmt.Errorf("cannot update final package")
+	}
+
+	head, err := r.repo.Reference(ref.Name(), true)
 	if err != nil {
-		return nil, fmt.Errorf("cannot find draft package branch %q: %w", refName, err)
+		return nil, fmt.Errorf("cannot find draft package branch %q: %w", ref.Name(), err)
 	}
 
 	rev, err := r.loadDraft(head)
@@ -563,7 +568,16 @@ func createDraftRefName(name, revision string) plumbing.ReferenceName {
 	return plumbing.ReferenceName(refName)
 }
 
+func createProposedRefName(name, revision string) plumbing.ReferenceName {
+	return plumbing.ReferenceName(refProposedPrefix + name + "/" + revision)
+}
+
+func createFinalRefName(name, revision string) plumbing.ReferenceName {
+	return plumbing.ReferenceName(refTagsPrefix + name + "/" + revision)
+}
+
 func createApprovedRefName(name, revision string) plumbing.ReferenceName {
+	// TODO: use createFinalRefName
 	refName := fmt.Sprintf("refs/heads/%s/%s", name, revision)
 	return plumbing.ReferenceName(refName)
 }
