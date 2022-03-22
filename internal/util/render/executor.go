@@ -116,10 +116,6 @@ func (e *Renderer) Execute(ctx context.Context) error {
 	at.Process()
 
 	if e.Output == nil {
-		matchFilesGlob := kio.MatchAll
-		// include meta resources by default
-		matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
-
 		// the intent of the user is to modify resources in-place
 		pkgWriter := &kio.LocalPackageReadWriter{
 			PackagePath:        string(root.pkg.UniquePath),
@@ -128,7 +124,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
-			MatchFilesGlob:     matchFilesGlob,
+			MatchFilesGlob:     pkg.MatchAllKRM,
 		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
@@ -328,7 +324,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(true /* always include meta resources */)
+	currPkgResources, err := curr.pkg.LocalResources()
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}

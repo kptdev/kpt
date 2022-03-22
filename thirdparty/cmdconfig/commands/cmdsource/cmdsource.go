@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -80,9 +81,6 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	var inputs []kio.Reader
-	matchFilesGlob := kio.MatchAll
-	// include meta resources by default
-	matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
 	for _, a := range args {
 		pkgPath, err := filepath.Abs(a)
 		if err != nil {
@@ -94,7 +92,7 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		}
 		inputs = append(inputs, kio.LocalPackageReader{
 			PackagePath:        resolvedPath,
-			MatchFilesGlob:     matchFilesGlob,
+			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,

@@ -11,6 +11,7 @@ import (
 	"os/user"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -117,14 +118,10 @@ func (r RunFns) getNodesAndFilters() (
 	// the same one for reading must be used for writing if deleting Resources
 	var outputPkg *kio.LocalPackageReadWriter
 
-	matchFilesGlob := kio.MatchAll
-	// include Kptfile by default
-	matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
-
 	if r.Path != "" {
 		outputPkg = &kio.LocalPackageReadWriter{
 			PackagePath:        string(r.uniquePath),
-			MatchFilesGlob:     matchFilesGlob,
+			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,

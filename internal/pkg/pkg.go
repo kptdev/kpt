@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -49,6 +48,10 @@ var DeprecatedKptfileVersions = []string{
 	"v1alpha1",
 	"v1alpha2",
 }
+
+// MatchAllKRM represents set of glob pattern to match all KRM
+// resources including Kptfile.
+var MatchAllKRM = append([]string{kptfilev1.KptFileName}, kio.MatchAll...)
 
 var SupportedKptfileVersions = []string{
 	kptfilev1.KptFileVersion,
@@ -469,7 +472,7 @@ func IsPackageUnfetched(path string) (bool, error) {
 }
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
-func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
+func (p *Pkg) LocalResources() (resources []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.readResources"
 
 	var hasKptfile bool
@@ -481,14 +484,11 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 		return nil, nil
 	}
 
-	matchFilesGlob := kio.MatchAll
-	matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
-
 	pkgReader := &kio.LocalPackageReader{
 		PackagePath:        string(p.UniquePath),
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
-		MatchFilesGlob:     matchFilesGlob,
+		MatchFilesGlob:     MatchAllKRM,
 		PreserveSeqIndent:  true,
 		SetAnnotations: map[string]string{
 			pkgPathAnnotation: string(p.UniquePath),
@@ -501,12 +501,6 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	resources, err = pkgReader.Read()
 	if err != nil {
 		return resources, errors.E(op, p.UniquePath, err)
-	}
-	if !includeMetaResources {
-		resources, err = filterMetaResources(resources)
-		if err != nil {
-			return resources, errors.E(op, p.UniquePath, err)
-		}
 	}
 	return resources, err
 }
@@ -523,7 +517,7 @@ func (p *Pkg) ValidatePipeline() error {
 	}
 
 	// read all resources including function pipeline.
-	resources, err := p.LocalResources(true)
+	resources, err := p.LocalResources()
 	if err != nil {
 		return err
 	}
@@ -557,22 +551,6 @@ func (p *Pkg) ValidatePipeline() error {
 		}
 	}
 	return nil
-}
-
-// filterMetaResources filters kpt metadata files such as Kptfile.
-func filterMetaResources(input []*yaml.RNode) (output []*yaml.RNode, err error) {
-	for _, r := range input {
-		meta, err := r.GetMeta()
-		if err != nil {
-			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
-		}
-		// filter out pkg metadata such as Kptfile
-		if strings.Contains(meta.APIVersion, "kpt.dev") && meta.Kind == "Kptfile" {
-			continue
-		}
-		output = append(output, r)
-	}
-	return output, nil
 }
 
 // GetPkgPathAnnotation returns the package path annotation on

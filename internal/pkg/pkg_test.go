@@ -27,7 +27,6 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestNewPkg(t *testing.T) {
@@ -182,120 +181,6 @@ func TestAdjustDisplayPathForSubpkg(t *testing.T) {
 			err = parent.adjustDisplayPathForSubpkg(subPkg)
 			assert.NoError(t, err)
 			assert.Equal(t, test.displayPath, string(subPkg.DisplayPath))
-		})
-	}
-}
-
-func TestFilterMetaResources(t *testing.T) {
-	tests := map[string]struct {
-		resources []string
-		expected  []string
-	}{
-		"no resources": {
-			resources: nil,
-			expected:  nil,
-		},
-
-		"nothing to filter": {
-			resources: []string{`
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}`,
-				`
-apiVersion: custom.io/v1
-kind: Custom
-spec:
-  image: nginx:1.2.3`,
-			},
-			expected: []string{
-				`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
-`,
-				`apiVersion: custom.io/v1
-kind: Custom
-spec:
-  image: nginx:1.2.3
-`,
-			},
-		},
-
-		"filter out metadata": {
-			resources: []string{`
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}`,
-				`
-apiVersion: custom.io/v1
-kind: Custom
-spec:
-  image: nginx:1.2.3`,
-				`
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: mysql
-pipeline:
-  mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.1
-      configMap:
-        replicas: 5
-`,
-			},
-			expected: []string{
-				`apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment
-spec:
-  replicas: 3 # {"$kpt-set":"replicas"}
-`,
-				`apiVersion: custom.io/v1
-kind: Custom
-spec:
-  image: nginx:1.2.3
-`,
-			},
-		},
-	}
-
-	for name := range tests {
-		test := tests[name]
-		t.Run(name, func(t *testing.T) {
-			var nodes []*yaml.RNode
-
-			for _, r := range test.resources {
-				res, err := yaml.Parse(r)
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				nodes = append(nodes, res)
-			}
-
-			filteredRes, err := filterMetaResources(nodes)
-			if err != nil {
-				t.Errorf("unexpected error in filtering meta resources: %v", err)
-			}
-			if len(filteredRes) != len(test.expected) {
-				t.Fatal("length of filtered resources not equal to expected")
-			}
-
-			for i, r := range filteredRes {
-				res, err := r.String()
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
-				assert.Equal(t, test.expected[i], res)
-			}
 		})
 	}
 }
