@@ -2,7 +2,3 @@ apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: dry-run-without-rg
-inventory:
-  namespace: dry-run-without-rg
-  name: dry-run-without-rg
-  inventoryID: dry-run-without-rg

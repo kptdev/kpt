@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: apply-depends-on
+  namespace: apply-depends-on
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: apply-depends-on

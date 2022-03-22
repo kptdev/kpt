@@ -2,7 +2,3 @@ apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: dry-run-with-install-rg
-inventory:
-  namespace: dry-run-with-install-rg
-  name: dry-run-with-install-rg
-  inventoryID: dry-run-with-install-rg

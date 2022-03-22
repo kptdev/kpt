@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/pkg/status"
 	"github.com/spf13/cobra"
@@ -83,6 +84,7 @@ func NewRunner(ctx context.Context, factory util.Factory,
 		"dry-run apply for the resources in the package.")
 	c.Flags().BoolVar(&r.printStatusEvents, "show-status-events", false,
 		"Print status events (always enabled for table output)")
+	c.Flags().StringVar(&r.rgFile, "rg-file", rgfilev1alpha1.RGFileName, "The file path to the ResourceGroup object.")
 	return r
 }
 

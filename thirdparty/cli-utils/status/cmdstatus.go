@@ -13,6 +13,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/GoogleContainerTools/kpt/pkg/status"
 	statusprinters "github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status/printers"
@@ -65,6 +66,7 @@ func NewRunner(ctx context.Context, factory util.Factory) *Runner {
 	c.Flags().StringVar(&r.output, "output", "events", "Output format.")
 	c.Flags().DurationVar(&r.timeout, "timeout", 0,
 		"How long to wait before exiting")
+	c.Flags().StringVar(&r.rgFile, "rg-file", rgfilev1alpha1.RGFileName, "The file path to the ResourceGroup object.")
 	return r
 }
 

@@ -708,9 +708,9 @@ func RemovePkgPathAnnotation(rn *yaml.RNode) error {
 }
 
 // ReadRGFile returns the resourcegroup object by lazy loading it from the filesytem.
-func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error) {
+func (p *Pkg) ReadRGFile(rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if p.rgFile == nil {
-		rg, err := ReadRGFile(p.UniquePath.String(), filename)
+		rg, err := ReadRGFile(p.UniquePath.String(), rgfile)
 		if err != nil {
 			return nil, err
 		}
@@ -722,12 +722,29 @@ func (p *Pkg) ReadRGFile(filename string) (*rgfilev1alpha1.ResourceGroup, error)
 // TODO(rquitales): Consolidate both Kptfile and ResourceGroup file reading functions to use
 // shared logic/function.
 
-// ReadRGFile reads the KptFile in the given pkg.
-func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
-	f, err := os.Open(filepath.Join(path, filename))
+// ReadRGFile reads the resourcegroup inventory in the given pkg.
+func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
+	// Check to see if filename for ResourceGroup is a filepath, rather than being relative to the pkg path.
+	// If only a filename is provided, we assume that the resourcegroup file is relative to the pkg path.
+	var absPath string
+	if filepath.Base(rgfile) == rgfile {
+		absPath = filepath.Join(pkgPath, rgfile)
+	} else {
+		rgFilePath, _, err := pathutil.ResolveAbsAndRelPaths(rgfile)
+		if err != nil {
+			return nil, &RGError{
+				Path: types.UniquePath(rgfile),
+				Err:  err,
+			}
+		}
+
+		absPath = rgFilePath
+	}
+
+	f, err := os.Open(absPath)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(path),
+			Path: types.UniquePath(absPath),
 			Err:  err,
 		}
 	}
@@ -736,7 +753,7 @@ func ReadRGFile(path, filename string) (*rgfilev1alpha1.ResourceGroup, error) {
 	rg, err := DecodeRGFile(f)
 	if err != nil {
 		return nil, &RGError{
-			Path: types.UniquePath(path),
+			Path: types.UniquePath(absPath),
 			Err:  err,
 		}
 	}
