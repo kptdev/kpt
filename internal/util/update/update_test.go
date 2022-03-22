@@ -3747,14 +3747,10 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ds, err := testutil.GetTestDataPath()
 			assert.NoError(t, err)
-			updated, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
-			original, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
-			local, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
-			expectedLocal, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
+			updated := t.TempDir()
+			original := t.TempDir()
+			local := t.TempDir()
+			expectedLocal := t.TempDir()
 
 			err = copyutil.CopyDir(filepath.Join(ds, test.updated), updated)
 			assert.NoError(t, err)

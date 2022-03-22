@@ -23,7 +23,6 @@ import (
 	"bufio"
 	"bytes"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 	"testing"
@@ -442,10 +441,7 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 // Tests against directories in different states
 func TestCommand_NotAKptDirectory(t *testing.T) {
 	// Initial test setup
-	dir, err := ioutil.TempDir("", "example")
-	if err != nil {
-		t.Fatal(err)
-	}
+	dir := t.TempDir()
 
 	testCases := map[string]struct {
 		directory string

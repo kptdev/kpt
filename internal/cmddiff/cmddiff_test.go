@@ -15,7 +15,6 @@
 package cmddiff_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -73,14 +72,10 @@ func TestCmdExecute(t *testing.T) {
 }
 
 func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	defer testutil.Chdir(t, dir)()
 
-	err = os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
+	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
 	assert.NoError(t, err)

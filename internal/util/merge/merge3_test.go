@@ -573,13 +573,9 @@ spec:
 		t.Run(tn, func(t *testing.T) {
 
 			// setup the local directory
-			dir, err := ioutil.TempDir("", "merge3-test")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer os.RemoveAll(dir)
+			dir := t.TempDir()
 
-			err = os.MkdirAll(filepath.Join(dir, "localDir"), 0700)
+			err := os.MkdirAll(filepath.Join(dir, "localDir"), 0700)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

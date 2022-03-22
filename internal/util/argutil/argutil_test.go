@@ -15,7 +15,6 @@
 package argutil_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -123,13 +122,9 @@ func TestParseDirVersionWithDefaults(t *testing.T) {
 }
 
 func TestResolveSymlink(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	defer testutil.Chdir(t, dir)()
-	err = os.MkdirAll(filepath.Join(dir, "foo"), 0700)
+	err := os.MkdirAll(filepath.Join(dir, "foo"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink("foo", "foo-link")
 	assert.NoError(t, err)

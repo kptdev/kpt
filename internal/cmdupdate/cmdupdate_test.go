@@ -16,7 +16,6 @@ package cmdupdate_test
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -296,18 +295,14 @@ func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
 func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 	failRun := NoOpFailRunE{t: t}.runE
 
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	defer testutil.Chdir(t, filepath.Dir(dir))()
 
 	// verify the current working directory is used if no path is specified
 	r := cmdupdate.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.RunE = NoOpRunE
 	r.Command.SetArgs([]string{})
-	err = r.Command.Execute()
+	err := r.Command.Execute()
 	assert.NoError(t, err)
 	assert.Equal(t, "", r.Update.Ref)
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
@@ -350,14 +345,10 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 }
 
 func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 	defer testutil.Chdir(t, dir)()
 
-	err = os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
+	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
 	assert.NoError(t, err)
@@ -393,11 +384,7 @@ func TestCmd_path(t *testing.T) {
 		pathPrefix = "/private"
 	}
 
-	dir, err := ioutil.TempDir("", "")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	testCases := []struct {
 		name                    string
@@ -450,7 +437,7 @@ func TestCmd_path(t *testing.T) {
 			}
 
 			r.Command.SetArgs([]string{test.path})
-			err = r.Command.Execute()
+			err := r.Command.Execute()
 
 			if test.expectedErrMsg != "" {
 				if !assert.Error(t, err) {

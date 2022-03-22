@@ -204,11 +204,7 @@ metadata:
 	for i := range tests {
 		test := tests[i]
 		t.Run(test.name, func(t *testing.T) {
-			baseDir, err := ioutil.TempDir("", "")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
-			defer os.RemoveAll(baseDir)
+			baseDir := t.TempDir()
 
 			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {

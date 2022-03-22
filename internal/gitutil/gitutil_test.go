@@ -15,7 +15,6 @@
 package gitutil_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -58,10 +57,7 @@ func TestLocalGitRunner(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			dir, err := ioutil.TempDir("", "kpt-test")
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			dir := t.TempDir()
 
 			runner, err := NewLocalGitRunner(dir)
 			if !assert.NoError(t, err) {
@@ -94,12 +90,9 @@ func TestLocalGitRunner(t *testing.T) {
 }
 
 func TestNewGitUpstreamRepo_noRepo(t *testing.T) {
-	dir, err := ioutil.TempDir("", "kpt-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	dir := t.TempDir()
 
-	_, err = NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), dir)
+	_, err := NewGitUpstreamRepo(fake.CtxWithDefaultPrinter(), dir)
 	if !assert.Error(t, err) {
 		t.FailNow()
 	}
@@ -107,10 +100,7 @@ func TestNewGitUpstreamRepo_noRepo(t *testing.T) {
 }
 
 func TestNewGitUpstreamRepo_noRefs(t *testing.T) {
-	dir, err := ioutil.TempDir("", "kpt-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	dir := t.TempDir()
 
 	runner, err := NewLocalGitRunner(dir)
 	if !assert.NoError(t, err) {
@@ -189,10 +179,7 @@ func TestNewGitUpstreamRepo(t *testing.T) {
 }
 
 func TestGitUpstreamRepo_GetDefaultBranch_noRefs(t *testing.T) {
-	dir, err := ioutil.TempDir("", "kpt-test")
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	dir := t.TempDir()
 
 	runner, err := NewLocalGitRunner(dir)
 	if !assert.NoError(t, err) {

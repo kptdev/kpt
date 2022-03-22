@@ -505,9 +505,8 @@ metadata:
 	for _, tc := range testcases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			d, err := ioutil.TempDir("", "")
-			assert.NoError(t, err)
-			err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
+			d := t.TempDir()
+			err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
 			assert.NoError(t, err)
 			got, err := GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, types.UniquePath(d), "f1.yaml")
 			if tc.errMsg != "" {

@@ -30,11 +30,10 @@ import (
 // TestMan_Execute verifies that Execute will find the man page file,
 // format it as a man page, and execute a command to display it.
 func TestMan_Execute(t *testing.T) {
-	d, err := ioutil.TempDir("", "kptman")
-	assert.NoError(t, err)
+	d := t.TempDir()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -190,13 +189,10 @@ func TestMan_GetStdOut(t *testing.T) {
 // TestMan_Execute_failNoManPage verifies that if the man page is not
 // specified for the package, an error is returned.
 func TestMan_Execute_failNoManPage(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt-man-test")
-	if !assert.NoError(t, err) {
-		return
-	}
+	d := t.TempDir()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -225,11 +221,10 @@ info:
 // TestMan_Execute_failBadPath verifies that Execute will fail if the man
 // path does not exist.
 func TestMan_Execute_failBadPath(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt-man-test")
-	assert.NoError(t, err)
+	d := t.TempDir()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -254,11 +249,10 @@ info:
 // TestMan_Execute_failLocation verifies that Execute will fail if the man
 // path is not under the package directory.
 func TestMan_Execute_failLocation(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt-man-test")
-	assert.NoError(t, err)
+	d := t.TempDir()
 
 	// write the KptFile
-	err = ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:

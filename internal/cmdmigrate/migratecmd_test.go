@@ -136,10 +136,9 @@ func TestKptMigrate_updateKptfile(t *testing.T) {
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
 			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-migrate-test")
-			assert.NoError(t, err)
+			dir := t.TempDir()
 			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			err := ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
 			ctx := fake.CtxWithDefaultPrinter()
@@ -228,10 +227,9 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
 
 			// Set up temp directory with Ktpfile
-			dir, err := ioutil.TempDir("", "kpt-migrate-test")
-			assert.NoError(t, err)
+			dir := t.TempDir()
 			p := filepath.Join(dir, "Kptfile")
-			err = ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			err := ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
 			if tc.resourcegroup != "" {

@@ -35,13 +35,12 @@ func TestMain(m *testing.M) {
 
 // TestCmd verifies the directory is initialized
 func TestCmd(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
+	d := t.TempDir()
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 
 	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
-	err = r.Command.Execute()
+	err := r.Command.Execute()
 	assert.NoError(t, err)
 
 	// verify the contents
@@ -86,8 +85,7 @@ Details: https://kpt.dev/reference/cli/live/
 }
 
 func TestCmd_currentDir(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
+	d := t.TempDir()
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
@@ -123,8 +121,7 @@ info:
 }
 
 func TestCmd_DefaultToCurrentDir(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
+	d := t.TempDir()
 	assert.NoError(t, os.Mkdir(filepath.Join(d, "my-pkg"), 0700))
 	packageDir := filepath.Join(d, "my-pkg")
 	currentDir, err := os.Getwd()
@@ -161,11 +158,10 @@ info:
 
 // TestCmd_failExists verifies the command throws and error if the directory exists
 func TestCmd_failNotExists(t *testing.T) {
-	d, err := ioutil.TempDir("", "kpt")
-	assert.NoError(t, err)
+	d := t.TempDir()
 	r := cmdinit.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
-	err = r.Command.Execute()
+	err := r.Command.Execute()
 	if assert.Error(t, err) {
 		assert.Contains(t, err.Error(), "does not exist")
 	}
