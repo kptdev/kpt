@@ -30,6 +30,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/test/porch"
 	"github.com/google/go-cmp/cmp"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
@@ -88,6 +89,10 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 
 		err := cmd.Run()
 
+		if command.Yaml {
+			reorderYamlStdout(t, &stdout)
+		}
+
 		if *update {
 			updateCommand(command, err, stdout.String(), stderr.String())
 		}
@@ -105,6 +110,25 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 
 	if *update {
 		porch.WriteTestCaseConfig(t, &tc)
+	}
+}
+
+func reorderYamlStdout(t *testing.T, buf *bytes.Buffer) {
+	var data interface{}
+	if err := yaml.Unmarshal(buf.Bytes(), &data); err != nil {
+		// not yaml.
+		return
+	}
+
+	var stable bytes.Buffer
+	encoder := yaml.NewEncoder(&stable)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(data); err != nil {
+		t.Fatalf("Failed to re-encode yaml output: %v", err)
+	}
+	buf.Reset()
+	if _, err := buf.Write(stable.Bytes()); err != nil {
+		t.Fatalf("Failed to update reordered yaml output: %v", err)
 	}
 }
 

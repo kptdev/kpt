@@ -34,41 +34,42 @@ commands:
       - git:basens-clone:v0
     stdout: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
       - apiVersion: kpt.dev/v1
-        kind: Kptfile
-        metadata:
-          name: basens-clone
-          annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-            config.kubernetes.io/path: 'Kptfile'
-        upstream:
-          type: git
-          git:
-            repo: https://github.com/platkrm/test-blueprints
-            directory: basens
-            ref: basens/v1
-        upstreamLock:
-          type: git
-          git:
-            repo: https://github.com/platkrm/test-blueprints
-            directory: basens
-            ref: basens/v1
-            commit: 67f29546028f0a48c6bbb08614934d0e070cdd3a
         info:
           description: sample description
+        kind: Kptfile
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: Kptfile
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: basens-clone
+        upstream:
+          git:
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+        upstreamLock:
+          git:
+            commit: 67f29546028f0a48c6bbb08614934d0e070cdd3a
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
       - apiVersion: v1
         kind: Namespace
         metadata:
-          name: example
           annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'namespace.yaml'
-            config.kubernetes.io/path: 'namespace.yaml'
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: namespace.yaml
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: namespace.yaml
+          name: example
+      kind: ResourceList
+    yaml: true
   - args:
       - alpha
       - rpkg
@@ -77,28 +78,29 @@ commands:
       - git:empty-clone:v0
     stdout: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
       - apiVersion: kpt.dev/v1
-        kind: Kptfile
-        metadata:
-          name: empty-clone
-          annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-        upstream:
-          type: git
-          git:
-            repo: https://github.com/platkrm/test-blueprints
-            directory: empty
-            ref: v1
-        upstreamLock:
-          type: git
-          git:
-            repo: https://github.com/platkrm/test-blueprints
-            directory: empty
-            ref: v1
-            commit: 3de8635354eda8e7de756494a4e0eb5c12af01ab
         info:
           description: Empty Blueprint
+        kind: Kptfile
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: empty-clone
+        upstream:
+          git:
+            directory: empty
+            ref: v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+        upstreamLock:
+          git:
+            commit: 3de8635354eda8e7de756494a4e0eb5c12af01ab
+            directory: empty
+            ref: v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+      kind: ResourceList
+    yaml: true

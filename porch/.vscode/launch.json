@@ -63,6 +63,7 @@
             "mode": "test",
             "program": "${workspaceFolder}/../e2e",
             "args": [
+                "-v",
                 "-test.run",
                 "TestPorch"
             ]
