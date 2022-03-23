@@ -30,7 +30,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/test/porch"
 	"github.com/google/go-cmp/cmp"
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (

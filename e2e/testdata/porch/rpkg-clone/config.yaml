@@ -35,39 +35,39 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
-        - apiVersion: kpt.dev/v1
-          info:
-            description: sample description
-          kind: Kptfile
-          metadata:
-            annotations:
-              config.kubernetes.io/index: "0"
-              config.kubernetes.io/path: Kptfile
-              internal.config.kubernetes.io/index: "0"
-              internal.config.kubernetes.io/path: Kptfile
-            name: basens-clone
-          upstream:
-            git:
-              directory: basens
-              ref: basens/v1
-              repo: https://github.com/platkrm/test-blueprints
-            type: git
-          upstreamLock:
-            git:
-              commit: 67f29546028f0a48c6bbb08614934d0e070cdd3a
-              directory: basens
-              ref: basens/v1
-              repo: https://github.com/platkrm/test-blueprints
-            type: git
-        - apiVersion: v1
-          kind: Namespace
-          metadata:
-            annotations:
-              config.kubernetes.io/index: "0"
-              config.kubernetes.io/path: namespace.yaml
-              internal.config.kubernetes.io/index: "0"
-              internal.config.kubernetes.io/path: namespace.yaml
-            name: example
+      - apiVersion: kpt.dev/v1
+        info:
+          description: sample description
+        kind: Kptfile
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: Kptfile
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: basens-clone
+        upstream:
+          git:
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+        upstreamLock:
+          git:
+            commit: 67f29546028f0a48c6bbb08614934d0e070cdd3a
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+      - apiVersion: v1
+        kind: Namespace
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: namespace.yaml
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: namespace.yaml
+          name: example
       kind: ResourceList
     yaml: true
   - args:
@@ -79,28 +79,28 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
-        - apiVersion: kpt.dev/v1
-          info:
-            description: Empty Blueprint
-          kind: Kptfile
-          metadata:
-            annotations:
-              config.kubernetes.io/index: "0"
-              internal.config.kubernetes.io/index: "0"
-              internal.config.kubernetes.io/path: Kptfile
-            name: empty-clone
-          upstream:
-            git:
-              directory: empty
-              ref: v1
-              repo: https://github.com/platkrm/test-blueprints
-            type: git
-          upstreamLock:
-            git:
-              commit: 3de8635354eda8e7de756494a4e0eb5c12af01ab
-              directory: empty
-              ref: v1
-              repo: https://github.com/platkrm/test-blueprints
-            type: git
+      - apiVersion: kpt.dev/v1
+        info:
+          description: Empty Blueprint
+        kind: Kptfile
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: empty-clone
+        upstream:
+          git:
+            directory: empty
+            ref: v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
+        upstreamLock:
+          git:
+            commit: 3de8635354eda8e7de756494a4e0eb5c12af01ab
+            directory: empty
+            ref: v1
+            repo: https://github.com/platkrm/test-blueprints
+          type: git
       kind: ResourceList
     yaml: true
