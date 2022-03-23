@@ -34,19 +34,20 @@ commands:
       - git:test-package:v0
     stdout: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
-      - apiVersion: kpt.dev/v1
-        kind: Kptfile
-        metadata:
-          name: test-package
-          annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-        info:
-          site: http://kpt.dev/test-package
-          description: Test Package Description
-          keywords:
-          - test
-          - package
+        - apiVersion: kpt.dev/v1
+          info:
+            description: Test Package Description
+            keywords:
+              - test
+              - package
+            site: http://kpt.dev/test-package
+          kind: Kptfile
+          metadata:
+            annotations:
+              config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/path: Kptfile
+            name: test-package
+      kind: ResourceList
+    yaml: true

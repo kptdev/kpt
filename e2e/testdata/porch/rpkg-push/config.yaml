@@ -20,18 +20,19 @@ commands:
       - git:test-package:v0
     stdout: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
-      - apiVersion: kpt.dev/v1
-        kind: Kptfile
-        metadata:
-          name: test-package
-          annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-        info:
-          description: sample description
+        - apiVersion: kpt.dev/v1
+          info:
+            description: sample description
+          kind: Kptfile
+          metadata:
+            annotations:
+              config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/path: Kptfile
+            name: test-package
+      kind: ResourceList
+    yaml: true
   - args:
       - alpha
       - rpkg
@@ -70,28 +71,29 @@ commands:
       - git:test-package:v0
     stdout: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
-      - apiVersion: kpt.dev/v1
-        kind: Kptfile
-        metadata:
-          name: test-package
-          annotations:
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-            config.kubernetes.io/path: 'Kptfile'
-        info:
-          site: http://kpt.dev/test-package
-          description: Updated Test Package Description
-      - apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: new-config-map
-          annotations:
-            config.kubernetes.io/path: 'config-map.yaml'
-            internal.config.kubernetes.io/path: 'config-map.yaml'
-            config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/index: '0'
-        data:
-          key: value
+        - apiVersion: kpt.dev/v1
+          info:
+            description: Updated Test Package Description
+            site: http://kpt.dev/test-package
+          kind: Kptfile
+          metadata:
+            annotations:
+              config.kubernetes.io/index: "0"
+              config.kubernetes.io/path: Kptfile
+              internal.config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/path: Kptfile
+            name: test-package
+        - apiVersion: v1
+          data:
+            key: value
+          kind: ConfigMap
+          metadata:
+            annotations:
+              config.kubernetes.io/index: "0"
+              config.kubernetes.io/path: config-map.yaml
+              internal.config.kubernetes.io/index: "0"
+              internal.config.kubernetes.io/path: config-map.yaml
+            name: new-config-map
+      kind: ResourceList
+    yaml: true

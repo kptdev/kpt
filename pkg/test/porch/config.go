@@ -34,6 +34,8 @@ type Command struct {
 	Stderr string `yaml:"stderr,omitempty"`
 	// ExitCode is the expected exit code frm the command.
 	ExitCode int `yaml:"exitCode,omitempty"`
+	// Yaml indicates that stdout is yaml and the test will reformat it for stable ordering
+	Yaml bool `yaml:"yaml,omitempty"`
 }
 
 type TestCaseConfig struct {
