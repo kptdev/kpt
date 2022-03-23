@@ -35,6 +35,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -103,6 +104,10 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 				ObjectMeta: yaml.ObjectMeta{
 					NameMeta: yaml.NameMeta{
 						Name: r.Name,
+					},
+					// mark Kptfile as local-config
+					Annotations: map[string]string{
+						filters.LocalConfigAnnotation: "true",
 					},
 				},
 			},

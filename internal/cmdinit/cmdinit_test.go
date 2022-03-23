@@ -50,6 +50,8 @@ func TestCmd(t *testing.T) {
 kind: Kptfile
 metadata:
   name: my-pkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
 info:
   description: my description
 `, string(b))
@@ -115,6 +117,8 @@ func TestCmd_currentDir(t *testing.T) {
 kind: Kptfile
 metadata:
   name: my-pkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
 info:
   description: my description
 `, string(b))
@@ -151,6 +155,8 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 kind: Kptfile
 metadata:
   name: my-pkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
 info:
   description: my description
 `, string(b))
