@@ -25,12 +25,31 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"k8s.io/klog/v2"
 )
 
 type grpcRuntime struct {
 	cc     *grpc.ClientConn
 	client evaluator.FunctionEvaluatorClient
+}
+
+func newGRPCFunctionRuntime(address string) (*grpcRuntime, error) {
+	if address == "" {
+		return nil, fmt.Errorf("address is required to instantiate gRPC function runtime")
+	}
+
+	klog.Infof("Dialing grpc function runner %q", address)
+
+	cc, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to dial grpc function evaluator: %w", err)
+	}
+
+	return &grpcRuntime{
+		cc:     cc,
+		client: evaluator.NewFunctionEvaluatorClient(cc),
+	}, err
 }
 
 var _ kpt.FunctionRuntime = &grpcRuntime{}
