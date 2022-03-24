@@ -18,13 +18,14 @@ import (
 	"archive/tar"
 	"context"
 	"io"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -38,19 +39,6 @@ func TestDataAbs(t *testing.T, rel string) string {
 	return testdata
 }
 
-func CreateTestTempDir(t *testing.T) string {
-	tempdir, err := ioutil.TempDir("", "test-git-*")
-	if err != nil {
-		t.Fatalf("TempDir failed: %v", err)
-	}
-	t.Cleanup(func() {
-		if err := os.RemoveAll(tempdir); err != nil {
-			t.Errorf("RemoveAll(%q) failed: %v", tempdir, err)
-		}
-	})
-	return tempdir
-}
-
 func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.Repository {
 	extractTar(t, tarfile, tempdir)
 
@@ -62,7 +50,7 @@ func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.
 	return git
 }
 
-func ServeGitRepository(t *testing.T, tarfile, tempdir string) string {
+func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repository, string) {
 	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
 
 	server, err := NewGitServer(git)
@@ -93,7 +81,7 @@ func ServeGitRepository(t *testing.T, tarfile, tempdir string) string {
 	if !ok {
 		t.Fatalf("Git Server failed to start")
 	}
-	return "http://" + address.String()
+	return git, "http://" + address.String()
 }
 
 func extractTar(t *testing.T, tarfile string, dir string) {
@@ -178,4 +166,40 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 		t.Fatalf("Failed to find file %q under the root commit tree %q: %v", path, tree.Hash, err)
 	}
 	return file
+}
+
+func findPackage(t *testing.T, revisions []repository.PackageRevision, name string) repository.PackageRevision {
+	for _, r := range revisions {
+		if r.Name() == name {
+			return r
+		}
+	}
+	names := make([]string, len(revisions))
+	for _, r := range revisions {
+		names = append(names, r.Name())
+	}
+	t.Fatalf("PackageRevision %q not found among %s", name, strings.Join(names, ","))
+	return nil
+}
+
+func refMustExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {
+	switch _, err := repo.Reference(name, false); err {
+	case nil:
+		// ok
+	case plumbing.ErrReferenceNotFound:
+		t.Fatalf("Reference %s must exist but was not found: %v", name, err)
+	default:
+		t.Fatalf("Unexpected error resolving reference %q: %v", name, err)
+	}
+}
+
+func refMustNotExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {
+	switch ref, err := repo.Reference(name, false); err {
+	case nil:
+		t.Fatalf("Reference %s must not exist but was found: %s", name, ref)
+	case plumbing.ErrReferenceNotFound:
+		// ok
+	default:
+		t.Fatalf("Unexpected error resolving reference %q: %v", name, err)
+	}
 }
