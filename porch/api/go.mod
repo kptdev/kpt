@@ -5,8 +5,8 @@ module github.com/GoogleContainerTools/kpt/porch/api
 go 1.17
 
 require (
-	k8s.io/apimachinery v0.23.2
-	k8s.io/code-generator v0.23.2
+	k8s.io/apimachinery v0.23.5
+	k8s.io/code-generator v0.23.5
 )
 
 require (
