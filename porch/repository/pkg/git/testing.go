@@ -33,6 +33,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/format/packfile"
 	"github.com/go-git/go-git/v5/plumbing/format/pktline"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/protocol/packp/capability"
 	"github.com/go-git/go-git/v5/storage"
 	"k8s.io/klog/v2"
 )
@@ -138,7 +139,7 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 	query := r.URL.Query()
 	serviceName := query.Get("service")
 
-	capabilities := []string{}
+	capabilities := []string{string(capability.DeleteRefs)}
 
 	switch serviceName {
 	case "git-upload-pack":
@@ -147,7 +148,6 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 
 	case "git-receive-pack":
 		// OK
-		// TODO: capabilities?
 
 	default:
 		return fmt.Errorf("unknown service-name %q", serviceName)
@@ -417,7 +417,10 @@ func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request) 
 
 	gitWriter := NewPacketLineWriter(w)
 
-	if err := packfile.UpdateObjectStorage(s.repo.Storer, body); err != nil {
+	switch err := packfile.UpdateObjectStorage(s.repo.Storer, body); err {
+	case nil, packfile.ErrEmptyPackfile:
+		// ok
+	default:
 		klog.Warningf("error parsing packfile: %v", err)
 		gitWriter.WriteLine("unpack error parsing packfile")
 		gitWriter.Flush()
@@ -437,11 +440,18 @@ func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request) 
 
 	// TODO: Concurrency, if we ever pull this out of test code
 	for _, refUpdate := range refUpdates {
-		ref := plumbing.NewHashReference(plumbing.ReferenceName(refUpdate.Ref), refUpdate.To)
-		if err := s.repo.Storer.SetReference(ref); err != nil {
-			klog.Warningf("failed to update reference %v: %v", refUpdate, err)
-		} else {
-			klog.Warningf("updated reference %v -> %v", refUpdate.Ref, refUpdate.To)
+		switch {
+		case refUpdate.To.IsZero():
+			klog.Infof("Deleting reference %s", refUpdate.Ref)
+			s.repo.Storer.RemoveReference(plumbing.ReferenceName(refUpdate.Ref))
+
+		default:
+			ref := plumbing.NewHashReference(plumbing.ReferenceName(refUpdate.Ref), refUpdate.To)
+			if err := s.repo.Storer.SetReference(ref); err != nil {
+				klog.Warningf("failed to update reference %v: %v", refUpdate, err)
+			} else {
+				klog.Warningf("updated reference %v -> %v", refUpdate.Ref, refUpdate.To)
+			}
 		}
 	}
 
