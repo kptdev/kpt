@@ -57,6 +57,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
+	r.Command.Flags().BoolVarP(
+		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 	r.Command.Flags().BoolVar(
@@ -80,6 +82,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
 
+	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
+		panic(err)
+	}
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -90,24 +95,25 @@ func EvalCommand(ctx context.Context, name string) *cobra.Command {
 
 // EvalFnRunner contains the run function
 type EvalFnRunner struct {
-	Command         *cobra.Command
-	Dest            string
-	OutContent      bytes.Buffer
-	FromStdin       bool
-	Image           string
-	SaveFn          bool
-	Exec            string
-	FnConfigPath    string
-	RunFns          runfn.RunFns
-	ResultsDir      string
-	ImagePullPolicy string
-	Network         bool
-	Mounts          []string
-	Env             []string
-	AsCurrentUser   bool
-	Ctx             context.Context
-	Selector        kptfile.Selector
-	dataItems       []string
+	Command              *cobra.Command
+	Dest                 string
+	OutContent           bytes.Buffer
+	FromStdin            bool
+	Image                string
+	SaveFn               bool
+	Exec                 string
+	FnConfigPath         string
+	RunFns               runfn.RunFns
+	ResultsDir           string
+	ImagePullPolicy      string
+	Network              bool
+	Mounts               []string
+	Env                  []string
+	AsCurrentUser        bool
+	IncludeMetaResources bool
+	Ctx                  context.Context
+	Selector             kptfile.Selector
+	dataItems            []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -301,6 +307,12 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	// Let users know that --include-meta-resources is not longer necessary
+	// since meta resources are included by default.
+	if r.IncludeMetaResources {
+		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
+	}
+
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
 			return err

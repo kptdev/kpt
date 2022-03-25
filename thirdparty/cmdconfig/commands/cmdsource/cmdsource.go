@@ -35,13 +35,21 @@ func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 		Example: fndocs.SourceExamples,
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 	c.Flags().StringVarP(&r.Output, "output", "o", cmdutil.Stdout,
 		fmt.Sprintf("output resources are written to stdout in provided format. Allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
 		"path to function config file.")
+	c.Flags().BoolVar(&r.IncludeMetaResources,
+		"include-meta-resources", false, "include package meta resources in the command output")
+	if err := c.Flags().MarkHidden("include-meta-resources"); err != nil {
+		panic(err)
+	}
 	r.Command = c
-	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
+	if err := c.MarkFlagFilename("fn-config", "yaml", "json", "yml"); err != nil {
+		panic(err)
+	}
 	return r
 }
 
@@ -51,12 +59,20 @@ func NewCommand(ctx context.Context, name string) *cobra.Command {
 
 // SourceRunner contains the run function
 type SourceRunner struct {
-	Output         string
-	WrapKind       string
-	WrapAPIVersion string
-	FunctionConfig string
-	Command        *cobra.Command
-	Ctx            context.Context
+	Output               string
+	WrapKind             string
+	WrapAPIVersion       string
+	FunctionConfig       string
+	Command              *cobra.Command
+	IncludeMetaResources bool
+	Ctx                  context.Context
+}
+
+func (r *SourceRunner) preRunE(c *cobra.Command, _ []string) error {
+	if r.IncludeMetaResources {
+		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
+	}
+	return nil
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
