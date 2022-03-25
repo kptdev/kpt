@@ -55,6 +55,7 @@ func newGRPCFunctionRuntime(address string) (*grpcRuntime, error) {
 var _ kpt.FunctionRuntime = &grpcRuntime{}
 
 func (gr *grpcRuntime) GetRunner(ctx context.Context, fn *v1.Function) (fn.FunctionRunner, error) {
+	// TODO: Check if the function is actually available?
 	return &grpcRunner{
 		ctx:    ctx,
 		client: gr.client,
