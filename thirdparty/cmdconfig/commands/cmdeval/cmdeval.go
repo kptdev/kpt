@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strings"
 
@@ -57,8 +58,6 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Exec, "exec", "", "run an executable as a function")
 	r.Command.Flags().StringVar(
 		&r.FnConfigPath, "fn-config", "", "path to the function config file")
-	r.Command.Flags().BoolVarP(
-		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
 	r.Command.Flags().StringVar(
 		&r.ResultsDir, "results-dir", "", "write function results to this dir")
 	r.Command.Flags().BoolVar(
@@ -81,6 +80,13 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Selector.Name, "match-name", "", "select resources matching the given name")
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
+
+	// hide this flag, because it is no longer supported.
+	r.Command.Flags().BoolVarP(
+		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
+	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
+		log.Fatal(err)
+	}
 
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
@@ -304,6 +310,12 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	// Let users know that --include-meta-resources is no longer necessary
+	if r.IncludeMetaResources {
+		return fmt.Errorf(`Flag "include-meta-resource" is no longer necessary; meta resources are now included by default. 
+Read more in the kpt FAQ and release notes.`)
+	}
+
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
 			return err

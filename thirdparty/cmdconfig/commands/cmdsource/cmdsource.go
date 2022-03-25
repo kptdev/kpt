@@ -6,6 +6,7 @@ package cmdsource
 import (
 	"context"
 	"fmt"
+	"log"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -37,13 +38,20 @@ func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 		Example: fndocs.SourceExamples,
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 	c.Flags().StringVarP(&r.Output, "output", "o", cmdutil.Stdout,
 		fmt.Sprintf("output resources are written to stdout in provided format. Allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap))
 	c.Flags().StringVar(&r.FunctionConfig, "fn-config", "",
 		"path to function config file.")
-	c.Flags().BoolVar(&r.IncludeMetaResources,
-		"include-meta-resources", false, "include package meta resources in the command output")
+
+	// hide this flag, because it is no longer supported.
+	c.Flags().BoolVarP(
+		&r.IncludeMetaResources, "include-meta-resources", "m", false, "include package meta resources in function input")
+	if err := c.Flags().MarkHidden("include-meta-resources"); err != nil {
+		log.Fatal(err)
+	}
+
 	r.Command = c
 	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
 	return r
@@ -62,6 +70,15 @@ type SourceRunner struct {
 	Command              *cobra.Command
 	IncludeMetaResources bool
 	Ctx                  context.Context
+}
+
+func (r *SourceRunner) preRunE(c *cobra.Command, _ []string) error {
+	// Let users know that --include-meta-resources is no longer necessary
+	if r.IncludeMetaResources {
+		return fmt.Errorf(`Flag "include-meta-resource" is no longer necessary; meta resources are now included by default. 
+Read more in the kpt FAQ and release notes.`)
+	}
+	return nil
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
