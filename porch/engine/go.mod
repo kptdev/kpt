@@ -13,7 +13,7 @@ require (
 	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
 	github.com/google/go-cmp v0.5.7
 	google.golang.org/grpc v1.44.0
-	k8s.io/apimachinery v0.23.2
+	k8s.io/apimachinery v0.23.5
 	k8s.io/klog/v2 v2.40.1
 	sigs.k8s.io/kustomize/kyaml v0.13.3
 )
@@ -103,12 +103,12 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	k8s.io/api v0.23.2 // indirect
-	k8s.io/cli-runtime v0.23.2 // indirect
-	k8s.io/client-go v0.23.2 // indirect
-	k8s.io/component-base v0.23.2 // indirect
+	k8s.io/api v0.23.5 // indirect
+	k8s.io/cli-runtime v0.23.5 // indirect
+	k8s.io/client-go v0.23.5 // indirect
+	k8s.io/component-base v0.23.5 // indirect
 	k8s.io/kube-openapi v0.0.0-20211115234752-e816edb12b65 // indirect
-	k8s.io/kubectl v0.23.2 // indirect
+	k8s.io/kubectl v0.23.5 // indirect
 	k8s.io/utils v0.0.0-20211208161948-7d6a63dca704 // indirect
 	sigs.k8s.io/cli-utils v0.29.2 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
