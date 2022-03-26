@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -179,6 +180,36 @@ func Test_pkgURLFromGHURL(t *testing.T) {
 				r.NoError(err, "should not return error")
 				r.Equal(tt.want, got, "url should be equal")
 			}
+		})
+	}
+}
+
+func Test_parseURLL(t *testing.T) {
+	type expected struct {
+		repo    string
+		dir     string
+		version string
+	}
+	tests := map[string]struct {
+		ghURL string
+		expected
+	}{
+		"simple": {
+			ghURL:    "https://my.git-server.com/repository.git/directory@main",
+			expected: expected{repo: "https://my.git-server.com/repository", dir: "/directory", version: "main"},
+		},
+		"no ref": {
+			ghURL:    "https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/apply-replacements-simple",
+			expected: expected{repo: "https://github.com/GoogleContainerTools/kpt-functions-catalog", dir: "/examples/apply-replacements-simple", version: "master"},
+		},
+	}
+	for name, test := range tests {
+		test := test // capture range variable
+		t.Run(name, func(t *testing.T) {
+			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
+			repo, dir, version, err := parseURL(ctx, test.ghURL)
+			assert.NoError(t, err)
+			assert.Equal(t, expected{repo: repo, dir: dir, version: version}, test.expected)
 		})
 	}
 }

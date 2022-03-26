@@ -17,6 +17,7 @@ package parse
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -38,8 +39,13 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		return g, nil
 	}
 
+	parsedUrl, err := url.Parse(args[0])
+	if err != nil {
+		return g, err
+	}
+
 	// Simple parsing if contains .git
-	if strings.Contains(args[0], ".git") {
+	if strings.Contains(parsedUrl.Path, ".git") {
 		return targetFromPkgURL(ctx, args[0], args[1])
 	}
 
@@ -84,11 +90,32 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
+func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, error) {
 	g := Target{}
-	var repo, dir, version string
-	parts := strings.Split(pkgURL, ".git")
-	repo = strings.TrimSuffix(parts[0], "/")
+	repo, dir, version, err := parseURL(ctx, pkgURL)
+	if err != nil {
+		return g, err
+	}
+	destination, err := getDest(dest, repo, dir)
+	if err != nil {
+		return g, err
+	}
+	g.Ref = version
+	g.Directory = path.Clean(dir)
+	g.Repo = repo
+	g.Destination = filepath.Clean(destination)
+	return g, nil
+}
+
+// parseURL parses a pkg url and returns the repo, directory, and version
+func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, version string, err error) {
+	parsedUrl, err := url.Parse(pkgURL)
+	if err != nil {
+		return "", "", "", err
+	}
+	parts := strings.Split(parsedUrl.Path, ".git")
+	index := strings.Index(pkgURL, parts[0])
+	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")
 	switch {
 	case len(parts) == 1:
 		// do nothing
@@ -102,26 +129,18 @@ func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) 
 	if version == "" {
 		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
 		if err != nil {
-			return g, err
+			return "", "", "", err
 		}
 		defaultRef, err := gur.GetDefaultBranch(ctx)
 		if err != nil {
-			return g, err
+			return "", "", "", err
 		}
 		version = defaultRef
 	}
 	if dir == "" {
 		dir = "/"
 	}
-	destination, err := getDest(dest, repo, dir)
-	if err != nil {
-		return g, err
-	}
-	g.Ref = version
-	g.Directory = path.Clean(dir)
-	g.Repo = repo
-	g.Destination = filepath.Clean(destination)
-	return g, nil
+	return repo, dir, version, nil
 }
 
 // pkgURLFromGHURL converts a GitHub URL into a well formed pkg url
