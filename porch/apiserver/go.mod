@@ -38,7 +38,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.0.0-20220324001910-77bf0f4e38e9 // indirect
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0 // indirect
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.2.1-0.20220324001910-77bf0f4e38e9 // indirect
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220322205615-b3b2aa33ba46 // indirect
+	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220325190148-462afb7cfc4b // indirect
 	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000 // indirect
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect

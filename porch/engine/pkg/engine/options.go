@@ -45,7 +45,11 @@ func WithCache(cache *cache.Cache) EngineOption {
 func WithBuiltinFunctionRuntime() EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
 		runtime := newBuiltinRuntime()
-		engine.runtime = runtime
+		if engine.runtime == nil {
+			engine.runtime = runtime
+		} else {
+			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
+		}
 		return nil
 	})
 }
@@ -56,18 +60,11 @@ func WithGRPCFunctionRuntime(address string) EngineOption {
 		if err != nil {
 			return fmt.Errorf("failed to create function runtime: %w", err)
 		}
-		engine.runtime = runtime
-		return nil
-	})
-}
-
-func WithDelegatingFunctionRuntime(address string) EngineOption {
-	return EngineOptionFunc(func(engine *cadEngine) error {
-		runtime, err := newDelegatingFunctionRuntime(address)
-		if err != nil {
-			return fmt.Errorf("failed to create function runtime: %w", err)
+		if engine.runtime == nil {
+			engine.runtime = runtime
+		} else {
+			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
 		}
-		engine.runtime = runtime
 		return nil
 	})
 }

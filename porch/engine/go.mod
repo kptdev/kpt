@@ -7,7 +7,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.0.0-20220324001910-77bf0f4e38e9
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.2.1-0.20220324001910-77bf0f4e38e9
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220322205615-b3b2aa33ba46
+	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220325190148-462afb7cfc4b
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee
 	github.com/GoogleContainerTools/kpt/porch/func v0.0.0-00010101000000-000000000000

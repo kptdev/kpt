@@ -53,3 +53,8 @@ func (r *MultiRuntime) GetRunner(ctx context.Context, fn *v1.Function) (Function
 
 	return nil, &NotFoundError{Function: *fn}
 }
+
+// Add adds the provided runtime to the end of the MultiRuntime list.
+func (r *MultiRuntime) Add(runtime FunctionRuntime) {
+	r.runtimes = append(r.runtimes, runtime)
+}

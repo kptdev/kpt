@@ -78,8 +78,8 @@ github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters
 github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.2.1-0.20220324001910-77bf0f4e38e9 h1:4yl14/Ns8hctCgQ/QbeqDqjcVtUI3txXpWAg+0qeq3A=
 github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.2.1-0.20220324001910-77bf0f4e38e9/go.mod h1:mVPJdN4OCt6IYfIas9URCDtgh9WFZSxnbEJjQNFkD80=
 github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220316202203-f9115a993ebd/go.mod h1:hENpuHQH/bIfHUCuG4hvzb5i4doJ1KTId5EdWBg6AvU=
-github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220322205615-b3b2aa33ba46 h1:1MUhi+aih7/tGMkU5vmieVSu+U4qEVAJwq4JMX6/Xg0=
-github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220322205615-b3b2aa33ba46/go.mod h1:hENpuHQH/bIfHUCuG4hvzb5i4doJ1KTId5EdWBg6AvU=
+github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220325190148-462afb7cfc4b h1:2qrdsQmZXHfhY/S71XQGIyhbaxpkFPBRTn9OM6fEhzE=
+github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220325190148-462afb7cfc4b/go.mod h1:hENpuHQH/bIfHUCuG4hvzb5i4doJ1KTId5EdWBg6AvU=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd h1:sjQovDkwrZp8u+gxLtPgKGjk5hCxuy2hrRejBTA9xFU=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Microsoft/go-winio v0.4.11/go.mod h1:VhR8bwka0BXejwEJY73c50VrPtXAaKcyvVC4A4RozmA=

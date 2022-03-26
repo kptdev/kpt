@@ -170,7 +170,11 @@ func (c completedConfig) New() (*PorchServer, error) {
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, credentialResolver)
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
-		engine.WithDelegatingFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
+		// The order of registering the function runtimes matters here. When
+		// evaluating a function, the runtimes will be tried in the same
+		// order as they are registered.
+		engine.WithBuiltinFunctionRuntime(),
+		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),

@@ -16,9 +16,7 @@ package engine
 
 import (
 	"context"
-	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements/replacements"
 	"github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace/transformer"
@@ -36,19 +34,19 @@ func newBuiltinRuntime() *builtinRuntime {
 	return &builtinRuntime{
 		fnMapping: map[string]fnsdk.ResourceListProcessor{
 			"gcr.io/kpt-fn/apply-replacements:unstable":                                                                fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements),
-			"gcr.io/kpt-fn/apply-replacements@sha256:c7a1b2d96e7f02e8aca6b1d15c15542c73f5a9f072c7fc6a3569160f8662e056": fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements),
+			"gcr.io/kpt-fn/apply-replacements@sha256:fb1f749b13dc3498d411d4b3b6eda58d2599e57206c9c1d9c2b1736f48cd6ab4": fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements),
 			"gcr.io/kpt-fn/set-namespace:unstable":                                                                     fnsdk.ResourceListProcessorFunc(transformer.SetNamespace),
-			"gcr.io/kpt-fn/set-namespace@sha256:36bf1a791436a75c0108c071bdb34c2cfe97329d548ac47329119dad87d6c6e2":      fnsdk.ResourceListProcessorFunc(transformer.SetNamespace),
+			"gcr.io/kpt-fn/set-namespace@sha256:a18dcb30b5dda1a16d22586dae17a91cb2f53da1abfaa353eb4de9d0a2c4538f":      fnsdk.ResourceListProcessorFunc(transformer.SetNamespace),
 		},
 	}
 }
 
 var _ kpt.FunctionRuntime = &builtinRuntime{}
 
-func (br *builtinRuntime) GetRunner(ctx context.Context, fn *v1.Function) (fn.FunctionRunner, error) {
-	processor, found := br.fnMapping[fn.Image]
+func (br *builtinRuntime) GetRunner(ctx context.Context, funct *v1.Function) (fn.FunctionRunner, error) {
+	processor, found := br.fnMapping[funct.Image]
 	if !found {
-		return nil, &UnsupportedFunctionError{Image: fn.Image}
+		return nil, &fn.NotFoundError{Function: *funct}
 	}
 
 	return &builtinRunner{
@@ -69,24 +67,5 @@ type builtinRunner struct {
 var _ fn.FunctionRunner = &builtinRunner{}
 
 func (br *builtinRunner) Run(r io.Reader, w io.Writer) error {
-	in, err := ioutil.ReadAll(r)
-	if err != nil {
-		return fmt.Errorf("failed to read function runner input: %w", err)
-	}
-
-	rl, err := fnsdk.ParseResourceList(in)
-	if err != nil {
-		return fmt.Errorf("failed to parse the resourceList: %w", err)
-	}
-	if err = br.processor.Process(rl); err != nil {
-		return fmt.Errorf("func eval failed: %w", err)
-	}
-	y, err := rl.ToYAML()
-	if err != nil {
-		return fmt.Errorf("failed to marshal resourceList as yaml: %w", err)
-	}
-	if _, err = w.Write(y); err != nil {
-		return fmt.Errorf("failed to write function runner output: %w", err)
-	}
-	return nil
+	return fnsdk.Execute(br.processor, r, w)
 }
