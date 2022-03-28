@@ -73,14 +73,16 @@ func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *config
 func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
 	// Validate package lifecycle. Cannot create a final package
 	switch obj.Spec.Lifecycle {
-	default:
-		// TODO: Is there a standard way to apply defaults to k8s resources? (webhook?)
+	case "":
+		// Set draft as default
 		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// These values are ok
 	case api.PackageRevisionLifecycleFinal:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot create a package revision with lifecycle value 'Final'")
+	default:
+		return nil, fmt.Errorf("unsupported lifecycle value: %s", obj.Spec.Lifecycle)
 	}
 
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
@@ -256,6 +258,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
+	// TODO: Handle the case if alongside lifecycle change, tasks are changed too.
 	// Update package contents only if the package is in draft state
 	if oldObj.Spec.Lifecycle == api.PackageRevisionLifecycleDraft {
 		apiResources, err := oldPackage.GetResources(ctx)

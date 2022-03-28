@@ -181,9 +181,11 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 		}
 	}
 
+	// TODO: Combine this Push with the one above? Will need to reconcile the temporary
+	// use of `force` in the previous push where draft package contents are updated.
 	if len(deleteRemotes) > 0 {
 		if err := d.parent.repo.Push(&git.PushOptions{
-			RemoteName: "origin",
+			RemoteName: originName,
 			RefSpecs:   deleteRemotes,
 			Auth:       auth,
 		}); err != nil {
@@ -216,7 +218,7 @@ func (d *gitPackageDraft) commitPackageToMain(ctx context.Context) (commitHash, 
 
 	// Fetch main
 	switch err := repo.Fetch(&git.FetchOptions{
-		RemoteName: "origin",
+		RemoteName: originName,
 		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", localRef, remoteRef))},
 		Auth:       auth,
 		Tags:       git.AllTags,
