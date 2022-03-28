@@ -16,10 +16,10 @@ package fn
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestNotFound(t *testing.T) {
@@ -33,11 +33,11 @@ func TestNotFound(t *testing.T) {
 		t.Fatalf("expected NotFoundError to satisfy errors.As")
 	}
 
-	if got, want := notFoundErr.Function, *fn; !reflect.DeepEqual(got, want) {
-		t.Fatalf("function in NotFoundError did not match expected; got %#v, want %#v", got, want)
+	if diff := cmp.Diff(notFoundErr.Function, *fn); diff != "" {
+		t.Fatalf("Unexpected result (-want, +got): %s", diff)
 	}
 
-	if got, want := notFoundErr.Error(), "function \"foo\" not found"; !reflect.DeepEqual(got, want) {
-		t.Fatalf("string form NotFoundError did not match expected; got %#v, want %#v", got, want)
+	if diff := cmp.Diff(notFoundErr.Error(), "function \"foo\" not found"); diff != "" {
+		t.Fatalf("Unexpected result (-want, +got): %s", diff)
 	}
 }

@@ -47,6 +47,8 @@ func WithBuiltinFunctionRuntime() EngineOption {
 		runtime := newBuiltinRuntime()
 		if engine.runtime == nil {
 			engine.runtime = runtime
+		} else if mr, ok := engine.runtime.(*fn.MultiRuntime); ok {
+			mr.Add(runtime)
 		} else {
 			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
 		}
@@ -62,6 +64,8 @@ func WithGRPCFunctionRuntime(address string) EngineOption {
 		}
 		if engine.runtime == nil {
 			engine.runtime = runtime
+		} else if mr, ok := engine.runtime.(*fn.MultiRuntime); ok {
+			mr.Add(runtime)
 		} else {
 			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
 		}

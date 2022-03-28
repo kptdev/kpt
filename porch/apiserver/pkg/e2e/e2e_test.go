@@ -145,6 +145,10 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
 	}
+	annotations := node.GetAnnotations()
+	if val, found := annotations["foo"]; !found || val != "bar" {
+		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
+	}
 }
 
 func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {

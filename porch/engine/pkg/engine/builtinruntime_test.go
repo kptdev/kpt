@@ -18,9 +18,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"strings"
 	"testing"
 
+	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 )
@@ -55,9 +55,16 @@ functionConfig:
 	if err != nil {
 		t.Fatalf("unexpected error when running the function runner: %v", err)
 	}
-	output := buf.String()
-	if !strings.Contains(output, "namespace: test-ns") {
-		t.Fatalf("expect namespace to be set, but it didn't. We got:\n%v\n", output)
+	rl, err := fnsdk.ParseResourceList(buf.Bytes())
+	if err != nil {
+		t.Fatalf("can't parse the updated resource list: %v", err)
+	}
+	if len(rl.Items) != 1 {
+		t.Fatalf("expect the updated resource list to have 1 object in items, but got %d", len(rl.Items))
+	}
+	ns := rl.Items[0].GetNamespace()
+	if ns != "test-ns" {
+		t.Fatalf("expect the updated namespace to be %v, but got %v", "test-ns", "ns")
 	}
 }
 
@@ -69,6 +76,6 @@ func TestBuiltinRuntimeNotFound(t *testing.T) {
 	_, err := br.GetRunner(context.Background(), funct)
 	var fnNotFoundErr *fn.NotFoundError
 	if !errors.As(err, &fnNotFoundErr) {
-		t.Fatalf("expect error to be %T, but got %v", fnNotFoundErr, err)
+		t.Fatalf("expect error to be %T, but got %T %v", fnNotFoundErr, err, err)
 	}
 }
