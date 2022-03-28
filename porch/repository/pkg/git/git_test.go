@@ -289,9 +289,9 @@ info:
 
 func TestListPackagesEmpty(t *testing.T) {
 	testdata := TestDataAbs(t, "testdata")
-	tempdir := CreateTestTempDir(t)
+	tempdir := t.TempDir()
 	tarfile := filepath.Join(testdata, "empty-repository.tar")
-	address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
 	const (
@@ -378,9 +378,9 @@ func TestListPackagesEmpty(t *testing.T) {
 // trivial-repository.tar has a repon with a `main` branch and a single empty commit.
 func TestCreatePackageInTrivialRepository(t *testing.T) {
 	testdata := TestDataAbs(t, "testdata")
-	tempdir := CreateTestTempDir(t)
+	tempdir := t.TempDir()
 	tarfile := filepath.Join(testdata, "trivial-repository.tar")
-	address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
 	const (
@@ -456,9 +456,9 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 
 func TestListPackagesSimple(t *testing.T) {
 	testdata := TestDataAbs(t, "testdata")
-	tempdir := CreateTestTempDir(t)
+	tempdir := t.TempDir()
 	tarfile := filepath.Join(testdata, "simple-repository.tar")
-	address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
 	const (
@@ -513,9 +513,9 @@ func TestListPackagesSimple(t *testing.T) {
 
 func TestListPackagesDrafts(t *testing.T) {
 	testdata := TestDataAbs(t, "testdata")
-	tempdir := CreateTestTempDir(t)
+	tempdir := t.TempDir()
 	tarfile := filepath.Join(testdata, "drafts-repository.tar")
-	address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
 	const (
@@ -567,4 +567,63 @@ func TestListPackagesDrafts(t *testing.T) {
 	if !cmp.Equal(want, got) {
 		t.Errorf("Package Revisions in drafts-repository: (-want,+got): %s", cmp.Diff(want, got))
 	}
+}
+
+func TestApproveDraft(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "drafts-repository.tar")
+	repo, address := ServeGitRepository(t, tarfile, tempdir)
+
+	const (
+		repositoryName                            = "approve"
+		namespace                                 = "default"
+		draftReferenceName plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
+		finalReferenceName plumbing.ReferenceName = "refs/tags/bucket/v1"
+	)
+	ctx := context.Background()
+	var resolver repository.CredentialResolver
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+
+	bucket := findPackage(t, revisions, "approve:bucket:v1")
+
+	// Before Update; Check server references. Draft must exist, final not.
+	refMustExist(t, repo, draftReferenceName)
+	refMustNotExist(t, repo, finalReferenceName)
+
+	update, err := git.UpdatePackage(ctx, bucket)
+	if err != nil {
+		t.Fatalf("UpdatePackage failed: %v", err)
+	}
+
+	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecycleFinal)
+
+	new, err := update.Close(ctx)
+	if err != nil {
+		t.Fatalf("Close failed: %v", err)
+	}
+
+	rev, err := new.GetPackageRevision()
+	if err != nil {
+		t.Fatalf("GetPackageRevision failed: %v", err)
+	}
+
+	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleFinal; got != want {
+		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
+	}
+
+	// After Update: Final must exist, draft must not exist
+	refMustNotExist(t, repo, draftReferenceName)
+	refMustExist(t, repo, finalReferenceName)
 }

@@ -71,6 +71,20 @@ func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *config
 }
 
 func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
+	// Validate package lifecycle. Cannot create a final package
+	switch obj.Spec.Lifecycle {
+	case "":
+		// Set draft as default
+		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// These values are ok
+	case api.PackageRevisionLifecycleFinal:
+		// TODO: generate errors that can be translated to correct HTTP responses
+		return nil, fmt.Errorf("cannot create a package revision with lifecycle value 'Final'")
+	default:
+		return nil, fmt.Errorf("unsupported lifecycle value: %s", obj.Spec.Lifecycle)
+	}
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
@@ -119,8 +133,16 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	})
 
 	baseResources := repository.PackageResources{}
+	if err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
+		return nil, err
+	}
 
-	return updateDraft(ctx, draft, baseResources, mutations)
+	if err := draft.UpdateLifecycle(ctx, obj.Spec.Lifecycle); err != nil {
+		return nil, err
+	}
+
+	// Updates are done.
+	return draft.Close(ctx)
 }
 
 func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task) (mutation, error) {
@@ -168,6 +190,23 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 }
 
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+	// Validate package lifecycle. Can only update a draft.
+	switch lifecycle := oldObj.Spec.Lifecycle; lifecycle {
+	default:
+		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// Draft or proposed can be updated.
+	case api.PackageRevisionLifecycleFinal:
+		// TODO: generate errors that can be translated to correct HTTP responses
+		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q", lifecycle)
+	}
+	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
+	default:
+		return nil, fmt.Errorf("invalid desired lifecycle value: %q", lifecycle)
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal:
+		// These values are ok
+	}
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
@@ -219,15 +258,28 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	apiResources, err := oldPackage.GetResources(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get package resources: %w", err)
-	}
-	resources := repository.PackageResources{
-		Contents: apiResources.Spec.Resources,
+	// TODO: Handle the case if alongside lifecycle change, tasks are changed too.
+	// Update package contents only if the package is in draft state
+	if oldObj.Spec.Lifecycle == api.PackageRevisionLifecycleDraft {
+		apiResources, err := oldPackage.GetResources(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get package resources: %w", err)
+		}
+		resources := repository.PackageResources{
+			Contents: apiResources.Spec.Resources,
+		}
+
+		if err := applyResourceMutations(ctx, draft, resources, mutations); err != nil {
+			return nil, err
+		}
 	}
 
-	return updateDraft(ctx, draft, resources, mutations)
+	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+		return nil, err
+	}
+
+	// Updates are done.
+	return draft.Close(ctx)
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {
@@ -244,6 +296,22 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 }
 
 func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
+	rev, err := oldPackage.GetPackageRevision()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get package revision: %w", err)
+	}
+
+	// Validate package lifecycle. Can only update a draft.
+	switch lifecycle := rev.Spec.Lifecycle; lifecycle {
+	default:
+		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
+	case api.PackageRevisionLifecycleDraft:
+		// Only draf can be updated.
+	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal:
+		// TODO: generate errors that can be translated to correct HTTP responses
+		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
+	}
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
@@ -269,27 +337,31 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		Contents: apiResources.Spec.Resources,
 	}
 
-	return updateDraft(ctx, draft, resources, mutations)
+	if err := applyResourceMutations(ctx, draft, resources, mutations); err != nil {
+		return nil, err
+	}
+
+	// No lifecycle change when updating package resources; updates are done.
+	return draft.Close(ctx)
 }
 
-func updateDraft(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (repository.PackageRevision, error) {
+func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) error {
 	for _, m := range mutations {
 		applied, task, err := m.Apply(ctx, baseResources)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if err := draft.UpdateResources(ctx, &api.PackageRevisionResources{
 			Spec: api.PackageRevisionResourcesSpec{
 				Resources: applied.Contents,
 			},
 		}, task); err != nil {
-			return nil, err
+			return err
 		}
 		baseResources = applied
 	}
 
-	// Updates are done.
-	return draft.Close(ctx)
+	return nil
 }
 
 func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error) {

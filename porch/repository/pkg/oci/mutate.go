@@ -20,6 +20,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -180,6 +181,10 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 	p.tasks = append(p.tasks, *task)
 
 	return nil
+}
+
+func (p *ociPackageDraft) UpdateLifecycle(ctx context.Context, new api.PackageRevisionLifecycle) error {
+	return errors.New("OCI package lifecycle not implemented")
 }
 
 // Finish round of updates.

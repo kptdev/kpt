@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/google/go-cmp/cmp"
@@ -494,8 +495,66 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 	}
 }
 
-func (t *PorchSuite) TestDevPorch(ctx context.Context) {
-	t.IsUsingDevPorch()
+func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
+	const (
+		repository      = "lifecycle"
+		packageName     = "test-package"
+		packageRevision = "v1"
+		fullName        = repository + ":" + packageName + ":" + packageRevision
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fullName,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			Revision:       packageRevision,
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeInit,
+					Init: &porchapi.PackageInitTaskSpec{},
+				},
+			},
+		},
+	})
+
+	var pkg porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      fullName,
+	}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	var proposed porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      fullName,
+	}, &proposed)
+
+	if got, want := proposed.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleProposed; got != want {
+		t.Fatalf("Proposed package lifecycle value: got %s, want %s", got, want)
+	}
+
+	// Approve the package
+	proposed.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleFinal
+	approved := t.UpdateApprovalF(ctx, &proposed, metav1.UpdateOptions{})
+	if got, want := approved.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleFinal; got != want {
+		t.Fatalf("Approved package lifecycle value: got %s, want %s", got, want)
+	}
 }
 
 func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
