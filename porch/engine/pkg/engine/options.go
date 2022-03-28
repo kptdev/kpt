@@ -19,12 +19,8 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
-	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"k8s.io/klog/v2"
 )
 
 type EngineOption interface {
@@ -46,13 +42,33 @@ func WithCache(cache *cache.Cache) EngineOption {
 	})
 }
 
+func WithBuiltinFunctionRuntime() EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		runtime := newBuiltinRuntime()
+		if engine.runtime == nil {
+			engine.runtime = runtime
+		} else if mr, ok := engine.runtime.(*fn.MultiRuntime); ok {
+			mr.Add(runtime)
+		} else {
+			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
+		}
+		return nil
+	})
+}
+
 func WithGRPCFunctionRuntime(address string) EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
-		runtime, err := createFunctionRuntime(address)
+		runtime, err := newGRPCFunctionRuntime(address)
 		if err != nil {
 			return fmt.Errorf("failed to create function runtime: %w", err)
 		}
-		engine.runtime = runtime
+		if engine.runtime == nil {
+			engine.runtime = runtime
+		} else if mr, ok := engine.runtime.(*fn.MultiRuntime); ok {
+			mr.Add(runtime)
+		} else {
+			engine.runtime = fn.NewMultiRuntime([]fn.FunctionRuntime{engine.runtime, runtime})
+		}
 		return nil
 	})
 }
@@ -90,22 +106,4 @@ func WithReferenceResolver(resolver ReferenceResolver) EngineOption {
 		engine.referenceResolver = resolver
 		return nil
 	})
-}
-
-func createFunctionRuntime(address string) (kpt.FunctionRuntime, error) {
-	if address == "" {
-		return nil, fmt.Errorf("address is required to instantiate gRPC function runtime")
-	}
-
-	klog.Infof("Dialing grpc function runner %q", address)
-
-	cc, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to dial grpc function evaluator: %w", err)
-	}
-
-	return &grpcRuntime{
-		cc:     cc,
-		client: evaluator.NewFunctionEvaluatorClient(cc),
-	}, err
 }

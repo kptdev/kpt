@@ -16,7 +16,6 @@ package kpt
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -36,10 +35,10 @@ type runtime struct {
 
 var _ FunctionRuntime = &runtime{}
 
-func (e *runtime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (fn.FunctionRunner, error) {
-	processor := internal.FindProcessor(fn.Image)
+func (e *runtime) GetRunner(ctx context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
+	processor := internal.FindProcessor(funct.Image)
 	if processor == nil {
-		return nil, fmt.Errorf("unsupported kpt function %q", fn.Image)
+		return nil, &fn.NotFoundError{Function: *funct}
 	}
 
 	return &runner{

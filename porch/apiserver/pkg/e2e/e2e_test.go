@@ -109,9 +109,18 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:v0.2.0",
+						Image: "gcr.io/kpt-fn/set-namespace:unstable",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
+						ConfigMap: map[string]string{
+							"foo": "bar",
 						},
 					},
 				},
@@ -136,6 +145,10 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	}
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
+	}
+	annotations := node.GetAnnotations()
+	if val, found := annotations["foo"]; !found || val != "bar" {
+		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
 	}
 }
 

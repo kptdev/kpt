@@ -16,6 +16,7 @@ package fn
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -28,6 +29,15 @@ type FunctionRunner interface {
 }
 
 // FunctionRuntime provides a way to obtain a function runner to be used for a given function configuration.
+// If the function is not found, this should return an error that includes a NotFoundError in the chain.
 type FunctionRuntime interface {
 	GetRunner(ctx context.Context, fn *v1.Function) (FunctionRunner, error)
+}
+
+type NotFoundError struct {
+	Function v1.Function
+}
+
+func (e *NotFoundError) Error() string {
+	return fmt.Sprintf("function %q not found", e.Function.Image)
 }
