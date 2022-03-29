@@ -44,16 +44,6 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	}
 
 	for _, n := range nodes {
-		// Note(droot): Since we stopped givign special treatment to functionConfigs
-		// explicit-not-local-config probably doesn't have a use-case now
-		// so removing it completely makes more sense now. Also, we can probably
-		// enable just presence of local-config annotation as a way to mark that
-		// config is local. Can get rid of confusion as pointed out in the
-		// issue --> https://github.com/GoogleContainerTools/kpt/issues/2767
-		// if !isExplicitNotLocalConfig(n) {
-		//	 continue
-		// }
-
 		if err := removeAnnotations(n, kioutil.IndexAnnotation, kioutil.LegacyIndexAnnotation); err != nil { // nolint:staticcheck
 			return objs, err
 		}
@@ -113,6 +103,11 @@ const NoLocalConfigAnnoVal = "false"
 // that are designated as local config have been filtered out. It does this
 // by looking at the config.kubernetes.io/local-config annotation. Any value
 // except "false" is considered to mean the resource is local config.
+// Note(droot): Since we stopped giving special treatment to functionConfigs
+// "false" value for the local-config annotation doesn't make much sense.
+// With that we can probably enable just presence of local-config annotation
+// as a way to mark that config is local. Can get rid of confusion as pointed out in the
+// issue --> https://github.com/GoogleContainerTools/kpt/issues/2767
 func filterLocalConfig(objs []*unstructured.Unstructured) []*unstructured.Unstructured {
 	var filteredObjs []*unstructured.Unstructured
 	for _, obj := range objs {

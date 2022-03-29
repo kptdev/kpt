@@ -307,7 +307,7 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
-	// Let users know that --include-meta-resources is not longer necessary
+	// Let users know that --include-meta-resources is no longer necessary
 	// since meta resources are included by default.
 	if r.IncludeMetaResources {
 		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
