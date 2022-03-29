@@ -29,14 +29,20 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	packageRevisions := &packageRevisions{
 		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisions")),
 		packageCommon: packageCommon{
-			cad:        cad,
-			gr:         porch.Resource("packagerevisions"),
-			coreClient: coreClient,
+			cad:            cad,
+			gr:             porch.Resource("packagerevisions"),
+			coreClient:     coreClient,
+			updateStrategy: packageRevisionStrategy{},
 		},
 	}
 
 	packageRevisionsApproval := &packageRevisionsApproval{
-		revisions: packageRevisions,
+		common: packageCommon{
+			cad:            cad,
+			coreClient:     coreClient,
+			gr:             porch.Resource("packagerevisions"),
+			updateStrategy: packageRevisionApprovalStrategy{},
+		},
 	}
 
 	packageRevisionResources := &packageRevisionResources{
