@@ -20,19 +20,22 @@ import (
 	"path"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type initPackageMutation struct {
-	name string
-	spec api.PackageInitTaskSpec
+	initializer kptpkg.Initializer
+	name        string
+	spec        api.PackageInitTaskSpec
 }
 
 var _ mutation = &initPackageMutation{}
 
-func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *initPackageMutation) ApplyV0(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	kptfile := kptfilev1.KptFile{
 		ResourceMeta: yaml.ResourceMeta{
 			TypeMeta: yaml.TypeMeta{
@@ -69,4 +72,29 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	resources.Contents[kptfilePath] = string(b)
 
 	return resources, &api.Task{}, nil
+}
+
+func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+
+	fs := filesys.MakeFsInMemory()
+
+	// TODO(droot): initialize it once and wire it up.
+	m.initializer = &kptpkg.DefaultInitializer{}
+
+	err := m.initializer.Initialize(ctx, fs, kptpkg.InitOptions{
+		PkgPath:  m.spec.Subpackage,
+		Desc:     m.spec.Description,
+		Keywords: m.spec.Keywords,
+		Site:     m.spec.Site,
+	})
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to initialize pkg %q: %w", m.name, err)
+	}
+
+	result, err := readResources(fs)
+	if err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+
+	return result, &api.Task{}, nil
 }
