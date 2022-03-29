@@ -18,10 +18,12 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"path/filepath"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -77,12 +79,15 @@ func (m *initPackageMutation) ApplyV0(ctx context.Context, resources repository.
 func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 
 	fs := filesys.MakeFsInMemory()
-
+	pkgPath := filepath.Join("/", m.name)
+	if err := fs.Mkdir(pkgPath); err != nil {
+		return repository.PackageResources{}, nil, err
+	}
 	// TODO(droot): initialize it once and wire it up.
-	m.initializer = &kptpkg.DefaultInitializer{}
+	initializer := kpt.NewInitializer()
 
-	err := m.initializer.Initialize(ctx, fs, kptpkg.InitOptions{
-		PkgPath:  m.spec.Subpackage,
+	err := initializer.Initialize(ctx, fs, kptpkg.InitOptions{
+		PkgPath:  pkgPath,
 		Desc:     m.spec.Description,
 		Keywords: m.spec.Keywords,
 		Site:     m.spec.Site,
