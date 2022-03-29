@@ -19,14 +19,16 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type initPackageMutation struct {
+	kptpkg.DefaultInitializer
 	name string
 	spec api.PackageInitTaskSpec
 }
@@ -40,9 +42,7 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	if err := fs.Mkdir(pkgPath); err != nil {
 		return repository.PackageResources{}, nil, err
 	}
-	initializer := kpt.NewInitializer()
-
-	err := initializer.Initialize(ctx, fs, kptpkg.InitOptions{
+	err := m.Initialize(printer.WithContext(ctx, &fake.Printer{}), fs, kptpkg.InitOptions{
 		PkgPath:  pkgPath,
 		Desc:     m.spec.Description,
 		Keywords: m.spec.Keywords,
