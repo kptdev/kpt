@@ -15,6 +15,7 @@
 package git
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -369,6 +370,10 @@ func TestListPackagesEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open git repository for verification: %v", err)
 	}
+	forEachRef(t, verify, func(ref *plumbing.Reference) error {
+		t.Logf("Ref: %s", ref)
+		return nil
+	})
 	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/v1")
 	if _, err = verify.Reference(draftRefName, true); err != nil {
 		t.Errorf("Failed to resolve %q references: %v", draftRefName, err)
@@ -626,4 +631,105 @@ func TestApproveDraft(t *testing.T) {
 	// After Update: Final must exist, draft must not exist
 	refMustNotExist(t, repo, draftReferenceName)
 	refMustExist(t, repo, finalReferenceName)
+}
+
+func TestDeletePackages(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "drafts-repository.tar")
+	repo, address := ServeGitRepository(t, tarfile, tempdir)
+
+	const (
+		repositoryName = "delete"
+		namespace      = "delete-namespace"
+	)
+
+	ctx := context.Background()
+	var resolver repository.CredentialResolver
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo: address,
+	}, resolver, tempdir)
+	if err != nil {
+		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
+	}
+
+	type PackageReference struct {
+		name string
+		ref  plumbing.ReferenceName
+	}
+
+	// If we delete one of these packages, we expect the reference to be deleted too
+	wantDeletedRefs := map[string]plumbing.ReferenceName{
+		"delete:bucket:v1":  "refs/heads/drafts/bucket/v1",
+		"delete:none:v1":    "refs/heads/drafts/none/v1",
+		"delete:basens:v1":  "refs/tags/basens/v1",
+		"delete:basens:v2":  "refs/tags/basens/v2",
+		"delete:empty:v1":   "refs/tags/empty/v1",
+		"delete:istions:v1": "refs/tags/istions/v1",
+		"delete:istions:v2": "refs/tags/istions/v2",
+	}
+
+	// Delete all packages
+	all, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+
+	for len(all) > 0 {
+		// Delete one of the packages
+		deleting := all[0]
+		name := deleting.Name()
+
+		if rn, ok := wantDeletedRefs[name]; ok {
+			// Verify the reference still exists
+			refMustExist(t, repo, rn)
+		}
+
+		if err := git.DeletePackageRevision(ctx, deleting); err != nil {
+			t.Fatalf("DeletePackageRevision(%q) failed: %v", deleting.Name(), err)
+		}
+
+		if rn, ok := wantDeletedRefs[name]; ok {
+			// Verify the reference no longer exists
+			refMustNotExist(t, repo, rn)
+		}
+
+		// Re-list packages and check the deleted package is absent
+		all, err = git.ListPackageRevisions(ctx)
+		if err != nil {
+			t.Fatalf("ListPackageRevisions failed: %v", err)
+		}
+
+		for _, existing := range all {
+			if existing.Name() == name {
+				t.Errorf("Deleted package %q was found among the list results", name)
+			}
+		}
+	}
+
+	// The only got references should be main and HEAD
+	got := map[plumbing.ReferenceName]bool{}
+	forEachRef(t, repo, func(ref *plumbing.Reference) error {
+		got[ref.Name()] = true
+		return nil
+	})
+	want := map[plumbing.ReferenceName]bool{
+		refMain: true,
+		"HEAD":  true,
+	}
+	if !cmp.Equal(want, got) {
+		t.Fatalf("Unexpected references after deleting all packages (-want, +got): %s", cmp.Diff(want, got))
+	}
+
+	// And there should be no packages in main branch
+	main := resolveReference(t, repo, refMain)
+	tree := getCommitTree(t, repo, main.Hash())
+	if len(tree.Entries) > 0 {
+		var b bytes.Buffer
+		for i := range tree.Entries {
+			e := &tree.Entries[i]
+			fmt.Fprintf(&b, "%s: %s (%s)", e.Name, e.Hash, e.Mode)
+		}
+		// Tree is not empty after deleting all packages
+		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", refMain, b.String())
+	}
 }

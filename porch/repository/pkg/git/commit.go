@@ -127,6 +127,9 @@ func initializeTrees(storer storage.Storer, root *object.Tree, packagePath strin
 		}
 		trees[packagePath] = packageTree
 		setOrAddDirEntry(parent, lastPart)
+	} else {
+		// Remove the entry if one exists
+		removeDirEntry(parent, lastPart)
 	}
 
 	return trees, nil
@@ -162,6 +165,17 @@ func setOrAddDirEntry(tree *object.Tree, name string) {
 	}
 	// Not found. append new
 	tree.Entries = append(tree.Entries, te)
+}
+
+func removeDirEntry(tree *object.Tree, name string) {
+	entries := tree.Entries
+	for i := range entries {
+		e := &entries[i]
+		if e.Name == name {
+			tree.Entries = append(entries[:i], entries[i+1:]...)
+			return
+		}
+	}
 }
 
 func (h *commitHelper) storeFile(path, contents string) error {

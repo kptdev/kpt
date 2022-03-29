@@ -361,7 +361,8 @@ func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
 func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	const downstreamRepository = "deployment"
 	const downstreamPackage = "istions"
-	const downstreamName = downstreamRepository + ":" + downstreamPackage + ":v1"
+	const downstreamRevision = "v1"
+	const downstreamName = downstreamRepository + ":" + downstreamPackage + ":" + downstreamRevision
 
 	// Register the deployment repository
 	t.registerMainGitRepositoryF(ctx, downstreamRepository, withDeployment())
@@ -385,7 +386,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    downstreamPackage,
-			Revision:       "v1",
+			Revision:       downstreamRevision,
 			RepositoryName: downstreamRepository,
 			Tasks: []porchapi.Task{
 				{

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -27,7 +26,6 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/storage"
-	"k8s.io/klog/v2"
 )
 
 type gitPackageDraft struct {
@@ -140,57 +138,19 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 			return nil, fmt.Errorf("failed to update package draft: %v", err)
 		}
 		// Push the package revision into a draft branch.
-		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", d.commit, refNames.draft)))
+		// TODO: implement config resolution rather than forcing the push (+)
+		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("+%s:%s", d.commit, refNames.draft)))
 		cleanup[refNames.proposed] = true // In case client downgraded packaget to draft from proposed
 
 		// Update package referemce (commit and tree hash stay the same)
 		d.ref = newRef
+
+	default:
+		return nil, fmt.Errorf("package has unrecognized lifecycle: %q", d.lifecycle)
 	}
 
-	auth, err := d.parent.getAuthMethod(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to obtain git credentials: %w", err)
-	}
-
-	if err := d.parent.repo.Push(&git.PushOptions{
-		RemoteName: originName,
-		RefSpecs:   pushRefSpecs,
-		Auth:       auth,
-		Force:      true, // TODO: implement conflict recovery.
-	}); err != nil {
-		return nil, fmt.Errorf("failed to push to git: %w", err)
-	}
-
-	deleteRemotes := []config.RefSpec{}
-	// Cleanup local and remote branches
-	for rn := range cleanup {
-		switch err := d.parent.repo.Storer.RemoveReference(rn); err {
-		case nil, plumbing.ErrReferenceNotFound:
-			// These are OK.
-
-		default:
-			return nil, err
-		}
-
-		// Check if its corresponding remote exists locally
-		if strings.HasPrefix(rn.String(), refHeadsPrefix) {
-			remote := plumbing.NewRemoteReferenceName("origin", strings.TrimPrefix(rn.String(), refHeadsPrefix))
-			if _, err := d.parent.repo.Reference(remote, true); err == nil {
-				deleteRemotes = append(deleteRemotes, config.RefSpec(fmt.Sprintf(":%s", rn.String())))
-			}
-		}
-	}
-
-	// TODO: Combine this Push with the one above? Will need to reconcile the temporary
-	// use of `force` in the previous push where draft package contents are updated.
-	if len(deleteRemotes) > 0 {
-		if err := d.parent.repo.Push(&git.PushOptions{
-			RemoteName: originName,
-			RefSpecs:   deleteRemotes,
-			Auth:       auth,
-		}); err != nil {
-			klog.Errorf("Failed to clean up remote branches: %v", err)
-		}
+	if err := d.parent.pushAndCleanupRefs(ctx, pushRefSpecs, cleanup); err != nil {
+		return nil, err
 	}
 
 	return &gitPackageRevision{
