@@ -15,4 +15,5 @@
 stdErr: |
   [RUNNING] "./function.sh"
   [PASS] "./function.sh" in 0s
-  function is added to Kptfile
+  adding function to Kptfile
+  Kptfile updated

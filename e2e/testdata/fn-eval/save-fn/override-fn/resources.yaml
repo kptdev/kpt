@@ -11,13 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-testType: eval
-image: set-namespace:v0.1.3
-args:
-  namespace: staging
-stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
-  adding function to Kptfile
-  Kptfile updated
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+  name: custom
+spec:
+  image: nginx:1.2.3
