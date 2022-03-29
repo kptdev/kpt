@@ -16,15 +16,18 @@ package porch
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/registry/rest"
 )
 
 type packageRevisionsApproval struct {
-	revisions *packageRevisions
+	common packageCommon
 }
 
 var _ rest.Storage = &packageRevisionsApproval{}
@@ -44,7 +47,7 @@ func (a *packageRevisionsApproval) NamespaceScoped() bool {
 }
 
 func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return a.revisions.Get(ctx, name, options)
+	return a.common.getPackageRevision(ctx, name, options)
 }
 
 // Update finds a resource in the storage and updates it. Some implementations
@@ -52,5 +55,38 @@ func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options
 // to true.
 func (a *packageRevisionsApproval) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
 	allowCreate := false // do not allow create on update
-	return a.revisions.Update(ctx, name, objInfo, createValidation, updateValidation, allowCreate, options)
+	return a.common.updatePackageRevision(ctx, name, objInfo, createValidation, updateValidation, allowCreate, options)
 }
+
+type packageRevisionApprovalStrategy struct{}
+
+func (s packageRevisionApprovalStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+}
+
+func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+	oldRevision := old.(*api.PackageRevision)
+	newRevision := obj.(*api.PackageRevision)
+
+	if lifecycle := oldRevision.Spec.Lifecycle; lifecycle != api.PackageRevisionLifecycleProposed {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("cannot only approve package with Proposed lifecycle value")))
+	}
+
+	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
+	// TODO: signal rejection of the approval differently than by returning to draft?
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleFinal:
+		// valid
+
+	default:
+		allErrs = append(allErrs,
+			field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value for approval can be only one of %s",
+				strings.Join([]string{
+					string(api.PackageRevisionLifecycleDraft),
+					string(api.PackageRevisionLifecycleFinal),
+				}, ",")),
+			))
+	}
+	return allErrs
+}
+
+func (s packageRevisionApprovalStrategy) Canonicalize(obj runtime.Object) {}

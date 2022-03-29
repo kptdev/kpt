@@ -17,6 +17,7 @@ package porch
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
@@ -26,6 +27,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/klog/v2"
@@ -33,7 +35,6 @@ import (
 
 type packageRevisions struct {
 	packageCommon
-
 	rest.TableConvertor
 }
 
@@ -82,16 +83,7 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 
 // Get implements the Getter interface
 func (r *packageRevisions) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	pkg, err := r.packageCommon.getPackage(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-
-	obj, err := pkg.GetPackageRevision()
-	if err != nil {
-		return nil, err
-	}
-	return obj, nil
+	return r.packageCommon.getPackageRevision(ctx, name, options)
 }
 
 // Create implements the Creater interface.
@@ -148,66 +140,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 // may allow updates creates the object - they should set the created boolean
 // to true.
 func (r *packageRevisions) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
-	// TODO: Is this all boilerplate??
-
-	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
-	if !namespaced {
-		return nil, false, apierrors.NewBadRequest("namespace must be specified")
-	}
-
-	oldPackage, err := r.packageCommon.getPackage(ctx, name)
-	if err != nil {
-		return nil, false, err
-	}
-
-	oldObj, err := oldPackage.GetPackageRevision()
-	if err != nil {
-		klog.Infof("update failed to retrieve old object: %v", err)
-		return nil, false, err
-	}
-
-	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldObj)
-	if err != nil {
-		klog.Infof("update failed to construct UpdatedObject: %v", err)
-		return nil, false, err
-	}
-	newObj, ok := newRuntimeObj.(*api.PackageRevision)
-	if !ok {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", newRuntimeObj))
-	}
-
-	if updateValidation != nil {
-		err := updateValidation(ctx, newObj, oldObj)
-		if err != nil {
-			klog.Infof("update failed validation: %v", err)
-			return nil, false, err
-		}
-	}
-
-	nameTokens, err := ParseName(name)
-	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
-	}
-
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)
-		}
-		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
-	}
-
-	rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldPackage, oldObj, newObj)
-	if err != nil {
-		return nil, false, apierrors.NewInternalError(err)
-	}
-
-	created, err := rev.GetPackageRevision()
-	if err != nil {
-		return nil, false, apierrors.NewInternalError(err)
-	}
-	return created, false, nil
+	return r.packageCommon.updatePackageRevision(ctx, name, objInfo, createValidation, updateValidation, forceAllowCreate, options)
 }
 
 // Delete implements the GracefulDeleter interface.
@@ -268,4 +201,56 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 
 	// TODO: Should we do an async delete?
 	return oldObj, true, nil
+}
+
+// PackageRevisions Update Strategy
+
+type packageRevisionStrategy struct{}
+
+var _ SimpleRESTUpdateStrategy = packageRevisionStrategy{}
+
+func (s packageRevisionStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+}
+
+func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+	oldRevision := old.(*api.PackageRevision)
+	newRevision := obj.(*api.PackageRevision)
+
+	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+				string(api.PackageRevisionLifecycleProposed),
+			}, ",")),
+		))
+
+	}
+
+	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+				string(api.PackageRevisionLifecycleProposed),
+			}, ",")),
+		))
+	}
+
+	return allErrs
+}
+
+func (s packageRevisionStrategy) Canonicalize(obj runtime.Object) {
+	pr := obj.(*api.PackageRevision)
+	if pr.Spec.Lifecycle == "" {
+		// Set default
+		pr.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
+	}
 }

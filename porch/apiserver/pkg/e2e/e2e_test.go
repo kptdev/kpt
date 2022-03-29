@@ -562,6 +562,12 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 		t.Fatalf("Proposed package lifecycle value: got %s, want %s", got, want)
 	}
 
+	// Approve using Update should fail.
+	proposed.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleFinal
+	if err := t.client.Update(ctx, &proposed); err == nil {
+		t.Fatalf("Finalization of a package via Update unexpectedly succeeded")
+	}
+
 	// Approve the package
 	proposed.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleFinal
 	approved := t.UpdateApprovalF(ctx, &proposed, metav1.UpdateOptions{})
