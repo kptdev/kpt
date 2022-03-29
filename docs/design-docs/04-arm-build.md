@@ -26,9 +26,9 @@ Right now the build pipeline has several steps:
 2) tag
 3) push
 
-In different scenarios only the first step is executed.  If we switch to 
-`buildx` we will need to build/tag/push in one step.  It is not clear if
-we need to build things locally (maybe the OWNERs can give guidance on that).
+In different scenarios only the two steps are executed.  If we switch to 
+`buildx` we will need to build/tag/push in one step.  Locally developers 
+might want to build and tag images locally.
 
 However if we make the changes needed to the shell scripts that produce the
 images all that the users of docker images will need to do is just update
