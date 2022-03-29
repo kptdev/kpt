@@ -243,6 +243,11 @@ func (t *TestSuite) CreateF(ctx context.Context, obj client.Object, opts ...clie
 func (t *TestSuite) CreateE(ctx context.Context, obj client.Object, opts ...client.CreateOption) {
 	t.create(ctx, obj, opts, t.Errorf)
 }
+
+func (t *TestSuite) DeleteF(ctx context.Context, obj client.Object, opts ...client.DeleteOption) {
+	t.delete(ctx, obj, opts, t.Fatalf)
+}
+
 func (t *TestSuite) DeleteE(ctx context.Context, obj client.Object, opts ...client.DeleteOption) {
 	t.delete(ctx, obj, opts, t.Errorf)
 }

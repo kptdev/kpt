@@ -27,6 +27,7 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -577,6 +578,106 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	}
 }
 
+func (t *PorchSuite) TestDeleteDraft(ctx context.Context) {
+	const (
+		repository  = "delete-draft"
+		packageName = "test-delete-draft"
+		revision    = "v1"
+		name        = repository + ":" + packageName + ":" + revision
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	t.createPackageDraftF(ctx, repository, packageName, revision)
+
+	// Check the package exists
+	var draft porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &draft)
+
+	// Delete the package
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      name,
+		},
+	})
+
+	t.mustNotExist(ctx, &draft)
+}
+
+func (t *PorchSuite) TestDeleteProposed(ctx context.Context) {
+	const (
+		repository  = "delete-proposed"
+		packageName = "test-delete-proposed"
+		revision    = "v1"
+		name        = repository + ":" + packageName + ":" + revision
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	t.createPackageDraftF(ctx, repository, packageName, revision)
+
+	// Check the package exists
+	var pkg porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	// Delete the package
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      name,
+		},
+	})
+
+	t.mustNotExist(ctx, &pkg)
+}
+
+func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
+	const (
+		repository  = "delete-final"
+		packageName = "test-delete-final"
+		revision    = "v1"
+		name        = repository + ":" + packageName + ":" + revision
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	t.createPackageDraftF(ctx, repository, packageName, revision)
+
+	// Check the package exists
+	var pkg porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	pkg.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleFinal
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+
+	// Delete the package
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      name,
+		},
+	})
+
+	t.mustNotExist(ctx, &pkg)
+}
+
 func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
 	t.CreateF(ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
@@ -705,5 +806,52 @@ func withType(t configapi.RepositoryType) repositoryOption {
 func withContent(content configapi.RepositoryContent) repositoryOption {
 	return func(r *configapi.Repository) {
 		r.Spec.Content = content
+	}
+}
+
+// Creates an empty package draft by initializing an empty package
+func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, revision string) *porchapi.PackageRevision {
+	fullName := fmt.Sprintf("%s:%s:%s", repository, name, revision)
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      fullName,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    name,
+			Revision:       revision,
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeInit,
+					Init: &porchapi.PackageInitTaskSpec{},
+				},
+			},
+		},
+	}
+	t.CreateF(ctx, pr)
+	return pr
+}
+
+func (t *PorchSuite) mustExist(ctx context.Context, key client.ObjectKey, obj client.Object) {
+	t.GetE(ctx, key, obj)
+	if got, want := obj.GetName(), key.Name; got != want {
+		t.Errorf("%T.Name: got %q, want %q", obj, got, want)
+	}
+	if got, want := obj.GetNamespace(), key.Namespace; got != want {
+		t.Errorf("%T.Namespace: got %q, want %q", obj, got, want)
+	}
+}
+
+func (t *PorchSuite) mustNotExist(ctx context.Context, obj client.Object) {
+	switch err := t.client.Get(ctx, client.ObjectKeyFromObject(obj), obj); {
+	case err == nil:
+		t.Errorf("No error returned getting a deleted package; expected error")
+	case !apierrors.IsNotFound(err):
+		t.Errorf("Expected NotFound error. got %v", err)
 	}
 }
