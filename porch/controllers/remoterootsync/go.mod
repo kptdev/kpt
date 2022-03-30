@@ -32,7 +32,7 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000 // indirect
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee // indirect
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220330205144-0b1442857d49 // indirect
 	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
