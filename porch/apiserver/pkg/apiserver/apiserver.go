@@ -178,6 +178,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),
+		engine.WithUserInfoProvider(&porch.ApiserverUserInfoProvider{}),
 	)
 	if err != nil {
 		return nil, err

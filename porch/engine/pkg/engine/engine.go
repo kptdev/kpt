@@ -58,6 +58,7 @@ type cadEngine struct {
 	runtime            fn.FunctionRuntime
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
+	userInfoProvider   repository.UserInfoProvider
 }
 
 var _ CaDEngine = &cadEngine{}
