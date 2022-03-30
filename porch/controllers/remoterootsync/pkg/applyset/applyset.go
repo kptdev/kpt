@@ -120,11 +120,6 @@ func (r *ApplyResults) checkInvariants() {
 	}
 }
 
-// applySkipped records that the apply of an object was skipped because it was already applied.
-func (r *ApplyResults) applySkipped(gvk schema.GroupVersionKind, nn types.NamespacedName) {
-	r.applySuccessCount++
-}
-
 // applyError records that the apply of an object failed with an error.
 func (r *ApplyResults) applyError(gvk schema.GroupVersionKind, nn types.NamespacedName, err error) {
 	r.applyFailCount++

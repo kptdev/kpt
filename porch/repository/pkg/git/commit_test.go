@@ -99,6 +99,9 @@ func TestPackageCommitToMain(t *testing.T) {
 	bucketEntry := findTreeEntry(t, draftTree, packagePath)
 	bucketTree := bucketEntry.Hash
 	ch, err := newCommitHelper(repo.Storer, main.Hash(), packagePath, bucketTree)
+	if err != nil {
+		t.Fatalf("Failed to create commit helper: %v", err)
+	}
 
 	commitHash, treeHash, err := ch.commit("Move bucket to main", packagePath)
 	if err != nil {

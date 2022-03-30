@@ -18,11 +18,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -31,9 +29,7 @@ import (
 	internalpkg "github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchtest "github.com/GoogleContainerTools/kpt/pkg/test/porch"
-	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
 	porchclient "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
@@ -69,14 +65,6 @@ type OciConfig struct {
 	Registry string `json:"registry"`
 }
 
-// Format of the optional test configuration file to enable running
-// the test with specified GCP project, repositories and authentication.
-type PorchTestConfig struct {
-	Project string    `json:"project"`
-	Git     GitConfig `json:"git"`
-	Oci     OciConfig `yaml:"oci"`
-}
-
 type Password string
 
 func (p Password) String() string {
@@ -87,11 +75,10 @@ type TestSuite struct {
 	*testing.T
 	kubeconfig *rest.Config
 	client     client.Client
-	clientset  versioned.Interface
+	clientset  porchclient.Interface
 
 	namespace string // K8s namespace for this test run
 	local     bool   // Tests running against local dev porch
-	//ptc       PorchTestConfig
 }
 
 type Initializer interface {
@@ -213,7 +200,7 @@ func (t *TestSuite) patch(ctx context.Context, obj client.Object, patch client.P
 	}
 }
 
-func (t *TestSuite) updateApproval(ctx context.Context, obj *v1alpha1.PackageRevision, opts metav1.UpdateOptions, eh ErrorHandler) *v1alpha1.PackageRevision {
+func (t *TestSuite) updateApproval(ctx context.Context, obj *porchapi.PackageRevision, opts metav1.UpdateOptions, eh ErrorHandler) *porchapi.PackageRevision {
 	if res, err := t.clientset.PorchV1alpha1().PackageRevisions(obj.Namespace).UpdateApproval(ctx, obj.Name, obj, opts); err != nil {
 		eh("failed to update approval of %s/%s: %v", obj.Namespace, obj.Name, err)
 		return nil
@@ -272,31 +259,11 @@ func (t *TestSuite) PatchE(ctx context.Context, obj client.Object, patch client.
 	t.patch(ctx, obj, patch, opts, t.Errorf)
 }
 
-func (t *TestSuite) UpdateApprovalF(ctx context.Context, pr *v1alpha1.PackageRevision, opts metav1.UpdateOptions) *v1alpha1.PackageRevision {
+func (t *TestSuite) UpdateApprovalF(ctx context.Context, pr *porchapi.PackageRevision, opts metav1.UpdateOptions) *porchapi.PackageRevision {
 	return t.updateApproval(ctx, pr, opts, t.Fatalf)
 }
 
 // DeleteAllOf(ctx context.Context, obj Object, opts ...DeleteAllOfOption) error
-
-func readTestConfig(t *testing.T) PorchTestConfig {
-	dir, err := os.UserConfigDir()
-	if err != nil {
-		t.Logf("Cannot get user config directory: %v; proceeding without config", err)
-		return PorchTestConfig{}
-	}
-	path := filepath.Join(dir, PorchTestConfigFile)
-	config, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Logf("Cannot read Porch test config %q: %v; proceeding without config", path, err)
-		return PorchTestConfig{}
-	}
-	var ptc PorchTestConfig
-	if err := yaml.Unmarshal(config, &ptc); err != nil {
-		t.Fatalf("Failed to parse Porch test config %q: %v; failing...", path, err)
-		return PorchTestConfig{}
-	}
-	return ptc
-}
 
 func createClientScheme(t *testing.T) *runtime.Scheme {
 	scheme := runtime.NewScheme()

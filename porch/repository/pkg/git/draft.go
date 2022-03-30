@@ -43,6 +43,9 @@ var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
 	ch, err := newCommitHelper(d.parent.repo.Storer, d.ref.Hash(), d.path, plumbing.ZeroHash)
+	if err != nil {
+		return fmt.Errorf("failed to commit packgae: %w", err)
+	}
 
 	for k, v := range new.Spec.Resources {
 		ch.storeFile(path.Join(d.path, k), v)

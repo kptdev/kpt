@@ -158,7 +158,3 @@ func (p *gitPackageRevision) getPackageRevisionLifecycle() v1alpha1.PackageRevis
 		return v1alpha1.PackageRevisionLifecycleFinal
 	}
 }
-
-func (p *gitPackageRevision) isDraft() bool {
-	return p.ref != nil && strings.HasPrefix(p.ref.Name().String(), refDraftPrefix)
-}

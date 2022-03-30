@@ -43,10 +43,10 @@ import (
 )
 
 var (
-	rootSyncNamespace  = "config-management-system"
-	rootSyncApiVersion = "configsync.gke.io/v1beta1"
-	rootSyncName       = "root-sync"
-	rootSyncKind       = "RootSync"
+	RootSyncNamespace  = "config-management-system"
+	RootSyncApiVersion = "configsync.gke.io/v1beta1"
+	RootSyncName       = "root-sync"
+	RootSyncKind       = "RootSync"
 )
 
 // RemoteRootSyncSetReconciler reconciles RemoteRootSyncSet objects
@@ -406,6 +406,6 @@ func (r *RemoteRootSyncSetReconciler) deleteExternalResources(ctx context.Contex
 		}
 		return deleteErrs[0]
 	}
-	klog.Infof("external resource %s delete Done!", rootSyncName)
+	klog.Infof("external resource %s delete Done!", RootSyncName)
 	return nil
 }

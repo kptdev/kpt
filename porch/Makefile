@@ -115,7 +115,7 @@ test:
 
 .PHONY: vet
 vet:
-	@#for f in $(MODULES); do (cd $$f; echo "Checking $$f"; go run honnef.co/go/tools/cmd/staticcheck@latest ./...); done
+	@for f in $(MODULES); do (cd $$f; echo "Checking $$f"; go run honnef.co/go/tools/cmd/staticcheck@latest ./...); done
 	@for f in $(MODULES); do (cd $$f; echo "Vetting $$f"; go vet ./...) || exit 1; done
 
 .PHONY: fmt
