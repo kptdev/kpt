@@ -15,12 +15,14 @@
 package git
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
@@ -29,10 +31,13 @@ func TestPackageCommitEmptyRepo(t *testing.T) {
 	tempdir := t.TempDir()
 	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "empty-repository.tar"), tempdir)
 
+	ctx := context.Background()
+
+	var userInfoProvider repository.UserInfoProvider
 	parent := plumbing.ZeroHash      // Empty repository
 	packageTree := plumbing.ZeroHash // Empty package
 	packagePath := "catalog/namespaces/istions"
-	ch, err := newCommitHelper(repo.Storer, parent, packagePath, packageTree)
+	ch, err := newCommitHelper(repo.Storer, userInfoProvider, parent, packagePath, packageTree)
 	if err != nil {
 		t.Fatalf("newCommitHelper(%q) failed: %v", packagePath, err)
 	}
@@ -44,7 +49,7 @@ func TestPackageCommitEmptyRepo(t *testing.T) {
 	}
 
 	message := fmt.Sprintf("Commit Message: %d", time.Now().UnixMicro())
-	commitHash, treeHash, err := ch.commit(message, packagePath)
+	commitHash, treeHash, err := ch.commit(ctx, message, packagePath)
 	if err != nil {
 		t.Fatalf("Commit failed: %v", err)
 	}
@@ -81,6 +86,10 @@ func TestPackageCommitToMain(t *testing.T) {
 	tempdir := t.TempDir()
 	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "drafts-repository.tar"), tempdir)
 
+	ctx := context.Background()
+
+	var userInfoProvider repository.UserInfoProvider
+
 	// Commit `bucket`` package from drafts/bucket/v1 into main
 
 	main := resolveReference(t, repo, refMain)
@@ -98,12 +107,12 @@ func TestPackageCommitToMain(t *testing.T) {
 	draftTree := getCommitTree(t, repo, draft.Hash())
 	bucketEntry := findTreeEntry(t, draftTree, packagePath)
 	bucketTree := bucketEntry.Hash
-	ch, err := newCommitHelper(repo.Storer, main.Hash(), packagePath, bucketTree)
+	ch, err := newCommitHelper(repo.Storer, userInfoProvider, main.Hash(), packagePath, bucketTree)
 	if err != nil {
 		t.Fatalf("Failed to create commit helper: %v", err)
 	}
 
-	commitHash, treeHash, err := ch.commit("Move bucket to main", packagePath)
+	commitHash, treeHash, err := ch.commit(ctx, "Move bucket to main", packagePath)
 	if err != nil {
 		t.Fatalf("Commit failed: %v", err)
 	}
@@ -118,5 +127,116 @@ func TestPackageCommitToMain(t *testing.T) {
 	packageEntry := findTreeEntry(t, commitTree, packagePath)
 	if got, want := packageEntry.Hash, bucketTree; got != want {
 		t.Errorf("Package copied into main branch with unexpected tree hash; got %s, want %s", got, want)
+	}
+}
+
+type testUserInfoProvider struct {
+	user string
+	ok   bool
+}
+
+func (p *testUserInfoProvider) GetUserName(ctx context.Context) (string, bool) {
+	return p.user, p.ok
+}
+
+func TestCommitWithUser(t *testing.T) {
+	tempdir := t.TempDir()
+	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "trivial-repository.tar"), tempdir)
+
+	ctx := context.Background()
+	main := resolveReference(t, repo, refMain)
+
+	{
+		const testUser = "porch-test@porch-domain.com"
+		// Make one commit with user info provided
+		userInfoProvider := &testUserInfoProvider{
+			user: testUser,
+			ok:   true,
+		}
+
+		var zeroHash plumbing.Hash
+		const packagePath = "testpackage"
+		ch, err := newCommitHelper(repo.Storer, userInfoProvider, main.Hash(), packagePath, zeroHash)
+		if err != nil {
+			t.Fatalf("newCommitHelper(%q) failed: %v", packagePath, err)
+		}
+
+		filePath := path.Join(packagePath, "hello.txt")
+		fileContents := "Hello, World!"
+		if err := ch.storeFile(filePath, fileContents); err != nil {
+			t.Fatalf("storeFile(%q, %q) failed: %v", filePath, fileContents, err)
+		}
+
+		message := fmt.Sprintf("Commit Message: %d", time.Now().UnixMicro())
+		commitHash, _, err := ch.commit(ctx, message, packagePath)
+		if err != nil {
+			t.Fatalf("commit failed: %v", err)
+		}
+
+		commit := getCommitObject(t, repo, commitHash)
+
+		if got, want := commit.Author.Email, testUser; got != want {
+			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
+		}
+		if got, want := commit.Author.Name, testUser; got != want {
+			t.Errorf("Commit.Author.Name: got %q, want %q", got, want)
+		}
+
+		// Committer is Porch
+		if got, want := commit.Committer.Email, porchSignatureEmail; got != want {
+			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
+		}
+		if got, want := commit.Committer.Name, porchSignatureName; got != want {
+			t.Errorf("Commit.Author.Name: got %q, want %q", got, want)
+		}
+	}
+
+	{
+		// And another without ...
+		userInfoProvider := &testUserInfoProvider{
+			user: "",
+			ok:   false,
+		}
+
+		var zeroHash plumbing.Hash
+		const packagePath = "testpackage-nouser"
+		ch, err := newCommitHelper(repo.Storer, userInfoProvider, main.Hash(), packagePath, zeroHash)
+		if err != nil {
+			t.Fatalf("newCommitHelper(%q) failed: %v", packagePath, err)
+		}
+
+		filePath := path.Join(packagePath, "hello-nouser.txt")
+		fileContents := "Hello, World!"
+		if err := ch.storeFile(filePath, fileContents); err != nil {
+			t.Fatalf("storeFile(%q, %q) failed: %v", filePath, fileContents, err)
+		}
+
+		message := fmt.Sprintf("Commit Message: %d", time.Now().UnixMicro())
+		commitHash, _, err := ch.commit(ctx, message, packagePath)
+		if err != nil {
+			t.Fatalf("commit failed: %v", err)
+		}
+
+		commit := getCommitObject(t, repo, commitHash)
+
+		if got, want := commit.Author.Email, porchSignatureEmail; got != want {
+			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
+		}
+		if got, want := commit.Author.Name, porchSignatureName; got != want {
+			t.Errorf("Commit.Author.Name: got %q, want %q", got, want)
+		}
+
+		// Committer is Porch
+		if got, want := commit.Committer.Email, porchSignatureEmail; got != want {
+			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
+		}
+		if got, want := commit.Committer.Name, porchSignatureName; got != want {
+			t.Errorf("Commit.Author.Name: got %q, want %q", got, want)
+		}
+
+		// Check the message
+		if got, want := commit.Message, message; got != want {
+			t.Errorf("Commit.Message: got %q, want %q", got, want)
+		}
 	}
 }

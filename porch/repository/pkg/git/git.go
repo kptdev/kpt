@@ -877,13 +877,13 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 
 	// Create commit helper. Use zero hash for the initial package tree. Commit helper will initialize trees
 	// without TreeEntry for this package present - the package is deleted.
-	ch, err := newCommitHelper(repo.Storer, commit.Hash, packagePath, zero)
+	ch, err := newCommitHelper(repo.Storer, r.userInfoProvider, commit.Hash, packagePath, zero)
 	if err != nil {
 		return zero, fmt.Errorf("failed to initialize commit of package %q to %q: %w", packagePath, ref, err)
 	}
 
 	message := fmt.Sprintf("Delete %s", packagePath)
-	commitHash, _, err := ch.commit(message, packagePath)
+	commitHash, _, err := ch.commit(ctx, message, packagePath)
 	if err != nil {
 		return zero, fmt.Errorf("failed to commit package %q to %q: %w", packagePath, ref, err)
 	}
