@@ -56,7 +56,12 @@ type GitRepository interface {
 	GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
-func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, resolver repository.CredentialResolver, root string) (GitRepository, error) {
+type GitRepositoryOptions struct {
+	CredentialResolver repository.CredentialResolver
+	UserInfoProvider   repository.UserInfoProvider
+}
+
+func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, root string, opts GitRepositoryOptions) (GitRepository, error) {
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 
@@ -102,7 +107,8 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		namespace:          namespace,
 		repo:               repo,
 		secret:             spec.SecretRef.Name,
-		credentialResolver: resolver,
+		credentialResolver: opts.CredentialResolver,
+		userInfoProvider:   opts.UserInfoProvider,
 	}
 
 	if err := repository.update(ctx); err != nil {
@@ -119,6 +125,7 @@ type gitRepository struct {
 	repo               *git.Repository
 	cachedCredentials  transport.AuthMethod
 	credentialResolver repository.CredentialResolver
+	userInfoProvider   repository.UserInfoProvider
 }
 
 func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {

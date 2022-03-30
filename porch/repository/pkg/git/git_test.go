@@ -28,7 +28,6 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -91,10 +90,9 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		Repo: gitServerURL,
 	}
 
-	var credentialResolver repository.CredentialResolver
 	root := filepath.Join(tempdir, "work")
 
-	repo, err := OpenRepository(ctx, name, namespace, spec, credentialResolver, root)
+	repo, err := OpenRepository(ctx, name, namespace, spec, root, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("failed to open repository: %v", err)
 	}
@@ -146,7 +144,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 
 	// We reopen to refetch
 	// TODO: This is pretty hacky...
-	repo, err = OpenRepository(ctx, name, namespace, spec, credentialResolver, root)
+	repo, err = OpenRepository(ctx, name, namespace, spec, root, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("failed to open repository: %v", err)
 	}
@@ -299,14 +297,13 @@ func TestListPackagesEmpty(t *testing.T) {
 		repositoryName = "empty"
 		namespace      = "default"
 	)
-	var resolver repository.CredentialResolver
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
 		Branch:    "main",
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
@@ -392,14 +389,13 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 		repositoryName = "trivial"
 		namespace      = "default"
 	)
-	var resolver repository.CredentialResolver
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
 		Branch:    "main",
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
@@ -470,14 +466,13 @@ func TestListPackagesSimple(t *testing.T) {
 		repositoryName = "simple"
 		namespace      = "default"
 	)
-	var resolver repository.CredentialResolver
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
 		Branch:    "main",
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
@@ -527,14 +522,13 @@ func TestListPackagesDrafts(t *testing.T) {
 		repositoryName = "drafts"
 		namespace      = "default"
 	)
-	var resolver repository.CredentialResolver
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
 		Branch:    "main",
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
@@ -586,12 +580,11 @@ func TestApproveDraft(t *testing.T) {
 		finalReferenceName plumbing.ReferenceName = "refs/tags/bucket/v1"
 	)
 	ctx := context.Background()
-	var resolver repository.CredentialResolver
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
 		Branch:    "main",
 		Directory: "/",
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
@@ -644,10 +637,9 @@ func TestDeletePackages(t *testing.T) {
 	)
 
 	ctx := context.Background()
-	var resolver repository.CredentialResolver
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo: address,
-	}, resolver, tempdir)
+	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
 	}
