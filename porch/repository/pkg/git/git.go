@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"github.com/go-git/go-git/v5"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -191,12 +192,13 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 	}
 
 	return &gitPackageDraft{
-		parent:   r,
-		path:     obj.Spec.PackageName,
-		revision: obj.Spec.Revision,
-		updated:  time.Now(),
-		ref:      head,
-		commit:   base,
+		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
+		parent:    r,
+		path:      obj.Spec.PackageName,
+		revision:  obj.Spec.Revision,
+		updated:   time.Now(),
+		ref:       head,
+		commit:    base,
 	}, nil
 }
 
@@ -222,13 +224,14 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 	}
 
 	return &gitPackageDraft{
-		parent:   r,
-		path:     oldGitPackage.path,
-		revision: oldGitPackage.revision,
-		updated:  rev.updated,
-		ref:      rev.ref,
-		tree:     rev.tree,
-		commit:   rev.commit,
+		parent:    r,
+		path:      oldGitPackage.path,
+		revision:  oldGitPackage.revision,
+		lifecycle: oldGitPackage.getPackageRevisionLifecycle(),
+		updated:   rev.updated,
+		ref:       rev.ref,
+		tree:      rev.tree,
+		commit:    rev.commit,
 	}, nil
 }
 
@@ -285,7 +288,64 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 }
 
 func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
-	return fmt.Errorf("gitRepository::DeletePackageRevision not implemented")
+	oldGit, ok := old.(*gitPackageRevision)
+	if !ok {
+		return fmt.Errorf("cannot delete non-git package: %T", old)
+	}
+
+	ref := oldGit.ref
+	if ref == nil {
+		// This is an internal error. In some rare cases (see GetPackage below) we create
+		// package revisions without refs. They should never be returned via the API though.
+		return fmt.Errorf("cannot delete package with no ref: %s", oldGit.path)
+	}
+
+	// We can only delete packages which have their own ref. Refs that are shared with other packages
+	// (main branch, tag that doesn't contain package path in its name, ...) cannot be deleted.
+
+	refsPush := []config.RefSpec{}
+	refsDelete := map[plumbing.ReferenceName]bool{}
+
+	switch rn := ref.Name(); {
+	case rn.IsTag():
+		// Delete tag only if it is package-specific.
+		name := createFinalRefName(oldGit.path, oldGit.revision)
+		if rn != name {
+			return fmt.Errorf("cannot delete package tagged with a tag that is not specific to the package: %s", rn)
+		}
+
+		// Delete the tag
+		refsDelete[name] = true
+
+	case strings.HasPrefix(rn.String(), refDraftPrefix), strings.HasPrefix(rn.String(), refProposedPrefix):
+		// PackageRevision is proposed or draft; delete the branch directly.
+		refsDelete[rn] = true
+
+	case rn.IsBranch():
+		// Delete package from the branch
+		commitHash, err := r.createPackageDeleteCommit(ctx, rn, oldGit)
+		if err != nil {
+			return err
+		}
+
+		// Update the reference
+		// TODO: consider collecting all updates and applying them all at once.
+		setReference(r.repo.Storer, rn, commitHash)
+
+		refsPush = append(
+			refsPush,
+			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, rn.String())),
+		)
+
+	default:
+		return fmt.Errorf("cannot delete package with the ref name %s", rn)
+	}
+
+	// Update references
+	if err := r.pushAndCleanupRefs(ctx, refsPush, refsDelete); err != nil {
+		return fmt.Errorf("failed to update git references: %v", err)
+	}
+	return nil
 }
 
 func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
@@ -750,6 +810,128 @@ func (r *gitRepository) update(ctx context.Context) error {
 			if err := r.repo.Storer.SetReference(new); err != nil {
 				klog.Errorf("Failed to fast-forward %s to %s, localRef, remoteRef")
 			}
+		}
+	}
+
+	return nil
+}
+
+// Creates a commit which deletes the package from the branch, and returns its commit hash.
+// If the branch doesn't exist, will return zero hash and no error.
+func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch plumbing.ReferenceName, pkg *gitPackageRevision) (plumbing.Hash, error) {
+	var zero plumbing.Hash
+	auth, err := r.getAuthMethod(ctx)
+	if err != nil {
+		return zero, fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+
+	repo := r.repo
+
+	// Fetch the branch
+	switch err := repo.Fetch(&git.FetchOptions{
+		RemoteName: originName,
+		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", branch, branch))},
+		Auth:       auth,
+		Tags:       git.NoTags,
+	}); err {
+	case nil, git.NoErrAlreadyUpToDate:
+		// ok
+	default:
+		return zero, fmt.Errorf("failed to fetch remote repository: %w", err)
+	}
+
+	// find the branch
+	ref, err := repo.Reference(branch, true)
+	if err != nil {
+		// branch doesn't exist, and therefore package doesn't exist either.
+		klog.Infof("Branch %q no longer exist, deleting a package from it is unnecessary", branch)
+		return zero, nil
+	}
+	commit, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return zero, fmt.Errorf("failed to resolve main branch to commit: %w", err)
+	}
+	root, err := commit.Tree()
+	if err != nil {
+		return zero, fmt.Errorf("failed to find commit tree for %s: %w", ref, err)
+	}
+
+	packagePath := pkg.path
+
+	// Find the package in the tree
+	switch _, err := root.FindEntry(packagePath); err {
+	case object.ErrEntryNotFound:
+		// Package doesn't exist; no need to delete it
+		return zero, nil
+	case nil:
+		// found
+	default:
+		return zero, fmt.Errorf("failed to find package %q in the repositrory ref %q: %w,", packagePath, ref, err)
+	}
+
+	// Create commit helper. Use zero hash for the initial package tree. Commit helper will initialize trees
+	// without TreeEntry for this package present - the package is deleted.
+	ch, err := newCommitHelper(repo.Storer, commit.Hash, packagePath, zero)
+	if err != nil {
+		return zero, fmt.Errorf("failed to initialize commit of package %q to %q: %w", packagePath, ref, err)
+	}
+
+	message := fmt.Sprintf("Delete %s", packagePath)
+	commitHash, _, err := ch.commit(message, packagePath)
+	if err != nil {
+		return zero, fmt.Errorf("failed to commit package %q to %q: %w", packagePath, ref, err)
+	}
+	return commitHash, nil
+}
+
+func (r *gitRepository) pushAndCleanupRefs(ctx context.Context, updates []config.RefSpec, cleanup map[plumbing.ReferenceName]bool) error {
+	auth, err := r.getAuthMethod(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+
+	repo := r.repo
+
+	if len(updates) > 0 {
+		switch err := repo.Push(&git.PushOptions{
+			RemoteName: originName,
+			RefSpecs:   updates,
+			Auth:       auth,
+		}); err {
+		case nil, git.NoErrAlreadyUpToDate:
+			// ok
+		default:
+			return fmt.Errorf("failed to push to git: %w", err)
+		}
+
+	}
+
+	deleteRemotes := []config.RefSpec{}
+	// Cleanup local and remote branches
+	for rn := range cleanup {
+		switch err := repo.Storer.RemoveReference(rn); err {
+		case nil, plumbing.ErrReferenceNotFound:
+			// These are OK.
+
+		default:
+			return err
+		}
+
+		deleteRemotes = append(deleteRemotes, config.RefSpec(fmt.Sprintf(":%s", rn.String())))
+	}
+
+	// TODO: Combine this Push with the one above? Will need to reconcile the temporary
+	// use of `force` in the previous push where draft package contents are updated.
+	if len(deleteRemotes) > 0 {
+		switch err := repo.Push(&git.PushOptions{
+			RemoteName: originName,
+			RefSpecs:   deleteRemotes,
+			Auth:       auth,
+		}); err {
+		case nil, git.NoErrAlreadyUpToDate:
+			// ok
+		default:
+			klog.Errorf("Failed to clean up remote branches: %v", err)
 		}
 	}
 

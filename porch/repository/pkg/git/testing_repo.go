@@ -203,3 +203,13 @@ func refMustNotExist(t *testing.T, repo *gogit.Repository, name plumbing.Referen
 		t.Fatalf("Unexpected error resolving reference %q: %v", name, err)
 	}
 }
+
+func forEachRef(t *testing.T, repo *gogit.Repository, fn func(*plumbing.Reference) error) {
+	refs, err := repo.References()
+	if err != nil {
+		t.Fatalf("Failed to create references iterator: %v", err)
+	}
+	if err := refs.ForEach(fn); err != nil {
+		t.Fatalf("References.ForEach faile: %v", err)
+	}
+}
