@@ -61,6 +61,9 @@ func runTests(t *testing.T, path string) {
 
 	for _, tc := range testCases {
 		t.Run(tc.TestCase, func(t *testing.T) {
+			if tc.Skip != "" {
+				t.Skipf("Skipping test: %s", tc.Skip)
+			}
 			runTestCase(t, git, tc)
 		})
 	}
