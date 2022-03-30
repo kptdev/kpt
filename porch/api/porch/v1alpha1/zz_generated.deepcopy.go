@@ -562,7 +562,11 @@ func (in *UpstreamPackage) DeepCopyInto(out *UpstreamPackage) {
 		*out = new(OciPackage)
 		**out = **in
 	}
-	out.UpstreamRef = in.UpstreamRef
+	if in.UpstreamRef != nil {
+		in, out := &in.UpstreamRef, &out.UpstreamRef
+		*out = new(PackageRevisionRef)
+		**out = **in
+	}
 	return
 }
 

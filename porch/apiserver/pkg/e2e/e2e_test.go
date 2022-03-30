@@ -196,7 +196,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 					Type: porchapi.TaskTypeClone,
 					Clone: &porchapi.PackageCloneTaskSpec{
 						Upstream: porchapi.UpstreamPackage{
-							UpstreamRef: porchapi.PackageRevisionRef{
+							UpstreamRef: &porchapi.PackageRevisionRef{
 								Name: "test-blueprints:basens:v1", // Clone from basens/v1
 							},
 						},
@@ -394,7 +394,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 					Type: porchapi.TaskTypeClone,
 					Clone: &porchapi.PackageCloneTaskSpec{
 						Upstream: porchapi.UpstreamPackage{
-							UpstreamRef: porchapi.PackageRevisionRef{
+							UpstreamRef: &porchapi.PackageRevisionRef{
 								Name: upstreamPackage, // Package to be cloned
 							},
 						},

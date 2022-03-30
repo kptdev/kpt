@@ -1022,7 +1022,6 @@ func schema_porch_api_porch_v1alpha1_UpstreamPackage(ref common.ReferenceCallbac
 					"upstreamRef": {
 						SchemaProps: spec.SchemaProps{
 							Description: "UpstreamRef is the reference to the package from a registered repository rather than external package.",
-							Default:     map[string]interface{}{},
 							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionRef"),
 						},
 					},

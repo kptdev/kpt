@@ -850,9 +850,7 @@ func autoConvert_v1alpha1_UpstreamPackage_To_porch_UpstreamPackage(in *UpstreamP
 	out.Type = porch.RepositoryType(in.Type)
 	out.Git = (*porch.GitPackage)(unsafe.Pointer(in.Git))
 	out.Oci = (*porch.OciPackage)(unsafe.Pointer(in.Oci))
-	if err := Convert_v1alpha1_PackageRevisionRef_To_porch_PackageRevisionRef(&in.UpstreamRef, &out.UpstreamRef, s); err != nil {
-		return err
-	}
+	out.UpstreamRef = (*porch.PackageRevisionRef)(unsafe.Pointer(in.UpstreamRef))
 	return nil
 }
 
@@ -865,9 +863,7 @@ func autoConvert_porch_UpstreamPackage_To_v1alpha1_UpstreamPackage(in *porch.Ups
 	out.Type = RepositoryType(in.Type)
 	out.Git = (*GitPackage)(unsafe.Pointer(in.Git))
 	out.Oci = (*OciPackage)(unsafe.Pointer(in.Oci))
-	if err := Convert_porch_PackageRevisionRef_To_v1alpha1_PackageRevisionRef(&in.UpstreamRef, &out.UpstreamRef, s); err != nil {
-		return err
-	}
+	out.UpstreamRef = (*PackageRevisionRef)(unsafe.Pointer(in.UpstreamRef))
 	return nil
 }
 
