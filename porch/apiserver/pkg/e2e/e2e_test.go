@@ -838,7 +838,7 @@ func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, 
 }
 
 func (t *PorchSuite) mustExist(ctx context.Context, key client.ObjectKey, obj client.Object) {
-	t.GetE(ctx, key, obj)
+	t.GetF(ctx, key, obj)
 	if got, want := obj.GetName(), key.Name; got != want {
 		t.Errorf("%T.Name: got %q, want %q", obj, got, want)
 	}
