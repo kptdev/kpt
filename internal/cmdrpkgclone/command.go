@@ -170,7 +170,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		if targetPackageName.Package == "" {
 			targetPackageName.Package = src.Package
 		}
-		r.clone.Upstream.UpstreamRef = porchapi.PackageRevisionRef{
+		r.clone.Upstream.UpstreamRef = &porchapi.PackageRevisionRef{
 			Name: src.Original,
 		}
 	}
