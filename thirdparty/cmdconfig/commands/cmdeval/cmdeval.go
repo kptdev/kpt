@@ -164,7 +164,7 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 // SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` list.
 func (r *EvalFnRunner) SaveFnToKptfile() {
 	pr := printer.FromContextOrDie(r.Ctx)
-	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.Dest)
+	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.RunFns.Path)
 	if err != nil {
 		pr.Printf("function not added: Kptfile not exists\n")
 		return
@@ -176,24 +176,33 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	}
 	if kf.Pipeline.Mutators == nil {
 		kf.Pipeline.Mutators = []kptfile.Function{}
-	} else {
-		for _, m := range kf.Pipeline.Mutators {
-			if m.Name == r.Image || m.Image == r.Image {
-				pr.Printf("skip adding image: already exists in Kptfile\n")
-				return
-			}
-			if m.Name == r.Exec || m.Exec == r.Exec {
-				pr.Printf("skip adding exec: already exists in Kptfile\n")
-				return
-			}
+	}
+	var newMutators []kptfile.Function
+	found := false
+	for _, m := range kf.Pipeline.Mutators {
+		switch {
+		case m.Image != "" && m.Image == r.Image:
+			pr.Printf("found image in Kptfile, updating...\n")
+			newMutators = append(newMutators, *r.NewFunction())
+			found = true
+		case m.Exec != "" && m.Exec == r.Exec:
+			pr.Printf("found exec in Kptfile, updating...\n")
+			newMutators = append(newMutators, *r.NewFunction())
+			found = true
+		default:
+			newMutators = append(newMutators, m)
 		}
 	}
-	kf.Pipeline.Mutators = append(kf.Pipeline.Mutators, *r.NewFunction())
-	if err = kptfileutil.WriteFile(r.Dest, kf); err != nil {
+	if !found {
+		newMutators = append(newMutators, *r.NewFunction())
+		pr.Printf("adding function to Kptfile\n")
+	}
+	kf.Pipeline.Mutators = newMutators
+	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
-	pr.Printf("function is added to Kptfile\n")
+	pr.Printf("Kptfile updated\n")
 }
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit

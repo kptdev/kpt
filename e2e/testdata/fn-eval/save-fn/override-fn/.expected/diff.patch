@@ -1,0 +1,35 @@
+diff --git a/Kptfile b/Kptfile
+index 4a1e2fa..f094437 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,7 +4,7 @@ metadata:
+   name: app
+ pipeline:
+   mutators:
+-  - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+-    configMap:
+-      namespace: oldNs
+-    name: gcr.io/kpt-fn/set-namespace:v0.1.3
++    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
++      configMap:
++        namespace: newNs
++      name: gcr.io/kpt-fn/set-namespace:v0.1.3
+diff --git a/resources.yaml b/resources.yaml
+index ac634f3..80e1b9e 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,6 +15,7 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: newNs
+ spec:
+   replicas: 3
+ ---
+@@ -22,5 +23,6 @@ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+   name: custom
++  namespace: newNs
+ spec:
+   image: nginx:1.2.3

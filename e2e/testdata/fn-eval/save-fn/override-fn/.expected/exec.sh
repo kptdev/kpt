@@ -1,4 +1,5 @@
-# Copyright 2022 Google LLC
+#! /bin/bash
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-testType: eval
-image: set-namespace:v0.1.3
-args:
-  namespace: staging
-stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
-  adding function to Kptfile
-  Kptfile updated
+set -eo pipefail
+
+kpt fn eval -s -i set-namespace:v0.1.3 -- namespace=newNs
