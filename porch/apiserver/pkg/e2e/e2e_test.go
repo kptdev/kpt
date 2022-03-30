@@ -678,6 +678,53 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	t.mustNotExist(ctx, &pkg)
 }
 
+func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
+	const (
+		repository  = "clone-ls"
+		packageName = "test-clone-ls"
+		revision    = "v1"
+		name        = repository + ":" + packageName + ":" + revision
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Clone the package. Use leading slash in the directory (regression test)
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			Revision:       revision,
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeClone,
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: porchapi.RepositoryTypeGit,
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/platkrm/test-blueprints",
+								Ref:       "basens/v1",
+								Directory: "/basens",
+							},
+						},
+						Strategy: porchapi.ResourceMerge,
+					},
+				},
+			},
+		},
+	})
+
+	var pr porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pr)
+}
+
 func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
 	t.CreateF(ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
