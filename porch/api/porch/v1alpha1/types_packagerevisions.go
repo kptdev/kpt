@@ -142,7 +142,7 @@ type UpstreamPackage struct {
 	Oci *OciPackage `json:"oci,omitempty"`
 
 	// UpstreamRef is the reference to the package from a registered repository rather than external package.
-	UpstreamRef PackageRevisionRef `json:"upstreamRef,omitempty"`
+	UpstreamRef *PackageRevisionRef `json:"upstreamRef,omitempty"`
 }
 
 type GitPackage struct {

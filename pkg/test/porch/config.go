@@ -48,6 +48,8 @@ type TestCaseConfig struct {
 	Repository string `yaml:"repository,omitempty"`
 	// Commands is a list of kpt commands to be executed by the test.
 	Commands []Command `yaml:"commands,omitempty"`
+	// Skip the test? If the value is not empty, it will be used as a message with which to skip the test.
+	Skip string `yaml:"skip,omitempty"`
 }
 
 func ReadTestCaseConfig(t *testing.T, name, path string) TestCaseConfig {

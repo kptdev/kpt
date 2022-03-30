@@ -43,7 +43,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	var cloned repository.PackageResources
 	var err error
 
-	if ref := m.task.Clone.Upstream.UpstreamRef; ref.Name != "" {
+	if ref := m.task.Clone.Upstream.UpstreamRef; ref != nil {
 		cloned, err = m.cloneFromRegisteredRepository(ctx, ref)
 	} else if git := m.task.Clone.Upstream.Git; git != nil {
 		cloned, err = m.cloneFromGit(ctx, git)
@@ -67,7 +67,11 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	return cloned, m.task, nil
 }
 
-func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref api.PackageRevisionRef) (repository.PackageResources, error) {
+func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {
+	if ref.Name == "" {
+		return repository.PackageResources{}, fmt.Errorf("upstreamRef.name is required")
+
+	}
 	parsed, err := parseUpstreamRef(ref.Name)
 	if err != nil {
 		return repository.PackageResources{}, err
