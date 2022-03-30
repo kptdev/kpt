@@ -3,8 +3,8 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220321233950-4752a2528bee
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220330205144-0b1442857d49
+	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220330205144-0b1442857d49
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.0
 	github.com/google/go-cmp v0.5.7

@@ -1,4 +1,3 @@
-skip: "Temporarily disabled to facilitate Porch API change."
 commands:
   - args:
       - alpha
