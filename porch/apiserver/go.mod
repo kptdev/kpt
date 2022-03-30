@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220330205144-0b1442857d49
-	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220321233950-4752a2528bee
+	github.com/GoogleContainerTools/kpt/porch/controllers v0.0.0-20220330205144-0b1442857d49
 	github.com/GoogleContainerTools/kpt/porch/engine v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt/porch/repository v0.0.0-00010101000000-000000000000
 	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
