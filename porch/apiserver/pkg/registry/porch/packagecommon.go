@@ -22,7 +22,6 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -163,7 +162,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 
 	fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldObj)
 	if len(fieldErrors) > 0 {
-		return nil, false, errors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), oldObj.Name, fieldErrors)
+		return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), oldObj.Name, fieldErrors)
 	}
 	r.updateStrategy.Canonicalize(newRuntimeObj)
 

@@ -30,7 +30,6 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/go-git/go-git/v5"
-	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -61,7 +60,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 
-	var repo *gogit.Repository
+	var repo *git.Repository
 
 	if fi, err := os.Stat(dir); err != nil {
 		if !os.IsNotExist(err) {
@@ -69,7 +68,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		}
 
 		isBare := true
-		r, err := gogit.PlainInit(dir, isBare)
+		r, err := git.PlainInit(dir, isBare)
 		if err != nil {
 			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}
@@ -90,7 +89,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		// Internal error - corrupted cache.
 		return nil, fmt.Errorf("cannot clone git repository %q: %w", spec.Repo, err)
 	} else {
-		r, err := gogit.PlainOpen(dir)
+		r, err := git.PlainOpen(dir)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +116,7 @@ type gitRepository struct {
 	name               string
 	namespace          string
 	secret             string
-	repo               *gogit.Repository
+	repo               *git.Repository
 	cachedCredentials  transport.AuthMethod
 	credentialResolver repository.CredentialResolver
 }
@@ -251,7 +250,7 @@ func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revisi
 
 	newRef := plumbing.NewHashReference(approvedName, oldRef.Hash())
 
-	options := &gogit.PushOptions{
+	options := &git.PushOptions{
 		RemoteName:        "origin",
 		RefSpecs:          []config.RefSpec{},
 		Auth:              auth,
@@ -482,7 +481,7 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 
 type foundPackageCallback func(dir string, tree, kptfile plumbing.Hash) error
 
-func discoverPackagesInTree(r *gogit.Repository, tree *object.Tree, dir string, found foundPackageCallback) error {
+func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, found foundPackageCallback) error {
 	for _, e := range tree.Entries {
 		if e.Mode.IsRegular() && e.Name == "Kptfile" {
 			// Found a package
@@ -721,13 +720,13 @@ func (r *gitRepository) update(ctx context.Context) error {
 	}
 
 	// Fetch
-	switch err := r.repo.Fetch(&gogit.FetchOptions{
+	switch err := r.repo.Fetch(&git.FetchOptions{
 		RemoteName: originName,
 		Auth:       auth,
-		Tags:       gogit.AllTags,
+		Tags:       git.AllTags,
 	}); err {
 	case nil: // OK
-	case gogit.NoErrAlreadyUpToDate:
+	case git.NoErrAlreadyUpToDate:
 	case transport.ErrEmptyRemoteRepository:
 
 	default:

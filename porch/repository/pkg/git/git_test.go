@@ -652,11 +652,6 @@ func TestDeletePackages(t *testing.T) {
 		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
 	}
 
-	type PackageReference struct {
-		name string
-		ref  plumbing.ReferenceName
-	}
-
 	// If we delete one of these packages, we expect the reference to be deleted too
 	wantDeletedRefs := map[string]plumbing.ReferenceName{
 		"delete:bucket:v1":  "refs/heads/drafts/bucket/v1",

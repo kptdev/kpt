@@ -70,7 +70,7 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 
 	if lifecycle := oldRevision.Spec.Lifecycle; lifecycle != api.PackageRevisionLifecycleProposed {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle,
-			fmt.Sprintf("can only approve package with Proposed lifecycle value")))
+			fmt.Sprintf("cannot approve package with %s lifecycle value; only Proposed packages can be approved", lifecycle)))
 	}
 
 	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
