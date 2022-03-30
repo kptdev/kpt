@@ -353,18 +353,22 @@ func entrySortKey(e *object.TreeEntry) string {
 
 func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, author, message string) (plumbing.Hash, error) {
 	now := time.Now()
-	authorSignature := object.Signature{
-		Name:  porchSignatureName,
-		Email: porchSignatureEmail,
-		When:  time.Time{},
-	}
+	var authorName, authorEmail string
 	if author != "" {
 		// Authenticated user info only provides one value...
-		authorSignature.Name = author
-		authorSignature.Email = author
+		authorName = author
+		authorEmail = author
+	} else {
+		// Defaults
+		authorName = porchSignatureName
+		authorEmail = porchSignatureEmail
 	}
 	commit := &object.Commit{
-		Author: authorSignature,
+		Author: object.Signature{
+			Name:  authorName,
+			Email: authorEmail,
+			When:  now,
+		},
 		Committer: object.Signature{
 			Name:  porchSignatureName,
 			Email: porchSignatureEmail,
