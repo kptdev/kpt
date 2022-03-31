@@ -50,6 +50,26 @@ func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.
 	return git
 }
 
+func OpenGitRepositoryFromArchiveWithWorktree(t *testing.T, tarfile, path string) *gogit.Repository {
+	extractTar(t, tarfile, path)
+	repo, err := gogit.PlainOpen(path)
+	if err != nil {
+		t.Fatalf("Failed to open Git repository extracted from %q: %v", tarfile, err)
+	}
+	return repo
+}
+
+func InitEmptyRepositoryWithWorktree(t *testing.T, path string) *gogit.Repository {
+	repo, err := gogit.PlainInit(path, false)
+	if err != nil {
+		t.Fatalf("Failed to initialize empty Git repository: %v", err)
+	}
+	if err := RemoveDefaultBranches(repo); err != nil {
+		t.Fatalf("Failed to remove default branches")
+	}
+	return repo
+}
+
 func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repository, string) {
 	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
 
@@ -212,4 +232,11 @@ func forEachRef(t *testing.T, repo *gogit.Repository, fn func(*plumbing.Referenc
 	if err := refs.ForEach(fn); err != nil {
 		t.Fatalf("References.ForEach faile: %v", err)
 	}
+}
+
+func logRefs(t *testing.T, repo *gogit.Repository, logPrefix string) {
+	forEachRef(t, repo, func(ref *plumbing.Reference) error {
+		t.Logf("%s%s", logPrefix, ref)
+		return nil
+	})
 }

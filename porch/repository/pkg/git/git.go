@@ -49,6 +49,7 @@ const (
 	refRemoteBranchPrefix                        = "refs/remotes/origin/"
 	refOriginMain         plumbing.ReferenceName = refRemoteBranchPrefix + "main"
 	originName                                   = "origin"
+	originFetchSpec                              = "+refs/heads/*:refs/remotes/origin/*"
 )
 
 type GitRepository interface {
@@ -72,8 +73,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, err
 		}
 
-		isBare := true
-		r, err := git.PlainInit(dir, isBare)
+		r, err := InitEmptyRepository(dir)
 		if err != nil {
 			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}

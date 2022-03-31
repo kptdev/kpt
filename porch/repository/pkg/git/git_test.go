@@ -54,7 +54,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 	gitServerAddressChannel := make(chan net.Addr)
 
 	p := filepath.Join(tempdir, "repo")
-	serverRepo, err := gogit.PlainInit(p, true)
+	serverRepo, err := InitEmptyRepository(p)
 	if err != nil {
 		t.Fatalf("failed to open source repo %q: %v", p, err)
 	}
