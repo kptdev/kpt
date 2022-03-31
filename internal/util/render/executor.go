@@ -406,8 +406,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 	for i, mutator := range mutators {
 		selectors := pl.Mutators[i].Selectors
+		exclusions := pl.Mutators[i].Exclusions
 
-		if len(selectors) > 0 {
+		if len(selectors) > 0 || len(exclusions) > 0 {
 			// set kpt-resource-id annotation on each resource before mutation
 			err = fnruntime.SetResourceIds(input)
 			if err != nil {
@@ -415,7 +416,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			}
 		}
 		// select the resources on which function should be applied
-		selectedInput, err := fnruntime.SelectInput(input, selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return nil, err
 		}
@@ -434,7 +435,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		}
 		hctx.executedFunctionCnt += 1
 
-		if len(selectors) > 0 {
+		if len(selectors) > 0 || len(exclusions) > 0 {
 			// merge the output resources with input resources
 			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
 			// delete the kpt-resource-id annotation on each resource
@@ -467,13 +468,13 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		function := pl.Validators[i]
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
-		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
+		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
 			return err
 		}
 		var validator kio.Filter
 		displayResourceCount := false
-		if len(function.Selectors) > 0 {
+		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.allowExec {
@@ -590,7 +591,7 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		var runner kio.Filter
 		function := fns[i]
 		displayResourceCount := false
-		if len(function.Selectors) > 0 {
+		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.allowExec {
