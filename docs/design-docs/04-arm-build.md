@@ -26,7 +26,7 @@ Right now the build pipeline has several steps:
 2) tag
 3) push
 
-In different scenarios only the two steps are executed.  If we switch to 
+In different scenarios only the first two steps are executed.  If we switch to 
 `buildx` we will need to build/tag/push in one step.  Locally developers 
 might want to build and tag images locally.
 
@@ -51,14 +51,16 @@ Please list any open questions here in the following format:
 
 An alternative to using a multi architecture images is to build a special image
 for each platform and then tag them differently.  The benefits of this are:
-1) (possibly) the images are smaller
-2) users can select the right architecture in their Kptfile or imperability 
+- users can select the right architecture in their Kptfile or imperability 
 invoking the right function image.
 
 The problem is that most of the time CI/CD systems are amd64 linux and the arm64
 is primarily for the convenience of client systems.  The users most likely
 do not want to change their hydration pipeline definition from client to CI/CD
 systems.
+
+NOTE: we have done a test on how the images look in the container registry.
+buildx builds two images and the individual images are not any bigger.
 
 ### \<Approach\>
 
