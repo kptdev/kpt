@@ -17,7 +17,6 @@ package engine
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
@@ -38,7 +37,11 @@ var _ mutation = &initPackageMutation{}
 func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 
 	fs := filesys.MakeFsInMemory()
-	pkgPath := filepath.Join("/", m.name)
+	// virtual fs expected a rooted filesystem
+	pkgPath := "/"
+	if m.spec.Subpackage != "" {
+		pkgPath = "/" + m.spec.Subpackage
+	}
 	if err := fs.Mkdir(pkgPath); err != nil {
 		return repository.PackageResources{}, nil, err
 	}

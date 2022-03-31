@@ -48,7 +48,7 @@ func TestInit(t *testing.T) {
 	filesToCompare := []string{"Kptfile", "README.md", "package-context.yaml"}
 
 	for _, fi := range filesToCompare {
-		got, ok := rendered.Contents["testpkg/"+fi]
+		got, ok := rendered.Contents[fi]
 		if !ok {
 			t.Errorf("Cannot find Kptfile in %v", rendered.Contents)
 		}
