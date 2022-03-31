@@ -1,3 +1,30 @@
+diff --git a/Kptfile b/Kptfile
+index 0bcb810..dcafc38 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: wordpress
++  annotations:
++    abc: def
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-annotations:v0.1.3
+diff --git a/mysql/Kptfile b/mysql/Kptfile
+index 78ee518..cda1359 100644
+--- a/mysql/Kptfile
++++ b/mysql/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: mysql
++  annotations:
++    foo: bar
++    abc: def
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-annotations:v0.1.3
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
 index 173c2e1..11cfcb0 100644
 --- a/mysql/mysql-deployment.yaml

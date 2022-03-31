@@ -11,18 +11,6 @@ index d9e2f05..3d2827b 100644
 +    - exec: ./function.sh
 +      configPath: fn-config.yaml
 +      name: ./function.sh
-diff --git a/fn-config.yaml b/fn-config.yaml
-index b160cd1..4f69f62 100644
---- a/fn-config.yaml
-+++ b/fn-config.yaml
-@@ -11,7 +11,6 @@
- # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- # See the License for the specific language governing permissions and
- # limitations under the License.
--
- apiVersion: v1
- kind: ConfigMap
- metadata:
 diff --git a/resources.yaml b/resources.yaml
 index 9e9c98f..9adc2f7 100644
 --- a/resources.yaml

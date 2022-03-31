@@ -11,13 +11,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -37,6 +35,7 @@ func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 		Example: fndocs.SourceExamples,
 		Args:    cobra.MaximumNArgs(1),
 		RunE:    r.runE,
+		PreRunE: r.preRunE,
 	}
 	c.Flags().StringVarP(&r.Output, "output", "o", cmdutil.Stdout,
 		fmt.Sprintf("output resources are written to stdout in provided format. Allowed values: %s|%s", cmdutil.Stdout, cmdutil.Unwrap))
@@ -44,8 +43,13 @@ func GetSourceRunner(ctx context.Context, name string) *SourceRunner {
 		"path to function config file.")
 	c.Flags().BoolVar(&r.IncludeMetaResources,
 		"include-meta-resources", false, "include package meta resources in the command output")
+	if err := c.Flags().MarkHidden("include-meta-resources"); err != nil {
+		panic(err)
+	}
 	r.Command = c
-	_ = c.MarkFlagFilename("fn-config", "yaml", "json", "yml")
+	if err := c.MarkFlagFilename("fn-config", "yaml", "json", "yml"); err != nil {
+		panic(err)
+	}
 	return r
 }
 
@@ -62,6 +66,13 @@ type SourceRunner struct {
 	Command              *cobra.Command
 	IncludeMetaResources bool
 	Ctx                  context.Context
+}
+
+func (r *SourceRunner) preRunE(c *cobra.Command, _ []string) error {
+	if r.IncludeMetaResources {
+		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
+	}
+	return nil
 }
 
 func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
@@ -86,10 +97,6 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 	}
 
 	var inputs []kio.Reader
-	matchFilesGlob := kio.MatchAll
-	if r.IncludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, kptfile.KptFileName)
-	}
 	for _, a := range args {
 		pkgPath, err := filepath.Abs(a)
 		if err != nil {
@@ -99,14 +106,9 @@ func (r *SourceRunner) runE(c *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		functionConfigFilter, err := pkg.FunctionConfigFilterFunc(filesys.FileSystemOrOnDisk{}, types.UniquePath(resolvedPath), r.IncludeMetaResources)
-		if err != nil {
-			return err
-		}
 		inputs = append(inputs, kio.LocalPackageReader{
 			PackagePath:        resolvedPath,
-			MatchFilesGlob:     matchFilesGlob,
-			FileSkipFunc:       functionConfigFilter,
+			MatchFilesGlob:     pkg.MatchAllKRM,
 			PreserveSeqIndent:  true,
 			PackageFileName:    kptfile.KptFileName,
 			IncludeSubpackages: true,

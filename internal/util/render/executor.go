@@ -124,6 +124,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 			IncludeSubpackages: true,
 			WrapBareSeqNode:    true,
 			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
+			MatchFilesGlob:     pkg.MatchAllKRM,
 		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
@@ -323,7 +324,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	}
 
 	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources(false)
+	currPkgResources, err := curr.pkg.LocalResources()
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}

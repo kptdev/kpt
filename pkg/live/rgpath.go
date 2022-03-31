@@ -6,12 +6,10 @@ package live
 import (
 	"encoding/json"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -35,20 +33,10 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	if err != nil {
 		return nil, err
 	}
-	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPkgPath)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lookup all files referenced by all subpackages.
-	fcPaths, err := pkg.FunctionConfigFilePaths(filesys.FileSystemOrOnDisk{}, p.UniquePath, true)
-	if err != nil {
-		return nil, err
-	}
 
 	var objs []*unstructured.Unstructured
 	nodes, err := (&kio.LocalPackageReader{
-		PackagePath:     r.PkgPath,
+		PackagePath:     absPkgPath,
 		WrapBareSeqNode: true,
 	}).Read()
 	if err != nil {
@@ -56,14 +44,6 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 	}
 
 	for _, n := range nodes {
-		relPath, _, err := kioutil.GetFileAnnotations(n)
-		if err != nil {
-			return objs, err
-		}
-		if fcPaths.Has(relPath) && !isExplicitNotLocalConfig(n) {
-			continue
-		}
-
 		if err := removeAnnotations(n, kioutil.IndexAnnotation, kioutil.LegacyIndexAnnotation); err != nil { // nolint:staticcheck
 			return objs, err
 		}
@@ -119,22 +99,15 @@ func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) 
 
 const NoLocalConfigAnnoVal = "false"
 
-// isExplicitNotLocalConfig checks whether the resource has been explicitly
-// label as NOT being local config. It checks for the config.kubernetes.io/local-config
-// annotation with a value of "false".
-func isExplicitNotLocalConfig(n *yaml.RNode) bool {
-	if val, found := n.GetAnnotations()[filters.LocalConfigAnnotation]; found {
-		if val == NoLocalConfigAnnoVal {
-			return true
-		}
-	}
-	return false
-}
-
 // filterLocalConfig returns a new slice of Unstructured where all resources
 // that are designated as local config have been filtered out. It does this
 // by looking at the config.kubernetes.io/local-config annotation. Any value
 // except "false" is considered to mean the resource is local config.
+// Note(droot): Since we stopped giving special treatment to functionConfigs
+// "false" value for the local-config annotation doesn't make much sense.
+// With that we can probably enable just presence of local-config annotation
+// as a way to mark that config is local. Can get rid of confusion as pointed out in the
+// issue --> https://github.com/GoogleContainerTools/kpt/issues/2767
 func filterLocalConfig(objs []*unstructured.Unstructured) []*unstructured.Unstructured {
 	var filteredObjs []*unstructured.Unstructured
 	for _, obj := range objs {

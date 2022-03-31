@@ -72,7 +72,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 				},
 			},
 		},
-		"function config is excluded": {
+		"function config is included by default": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
@@ -93,8 +93,24 @@ func TestLoad_LocalDisk(t *testing.T) {
 						).
 						WithFile("deployment.yaml", deploymentA),
 				),
-			namespace:    "foo",
-			expectedObjs: []object.ObjMetadata{},
+			namespace: "foo",
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "foo",
+				},
+				{
+					GroupKind: schema.GroupKind{
+						Group: "apps",
+						Kind:  "Deployment",
+					},
+					Name:      "test-deployment",
+					Namespace: "foo",
+				},
+			},
 		},
 		"inventory info is taken from the root Kptfile": {
 			pkg: pkgbuilder.NewRootPkg().

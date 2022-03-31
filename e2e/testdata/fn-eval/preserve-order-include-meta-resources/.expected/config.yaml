@@ -15,5 +15,6 @@
 testType: eval
 image: gcr.io/kpt-fn/set-namespace:v0.1.3
 includeMetaResources: true
+exitCode: 1
 args:
   namespace: staging

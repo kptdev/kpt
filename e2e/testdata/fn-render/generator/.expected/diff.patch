@@ -1,3 +1,32 @@
+diff --git a/Kptfile b/Kptfile
+index 8632ba7..eaab661 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app-with-generator
++  namespace: staging
++  labels:
++    tier: db
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+diff --git a/db/Kptfile b/db/Kptfile
+index a9d1c11..4813f6d 100644
+--- a/db/Kptfile
++++ b/db/Kptfile
+@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: db
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/starlark:v0.2.1
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
 index 0000000..ffdf484
@@ -52,6 +81,21 @@ index ac1fd96..49fa8df 100644
 +      labels:
 +        app: backend
 +        tier: db
+diff --git a/db/starlark-httpbin.yaml b/db/starlark-httpbin.yaml
+index 5c7eea7..d5252a4 100644
+--- a/db/starlark-httpbin.yaml
++++ b/db/starlark-httpbin.yaml
+@@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: httpbin-gen
++  namespace: staging
++  labels:
++    app: backend
++    tier: db
+ source: |-
+   httpbin_deployment = {
+      "apiVersion": "apps/v1",
 diff --git a/resources.yaml b/resources.yaml
 index 7a494c9..ac4edf8 100644
 --- a/resources.yaml

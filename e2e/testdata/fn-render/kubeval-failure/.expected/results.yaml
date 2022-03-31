@@ -48,3 +48,13 @@ items:
         file:
           path: resources.yaml
           index: 1
+      - message: |
+          Validating arbitrary CRDs is not supported yet. You can skip them by setting ignore_missing_schemas or skip_kinds in the function config:
+          ERR  - stdin: Failed initializing schema file:///tmp/master-standalone-strict/kptfile-kpt-v1.json: open /tmp/master-standalone-strict/kptfile-kpt-v1.json: no such file or directory
+        severity: error
+        resourceRef:
+          apiVersion: kpt.dev/v1
+          kind: Kptfile
+          name: app
+        file:
+          path: Kptfile

@@ -22,12 +22,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -50,6 +48,10 @@ var DeprecatedKptfileVersions = []string{
 	"v1alpha1",
 	"v1alpha2",
 }
+
+// MatchAllKRM represents set of glob pattern to match all KRM
+// resources including Kptfile.
+var MatchAllKRM = append([]string{kptfilev1.KptFileName}, kio.MatchAll...)
 
 var SupportedKptfileVersions = []string{
 	kptfilev1.KptFileVersion,
@@ -470,7 +472,7 @@ func IsPackageUnfetched(path string) (bool, error) {
 }
 
 // LocalResources returns resources that belong to this package excluding the subpackage resources.
-func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode, err error) {
+func (p *Pkg) LocalResources() (resources []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.readResources"
 
 	var hasKptfile bool
@@ -481,16 +483,12 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	if !hasKptfile {
 		return nil, nil
 	}
-	pl, err := p.Pipeline()
-	if err != nil {
-		return nil, errors.E(op, p.UniquePath, err)
-	}
 
 	pkgReader := &kio.LocalPackageReader{
 		PackagePath:        string(p.UniquePath),
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: false,
-		MatchFilesGlob:     kio.MatchAll,
+		MatchFilesGlob:     MatchAllKRM,
 		PreserveSeqIndent:  true,
 		SetAnnotations: map[string]string{
 			pkgPathAnnotation: string(p.UniquePath),
@@ -503,12 +501,6 @@ func (p *Pkg) LocalResources(includeMetaResources bool) (resources []*yaml.RNode
 	resources, err = pkgReader.Read()
 	if err != nil {
 		return resources, errors.E(op, p.UniquePath, err)
-	}
-	if !includeMetaResources {
-		resources, err = filterMetaResources(resources, pl)
-		if err != nil {
-			return resources, errors.E(op, p.UniquePath, err)
-		}
 	}
 	return resources, err
 }
@@ -525,7 +517,7 @@ func (p *Pkg) ValidatePipeline() error {
 	}
 
 	// read all resources including function pipeline.
-	resources, err := p.LocalResources(true)
+	resources, err := p.LocalResources()
 	if err != nil {
 		return err
 	}
@@ -559,131 +551,6 @@ func (p *Pkg) ValidatePipeline() error {
 		}
 	}
 	return nil
-}
-
-// filterMetaResources filters kpt metadata files such as Kptfile, function configs.
-func filterMetaResources(input []*yaml.RNode, pl *kptfilev1.Pipeline) (output []*yaml.RNode, err error) {
-	pathsToExclude := fnConfigFilePaths(pl)
-	for _, r := range input {
-		meta, err := r.GetMeta()
-		if err != nil {
-			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
-		}
-		path, _, err := kioutil.GetFileAnnotations(r)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read path while filtering meta resources %w", err)
-		}
-		// filter out pkg metadata such as Kptfile
-		if strings.Contains(meta.APIVersion, "kpt.dev") {
-			continue
-		}
-		// filter out function config files
-		if pathsToExclude.Has(path) {
-			continue
-		}
-		output = append(output, r)
-	}
-	return output, nil
-}
-
-// fnConfigFilePaths returns paths to function config files referred in the
-// given pipeline.
-func fnConfigFilePaths(pl *kptfilev1.Pipeline) (fnConfigPaths sets.String) {
-	if pl == nil {
-		return nil
-	}
-	fnConfigPaths = sets.String{}
-
-	for _, fn := range pl.Mutators {
-		if fn.ConfigPath != "" {
-			// TODO(droot): check if cleaning this path has some unnecessary side effects
-			fnConfigPaths.Insert(filepath.Clean(fn.ConfigPath))
-		}
-	}
-	for _, fn := range pl.Validators {
-		if fn.ConfigPath != "" {
-			// TODO(droot): check if cleaning this path has some unnecessary side effects
-			fnConfigPaths.Insert(filepath.Clean(fn.ConfigPath))
-		}
-	}
-	return fnConfigPaths
-}
-
-// FunctionConfigFilePaths returns a set of config file paths that used by
-// package pipeline. rootPath is the path to the package. recursive decides
-// will config file paths in subpackages will be returned. Returned paths
-// are all relative to rootPath.
-func FunctionConfigFilePaths(fsys filesys.FileSystem, rootPath types.UniquePath, recursive bool) (sets.String, error) {
-	const op errors.Op = "pkg.FunctionConfigFilePaths"
-	ok, err := IsPackageDir(filesys.FileSystemOrOnDisk{}, string(rootPath))
-	if err != nil {
-		return nil, errors.E(op, rootPath, err)
-	}
-	var pkgPaths []types.UniquePath
-	if ok {
-		pkgPaths = []types.UniquePath{rootPath}
-	}
-	if recursive {
-		subPkgPaths, err := Subpackages(fsys, string(rootPath), All, true)
-		if err != nil {
-			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get subpackage paths: %w", err))
-		}
-		for _, spp := range subPkgPaths {
-			// sub package paths are all relative to rootPath
-			pkgPaths = append(pkgPaths, types.UniquePath(filepath.Join(string(rootPath), spp)))
-		}
-	}
-	fnConfigPaths := sets.String{}
-	for _, uniquePath := range pkgPaths {
-		path := string(uniquePath)
-		absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
-		if err != nil {
-			return nil, err
-		}
-		p, err := New(filesys.FileSystemOrOnDisk{}, absPath)
-		if err != nil {
-			return nil, errors.E(op, rootPath, err)
-		}
-		pl, err := p.Pipeline()
-		if err != nil {
-			return nil, errors.E(op, rootPath, fmt.Errorf("failed to get pipeline in package %s: %w", path, err))
-		}
-		// function file path are relative to the package which it's in
-		for _, ffp := range fnConfigFilePaths(pl).List() {
-			fnRelPath, err := filepath.Rel(string(rootPath), filepath.Join(path, ffp))
-			if err != nil {
-				return nil, errors.E(op, rootPath, fmt.Errorf("failed to get path relative to %s from %s: %w",
-					rootPath, filepath.Join(path, ffp), err))
-			}
-			fnConfigPaths.Insert(fnRelPath)
-		}
-	}
-	return fnConfigPaths, nil
-}
-
-// FunctionConfigFilterFunc returns a kio.LocalPackageSkipFileFunc filter which will be
-// invoked by kio.LocalPackageReader when it reads the package. The filter will return
-// true if the file should be skipped during reading. Skipped files will not be included
-// in all steps following.
-func FunctionConfigFilterFunc(fsys filesys.FileSystem, pkgPath types.UniquePath, includeMetaResources bool) (kio.LocalPackageSkipFileFunc, error) {
-	if includeMetaResources {
-		return func(relPath string) bool {
-			return false
-		}, nil
-	}
-
-	fnConfigPaths, err := FunctionConfigFilePaths(fsys, pkgPath, true)
-	if err != nil {
-		return nil, err
-	}
-
-	return func(relPath string) bool {
-		if len(fnConfigPaths) == 0 {
-			return false
-		}
-		// relPath is cleaned so we can directly use it here
-		return fnConfigPaths.Has(relPath)
-	}, nil
 }
 
 // GetPkgPathAnnotation returns the package path annotation on

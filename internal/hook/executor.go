@@ -20,6 +20,7 @@ import (
 	"io"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
@@ -35,12 +36,11 @@ var ErrAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` 
 
 // Executor executes a hook.
 type Executor struct {
-	PkgPath              string
-	ResultsDirPath       string
-	Output               io.Writer
-	ImagePullPolicy      fnruntime.ImagePullPolicy
-	ExcludeMetaResources bool
-	AllowExec            bool
+	PkgPath         string
+	ResultsDirPath  string
+	Output          io.Writer
+	ImagePullPolicy fnruntime.ImagePullPolicy
+	AllowExec       bool
 
 	FileSystem filesys.FileSystem
 
@@ -60,14 +60,9 @@ type Executor struct {
 func (e *Executor) Execute(ctx context.Context, hook []kptfilev1.Function) error {
 	e.fnResults = fnresult.NewResultList()
 
-	matchFilesGlob := kio.MatchAll
-	if !e.ExcludeMetaResources {
-		matchFilesGlob = append(matchFilesGlob, kptfilev1.KptFileName)
-	}
-
 	pkgReaderWriter := &kio.LocalPackageReadWriter{
 		PackagePath:        e.PkgPath,
-		MatchFilesGlob:     matchFilesGlob,
+		MatchFilesGlob:     pkg.MatchAllKRM,
 		PreserveSeqIndent:  true,
 		PackageFileName:    kptfilev1.KptFileName,
 		IncludeSubpackages: true,

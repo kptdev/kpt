@@ -178,7 +178,6 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 		Ctx:                    fake.CtxWithDefaultPrinter(),
 		Path:                   dir,
 		functionFilterProvider: getMetaResourceFilterProvider(),
-		IncludeMetaResources:   true,
 		Function:               fn,
 		FnConfig:               fnConfig,
 		fnResults:              fnresult.NewResultList(),

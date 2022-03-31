@@ -82,6 +82,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
 
+	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
+		panic(err)
+	}
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -313,6 +316,12 @@ func checkFnConfigPathExistence(path string) error {
 }
 
 func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	// Let users know that --include-meta-resources is no longer necessary
+	// since meta resources are included by default.
+	if r.IncludeMetaResources {
+		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
+	}
+
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
 			return err
@@ -403,22 +412,21 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	r.RunFns = runfn.RunFns{
-		Ctx:                  r.Ctx,
-		Function:             fnSpec,
-		ExecArgs:             execArgs,
-		OriginalExec:         r.Exec,
-		Output:               output,
-		Input:                input,
-		Path:                 path,
-		Network:              r.Network,
-		StorageMounts:        storageMounts,
-		ResultsDir:           r.ResultsDir,
-		Env:                  r.Env,
-		AsCurrentUser:        r.AsCurrentUser,
-		FnConfig:             fnConfig,
-		FnConfigPath:         r.FnConfigPath,
-		IncludeMetaResources: r.IncludeMetaResources,
-		ImagePullPolicy:      cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
+		Ctx:             r.Ctx,
+		Function:        fnSpec,
+		ExecArgs:        execArgs,
+		OriginalExec:    r.Exec,
+		Output:          output,
+		Input:           input,
+		Path:            path,
+		Network:         r.Network,
+		StorageMounts:   storageMounts,
+		ResultsDir:      r.ResultsDir,
+		Env:             r.Env,
+		AsCurrentUser:   r.AsCurrentUser,
+		FnConfig:        fnConfig,
+		FnConfigPath:    r.FnConfigPath,
+		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,

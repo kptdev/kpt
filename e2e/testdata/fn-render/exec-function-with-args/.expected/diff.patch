@@ -1,3 +1,13 @@
+diff --git a/Kptfile b/Kptfile
+index 0d98dbb..23bd061 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,4 +4,4 @@ metadata:
+   name: app
+ pipeline:
+   mutators:
+-    - exec: "sed -e 's/foo/bar/'"
++    - exec: "sed -e 's/bar/bar/'"
 diff --git a/resources.yaml b/resources.yaml
 index e8ae6bb..297b99f 100644
 --- a/resources.yaml
