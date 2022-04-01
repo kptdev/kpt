@@ -17,15 +17,17 @@ package engine
 import (
 	"context"
 	"fmt"
-	"path"
 
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 type initPackageMutation struct {
+	kptpkg.DefaultInitializer
 	name string
 	spec api.PackageInitTaskSpec
 }
@@ -33,40 +35,31 @@ type initPackageMutation struct {
 var _ mutation = &initPackageMutation{}
 
 func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
-	kptfile := kptfilev1.KptFile{
-		ResourceMeta: yaml.ResourceMeta{
-			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind,
-			},
-			ObjectMeta: yaml.ObjectMeta{
-				NameMeta: yaml.NameMeta{
-					Name: m.name,
-				},
-			},
-		},
-		Info: &kptfilev1.PackageInfo{
-			Site:        m.spec.Site,
-			Description: m.spec.Description,
-			Keywords:    m.spec.Keywords,
-		},
-	}
 
-	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	fs := filesys.MakeFsInMemory()
+	// virtual fs expected a rooted filesystem
+	pkgPath := "/"
+	if m.spec.Subpackage != "" {
+		pkgPath = "/" + m.spec.Subpackage
+	}
+	if err := fs.Mkdir(pkgPath); err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+	err := m.Initialize(printer.WithContext(ctx, &fake.Printer{}), fs, kptpkg.InitOptions{
+		PkgPath:  pkgPath,
+		PkgName:  m.name,
+		Desc:     m.spec.Description,
+		Keywords: m.spec.Keywords,
+		Site:     m.spec.Site,
+	})
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to serialize Kptfile: %w", err)
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to initialize pkg %q: %w", m.name, err)
 	}
 
-	if resources.Contents == nil {
-		resources.Contents = map[string]string{}
+	result, err := readResources(fs)
+	if err != nil {
+		return repository.PackageResources{}, nil, err
 	}
 
-	kptfilePath := path.Join(m.spec.Subpackage, kptfilev1.KptFileName)
-	if _, found := resources.Contents[kptfilePath]; found {
-		return repository.PackageResources{}, nil, fmt.Errorf("package %q already initialized", m.name)
-	}
-
-	resources.Contents[kptfilePath] = string(b)
-
-	return resources, &api.Task{}, nil
+	return result, &api.Task{}, nil
 }

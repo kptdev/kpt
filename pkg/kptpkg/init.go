@@ -39,6 +39,7 @@ type Initializer interface {
 
 // InitOptions contains customization options for package initialization.
 type InitOptions struct {
+	PkgName string
 	PkgPath string
 	// RelPath is used purely for printing info relative to current working dir of user.
 	// It may or may not be same as PkgPath.
@@ -58,7 +59,12 @@ func (i *DefaultInitializer) Initialize(ctx context.Context, fsys filesys.FileSy
 		return err
 	}
 
-	pkgName := string(p.DisplayPath)
+	var pkgName string
+	if opts.PkgName != "" {
+		pkgName = opts.PkgName
+	} else {
+		pkgName = string(p.DisplayPath)
+	}
 
 	up := string(p.UniquePath)
 	if !fsys.Exists(string(p.UniquePath)) {

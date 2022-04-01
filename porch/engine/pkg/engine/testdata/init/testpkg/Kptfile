@@ -1,0 +1,13 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: testpkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  site: http://kpt.dev/testpkg
+  description: test package
+  keywords:
+  - test
+  - kpt
+  - pkg
