@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"

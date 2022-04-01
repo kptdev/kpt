@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
