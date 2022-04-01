@@ -21,30 +21,18 @@ WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 # and so that source changes don't invalidate our downloaded layer
 
 COPY go.mod go.sum ./
+COPY porch/go.mod porch/go.sum porch/
 COPY porch/api/go.mod porch/api/go.sum porch/api/
-COPY porch/apiserver/go.mod porch/apiserver/go.sum porch/apiserver/
-COPY porch/controllers/go.mod porch/controllers/go.sum porch/controllers/
-COPY porch/engine/go.mod porch/engine/go.mod porch/engine/
-COPY porch/repository/go.mod porch/repository/go.sum porch/repository/
-COPY porch/func/go.mod porch/func/go.sum porch/func/
 
 RUN echo "Downloading root modules ..." \
  && go mod download
+RUN echo "Downloading porch modules ..." \
+ && cd porch && go mod download
 RUN echo "Downloading api modules ..." \
  && cd porch/api && go mod download
-RUN echo "Downloading apiserver modules ..." \
- && cd porch/apiserver && go mod download
-RUN echo "Downloading controllers modules ..." \
- && cd porch/controllers && go mod download
-RUN echo "Downloading engine modules ..." \
- && cd porch/engine && go mod download
-RUN echo "Downloading repository modules ..." \
- && cd porch/repository && go mod download
-RUN echo "Downloading func modules ..." \
- && cd porch/func && go mod download
 
 # Prebuild some library dependencies to warm the cache
-RUN cd porch/apiserver; go build -v \
+RUN cd porch; go build -v \
   google.golang.org/grpc \
   k8s.io/apiserver/pkg/server \
   k8s.io/component-base/cli \

@@ -25,10 +25,17 @@ FROM gcr.io/kpt-fn/starlark:v0.3.0 as starlark
 FROM gcr.io/kpt-fn/upsert-resource:v0.2.0 as upsert-resource
 
 FROM golang:1.17.6-alpine3.15 as builder
-WORKDIR /build
-COPY . ./func
-RUN cd ./func ; go mod download -x
-RUN cd ./func ; go build -v -o /server ./server
+WORKDIR /go/src/github.com/GoogleContainerTools/kpt
+
+COPY go.mod go.sum ./
+COPY porch/go.mod porch/go.sum porch/
+COPY porch/api/go.mod porch/api/go.sum porch/api/
+
+RUN cd porch ; go build -v google.golang.org/grpc k8s.io/klog/v2
+
+COPY porch/func/ porch/func/
+RUN cd porch/func ; go build -v -o /server ./server
+COPY porch/func/config.yaml /config.yaml
 
 FROM alpine:3.15
 
@@ -43,7 +50,7 @@ COPY --from=set-namespace          /usr/local/bin/function /functions/set-namesp
 COPY --from=set-project-id         /usr/local/bin/function /functions/set-project-id
 COPY --from=starlark               /usr/local/bin/star     /functions/starlark
 COPY --from=upsert-resource        /usr/local/bin/function /functions/upsert-resource
-COPY --from=builder                /server /build/func/config.yaml /
+COPY --from=builder                /server /config.yaml /
 
 EXPOSE 9445/tcp
 ENTRYPOINT [ "/server", "--config=/config.yaml", "--functions=/functions" ]

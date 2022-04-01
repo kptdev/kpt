@@ -18,6 +18,8 @@ IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
 IMAGE_NAME ?= function-runner
 COMPILED_PROTO=evaluator/evaluator_grpc.pb.go evaluator/evaluator.pb.go
 
+KPTDIR = $(abspath $(CURDIR)/../..)
+
 all: $(COMPILED_PROTO)
 
 $(COMPILED_PROTO): evaluator/evaluator.proto
@@ -30,8 +32,8 @@ $(COMPILED_PROTO): evaluator/evaluator.proto
 
 .PHONY: build-image
 build-image:
-	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) .
+	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
 
 .PHONY: push-image
 push-image:
-	docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) .
+	docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
