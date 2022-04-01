@@ -107,18 +107,18 @@ function customize-image {
   local TAG="${NEW##*:}"
   local IMG="${NEW%:*}"
 
-	kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 -- \
-	  "name=${OLD}" \
-	  "newName=${IMG}" \
-	  "newTag=${TAG}"
+  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 -- \
+    "name=${OLD}" \
+    "newName=${IMG}" \
+    "newTag=${TAG}"
 }
 
 function customize-sa {
   local NAME="${1}"
   local SA="${2}"
 
-	kpt fn eval "${DESTINATION}" --image set-annotations:v0.1.4 \
-	  --match-api-version=v1 \
+  kpt fn eval "${DESTINATION}" --image set-annotations:v0.1.4 \
+    --match-api-version=v1 \
     --match-kind=ServiceAccount \
     "--match-name=${NAME}" \
     --match-namespace=porch-system -- \
@@ -127,16 +127,16 @@ function customize-sa {
 
 function main() {
   # RemoteRootSync controller
-	cp "${PORCH_DIR}/controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml" \
+  cp "${PORCH_DIR}/controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml" \
      "${DESTINATION}/0-remoterootsyncsets.yaml"
-	cp "${PORCH_DIR}/controllers/remoterootsync/config/rbac/role.yaml" \
+  cp "${PORCH_DIR}/controllers/remoterootsync/config/rbac/role.yaml" \
      "${DESTINATION}/0-remoterootsync-role.yaml"
   # Repository CRD
-	cp "./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
+  cp "./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"
 
   # Porch Deployment Config
-	cp ${PORCH_DIR}/config/deploy/*.yaml "${PORCH_DIR}/config/deploy/Kptfile" "${DESTINATION}"
+  cp ${PORCH_DIR}/config/deploy/*.yaml "${PORCH_DIR}/config/deploy/Kptfile" "${DESTINATION}"
 
   customize-image \
     "gcr.io/example-google-project-id/porch-function-runner:latest" \
