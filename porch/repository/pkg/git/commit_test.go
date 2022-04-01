@@ -131,12 +131,11 @@ func TestPackageCommitToMain(t *testing.T) {
 }
 
 type testUserInfoProvider struct {
-	user string
-	ok   bool
+	userInfo *repository.UserInfo
 }
 
-func (p *testUserInfoProvider) GetUserName(ctx context.Context) (string, bool) {
-	return p.user, p.ok
+func (p *testUserInfoProvider) GetUserInfo(ctx context.Context) *repository.UserInfo {
+	return p.userInfo
 }
 
 func TestCommitWithUser(t *testing.T) {
@@ -147,11 +146,14 @@ func TestCommitWithUser(t *testing.T) {
 	main := resolveReference(t, repo, refMain)
 
 	{
-		const testUser = "porch-test@porch-domain.com"
+		const testEmail = "porch-test@porch-domain.com"
+		const testName = "Porch Test"
 		// Make one commit with user info provided
 		userInfoProvider := &testUserInfoProvider{
-			user: testUser,
-			ok:   true,
+			userInfo: &repository.UserInfo{
+				Name:  testName,
+				Email: testEmail,
+			},
 		}
 
 		var zeroHash plumbing.Hash
@@ -175,10 +177,10 @@ func TestCommitWithUser(t *testing.T) {
 
 		commit := getCommitObject(t, repo, commitHash)
 
-		if got, want := commit.Author.Email, testUser; got != want {
+		if got, want := commit.Author.Email, testEmail; got != want {
 			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
 		}
-		if got, want := commit.Author.Name, testUser; got != want {
+		if got, want := commit.Author.Name, testName; got != want {
 			t.Errorf("Commit.Author.Name: got %q, want %q", got, want)
 		}
 
@@ -194,8 +196,7 @@ func TestCommitWithUser(t *testing.T) {
 	{
 		// And another without ...
 		userInfoProvider := &testUserInfoProvider{
-			user: "",
-			ok:   false,
+			userInfo: nil,
 		}
 
 		var zeroHash plumbing.Hash

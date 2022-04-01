@@ -26,22 +26,25 @@ type ApiserverUserInfoProvider struct{}
 
 var _ repository.UserInfoProvider = &ApiserverUserInfoProvider{}
 
-func (p *ApiserverUserInfoProvider) GetUserName(ctx context.Context) (string, bool) {
+func (p *ApiserverUserInfoProvider) GetUserInfo(ctx context.Context) *repository.UserInfo {
 	userinfo, ok := request.UserFrom(ctx)
 	if !ok {
-		return "", false
+		return nil
 	}
 
 	name := userinfo.GetName()
 	if name == "" {
-		return "", false
+		return nil
 	}
 
 	for _, group := range userinfo.GetGroups() {
 		if group == user.AllAuthenticated {
-			return name, true
+			return &repository.UserInfo{
+				Name:  name, // k8s authentication only provides single name; use it for both values for now.
+				Email: name,
+			}
 		}
 	}
 
-	return "", false
+	return nil
 }

@@ -16,9 +16,10 @@ package porch
 
 import (
 	"context"
-	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"github.com/google/go-cmp/cmp"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"k8s.io/apiserver/pkg/endpoints/request"
 )
@@ -31,36 +32,33 @@ func TestApiserverProvider(t *testing.T) {
 		name   string
 		groups []string
 
-		want_user string
-		want_ok   bool
+		want *repository.UserInfo
 	}{
 		{
-			want_user: "",
-			want_ok:   false,
+			want: nil,
 		},
 		{
-			name:      "user1@domain.com",
-			groups:    []string{},
-			want_user: "",
-			want_ok:   false,
+			name:   "user1@domain.com",
+			groups: []string{},
+			want:   nil,
 		},
 		{
-			name:      "user2@domain.com",
-			groups:    []string{user.AllUnauthenticated, user.Anonymous},
-			want_user: "",
-			want_ok:   false,
+			name:   "user2@domain.com",
+			groups: []string{user.AllUnauthenticated, user.Anonymous},
+			want:   nil,
 		},
 		{
-			name:      "",
-			groups:    []string{user.AllAuthenticated},
-			want_user: "",
-			want_ok:   false,
+			name:   "",
+			groups: []string{user.AllAuthenticated},
+			want:   nil,
 		},
 		{
-			name:      "user3@domain.com",
-			groups:    []string{user.AllAuthenticated},
-			want_user: "user3@domain.com",
-			want_ok:   true,
+			name:   "user3@domain.com",
+			groups: []string{user.AllAuthenticated},
+			want: &repository.UserInfo{
+				Name:  "user3@domain.com",
+				Email: "user3@domain.com",
+			},
 		},
 	} {
 		di := &user.DefaultInfo{
@@ -72,14 +70,8 @@ func TestApiserverProvider(t *testing.T) {
 
 		ctx := request.WithUser(context.Background(), di)
 
-		got_user, got_ok := uip.GetUserName(ctx)
-
-		if got_ok != tc.want_ok {
-			t.Errorf("GetUserName with user %q and groups: %s: got ok flag %t, want %t", tc.name, strings.Join(tc.groups, ","), got_ok, tc.want_ok)
-		}
-
-		if got_user != tc.want_user {
-			t.Errorf("GetUserName with user %q and groups: %s: got user %q, want %q", tc.name, strings.Join(tc.groups, ","), got_user, tc.want_user)
+		if got, want := uip.GetUserInfo(ctx), tc.want; !cmp.Equal(got, want) {
+			t.Errorf("GetUserInfo: got %v, want %v; diff (-want,+got): %s", got, want, cmp.Diff(want, got))
 		}
 	}
 }
@@ -87,14 +79,7 @@ func TestApiserverProvider(t *testing.T) {
 func TestEmptyUserInfo(t *testing.T) {
 	uip := &ApiserverUserInfoProvider{}
 
-	got_user, got_ok := uip.GetUserName(context.Background())
-	want_user, want_ok := "", false
-
-	if got_ok != want_ok {
-		t.Errorf("GetUserName with empty context: got ok %t, want %t", got_ok, want_ok)
-	}
-
-	if got_user != want_user {
-		t.Errorf("GetUserName with empty context: got user %q, want %q", got_user, want_user)
+	if got, want := uip.GetUserInfo(context.Background()), (*repository.UserInfo)(nil); got != want {
+		t.Errorf("GetUserInfo with empty context: got %v, want %v", got, want)
 	}
 }

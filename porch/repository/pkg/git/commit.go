@@ -206,15 +206,12 @@ func (h *commitHelper) commit(ctx context.Context, message string, pkgPath strin
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
 
-	var author string
+	var ui *repository.UserInfo
 	if h.userInfoProvider != nil {
-		user, ok := h.userInfoProvider.GetUserName(ctx)
-		if ok {
-			author = user
-		}
+		ui = h.userInfoProvider.GetUserInfo(ctx)
 	}
 
-	commit, err = storeCommit(h.storer, h.parent, treeHash, author, message)
+	commit, err = storeCommit(h.storer, h.parent, treeHash, ui, message)
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
@@ -351,13 +348,13 @@ func entrySortKey(e *object.TreeEntry) string {
 	return e.Name
 }
 
-func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, author, message string) (plumbing.Hash, error) {
+func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
 	now := time.Now()
 	var authorName, authorEmail string
-	if author != "" {
+	if userInfo != nil {
 		// Authenticated user info only provides one value...
-		authorName = author
-		authorEmail = author
+		authorName = userInfo.Name
+		authorEmail = userInfo.Email
 	} else {
 		// Defaults
 		authorName = porchSignatureName

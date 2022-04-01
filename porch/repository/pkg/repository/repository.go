@@ -85,11 +85,15 @@ type CredentialResolver interface {
 	ResolveCredential(ctx context.Context, namespace, name string) (Credential, error)
 }
 
+type UserInfo struct {
+	Name  string
+	Email string
+}
+
 // UserInfoProvider providers name of the authenticated user on whose behalf the request
 // is being processed.
 type UserInfoProvider interface {
-	// GetUserName returns the user name of the user on whose behalf the request is being
-	// processed, if any. The first return value is the user name, the second is boolean
-	// indicator whether there is an authenticated user (true) or not (false).
-	GetUserName(ctx context.Context) (string, bool)
+	// GetUserInfo returns the information about the user on whose behalf the request is being
+	// processed, if any. If user cannot be determnined, returns nil.
+	GetUserInfo(ctx context.Context) *UserInfo
 }
