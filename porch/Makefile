@@ -184,29 +184,13 @@ apply-dev-config:
 .PHONY: deployment-config
 deployment-config:
 	rm -rf $(DEPLOYCONFIGDIR) || true
-	mkdir -p $(DEPLOYCONFIGDIR)/crd
-	cp ./controllers/remoterootsync/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml $(DEPLOYCONFIGDIR)/0-remoterootsyncsets.yaml
-	cp ./controllers/remoterootsync/config/rbac/role.yaml $(DEPLOYCONFIGDIR)/0-remoterootsync-role.yaml
-	cp ./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml $(DEPLOYCONFIGDIR)/0-repositories.yaml
-	cp ./config/deploy/*.yaml ./config/deploy/Kptfile $(DEPLOYCONFIGDIR)
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
-	  "name=gcr.io/example-google-project-id/porch-function-runner:latest" \
-	  "newName=$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE)" \
-	  "newTag=$(IMAGE_TAG)"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
-	  "name=gcr.io/example-google-project-id/porch-server:latest" \
-	  "newName=$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE)" \
-	  "newTag=$(IMAGE_TAG)"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-image:v0.1.0 -- \
-	  "name=gcr.io/example-google-project-id/porch-controllers:latest" \
-	  "newName=$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE)" \
-	  "newTag=$(IMAGE_TAG)"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
-	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-server --match-namespace=porch-system -- \
-		"iam.gke.io/gcp-service-account=porch-server@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
-	kpt fn eval $(DEPLOYCONFIGDIR) --image set-annotations:v0.1.4 \
-	  --match-api-version=v1 --match-kind=ServiceAccount --match-name=porch-controllers --match-namespace=porch-system -- \
-		"iam.gke.io/gcp-service-account=porch-sync@$(GCP_PROJECT_ID).iam.gserviceaccount.com"
+	mkdir -p $(DEPLOYCONFIGDIR)
+	./hack/create-deployment-blueprint.sh \
+	  --destination "$(DEPLOYCONFIGDIR)" \
+	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
+	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
+	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
+	  --project "$(GCP_PROJECT_ID)"
 
 .PHONY: deploy
 deploy: deployment-config
