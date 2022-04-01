@@ -28,9 +28,23 @@ commands:
         metadata:
           annotations:
             config.kubernetes.io/index: "0"
+            config.kubernetes.io/local-config: "true"
+            config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
           name: test-package
+      - apiVersion: v1
+        data:
+          name: example
+        kind: ConfigMap
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/local-config: "true"
+            config.kubernetes.io/path: package-context.yaml
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: package-context.yaml
+          name: kptfile.kpt.dev
       kind: ResourceList
     yaml: true
   - args:
@@ -80,6 +94,7 @@ commands:
         metadata:
           annotations:
             config.kubernetes.io/index: "0"
+            config.kubernetes.io/local-config: "true"
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
@@ -95,5 +110,17 @@ commands:
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: config-map.yaml
           name: new-config-map
+      - apiVersion: v1
+        data:
+          name: example
+        kind: ConfigMap
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/local-config: "true"
+            config.kubernetes.io/path: package-context.yaml
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: package-context.yaml
+          name: kptfile.kpt.dev
       kind: ResourceList
     yaml: true

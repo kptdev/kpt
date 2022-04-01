@@ -47,6 +47,7 @@ commands:
         metadata:
           annotations:
             config.kubernetes.io/index: "0"
+            config.kubernetes.io/local-config: "true"
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
