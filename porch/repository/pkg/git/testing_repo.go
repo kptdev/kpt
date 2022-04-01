@@ -64,7 +64,7 @@ func InitEmptyRepositoryWithWorktree(t *testing.T, path string) *gogit.Repositor
 	if err != nil {
 		t.Fatalf("Failed to initialize empty Git repository: %v", err)
 	}
-	if err := RemoveDefaultBranches(repo); err != nil {
+	if err := initializeDefaultBranches(repo); err != nil {
 		t.Fatalf("Failed to remove default branches")
 	}
 	return repo

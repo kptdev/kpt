@@ -73,7 +73,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, err
 		}
 
-		r, err := InitEmptyRepository(dir)
+		r, err := initEmptyRepository(dir)
 		if err != nil {
 			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}
@@ -94,7 +94,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		// Internal error - corrupted cache.
 		return nil, fmt.Errorf("cannot clone git repository %q: %w", spec.Repo, err)
 	} else {
-		r, err := git.PlainOpen(dir)
+		r, err := openRepository(dir)
 		if err != nil {
 			return nil, err
 		}

@@ -15,32 +15,42 @@
 package git
 
 import (
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/cache"
+	"github.com/go-git/go-git/v5/storage/filesystem"
 )
 
 // This file contains helpers for interacting with gogit.
 
-func InitEmptyRepository(path string) (*git.Repository, error) {
+func initEmptyRepository(path string) (*git.Repository, error) {
 	isBare := true // Porch only uses bare repositories
 	repo, err := git.PlainInit(path, isBare)
 	if err != nil {
 		return nil, err
 	}
-	if err := RemoveDefaultBranches(repo); err != nil {
+	if err := initializeDefaultBranches(repo); err != nil {
 		return nil, err
 	}
 	return repo, nil
 }
 
-func RemoveDefaultBranches(repo *git.Repository) error {
+func initializeDefaultBranches(repo *git.Repository) error {
 	// Adjust default references
 	if err := repo.Storer.RemoveReference(plumbing.Master); err != nil {
 		return err
 	}
-	// gogit points HEAD at a wrong branch; delete it too
-	if err := repo.Storer.RemoveReference(plumbing.HEAD); err != nil {
+	// gogit points HEAD at a wrong branch; point it at main
+	main := plumbing.NewSymbolicReference(plumbing.HEAD, refMain)
+	if err := repo.Storer.SetReference(main); err != nil {
 		return err
 	}
 	return nil
+}
+
+func openRepository(path string) (*git.Repository, error) {
+	dot := osfs.New(path)
+	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
+	return git.Open(storage, dot)
 }
