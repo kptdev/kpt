@@ -93,14 +93,16 @@ func TestSimplePush(t *testing.T) {
 		Tags:       git.AllTags,
 	})
 
-	const draftReferenceName = "refs/heads/drafts/bucket/v1"
-	const remoteDraftReferenceName = "refs/remotes/origin/drafts/bucket/v1"
+	const (
+		draftReferenceName       plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
+		remoteDraftReferenceName plumbing.ReferenceName = "refs/remotes/origin/drafts/bucket/v1"
+	)
 
 	draftRef := resolveReference(t, downstream, remoteDraftReferenceName)
 
 	var commit plumbing.Hash
 	{
-		// Create a firstCommit in test branch
+		// Create a first commit in test branch
 		commit = createTestCommit(t, downstream, draftRef.Hash(), "Draft Commit", "readme.txt", "Hello, World!")
 		if err := downstream.Push(&git.PushOptions{
 			RemoteName: originName,
@@ -132,7 +134,7 @@ func TestSimplePush(t *testing.T) {
 		case err == git.ErrNonFastForwardUpdate:
 			// ok
 		case err == nil:
-			t.Fatalf("Second push failed: %v", err)
+			t.Fatalf("Second push unexpectedly succeeded")
 		case strings.Contains(err.Error(), "non-fast-forward update"):
 			// ok
 			// TODO: preferably we get strongly typed error here...
@@ -150,6 +152,92 @@ func TestSimplePush(t *testing.T) {
 	}
 	if got, want := localDraftRef.Hash(), commit; got != want {
 		t.Errorf("Updated draft reference in local repo: %s, got %s, want %s", localDraftRef, got, want)
+	}
+}
+
+// Test concurrent tag pushes.
+func TestFinalPush(t *testing.T) {
+	upstreamDir := t.TempDir()
+	downstreamDir := t.TempDir()
+	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
+	downstream := initRepositoryWithRemote(t, downstreamDir, address)
+	downstream.Fetch(&git.FetchOptions{
+		RemoteName: originName,
+		Tags:       git.AllTags,
+	})
+
+	const (
+		mainReferenceName       plumbing.ReferenceName = "refs/heads/main"
+		remoteMainReferenceName plumbing.ReferenceName = "refs/remotes/origin/main"
+		packageTagReferenceName plumbing.ReferenceName = "refs/tags/package/v1"
+	)
+
+	main := resolveReference(t, downstream, remoteMainReferenceName)
+
+	var commit plumbing.Hash
+	{
+		// Create first commit and tag (finalized package)
+		commit = createTestCommit(t, downstream, main.Hash(), "Package One", "one.txt", "initial")
+		if err := downstream.Push(&git.PushOptions{
+			RemoteName: originName,
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("%s:%s", commit, mainReferenceName)),
+				config.RefSpec(fmt.Sprintf("%s:%s", commit, packageTagReferenceName)),
+			},
+			RequireRemoteRefs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("%s:%s", main.Hash(), mainReferenceName)),
+			},
+		}); err != nil {
+			t.Fatalf("Push failed: %v", err)
+		}
+	}
+
+	{
+		// Create a competing concurrent finalized package.
+		concurrent := createTestCommit(t, downstream, main.Hash(), "Package One", "one.txt", "concurrent")
+
+		// Simulated concurrent push should fail
+		switch err := downstream.Push(&git.PushOptions{
+			RemoteName: originName,
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("%s:%s", concurrent, mainReferenceName)),
+			},
+			RequireRemoteRefs: []config.RefSpec{},
+		}); {
+		case err == git.ErrNonFastForwardUpdate:
+			// ok
+		case err == nil:
+			t.Fatalf("Second push unexpectedly succeeded")
+		case strings.Contains(err.Error(), "non-fast-forward update: refs/heads/main"):
+			// ok
+		default:
+			t.Fatalf("Unexpected error pushing concurrent commit: %v", err)
+		}
+
+		// Liewise, push to the tag should fail
+		switch err := downstream.Push(&git.PushOptions{
+			RemoteName: originName,
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("%s:%s", concurrent, packageTagReferenceName)),
+			},
+			RequireRemoteRefs: []config.RefSpec{},
+		}); {
+		case err == git.ErrNonFastForwardUpdate:
+			// ok
+		case err == nil:
+			t.Fatalf("Second push unexpectedly succeeded")
+		case strings.Contains(err.Error(), "non-fast-forward update: refs/tags/package/v1"):
+			// ok
+		default:
+			t.Fatalf("Unexpected error pushing concurrent commit: %v", err)
+		}
+
+	}
+
+	// Double check that the upstream main is the expected commit
+	upstreamMain := resolveReference(t, upstream, mainReferenceName)
+	if got, want := upstreamMain.Hash(), commit; got != want {
+		t.Errorf("Upstream main %s after push: got %s, want %s", upstreamMain, got, want)
 	}
 }
 
