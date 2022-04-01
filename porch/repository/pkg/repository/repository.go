@@ -72,6 +72,10 @@ type FunctionRepository interface {
 	ListFunctions(ctx context.Context) ([]Function, error)
 }
 
+// The definitions below would be more appropriately located in a package usable by any Porch component.
+// They are located in repository package because repository is one such package though thematically
+// they rather belong to a package of their own.
+
 type Credential struct {
 	// TODO: support different credential types
 	Data map[string][]byte
@@ -79,4 +83,17 @@ type Credential struct {
 
 type CredentialResolver interface {
 	ResolveCredential(ctx context.Context, namespace, name string) (Credential, error)
+}
+
+type UserInfo struct {
+	Name  string
+	Email string
+}
+
+// UserInfoProvider providers name of the authenticated user on whose behalf the request
+// is being processed.
+type UserInfoProvider interface {
+	// GetUserInfo returns the information about the user on whose behalf the request is being
+	// processed, if any. If user cannot be determnined, returns nil.
+	GetUserInfo(ctx context.Context) *UserInfo
 }

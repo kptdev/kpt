@@ -42,7 +42,7 @@ type gitPackageDraft struct {
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
-	ch, err := newCommitHelper(d.parent.repo.Storer, d.ref.Hash(), d.path, plumbing.ZeroHash)
+	ch, err := newCommitHelper(d.parent.repo.Storer, d.parent.userInfoProvider, d.ref.Hash(), d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit packgae: %w", err)
 	}
@@ -52,7 +52,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 	}
 
 	message := fmt.Sprintf("Intermittent commit: %s", change.Type)
-	commitHash, packageTree, err := ch.commit(message, d.path)
+	commitHash, packageTree, err := ch.commit(ctx, message, d.path)
 	if err != nil {
 		return fmt.Errorf("failed to commit package: %w", err)
 	}
@@ -217,12 +217,12 @@ func (d *gitPackageDraft) commitPackageToMain(ctx context.Context) (commitHash, 
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
-	ch, err := newCommitHelper(repo.Storer, headCommit.Hash, packagePath, packageTree)
+	ch, err := newCommitHelper(repo.Storer, d.parent.userInfoProvider, headCommit.Hash, packagePath, packageTree)
 	if err != nil {
 		return zero, zero, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
 	message := fmt.Sprintf("Approve %s", packagePath)
-	commitHash, newPackageTreeHash, err = ch.commit(message, packagePath)
+	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
 		return zero, zero, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
 	}

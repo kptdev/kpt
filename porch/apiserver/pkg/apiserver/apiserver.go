@@ -164,10 +164,14 @@ func (c completedConfig) New() (*PorchServer, error) {
 
 	credentialResolver := porch.NewCredentialResolver(coreClient)
 	referenceResolver := porch.NewReferenceResolver(coreClient)
+	userInfoProvider := &porch.ApiserverUserInfoProvider{}
 
 	renderer := kpt.NewRenderer()
 
-	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, credentialResolver)
+	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
+		CredentialResolver: credentialResolver,
+		UserInfoProvider:   userInfoProvider,
+	})
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
 		// The order of registering the function runtimes matters here. When
@@ -178,6 +182,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithCredentialResolver(credentialResolver),
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),
+		engine.WithUserInfoProvider(userInfoProvider),
 	)
 	if err != nil {
 		return nil, err

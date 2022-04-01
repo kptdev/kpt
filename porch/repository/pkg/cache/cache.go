@@ -42,13 +42,20 @@ type Cache struct {
 	repositories       map[string]*cachedRepository
 	cacheDir           string
 	credentialResolver repository.CredentialResolver
+	userInfoProvider   repository.UserInfoProvider
 }
 
-func NewCache(cacheDir string, credentialResolver repository.CredentialResolver) *Cache {
+type CacheOptions struct {
+	CredentialResolver repository.CredentialResolver
+	UserInfoProvider   repository.UserInfoProvider
+}
+
+func NewCache(cacheDir string, opts CacheOptions) *Cache {
 	return &Cache{
 		repositories:       make(map[string]*cachedRepository),
 		cacheDir:           cacheDir,
-		credentialResolver: credentialResolver,
+		credentialResolver: opts.CredentialResolver,
+		userInfoProvider:   opts.UserInfoProvider,
 	}
 }
 
@@ -93,7 +100,10 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 
 		cr := c.repositories[key]
 		if cr == nil {
-			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, c.credentialResolver, filepath.Join(c.cacheDir, "git")); err != nil {
+			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, filepath.Join(c.cacheDir, "git"), git.GitRepositoryOptions{
+				CredentialResolver: c.credentialResolver,
+				UserInfoProvider:   c.userInfoProvider,
+			}); err != nil {
 				return nil, err
 			} else {
 				cr = newRepository(key, r)

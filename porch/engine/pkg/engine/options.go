@@ -107,3 +107,10 @@ func WithReferenceResolver(resolver ReferenceResolver) EngineOption {
 		return nil
 	})
 }
+
+func WithUserInfoProvider(provider repository.UserInfoProvider) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.userInfoProvider = provider
+		return nil
+	})
+}

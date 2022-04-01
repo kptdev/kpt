@@ -15,12 +15,14 @@
 package git
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -28,15 +30,22 @@ import (
 	"github.com/go-git/go-git/v5/storage"
 )
 
+const (
+	porchSignatureName  = "Package Orchestration Service"
+	porchSignatureEmail = "porch@kpt.dev"
+)
+
 type commitHelper struct {
-	storer storage.Storer
-	trees  map[string]*object.Tree
-	parent plumbing.Hash
+	storer           storage.Storer
+	trees            map[string]*object.Tree
+	parent           plumbing.Hash
+	userInfoProvider repository.UserInfoProvider
 }
 
 // if packageTree is zero, new tree for the package will be created (effectively replacing the package with the subsequently provided
 // contents). If the packageTree is provided, the tree will be used as the initial package contents, possibly subsequently modified.
-func newCommitHelper(storer storage.Storer, parent plumbing.Hash, packagePath string, packageTree plumbing.Hash) (*commitHelper, error) {
+func newCommitHelper(storer storage.Storer, userInfoProvider repository.UserInfoProvider,
+	parent plumbing.Hash, packagePath string, packageTree plumbing.Hash) (*commitHelper, error) {
 	var root *object.Tree
 
 	if parent.IsZero() {
@@ -60,9 +69,10 @@ func newCommitHelper(storer storage.Storer, parent plumbing.Hash, packagePath st
 	}
 
 	ch := &commitHelper{
-		storer: storer,
-		trees:  trees,
-		parent: parent,
+		storer:           storer,
+		trees:            trees,
+		parent:           parent,
+		userInfoProvider: userInfoProvider,
 	}
 
 	return ch, nil
@@ -190,13 +200,18 @@ func (h *commitHelper) storeFile(path, contents string) error {
 	return nil
 }
 
-func (h *commitHelper) commit(message string, pkgPath string) (commit, pkgTree plumbing.Hash, err error) {
+func (h *commitHelper) commit(ctx context.Context, message string, pkgPath string) (commit, pkgTree plumbing.Hash, err error) {
 	treeHash, err := storeTrees(h.storer, h.trees, "")
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
 
-	commit, err = storeCommit(h.storer, h.parent, treeHash, message)
+	var ui *repository.UserInfo
+	if h.userInfoProvider != nil {
+		ui = h.userInfoProvider.GetUserInfo(ctx)
+	}
+
+	commit, err = storeCommit(h.storer, h.parent, treeHash, ui, message)
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
@@ -333,17 +348,27 @@ func entrySortKey(e *object.TreeEntry) string {
 	return e.Name
 }
 
-func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, message string) (plumbing.Hash, error) {
+func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
 	now := time.Now()
+	var authorName, authorEmail string
+	if userInfo != nil {
+		// Authenticated user info only provides one value...
+		authorName = userInfo.Name
+		authorEmail = userInfo.Email
+	} else {
+		// Defaults
+		authorName = porchSignatureName
+		authorEmail = porchSignatureEmail
+	}
 	commit := &object.Commit{
 		Author: object.Signature{
-			Name:  "Porch Author",
-			Email: "author@kpt.dev",
+			Name:  authorName,
+			Email: authorEmail,
 			When:  now,
 		},
 		Committer: object.Signature{
-			Name:  "Porch Committer",
-			Email: "committer@kpt.dev",
+			Name:  porchSignatureName,
+			Email: porchSignatureEmail,
 			When:  now,
 		},
 		Message:  message,
