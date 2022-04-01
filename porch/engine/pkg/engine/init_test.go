@@ -40,7 +40,7 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Failed to find testdata: %v", err)
 	}
 
-	rendered, _, err := init.Apply(context.Background(), repository.PackageResources{})
+	initializedPkg, _, err := init.Apply(context.Background(), repository.PackageResources{})
 	if err != nil {
 		t.Errorf("package init failed: %v", err)
 	}
@@ -48,9 +48,9 @@ func TestInit(t *testing.T) {
 	filesToCompare := []string{"Kptfile", "README.md", "package-context.yaml"}
 
 	for _, fi := range filesToCompare {
-		got, ok := rendered.Contents[fi]
+		got, ok := initializedPkg.Contents[fi]
 		if !ok {
-			t.Errorf("Cannot find Kptfile in %v", rendered.Contents)
+			t.Errorf("Cannot find Kptfile in %v", initializedPkg.Contents)
 		}
 
 		want, err := ioutil.ReadFile(filepath.Join(testdata, fi))
