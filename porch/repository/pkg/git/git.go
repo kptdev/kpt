@@ -40,16 +40,8 @@ import (
 )
 
 const (
-	refMain plumbing.ReferenceName = "refs/heads/main"
-	// TODO: support customizable pattern of draft branches.
-	refDraftPrefix                               = "refs/heads/drafts/"
-	refProposedPrefix                            = "refs/heads/proposed/"
-	refTagsPrefix                                = "refs/tags/"
-	refHeadsPrefix                               = "refs/heads/"
-	refRemoteBranchPrefix                        = "refs/remotes/origin/"
-	refOriginMain         plumbing.ReferenceName = refRemoteBranchPrefix + "main"
-	originName                                   = "origin"
-	originFetchSpec                              = "+refs/heads/*:refs/remotes/origin/*"
+	DefaultMainReferenceName plumbing.ReferenceName = "refs/heads/main"
+	OriginName               string                 = "origin"
 )
 
 type GitRepository interface {
@@ -78,17 +70,6 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 			return nil, fmt.Errorf("error cloning git repository %q: %w", spec.Repo, err)
 		}
 
-		// Create Remote
-		if _, err = r.CreateRemote(&config.RemoteConfig{
-			Name: originName,
-			URLs: []string{spec.Repo},
-			Fetch: []config.RefSpec{
-				config.RefSpec(fmt.Sprintf(config.DefaultFetchRefSpec, originName)),
-			},
-		}); err != nil {
-			return nil, fmt.Errorf("error cloning git repository %q, cannot create remote: %v", spec.Repo, err)
-		}
-
 		repo = r
 	} else if !fi.IsDir() {
 		// Internal error - corrupted cache.
@@ -102,10 +83,23 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		repo = r
 	}
 
+	// Create Remote
+	if err := initializeOrigin(repo, spec.Repo); err != nil {
+		return nil, fmt.Errorf("error cloning git repository %q, cannot create remote: %v", spec.Repo, err)
+	}
+
+	branch := MainBranch
+	if spec.Branch != "" {
+		// TODO: Validate branch name syntax (we can't check whether the branch exists;
+		// the repository may be empty).
+		branch = BranchName(spec.Branch)
+	}
+
 	repository := &gitRepository{
 		name:               name,
 		namespace:          namespace,
 		repo:               repo,
+		branch:             branch,
 		secret:             spec.SecretRef.Name,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
@@ -119,9 +113,10 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 }
 
 type gitRepository struct {
-	name               string
-	namespace          string
-	secret             string
+	name               string     // Repository resource name
+	namespace          string     // Repository resource namespace
+	secret             string     // Name of the k8s Secret resource containing credentials
+	branch             BranchName // The main branch from repository registration (defaults to 'main' if unspecified)
 	repo               *git.Repository
 	cachedCredentials  transport.AuthMethod
 	credentialResolver repository.CredentialResolver
@@ -138,6 +133,8 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 	var drafts []repository.PackageRevision
 	var result []repository.PackageRevision
 
+	mainBranch := r.branch.RefInLocal() // Looking for the registered branch
+
 	for {
 		ref, err := refs.Next()
 		if err == io.EOF {
@@ -145,20 +142,18 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 		}
 
 		switch name := ref.Name(); {
-		case name == refMain:
+		case name == mainBranch:
 			main = ref
 			continue
 
-		case strings.HasPrefix(name.String(), refProposedPrefix):
-			fallthrough
-		case strings.HasPrefix(name.String(), refDraftPrefix):
+		case isProposedBranchNameInLocal(ref.Name()), isDraftBranchNameInLocal(ref.Name()):
 			draft, err := r.loadDraft(ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 			}
 			drafts = append(drafts, draft)
 
-		case strings.HasPrefix(name.String(), refTagsPrefix):
+		case isTagInLocalRepo(ref.Name()):
 			tagged, err := r.loadTaggedPackages(ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
@@ -183,7 +178,8 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 
 func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
 	var base plumbing.Hash
-	switch main, err := r.repo.Reference(refMain, true); {
+	refName := r.branch.RefInLocal()
+	switch main, err := r.repo.Reference(refName, true); {
 	case err == nil:
 		base = main.Hash()
 	case err == plumbing.ErrReferenceNotFound:
@@ -191,19 +187,17 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 	default:
 		return nil, fmt.Errorf("error when resolving target branch for the package: %w", err)
 	}
-	ref := createDraftRefName(obj.Spec.PackageName, obj.Spec.Revision)
-	head := plumbing.NewHashReference(ref, base)
-	if err := r.repo.Storer.SetReference(head); err != nil {
-		return nil, err
-	}
+
+	draft := createDraftName(obj.Spec.PackageName, obj.Spec.Revision)
 
 	return &gitPackageDraft{
-		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
 		parent:    r,
 		path:      obj.Spec.PackageName,
 		revision:  obj.Spec.Revision,
+		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
 		updated:   time.Now(),
-		ref:       head,
+		base:      nil, // Creating a new package
+		branch:    draft,
 		commit:    base,
 	}, nil
 }
@@ -235,62 +229,10 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		revision:  oldGitPackage.revision,
 		lifecycle: oldGitPackage.getPackageRevisionLifecycle(),
 		updated:   rev.updated,
-		ref:       rev.ref,
+		base:      rev.ref,
 		tree:      rev.tree,
 		commit:    rev.commit,
 	}, nil
-}
-
-func (r *gitRepository) ApprovePackageRevision(ctx context.Context, path, revision string) (repository.PackageRevision, error) {
-	refName := createDraftRefName(path, revision)
-	oldRef, err := r.repo.Reference(refName, true)
-	if err != nil {
-		return nil, fmt.Errorf("cannot find draft package branch %q: %w", refName, err)
-	}
-
-	auth, err := r.getAuthMethod(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to obtain git credentials: %w", err)
-	}
-
-	approvedName := createApprovedRefName(path, revision)
-
-	newRef := plumbing.NewHashReference(approvedName, oldRef.Hash())
-
-	options := &git.PushOptions{
-		RemoteName:        "origin",
-		RefSpecs:          []config.RefSpec{},
-		Auth:              auth,
-		RequireRemoteRefs: []config.RefSpec{},
-	}
-
-	options.RefSpecs = append(options.RefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", oldRef.Hash(), newRef.Name())))
-
-	currentNewRefValue, err := r.repo.Storer.Reference(newRef.Name())
-	if err == nil {
-		options.RequireRemoteRefs = append(options.RequireRemoteRefs, config.RefSpec(fmt.Sprintf("%s:%s", currentNewRefValue.Hash(), newRef.Name())))
-	} else if err == plumbing.ErrReferenceNotFound {
-		// TODO: Should we push with 000000 ?
-	} else {
-		return nil, fmt.Errorf("error getting reference %q: %w", newRef.Name(), err)
-	}
-
-	klog.Infof("pushing with options %v", options)
-
-	// Note that we push and _then_ we set the local reference to avoid drift
-	if err := r.repo.Push(options); err != nil {
-		return nil, fmt.Errorf("failed to push to git %#v: %w", options, err)
-	}
-
-	if err := r.repo.Storer.SetReference(newRef); err != nil {
-		return nil, fmt.Errorf("error storing git reference %v: %w", newRef, err)
-	}
-
-	approved, _, err := r.loadPackageRevision(revision, path, newRef.Hash())
-	if err != nil {
-		return nil, fmt.Errorf("cannot load approved package: %w", err)
-	}
-	return approved, nil
 }
 
 func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
@@ -309,25 +251,24 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	// We can only delete packages which have their own ref. Refs that are shared with other packages
 	// (main branch, tag that doesn't contain package path in its name, ...) cannot be deleted.
 
-	refsPush := []config.RefSpec{}
-	refsDelete := map[plumbing.ReferenceName]bool{}
+	pushHelper := newPushHelper(r.repo)
 
 	switch rn := ref.Name(); {
 	case rn.IsTag():
 		// Delete tag only if it is package-specific.
-		name := createFinalRefName(oldGit.path, oldGit.revision)
+		name := createFinalTagNameInLocal(oldGit.path, oldGit.revision)
 		if rn != name {
 			return fmt.Errorf("cannot delete package tagged with a tag that is not specific to the package: %s", rn)
 		}
 
 		// Delete the tag
-		refsDelete[name] = true
+		pushHelper.Delete(ref)
 
-	case strings.HasPrefix(rn.String(), refDraftPrefix), strings.HasPrefix(rn.String(), refProposedPrefix):
+	case isDraftBranchNameInLocal(rn), isProposedBranchNameInLocal(rn):
 		// PackageRevision is proposed or draft; delete the branch directly.
-		refsDelete[rn] = true
+		pushHelper.Delete(ref)
 
-	case rn.IsBranch():
+	case isBranchInLocalRepo(rn):
 		// Delete package from the branch
 		commitHash, err := r.createPackageDeleteCommit(ctx, rn, oldGit)
 		if err != nil {
@@ -335,20 +276,14 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		}
 
 		// Update the reference
-		// TODO: consider collecting all updates and applying them all at once.
-		setReference(r.repo.Storer, rn, commitHash)
-
-		refsPush = append(
-			refsPush,
-			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, rn.String())),
-		)
+		pushHelper.Push(commitHash, rn)
 
 	default:
 		return fmt.Errorf("cannot delete package with the ref name %s", rn)
 	}
 
 	// Update references
-	if err := r.pushAndCleanupRefs(ctx, refsPush, refsDelete); err != nil {
+	if err := r.pushAndCleanup(ctx, pushHelper); err != nil {
 		return fmt.Errorf("failed to update git references: %v", err)
 	}
 	return nil
@@ -458,13 +393,12 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 	}
 
 	var revision string
-	rev := ref.Name().String()
-	switch {
-	case strings.HasPrefix(rev, refTagsPrefix):
-		revision = strings.TrimPrefix(rev, refTagsPrefix)
-	case strings.HasPrefix(rev, refHeadsPrefix):
-		revision = strings.TrimPrefix(rev, refHeadsPrefix)
-	default:
+	if rev, ok := getBranchNameInLocalRepo(ref.Name()); ok {
+		revision = rev
+	} else if rev, ok = getTagNameInLocalRepo(ref.Name()); ok {
+		revision = rev
+	} else {
+		// TODO: ignore the ref instead?
 		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
 	}
 
@@ -558,14 +492,13 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 }
 
 func parseDraftName(draft *plumbing.Reference) (name, revision string, err error) {
-	refName := draft.Name().String()
+	refName := draft.Name()
 	var suffix string
-	switch {
-	case strings.HasPrefix(refName, refDraftPrefix):
-		suffix = strings.TrimPrefix(refName, refDraftPrefix)
-	case strings.HasPrefix(refName, refProposedPrefix):
-		suffix = strings.TrimPrefix(refName, refProposedPrefix)
-	default:
+	if b, ok := getDraftBranchNameInLocal(refName); ok {
+		suffix = string(b)
+	} else if b, ok = getProposedBranchNameInLocal(refName); ok {
+		suffix = string(b)
+	} else {
 		return "", "", fmt.Errorf("invalid draft ref name: %q", refName)
 	}
 
@@ -578,11 +511,10 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 }
 
 func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repository.PackageRevision, error) {
-	name := tag.Name().String()
-	if !strings.HasPrefix(name, refTagsPrefix) {
-		return nil, fmt.Errorf("invalid tag ref name: %q", name)
+	name, ok := getTagNameInLocalRepo(tag.Name())
+	if !ok {
+		return nil, fmt.Errorf("invalid tag ref: %q", tag)
 	}
-	name = strings.TrimPrefix(name, refTagsPrefix)
 	slash := strings.LastIndex(name, "/")
 
 	if slash < 0 {
@@ -627,25 +559,6 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 			commit:   tag.Hash(),
 		},
 	}, nil
-}
-
-func createDraftRefName(name, revision string) plumbing.ReferenceName {
-	refName := fmt.Sprintf("refs/heads/drafts/%s/%s", name, revision)
-	return plumbing.ReferenceName(refName)
-}
-
-func createProposedRefName(name, revision string) plumbing.ReferenceName {
-	return plumbing.ReferenceName(refProposedPrefix + name + "/" + revision)
-}
-
-func createFinalRefName(name, revision string) plumbing.ReferenceName {
-	return plumbing.ReferenceName(refTagsPrefix + name + "/" + revision)
-}
-
-func createApprovedRefName(name, revision string) plumbing.ReferenceName {
-	// TODO: use createFinalRefName
-	refName := fmt.Sprintf("refs/heads/%s/%s", name, revision)
-	return plumbing.ReferenceName(refName)
 }
 
 func (r *gitRepository) dumpAllRefs() {
@@ -728,9 +641,8 @@ func (r *gitRepository) update(ctx context.Context) error {
 
 	// Fetch
 	switch err := r.repo.Fetch(&git.FetchOptions{
-		RemoteName: originName,
+		RemoteName: OriginName,
 		Auth:       auth,
-		Tags:       git.AllTags,
 	}); err {
 	case nil: // OK
 	case git.NoErrAlreadyUpToDate:
@@ -738,85 +650,6 @@ func (r *gitRepository) update(ctx context.Context) error {
 
 	default:
 		return fmt.Errorf("cannot fetch repository %s/%s: %w", r.namespace, r.name, err)
-	}
-
-	// Create tracking branches for remotes
-	refs, err := r.repo.References()
-	if err != nil {
-		return fmt.Errorf("cannot identify repository remote references in %s/%s: %w", r.namespace, r.name, err)
-	}
-
-	// Collect remote and local branches. Both maps are indexed by the local reference name.
-	// remote references (refs/remotes/origin/...) are transformed to `refs/heads/...` to have
-	// both maps use matching keys.
-	remoteBranches := map[string]*plumbing.Reference{}
-	localBranches := map[string]*plumbing.Reference{}
-	for {
-		ref, err := refs.Next()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			klog.Warningf("Skipping reference during iteration on error: %v", err)
-			continue
-		}
-
-		name := ref.Name().String()
-		switch {
-		case strings.HasPrefix(name, refRemoteBranchPrefix):
-			branch := strings.TrimPrefix(name, refRemoteBranchPrefix)
-			remoteBranches[refHeadsPrefix+branch] = ref
-
-		case strings.HasPrefix(name, refHeadsPrefix):
-			localBranches[name] = ref
-		}
-	}
-
-	// TODO: Explore use of automatic branch tracking to do this.
-	// There may be risks involved such as automated rebase which may lead to incorrect results on the package.
-	// One possibility is to replay package history ... something to consider in the future.
-	for name, remoteRef := range remoteBranches {
-		localRef, ok := localBranches[name]
-
-		if !ok {
-			localRef = plumbing.NewHashReference(plumbing.ReferenceName(name), remoteRef.Hash())
-			// local branch doesn't exist. create it
-			if err := r.repo.Storer.SetReference(localRef); err != nil {
-				return fmt.Errorf("failed creating reference %q: %v", localRef, err)
-			}
-		} else if remoteRef.Hash() != localRef.Hash() {
-			remoteCommit, err := r.repo.CommitObject(remoteRef.Hash())
-			if err != nil {
-				return fmt.Errorf("failed to resolve remote reference %s: %w", remoteRef, err)
-			}
-			localCommit, err := r.repo.CommitObject(localRef.Hash())
-			if err != nil {
-				klog.Warningf("Overwriting unresolvable local reference %s: %v", localRef, err)
-				new := plumbing.NewHashReference(localRef.Name(), remoteCommit.Hash)
-				if err := r.repo.Storer.SetReference(new); err != nil {
-					return fmt.Errorf("failed to set local reference: %s to %s", new.Name(), new.Hash())
-				}
-				continue
-			}
-
-			// If local commit is ancestor of remote, fast-forward local commit to match
-			ancestor, err := localCommit.IsAncestor(remoteCommit)
-			if err != nil {
-				klog.Warningf("Failed to determine whether %s is ancestor of %s: %v", localRef, remoteRef, err)
-			}
-
-			// TODO: Better conflict resolution policy
-			if !ancestor {
-				klog.Warningf("Refusing to fast-forward %s which is not an ancestor of %s", localRef, remoteRef)
-				continue
-			}
-
-			klog.Infof("Fast-forwarding local branch %s to %s", localRef, remoteRef)
-			new := plumbing.NewHashReference(localRef.Name(), remoteCommit.Hash)
-			if err := r.repo.Storer.SetReference(new); err != nil {
-				klog.Errorf("Failed to fast-forward %s to %s, localRef, remoteRef")
-			}
-		}
 	}
 
 	return nil
@@ -833,10 +666,15 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 
 	repo := r.repo
 
+	local, err := refInRemoteFromRefInLocal(branch)
+	if err != nil {
+		return zero, err
+	}
 	// Fetch the branch
+	// TODO: Fetch only as part of conflict resolution & Retry
 	switch err := repo.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", branch, branch))},
+		RemoteName: OriginName,
+		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", local, branch))},
 		Auth:       auth,
 		Tags:       git.NoTags,
 	}); err {
@@ -890,56 +728,24 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 	return commitHash, nil
 }
 
-func (r *gitRepository) pushAndCleanupRefs(ctx context.Context, updates []config.RefSpec, cleanup map[plumbing.ReferenceName]bool) error {
+func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushHelper) error {
 	auth, err := r.getAuthMethod(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to obtain git credentials: %w", err)
 	}
 
-	repo := r.repo
-
-	if len(updates) > 0 {
-		switch err := repo.Push(&git.PushOptions{
-			RemoteName: originName,
-			RefSpecs:   updates,
-			Auth:       auth,
-		}); err {
-		case nil, git.NoErrAlreadyUpToDate:
-			// ok
-		default:
-			return fmt.Errorf("failed to push to git: %w", err)
-		}
-
+	specs, require, err := ph.CreateSpecs()
+	if err != nil {
+		return err
 	}
 
-	deleteRemotes := []config.RefSpec{}
-	// Cleanup local and remote branches
-	for rn := range cleanup {
-		switch err := repo.Storer.RemoveReference(rn); err {
-		case nil, plumbing.ErrReferenceNotFound:
-			// These are OK.
-
-		default:
-			return err
-		}
-
-		deleteRemotes = append(deleteRemotes, config.RefSpec(fmt.Sprintf(":%s", rn.String())))
+	if err := r.repo.Push(&git.PushOptions{
+		RemoteName:        OriginName,
+		RefSpecs:          specs,
+		Auth:              auth,
+		RequireRemoteRefs: require,
+	}); err != nil {
+		return err
 	}
-
-	// TODO: Combine this Push with the one above? Will need to reconcile the temporary
-	// use of `force` in the previous push where draft package contents are updated.
-	if len(deleteRemotes) > 0 {
-		switch err := repo.Push(&git.PushOptions{
-			RemoteName: originName,
-			RefSpecs:   deleteRemotes,
-			Auth:       auth,
-		}); err {
-		case nil, git.NoErrAlreadyUpToDate:
-			// ok
-		default:
-			klog.Errorf("Failed to clean up remote branches: %v", err)
-		}
-	}
-
 	return nil
 }

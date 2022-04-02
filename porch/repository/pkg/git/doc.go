@@ -13,4 +13,28 @@
 // limitations under the License.
 
 // Git Repository Adapter
+//
+// This component implements integration of git into package orchestration.
+// A local clone of a registered git repository is created in a cache, and
+// periodically refreshed.
+// All package operations happen on the local copy; on completion of an
+// operation// (create, update, delete package revision or its resources)
+// any new changes (in one or more commits) are pushed to the remote
+// repository.
+//
+// Branching Strategy
+//
+// Porch doesn't create tracking branches for remotes. This indirection
+// would add a layer of complexity where branches can become out of sync
+// and in need of reconciliation and conflict resolution. Instead, Porch
+// analyzes the remote references (refs/remotes/origin/branch...) to
+// discover packges. These refs are never directly updated by Porch other
+// than by push or fetch to/from remote.
+// Any intermediate commits Porch makes are either in 'detached HEAD'
+// mode, or using temporary branches (these will become relevant if/when
+// Porch implements repository garbage collection).
+//
+// Porch uses the default convention for naming remote branches
+// (refs/remotes/origin/branch...) in order to make direct introspection
+// of the repositories aligned with traditional git repositories.
 package git

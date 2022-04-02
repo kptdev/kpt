@@ -360,7 +360,7 @@ func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
 func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	const downstreamRepository = "deployment"
 	const downstreamPackage = "istions"
-	const downstreamRevision = "v1"
+	const downstreamRevision = "v2"
 	const downstreamName = downstreamRepository + ":" + downstreamPackage + ":" + downstreamRevision
 
 	// Register the deployment repository

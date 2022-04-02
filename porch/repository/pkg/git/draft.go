@@ -25,7 +25,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/storage"
 )
 
 type gitPackageDraft struct {
@@ -34,15 +33,16 @@ type gitPackageDraft struct {
 	revision  string
 	lifecycle v1alpha1.PackageRevisionLifecycle // New value of the package revision lifecycle
 	updated   time.Time
-	ref       *plumbing.Reference // ref is the Git reference at which the package exists
-	tree      plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
-	commit    plumbing.Hash       // Current version of the package (commit sha)
+	base      *plumbing.Reference // ref to the base of the package update commit chain (used for conditional push)
+	branch    BranchName          // name of the branch where the changes will be pushed
+	commit    plumbing.Hash       // Current HEAD of the package changes (commit sha)
+	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
-	ch, err := newCommitHelper(d.parent.repo.Storer, d.parent.userInfoProvider, d.ref.Hash(), d.path, plumbing.ZeroHash)
+	ch, err := newCommitHelper(d.parent.repo.Storer, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit packgae: %w", err)
 	}
@@ -57,13 +57,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		return fmt.Errorf("failed to commit package: %w", err)
 	}
 
-	head := plumbing.NewHashReference(d.ref.Name(), commitHash)
-	if err := d.parent.repo.Storer.SetReference(head); err != nil {
-		return err
-	}
-
 	d.tree = packageTree
-	d.ref = head
 	d.commit = commitHash
 	return nil
 }
@@ -75,84 +69,73 @@ func (d *gitPackageDraft) UpdateLifecycle(ctx context.Context, new v1alpha1.Pack
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
-	remoteRef := refMain // TODO: support  branches registered with repository
-	// RefSpec(s) to push to the origin
-	pushRefSpecs := []config.RefSpec{}
-	// References to clean up (delete) locally and remotely after successful push
-	cleanup := map[plumbing.ReferenceName]bool{}
-	refNames := createPackageRefNames(d.path, d.revision)
-	repo := d.parent.repo
+	return d.parent.closeDraft(ctx, d)
+}
+
+func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gitPackageRevision, error) {
+	pushHelper := newPushHelper(r.repo)
+	draftBranch := createDraftName(d.path, d.revision)
+	proposedBranch := createProposedName(d.path, d.revision)
+
+	var newRef *plumbing.Reference
 
 	switch d.lifecycle {
 	case v1alpha1.PackageRevisionLifecycleFinal:
 		// Finalize the package revision. Commit it to main branch.
-		commitHash, newTreeHash, err := d.commitPackageToMain(ctx)
+		commitHash, newTreeHash, commitBase, err := r.commitPackageToMain(ctx, d)
 		if err != nil {
 			return nil, err
 		}
 
-		// Create Tag
-		switch _, err := repo.Storer.Reference(refNames.final); err {
-		case nil:
-			// Tag exists, cannot overwrite
-			return nil, fmt.Errorf("another instance of finalized package %s:%s:%s already exists", d.parent.name, d.path, d.revision)
-		case plumbing.ErrReferenceNotFound:
-			// Tag does not yet exist
-		}
+		tag := createFinalTagNameInLocal(d.path, d.revision)
+		pushHelper.Push(commitHash, r.branch.RefInLocal()) // Push new main branch
+		pushHelper.Push(commitHash, tag)                   // Push the tag
+		pushHelper.RequireRef(commitBase)                  // Make sure main didn't advance
 
-		newRef, err := setReference(repo.Storer, refNames.final, commitHash)
-		if err != nil {
-			return nil, fmt.Errorf("failed to finalize package: %v", err)
+		// Delete base branch?
+		switch base := d.base; {
+		case base == nil: // no branch to delete
+		case base.Name() == draftBranch.RefInLocal(), base.Name() == proposedBranch.RefInLocal():
+			pushHelper.Delete(base)
 		}
-
-		pushRefSpecs = append(
-			pushRefSpecs,
-			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, remoteRef)),      // Push new main
-			config.RefSpec(fmt.Sprintf("%s:%s", commitHash, refNames.final)), // Push the tag
-		)
-
-		if d.ref != nil {
-			cleanup[d.ref.Name()] = true
-		}
-		// also make sure to clean up draft and proposed refs for this package, if they exist.
-		cleanup[refNames.draft] = true
-		cleanup[refNames.proposed] = true
 
 		// Update package draft
 		d.commit = commitHash
 		d.tree = newTreeHash
-		d.ref = newRef
+		newRef = plumbing.NewHashReference(tag, commitHash)
 
 	case v1alpha1.PackageRevisionLifecycleProposed:
-		newRef, err := setReference(repo.Storer, refNames.proposed, d.commit)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update package lifecycle to \"proposed\": %v", err)
-		}
 		// Push the package revision into a proposed branch.
-		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("%s:%s", d.commit, refNames.proposed)))
-		cleanup[refNames.draft] = true
+		pushHelper.Push(d.commit, proposedBranch.RefInLocal())
+
+		// Delete base branch?
+		switch base := d.base; {
+		case base == nil: // no branch to delete
+		case base.Name() != proposedBranch.RefInLocal():
+			pushHelper.Delete(base)
+		}
 
 		// Update package referemce (commit and tree hash stay the same)
-		d.ref = newRef
+		newRef = plumbing.NewHashReference(proposedBranch.RefInLocal(), d.commit)
 
 	case v1alpha1.PackageRevisionLifecycleDraft:
-		newRef, err := setReference(repo.Storer, refNames.draft, d.commit)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update package draft: %v", err)
-		}
 		// Push the package revision into a draft branch.
-		// TODO: implement config resolution rather than forcing the push (+)
-		pushRefSpecs = append(pushRefSpecs, config.RefSpec(fmt.Sprintf("+%s:%s", d.commit, refNames.draft)))
-		cleanup[refNames.proposed] = true // In case client downgraded packaget to draft from proposed
+		pushHelper.Push(d.commit, draftBranch.RefInLocal())
+		// Delete base branch?
+		switch base := d.base; {
+		case base == nil: // no branch to delete
+		case base.Name() != draftBranch.RefInLocal():
+			pushHelper.Delete(base)
+		}
 
 		// Update package referemce (commit and tree hash stay the same)
-		d.ref = newRef
+		newRef = plumbing.NewHashReference(draftBranch.RefInLocal(), d.commit)
 
 	default:
 		return nil, fmt.Errorf("package has unrecognized lifecycle: %q", d.lifecycle)
 	}
 
-	if err := d.parent.pushAndCleanupRefs(ctx, pushRefSpecs, cleanup); err != nil {
+	if err := d.parent.pushAndCleanup(ctx, pushHelper); err != nil {
 		return nil, err
 	}
 
@@ -161,91 +144,71 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 		path:     d.path,
 		revision: d.revision,
 		updated:  d.updated,
-		ref:      d.ref,
+		ref:      newRef,
 		tree:     d.tree,
-		commit:   d.ref.Hash(),
+		commit:   newRef.Hash(),
 	}, nil
 }
 
-func (d *gitPackageDraft) commitPackageToMain(ctx context.Context) (commitHash, newPackageTreeHash plumbing.Hash, err error) {
-	localRef := refMain // TODO: add support for the branch provided at repository registration
-	remoteRef := refMain
+func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDraft) (commitHash, newPackageTreeHash plumbing.Hash, base *plumbing.Reference, err error) {
+	branch := r.branch
+	localRef := branch.RefInLocal()
 
 	var zero plumbing.Hash
-	auth, err := d.parent.getAuthMethod(ctx)
+	auth, err := r.getAuthMethod(ctx)
+
 	if err != nil {
-		return zero, zero, fmt.Errorf("failed to obtain git credentials: %w", err)
+		return zero, zero, nil, fmt.Errorf("failed to obtain git credentials: %w", err)
 	}
 
-	repo := d.parent.repo
+	repo := r.repo
 
 	// Fetch main
 	switch err := repo.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", localRef, remoteRef))},
+		RemoteName: OriginName,
+		RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
 		Auth:       auth,
-		Tags:       git.AllTags,
 	}); err {
 	case nil, git.NoErrAlreadyUpToDate:
 		// ok
 	default:
-		return zero, zero, fmt.Errorf("failed to fetch remote repository: %w", err)
+		return zero, zero, nil, fmt.Errorf("failed to fetch remote repository: %w", err)
 	}
 
 	// Find localTarget branch
-	localTarget, err := repo.Reference(localRef, true)
+	localTarget, err := repo.Reference(localRef, false)
 	if err != nil {
 		// TODO: handle empty repositories - NotFound error
-		return zero, zero, fmt.Errorf("failed to find 'main' branch: %w", err)
+		return zero, zero, nil, fmt.Errorf("failed to find 'main' branch: %w", err)
 	}
 	headCommit, err := repo.CommitObject(localTarget.Hash())
 	if err != nil {
-		return zero, zero, fmt.Errorf("failed to resolve main branch to commit: %w", err)
+		return zero, zero, nil, fmt.Errorf("failed to resolve main branch to commit: %w", err)
 	}
 	headRoot, err := headCommit.Tree()
 	if err != nil {
 		// TODO: handle empty repositories
-		return zero, zero, fmt.Errorf("failed to get main commit tree; %w", err)
+		return zero, zero, nil, fmt.Errorf("failed to get main commit tree; %w", err)
 	}
 	packagePath := d.path
 	packageTree := d.tree
 	if packageEntry, err := headRoot.FindEntry(packagePath); err == nil {
 		if packageEntry.Hash != packageTree {
-			return zero, zero, fmt.Errorf("internal error: package tree consistency check failed: %s != %s", packageEntry.Hash, packageTree)
+			return zero, zero, nil, fmt.Errorf("internal error: package tree consistency check failed: %s != %s", packageEntry.Hash, packageTree)
 		}
 	}
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
-	ch, err := newCommitHelper(repo.Storer, d.parent.userInfoProvider, headCommit.Hash, packagePath, packageTree)
+	ch, err := newCommitHelper(repo.Storer, r.userInfoProvider, headCommit.Hash, packagePath, packageTree)
 	if err != nil {
-		return zero, zero, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
+		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
 	message := fmt.Sprintf("Approve %s", packagePath)
 	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
-		return zero, zero, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
+		return zero, zero, nil, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
 	}
 
-	return commitHash, newPackageTreeHash, nil
-}
-
-type packageRefs struct {
-	draft, proposed, final plumbing.ReferenceName
-}
-
-func createPackageRefNames(name, revision string) packageRefs {
-	return packageRefs{
-		draft:    createDraftRefName(name, revision),
-		proposed: createProposedRefName(name, revision),
-		final:    createFinalRefName(name, revision),
-	}
-}
-
-func setReference(storer storage.Storer, name plumbing.ReferenceName, hash plumbing.Hash) (*plumbing.Reference, error) {
-	ref := plumbing.NewHashReference(name, hash)
-	if err := storer.SetReference(ref); err != nil {
-		return nil, err
-	}
-	return ref, nil
+	return commitHash, newPackageTreeHash, localTarget, nil
 }
