@@ -314,8 +314,8 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 
 	var objects []*unstructured.Unstructured
 
-	for _, item := range resources.Items {
-		ext := path.Ext(item.Path)
+	for filePath, fileContents := range resources.Contents {
+		ext := path.Ext(filePath)
 		ext = strings.ToLower(ext)
 
 		parse := false
@@ -324,21 +324,21 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 			parse = true
 
 		default:
-			klog.Warningf("ignoring non-yaml file %s", item.Path)
+			klog.Warningf("ignoring non-yaml file %s", filePath)
 		}
 
 		if !parse {
 			continue
 		}
 		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
-		for _, s := range strings.Split(item.Contents, "\n---\n") {
+		for _, s := range strings.Split(fileContents, "\n---\n") {
 			if isWhitespace(s) {
 				continue
 			}
 
 			o := &unstructured.Unstructured{}
 			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
-				return nil, fmt.Errorf("error parsing yaml from %s: %w", item.Path, err)
+				return nil, fmt.Errorf("error parsing yaml from %s: %w", filePath, err)
 			}
 
 			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
