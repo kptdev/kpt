@@ -92,6 +92,10 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Selector.Name, "match-name", "", "select resources matching the given name")
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
+	r.Command.Flags().StringArrayVar(
+		&r.selectorAnno, "match-annotations", []string{}, "select resources matching the given annotations")
+	r.Command.Flags().StringArrayVar(
+		&r.selectorLabel, "match-labels", []string{}, "select resources matching the given labels")
 
 	// exclusion flags
 	r.Command.Flags().StringVar(
@@ -102,6 +106,10 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Exclusion.Name, "exclude-name", "", "exclude resources matching the given name")
 	r.Command.Flags().StringVar(
 		&r.Exclusion.Namespace, "exclude-namespace", "", "exclude resources matching the given namespace")
+	r.Command.Flags().StringArrayVar(
+		&r.excludeAnno, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
+	r.Command.Flags().StringArrayVar(
+		&r.excludeLabel, "exclude-labels", []string{}, "exclude resources matching the given labels")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
@@ -138,6 +146,12 @@ type EvalFnRunner struct {
 	Selector             kptfile.Selector
 	Exclusion            kptfile.Selector
 	dataItems            []string
+
+	// we will need to parse these values into Selector and Exclusion
+	selectorLabel []string
+	selectorAnno  []string
+	excludeLabel  []string
+	excludeAnno   []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -443,6 +457,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 	}
 
+	r.parseSelectors()
 	r.RunFns = runfn.RunFns{
 		Ctx:             r.Ctx,
 		Function:        fnSpec,
@@ -467,4 +482,28 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// parses annotation and label based selectors and exclusion from the command line input
+func (r *EvalFnRunner) parseSelectors() {
+	for _, s := range r.selectorAnno {
+		parts := strings.Split(s, "=")
+		key, value := parts[0], parts[1]
+		r.Selector.Annotations = map[string]string{key: value}
+	}
+	for _, s := range r.selectorLabel {
+		parts := strings.Split(s, "=")
+		key, value := parts[0], parts[1]
+		r.Selector.Labels = map[string]string{key: value}
+	}
+	for _, s := range r.excludeAnno {
+		parts := strings.Split(s, "=")
+		key, value := parts[0], parts[1]
+		r.Exclusion.Annotations = map[string]string{key: value}
+	}
+	for _, s := range r.excludeLabel {
+		parts := strings.Split(s, "=")
+		key, value := parts[0], parts[1]
+		r.Exclusion.Labels = map[string]string{key: value}
+	}
 }

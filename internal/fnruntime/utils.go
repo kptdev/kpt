@@ -175,7 +175,8 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	// keep expanding with new selectors
 	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector)
+		kindMatch(node, selector) && apiVersionMatch(node, selector) &&
+		labelMatch(node, selector) && annoMatch(node, selector)
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
@@ -196,4 +197,26 @@ func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 // apiVersionMatch returns true if the resource apiVersion matches input selection criteria
 func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
+}
+
+// labelMatch returns true if the resource labels match input selection criteria
+func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	nodeLabels := node.GetLabels()
+	for sk, sv := range selector.Labels {
+		if nv, ok := nodeLabels[sk]; !ok || sv != nv {
+			return false
+		}
+	}
+	return true
+}
+
+// annoMatch returns true if the resource annotations match input selection criteria
+func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	nodeAnnos := node.GetAnnotations()
+	for sk, sv := range selector.Annotations {
+		if nv, ok := nodeAnnos[sk]; !ok || sv != nv {
+			return false
+		}
+	}
+	return true
 }

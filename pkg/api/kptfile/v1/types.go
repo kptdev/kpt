@@ -308,6 +308,10 @@ type Selector struct {
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	// Labels on the target resources
+	Labels map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+	// Annotations on the target resources
+	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
@@ -315,7 +319,9 @@ func (s Selector) IsEmpty() bool {
 	return s.APIVersion == "" &&
 		s.Namespace == "" &&
 		s.Name == "" &&
-		s.Kind == ""
+		s.Kind == "" &&
+		len(s.Labels) == 0 &&
+		len(s.Annotations) == 0
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.
