@@ -21,7 +21,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,6 +47,30 @@ func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
 	}
 
 	return c, nil
+}
+
+// controller-runtime does not support subresources so we use REST client directly.
+// TODO: Separate Porch clientset into its own module (similar to k8s clientsets) to use it
+// without causing circular reference.
+func CreateRESTClient(flags *genericclioptions.ConfigFlags) (rest.Interface, error) {
+	config, err := flags.ToRESTConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	scheme, err := createScheme()
+	if err != nil {
+		return nil, err
+	}
+
+	codecs := serializer.NewCodecFactory(scheme)
+
+	gv := porchapi.SchemeGroupVersion
+	config.GroupVersion = &gv
+	config.APIPath = "/apis"
+	config.NegotiatedSerializer = codecs.WithoutConversion()
+
+	return rest.RESTClientFor(config)
 }
 
 func createScheme() (*runtime.Scheme, error) {
