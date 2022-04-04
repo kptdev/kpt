@@ -13,7 +13,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.2.1-0.20220324001910-77bf0f4e38e9
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220325190148-462afb7cfc4b
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-00010101000000-000000000000
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220404223850-4fe7ba260b65
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
 	github.com/google/go-cmp v0.5.7
