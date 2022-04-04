@@ -32,6 +32,7 @@ func TestUpdateRef(t *testing.T) {
 	repo := OpenGitRepositoryFromArchiveWithWorktree(t, filepath.Join("testdata", "drafts-repository.tar"), gitdir)
 
 	const draftReferenceName plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
+
 	draftRef := resolveReference(t, repo, draftReferenceName)
 
 	{
@@ -57,10 +58,31 @@ func TestUpdateRef(t *testing.T) {
 	}
 }
 
+func TestSetNewRef(t *testing.T) {
+	temp := t.TempDir()
+	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "simple-repository.tar"), temp)
+
+	logRefs(t, repo, "Simple: ")
+
+	basens := resolveReference(t, repo, "refs/tags/basens/v1")
+
+	const draftReferenceName plumbing.ReferenceName = "refs/heads/test-reference"
+	zero := plumbing.NewHashReference(draftReferenceName, plumbing.ZeroHash)
+	test := plumbing.NewHashReference(draftReferenceName, basens.Hash())
+
+	if err := repo.Storer.CheckAndSetReference(test, zero); err != nil {
+		t.Errorf("CheckAndSetReference(%s, zero) failed: %v", test, err)
+	}
+
+	// Try again, this time it should fail.
+	if err := repo.Storer.CheckAndSetReference(test, zero); err == nil {
+		t.Errorf("Second CheckAndSetReference(%s, zero) unexpectedly succeeded", test)
+	}
+}
+
 func TestSimpleFetch(t *testing.T) {
 	upstreamDir := t.TempDir()
 	downstreamDir := t.TempDir()
-
 	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
 	downstream := initRepositoryWithRemote(t, downstreamDir, address)
 
@@ -68,11 +90,7 @@ func TestSimpleFetch(t *testing.T) {
 
 	originRef := resolveReference(t, upstream, "refs/heads/drafts/bucket/v1")
 	refMustNotExist(t, downstream, remoteDraftReferenceName)
-
-	downstream.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		Tags:       git.AllTags,
-	})
+	fetch(t, downstream)
 
 	clonedRef := resolveReference(t, downstream, remoteDraftReferenceName)
 	if got, want := clonedRef.Hash(), originRef.Hash(); got != want {
@@ -88,10 +106,7 @@ func TestSimplePush(t *testing.T) {
 
 	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
 	downstream := initRepositoryWithRemote(t, downstreamDir, address)
-	downstream.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		Tags:       git.AllTags,
-	})
+	fetch(t, downstream)
 
 	const (
 		draftReferenceName       plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
@@ -105,7 +120,7 @@ func TestSimplePush(t *testing.T) {
 		// Create a first commit in test branch
 		commit = createTestCommit(t, downstream, draftRef.Hash(), "Draft Commit", "readme.txt", "Hello, World!")
 		if err := downstream.Push(&git.PushOptions{
-			RemoteName: originName,
+			RemoteName: OriginName,
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("%s:%s", commit, draftReferenceName)),
 			},
@@ -125,7 +140,7 @@ func TestSimplePush(t *testing.T) {
 		// Create a competing concurrent in a test branch
 		concurrent := createTestCommit(t, downstream, draftRef.Hash(), "Competing Commit", "test.txt", "competing commit")
 		switch err := downstream.Push(&git.PushOptions{
-			RemoteName: originName,
+			RemoteName: OriginName,
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("%s:%s", concurrent, draftReferenceName)),
 			},
@@ -161,10 +176,8 @@ func TestFinalPush(t *testing.T) {
 	downstreamDir := t.TempDir()
 	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
 	downstream := initRepositoryWithRemote(t, downstreamDir, address)
-	downstream.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		Tags:       git.AllTags,
-	})
+
+	fetch(t, downstream)
 
 	const (
 		mainReferenceName       plumbing.ReferenceName = "refs/heads/main"
@@ -179,7 +192,7 @@ func TestFinalPush(t *testing.T) {
 		// Create first commit and tag (finalized package)
 		commit = createTestCommit(t, downstream, main.Hash(), "Package One", "one.txt", "initial")
 		if err := downstream.Push(&git.PushOptions{
-			RemoteName: originName,
+			RemoteName: OriginName,
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("%s:%s", commit, mainReferenceName)),
 				config.RefSpec(fmt.Sprintf("%s:%s", commit, packageTagReferenceName)),
@@ -190,6 +203,12 @@ func TestFinalPush(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("Push failed: %v", err)
 		}
+
+		if tag, err := downstream.Reference(packageTagReferenceName, false); err != nil {
+			t.Errorf("Failed to find pushed tag")
+		} else if got, want := tag.Hash(), commit; got != want {
+			t.Errorf("Tag hash after push: got %s, want %s", got, want)
+		}
 	}
 
 	{
@@ -198,7 +217,7 @@ func TestFinalPush(t *testing.T) {
 
 		// Simulated concurrent push should fail
 		switch err := downstream.Push(&git.PushOptions{
-			RemoteName: originName,
+			RemoteName: OriginName,
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("%s:%s", concurrent, mainReferenceName)),
 			},
@@ -216,7 +235,7 @@ func TestFinalPush(t *testing.T) {
 
 		// Liewise, push to the tag should fail
 		switch err := downstream.Push(&git.PushOptions{
-			RemoteName: originName,
+			RemoteName: OriginName,
 			RefSpecs: []config.RefSpec{
 				config.RefSpec(fmt.Sprintf("%s:%s", concurrent, packageTagReferenceName)),
 			},
@@ -252,12 +271,10 @@ func TestRepoRecovery(t *testing.T) {
 	const (
 		draftReferenceName       plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
 		remoteDraftReferenceName plumbing.ReferenceName = "refs/remotes/origin/drafts/bucket/v1"
+		istionsReferenceName     plumbing.ReferenceName = "refs/tags/istions/v1"
 	)
 
-	downstream.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		Tags:       git.AllTags,
-	})
+	fetch(t, downstream)
 
 	upstreamDraftRef := resolveReference(t, upstream, draftReferenceName)
 
@@ -277,6 +294,13 @@ func TestRepoRecovery(t *testing.T) {
 		t.Fatalf("Failed to intentionally overwrite a remote reference %s: %v", newRef, err)
 	}
 
+	// Corrupt the istions reference (tag) also
+	istioRef := resolveReference(t, downstream, istionsReferenceName)
+	istioNew := plumbing.NewHashReference(istionsReferenceName, conflicting)
+	if err := downstream.Storer.CheckAndSetReference(istioNew, istioRef); err != nil {
+		t.Fatalf("Failed to intentionally overwrite a tag: %s: %v", istioNew, err)
+	}
+
 	// Perhaps overly cautious; check the reference value
 	{
 		ref := resolveReference(t, downstream, remoteDraftReferenceName)
@@ -286,12 +310,7 @@ func TestRepoRecovery(t *testing.T) {
 	}
 
 	// Re-fetch. Expect ref to go back
-	if err := downstream.Fetch(&git.FetchOptions{
-		RemoteName: originName,
-		Tags:       git.AllTags,
-	}); err != nil {
-		t.Fatalf("Failed to fetch into an intentionally corrupted repository: %v", err)
-	}
+	fetch(t, downstream)
 
 	// Re-resolve the corrupted reference
 	{
@@ -305,17 +324,67 @@ func TestRepoRecovery(t *testing.T) {
 			t.Errorf("Ref %s was reset to an unexpected value, not matching upstream repository; got %s, want %s", ref, got, want)
 		}
 	}
+
+	// Re-resolve the tag
+	{
+		ref := resolveReference(t, downstream, istionsReferenceName)
+		if got, want := ref.Hash(), istioRef.Hash(); got != want {
+			t.Errorf("Tag %s was not reset by re-fetch; got %s, want %s", ref, got, want)
+		}
+	}
+}
+
+func TestProposal(t *testing.T) {
+	upstreamDir := t.TempDir()
+	downstreamDir := t.TempDir()
+	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
+	downstream := initRepositoryWithRemote(t, downstreamDir, address)
+
+	fetch(t, downstream)
+
+	const (
+		draftRef            plumbing.ReferenceName = "refs/remotes/origin/drafts/bucket/v1"
+		proposedRef         plumbing.ReferenceName = "refs/remotes/origin/proposed/bucket/v1"
+		upstreamDraftRef    plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
+		upstreamProposedRef plumbing.ReferenceName = "refs/heads/proposed/bucket/v1"
+	)
+
+	bucket := resolveReference(t, downstream, draftRef)
+
+	// Simulate changing package to proposed
+	if err := downstream.Push(&git.PushOptions{
+		RemoteName: OriginName,
+		RefSpecs: []config.RefSpec{
+			config.RefSpec(fmt.Sprintf("%s:%s", bucket.Hash(), upstreamProposedRef)),
+			config.RefSpec(fmt.Sprintf(":%s", upstreamDraftRef)),
+		},
+		RequireRemoteRefs: []config.RefSpec{
+			config.RefSpec(fmt.Sprintf("%s:%s", bucket.Hash(), upstreamDraftRef)),
+		},
+	}); err != nil {
+		t.Fatalf("Push failed: %v", err)
+	}
+
+	refMustNotExist(t, downstream, draftRef)
+
+	// Verify upstream
+	{
+		ref := resolveReference(t, upstream, upstreamProposedRef)
+		if got, want := ref.Hash(), bucket.Hash(); got != want {
+			t.Errorf("Proposed in upstream: got %s, want %s", got, want)
+		}
+
+		refMustNotExist(t, upstream, upstreamDraftRef)
+	}
 }
 
 func initRepositoryWithRemote(t *testing.T, dir, address string) *git.Repository {
 	repo := InitEmptyRepositoryWithWorktree(t, dir)
 
-	const fetchSpec = "+refs/heads/*:refs/remotes/" + originName + "/*"
-
 	if _, err := repo.CreateRemote(&config.RemoteConfig{
-		Name:  originName,
+		Name:  OriginName,
 		URLs:  []string{address},
-		Fetch: []config.RefSpec{fetchSpec},
+		Fetch: defaultFetchSpec,
 	}); err != nil {
 		t.Fatalf("CreateRemote failed: %v", err)
 	}

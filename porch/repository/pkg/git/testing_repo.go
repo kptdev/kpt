@@ -72,7 +72,10 @@ func InitEmptyRepositoryWithWorktree(t *testing.T, path string) *gogit.Repositor
 
 func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repository, string) {
 	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
+	return git, ServeExistingRepository(t, git)
+}
 
+func ServeExistingRepository(t *testing.T, git *gogit.Repository) string {
 	server, err := NewGitServer(git)
 	if err != nil {
 		t.Fatalf("NewGitServer() failed: %v", err)
@@ -101,7 +104,7 @@ func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repositor
 	if !ok {
 		t.Fatalf("Git Server failed to start")
 	}
-	return git, "http://" + address.String()
+	return "http://" + address.String()
 }
 
 func extractTar(t *testing.T, tarfile string, dir string) {
@@ -239,4 +242,13 @@ func logRefs(t *testing.T, repo *gogit.Repository, logPrefix string) {
 		t.Logf("%s%s", logPrefix, ref)
 		return nil
 	})
+}
+
+func fetch(t *testing.T, reop *gogit.Repository) {
+	if err := reop.Fetch(&gogit.FetchOptions{
+		RemoteName: OriginName,
+		Tags:       gogit.NoTags,
+	}); err != nil {
+		t.Fatalf("Fetch failed: %s", err)
+	}
 }

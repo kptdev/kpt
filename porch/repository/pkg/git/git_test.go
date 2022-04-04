@@ -19,7 +19,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -45,54 +44,32 @@ func TestMain(m *testing.M) {
 
 // TestGitPackageRoundTrip creates a package in git and verifies we can read the contents back.
 func TestGitPackageRoundTrip(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	tempdir := t.TempDir()
-
-	// Start a mock git server
-	gitServerAddressChannel := make(chan net.Addr)
-
 	p := filepath.Join(tempdir, "repo")
-	serverRepo, err := initEmptyRepository(p)
-	if err != nil {
-		t.Fatalf("failed to open source repo %q: %v", p, err)
-	}
+	serverRepo := InitEmptyRepositoryWithWorktree(t, p)
 
 	if err := initRepo(serverRepo); err != nil {
 		t.Fatalf("failed to init repo: %v", err)
 	}
 
-	gitServer, err := NewGitServer(serverRepo)
-	if err != nil {
-		t.Fatalf("NewGitServer() failed: %v", err)
-	}
-
-	go func() {
-		if err := gitServer.ListenAndServe(ctx, "127.0.0.1:0", gitServerAddressChannel); err != nil {
-			if ctx.Err() == nil {
-				t.Errorf("ListenAndServe failed: %v", err)
-			}
-		}
-	}()
-
-	gitServerAddress, ok := <-gitServerAddressChannel
-	if !ok {
-		t.Fatalf("could not get address from server")
-	}
+	ctx := context.Background()
+	gitServerURL := ServeExistingRepository(t, serverRepo)
 
 	// Now that we are running a git server, we can create a GitRepository backed by it
 
-	gitServerURL := "http://" + gitServerAddress.String()
-	name := ""
-	namespace := ""
+	const (
+		repository  = "roundtrip"
+		packageName = "test-package"
+		revision    = "v123"
+		fullName    = repository + ":" + packageName + ":" + revision
+		namespace   = "default"
+	)
 	spec := &configapi.GitRepository{
 		Repo: gitServerURL,
 	}
 
 	root := filepath.Join(tempdir, "work")
-
-	repo, err := OpenRepository(ctx, name, namespace, spec, root, GitRepositoryOptions{})
+	repo, err := OpenRepository(ctx, repository, namespace, spec, root, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("failed to open repository: %v", err)
 	}
@@ -101,17 +78,24 @@ func TestGitPackageRoundTrip(t *testing.T) {
 	t.Logf("repo is %#v", repo)
 
 	// Push a package to the repo
-	packageName := "test-package"
-	revision := "v123"
 
 	wantResources := map[string]string{
 		"hello": "world",
 	}
 
 	{
-		packageRevision := &v1alpha1.PackageRevision{}
-		packageRevision.Spec.PackageName = packageName
-		packageRevision.Spec.Revision = revision
+		packageRevision := &v1alpha1.PackageRevision{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fullName,
+				Namespace: namespace,
+			},
+			Spec: v1alpha1.PackageRevisionSpec{
+				PackageName:    packageName,
+				Revision:       revision,
+				RepositoryName: repository,
+			},
+			Status: v1alpha1.PackageRevisionStatus{},
+		}
 
 		draft, err := repo.CreatePackageRevision(ctx, packageRevision)
 		if err != nil {
@@ -134,21 +118,27 @@ func TestGitPackageRoundTrip(t *testing.T) {
 
 	// We approve the draft so that we can fetch it
 	{
-		approved, err := repo.(*gitRepository).ApprovePackageRevision(ctx, packageName, revision)
+		revisions, err := repo.ListPackageRevisions(ctx)
 		if err != nil {
-			t.Fatalf("ApprovePackageRevision(%q, %q) failed: %v", packageName, revision, err)
+			t.Fatalf("ListPackageRevisons failed: %v", err)
+		}
+
+		original := findPackage(t, revisions, fullName)
+
+		update, err := repo.UpdatePackage(ctx, original)
+		if err != nil {
+			t.Fatalf("UpdatePackage(%#v failed: %v", original, err)
+		}
+		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecycleFinal); err != nil {
+			t.Fatalf("UpdateLifecycle failed: %v", err)
+		}
+		approved, err := update.Close(ctx)
+		if err != nil {
+			t.Fatalf("Close() of %q, %q failed: %v", packageName, revision, err)
 		}
 
 		klog.Infof("approved revision %v", approved.Name())
 	}
-
-	// We reopen to refetch
-	// TODO: This is pretty hacky...
-	repo, err = OpenRepository(ctx, name, namespace, spec, root, GitRepositoryOptions{})
-	if err != nil {
-		t.Fatalf("failed to open repository: %v", err)
-	}
-	// TODO: is there any state? should we  defer repo.Close()
 
 	// Get the package again, the resources should match what we push
 	{
@@ -367,10 +357,7 @@ func TestListPackagesEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to open git repository for verification: %v", err)
 	}
-	forEachRef(t, verify, func(ref *plumbing.Reference) error {
-		t.Logf("Ref: %s", ref)
-		return nil
-	})
+	logRefs(t, verify, "Ref: ")
 	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/v1")
 	if _, err = verify.Reference(draftRefName, true); err != nil {
 		t.Errorf("Failed to resolve %q references: %v", draftRefName, err)
@@ -576,7 +563,7 @@ func TestApproveDraft(t *testing.T) {
 	const (
 		repositoryName                            = "approve"
 		namespace                                 = "default"
-		draftReferenceName plumbing.ReferenceName = "refs/heads/drafts/bucket/v1"
+		draft              BranchName             = "drafts/bucket/v1"
 		finalReferenceName plumbing.ReferenceName = "refs/tags/bucket/v1"
 	)
 	ctx := context.Background()
@@ -597,7 +584,7 @@ func TestApproveDraft(t *testing.T) {
 	bucket := findPackage(t, revisions, "approve:bucket:v1")
 
 	// Before Update; Check server references. Draft must exist, final not.
-	refMustExist(t, repo, draftReferenceName)
+	refMustExist(t, repo, draft.RefInRemote())
 	refMustNotExist(t, repo, finalReferenceName)
 
 	update, err := git.UpdatePackage(ctx, bucket)
@@ -622,7 +609,7 @@ func TestApproveDraft(t *testing.T) {
 	}
 
 	// After Update: Final must exist, draft must not exist
-	refMustNotExist(t, repo, draftReferenceName)
+	refMustNotExist(t, repo, draft.RefInRemote())
 	refMustExist(t, repo, finalReferenceName)
 }
 
@@ -688,7 +675,7 @@ func TestDeletePackages(t *testing.T) {
 
 		for _, existing := range all {
 			if existing.Name() == name {
-				t.Errorf("Deleted package %q was found among the list results", name)
+				t.Fatalf("Deleted package %q was found among the list results", name)
 			}
 		}
 	}
@@ -700,15 +687,15 @@ func TestDeletePackages(t *testing.T) {
 		return nil
 	})
 	want := map[plumbing.ReferenceName]bool{
-		refMain: true,
-		"HEAD":  true,
+		DefaultMainReferenceName: true,
+		"HEAD":                   true,
 	}
 	if !cmp.Equal(want, got) {
 		t.Fatalf("Unexpected references after deleting all packages (-want, +got): %s", cmp.Diff(want, got))
 	}
 
 	// And there should be no packages in main branch
-	main := resolveReference(t, repo, refMain)
+	main := resolveReference(t, repo, DefaultMainReferenceName)
 	tree := getCommitTree(t, repo, main.Hash())
 	if len(tree.Entries) > 0 {
 		var b bytes.Buffer
@@ -717,6 +704,6 @@ func TestDeletePackages(t *testing.T) {
 			fmt.Fprintf(&b, "%s: %s (%s)", e.Name, e.Hash, e.Mode)
 		}
 		// Tree is not empty after deleting all packages
-		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", refMain, b.String())
+		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", DefaultMainReferenceName, b.String())
 	}
 }

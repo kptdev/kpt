@@ -17,6 +17,7 @@ package git
 import (
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/cache"
 	"github.com/go-git/go-git/v5/storage/filesystem"
@@ -42,7 +43,7 @@ func initializeDefaultBranches(repo *git.Repository) error {
 		return err
 	}
 	// gogit points HEAD at a wrong branch; point it at main
-	main := plumbing.NewSymbolicReference(plumbing.HEAD, refMain)
+	main := plumbing.NewSymbolicReference(plumbing.HEAD, DefaultMainReferenceName)
 	if err := repo.Storer.SetReference(main); err != nil {
 		return err
 	}
@@ -53,4 +54,23 @@ func openRepository(path string) (*git.Repository, error) {
 	dot := osfs.New(path)
 	storage := filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
 	return git.Open(storage, dot)
+}
+
+func initializeOrigin(repo *git.Repository, address string) error {
+	cfg, err := repo.Config()
+	if err != nil {
+		return err
+	}
+
+	cfg.Remotes[OriginName] = &config.RemoteConfig{
+		Name:  OriginName,
+		URLs:  []string{address},
+		Fetch: defaultFetchSpec,
+	}
+
+	if err := repo.SetConfig(cfg); err != nil {
+		return err
+	}
+
+	return nil
 }

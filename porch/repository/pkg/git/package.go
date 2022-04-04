@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -35,7 +34,7 @@ type gitPackageRevision struct {
 	revision string
 	updated  time.Time
 	ref      *plumbing.Reference // ref is the Git reference at which the package exists
-	tree     plumbing.Hash       // tree of the package itself, some descendent of commit.Tree()
+	tree     plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
 	commit   plumbing.Hash       // Current version of the package (commit sha)
 }
 
@@ -147,12 +146,12 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 }
 
 func (p *gitPackageRevision) getPackageRevisionLifecycle() v1alpha1.PackageRevisionLifecycle {
-	switch {
-	case p.ref == nil || p.ref.Name().IsTag():
+	switch ref := p.ref; {
+	case ref == nil:
 		return v1alpha1.PackageRevisionLifecycleFinal
-	case strings.HasPrefix(p.ref.Name().String(), refDraftPrefix):
+	case isDraftBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleDraft
-	case strings.HasPrefix(p.ref.Name().String(), refProposedPrefix):
+	case isProposedBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleProposed
 	default:
 		return v1alpha1.PackageRevisionLifecycleFinal
