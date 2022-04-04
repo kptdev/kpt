@@ -73,7 +73,7 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 }
 
 func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gitPackageRevision, error) {
-	pushHelper := newPushHelper(r.repo)
+	refSpecs := newPushRefSpecBuilder()
 	draftBranch := createDraftName(d.path, d.revision)
 	proposedBranch := createProposedName(d.path, d.revision)
 
@@ -88,15 +88,15 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 		}
 
 		tag := createFinalTagNameInLocal(d.path, d.revision)
-		pushHelper.Push(commitHash, r.branch.RefInLocal()) // Push new main branch
-		pushHelper.Push(commitHash, tag)                   // Push the tag
-		pushHelper.RequireRef(commitBase)                  // Make sure main didn't advance
+		refSpecs.AddRefToPush(commitHash, r.branch.RefInLocal()) // Push new main branch
+		refSpecs.AddRefToPush(commitHash, tag)                   // Push the tag
+		refSpecs.RequireRef(commitBase)                          // Make sure main didn't advance
 
-		// Delete base branch?
+		// Delete base branch (if one exists and should be deleted)
 		switch base := d.base; {
 		case base == nil: // no branch to delete
 		case base.Name() == draftBranch.RefInLocal(), base.Name() == proposedBranch.RefInLocal():
-			pushHelper.Delete(base)
+			refSpecs.AddRefToDelete(base)
 		}
 
 		// Update package draft
@@ -106,13 +106,13 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 
 	case v1alpha1.PackageRevisionLifecycleProposed:
 		// Push the package revision into a proposed branch.
-		pushHelper.Push(d.commit, proposedBranch.RefInLocal())
+		refSpecs.AddRefToPush(d.commit, proposedBranch.RefInLocal())
 
-		// Delete base branch?
+		// Delete base branch (if one exists and should be deleted)
 		switch base := d.base; {
 		case base == nil: // no branch to delete
 		case base.Name() != proposedBranch.RefInLocal():
-			pushHelper.Delete(base)
+			refSpecs.AddRefToDelete(base)
 		}
 
 		// Update package referemce (commit and tree hash stay the same)
@@ -120,12 +120,12 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 
 	case v1alpha1.PackageRevisionLifecycleDraft:
 		// Push the package revision into a draft branch.
-		pushHelper.Push(d.commit, draftBranch.RefInLocal())
-		// Delete base branch?
+		refSpecs.AddRefToPush(d.commit, draftBranch.RefInLocal())
+		// Delete base branch (if one exists and should be deleted)
 		switch base := d.base; {
 		case base == nil: // no branch to delete
 		case base.Name() != draftBranch.RefInLocal():
-			pushHelper.Delete(base)
+			refSpecs.AddRefToDelete(base)
 		}
 
 		// Update package referemce (commit and tree hash stay the same)
@@ -135,7 +135,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 		return nil, fmt.Errorf("package has unrecognized lifecycle: %q", d.lifecycle)
 	}
 
-	if err := d.parent.pushAndCleanup(ctx, pushHelper); err != nil {
+	if err := d.parent.pushAndCleanup(ctx, refSpecs); err != nil {
 		return nil, err
 	}
 

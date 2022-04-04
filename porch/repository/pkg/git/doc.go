@@ -18,7 +18,7 @@
 // A local clone of a registered git repository is created in a cache, and
 // periodically refreshed.
 // All package operations happen on the local copy; on completion of an
-// operation// (create, update, delete package revision or its resources)
+// operation (create, update, delete package revision or its resources)
 // any new changes (in one or more commits) are pushed to the remote
 // repository.
 //

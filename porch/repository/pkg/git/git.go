@@ -251,7 +251,7 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	// We can only delete packages which have their own ref. Refs that are shared with other packages
 	// (main branch, tag that doesn't contain package path in its name, ...) cannot be deleted.
 
-	pushHelper := newPushHelper(r.repo)
+	refSpecs := newPushRefSpecBuilder()
 
 	switch rn := ref.Name(); {
 	case rn.IsTag():
@@ -262,11 +262,11 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		}
 
 		// Delete the tag
-		pushHelper.Delete(ref)
+		refSpecs.AddRefToDelete(ref)
 
 	case isDraftBranchNameInLocal(rn), isProposedBranchNameInLocal(rn):
 		// PackageRevision is proposed or draft; delete the branch directly.
-		pushHelper.Delete(ref)
+		refSpecs.AddRefToDelete(ref)
 
 	case isBranchInLocalRepo(rn):
 		// Delete package from the branch
@@ -276,14 +276,14 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		}
 
 		// Update the reference
-		pushHelper.Push(commitHash, rn)
+		refSpecs.AddRefToPush(commitHash, rn)
 
 	default:
 		return fmt.Errorf("cannot delete package with the ref name %s", rn)
 	}
 
 	// Update references
-	if err := r.pushAndCleanup(ctx, pushHelper); err != nil {
+	if err := r.pushAndCleanup(ctx, refSpecs); err != nil {
 		return fmt.Errorf("failed to update git references: %v", err)
 	}
 	return nil
@@ -728,13 +728,13 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 	return commitHash, nil
 }
 
-func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushHelper) error {
+func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuilder) error {
 	auth, err := r.getAuthMethod(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to obtain git credentials: %w", err)
 	}
 
-	specs, require, err := ph.CreateSpecs()
+	specs, require, err := ph.BuildRefSpecs()
 	if err != nil {
 		return err
 	}

@@ -17,44 +17,39 @@ package git
 import (
 	"fmt"
 
-	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
-type pushHelper struct {
-	repo     *git.Repository
+type pushRefSpecBuilder struct {
 	pushRefs map[plumbing.ReferenceName]plumbing.Hash
-	cond     map[plumbing.ReferenceName]plumbing.Hash
+	require  map[plumbing.ReferenceName]plumbing.Hash
 }
 
-func newPushHelper(repo *git.Repository) *pushHelper {
-	return &pushHelper{
-		repo:     repo,
+func newPushRefSpecBuilder() *pushRefSpecBuilder {
+	return &pushRefSpecBuilder{
 		pushRefs: map[plumbing.ReferenceName]plumbing.Hash{},
-		cond:     map[plumbing.ReferenceName]plumbing.Hash{},
+		require:  map[plumbing.ReferenceName]plumbing.Hash{},
 	}
 }
 
-func (h *pushHelper) Push(hash plumbing.Hash, to plumbing.ReferenceName) {
-	h.pushRefs[to] = hash
+func (b *pushRefSpecBuilder) AddRefToPush(hash plumbing.Hash, to plumbing.ReferenceName) {
+	b.pushRefs[to] = hash
 }
 
-func (h *pushHelper) Delete(ref *plumbing.Reference) {
+func (b *pushRefSpecBuilder) AddRefToDelete(ref *plumbing.Reference) {
+	b.AddRefToPush(plumbing.ZeroHash, ref.Name())
+	b.RequireRef(ref)
+}
+
+func (b *pushRefSpecBuilder) RequireRef(ref *plumbing.Reference) {
 	if ref != nil {
-		h.Push(plumbing.ZeroHash, ref.Name())
-		h.RequireRef(ref)
+		b.require[ref.Name()] = ref.Hash()
 	}
 }
 
-func (h *pushHelper) RequireRef(ref *plumbing.Reference) {
-	if ref != nil {
-		h.cond[ref.Name()] = ref.Hash()
-	}
-}
-
-func (h *pushHelper) CreateSpecs() (push []config.RefSpec, require []config.RefSpec, err error) {
-	for local, hash := range h.pushRefs {
+func (b *pushRefSpecBuilder) BuildRefSpecs() (push []config.RefSpec, require []config.RefSpec, err error) {
+	for local, hash := range b.pushRefs {
 		remote, err := refInRemoteFromRefInLocal(local)
 		if err != nil {
 			return nil, nil, err
@@ -67,7 +62,7 @@ func (h *pushHelper) CreateSpecs() (push []config.RefSpec, require []config.RefS
 		}
 	}
 
-	for local, hash := range h.cond {
+	for local, hash := range b.require {
 		remote, err := refInRemoteFromRefInLocal(local)
 		if err != nil {
 			return nil, nil, err
