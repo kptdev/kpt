@@ -90,7 +90,7 @@ func (r *Storage) LookupImageTag(ctx context.Context, imageName ImageTagName) (*
 	}, nil
 }
 
-func (r *Storage) LoadResources(ctx context.Context, imageName *ImageDigestName) (*repository.Resources, error) {
+func (r *Storage) LoadResources(ctx context.Context, imageName *ImageDigestName) (*repository.PackageResources, error) {
 	ctx, span := tracer.Start(ctx, "loadResources", trace.WithAttributes(
 		attribute.Stringer("image", imageName),
 	))
@@ -98,8 +98,8 @@ func (r *Storage) LoadResources(ctx context.Context, imageName *ImageDigestName)
 
 	if imageName.Digest == "" {
 		// New package; no digest yet
-		return &repository.Resources{
-			Items: []*repository.ResourceItem{},
+		return &repository.PackageResources{
+			Contents: map[string]string{},
 		}, nil
 	}
 
@@ -132,8 +132,10 @@ func (r *Storage) LoadResources(ctx context.Context, imageName *ImageDigestName)
 	return resources, nil
 }
 
-func loadResourcesFromTar(ctx context.Context, tarReader *tar.Reader) (*repository.Resources, error) {
-	resources := &repository.Resources{}
+func loadResourcesFromTar(ctx context.Context, tarReader *tar.Reader) (*repository.PackageResources, error) {
+	resources := &repository.PackageResources{
+		Contents: map[string]string{},
+	}
 
 	for {
 		hdr, err := tarReader.Next()
@@ -156,10 +158,7 @@ func loadResourcesFromTar(ctx context.Context, tarReader *tar.Reader) (*reposito
 			if err != nil {
 				return nil, fmt.Errorf("error reading %q from image: %w", path, err)
 			}
-			resources.Items = append(resources.Items, &repository.ResourceItem{
-				Path:     path,
-				Contents: string(b),
-			})
+			resources.Contents[path] = string(b)
 
 		default:
 			return nil, fmt.Errorf("package cannot unsupported entry type for %q (%v)", path, fileType)

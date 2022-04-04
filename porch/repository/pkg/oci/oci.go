@@ -254,11 +254,6 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		return nil, err
 	}
 
-	resourceList, err := resources.AsResourceList()
-	if err != nil {
-		return nil, err
-	}
-
 	return &v1alpha1.PackageRevisionResources{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevisionResources",
@@ -274,7 +269,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			UID:             p.uid,
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
-			Resources: resourceList,
+			Resources: resources.Contents,
 		},
 	}, nil
 }
