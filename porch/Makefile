@@ -20,14 +20,8 @@ DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
 # Modules are ordered in dependency order. A module precedes modules that depend on it.
 MODULES = \
  config/samples/apps/hello-server \
- func \
  api \
- controllers \
- repository \
- test \
- controllers/remoterootsync \
- engine \
- apiserver
+ . \
 
 # GCP project to use for development
 export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
