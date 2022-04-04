@@ -195,6 +195,19 @@ for PACKAGE in $(go list -mod=mod -m -json all | jq -r .Path | sort -f); do
     continue
   fi
 
+  # cloud.google.com/go has a tricky structure in terms of LICENSE files.
+  # Use the go.mod package path to resolve the license.
+  if [[ "${PACKAGE}" =~ ^cloud.google.com/go(/.*)?$ ]]; then
+    # Make sure we have downloaded the package into the package cache
+    go mod download "${PACKAGE}"
+    # Look for a license in the package cache
+    for PACKAGE_DIR in $(go list -mod=mod -m -json ${PACKAGE} | jq -r .Dir); do
+      if [[ -e "${PACKAGE_DIR}/LICENSE" ]]; then
+        CONTENT["${PACKAGE}-LICENSE"]="${PACKAGE_DIR}/LICENSE"
+      fi
+    done
+  fi
+
   process_content "${PACKAGE}" LICENSE
   process_content "${PACKAGE}" COPYRIGHT
   process_content "${PACKAGE}" COPYING

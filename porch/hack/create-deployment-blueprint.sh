@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Stricter error handling
+set -e # Exit on error
+set -u # Must predefine variables
+set -o pipefail # Check errors in piped commands
+
 PORCH_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 function error() {
@@ -132,7 +137,7 @@ function main() {
   cp "${PORCH_DIR}/controllers/remoterootsync/config/rbac/role.yaml" \
      "${DESTINATION}/0-remoterootsync-role.yaml"
   # Repository CRD
-  cp "./controllers/pkg/apis/porch/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
+  cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"
 
   # Porch Deployment Config

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	configapi "github.com/GoogleContainerTools/kpt/porch/controllers/pkg/apis/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
