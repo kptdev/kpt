@@ -31,14 +31,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-func TestDataAbs(t *testing.T, rel string) string {
-	testdata, err := filepath.Abs(rel)
-	if err != nil {
-		t.Fatalf("Failed to find testdata: %v", err)
-	}
-	return testdata
-}
-
 func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.Repository {
 	extractTar(t, tarfile, tempdir)
 
@@ -197,12 +189,20 @@ func findPackage(t *testing.T, revisions []repository.PackageRevision, name stri
 			return r
 		}
 	}
-	names := make([]string, len(revisions))
+	names := make([]string, 0, len(revisions))
 	for _, r := range revisions {
 		names = append(names, r.Name())
 	}
 	t.Fatalf("PackageRevision %q not found among %s", name, strings.Join(names, ","))
 	return nil
+}
+
+func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name string) {
+	for _, r := range revisions {
+		if r.Name() == name {
+			t.Fatalf("PackageRevision %q expected to not exist was found", name)
+		}
+	}
 }
 
 func refMustExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {

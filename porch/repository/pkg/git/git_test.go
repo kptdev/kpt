@@ -277,9 +277,8 @@ info:
 `
 
 func TestListPackagesEmpty(t *testing.T) {
-	testdata := TestDataAbs(t, "testdata")
 	tempdir := t.TempDir()
-	tarfile := filepath.Join(testdata, "empty-repository.tar")
+	tarfile := filepath.Join("testdata", "empty-repository.tar")
 	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
@@ -366,9 +365,8 @@ func TestListPackagesEmpty(t *testing.T) {
 
 // trivial-repository.tar has a repon with a `main` branch and a single empty commit.
 func TestCreatePackageInTrivialRepository(t *testing.T) {
-	testdata := TestDataAbs(t, "testdata")
 	tempdir := t.TempDir()
-	tarfile := filepath.Join(testdata, "trivial-repository.tar")
+	tarfile := filepath.Join("testdata", "trivial-repository.tar")
 	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
@@ -443,9 +441,8 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 }
 
 func TestListPackagesSimple(t *testing.T) {
-	testdata := TestDataAbs(t, "testdata")
 	tempdir := t.TempDir()
-	tarfile := filepath.Join(testdata, "simple-repository.tar")
+	tarfile := filepath.Join("testdata", "simple-repository.tar")
 	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
@@ -499,9 +496,8 @@ func TestListPackagesSimple(t *testing.T) {
 }
 
 func TestListPackagesDrafts(t *testing.T) {
-	testdata := TestDataAbs(t, "testdata")
 	tempdir := t.TempDir()
-	tarfile := filepath.Join(testdata, "drafts-repository.tar")
+	tarfile := filepath.Join("testdata", "drafts-repository.tar")
 	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
@@ -706,4 +702,85 @@ func TestDeletePackages(t *testing.T) {
 		// Tree is not empty after deleting all packages
 		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", DefaultMainReferenceName, b.String())
 	}
+}
+
+// Test introduces package in the upstream repo and lists is after refresh.
+func TestRefreshRepo(t *testing.T) {
+	upstreamDir := t.TempDir()
+	downstreamDir := t.TempDir()
+	tarfile := filepath.Join("testdata", "simple-repository.tar")
+	upstream := OpenGitRepositoryFromArchiveWithWorktree(t, tarfile, upstreamDir)
+	address := ServeExistingRepository(t, upstream)
+
+	const (
+		repositoryName = "refresh"
+		namespace      = "refresh-namespace"
+		newPackageName = "refresh:newpkg:v3"
+	)
+
+	ctx := context.Background()
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo: address,
+	}, downstreamDir, GitRepositoryOptions{})
+	if err != nil {
+		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
+	}
+
+	all, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+
+	// Confirm we listed some package(s)
+	findPackage(t, all, "refresh:basens:v2")
+	packageMustNotExist(t, all, newPackageName)
+
+	// Create package in the upstream repository
+	wt, err := upstream.Worktree()
+	if err != nil {
+		t.Fatalf("Worktree failed: %v", err)
+	}
+
+	main := resolveReference(t, upstream, "refs/heads/main")
+	if err := wt.Checkout(&gogit.CheckoutOptions{
+		Branch: main.Name(),
+		Force:  true,
+	}); err != nil {
+		t.Fatalf("Checkout failed: %v", err)
+	}
+
+	const kptfileName = "newpkg/Kptfile"
+	file, err := wt.Filesystem.Create(kptfileName)
+	if err != nil {
+		t.Fatalf("Filesystem.Create failed: %v", err)
+	}
+	if _, err := file.Write([]byte(Kptfile)); err != nil {
+		t.Fatalf("Failed to write file: %v", err)
+	}
+	if _, err := wt.Add(kptfileName); err != nil {
+		t.Fatalf("Failed to add file to index: %v", err)
+	}
+	sig := object.Signature{
+		Name:  "Test",
+		Email: "test@kpt.dev",
+		When:  time.Now(),
+	}
+	commit, err := wt.Commit("Hello", &gogit.CommitOptions{
+		Author:    &sig,
+		Committer: &sig,
+	})
+	if err != nil {
+		t.Fatalf("Commit failed: %v", err)
+	}
+
+	tag := plumbing.NewHashReference(plumbing.NewTagReferenceName("newpkg/v3"), commit)
+	if err := upstream.Storer.SetReference(tag); err != nil {
+		t.Fatalf("Failed to create tag %s: %v", tag, err)
+	}
+
+	all, err = git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("ListPackageRevisions(Refresh) failed; %v", err)
+	}
+	findPackage(t, all, newPackageName)
 }

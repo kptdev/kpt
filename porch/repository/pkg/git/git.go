@@ -105,7 +105,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		userInfoProvider:   opts.UserInfoProvider,
 	}
 
-	if err := repository.update(ctx); err != nil {
+	if err := repository.fetchRemoteRepository(ctx); err != nil {
 		return nil, err
 	}
 
@@ -124,6 +124,10 @@ type gitRepository struct {
 }
 
 func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {
+	if err := r.fetchRemoteRepository(ctx); err != nil {
+		return nil, err
+	}
+
 	refs, err := r.repo.References()
 	if err != nil {
 		return nil, err
@@ -633,7 +637,7 @@ func (r *gitRepository) getRepo() (string, error) {
 	return origin.Config().URLs[0], nil
 }
 
-func (r *gitRepository) update(ctx context.Context) error {
+func (r *gitRepository) fetchRemoteRepository(ctx context.Context) error {
 	auth, err := r.getAuthMethod(ctx)
 	if err != nil {
 		return err

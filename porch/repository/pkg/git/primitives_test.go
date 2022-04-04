@@ -423,7 +423,7 @@ func createTestCommit(t *testing.T, repo *git.Repository, parent plumbing.Hash, 
 	commit, err := wt.Commit("Hello", &git.CommitOptions{
 		Author:    &sig,
 		Committer: &sig,
-		Parents:   []plumbing.Hash{},
+		Parents:   []plumbing.Hash{parent},
 	})
 	if err != nil {
 		t.Fatalf("Commit failed: %v", err)
