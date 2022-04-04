@@ -515,7 +515,7 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 		}
 	}
 
-	t.Logf("Waiting for git-serever-service to be ready ...")
+	t.Logf("Waiting for git-server-service to be ready ...")
 
 	// Check the Endpoint resource for readiness
 	giveUp = time.Now().Add(time.Minute)
