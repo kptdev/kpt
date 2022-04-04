@@ -4,29 +4,12 @@
 			"path": "api"
 		},
 		{
-			"path": "engine"
-		},
-		{
-			"path": "repository"
-		},
-		{
-			"path": "apiserver"
-		},
-		{
-			"path": "controllers"
-		},
-		{
-			"path": "controllers/remoterootsync"
-		},
-		{
-			"path": "func"
+			"name": "hello-server",
+			"path": "config/samples/apps/hello-server"
 		},
 		{
 			"name": "porch",
 			"path": "."
-		},
-		{
-			"path": "test",
 		},
 		{
 			"name": "kpt",
