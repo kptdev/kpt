@@ -17,7 +17,7 @@
 package fake
 
 import (
-	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned/typed/porch/v1alpha1"
+	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/generated/clientset/versioned/typed/porch/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

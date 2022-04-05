@@ -20,10 +20,10 @@ import (
 	"context"
 	time "time"
 
+	versioned "github.com/GoogleContainerTools/kpt/porch/api/generated/clientset/versioned"
+	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/api/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/generated/listers/porch/v1alpha1"
 	porchv1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	versioned "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/listers/porch/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"

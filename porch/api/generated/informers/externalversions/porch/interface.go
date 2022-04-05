@@ -17,8 +17,8 @@
 package porch
 
 import (
-	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/informers/externalversions/porch/v1alpha1"
+	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/api/generated/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/generated/informers/externalversions/porch/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.
