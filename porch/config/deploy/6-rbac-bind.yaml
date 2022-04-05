@@ -21,6 +21,20 @@ roleRef:
   kind: ClusterRole
   name: aggregated-apiserver-clusterrole
 subjects:
-- kind: ServiceAccount
-  name: porch-server
-  namespace: porch-system
+  - kind: ServiceAccount
+    name: porch-server
+    namespace: porch-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: porch-function-executor
+  namespace: porch-fn-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: porch-function-executor
+subjects:
+  - kind: ServiceAccount
+    name: porch-fn-runner
+    namespace: porch-system

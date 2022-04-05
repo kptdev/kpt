@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/func/internal"
@@ -26,10 +27,18 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	execRuntime = "exec"
+	podRuntime  = "pod"
+)
+
 var (
-	port      = flag.Int("port", 9445, "The server port")
-	functions = flag.String("functions", "./functions", "Path to cached functions.")
-	config    = flag.String("config", "./config.yaml", "Path to the config file.")
+	port               = flag.Int("port", 9445, "The server port")
+	functions          = flag.String("functions", "./functions", "Path to cached functions.")
+	config             = flag.String("config", "./config.yaml", "Path to the config file.")
+	podNamespace       = flag.String("pod-namespace", "porch-fn-system", "Namespace to run KRM functions pods.")
+	wrapperServerImage = flag.String("wrapper-server-image", "", "Image name of the wrapper server.")
+	disableRuntimes    = flag.String("disable-runtimes", "", fmt.Sprintf("The runtime(s) to disable. Multiple runtimes should separated by `,`. Available runtimes: `%v`, `%v`.", execRuntime, podRuntime))
 )
 
 func main() {
@@ -48,10 +57,34 @@ func run() error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	evaluator, err := internal.NewEvaluatorWithConfig(*functions, *config)
-	if err != nil {
-		return fmt.Errorf("failed to initialize evaluator server: %w", err)
+	availableRuntimes := map[string]struct{}{
+		execRuntime: struct{}{},
+		podRuntime:  struct{}{},
 	}
+	if disableRuntimes != nil {
+		runtimesFromFlag := strings.Split(*disableRuntimes, ",")
+		for _, rt := range runtimesFromFlag {
+			delete(availableRuntimes, rt)
+		}
+	}
+	runtimes := []pb.FunctionEvaluatorServer{}
+	for rt := range availableRuntimes {
+		switch rt {
+		case execRuntime:
+			execEval, err := internal.NewExecutableEvaluator(*functions, *config)
+			if err != nil {
+				return fmt.Errorf("failed to initialize executable evaluator: %w", err)
+			}
+			runtimes = append(runtimes, execEval)
+		case podRuntime:
+			podEval, err := internal.NewPodEvaluator(*podNamespace, *wrapperServerImage)
+			if err != nil {
+				return fmt.Errorf("failed to initialize pod evaluator: %w", err)
+			}
+			runtimes = append(runtimes, podEval)
+		}
+	}
+	evaluator := internal.NewMultiEvaluator(runtimes...)
 
 	klog.Infof("Listening on %s", address)
 

@@ -19,6 +19,7 @@ coverage.out
 kpt/kpt
 *.exe
 *.gif
+bin/
 
 # Emacs temp files
 *~

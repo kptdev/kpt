@@ -124,6 +124,21 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 						},
 					},
 				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/gatekeeper:v0.2.1",
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/kubeval:v0.2.0", // This function is a TS based function.
+						ConfigMap: map[string]string{
+							"ignore_missing_schemas": "true",
+						},
+					},
+				},
 			},
 		},
 	})

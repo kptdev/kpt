@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: porch-fn-runner
+  namespace: porch-system
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,10 +34,15 @@ spec:
       labels:
         app: function-runner
     spec:
+      serviceAccountName: porch-fn-runner
       containers:
         - name: function-runner
           image: gcr.io/example-google-project-id/porch-function-runner:latest
           imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - /server --config=/config.yaml --functions=/functions --pod-namespace=porch-fn-system --wrapper-server-image=gcr.io/example-google-project-id/wrapper-server:latest
           ports:
             - containerPort: 9445
           resources:

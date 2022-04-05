@@ -31,6 +31,7 @@ export IMAGE_TAG ?= latest
 PORCH_SERVER_IMAGE ?= porch-server
 PORCH_FUNCTION_RUNNER_IMAGE ?= porch-function-runner
 PORCH_CONTROLLERS_IMAGE ?= porch-controllers
+FUNCTION_WRAPPER_SERVER_IMAGE ?= wrapper-server
 TEST_GIT_SERVER_IMAGE ?= test-git-server
 
 .PHONY: all
@@ -93,7 +94,8 @@ start-function-runner:
 	  --network=porch \
 	  --ip 192.168.8.202 \
 	  --name function-runner \
-	  $(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)
+	  $(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG) \
+	  -disable-runtimes pod
 
 .PHONY: generate
 generate:
@@ -184,6 +186,7 @@ deployment-config:
 	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
 	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
+	  --wrapper-server-image "$(IMAGE_REPO)/$(FUNCTION_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --project "$(GCP_PROJECT_ID)"
 
 .PHONY: deploy

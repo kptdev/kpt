@@ -31,6 +31,7 @@ Supported Flags:
   --server-image IMAGE          ... address of the Porch server image
   --controllers-image IMAGE     ... address of the Porch controllers image
   --function-image IMAGE        ... address of the Porch function runtime image
+  --wrapper-server-image IMAGE  ... address of the Porch function wrapper server image
   --server-sa SVC_ACCOUNT       ... GCP service account to run the Porch server
   --controllers-sa SVC_ACCOUNT  ... GCP service account to run the Porch Controllers workload
 EOF
@@ -42,6 +43,7 @@ DESTINATION=""
 SERVER_IMAGE=""
 CONTROLLERS_IMAGE=""
 FUNCTION_IMAGE=""
+WRAPPER_SERVER_IMAGE=""
 SERVER_SA=""
 CONTROLLERS_SA=""
 
@@ -70,6 +72,11 @@ while [[ $# -gt 0 ]]; do
 
     --function-image)
       FUNCTION_IMAGE="${2}"
+      shift 2
+    ;;
+
+    --wrapper-server-image)
+      WRAPPER_SERVER_IMAGE="${2}"
       shift 2
     ;;
 
@@ -118,6 +125,16 @@ function customize-image {
     "newTag=${TAG}"
 }
 
+function customize-image-in-command {
+  local OLD="${1}"
+  local NEW="${2}"
+
+  kpt fn eval "${DESTINATION}" --image search-replace:v0.2.0 -- \
+	  "by-path=spec.template.spec.containers[*].command[*]" \
+	  "by-value-regex=(.*)${OLD}" \
+	  "put-value=\${1}${NEW}"
+}
+
 function customize-sa {
   local NAME="${1}"
   local SA="${2}"
@@ -152,6 +169,9 @@ function main() {
   customize-image \
     "gcr.io/example-google-project-id/porch-controllers:latest" \
     "${CONTROLLERS_IMAGE}"
+  customize-image-in-command \
+    "gcr.io/example-google-project-id/wrapper-server:latest" \
+    "${WRAPPER_SERVER_IMAGE}"
 
   if [ -n "${CONTROLLERS_SA}" ]; then
     customize-sa "porch-controllers" "${CONTROLLERS_SA}"

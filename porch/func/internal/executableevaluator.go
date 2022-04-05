@@ -22,6 +22,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -29,7 +31,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-type evaluator struct {
+type executableEvaluator struct {
 	pb.UnimplementedFunctionEvaluatorServer
 
 	// Fast-path function cache
@@ -45,7 +47,7 @@ type function struct {
 	Images   []string `yaml:"images"`
 }
 
-func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluatorServer, error) {
+func NewExecutableEvaluator(functions string, config string) (pb.FunctionEvaluatorServer, error) {
 	cache := map[string]string{}
 
 	if config != "" {
@@ -73,15 +75,17 @@ func NewEvaluatorWithConfig(functions string, config string) (pb.FunctionEvaluat
 			}
 		}
 	}
-	return &evaluator{
+	return &executableEvaluator{
 		cache: cache,
 	}, nil
 }
 
-func (e *evaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
+func (e *executableEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
 	binary, cached := e.cache[req.Image]
 	if !cached {
-		return nil, status.Errorf(codes.NotFound, "Unsupported function %q", req.Image)
+		return nil, &fn.NotFoundError{
+			Function: v1.Function{Image: req.Image},
+		}
 	}
 
 	var stdout, stderr bytes.Buffer
