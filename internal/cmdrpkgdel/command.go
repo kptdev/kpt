@@ -102,12 +102,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			},
 		}
 
-		switch err := r.client.Delete(r.ctx, pr); err {
-		case nil:
-			fmt.Fprintf(r.Command.OutOrStderr(), "%s deleted\n", pkg)
-		default:
+		if err := r.client.Delete(r.ctx, pr); err != nil {
 			messages = append(messages, err.Error())
 			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", pkg, err)
+		} else {
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s deleted\n", pkg)
 		}
 	}
 

@@ -114,12 +114,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 
 		pr.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
-		switch err := r.client.Update(r.ctx, pr); err {
-		case nil:
-			fmt.Fprintf(r.Command.OutOrStderr(), "%s proposed\n", name)
-		default:
+		if err := r.client.Update(r.ctx, pr); err != nil {
 			messages = append(messages, err.Error())
 			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+		} else {
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s proposed\n", name)
 		}
 	}
 
