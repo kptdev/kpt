@@ -58,8 +58,8 @@ func run() error {
 	}
 
 	availableRuntimes := map[string]struct{}{
-		execRuntime: struct{}{},
-		podRuntime:  struct{}{},
+		execRuntime: {},
+		podRuntime:  {},
 	}
 	if disableRuntimes != nil {
 		runtimesFromFlag := strings.Split(*disableRuntimes, ",")

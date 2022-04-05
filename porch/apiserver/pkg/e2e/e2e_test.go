@@ -109,33 +109,9 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:unstable",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.2.0",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
-						},
-					},
-				},
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
-						ConfigMap: map[string]string{
-							"foo": "bar",
-						},
-					},
-				},
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/gatekeeper:v0.2.1",
-					},
-				},
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/kubeval:v0.2.0", // This function is a TS based function.
-						ConfigMap: map[string]string{
-							"ignore_missing_schemas": "true",
 						},
 					},
 				},
@@ -160,10 +136,6 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	}
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
-	}
-	annotations := node.GetAnnotations()
-	if val, found := annotations["foo"]; !found || val != "bar" {
-		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
 	}
 }
 
@@ -766,6 +738,100 @@ func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 	}
 	if got, want := repo.Spec.Deployment, true; got != want {
 		t.Errorf("Repo Deployment: got %t, want %t", got, want)
+	}
+}
+
+func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
+	// Register the repository as 'git-fn'
+	t.registerMainGitRepositoryF(ctx, "git-fn")
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-fn:test-fn-bucket:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-bucket",
+			Revision:       "v1",
+			RepositoryName: "git-fn",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "bucket-blueprint-v0.4.3",
+								Directory: "catalog/bucket",
+							},
+						},
+					},
+				},
+				// TODO: add tests for all built-in KRM functions
+				// Testing built-in KRM function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-namespace:unstable",
+						ConfigMap: map[string]string{
+							"namespace": "bucket-namespace",
+						},
+					},
+				},
+				// Testing exec evaluator
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
+						ConfigMap: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+				// Testing pod evaluator with golang function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/gatekeeper:v0.2.1",
+					},
+				},
+				// Testing pod evaluator with TS function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/kubeval:v0.2.0", // This function is a TS based function.
+						ConfigMap: map[string]string{
+							"ignore_missing_schemas": "true",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git-fn:test-fn-bucket:v1",
+	}, &resources)
+
+	bucket, ok := resources.Spec.Resources["bucket.yaml"]
+	if !ok {
+		t.Errorf("'bucket.yaml' not found among package resources")
+	}
+	node, err := yaml.Parse(bucket)
+	if err != nil {
+		t.Errorf("yaml.Parse(\"bucket.yaml\") failed: %v", err)
+	}
+	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
+		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
+	}
+	annotations := node.GetAnnotations()
+	if val, found := annotations["foo"]; !found || val != "bar" {
+		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
 	}
 }
 
