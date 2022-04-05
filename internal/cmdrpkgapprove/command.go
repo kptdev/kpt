@@ -16,6 +16,8 @@ package cmdrpkgapprove
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -29,9 +31,14 @@ import (
 const (
 	command = "cmdrpkgapprove"
 	longMsg = `
-kpt alpha rpkg approve PACKAGE_REVISION
+kpt alpha rpkg approve [PACKAGE ...] [flags]
 
 Approves a proposal to finalize a package revision
+
+Args:
+
+PACKAGE:
+  Name of the proposed package revisions to approve.
 `
 )
 
@@ -47,8 +54,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 
 	c := &cobra.Command{
-		Use:     "approve PACKAGE_REVISION",
-		Short:   "Approves a proposal to finalize a package revision",
+		Use:     "approve PACKAGE",
+		Short:   "Approves a proposal to finalize a package revision.",
 		Long:    longMsg,
 		Example: "kpt alpha rpkg approve git-repository:package-revision:v3",
 		PreRunE: r.preRunE,
@@ -72,10 +79,6 @@ type runner struct {
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".preRunE"
 
-	if len(args) < 1 {
-		return errors.E(op, "PACKAGE_REVISION is a required positional argument")
-	}
-
 	client, err := porch.CreateRESTClient(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
@@ -86,15 +89,25 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
+	var messages []string
 
 	namespace := *r.cfg.Namespace
-	name := args[0]
 
-	if err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
-		Namespace: namespace,
-		Name:      name,
-	}, v1alpha1.PackageRevisionLifecycleFinal); err != nil {
-		return errors.E(op, err)
+	for _, name := range args {
+		switch err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
+			Namespace: namespace,
+			Name:      name,
+		}, v1alpha1.PackageRevisionLifecycleFinal); err {
+		case nil:
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s approved\n", name)
+		default:
+			messages = append(messages, err.Error())
+			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+		}
+	}
+
+	if len(messages) > 0 {
+		return errors.E(op, fmt.Errorf("errors:\n  %s", strings.Join(messages, "\n  ")))
 	}
 
 	return nil

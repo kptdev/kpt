@@ -16,6 +16,8 @@ package cmdrpkgreject
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -29,9 +31,14 @@ import (
 const (
 	command = "cmdrpkgreject"
 	longMsg = `
-kpt alpha rpkg reject PACKAGE_REVISION
+kpt alpha rpkg reject [PACKAGE...] [flags]
 
 Rejects a proposal to finalize a package revision
+
+Args:
+
+PACKAGE:
+  Name of the proposed package revision to reject.
 `
 )
 
@@ -47,7 +54,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 
 	c := &cobra.Command{
-		Use:     "reject PACKAGE_REVISION",
+		Use:     "reject PACKAGE",
 		Short:   "Rejects a proposal to finalize a package revision",
 		Long:    longMsg,
 		Example: "kpt alpha rpkg reject git-repository:package-revision:v3",
@@ -86,15 +93,26 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
+	var messages []string
 
 	namespace := *r.cfg.Namespace
-	name := args[0]
 
-	if err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
-		Namespace: namespace,
-		Name:      name,
-	}, v1alpha1.PackageRevisionLifecycleDraft); err != nil {
-		return errors.E(op, err)
+	for _, name := range args {
+		switch err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
+			Namespace: namespace,
+			Name:      name,
+		}, v1alpha1.PackageRevisionLifecycleDraft); err {
+		case nil:
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s rejected\n", name)
+
+		default:
+			messages = append(messages, err.Error())
+			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+		}
+	}
+
+	if len(messages) > 0 {
+		return errors.E(op, fmt.Errorf("errors:\n  %s", strings.Join(messages, "\n  ")))
 	}
 
 	return nil

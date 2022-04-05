@@ -19,7 +19,6 @@ package e2e
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"io/fs"
 	"os"
@@ -34,18 +33,10 @@ import (
 )
 
 const (
+	updateGoldenFiles    = "UPDATE_GOLDEN_FILES"
 	testGitNamespace     = "test-git-namespace"
 	gitRepositoryAddress = "http://git-server." + testGitNamespace + ".svc.cluster.local:8080"
 )
-
-var (
-	update = flag.Bool("update", false, "Update golden files")
-)
-
-func TestMain(m *testing.M) {
-	flag.Parse()
-	os.Exit(m.Run())
-}
 
 func TestPorch(t *testing.T) {
 	abs, err := filepath.Abs(filepath.Join(".", "testdata", "porch"))
@@ -96,7 +87,7 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 			reorderYamlStdout(t, &stdout)
 		}
 
-		if *update {
+		if os.Getenv(updateGoldenFiles) != "" {
 			updateCommand(command, err, stdout.String(), stderr.String())
 		}
 
@@ -111,7 +102,7 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 		}
 	}
 
-	if *update {
+	if os.Getenv(updateGoldenFiles) != "" {
 		porch.WriteTestCaseConfig(t, &tc)
 	}
 }

@@ -18,7 +18,8 @@ commands:
       - propose
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
-    stderr: git:lifecycle-package:v1 is successfully proposed
+    stderr: |
+      git:lifecycle-package:v1 proposed
   - args:
       - alpha
       - rpkg
@@ -35,6 +36,8 @@ commands:
       - reject
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
+    stderr: |
+      git:lifecycle-package:v1 rejected
   - args:
       - alpha
       - rpkg
@@ -51,7 +54,8 @@ commands:
       - propose
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
-    stderr: git:lifecycle-package:v1 is successfully proposed
+    stderr: |
+      git:lifecycle-package:v1 proposed
   - args:
       - alpha
       - rpkg
@@ -68,6 +72,8 @@ commands:
       - approve
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
+    stderr: |
+      git:lifecycle-package:v1 approved
   - args:
       - alpha
       - rpkg
@@ -84,7 +90,8 @@ commands:
       - delete
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-    stderr: git:lifecycle-package:v1 deleted
+    stderr: |
+      git:lifecycle-package:v1 deleted
   - args:
       - alpha
       - rpkg
