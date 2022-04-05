@@ -37,7 +37,7 @@ kpt alpha rpkg del[ete] [PACKAGE ...] [flags]
 Args:
 
 PACKAGE:
-  Name of the package revision to delete.
+  One or more ames of the package revisions to delete.
 `
 )
 
@@ -47,7 +47,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:        "del",
+		Use:        "del PACKAGE",
 		Aliases:    []string{"delete"},
 		SuggestFor: []string{},
 		Short:      "Deletes one or more packages in registered repositories.",
@@ -102,12 +102,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			},
 		}
 
-		switch err := r.client.Delete(r.ctx, pr); err {
-		case nil:
-			fmt.Fprintf(r.Command.ErrOrStderr(), "%s deleted", pkg)
-		default:
+		if err := r.client.Delete(r.ctx, pr); err != nil {
 			messages = append(messages, err.Error())
-			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)", pkg, err)
+			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", pkg, err)
+		} else {
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s deleted\n", pkg)
 		}
 	}
 

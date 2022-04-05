@@ -17,6 +17,7 @@ package cmdrpkgpropose
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -29,9 +30,14 @@ import (
 const (
 	command = "cmdrpkgpropose"
 	longMsg = `
-kpt alpha rpkg propose PACKAGE_REVISION
+kpt alpha rpkg propose [PACKAGE...] [flags]
 
 Proposes a package revision draft to be finalized
+
+Args:
+
+PACKAGE:
+  Name of the package revisions to propose to be finalized.
 `
 )
 
@@ -47,7 +53,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 
 	c := &cobra.Command{
-		Use:     "propose PACKAGE_REVISION",
+		Use:     "propose [PACKAGE ...] [flags]",
 		Short:   "Proposes to finalize a package revision draft",
 		Long:    longMsg,
 		Example: "kpt alpha rpkg propose git-repository:package-revision:v3",
@@ -72,10 +78,6 @@ type runner struct {
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".preRunE"
 
-	if len(args) < 1 {
-		return errors.E(op, "PACKAGE_REVISION is a required positional argument")
-	}
-
 	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
@@ -86,34 +88,43 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
-
+	var messages []string
 	namespace := *r.cfg.Namespace
-	name := args[0]
 
-	pr := &v1alpha1.PackageRevision{}
-	if err := r.client.Get(r.ctx, client.ObjectKey{
-		Namespace: namespace,
-		Name:      name,
-	}, pr); err != nil {
-		return errors.E(op, err)
+	for _, name := range args {
+		pr := &v1alpha1.PackageRevision{}
+		if err := r.client.Get(r.ctx, client.ObjectKey{
+			Namespace: namespace,
+			Name:      name,
+		}, pr); err != nil {
+			return errors.E(op, err)
+		}
+
+		switch pr.Spec.Lifecycle {
+		case v1alpha1.PackageRevisionLifecycleDraft:
+			// ok
+		case v1alpha1.PackageRevisionLifecycleProposed:
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s is already proposed\n", name)
+			continue
+		default:
+			msg := fmt.Sprintf("cannot propose %s package", pr.Spec.Lifecycle)
+			messages = append(messages, msg)
+			fmt.Fprintln(r.Command.ErrOrStderr(), msg)
+			continue
+		}
+
+		pr.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
+		if err := r.client.Update(r.ctx, pr); err != nil {
+			messages = append(messages, err.Error())
+			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+		} else {
+			fmt.Fprintf(r.Command.OutOrStderr(), "%s proposed\n", name)
+		}
 	}
 
-	switch pr.Spec.Lifecycle {
-	case v1alpha1.PackageRevisionLifecycleDraft:
-		// ok
-	case v1alpha1.PackageRevisionLifecycleProposed:
-		fmt.Fprintf(r.Command.OutOrStderr(), "%s is already proposed", name)
-		return nil
-	default:
-		return errors.E(op, fmt.Errorf("cannot propose %s package", pr.Spec.Lifecycle))
+	if len(messages) > 0 {
+		return errors.E(op, fmt.Errorf("errors:\n  %s", strings.Join(messages, "\n  ")))
 	}
-
-	pr.Spec.Lifecycle = v1alpha1.PackageRevisionLifecycleProposed
-	if err := r.client.Update(r.ctx, pr); err != nil {
-		return errors.E(op, err)
-	}
-
-	fmt.Fprintf(r.Command.OutOrStderr(), "%s is successfully proposed", name)
 
 	return nil
 }

@@ -18,79 +18,86 @@ commands:
       - propose
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
-    stderr: git:lifecycle-package:v1 is successfully proposed
+    stderr: |
+      git:lifecycle-package:v1 proposed
   - args:
       - alpha
       - rpkg
       - get
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       PKG                 REPO   REV
-      git:lifecycle-package:v1   lifecycle-package   git    Proposed
+      NAME                       LIFECYCLE
+      git:lifecycle-package:v1   Proposed
   - args:
       - alpha
       - rpkg
       - reject
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
+    stderr: |
+      git:lifecycle-package:v1 rejected
   - args:
       - alpha
       - rpkg
       - get
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       PKG                 REPO   REV
-      git:lifecycle-package:v1   lifecycle-package   git    Draft
+      NAME                       LIFECYCLE
+      git:lifecycle-package:v1   Draft
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
-    stderr: git:lifecycle-package:v1 is successfully proposed
+    stderr: |
+      git:lifecycle-package:v1 proposed
   - args:
       - alpha
       - rpkg
       - get
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       PKG                 REPO   REV
-      git:lifecycle-package:v1   lifecycle-package   git    Proposed
+      NAME                       LIFECYCLE
+      git:lifecycle-package:v1   Proposed
   - args:
       - alpha
       - rpkg
       - approve
       - --namespace=rpkg-lifecycle
       - git:lifecycle-package:v1
+    stderr: |
+      git:lifecycle-package:v1 approved
   - args:
       - alpha
       - rpkg
       - get
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       PKG                 REPO   REV
-      git:lifecycle-package:v1   lifecycle-package   git    Final
+      NAME                       LIFECYCLE
+      git:lifecycle-package:v1   Final
   - args:
       - alpha
       - rpkg
       - delete
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-    stderr: git:lifecycle-package:v1 deleted
+    stderr: |
+      git:lifecycle-package:v1 deleted
   - args:
       - alpha
       - rpkg
       - get
       - git:lifecycle-package:v1
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stderr: "Error: packagerevisions.porch.kpt.dev \"git:lifecycle-package:v1\" not found \n"
     exitCode: 1
