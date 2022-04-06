@@ -23,8 +23,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/google/go-containerregistry/pkg/v1/google"
+	"github.com/google/go-containerregistry/pkg/v1/remote"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
@@ -165,6 +168,59 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name ImageDige
 	return p, nil
 }
 
+func GetFunctionMeta(reference string, ctx context.Context) (*functionMeta, error) {
+	ref, err := name.ParseReference(reference)
+	if err != nil {
+		return nil, fmt.Errorf("parse image reference %v: %v", reference, err)
+	}
+	image, err := remote.Image(ref, remote.WithAuthFromKeychain(gcrane.Keychain), remote.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("pull remote image %v: %v", reference, err)
+	}
+	manifest, err := image.Manifest()
+	if err != nil {
+		return nil, fmt.Errorf("get manifest from image %v: %v", reference, err)
+	}
+	return &functionMeta{
+		FunctionTypes:    GetSliceFromAnnotation(FunctionTypesKey, manifest),
+		Description:      GetSingleFromAnnotation(DescriptionKey, manifest),
+		DocumentationUrl: GetSingleFromAnnotation(DocumentationURLKey, manifest),
+		Keywords:         GetSliceFromAnnotation(keywordsKey, manifest),
+		FunctionConfigs:  GetDefaultFunctionConfig(manifest),
+	}, nil
+}
+
+func GetDefaultFunctionConfig(manifest *v1.Manifest) []functionConfig {
+	val, ok := manifest.Annotations[ConfigMapFnKey]
+	if !ok {
+		return nil
+	}
+	return []functionConfig{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ConfigMap",
+				APIVersion: "v1",
+			},
+			RequiredFields: AnnotationToSlice(val),
+		},
+	}
+}
+
+func GetSliceFromAnnotation(key string, manifest *v1.Manifest) []string {
+	slice, ok := manifest.Annotations[key]
+	if !ok {
+		return nil
+	}
+	return AnnotationToSlice(slice)
+}
+
+func GetSingleFromAnnotation(key string, manifest *v1.Manifest) string {
+	if val, ok := manifest.Annotations[FunctionTypesKey]; ok {
+		return val
+	}
+	return fmt.Sprintf("annotation %v unset", key)
+}
+
 func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Function, error) {
 	// Repository whose content type is not Function contains no Function resources.
 	if r.content != configapi.RepositoryContentFunction {
@@ -212,12 +268,17 @@ func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Functio
 				if created.IsZero() {
 					created = manifest.Uploaded
 				}
-
+				meta, err := GetFunctionMeta(repo.Digest(digest).Name(), ctx)
+				if err != nil {
+					klog.Warningf(" pull function %v error: %w", functionName, err)
+					continue
+				}
 				result = append(result, &ociFunction{
 					ref:     repo.Digest(digest),
 					tag:     repo.Tag(tag),
 					name:    functionName,
 					version: tag,
+					meta:    meta,
 					created: created,
 					parent:  r,
 				})

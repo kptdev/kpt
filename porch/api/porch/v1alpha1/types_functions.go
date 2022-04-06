@@ -14,9 +14,7 @@
 
 package v1alpha1
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -59,9 +57,13 @@ type FunctionSpec struct {
 	// RepositoryRef references the repository in which the function is located.
 	RepositoryRef RepositoryRef `json:"repositoryRef"`
 
-	// FunctionType specifies the function type (mutator or validator).
-	// TODO: Should this be a label?
-	FunctionType FunctionType `json:"functionType"`
+	// FunctionType specifies the function types (mutator, validator or/and others).
+	FunctionTypes []FunctionType `json:"functionTypes,omitempty"`
+
+	FunctionConfigs []FunctionConfig `json:"functionConfigs,omitempty"`
+
+	// Keywords are used as filters to provide correlation in function discovery.
+	Keywords []string `json:"keywords,omitempty"`
 
 	// Description is a short description of the function.
 	Description string `json:"description"`
@@ -78,7 +80,7 @@ type FunctionSpec struct {
 	//      apiVersion: rbac.authorization.k8s.io
 	//    - kind: ClusterRoleBinding
 	//      apiVersion: rbac.authorization.k8s.io/v1
-	InputTypes []metav1.TypeMeta `json:"inputTypes,omitempty"`
+	// InputTypes []metav1.TypeMeta
 
 	// OutputTypes specifies types of any KRM resources the function creates
 	// For example:
@@ -86,10 +88,17 @@ type FunctionSpec struct {
 	//     outputTypes:
 	//     - kind: ConfigMap
 	//       apiVersion: v1
-	OutputTypes []metav1.TypeMeta `json:"outputTypes,omitempty"`
+	// OutputTypes []metav1.TypeMeta
 
-	// FunctionConfigType specifies the type of the function config for this function. If unspecified, defaults to v1/ConfigMap.
-	FunctionConfigType metav1.TypeMeta `json:"functionConfigType,omitempty"`
+}
+
+// FunctionConfig specifies all the valid types of the function config for this function.
+// If unspecified, defaults to v1/ConfigMap. For example, function `set-namespace` accepts both `ConfigMap` and `SetNamespace`
+type FunctionConfig struct {
+	metav1.TypeMeta `json:",inline"`
+	// Experimental: requiredFields tells necessary fields and is aimed to help users write the FunctionConfig.
+	// Otherwise, users can get the required fields info from the function evaluation error message.
+	RequiredFields []string `json:"requiredFields,omitempty"`
 }
 
 // FunctionRef is a reference to a Function resource.

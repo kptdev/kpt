@@ -25,14 +25,50 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	ociImagePrefix      = "kpt.dev.fn.meta."
+	FunctionTypesKey    = ociImagePrefix + "types"
+	DescriptionKey      = ociImagePrefix + "description"
+	DocumentationURLKey = ociImagePrefix + "documentationurl"
+	keywordsKey         = ociImagePrefix + "keywords"
+
+	fnConfigMetaPrefix = ociImagePrefix + "fnconfig."
+	// experimental: this field is very likely to be changed in the future.
+	ConfigMapFnKey = fnConfigMetaPrefix + "configmap.requiredfields"
+)
+
+func AnnotationToSlice(annotation string) []string {
+	vals := strings.Split(annotation, ",")
+	var result []string
+	for _, val := range vals {
+		result = append(result, strings.TrimSpace(val))
+	}
+	return result
+}
+
+type functionMeta struct {
+	FunctionTypes    []string
+	Description      string
+	DocumentationUrl string
+	Keywords         []string
+	// experimental: this field is very likely to be changed in the future.
+	FunctionConfigs []functionConfig
+}
+
+// experimental: this struct is very likely to be changed in the future.
+type functionConfig struct {
+	metav1.TypeMeta
+	RequiredFields []string
+}
+
 type ociFunction struct {
 	ref     name.Reference
 	tag     name.Reference
 	name    string
 	version string
 	created time.Time
-
-	parent *ociRepository
+	meta    *functionMeta
+	parent  *ociRepository
 }
 
 var _ repository.Function = &ociFunction{}
@@ -42,6 +78,24 @@ func (f *ociFunction) Name() string {
 }
 
 func (f *ociFunction) GetFunction() (*v1alpha1.Function, error) {
+	var functionTypes []v1alpha1.FunctionType
+	for _, fnType := range f.meta.FunctionTypes {
+		switch {
+		case fnType == string(v1alpha1.FunctionTypeMutator):
+			functionTypes = append(functionTypes, v1alpha1.FunctionTypeMutator)
+		case fnType == string(v1alpha1.FunctionTypeValidator):
+			functionTypes = append(functionTypes, v1alpha1.FunctionTypeValidator)
+		default:
+			// unrecognized custom FunctionType
+		}
+	}
+	var fnConfigs []v1alpha1.FunctionConfig
+	for _, metaFnConfig := range f.meta.FunctionConfigs {
+		fnConfigs = append(fnConfigs, v1alpha1.FunctionConfig{
+			TypeMeta:       metaFnConfig.TypeMeta,
+			RequiredFields: metaFnConfig.RequiredFields,
+		})
+	}
 	return &v1alpha1.Function{
 		TypeMeta: metav1.TypeMeta{},
 		ObjectMeta: metav1.ObjectMeta{
@@ -57,12 +111,11 @@ func (f *ociFunction) GetFunction() (*v1alpha1.Function, error) {
 			RepositoryRef: v1alpha1.RepositoryRef{
 				Name: f.parent.name,
 			},
-			FunctionType:       "TODO",
-			Description:        "TODO",
-			DocumentationUrl:   "TODO",
-			InputTypes:         []metav1.TypeMeta{},
-			OutputTypes:        []metav1.TypeMeta{},
-			FunctionConfigType: metav1.TypeMeta{},
+			FunctionTypes:    functionTypes,
+			Description:      f.meta.Description,
+			DocumentationUrl: f.meta.DocumentationUrl,
+			Keywords:         f.meta.Keywords,
+			FunctionConfigs:  fnConfigs,
 		},
 		Status: v1alpha1.FunctionStatus{},
 	}, nil

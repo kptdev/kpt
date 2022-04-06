@@ -26,20 +26,20 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 // [DNS Subdomain Names](https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names).
 // +k8s:openapi-gen=true
 type Function struct {
-	metav1.TypeMeta
-	metav1.ObjectMeta
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   FunctionSpec
-	Status FunctionStatus
+	Spec   FunctionSpec   `json:"spec,omitempty"`
+	Status FunctionStatus `json:"status,omitempty"`
 }
 
 // FunctionList
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type FunctionList struct {
-	metav1.TypeMeta
-	metav1.ListMeta
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []Function
+	Items []Function `json:"items"`
 }
 
 type FunctionType string
@@ -52,19 +52,24 @@ const (
 // FunctionSpec defines the desired state of a Function
 type FunctionSpec struct {
 	// Image specifies the function image, such as 'gcr.io/kpt-fn/gatekeeper:v0.2'.
-	Image string
+	Image string `json:"image"`
 
 	// RepositoryRef references the repository in which the function is located.
-	RepositoryRef RepositoryRef
+	RepositoryRef RepositoryRef `json:"repositoryRef"`
 
-	// FunctionType specifies the function type (mutator or validator).
-	FunctionType FunctionType
+	// FunctionType specifies the function types (mutator, validator or/and others).
+	FunctionTypes []FunctionType `json:"functionTypes,omitempty"`
+
+	FunctionConfigs []FunctionConfig `json:"functionConfigs,omitempty"`
+
+	// Keywords are used as filters to provide correlation in function discovery.
+	Keywords []string `json:"keywords,omitempty"`
 
 	// Description is a short description of the function.
-	Description string
+	Description string `json:"description"`
 
 	// `DocumentationUrl specifies the URL of comprehensive function documentation`
-	DocumentationUrl string
+	DocumentationUrl string `json:"documentationUrl,omitempty"`
 
 	// InputTypes specifies to which input KRM types the function applies. Specified as Group Version Kind.
 	// For example:
@@ -75,7 +80,7 @@ type FunctionSpec struct {
 	//      apiVersion: rbac.authorization.k8s.io
 	//    - kind: ClusterRoleBinding
 	//      apiVersion: rbac.authorization.k8s.io/v1
-	InputTypes []metav1.TypeMeta
+	// InputTypes []metav1.TypeMeta
 
 	// OutputTypes specifies types of any KRM resources the function creates
 	// For example:
@@ -83,16 +88,23 @@ type FunctionSpec struct {
 	//     outputTypes:
 	//     - kind: ConfigMap
 	//       apiVersion: v1
-	OutputTypes []metav1.TypeMeta
+	// OutputTypes []metav1.TypeMeta
 
-	// FunctionConfigType specifies the type of the function config for this function. If unspecified, defaults to v1/ConfigMap.
-	FunctionConfigType metav1.TypeMeta
+}
+
+// FunctionConfig specifies all the valid types of the function config for this function.
+// If unspecified, defaults to v1/ConfigMap. For example, function `set-namespace` accepts both `ConfigMap` and `SetNamespace`
+type FunctionConfig struct {
+	metav1.TypeMeta `json:",inline"`
+	// Experimental: requiredFields tells necessary fields and is aimed to help users write the FunctionConfig.
+	// Otherwise, users can get the required fields info from the function evaluation error message.
+	RequiredFields []string `json:"requiredFields,omitempty"`
 }
 
 // FunctionRef is a reference to a Function resource.
 type FunctionRef struct {
 	// Name is the name of the Function resource referenced. The resource is expected to be within the same namespace.
-	Name string
+	Name string `json:"name"`
 }
 
 // FunctionStatus defines the observed state of Function

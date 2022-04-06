@@ -30,6 +30,7 @@ import (
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Function":                     schema_porch_api_porch_v1alpha1_Function(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig":               schema_porch_api_porch_v1alpha1_FunctionConfig(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec":         schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionList":                 schema_porch_api_porch_v1alpha1_FunctionList(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef":                  schema_porch_api_porch_v1alpha1_FunctionRef(ref),
@@ -152,6 +153,48 @@ func schema_porch_api_porch_v1alpha1_Function(ref common.ReferenceCallback) comm
 		},
 		Dependencies: []string{
 			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_FunctionConfig(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "FunctionConfig specifies all the valid types of the function config for this function. If unspecified, defaults to v1/ConfigMap. For example, function `set-namespace` accepts both `ConfigMap` and `SetNamespace`",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"requiredFields": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Experimental: requiredFields tells necessary fields and is aimed to help users write the FunctionConfig. Otherwise, users can get the required fields info from the function evaluation error message.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -319,12 +362,47 @@ func schema_porch_api_porch_v1alpha1_FunctionSpec(ref common.ReferenceCallback) 
 							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef"),
 						},
 					},
-					"functionType": {
+					"functionTypes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "FunctionType specifies the function type (mutator or validator).",
-							Default:     "",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "FunctionType specifies the function types (mutator, validator or/and others).",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+					"functionConfigs": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig"),
+									},
+								},
+							},
+						},
+					},
+					"keywords": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Keywords are used as filters to provide correlation in function discovery.",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
 						},
 					},
 					"description": {
@@ -342,47 +420,12 @@ func schema_porch_api_porch_v1alpha1_FunctionSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"inputTypes": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InputTypes specifies to which input KRM types the function applies. Specified as Group Version Kind. For example:\n\n   inputTypes:\n   - kind: RoleBinding\n     # If version is unspecified, applies to all versions\n     apiVersion: rbac.authorization.k8s.io\n   - kind: ClusterRoleBinding\n     apiVersion: rbac.authorization.k8s.io/v1",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta"),
-									},
-								},
-							},
-						},
-					},
-					"outputTypes": {
-						SchemaProps: spec.SchemaProps{
-							Description: "OutputTypes specifies types of any KRM resources the function creates For example:\n\n    outputTypes:\n    - kind: ConfigMap\n      apiVersion: v1",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Default: map[string]interface{}{},
-										Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta"),
-									},
-								},
-							},
-						},
-					},
-					"functionConfigType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "FunctionConfigType specifies the type of the function config for this function. If unspecified, defaults to v1/ConfigMap.",
-							Default:     map[string]interface{}{},
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta"),
-						},
-					},
 				},
-				Required: []string{"image", "repositoryRef", "functionType", "description"},
+				Required: []string{"image", "repositoryRef", "description"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef", "k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef"},
 	}
 }
 
