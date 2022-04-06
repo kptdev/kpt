@@ -15,9 +15,11 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -36,6 +38,7 @@ import (
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,6 +54,7 @@ import (
 const (
 	// TODO: accept a flag?
 	PorchTestConfigFile = "porch-test-config.yaml"
+	updateGoldenFiles   = "UPDATE_GOLDEN_FILES"
 )
 
 type GitConfig struct {
@@ -576,6 +580,14 @@ func (t *TestSuite) ParseKptfileF(resources *porchapi.PackageRevisionResources) 
 	return kptfile
 }
 
+func (t *TestSuite) SaveKptfileF(resources *porchapi.PackageRevisionResources, kptfile *kptfilev1.KptFile) {
+	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if err != nil {
+		t.Fatalf("Failed saving Kptfile: %v", err)
+	}
+	resources.Spec.Resources[kptfilev1.KptFileName] = string(b)
+}
+
 func (t *TestSuite) FindAndDecodeF(resources *porchapi.PackageRevisionResources, name string, value interface{}) {
 	contents, ok := resources.Spec.Resources[name]
 	if !ok {
@@ -593,4 +605,35 @@ func (t *TestSuite) FindAndDecodeF(resources *porchapi.PackageRevisionResources,
 	if err := json.Unmarshal(jsonData, value); err != nil {
 		t.Fatalf("json.Unmarshal failed; %v", err)
 	}
+}
+
+func (t *TestSuite) CompareGoldenFileYAML(goldenPath string, gotContents string) string {
+	gotContents = normalizeYamlOrdering(t.T, gotContents)
+
+	if os.Getenv(updateGoldenFiles) != "" {
+		if err := ioutil.WriteFile(goldenPath, []byte(gotContents), 0644); err != nil {
+			t.Fatalf("Failed to update golden file %q: %v", goldenPath, err)
+		}
+	}
+	golden, err := ioutil.ReadFile(goldenPath)
+	if err != nil {
+		t.Fatalf("Failed to read golden file %q: %v", goldenPath, err)
+	}
+	return cmp.Diff(string(golden), gotContents)
+}
+
+func normalizeYamlOrdering(t *testing.T, contents string) string {
+	var data interface{}
+	if err := yaml.Unmarshal([]byte(contents), &data); err != nil {
+		// not yaml.
+		t.Fatalf("Failed to unmarshal yaml: %v\n%s\n", err, contents)
+	}
+
+	var stable bytes.Buffer
+	encoder := yaml.NewEncoder(&stable)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(data); err != nil {
+		t.Fatalf("Failed to re-encode yaml output: %v", err)
+	}
+	return stable.String()
 }

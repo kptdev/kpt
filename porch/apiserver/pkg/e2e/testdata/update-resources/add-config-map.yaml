@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: update-resources-configmap
+  namespace: example
+data:
+  value: Update Resources and Render
