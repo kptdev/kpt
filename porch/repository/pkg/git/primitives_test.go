@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/go-git/go-git/v5"
+	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -376,6 +377,53 @@ func TestProposal(t *testing.T) {
 
 		refMustNotExist(t, upstream, upstreamDraftRef)
 	}
+}
+
+func TestDeleteUpstreamBranches(t *testing.T) {
+	upstreamDir := t.TempDir()
+	downstreamDir := t.TempDir()
+	upstream, address := ServeGitRepository(t, filepath.Join("testdata", "drafts-repository.tar"), upstreamDir)
+	downstream := initRepositoryWithRemote(t, downstreamDir, address)
+
+	logRefs(t, downstream, "Init: ")
+
+	fetch(t, downstream)
+	logRefs(t, downstream, "Before: ")
+
+	// Delete upstream tags and branches
+	forEachRef(t, upstream, func(ref *plumbing.Reference) error {
+		if ref.Name() != DefaultMainReferenceName { // keep main
+			return upstream.Storer.RemoveReference(ref.Name())
+		}
+		return nil
+	})
+
+	logRefs(t, upstream, "Upstream: ")
+
+	// Refetch
+	switch err := downstream.Fetch(&git.FetchOptions{
+		RemoteName: OriginName,
+		Tags:       gogit.NoTags,
+		Prune:      git.Prune,
+	}); err {
+	case nil, git.NoErrAlreadyUpToDate:
+		// ok
+	default:
+		t.Fatalf("Fetch failed: %s", err)
+	}
+
+	// Make sure the local refs were deleted.
+	forEachRef(t, downstream, func(ref *plumbing.Reference) error {
+		switch ref.Name() {
+		case "HEAD", "refs/remotes/origin/main":
+			// ok
+		default:
+			return fmt.Errorf("found unexpected reference %s", ref)
+		}
+		return nil
+	})
+
+	logRefs(t, downstream, "After:")
 }
 
 func initRepositoryWithRemote(t *testing.T, dir, address string) *git.Repository {
