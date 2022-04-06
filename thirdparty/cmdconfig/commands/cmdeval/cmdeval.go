@@ -50,6 +50,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return cmdutil.FetchFunctionImages(), cobra.ShellCompDirectiveDefault
 	})
+	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "mutator",
+		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	r.Command.Flags().BoolVarP(
 		&r.SaveFn, "save", "s", false,
 		"save the function and its arguments to Kptfile")
@@ -101,6 +103,7 @@ type EvalFnRunner struct {
 	FromStdin            bool
 	Image                string
 	SaveFn               bool
+	FnType               string
 	Exec                 string
 	FnConfigPath         string
 	RunFns               runfn.RunFns
@@ -164,6 +167,33 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 	return newFn
 }
 
+// Add the evaluated function to the kptfile.Function list, this Function can either be
+// `pipeline.mutators` or `pipeline.validators`
+func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) []kptfile.Function {
+	var newFns []kptfile.Function
+	pr := printer.FromContextOrDie(r.Ctx)
+	found := false
+	for _, m := range oldFNs {
+		switch {
+		case m.Image != "" && m.Image == r.Image:
+			pr.Printf("found image in Kptfile, updating...\n")
+			newFns = append(newFns, *r.NewFunction())
+			found = true
+		case m.Exec != "" && m.Exec == r.Exec:
+			pr.Printf("found exec in Kptfile, updating...\n")
+			newFns = append(newFns, *r.NewFunction())
+			found = true
+		default:
+			newFns = append(newFns, m)
+		}
+	}
+	if !found {
+		newFns = append(newFns, *r.NewFunction())
+		pr.Printf("adding function to Kptfile\n")
+	}
+	return newFns
+}
+
 // SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` list.
 func (r *EvalFnRunner) SaveFnToKptfile() {
 	pr := printer.FromContextOrDie(r.Ctx)
@@ -172,35 +202,23 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 		pr.Printf("function not added: Kptfile not exists\n")
 		return
 	}
-	// TODO(yuwenma): Right now we cannot tell if a function is a mutator or validator. Once kpt supports
-	// OCI images, we can add annotations to image and find out the function type from these annotations.
 	if kf.Pipeline == nil {
 		kf.Pipeline = &kptfile.Pipeline{}
 	}
-	if kf.Pipeline.Mutators == nil {
-		kf.Pipeline.Mutators = []kptfile.Function{}
-	}
-	var newMutators []kptfile.Function
-	found := false
-	for _, m := range kf.Pipeline.Mutators {
-		switch {
-		case m.Image != "" && m.Image == r.Image:
-			pr.Printf("found image in Kptfile, updating...\n")
-			newMutators = append(newMutators, *r.NewFunction())
-			found = true
-		case m.Exec != "" && m.Exec == r.Exec:
-			pr.Printf("found exec in Kptfile, updating...\n")
-			newMutators = append(newMutators, *r.NewFunction())
-			found = true
-		default:
-			newMutators = append(newMutators, m)
+	switch r.FnType {
+	case "mutator":
+		if kf.Pipeline.Mutators == nil {
+			kf.Pipeline.Mutators = []kptfile.Function{}
 		}
+		newFns := r.updateFnList(kf.Pipeline.Mutators)
+		kf.Pipeline.Mutators = newFns
+	case "validator":
+		if kf.Pipeline.Validators == nil {
+			kf.Pipeline.Validators = []kptfile.Function{}
+		}
+		newFns := r.updateFnList(kf.Pipeline.Validators)
+		kf.Pipeline.Validators = newFns
 	}
-	if !found {
-		newMutators = append(newMutators, *r.NewFunction())
-		pr.Printf("adding function to Kptfile\n")
-	}
-	kf.Pipeline.Mutators = newMutators
 	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
