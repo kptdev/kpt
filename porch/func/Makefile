@@ -16,6 +16,7 @@ GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
 IMAGE_TAG  ?= latest
 IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
 IMAGE_NAME ?= function-runner
+WRAPPER_SERVER_IMAGE_NAME ?= wrapper-server
 COMPILED_PROTO=evaluator/evaluator_grpc.pb.go evaluator/evaluator.pb.go
 
 KPTDIR = $(abspath $(CURDIR)/../..)
@@ -33,7 +34,9 @@ $(COMPILED_PROTO): evaluator/evaluator.proto
 .PHONY: build-image
 build-image:
 	docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
+	docker buildx build --load --tag $(IMAGE_REPO)/$(WRAPPER_SERVER_IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile-wrapperserver "$(KPTDIR)"
 
 .PHONY: push-image
 push-image:
 	docker buildx build --push --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile "$(KPTDIR)"
+	docker buildx build --push --tag $(IMAGE_REPO)/$(WRAPPER_SERVER_IMAGE_NAME):$(IMAGE_TAG) -f ./Dockerfile-wrapperserver "$(KPTDIR)"

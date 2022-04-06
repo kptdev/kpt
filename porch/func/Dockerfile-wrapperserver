@@ -1,0 +1,16 @@
+FROM golang:1.17.8-alpine3.15 as builder
+
+WORKDIR /go/src/github.com/GoogleContainerTools/kpt
+
+COPY go.mod go.sum ./
+COPY porch/go.mod porch/go.sum porch/
+COPY porch/api/go.mod porch/api/go.sum porch/api/
+
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.8
+COPY porch/func/ porch/func/
+RUN cd porch/func ; go build -v -o /wrapper-server/wrapper-server ./wrapper-server
+RUN cp $GOPATH/bin/grpc-health-probe /wrapper-server/
+
+FROM alpine:3.15
+
+COPY --from=builder /wrapper-server/* /wrapper-server/

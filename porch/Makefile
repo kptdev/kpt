@@ -31,6 +31,7 @@ export IMAGE_TAG ?= latest
 PORCH_SERVER_IMAGE ?= porch-server
 PORCH_FUNCTION_RUNNER_IMAGE ?= porch-function-runner
 PORCH_CONTROLLERS_IMAGE ?= porch-controllers
+PORCH_WRAPPER_SERVER_IMAGE ?= porch-wrapper-server
 TEST_GIT_SERVER_IMAGE ?= test-git-server
 
 .PHONY: all
@@ -93,7 +94,8 @@ start-function-runner:
 	  --network=porch \
 	  --ip 192.168.8.202 \
 	  --name function-runner \
-	  $(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)
+	  $(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG) \
+	  -disable-runtimes pod
 
 .PHONY: generate
 generate:
@@ -149,14 +151,14 @@ fix-all: fix-headers fmt tidy
 push-images:
 	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ push-image
 	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ push-image
-	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" make -C func/ push-image
+	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" WRAPPER_SERVER_IMAGE_NAME="$(PORCH_WRAPPER_SERVER_IMAGE)" make -C func/ push-image
 	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ push-image
 
 .PHONY: build-images
 build-images:
 	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ build-image
 	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ build-image
-	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" make -C func/ build-image
+	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" WRAPPER_SERVER_IMAGE_NAME="$(PORCH_WRAPPER_SERVER_IMAGE)" make -C func/ build-image
 	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ build-image
 
 .PHONY: apply-dev-config
@@ -184,6 +186,7 @@ deployment-config:
 	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
 	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
+	  --wrapper-server-image "$(IMAGE_REPO)/$(PORCH_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --project "$(GCP_PROJECT_ID)"
 
 .PHONY: deploy

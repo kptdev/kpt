@@ -17,16 +17,28 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: aggregated-apiserver-clusterrole
 rules:
-- apiGroups: [""]
-  resources: ["namespaces", "secrets"]
-  verbs: ["get", "watch", "list"]
-- apiGroups: ["admissionregistration.k8s.io"]
-  resources: ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
-  verbs: ["get", "watch", "list"]
-- apiGroups: ["config.porch.kpt.dev"]
-  resources: ["repositories"]
-  verbs: ["get", "list", "watch", "create", "update", "patch"]
-# Needed for priority and fairness
-- apiGroups: ["flowcontrol.apiserver.k8s.io"]
-  resources: ["flowschemas", "prioritylevelconfigurations"]
-  verbs: ["get", "watch", "list"]
+  - apiGroups: [""]
+    resources: ["namespaces", "secrets"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources:
+      ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
+    verbs: ["get", "watch", "list"]
+  - apiGroups: ["config.porch.kpt.dev"]
+    resources: ["repositories"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  # Needed for priority and fairness
+  - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+    resources: ["flowschemas", "prioritylevelconfigurations"]
+    verbs: ["get", "watch", "list"]
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: porch-function-executor
+  namespace: porch-fn-system
+rules:
+  # Needed to launch / read function executor pods
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["create", "delete", "get", "watch", "list"]

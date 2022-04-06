@@ -33,6 +33,8 @@ COPY porch/api/go.mod porch/api/go.sum porch/api/
 
 RUN cd porch ; go build -v google.golang.org/grpc k8s.io/klog/v2
 
+COPY pkg pkg
+COPY internal internal
 COPY porch/func/ porch/func/
 RUN cd porch/func ; go build -v -o /server ./server
 COPY porch/func/config.yaml /config.yaml

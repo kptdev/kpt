@@ -111,18 +111,9 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:unstable",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.2.0",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
-						},
-					},
-				},
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
-						ConfigMap: map[string]string{
-							"foo": "bar",
 						},
 					},
 				},
@@ -147,10 +138,6 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	}
 	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
 		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
-	}
-	annotations := node.GetAnnotations()
-	if val, found := annotations["foo"]; !found || val != "bar" {
-		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
 	}
 }
 
@@ -824,6 +811,161 @@ func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 	}
 	if got, want := repo.Spec.Deployment, true; got != want {
 		t.Errorf("Repo Deployment: got %t, want %t", got, want)
+	}
+}
+
+func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
+	// Register the repository as 'git-fn'
+	t.registerMainGitRepositoryF(ctx, "git-fn")
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-fn:test-fn-bucket:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-bucket",
+			Revision:       "v1",
+			RepositoryName: "git-fn",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "bucket-blueprint-v0.4.3",
+								Directory: "catalog/bucket",
+							},
+						},
+					},
+				},
+				// TODO: add tests for all built-in KRM functions
+				// Testing built-in KRM function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-namespace:unstable",
+						ConfigMap: map[string]string{
+							"namespace": "bucket-namespace",
+						},
+					},
+				},
+				// Testing exec evaluator
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
+						ConfigMap: map[string]string{
+							"foo": "bar",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git-fn:test-fn-bucket:v1",
+	}, &resources)
+
+	bucket, ok := resources.Spec.Resources["bucket.yaml"]
+	if !ok {
+		t.Errorf("'bucket.yaml' not found among package resources")
+	}
+	node, err := yaml.Parse(bucket)
+	if err != nil {
+		t.Errorf("yaml.Parse(\"bucket.yaml\") failed: %v", err)
+	}
+	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
+		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
+	}
+	annotations := node.GetAnnotations()
+	if val, found := annotations["foo"]; !found || val != "bar" {
+		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
+	}
+}
+
+func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
+	if t.local {
+		t.Skipf("Skipping due to not having pod evalutor in local mode")
+	}
+
+	// Register the repository as 'git-fn'
+	t.registerMainGitRepositoryF(ctx, "git-fn-pod")
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-pod-hierarchy",
+			Revision:       "v1",
+			RepositoryName: "git-fn-pod",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "783380ce4e6c3f21e9e90055b3a88bada0410154",
+								Directory: "catalog/hierarchy/simple",
+							},
+						},
+					},
+				},
+				// Testing pod evaluator with TS function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/generate-folders:v0.1.1", // This function is a TS based function.
+					},
+				},
+				// Testing pod evaluator with golang function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.3", // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+						ConfigMap: map[string]string{
+							"test-key": "test-val",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
+	}, &resources)
+
+	counter := 0
+	for name, obj := range resources.Spec.Resources {
+		if strings.HasPrefix(name, "hierarchy/") {
+			counter++
+			node, err := yaml.Parse(obj)
+			if err != nil {
+				t.Errorf("failed to parse Folder object: %v", err)
+			}
+			if node.GetAnnotations()["test-key"] != "test-val" {
+				t.Errorf("Folder should contain annotation `test-key:test-val`, the annotations we got: %v", node.GetAnnotations())
+			}
+		}
+	}
+	if counter != 4 {
+		t.Errorf("expected 4 Folder objects, but got %v", counter)
 	}
 }
 

@@ -50,7 +50,7 @@ jobs:
     strategy:
       matrix:
         image:
-        - "kindest/node:v1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
+          - "kindest/node:v1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9"
 
     steps:
       - name: Set up Go 1.17
@@ -74,6 +74,7 @@ jobs:
           kind load docker-image porch-kind/porch-server:${GITHUB_SHA:0:8}
           kind load docker-image porch-kind/porch-controllers:${GITHUB_SHA:0:8}
           kind load docker-image porch-kind/porch-function-runner:${GITHUB_SHA:0:8}
+          kind load docker-image porch-kind/porch-wrapper-server:${GITHUB_SHA:0:8}
           kind load docker-image porch-kind/test-git-server:${GITHUB_SHA:0:8}
       - name: Install Porch
         run: |
