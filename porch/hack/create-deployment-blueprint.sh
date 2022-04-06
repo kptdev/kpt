@@ -46,6 +46,7 @@ FUNCTION_IMAGE=""
 WRAPPER_SERVER_IMAGE=""
 SERVER_SA=""
 CONTROLLERS_SA=""
+PROJECT=""
 
 while [[ $# -gt 0 ]]; do
   key="${1}"
