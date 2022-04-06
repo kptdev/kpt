@@ -249,10 +249,13 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		}
 	}
 
-	mutations = append(mutations, &renderPackageMutation{
-		renderer: cad.renderer,
-		runtime:  cad.runtime,
-	})
+	// Re-render if we are making changes.
+	if len(mutations) > 0 {
+		mutations = append(mutations, &renderPackageMutation{
+			renderer: cad.renderer,
+			runtime:  cad.runtime,
+		})
+	}
 
 	draft, err := repo.UpdatePackage(ctx, oldPackage)
 	if err != nil {
@@ -327,6 +330,10 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		&mutationReplaceResources{
 			newResources: new,
 			oldResources: old,
+		},
+		&renderPackageMutation{
+			renderer: cad.renderer,
+			runtime:  cad.runtime,
 		},
 	}
 

@@ -17,6 +17,8 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -460,6 +462,77 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	}
 	if got, want := configmap.Data["name"], "istions"; got != want {
 		t.Errorf("package context 'data.name': got %s, want %s", got, want)
+	}
+}
+
+// Test will initialize an empty package, update its resources, adding a function
+// to the Kptfile's pipeline, and then check that the package was re-rendered.
+func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
+	const (
+		repository  = "re-render-test"
+		packageName = "simple-package"
+		revision    = "v3"
+		name        = repository + ":" + packageName + ":" + revision
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			Revision:       revision,
+			RepositoryName: repository,
+		},
+	})
+
+	// Get the package
+	var newPackage porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &newPackage)
+
+	// Add function into a pipeline
+	kptfile := t.ParseKptfileF(&newPackage)
+	if kptfile.Pipeline == nil {
+		kptfile.Pipeline = &kptfilev1.Pipeline{}
+	}
+	kptfile.Pipeline.Mutators = append(kptfile.Pipeline.Mutators, kptfilev1.Function{
+		Image: "gcr.io/kpt-fn/set-annotations:v0.1.4",
+		ConfigMap: map[string]string{
+			"color": "red",
+			"fruit": "apple",
+		},
+		Name: "set-annotations",
+	})
+	t.SaveKptfileF(&newPackage, kptfile)
+
+	// Add a new resource
+	filename := filepath.Join("testdata", "update-resources", "add-config-map.yaml")
+	cm, err := ioutil.ReadFile(filename)
+	if err != nil {
+		t.Fatalf("Failed to read ConfigMap from %q: %v", filename, err)
+	}
+	newPackage.Spec.Resources["config-map.yaml"] = string(cm)
+	t.UpdateF(ctx, &newPackage)
+
+	updated, ok := newPackage.Spec.Resources["config-map.yaml"]
+	if !ok {
+		t.Fatalf("Updated config map config-map.yaml not found")
+	}
+
+	golden := filepath.Join("testdata", "update-resources", "want-config-map.yaml")
+	if diff := t.CompareGoldenFileYAML(golden, updated); diff != "" {
+		t.Errorf("Unexpected updated confg map contents: (-want,+got): %s", diff)
 	}
 }
 
