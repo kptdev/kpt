@@ -49,6 +49,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec": schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":          schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":        schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":              schema_porch_api_porch_v1alpha1_ParentReference(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                    schema_porch_api_porch_v1alpha1_SecretRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                     schema_porch_api_porch_v1alpha1_Selector(ref),
@@ -866,6 +867,12 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 							Format: "",
 						},
 					},
+					"parent": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Parent references a package that provides resources to us",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference"),
+						},
+					},
 					"repository": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
@@ -895,7 +902,7 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"},
 	}
 }
 
@@ -905,6 +912,28 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 			SchemaProps: spec.SchemaProps{
 				Description: "PackageRevisionStatus defines the observed state of PackageRevision",
 				Type:        []string{"object"},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_ParentReference(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ParentReference is a reference to a parent package",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the parent PackageRevision",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"name"},
 			},
 		},
 	}
