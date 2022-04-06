@@ -21,9 +21,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/clientset/versioned"
-	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/informers/externalversions/internalinterfaces"
-	porch "github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/generated/informers/externalversions/porch"
+	versioned "github.com/GoogleContainerTools/kpt/porch/api/generated/clientset/versioned"
+	internalinterfaces "github.com/GoogleContainerTools/kpt/porch/api/generated/informers/externalversions/internalinterfaces"
+	porch "github.com/GoogleContainerTools/kpt/porch/api/generated/informers/externalversions/porch"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
