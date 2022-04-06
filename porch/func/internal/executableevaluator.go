@@ -32,8 +32,6 @@ import (
 )
 
 type executableEvaluator struct {
-	pb.UnimplementedFunctionEvaluatorServer
-
 	// Fast-path function cache
 	cache map[string]string
 }
@@ -47,7 +45,9 @@ type function struct {
 	Images   []string `yaml:"images"`
 }
 
-func NewExecutableEvaluator(functions string, config string) (pb.FunctionEvaluatorServer, error) {
+var _ Evaluator = &executableEvaluator{}
+
+func NewExecutableEvaluator(functions string, config string) (Evaluator, error) {
 	cache := map[string]string{}
 
 	if config != "" {

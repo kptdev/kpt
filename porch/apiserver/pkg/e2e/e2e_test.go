@@ -790,23 +790,6 @@ func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
 						},
 					},
 				},
-				// Testing pod evaluator with golang function
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/gatekeeper:v0.2.1",
-					},
-				},
-				// Testing pod evaluator with TS function
-				{
-					Type: "eval",
-					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/kubeval:v0.2.0", // This function is a TS based function.
-						ConfigMap: map[string]string{
-							"ignore_missing_schemas": "true",
-						},
-					},
-				},
 			},
 		},
 	})
@@ -832,6 +815,84 @@ func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
 	annotations := node.GetAnnotations()
 	if val, found := annotations["foo"]; !found || val != "bar" {
 		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
+	}
+}
+
+func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
+	if t.local {
+		t.Skipf("Skipping due to not having pod evalutor in local mode")
+	}
+
+	// Register the repository as 'git-fn'
+	t.registerMainGitRepositoryF(ctx, "git-fn-pod")
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-pod-hierarchy",
+			Revision:       "v1",
+			RepositoryName: "git-fn-pod",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "783380ce4e6c3f21e9e90055b3a88bada0410154",
+								Directory: "catalog/hierarchy/simple",
+							},
+						},
+					},
+				},
+				// Testing pod evaluator with TS function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/generate-folders:v0.1.1", // This function is a TS based function.
+					},
+				},
+				// Testing pod evaluator with golang function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.3", // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+						ConfigMap: map[string]string{
+							"test-key": "test-val",
+						},
+					},
+				},
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
+	}, &resources)
+
+	counter := 0
+	for name, obj := range resources.Spec.Resources {
+		if strings.HasPrefix(name, "hierarchy/") {
+			counter++
+			node, err := yaml.Parse(obj)
+			if err != nil {
+				t.Errorf("failed to parse Folder object: %v", err)
+			}
+			if node.GetAnnotations()["test-key"] != "test-val" {
+				t.Errorf("Folder should contain annotation `test-key:test-val`, the annotations we got: %v", node.GetAnnotations())
+			}
+		}
+	}
+	if counter != 4 {
+		t.Errorf("expected 4 Folder objects, but got %v", counter)
 	}
 }
 

@@ -39,12 +39,13 @@ import (
 
 const (
 	defaultWrapperServerPort = 9446
+	volumeName               = "wrapper-server-tools"
 	volumeMountPath          = "/wrapper-server-tools"
+	wrapperServerBin         = "wrapper-server"
+	gRPCProbeBin             = "grpc-health-probe"
 )
 
 type podEvaluator struct {
-	pb.UnimplementedFunctionEvaluatorServer
-
 	// kubeClient is the kubernetes client
 	kubeClient client.Client
 	// namespace holds the namespace where the executors run
@@ -53,7 +54,9 @@ type podEvaluator struct {
 	wrapperServerImage string
 }
 
-func NewPodEvaluator(namespace, wrapperServerImage string) (pb.FunctionEvaluatorServer, error) {
+var _ Evaluator = &podEvaluator{}
+
+func NewPodEvaluator(namespace, wrapperServerImage string) (Evaluator, error) {
 	restCfg, err := config.GetConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rest config: %w", err)
@@ -78,6 +81,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 	if err != nil {
 		return nil, err
 	}
+	// TODO: cache the config file
 	cf, err := img.ConfigFile()
 	cfg := cf.Config
 	var fnCmd []string
@@ -88,7 +92,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 	}
 
 	cmd := append([]string{
-		path.Join(volumeMountPath, "wrapper-server"),
+		path.Join(volumeMountPath, wrapperServerBin),
 		"--port", strconv.Itoa(defaultWrapperServerPort), "--",
 	}, fnCmd...)
 
@@ -114,7 +118,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 					},
 					VolumeMounts: []corev1.VolumeMount{
 						{
-							Name:      "wrapper-server-tools",
+							Name:      volumeName,
 							MountPath: volumeMountPath,
 						},
 					},
@@ -132,7 +136,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 						ProbeHandler: corev1.ProbeHandler{
 							Exec: &corev1.ExecAction{
 								Command: []string{
-									"/wrapper-server-tools/grpc-health-probe",
+									path.Join(volumeMountPath, gRPCProbeBin),
 									"-addr", fmt.Sprintf("localhost:%v", strconv.Itoa(defaultWrapperServerPort)),
 								},
 							},
@@ -140,15 +144,15 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 					},
 					VolumeMounts: []corev1.VolumeMount{
 						{
-							Name:      "wrapper-server-tools",
-							MountPath: "/wrapper-server-tools",
+							Name:      volumeName,
+							MountPath: volumeMountPath,
 						},
 					},
 				},
 			},
 			Volumes: []corev1.Volume{
 				{
-					Name: "wrapper-server-tools",
+					Name: volumeName,
 					VolumeSource: corev1.VolumeSource{
 						EmptyDir: &corev1.EmptyDirVolumeSource{},
 					},
@@ -189,11 +193,11 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 		return nil, fmt.Errorf("error when waiting the pod to be ready: %w", err)
 	}
 
-	address := pod.Status.PodIP
-	if address == "" {
+	podIP := pod.Status.PodIP
+	if podIP == "" {
 		return nil, fmt.Errorf("pod did not have podIP")
 	}
-	address += ":9446"
+	address := fmt.Sprintf("%v:%v", podIP, defaultWrapperServerPort)
 	klog.Infof("dialing pod function runner %q", address)
 
 	// TODO: pool connections

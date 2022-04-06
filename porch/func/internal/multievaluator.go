@@ -19,19 +19,22 @@ import (
 	"errors"
 
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+type Evaluator interface {
+	EvaluateFunction(context.Context, *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error)
+}
+
 type multiEvaluator struct {
 	pb.UnimplementedFunctionEvaluatorServer
 
-	evaluators []evaluator.FunctionEvaluatorServer
+	evaluators []Evaluator
 }
 
-func NewMultiEvaluator(evaluators ...evaluator.FunctionEvaluatorServer) pb.FunctionEvaluatorServer {
+func NewMultiEvaluator(evaluators ...Evaluator) pb.FunctionEvaluatorServer {
 	return &multiEvaluator{
 		evaluators: evaluators,
 	}

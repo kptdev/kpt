@@ -42,7 +42,7 @@ spec:
           command:
             - sh
             - -c
-            - /server --config=/config.yaml --functions=/functions --pod-namespace=porch-fn-system --wrapper-server-image=gcr.io/example-google-project-id/wrapper-server:latest
+            - /server --config=/config.yaml --functions=/functions --pod-namespace=porch-fn-system --wrapper-server-image=gcr.io/example-google-project-id/porch-wrapper-server:latest
           ports:
             - containerPort: 9445
           resources:

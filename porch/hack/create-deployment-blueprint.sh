@@ -170,7 +170,7 @@ function main() {
     "gcr.io/example-google-project-id/porch-controllers:latest" \
     "${CONTROLLERS_IMAGE}"
   customize-image-in-command \
-    "gcr.io/example-google-project-id/wrapper-server:latest" \
+    "gcr.io/example-google-project-id/porch-wrapper-server:latest" \
     "${WRAPPER_SERVER_IMAGE}"
 
   if [ -n "${CONTROLLERS_SA}" ]; then

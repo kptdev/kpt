@@ -67,7 +67,7 @@ func run() error {
 			delete(availableRuntimes, rt)
 		}
 	}
-	runtimes := []pb.FunctionEvaluatorServer{}
+	runtimes := []internal.Evaluator{}
 	for rt := range availableRuntimes {
 		switch rt {
 		case execRuntime:
@@ -83,6 +83,9 @@ func run() error {
 			}
 			runtimes = append(runtimes, podEval)
 		}
+	}
+	if len(runtimes) == 0 {
+		klog.Warning("no runtime is enabled in function-runner")
 	}
 	evaluator := internal.NewMultiEvaluator(runtimes...)
 

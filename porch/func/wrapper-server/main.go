@@ -96,8 +96,6 @@ func (e *singleFunctionEvaluator) EvaluateFunction(ctx context.Context, req *pb.
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
-	// TODO: we should update EvaluateFunctionResponse to include exit code. If validator fails due to a policy violation, it will fail with non-0 exit code.
-	// We should be able to return this information to the caller.
 	var exitErr *exec.ExitError
 	if err != nil && !errors.As(err, &exitErr) {
 		return nil, status.Errorf(codes.Internal, "Failed to execute function %q: %s (%s)", req.Image, err, stderr.String())
