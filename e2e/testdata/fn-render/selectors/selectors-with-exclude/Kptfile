@@ -1,0 +1,17 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+      configMap:
+        namespace: staging
+      selectors:
+        - labels:
+            foo: bar
+      exclude:
+        - kind: Custom
+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+      configMap:
+        tier: backend
