@@ -814,7 +814,84 @@ func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 	}
 }
 
-func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
+func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
+	// Register the repository as 'git-fn'
+	t.registerMainGitRepositoryF(ctx, "git-builtin-fn")
+
+	// Create Package Revision
+	t.CreateF(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "git-builtin-fn:test-builtin-fn-bucket:v1",
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-builtin-fn-bucket",
+			Revision:       "v1",
+			RepositoryName: "git-builtin-fn",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "bucket-blueprint-v0.4.3",
+								Directory: "catalog/bucket",
+							},
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/starlark:v0.4.0",
+						ConfigMap: map[string]string{
+							"source": `for resource in ctx.resource_list["items"]:
+  resource["metadata"]["annotations"]["foo"] = "bar"`,
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-namespace:v0.3.1",
+						ConfigMap: map[string]string{
+							"namespace": "bucket-namespace",
+						},
+					},
+				},
+				// TODO: add test for apply-replacements, we can't do it now because FunctionEvalTaskSpec doesn't allow
+				// non-ConfigMap functionConfig due to a code generator issue when dealing with unstructured.
+			},
+		},
+	})
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      "git-builtin-fn:test-builtin-fn-bucket:v1",
+	}, &resources)
+
+	bucket, ok := resources.Spec.Resources["bucket.yaml"]
+	if !ok {
+		t.Errorf("'bucket.yaml' not found among package resources")
+	}
+	node, err := yaml.Parse(bucket)
+	if err != nil {
+		t.Errorf("yaml.Parse(\"bucket.yaml\") failed: %v", err)
+	}
+	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
+		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
+	}
+	annotations := node.GetAnnotations()
+	if val, found := annotations["foo"]; !found || val != "bar" {
+		t.Errorf("StorageBucket annotations should contain foo=bar, but got %v", annotations)
+	}
+}
+
+func (t *PorchSuite) TestExecFunctionEvaluator(ctx context.Context) {
 	// Register the repository as 'git-fn'
 	t.registerMainGitRepositoryF(ctx, "git-fn")
 
@@ -842,18 +919,18 @@ func (t *PorchSuite) TestFunctionEvaluator(ctx context.Context) {
 						},
 					},
 				},
-				// TODO: add tests for all built-in KRM functions
-				// Testing built-in KRM function
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:unstable",
+						Image: "gcr.io/kpt-fn/starlark:v0.3.0",
 						ConfigMap: map[string]string{
-							"namespace": "bucket-namespace",
+							"source": `# set the namespace on all resources
+for resource in ctx.resource_list["items"]:
+  # mutate the resource
+  resource["metadata"]["namespace"] = "bucket-namespace"`,
 						},
 					},
 				},
-				// Testing exec evaluator
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
