@@ -185,18 +185,8 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to resolve main branch to commit: %w", err)
 	}
-	headRoot, err := headCommit.Tree()
-	if err != nil {
-		// TODO: handle empty repositories
-		return zero, zero, nil, fmt.Errorf("failed to get main commit tree; %w", err)
-	}
 	packagePath := d.path
 	packageTree := d.tree
-	if packageEntry, err := headRoot.FindEntry(packagePath); err == nil {
-		if packageEntry.Hash != packageTree {
-			return zero, zero, nil, fmt.Errorf("internal error: package tree consistency check failed: %s != %s", packageEntry.Hash, packageTree)
-		}
-	}
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
