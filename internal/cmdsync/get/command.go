@@ -126,8 +126,3 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-
-func apply(ctx context.Context, api client.Client, obj client.Object) error {
-	//	api.Create(ctx, obj)
-	return api.Patch(ctx, obj, client.Apply, client.FieldOwner("kubectl"))
-}
