@@ -28,7 +28,7 @@ import (
 func TestBuiltinRuntime(t *testing.T) {
 	br := newBuiltinRuntime()
 	fn := &v1.Function{
-		Image: "gcr.io/kpt-fn/set-namespace:unstable",
+		Image: setNamespaceImageAliases[0],
 	}
 	fr, err := br.GetRunner(context.Background(), fn)
 	if err != nil {

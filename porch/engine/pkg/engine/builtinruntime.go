@@ -20,10 +20,29 @@ import (
 
 	"github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements/replacements"
 	"github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace/transformer"
+	"github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark/starlark"
 	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
+)
+
+var (
+	applyReplacementsImageAliases = []string{
+		"gcr.io/kpt-fn/apply-replacements:v0.1.0",
+		"gcr.io/kpt-fn/apply-replacements:v0.1",
+		"gcr.io/kpt-fn/apply-replacements@sha256:40d00367d46c04088d68ebd05649e1bff6ea43be3a2d3f4d257eef18c4d70f8c",
+	}
+	setNamespaceImageAliases = []string{
+		"gcr.io/kpt-fn/set-namespace:v0.3.1",
+		"gcr.io/kpt-fn/set-namespace:v0.3",
+		"gcr.io/kpt-fn/set-namespace@sha256:ea61ed9ea562cefaa2c2f256e8011352221cc45844aa7c9a61ba6b781b5dba47",
+	}
+	starlarkImageAliases = []string{
+		"gcr.io/kpt-fn/starlark:v0.4.0",
+		"gcr.io/kpt-fn/starlark:v0.4",
+		"gcr.io/kpt-fn/starlark@sha256:4f98e9298eb1d605ec22515771e0c495dad75606058edd926449825dc59dcd1b",
+	}
 )
 
 type builtinRuntime struct {
@@ -31,13 +50,18 @@ type builtinRuntime struct {
 }
 
 func newBuiltinRuntime() *builtinRuntime {
+	fnMap := map[string]fnsdk.ResourceListProcessor{}
+	for _, img := range applyReplacementsImageAliases {
+		fnMap[img] = fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements)
+	}
+	for _, img := range setNamespaceImageAliases {
+		fnMap[img] = fnsdk.ResourceListProcessorFunc(transformer.SetNamespace)
+	}
+	for _, img := range starlarkImageAliases {
+		fnMap[img] = fnsdk.ResourceListProcessorFunc(starlark.Process)
+	}
 	return &builtinRuntime{
-		fnMapping: map[string]fnsdk.ResourceListProcessor{
-			"gcr.io/kpt-fn/apply-replacements:unstable":                                                                fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements),
-			"gcr.io/kpt-fn/apply-replacements@sha256:fb1f749b13dc3498d411d4b3b6eda58d2599e57206c9c1d9c2b1736f48cd6ab4": fnsdk.ResourceListProcessorFunc(replacements.ApplyReplacements),
-			"gcr.io/kpt-fn/set-namespace:unstable":                                                                     fnsdk.ResourceListProcessorFunc(transformer.SetNamespace),
-			"gcr.io/kpt-fn/set-namespace@sha256:a18dcb30b5dda1a16d22586dae17a91cb2f53da1abfaa353eb4de9d0a2c4538f":      fnsdk.ResourceListProcessorFunc(transformer.SetNamespace),
-		},
+		fnMapping: fnMap,
 	}
 }
 
