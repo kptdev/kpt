@@ -489,21 +489,21 @@ func (r *EvalFnRunner) parseSelectors() {
 	for _, s := range r.selectorAnno {
 		parts := strings.Split(s, "=")
 		key, value := parts[0], parts[1]
-		r.Selector.Annotations = map[string]string{key: value}
+		r.Selector.Annotations[key] = value
 	}
 	for _, s := range r.selectorLabel {
 		parts := strings.Split(s, "=")
 		key, value := parts[0], parts[1]
-		r.Selector.Labels = map[string]string{key: value}
+		r.Selector.Labels[key] = value
 	}
 	for _, s := range r.excludeAnno {
 		parts := strings.Split(s, "=")
 		key, value := parts[0], parts[1]
-		r.Exclusion.Annotations = map[string]string{key: value}
+		r.Exclusion.Annotations[key] = value
 	}
 	for _, s := range r.excludeLabel {
 		parts := strings.Split(s, "=")
 		key, value := parts[0], parts[1]
-		r.Exclusion.Labels = map[string]string{key: value}
+		r.Exclusion.Labels[key] = value
 	}
 }
