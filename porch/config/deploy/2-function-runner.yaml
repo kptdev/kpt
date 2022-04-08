@@ -48,7 +48,7 @@ spec:
           resources:
             requests:
               memory: "64Mi"
-              cpu: "500m"
+              cpu: "125m"
 
 ---
 apiVersion: v1
