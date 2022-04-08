@@ -15,6 +15,8 @@
 package porch
 
 import (
+	"context"
+
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	coreapi "k8s.io/api/core/v1"
@@ -41,6 +43,27 @@ func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
 	c, err := client.New(config, client.Options{
 		Scheme: scheme,
 		Mapper: createRESTMapper(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func CreateDynamicClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
+	config, err := flags.ToRESTConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	scheme, err := createScheme()
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := client.New(config, client.Options{
+		Scheme: scheme,
 	})
 	if err != nil {
 		return nil, err
@@ -114,4 +137,8 @@ func createRESTMapper() meta.RESTMapper {
 	}
 
 	return rm
+}
+
+func Apply(ctx context.Context, api client.Client, obj client.Object) error {
+	return api.Patch(ctx, obj, client.Apply, client.FieldOwner("kubectl"))
 }
