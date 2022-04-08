@@ -8,7 +8,7 @@ spec:
     git:
         branch: main
         directory: /
-        repo: https://github.com/platkrm/test-blueprints
+        repo: https://github.com/platkrm/test-blueprints.git
         secretRef:
             name: test-blueprints-auth
     type: git

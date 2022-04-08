@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/spf13/cobra"
@@ -59,6 +58,13 @@ Flags:
 
 --repo-password
   Password for repository authentication.
+
+--directory
+  Directory within the repository where to look for packages.
+
+--branch
+  Branch in the repository where finalized packages are committed.
+
 `
 )
 
@@ -80,6 +86,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	r.Command = c
 
 	c.Flags().StringVar(&r.title, "title", "", "Title of the package repository.")
+	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where to look for packages.")
+	c.Flags().StringVar(&r.branch, "branch", "main", "Branch in the repository where finalized packages are committed.")
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
 	c.Flags().StringVar(&r.description, "description", "", "Brief description of the package repository.")
 	c.Flags().BoolVar(&r.deployment, "deployment", false, "Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.")
@@ -101,6 +109,8 @@ type runner struct {
 
 	// Flags
 	title       string
+	directory   string
+	branch      string
 	name        string
 	description string
 	deployment  bool
@@ -142,18 +152,18 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	} else {
 		rt = configapi.RepositoryTypeGit
 		// TODO: better parsing.
-		t, err := parse.GitParseArgs(r.ctx, []string{repository, "."})
-		if err != nil {
-			return errors.E(op, err)
-		}
+		// t, err := parse.GitParseArgs(r.ctx, []string{repository, "."})
+		// if err != nil {
+		// 	return errors.E(op, err)
+		// }
 		git = &configapi.GitRepository{
-			Repo:      t.Repo,
-			Branch:    t.Ref,
-			Directory: t.Directory,
+			Repo:      repository,
+			Branch:    r.branch,
+			Directory: r.directory,
 		}
 
 		if r.name == "" {
-			r.name = porch.LastSegment(t.Repo)
+			r.name = porch.LastSegment(repository)
 		}
 	}
 

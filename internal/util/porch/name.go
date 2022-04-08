@@ -69,5 +69,7 @@ func (name PackageName) String() string {
 
 func LastSegment(path string) string {
 	path = strings.TrimRight(path, "/")
-	return path[strings.LastIndex(path, "/")+1:]
+	path = path[strings.LastIndex(path, "/")+1:]
+	path = strings.TrimSuffix(path, ".git")
+	return path
 }

@@ -93,11 +93,13 @@ func TestRepoReg(t *testing.T) {
 		{
 			name: "FullRegister",
 			args: []string{
-				"https://github.com/platkrm/test-blueprints.git/catalog@main-branch",
+				"https://github.com/platkrm/test-blueprints.git",
 				"--title=\"Test Repository Title\"",
 				"--name=repository-resource-name",
 				"--description=\"Test Repository Description\"",
 				"--deployment",
+				"--directory=/catalog",
+				"--branch=main-branch",
 				"--namespace=repository-namespace",
 			},
 			actions: []httpAction{

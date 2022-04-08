@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
@@ -50,9 +49,14 @@ TARGET:
 
 Flags:
 
+--directory
+  Directory within the repository where the upstream package is located.
+
+--ref
+	Ref in the repository where the upstream package is located (branch, tag, SHA)
+
 --strategy
-  "update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace
- 
+  Update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace
 `
 )
 
@@ -86,6 +90,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c.Flags().StringVar(&r.strategy, "strategy", string(porchapi.ResourceMerge),
 		"update strategy that should be used when updating this package; one of: "+strings.Join(strategies, ","))
+	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where the upstream package is located.")
+	c.Flags().StringVar(&r.ref, "ref", "main", "Branch in the repository where the upstream package is located.")
 
 	return r
 }
@@ -100,7 +106,9 @@ type runner struct {
 	target porch.PackageName
 
 	// Flags
-	strategy string
+	strategy  string
+	directory string
+	ref       string
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -144,22 +152,22 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 	case strings.Contains(source, "/"):
 		// TODO: better parsing
-		git, err := parse.GitParseArgs(r.ctx, []string{source, "."})
-		if err != nil {
-			return errors.E(op, err)
-		}
+		// git, err := parse.GitParseArgs(r.ctx, []string{source, "."})
+		// if err != nil {
+		// 	return errors.E(op, err)
+		// }
 
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
-			Repo: git.Repo,
-			Ref:  git.Ref,
+			Repo: source,
+			Ref:  r.ref,
 			// TODO: Temporary limitation of Porch server - it does not handle leading
 			// and trailing '/' in directory names. Can be removed when PR 2913 is merged.
-			Directory: strings.Trim(git.Directory, "/"),
+			Directory: strings.Trim(r.directory, "/"),
 		}
 		// TODO: support authn
 		if targetPackageName.Package == "" {
-			targetPackageName.Package = porch.LastSegment(git.Directory)
+			targetPackageName.Package = porch.LastSegment(r.directory)
 		}
 
 	default:
