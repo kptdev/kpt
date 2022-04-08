@@ -292,8 +292,8 @@ type Function struct {
 	// if not specified, all resources are selected
 	Selectors []Selector `yaml:"selectors,omitempty" json:"selectors,omitempty"`
 
-	// From `Selectors`, `Exclude` are used to specify resources on which the function should NOT be executed.
-	// if not specified, all resources selected by `Selectors` are selected.
+	// `Exclude` are used to specify resources on which the function should NOT be executed.
+	// If not specified, all resources selected by `Selectors` are selected.
 	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
 }
 

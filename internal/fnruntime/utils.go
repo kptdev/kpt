@@ -162,6 +162,7 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 		for _, exclusion := range exclusions {
 			if !exclusion.IsEmpty() && isMatch(node, exclusion) {
 				matchesExclusion = true
+				break
 			}
 		}
 		if !matchesExclusion {
@@ -203,7 +204,7 @@ func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	nodeLabels := node.GetLabels()
 	for sk, sv := range selector.Labels {
-		if nv, ok := nodeLabels[sk]; !ok || sv != nv {
+		if nv, found := nodeLabels[sk]; !found || sv != nv {
 			return false
 		}
 	}
@@ -214,7 +215,7 @@ func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	nodeAnnos := node.GetAnnotations()
 	for sk, sv := range selector.Annotations {
-		if nv, ok := nodeAnnos[sk]; !ok || sv != nv {
+		if nv, found := nodeAnnos[sk]; !found || sv != nv {
 			return false
 		}
 	}

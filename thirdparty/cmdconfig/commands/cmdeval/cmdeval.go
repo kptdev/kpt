@@ -93,9 +93,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
 	r.Command.Flags().StringArrayVar(
-		&r.selectorAnno, "match-annotations", []string{}, "select resources matching the given annotations")
+		&r.selectorAnnotations, "match-annotations", []string{}, "select resources matching the given annotations")
 	r.Command.Flags().StringArrayVar(
-		&r.selectorLabel, "match-labels", []string{}, "select resources matching the given labels")
+		&r.selectorLabels, "match-labels", []string{}, "select resources matching the given labels")
 
 	// exclusion flags
 	r.Command.Flags().StringVar(
@@ -107,9 +107,9 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVar(
 		&r.Exclusion.Namespace, "exclude-namespace", "", "exclude resources matching the given namespace")
 	r.Command.Flags().StringArrayVar(
-		&r.excludeAnno, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
+		&r.excludeAnnotations, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
 	r.Command.Flags().StringArrayVar(
-		&r.excludeLabel, "exclude-labels", []string{}, "exclude resources matching the given labels")
+		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
 
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
@@ -148,10 +148,10 @@ type EvalFnRunner struct {
 	dataItems            []string
 
 	// we will need to parse these values into Selector and Exclusion
-	selectorLabel []string
-	selectorAnno  []string
-	excludeLabel  []string
-	excludeAnno   []string
+	selectorLabels      []string
+	selectorAnnotations []string
+	excludeLabels       []string
+	excludeAnnotations  []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -486,24 +486,21 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 
 // parses annotation and label based selectors and exclusion from the command line input
 func (r *EvalFnRunner) parseSelectors() {
-	for _, s := range r.selectorAnno {
+	r.Selector.Annotations = parseSelectorMap(r.selectorAnnotations)
+	r.Selector.Labels = parseSelectorMap(r.selectorLabels)
+	r.Exclusion.Annotations = parseSelectorMap(r.excludeAnnotations)
+	r.Exclusion.Labels = parseSelectorMap(r.excludeLabels)
+}
+
+func parseSelectorMap(selectors []string) map[string]string {
+	if len(selectors) == 0 {
+		return nil
+	}
+	result := make(map[string]string)
+	for _, s := range selectors {
 		parts := strings.Split(s, "=")
 		key, value := parts[0], parts[1]
-		r.Selector.Annotations[key] = value
+		result[key] = value
 	}
-	for _, s := range r.selectorLabel {
-		parts := strings.Split(s, "=")
-		key, value := parts[0], parts[1]
-		r.Selector.Labels[key] = value
-	}
-	for _, s := range r.excludeAnno {
-		parts := strings.Split(s, "=")
-		key, value := parts[0], parts[1]
-		r.Exclusion.Annotations[key] = value
-	}
-	for _, s := range r.excludeLabel {
-		parts := strings.Split(s, "=")
-		key, value := parts[0], parts[1]
-		r.Exclusion.Labels[key] = value
-	}
+	return result
 }
