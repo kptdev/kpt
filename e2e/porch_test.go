@@ -19,7 +19,6 @@ package e2e
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -145,9 +144,7 @@ func startGitServer(t *testing.T, path string) string {
 	porch.KubectlApply(t, config)
 	porch.KubectlWaitForDeployment(t, testGitNamespace, "git-server")
 	porch.KubectlWaitForService(t, testGitNamespace, "git-server")
-	// TODO: kpt git address parsing is strange; the address constructed here is invalid
-	// but required nonetheless to satisfy kpt parsing.
-	porch.KubectlWaitForGitDNS(t, fmt.Sprintf("%s.git/@main", gitRepositoryAddress))
+	porch.KubectlWaitForGitDNS(t, gitRepositoryAddress)
 
 	return gitRepositoryAddress
 }

@@ -6,7 +6,7 @@ commands:
       - --namespace=rpkg-init-deploy
       - --name=git
       - --deployment
-      - http://git-server.test-git-namespace.svc.cluster.local:8080.git/@main
+      - http://git-server.test-git-namespace.svc.cluster.local:8080
   - args:
       - alpha
       - repo

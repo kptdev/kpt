@@ -14,8 +14,8 @@ commands:
       - --namespace=repo-register
       - --output=custom-columns=NAME:.metadata.name,ADDRESS:.spec.git.repo,BRANCH:.spec.git.branch,DIR:.spec.git.directory
     stdout: |
-      NAME              ADDRESS                                      BRANCH   DIR
-      test-blueprints   https://github.com/platkrm/test-blueprints   main     /
+      NAME              ADDRESS                                          BRANCH   DIR
+      test-blueprints   https://github.com/platkrm/test-blueprints.git   main     /
   - args:
       - alpha
       - repo

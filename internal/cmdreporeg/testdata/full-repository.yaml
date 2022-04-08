@@ -11,7 +11,7 @@ spec:
     git:
         branch: main-branch
         directory: /catalog
-        repo: https://github.com/platkrm/test-blueprints
+        repo: https://github.com/platkrm/test-blueprints.git
         secretRef:
             name: ""
     title: '"Test Repository Title"'
