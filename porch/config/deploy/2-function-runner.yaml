@@ -47,11 +47,8 @@ spec:
             - containerPort: 9445
           resources:
             requests:
-              memory: "32Mi"
-              cpu: "125m"
-            limits:
               memory: "64Mi"
-              cpu: "500m"
+              cpu: "125m"
 
 ---
 apiVersion: v1
