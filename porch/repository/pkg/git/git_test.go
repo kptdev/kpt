@@ -129,7 +129,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		if err != nil {
 			t.Fatalf("UpdatePackage(%#v failed: %v", original, err)
 		}
-		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecycleFinal); err != nil {
+		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished); err != nil {
 			t.Fatalf("UpdateLifecycle failed: %v", err)
 		}
 		approved, err := update.Close(ctx)
@@ -467,18 +467,18 @@ func TestListPackagesSimple(t *testing.T) {
 	}
 
 	want := map[string]v1alpha1.PackageRevisionLifecycle{
-		"simple:empty:v1":   v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:basens:v1":  v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:basens:v2":  v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:istions:v1": v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:istions:v2": v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:empty:v1":   v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:basens:v1":  v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:basens:v2":  v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:istions:v1": v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:istions:v2": v1alpha1.PackageRevisionLifecyclePublished,
 
 		// TODO: may want to filter these out, for example by including only those package
 		// revisions from main branch that differ in content (their tree hash) from another
 		// taged revision of the package.
-		"simple:empty:main":   v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:basens:main":  v1alpha1.PackageRevisionLifecycleFinal,
-		"simple:istions:main": v1alpha1.PackageRevisionLifecycleFinal,
+		"simple:empty:main":   v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:basens:main":  v1alpha1.PackageRevisionLifecyclePublished,
+		"simple:istions:main": v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
@@ -522,19 +522,19 @@ func TestListPackagesDrafts(t *testing.T) {
 	}
 
 	want := map[string]v1alpha1.PackageRevisionLifecycle{
-		"drafts:empty:v1":   v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:basens:v1":  v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:basens:v2":  v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:istions:v1": v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:istions:v2": v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:empty:v1":   v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:basens:v1":  v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:basens:v2":  v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:istions:v1": v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:istions:v2": v1alpha1.PackageRevisionLifecyclePublished,
 
 		"drafts:bucket:v1": v1alpha1.PackageRevisionLifecycleDraft,
 		"drafts:none:v1":   v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
-		"drafts:basens:main":  v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:empty:main":   v1alpha1.PackageRevisionLifecycleFinal,
-		"drafts:istions:main": v1alpha1.PackageRevisionLifecycleFinal,
+		"drafts:basens:main":  v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:empty:main":   v1alpha1.PackageRevisionLifecyclePublished,
+		"drafts:istions:main": v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
@@ -588,7 +588,7 @@ func TestApproveDraft(t *testing.T) {
 		t.Fatalf("UpdatePackage failed: %v", err)
 	}
 
-	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecycleFinal)
+	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
 
 	new, err := update.Close(ctx)
 	if err != nil {
@@ -600,7 +600,7 @@ func TestApproveDraft(t *testing.T) {
 		t.Fatalf("GetPackageRevision failed: %v", err)
 	}
 
-	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleFinal; got != want {
+	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
 		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
 	}
 

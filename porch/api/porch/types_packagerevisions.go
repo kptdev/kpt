@@ -43,9 +43,9 @@ type PackageRevisionList struct {
 type PackageRevisionLifecycle string
 
 const (
-	PackageRevisionLifecycleDraft    PackageRevisionLifecycle = "Draft"
-	PackageRevisionLifecycleProposed PackageRevisionLifecycle = "Proposed"
-	PackageRevisionLifecycleFinal    PackageRevisionLifecycle = "Final"
+	PackageRevisionLifecycleDraft     PackageRevisionLifecycle = "Draft"
+	PackageRevisionLifecycleProposed  PackageRevisionLifecycle = "Proposed"
+	PackageRevisionLifecyclePublished PackageRevisionLifecycle = "Published"
 )
 
 // PackageRevisionSpec defines the desired state of PackageRevision

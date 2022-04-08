@@ -33,26 +33,26 @@ func TestApprovalUpdateStrategy(t *testing.T) {
 		{
 			old:     "",
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     "Wrong",
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     api.PackageRevisionLifecycleDraft,
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 		{
-			old:     api.PackageRevisionLifecycleFinal,
+			old:     api.PackageRevisionLifecyclePublished,
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     api.PackageRevisionLifecycleProposed,
-			valid:   []api.PackageRevisionLifecycle{api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleFinal},
+			valid:   []api.PackageRevisionLifecycle{api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecyclePublished},
 			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleProposed},
 		},
 	} {

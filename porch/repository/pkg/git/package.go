@@ -148,12 +148,12 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 func (p *gitPackageRevision) getPackageRevisionLifecycle() v1alpha1.PackageRevisionLifecycle {
 	switch ref := p.ref; {
 	case ref == nil:
-		return v1alpha1.PackageRevisionLifecycleFinal
+		return v1alpha1.PackageRevisionLifecyclePublished
 	case isDraftBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleDraft
 	case isProposedBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleProposed
 	default:
-		return v1alpha1.PackageRevisionLifecycleFinal
+		return v1alpha1.PackageRevisionLifecyclePublished
 	}
 }
