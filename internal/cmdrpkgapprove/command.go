@@ -97,7 +97,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		if err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
 			Namespace: namespace,
 			Name:      name,
-		}, v1alpha1.PackageRevisionLifecycleFinal); err != nil {
+		}, v1alpha1.PackageRevisionLifecyclePublished); err != nil {
 			messages = append(messages, err.Error())
 			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
 		} else {
