@@ -149,6 +149,46 @@ metadata:
 			expectedStatus: status.NotFoundStatus,
 			deleted:        true,
 		},
+
+		"ConfigConnectorContext resource with status.healthy set to true": {
+			resource: `
+apiVersion: core.cnrm.cloud.google.com/v1beta1
+kind: ConfigConnectorContext
+metadata:
+  name: ccc
+  namespace: cnrm
+  generation: 42
+status:
+  healthy: true
+`,
+			gvk: schema.GroupVersionKind{
+				Group:   "core.cnrm.cloud.google.com",
+				Version: "v1beta1",
+				Kind:    "ConfigConnectorContext",
+			},
+			expectedStatus: status.CurrentStatus,
+			deleted:        false,
+		},
+
+		"ConfigConnectorContext resource with status.healthy set to false": {
+			resource: `
+apiVersion: core.cnrm.cloud.google.com/v1beta1
+kind: ConfigConnectorContext
+metadata:
+  name: ccc
+  namespace: cnrm
+  generation: 42
+status:
+  healthy: false
+`,
+			gvk: schema.GroupVersionKind{
+				Group:   "core.cnrm.cloud.google.com",
+				Version: "v1beta1",
+				Kind:    "ConfigConnectorContext",
+			},
+			expectedStatus: status.InProgressStatus,
+			deleted:        false,
+		},
 	}
 
 	for tn, tc := range testCases {
