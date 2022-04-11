@@ -138,7 +138,7 @@ pipeline:
 We will support selection and exclusion with annotation and label selectors.
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --match-annotation foo=bar --exclude-annotation foo=baz
+$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --match-annotation foo=bar --exclude-annotation config.kubernetes.io/local-config=true
 ```
 
 ```yaml
@@ -151,7 +151,7 @@ pipeline:
         foo: bar
     exclude:
     - annotations:
-        foo: baz
+        config.kubernetes.io/local-config: "true"
 ```
 
 ## Open Issues/Questions
@@ -184,7 +184,6 @@ this annotation to every resource that they don't want functions to modify.
 
 Pros:
 - The user would not need to write an exclusion field for each function.
-- Simple, easy to understand UX.
 
 Cons:
 - It will not be possible to control at a function level. If users want some functions to modify the Kptfile/meta resources, and others not to touch it, 
@@ -222,7 +221,8 @@ Some problems with this approach:
 
 We can exclude all local-config resources (i.e. resources with the annotation `config.kubernetes.io/local-config: true`) from functions. This annotation is 
 currently used by kpt live apply to determine whether to apply the resource to the cluster. However, users may have some resources that they want kpt to modify or be 
-available to generator functions, but that they don't want to be applied to the cluster. In these cases, overloading the annotation in this way will be problematic.
+available as function inputs, but that they don't want to be applied to the cluster. In these cases, overloading the annotation in this way will
+break some functions.
 
 ### Mark meta resources with an annotation
 Kpt can add the annotation config.kubernetes.io/meta-resource: true to all meta resources, to allow users to easily target the Kptfile and functionConfigs. 
