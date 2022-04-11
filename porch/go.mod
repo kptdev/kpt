@@ -5,6 +5,7 @@ go 1.17
 replace (
 	github.com/GoogleContainerTools/kpt => ../
 	github.com/GoogleContainerTools/kpt/porch/api => ./api
+	github.com/go-git/go-git/v5 v5.4.3-0.20220408232334-4f916225cb2f => github.com/platkrm/go-git/v5 v5.4.3-0.20220410165046-c76b262044ce
 )
 
 require (
@@ -17,7 +18,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220405020624-e5817d5d2014
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220404223850-4fe7ba260b65
 	github.com/go-git/go-billy/v5 v5.3.1
-	github.com/go-git/go-git/v5 v5.4.3-0.20220119145113-935af59cf64f
+	github.com/go-git/go-git/v5 v5.4.3-0.20220408232334-4f916225cb2f
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-containerregistry v0.8.0
 	github.com/spf13/cobra v1.3.0

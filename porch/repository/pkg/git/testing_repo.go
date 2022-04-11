@@ -244,11 +244,14 @@ func logRefs(t *testing.T, repo *gogit.Repository, logPrefix string) {
 	})
 }
 
-func fetch(t *testing.T, reop *gogit.Repository) {
-	if err := reop.Fetch(&gogit.FetchOptions{
+func fetch(t *testing.T, repo *gogit.Repository) {
+	switch err := repo.Fetch(&gogit.FetchOptions{
 		RemoteName: OriginName,
 		Tags:       gogit.NoTags,
-	}); err != nil {
+	}); err {
+	case nil, gogit.NoErrAlreadyUpToDate:
+		// ok
+	default:
 		t.Fatalf("Fetch failed: %s", err)
 	}
 }
