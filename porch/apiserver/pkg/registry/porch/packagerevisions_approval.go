@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/registry/rest"
+	"k8s.io/klog/v2"
 )
 
 type packageRevisionsApproval struct {
@@ -61,6 +62,12 @@ func (a *packageRevisionsApproval) Update(ctx context.Context, name string, objI
 type packageRevisionApprovalStrategy struct{}
 
 func (s packageRevisionApprovalStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+	newRevision := obj.(*api.PackageRevision)
+	if newRevision.Spec.Lifecycle == "Final" {
+		// Rewrite to "Published"
+		klog.Infof("Updating deprecated value Final to Published")
+		newRevision.Spec.Lifecycle = api.PackageRevisionLifecyclePublished
+	}
 }
 
 func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
@@ -75,7 +82,7 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 
 	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
 	// TODO: signal rejection of the approval differently than by returning to draft?
-	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleFinal:
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecyclePublished:
 		// valid
 
 	default:
@@ -83,7 +90,7 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 			field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value for approval can be only one of %s",
 				strings.Join([]string{
 					string(api.PackageRevisionLifecycleDraft),
-					string(api.PackageRevisionLifecycleFinal),
+					string(api.PackageRevisionLifecyclePublished),
 				}, ",")),
 			))
 	}

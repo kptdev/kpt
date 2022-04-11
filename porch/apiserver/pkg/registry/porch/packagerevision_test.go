@@ -33,27 +33,27 @@ func TestUpdateStrategy(t *testing.T) {
 		{
 			old:     "",
 			valid:   []api.PackageRevisionLifecycle{"", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed},
-			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     api.PackageRevisionLifecycleDraft,
 			valid:   []api.PackageRevisionLifecycle{"", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed},
-			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     api.PackageRevisionLifecycleProposed,
 			valid:   []api.PackageRevisionLifecycle{"", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed},
-			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"Wrong", api.PackageRevisionLifecyclePublished},
 		},
 		{
-			old:     api.PackageRevisionLifecycleFinal,
+			old:     api.PackageRevisionLifecyclePublished,
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 		{
 			old:     "Wrong",
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
 		},
 	} {
 		for _, new := range tc.valid {

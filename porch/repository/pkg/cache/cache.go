@@ -90,8 +90,8 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 		if gitSpec.Repo == "" {
 			return nil, errors.New("git.repo property is required")
 		}
-		if repositorySpec.Spec.Content != configapi.RepositoryContentPackage {
-			return nil, fmt.Errorf("git repository supports PackageRevision content only; got %q", string(repositorySpec.Spec.Content))
+		if !isPackageContent(repositorySpec.Spec.Content) {
+			return nil, fmt.Errorf("git repository supports Package content only; got %q", string(repositorySpec.Spec.Content))
 		}
 		key := "git://" + gitSpec.Repo
 
@@ -114,6 +114,17 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 
 	default:
 		return nil, fmt.Errorf("type %q not supported", repositoryType)
+	}
+}
+
+func isPackageContent(content configapi.RepositoryContent) bool {
+	switch content {
+	case "PackageRevision":
+		return true // TODO: remove this once migration to "Package" is complete.
+	case configapi.RepositoryContentPackage:
+		return true
+	default:
+		return false
 	}
 }
 

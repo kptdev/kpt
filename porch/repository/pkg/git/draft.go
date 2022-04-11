@@ -80,7 +80,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	var newRef *plumbing.Reference
 
 	switch d.lifecycle {
-	case v1alpha1.PackageRevisionLifecycleFinal:
+	case v1alpha1.PackageRevisionLifecyclePublished:
 		// Finalize the package revision. Commit it to main branch.
 		commitHash, newTreeHash, commitBase, err := r.commitPackageToMain(ctx, d)
 		if err != nil {

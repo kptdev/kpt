@@ -79,7 +79,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// These values are ok
-	case api.PackageRevisionLifecycleFinal:
+	case api.PackageRevisionLifecyclePublished:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot create a package revision with lifecycle value 'Final'")
 	default:
@@ -197,14 +197,14 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// Draft or proposed can be updated.
-	case api.PackageRevisionLifecycleFinal:
+	case api.PackageRevisionLifecyclePublished:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q", lifecycle)
 	}
 	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
 	default:
 		return nil, fmt.Errorf("invalid desired lifecycle value: %q", lifecycle)
-	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal:
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
 		// These values are ok
 	}
 
@@ -311,7 +311,7 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft:
 		// Only draf can be updated.
-	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleFinal:
+	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
 	}

@@ -83,7 +83,7 @@ commands:
       - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
     stdout: |
       NAME                       LIFECYCLE
-      git:lifecycle-package:v1   Final
+      git:lifecycle-package:v1   Published
   - args:
       - alpha
       - rpkg

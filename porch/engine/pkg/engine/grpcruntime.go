@@ -93,7 +93,7 @@ func (gr *grpcRunner) Run(r io.Reader, w io.Writer) error {
 		Image:        gr.image,
 	})
 	if err != nil {
-		return fmt.Errorf("func eval failed: %w", err)
+		return fmt.Errorf("func eval %q failed: %w", gr.image, err)
 	}
 	if _, err := w.Write(res.ResourceList); err != nil {
 		return fmt.Errorf("failed to write function runner output: %w", err)

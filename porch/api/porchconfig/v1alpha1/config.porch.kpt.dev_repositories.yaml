@@ -52,7 +52,7 @@ spec:
               directly? (or via this API)"
             properties:
               content:
-                description: 'Content stored in the repository (i.e. Function, PackageRevision
+                description: 'Content stored in the repository (i.e. Function, Package
                   - the literal values correspond to the API resource names). TODO:
                   support repository with mixed content?'
                 type: string

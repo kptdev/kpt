@@ -41,7 +41,7 @@ type RepositoryContent string
 
 const (
 	RepositoryContentFunction RepositoryContent = "Function"
-	RepositoryContentPackage  RepositoryContent = "PackageRevision"
+	RepositoryContentPackage  RepositoryContent = "Package"
 )
 
 // RepositorySpec defines the desired state of Repository
@@ -57,7 +57,7 @@ type RepositorySpec struct {
 	Deployment bool `json:"deployment,omitempty"`
 	// Type of the repository (i.e. git, OCI)
 	Type RepositoryType `json:"type,omitempty"`
-	// Content stored in the repository (i.e. Function, PackageRevision - the literal values correspond to the API resource names).
+	// Content stored in the repository (i.e. Function, Package - the literal values correspond to the API resource names).
 	// TODO: support repository with mixed content?
 	Content RepositoryContent `json:"content,omitempty"`
 	// Git repository details. Required if `type` is `git`. Ignored if `type` is not `git`.

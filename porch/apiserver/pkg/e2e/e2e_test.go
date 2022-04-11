@@ -623,15 +623,15 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	}
 
 	// Approve using Update should fail.
-	proposed.Spec.Lifecycle = porchapi.PackageRevisionLifecycleFinal
+	proposed.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	if err := t.client.Update(ctx, &proposed); err == nil {
 		t.Fatalf("Finalization of a package via Update unexpectedly succeeded")
 	}
 
 	// Approve the package
-	proposed.Spec.Lifecycle = porchapi.PackageRevisionLifecycleFinal
+	proposed.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	approved := t.UpdateApprovalF(ctx, &proposed, metav1.UpdateOptions{})
-	if got, want := approved.Spec.Lifecycle, porchapi.PackageRevisionLifecycleFinal; got != want {
+	if got, want := approved.Spec.Lifecycle, porchapi.PackageRevisionLifecyclePublished; got != want {
 		t.Fatalf("Approved package lifecycle value: got %s, want %s", got, want)
 	}
 }
@@ -720,7 +720,7 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
 	t.UpdateF(ctx, &pkg)
 
-	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleFinal
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
 
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
