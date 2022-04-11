@@ -5,7 +5,7 @@ metadata:
     name: repository-resource-name
     namespace: repository-namespace
 spec:
-    content: PackageRevision
+    content: Package
     deployment: true
     description: '"Test Repository Description"'
     git:
