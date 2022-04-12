@@ -205,6 +205,22 @@ func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, n
 	}
 }
 
+func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name string) {
+	list, err := git.ListPackageRevisions(context.Background())
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+	findPackage(t, list, name)
+}
+
+func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name string) {
+	list, err := git.ListPackageRevisions(context.Background())
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+	packageMustNotExist(t, list, name)
+}
+
 func refMustExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {
 	switch _, err := repo.Reference(name, false); err {
 	case nil:

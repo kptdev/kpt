@@ -784,3 +784,65 @@ func TestRefreshRepo(t *testing.T) {
 	}
 	findPackage(t, all, newPackageName)
 }
+
+// The test deletes packages on the upstream one by one and validates they were
+// pruned in the registered repository on refresh.
+func TestPruneRemotes(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "drafts-repository.tar")
+	repo, address := ServeGitRepository(t, tarfile, tempdir)
+
+	const (
+		name      = "prune"
+		namespace = "prune-namespace"
+	)
+
+	ctx := context.Background()
+	git, err := OpenRepository(ctx, name, namespace, &configapi.GitRepository{
+		Repo: address,
+	}, tempdir, GitRepositoryOptions{})
+	if err != nil {
+		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
+	}
+
+	for _, pair := range []struct {
+		ref plumbing.ReferenceName
+		pkg string
+	}{
+		{
+			ref: "refs/heads/drafts/bucket/v1",
+			pkg: "prune:bucket:v1",
+		},
+		{
+			ref: "refs/heads/drafts/none/v1",
+			pkg: "prune:none:v1",
+		},
+		{
+			ref: "refs/tags/basens/v1",
+			pkg: "prune:basens:v1",
+		},
+		{
+			ref: "refs/tags/basens/v2",
+			pkg: "prune:basens:v2",
+		},
+		{
+			ref: "refs/tags/empty/v1",
+			pkg: "prune:empty:v1",
+		},
+		{
+			ref: "refs/tags/istions/v1",
+			pkg: "prune:istions:v1",
+		},
+		{
+			ref: "refs/tags/istions/v2",
+			pkg: "prune:istions:v2",
+		},
+	} {
+		repositoryMustHavePackageRevision(t, git, pair.pkg)
+		refMustExist(t, repo, pair.ref)
+		if err := repo.Storer.RemoveReference(pair.ref); err != nil {
+			t.Fatalf("RemoveReference(%q) failed: %v", pair.ref, err)
+		}
+		repositoryMustNotHavePackageRevision(t, git, pair.pkg)
+	}
+}

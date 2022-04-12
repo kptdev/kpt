@@ -647,6 +647,7 @@ func (r *gitRepository) fetchRemoteRepository(ctx context.Context) error {
 	switch err := r.repo.Fetch(&git.FetchOptions{
 		RemoteName: OriginName,
 		Auth:       auth,
+		Prune:      git.Prune,
 	}); err {
 	case nil: // OK
 	case git.NoErrAlreadyUpToDate:
