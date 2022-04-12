@@ -4,7 +4,7 @@ metadata:
     creationTimestamp: null
     name: test-blueprints
 spec:
-    content: PackageRevision
+    content: Package
     git:
         branch: main
         directory: /

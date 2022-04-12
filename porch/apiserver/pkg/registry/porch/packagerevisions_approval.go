@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/registry/rest"
-	"k8s.io/klog/v2"
 )
 
 type packageRevisionsApproval struct {
@@ -62,12 +61,6 @@ func (a *packageRevisionsApproval) Update(ctx context.Context, name string, objI
 type packageRevisionApprovalStrategy struct{}
 
 func (s packageRevisionApprovalStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
-	newRevision := obj.(*api.PackageRevision)
-	if newRevision.Spec.Lifecycle == "Final" {
-		// Rewrite to "Published"
-		klog.Infof("Updating deprecated value Final to Published")
-		newRevision.Spec.Lifecycle = api.PackageRevisionLifecyclePublished
-	}
 }
 
 func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
