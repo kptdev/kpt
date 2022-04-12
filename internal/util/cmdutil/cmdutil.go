@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -176,6 +177,49 @@ func CheckDirectoryNotPresent(outDir string) error {
 		return err
 	}
 	return nil
+}
+
+func GetKeywordsFromFlag(cmd *cobra.Command) []string {
+	flagVal := cmd.Flag("keywords").Value.String()
+	flagVal = strings.TrimPrefix(flagVal, "[")
+	flagVal = strings.TrimSuffix(flagVal, "]")
+	splitted := strings.Split(flagVal, ",")
+	var trimmed []string
+	for _, val := range splitted {
+		trimmed = append(trimmed, strings.TrimSpace(val))
+	}
+	return trimmed
+}
+
+// SuggestFunctions looks for functions from kpt curated catalog list as well as the Porch
+// orchestrator to suggest functions.
+func SuggestFunctions(cmd *cobra.Command) []string {
+	var functions []string
+	matchers := []porch.Matcher{
+		porch.TypeMatcher{FnType: cmd.Flag("type").Value.String()},
+		porch.KeywordsMatcher{Keywords: GetKeywordsFromFlag(cmd)},
+	}
+	porchFunctions := porch.MatchFunctions(cmd.Context(), matchers...)
+	functions = append(functions, porch.ToShortNames(porchFunctions)...)
+	// TODO(yuwenma): We should filter these catalog.kpt.fn functions by its annotation as well! This requires changing
+	// the kpt-functions-catalog release workflow to include new annotations.
+	functions = append(functions, FetchFunctionImages()...)
+	var dedup []string
+	fnMap := map[string]bool{}
+	for _, function := range functions {
+		if _, ok := fnMap[function]; !ok {
+			dedup = append(dedup, function)
+			fnMap[function] = true
+		}
+	}
+	return dedup
+}
+
+// SuggestKeywords looks for all the unique keywords from Porch functions. This keywords
+// can later help users to select functions.
+func SuggestKeywords(cmd *cobra.Command) []string {
+	functions := porch.MatchFunctions(cmd.Context(), porch.TypeMatcher{FnType: cmd.Flag("type").Value.String()})
+	return porch.UnifyKeywords(functions)
 }
 
 // FetchFunctionImages returns the list of latest function images from catalog.kpt.dev

@@ -41,17 +41,24 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
-
 	r.Command = c
 	r.Command.Flags().StringVarP(&r.Dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
 	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.FetchFunctionImages(), cobra.ShellCompDirectiveDefault
+		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
+	})
+	r.Command.Flags().StringArrayVarP(
+		&r.Keywords, "keywords", "k", []string{}, "filter functions that match one or more keywords")
+	_ = r.Command.RegisterFlagCompletionFunc("keywords", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return cmdutil.SuggestKeywords(cmd), cobra.ShellCompDirectiveDefault
 	})
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "mutator",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
+	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"mutator", "validator"}, cobra.ShellCompDirectiveDefault
+	})
 	r.Command.Flags().BoolVarP(
 		&r.SaveFn, "save", "s", false,
 		"save the function and its arguments to Kptfile")
@@ -83,7 +90,6 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Selector.Name, "match-name", "", "select resources matching the given name")
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
-
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
 	}
@@ -103,6 +109,7 @@ type EvalFnRunner struct {
 	FromStdin            bool
 	Image                string
 	SaveFn               bool
+	Keywords             []string
 	FnType               string
 	Exec                 string
 	FnConfigPath         string
@@ -194,7 +201,7 @@ func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) []kptfile.Functio
 	return newFns
 }
 
-// SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` list.
+// SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` or `pipeline.validators` .
 func (r *EvalFnRunner) SaveFnToKptfile() {
 	pr := printer.FromContextOrDie(r.Ctx)
 	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.RunFns.Path)
@@ -207,17 +214,9 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	}
 	switch r.FnType {
 	case "mutator":
-		if kf.Pipeline.Mutators == nil {
-			kf.Pipeline.Mutators = []kptfile.Function{}
-		}
-		newFns := r.updateFnList(kf.Pipeline.Mutators)
-		kf.Pipeline.Mutators = newFns
+		kf.Pipeline.Mutators = r.updateFnList(kf.Pipeline.Mutators)
 	case "validator":
-		if kf.Pipeline.Validators == nil {
-			kf.Pipeline.Validators = []kptfile.Function{}
-		}
-		newFns := r.updateFnList(kf.Pipeline.Validators)
-		kf.Pipeline.Validators = newFns
+		kf.Pipeline.Validators = r.updateFnList(kf.Pipeline.Validators)
 	}
 	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
