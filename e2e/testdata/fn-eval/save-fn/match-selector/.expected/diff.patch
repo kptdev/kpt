@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index d9e2f05..33c8c8b 100644
+index d9e2f05..eb232bb 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,3 +2,11 @@ apiVersion: kpt.dev/v1
+@@ -2,3 +2,10 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: app
@@ -11,7 +11,6 @@ index d9e2f05..33c8c8b 100644
 +    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
 +      configMap:
 +        namespace: staging
-+      name: gcr.io/kpt-fn/set-namespace:v0.1.3
 +      selectors:
 +        - kind: Deployment
 diff --git a/resources.yaml b/resources.yaml
