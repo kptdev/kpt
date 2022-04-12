@@ -179,6 +179,7 @@ func AddDefaultImagePathPrefix(image string) string {
 	if !strings.Contains(image, "/") {
 		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
 	}
+	// TODO(yuwenma): append porch repo prefix if the image comes from porch function.
 	return image
 }
 

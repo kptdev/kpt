@@ -215,7 +215,7 @@ func GetSliceFromAnnotation(key string, manifest *v1.Manifest) []string {
 }
 
 func GetSingleFromAnnotation(key string, manifest *v1.Manifest) string {
-	if val, ok := manifest.Annotations[FunctionTypesKey]; ok {
+	if val, ok := manifest.Annotations[key]; ok {
 		return val
 	}
 	return fmt.Sprintf("annotation %v unset", key)

@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	ociImagePrefix      = "kpt.dev.fn.meta."
+	ociImagePrefix      = "dev.kpt.fn.meta."
 	FunctionTypesKey    = ociImagePrefix + "types"
 	DescriptionKey      = ociImagePrefix + "description"
 	DocumentationURLKey = ociImagePrefix + "documentationurl"
