@@ -147,10 +147,8 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 	newFn := &kptfile.Function{}
 	if r.Image != "" {
 		newFn.Image = r.Image
-		newFn.Name = r.Image
 	} else {
 		newFn.Exec = r.Exec
-		newFn.Name = r.Exec
 	}
 	if !r.Selector.IsEmpty() {
 		newFn.Selectors = []kptfile.Selector{r.Selector}
