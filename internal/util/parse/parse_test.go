@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
+	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -184,7 +185,7 @@ func Test_pkgURLFromGHURL(t *testing.T) {
 	}
 }
 
-func Test_parseURLL(t *testing.T) {
+func Test_parseURL(t *testing.T) {
 	type expected struct {
 		repo    string
 		dir     string
@@ -202,6 +203,10 @@ func Test_parseURLL(t *testing.T) {
 			ghURL:    "https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/apply-replacements-simple",
 			expected: expected{repo: "https://github.com/GoogleContainerTools/kpt-functions-catalog", dir: "/examples/apply-replacements-simple", version: "master"},
 		},
+		".git appears in the middle": {
+			ghURL:    "https://my-site.com/root.gitops.git/foo@main",
+			expected: expected{repo: "https://my-site.com/root.gitops", dir: "/foo", version: "main"},
+		},
 	}
 	for name, test := range tests {
 		test := test // capture range variable
@@ -210,6 +215,56 @@ func Test_parseURLL(t *testing.T) {
 			repo, dir, version, err := parseURL(ctx, test.ghURL)
 			assert.NoError(t, err)
 			assert.Equal(t, expected{repo: repo, dir: dir, version: version}, test.expected)
+		})
+	}
+}
+
+func Test_GitParseArgs(t *testing.T) {
+	tests := map[string]struct {
+		ghURL    string
+		skip     bool
+		expected Target
+	}{
+		"git@ url with .git suffix": {
+			ghURL: "git@github.com:GoogleContainerTools/kpt.git",
+			expected: Target{Git: v1.Git{
+				Repo:      "git@github.com:GoogleContainerTools/kpt",
+				Directory: "/",
+				Ref:       "main",
+			},
+				Destination: "kpt"},
+			// in CI we get the error "git@github.com: Permission denied (publickey)" because the ssh key is not set up.
+			skip: true,
+		},
+		"http url with .git suffix": {
+			ghURL: "https://github.com/GoogleContainerTools/kpt.git",
+			expected: Target{Git: v1.Git{
+				Repo:      "https://github.com/GoogleContainerTools/kpt",
+				Directory: "/",
+				Ref:       "main",
+			},
+				Destination: "kpt"},
+		},
+		"starts with github.com": {
+			ghURL: "https://github.com/GoogleContainerTools/kpt",
+			expected: Target{Git: v1.Git{
+				Repo:      "https://github.com/GoogleContainerTools/kpt",
+				Directory: "/",
+				Ref:       "main",
+			},
+				Destination: "kpt"},
+		},
+	}
+	for name, test := range tests {
+		test := test // capture range variable
+		t.Run(name, func(t *testing.T) {
+			if test.skip {
+				t.SkipNow()
+			}
+			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
+			actual, err := GitParseArgs(ctx, []string{test.ghURL, ""})
+			assert.NoError(t, err)
+			assert.Equal(t, test.expected, actual)
 		})
 	}
 }

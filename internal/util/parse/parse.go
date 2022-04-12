@@ -17,7 +17,6 @@ package parse
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -28,6 +27,8 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
+
+const gitSuffixRegexp = ".git($|/)"
 
 type Target struct {
 	kptfilev1.Git
@@ -40,13 +41,8 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		return g, nil
 	}
 
-	parsedURL, err := url.Parse(args[0])
-	if err != nil {
-		return g, err
-	}
-
 	// Simple parsing if contains .git{$|/)
-	matched, err := regexp.Match(".git($|/)", []byte(parsedURL.Path))
+	matched, err := regexp.Match(gitSuffixRegexp, []byte(args[0]))
 	if err != nil {
 		return g, err
 	}
@@ -114,11 +110,7 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, 
 
 // parseURL parses a pkg url and returns the repo, directory, and version
 func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, version string, err error) {
-	parsedURL, err := url.Parse(pkgURL)
-	if err != nil {
-		return "", "", "", err
-	}
-	parts := regexp.MustCompile(".git($|/)").Split(parsedURL.Path, 2)
+	parts := regexp.MustCompile(gitSuffixRegexp).Split(pkgURL, 2)
 	index := strings.Index(pkgURL, parts[0])
 	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")
 	switch {
