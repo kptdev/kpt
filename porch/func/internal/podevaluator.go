@@ -169,7 +169,9 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 	defer func() {
 		// TODO: keep the pod around for some time for potential reuse.
 		klog.Infof("deleting KRM function evaluator pod %v", pod.Name)
-		if err := pe.kubeClient.Delete(ctx, pod); err != nil {
+		// We don't use ctx here, since we want the deletion to be completed even the context is canceled.
+		// If we use ctx here, the pod will be orphaned if we cancel the request (e.g. ctrl+C).
+		if err := pe.kubeClient.Delete(context.Background(), pod); err != nil {
 			klog.Warningf("failed to delete KRM function evaluator pod %v: %v", pod.Name, err)
 		}
 	}()
