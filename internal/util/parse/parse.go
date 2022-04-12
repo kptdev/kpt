@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
@@ -39,13 +40,17 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		return g, nil
 	}
 
-	parsedUrl, err := url.Parse(args[0])
+	parsedURL, err := url.Parse(args[0])
 	if err != nil {
 		return g, err
 	}
 
-	// Simple parsing if contains .git
-	if strings.Contains(parsedUrl.Path, ".git") {
+	// Simple parsing if contains .git{$|/)
+	matched, err := regexp.Match(".git($|/)", []byte(parsedURL.Path))
+	if err != nil {
+		return g, err
+	}
+	if matched {
 		return targetFromPkgURL(ctx, args[0], args[1])
 	}
 
@@ -109,11 +114,11 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, 
 
 // parseURL parses a pkg url and returns the repo, directory, and version
 func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, version string, err error) {
-	parsedUrl, err := url.Parse(pkgURL)
+	parsedURL, err := url.Parse(pkgURL)
 	if err != nil {
 		return "", "", "", err
 	}
-	parts := strings.Split(parsedUrl.Path, ".git")
+	parts := regexp.MustCompile(".git($|/)").Split(parsedURL.Path, 2)
 	index := strings.Index(pkgURL, parts[0])
 	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")
 	switch {
@@ -122,9 +127,9 @@ func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, vers
 	case strings.Contains(parts[1], "@"):
 		parts := strings.Split(parts[1], "@")
 		version = strings.TrimSuffix(parts[1], "/")
-		dir = parts[0]
+		dir = string(filepath.Separator) + parts[0]
 	default:
-		dir = parts[1]
+		dir = string(filepath.Separator) + parts[1]
 	}
 	if version == "" {
 		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
@@ -137,9 +142,7 @@ func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, vers
 		}
 		version = defaultRef
 	}
-	if dir == "" {
-		dir = "/"
-	}
+
 	return repo, dir, version, nil
 }
 
