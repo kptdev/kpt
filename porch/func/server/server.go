@@ -20,6 +20,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/func/internal"
@@ -37,6 +38,8 @@ var (
 	functions          = flag.String("functions", "./functions", "Path to cached functions.")
 	config             = flag.String("config", "./config.yaml", "Path to the config file.")
 	podNamespace       = flag.String("pod-namespace", "porch-fn-system", "Namespace to run KRM functions pods.")
+	podTTL             = flag.Duration("pod-ttl", 10*time.Minute, "TTL for pods before GC.")
+	scanInterval       = flag.Duration("scan-interval", time.Minute, "The interval of GC between scans.")
 	wrapperServerImage = flag.String("wrapper-server-image", "", "Image name of the wrapper server.")
 	disableRuntimes    = flag.String("disable-runtimes", "", fmt.Sprintf("The runtime(s) to disable. Multiple runtimes should separated by `,`. Available runtimes: `%v`, `%v`.", execRuntime, podRuntime))
 )
@@ -77,7 +80,7 @@ func run() error {
 			}
 			runtimes = append(runtimes, execEval)
 		case podRuntime:
-			podEval, err := internal.NewPodEvaluator(*podNamespace, *wrapperServerImage)
+			podEval, err := internal.NewPodEvaluator(*podNamespace, *wrapperServerImage, *scanInterval, *podTTL)
 			if err != nil {
 				return fmt.Errorf("failed to initialize pod evaluator: %w", err)
 			}

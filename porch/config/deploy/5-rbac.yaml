@@ -41,4 +41,4 @@ rules:
   # Needed to launch / read function executor pods
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["create", "delete", "get", "watch", "list"]
+    verbs: ["create", "delete", "patch", "get", "watch", "list"]
