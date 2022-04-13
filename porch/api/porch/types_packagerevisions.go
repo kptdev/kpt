@@ -131,8 +131,22 @@ const (
 )
 
 type PackagePatchTaskSpec struct {
-	// TODO: We're going to need something better here to actually represent or reference the patch
-	Patches []string `json:"patches,omitempty"`
+	// Patches is a list of individual patch operations.
+	Patches []PatchSpec `json:"patches,omitempty"`
+}
+
+type PatchType string
+
+const (
+	PatchTypeCreateFile PatchType = "CreateFile"
+	PatchTypeDeleteFile PatchType = "DeleteFile"
+	PatchTypePatchFile  PatchType = "PatchFile"
+)
+
+type PatchSpec struct {
+	File      string    `json:"file,omitempty"`
+	Contents  string    `json:"contents,omitempty"`
+	PatchType PatchType `json:"patchType,omitempty"`
 }
 
 type RepositoryType string

@@ -50,6 +50,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":          schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":        schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":              schema_porch_api_porch_v1alpha1_ParentReference(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec":                    schema_porch_api_porch_v1alpha1_PatchSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                    schema_porch_api_porch_v1alpha1_SecretRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                     schema_porch_api_porch_v1alpha1_Selector(ref),
@@ -601,13 +602,13 @@ func schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"patches": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "Patches is a list of individual patch operations.",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Default: "",
-										Type:    []string{"string"},
-										Format:  "",
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec"),
 									},
 								},
 							},
@@ -616,6 +617,8 @@ func schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref common.ReferenceCa
 				},
 			},
 		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec"},
 	}
 }
 
@@ -941,6 +944,36 @@ func schema_porch_api_porch_v1alpha1_ParentReference(ref common.ReferenceCallbac
 					},
 				},
 				Required: []string{"name"},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PatchSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"file": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"contents": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"patchType": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
 			},
 		},
 	}
