@@ -8,7 +8,7 @@ languages like [Jinja] are very robust and feature rich.
 ## Problems:
 
 1. Increased usage and additional edge cases make a template a piece of code 
-that required tets and debugging.
+that requires testing and debugging.
 1. The interplay between different conditionals and loops is interleaved in the template making it hard to understand what exactly is configuration and what is 
 the logic that alters the configuration.  The consumer is left with one choice 
 supply different parameter values, execute the template rendering code and see 
