@@ -20,12 +20,15 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/gitutil"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
+
+const gitSuffixRegexp = ".git($|/)"
 
 type Target struct {
 	kptfilev1.Git
@@ -38,8 +41,12 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		return g, nil
 	}
 
-	// Simple parsing if contains .git
-	if strings.Contains(args[0], ".git") {
+	// Simple parsing if contains .git{$|/)
+	matched, err := regexp.Match(gitSuffixRegexp, []byte(args[0]))
+	if err != nil {
+		return g, err
+	}
+	if matched {
 		return targetFromPkgURL(ctx, args[0], args[1])
 	}
 
@@ -84,34 +91,11 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) {
+func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, error) {
 	g := Target{}
-	var repo, dir, version string
-	parts := strings.Split(pkgURL, ".git")
-	repo = strings.TrimSuffix(parts[0], "/")
-	switch {
-	case len(parts) == 1:
-		// do nothing
-	case strings.Contains(parts[1], "@"):
-		parts := strings.Split(parts[1], "@")
-		version = strings.TrimSuffix(parts[1], "/")
-		dir = parts[0]
-	default:
-		dir = parts[1]
-	}
-	if version == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
-		if err != nil {
-			return g, err
-		}
-		defaultRef, err := gur.GetDefaultBranch(ctx)
-		if err != nil {
-			return g, err
-		}
-		version = defaultRef
-	}
-	if dir == "" {
-		dir = "/"
+	repo, dir, version, err := parseURL(ctx, pkgURL)
+	if err != nil {
+		return g, err
 	}
 	destination, err := getDest(dest, repo, dir)
 	if err != nil {
@@ -122,6 +106,36 @@ func targetFromPkgURL(ctx context.Context, pkgURL, dest string) (Target, error) 
 	g.Repo = repo
 	g.Destination = filepath.Clean(destination)
 	return g, nil
+}
+
+// parseURL parses a pkg url and returns the repo, directory, and version
+func parseURL(ctx context.Context, pkgURL string) (repo string, dir string, version string, err error) {
+	parts := regexp.MustCompile(gitSuffixRegexp).Split(pkgURL, 2)
+	index := strings.Index(pkgURL, parts[0])
+	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")
+	switch {
+	case len(parts) == 1:
+		// do nothing
+	case strings.Contains(parts[1], "@"):
+		parts := strings.Split(parts[1], "@")
+		version = strings.TrimSuffix(parts[1], "/")
+		dir = string(filepath.Separator) + parts[0]
+	default:
+		dir = string(filepath.Separator) + parts[1]
+	}
+	if version == "" {
+		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+		if err != nil {
+			return "", "", "", err
+		}
+		defaultRef, err := gur.GetDefaultBranch(ctx)
+		if err != nil {
+			return "", "", "", err
+		}
+		version = defaultRef
+	}
+
+	return repo, dir, version, nil
 }
 
 // pkgURLFromGHURL converts a GitHub URL into a well formed pkg url
