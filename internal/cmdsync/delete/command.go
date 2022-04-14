@@ -17,6 +17,7 @@ package delete
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -24,7 +25,9 @@ import (
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -45,6 +48,23 @@ Flags:
 --keep-auth-secret
   Do not delete the repository authentication secret, if it exists.
 `
+	// TODO: Find a better location for this git repo.
+	emptyRepo       = "https://github.com/mortent/empty"
+	emptyRepoBranch = "main"
+	defaultTimeout  = 2 * time.Minute
+)
+
+var (
+	rootSyncGVK = schema.GroupVersionKind{
+		Group:   "configsync.gke.io",
+		Version: "v1beta1",
+		Kind:    "RootSync",
+	}
+	resourceGroupGVK = schema.GroupVersionKind{
+		Group:   "kpt.dev",
+		Version: "v1alpha1",
+		Kind:    "ResourceGroup",
+	}
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -69,6 +89,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	r.Command = c
 
 	c.Flags().BoolVar(&r.keepSecret, "keep-auth-secret", false, "Keep the auth secret associated with the RootSync resource, if any")
+	c.Flags().DurationVar(&r.timeout, "timeout", defaultTimeout, "How long to wait for Config Sync to delete package RootSync")
 
 	return r
 }
@@ -76,11 +97,12 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 type runner struct {
 	ctx     context.Context
 	cfg     *genericclioptions.ConfigFlags
-	client  client.Client
+	client  client.WithWatch
 	Command *cobra.Command
 
 	// Flags
 	keepSecret bool
+	timeout    time.Duration
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -108,12 +130,51 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 	rs := unstructured.Unstructured{
 		Object: map[string]interface{}{
-			"apiVersion": "configsync.gke.io/v1beta1",
-			"kind":       "RootSync",
+			"apiVersion": rootSyncGVK.GroupVersion().String(),
+			"kind":       rootSyncGVK.Kind,
 		},
 	}
 	if err := r.client.Get(r.ctx, key, &rs); err != nil {
 		return errors.E(op, fmt.Errorf("cannot get %s: %v", key, err))
+	}
+
+	git, found, err := unstructured.NestedMap(rs.Object, "spec", "git")
+	if err != nil || !found {
+		return errors.E(op, fmt.Errorf("couldn't find `spec.git`: %v", err))
+	}
+
+	git["repo"] = emptyRepo
+	git["branch"] = emptyRepoBranch
+	git["dir"] = ""
+	git["revision"] = ""
+
+	if err := unstructured.SetNestedMap(rs.Object, git, "spec", "git"); err != nil {
+		return errors.E(op, err)
+	}
+
+	fmt.Println("Deleting package resources..")
+	if err := r.client.Update(r.ctx, &rs); err != nil {
+		return errors.E(op, err)
+	}
+
+	if err := func() error {
+		ctx, cancel := context.WithTimeout(r.ctx, r.timeout)
+		defer cancel()
+
+		if err := r.waitForRootSync(ctx, name, namespace); err != nil {
+			return err
+		}
+
+		fmt.Println("Waiting for deleted resources to be removed..")
+		if err := r.waitForResourceGroup(ctx, name, namespace); err != nil {
+			return err
+		}
+		return nil
+	}(); err != nil {
+		// TODO: See if we can expose more information here about what might have prevented a package
+		// from being deleted.
+		e := fmt.Errorf("package %s failed to be deleted after %f seconds: %v", name, r.timeout.Seconds(), err)
+		return errors.E(op, e)
 	}
 
 	if err := r.client.Delete(r.ctx, &rs); err != nil {
@@ -142,7 +203,83 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, fmt.Errorf("failed to delete Secret %s: %w", secret, err))
 	}
 
+	fmt.Printf("Package %s successfully deleted\n", name)
 	return nil
+}
+
+func (r *runner) waitForRootSync(ctx context.Context, name string, namespace string) error {
+	const op errors.Op = command + ".waitForRootSync"
+
+	return r.waitForResource(ctx, resourceGroupGVK, name, namespace, func(u *unstructured.Unstructured) (bool, error) {
+		res, err := status.Compute(u)
+		if err != nil {
+			return false, errors.E(op, err)
+		}
+		if res.Status == status.CurrentStatus {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+func (r *runner) waitForResourceGroup(ctx context.Context, name string, namespace string) error {
+	const op errors.Op = command + ".waitForResourceGroup"
+
+	return r.waitForResource(ctx, resourceGroupGVK, name, namespace, func(u *unstructured.Unstructured) (bool, error) {
+		resources, found, err := unstructured.NestedSlice(u.Object, "spec", "resources")
+		if err != nil {
+			return false, errors.E(op, err)
+		}
+		if !found {
+			return true, nil
+		}
+		if len(resources) == 0 {
+			return true, nil
+		}
+		return false, nil
+	})
+}
+
+type ReconcileFunc func(*unstructured.Unstructured) (bool, error)
+
+func (r *runner) waitForResource(ctx context.Context, gvk schema.GroupVersionKind, name, namespace string, reconcileFunc ReconcileFunc) error {
+	const op errors.Op = command + ".waitForResource"
+
+	u := unstructured.UnstructuredList{}
+	u.SetGroupVersionKind(gvk)
+	watch, err := r.client.Watch(r.ctx, &u)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	defer watch.Stop()
+
+	for {
+		select {
+		case ev, ok := <-watch.ResultChan():
+			if !ok {
+				return errors.E(op, fmt.Errorf("watch closed unexpectedly"))
+			}
+			if ev.Object == nil {
+				continue
+			}
+
+			u := ev.Object.(*unstructured.Unstructured)
+
+			if u.GetName() != name || u.GetNamespace() != namespace {
+				continue
+			}
+
+			reconciled, err := reconcileFunc(u)
+			if err != nil {
+				return err
+			}
+			if reconciled {
+				return nil
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }
 
 func getSecretName(repo *unstructured.Unstructured) string {
