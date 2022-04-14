@@ -51,13 +51,25 @@ const (
 
 // PackageRevisionSpec defines the desired state of PackageRevision
 type PackageRevisionSpec struct {
-	PackageName    string `json:"packageName,omitempty"`
-	Revision       string `json:"revision,omitempty"`
+	PackageName string `json:"packageName,omitempty"`
+	Revision    string `json:"revision,omitempty"`
+
+	// Parent references a package that provides resources to us
+	Parent *ParentReference `json:"parent,omitempty"`
+
 	RepositoryName string `json:"repository,omitempty"`
 
 	Lifecycle PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 
 	Tasks []Task `json:"tasks,omitempty"`
+}
+
+// ParentReference is a reference to a parent package
+type ParentReference struct {
+	// TODO: Should this be a revision or a package?
+
+	// Name is the name of the parent PackageRevision
+	Name string `json:"name"`
 }
 
 // PackageRevisionStatus defines the observed state of PackageRevision
