@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/pkg/debug"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -241,7 +242,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			mutations = append(mutations, mutation)
 
 		default:
-			return nil, fmt.Errorf("updating task of type %q not supported", newTask.Type)
+			return nil, fmt.Errorf("updating task of type %q not supported (oldTask=%s, newTask=%s)", newTask.Type, debug.JSON(oldTask), debug.JSON(newTask))
 		}
 	}
 

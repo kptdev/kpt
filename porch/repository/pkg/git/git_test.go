@@ -178,7 +178,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		version := "v123"
 
 		path := "test-package"
-		packageRevision, gitLock, err := repo.GetPackage(version, path)
+		packageRevision, gitLock, err := repo.GetPackage(ctx, version, path)
 		if err != nil {
 			t.Fatalf("GetPackage(%q, %q) failed: %v", version, path, err)
 		}

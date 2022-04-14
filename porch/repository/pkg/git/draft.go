@@ -37,6 +37,7 @@ type gitPackageDraft struct {
 	branch    BranchName          // name of the branch where the changes will be pushed
 	commit    plumbing.Hash       // Current HEAD of the package changes (commit sha)
 	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
+	tasks     []v1alpha1.Task
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
@@ -51,7 +52,22 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		ch.storeFile(path.Join(d.path, k), v)
 	}
 
-	message := fmt.Sprintf("Intermittent commit: %s", change.Type)
+	annotation := &gitAnnotation{
+		PackagePath: d.path,
+		Task:        change,
+	}
+	message := "Intermediate commit"
+	if change != nil {
+		message += fmt.Sprintf(": %s", change.Type)
+		d.tasks = append(d.tasks, *change)
+	}
+	message += "\n"
+
+	message, err = AnnotateCommitMessage(message, annotation)
+	if err != nil {
+		return err
+	}
+
 	commitHash, packageTree, err := ch.commit(ctx, message, d.path)
 	if err != nil {
 		return fmt.Errorf("failed to commit package: %w", err)
@@ -147,6 +163,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 		ref:      newRef,
 		tree:     d.tree,
 		commit:   newRef.Hash(),
+		tasks:    d.tasks,
 	}, nil
 }
 
@@ -195,6 +212,9 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
 	message := fmt.Sprintf("Approve %s", packagePath)
+
+	// TODO: Should we annotate this in some way?  Should we include the tasks?
+
 	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
