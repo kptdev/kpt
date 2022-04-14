@@ -291,6 +291,10 @@ type Function struct {
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected
 	Selectors []Selector `yaml:"selectors,omitempty" json:"selectors,omitempty"`
+
+	// `Exclude` are used to specify resources on which the function should NOT be executed.
+	// If not specified, all resources selected by `Selectors` are selected.
+	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
 }
 
 // Selector specifies the selection criteria
@@ -304,6 +308,10 @@ type Selector struct {
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+	// Labels on the target resources
+	Labels map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
+	// Annotations on the target resources
+	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
 }
 
 // IsEmpty returns true of none of the selection criteria is specified
@@ -311,7 +319,9 @@ func (s Selector) IsEmpty() bool {
 	return s.APIVersion == "" &&
 		s.Namespace == "" &&
 		s.Name == "" &&
-		s.Kind == ""
+		s.Kind == "" &&
+		len(s.Labels) == 0 &&
+		len(s.Annotations) == 0
 }
 
 // Inventory encapsulates the parameters for the inventory resource applied to a cluster.

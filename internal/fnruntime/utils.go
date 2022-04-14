@@ -140,16 +140,33 @@ type SelectionContext struct {
 }
 
 // SelectInput returns the selected resources based on criteria in selectors
-func SelectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, _ *SelectionContext) ([]*yaml.RNode, error) {
+func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector, _ *SelectionContext) ([]*yaml.RNode, error) {
+	var selectedInput []*yaml.RNode
 	if len(selectors) == 0 {
-		return input, nil
+		selectedInput = input
+	} else {
+		for _, node := range input {
+			for _, selector := range selectors {
+				if isMatch(node, selector) {
+					selectedInput = append(selectedInput, node)
+				}
+			}
+		}
+	}
+	if len(exclusions) == 0 {
+		return selectedInput, nil
 	}
 	var filteredInput []*yaml.RNode
-	for _, node := range input {
-		for _, selector := range selectors {
-			if isMatch(node, selector) {
-				filteredInput = append(filteredInput, node)
+	for _, node := range selectedInput {
+		matchesExclusion := false
+		for _, exclusion := range exclusions {
+			if !exclusion.IsEmpty() && isMatch(node, exclusion) {
+				matchesExclusion = true
+				break
 			}
+		}
+		if !matchesExclusion {
+			filteredInput = append(filteredInput, node)
 		}
 	}
 	return filteredInput, nil
@@ -159,7 +176,8 @@ func SelectInput(input []*yaml.RNode, selectors []kptfilev1.Selector, _ *Selecti
 func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	// keep expanding with new selectors
 	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
-		kindMatch(node, selector) && apiVersionMatch(node, selector)
+		kindMatch(node, selector) && apiVersionMatch(node, selector) &&
+		labelMatch(node, selector) && annoMatch(node, selector)
 }
 
 // nameMatch returns true if the resource name matches input selection criteria
@@ -180,4 +198,26 @@ func kindMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 // apiVersionMatch returns true if the resource apiVersion matches input selection criteria
 func apiVersionMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	return selector.APIVersion == "" || selector.APIVersion == node.GetApiVersion()
+}
+
+// labelMatch returns true if the resource labels match input selection criteria
+func labelMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	nodeLabels := node.GetLabels()
+	for sk, sv := range selector.Labels {
+		if nv, found := nodeLabels[sk]; !found || sv != nv {
+			return false
+		}
+	}
+	return true
+}
+
+// annoMatch returns true if the resource annotations match input selection criteria
+func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+	nodeAnnos := node.GetAnnotations()
+	for sk, sv := range selector.Annotations {
+		if nv, found := nodeAnnos[sk]; !found || sv != nv {
+			return false
+		}
+	}
+	return true
 }

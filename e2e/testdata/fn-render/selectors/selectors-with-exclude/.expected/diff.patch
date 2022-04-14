@@ -1,0 +1,42 @@
+diff --git a/Kptfile b/Kptfile
+index a47bd49..a402119 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app
++  labels:
++    tier: backend
+ pipeline:
+   mutators:
+     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+diff --git a/resources.yaml b/resources.yaml
+index e7eda6a..f50b306 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -17,8 +17,17 @@ metadata:
+   name: nginx-deployment
+   labels:
+     foo: bar
++    tier: backend
++  namespace: staging
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+@@ -26,5 +35,6 @@ metadata:
+   name: custom
+   labels:
+     foo: bar
++    tier: backend
+ spec:
+   image: nginx:1.2.3

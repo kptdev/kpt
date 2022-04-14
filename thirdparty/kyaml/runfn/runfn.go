@@ -93,6 +93,8 @@ type RunFns struct {
 	ImagePullPolicy fnruntime.ImagePullPolicy
 
 	Selector kptfile.Selector
+
+	Exclusion kptfile.Selector
 }
 
 // Execute runs the command
@@ -189,7 +191,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 
 	selectedInput := inputResources
 
-	if !r.Selector.IsEmpty() {
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
 		err = fnruntime.SetResourceIds(inputResources)
 		if err != nil {
 			return err
@@ -199,6 +201,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 		selectedInput, err = fnruntime.SelectInput(
 			inputResources,
 			[]kptfile.Selector{r.Selector},
+			[]kptfile.Selector{r.Exclusion},
 			&fnruntime.SelectionContext{RootPackagePath: r.uniquePath})
 		if err != nil {
 			return err
@@ -215,7 +218,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 	err = pipeline.Execute()
 	outputResources := pb.Nodes
 
-	if !r.Selector.IsEmpty() {
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
 		outputResources = fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
 		deleteAnnoErr := fnruntime.DeleteResourceIds(outputResources)
 		if deleteAnnoErr != nil {
@@ -388,7 +391,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	}
 
 	displayResourceCount := false
-	if !r.Selector.IsEmpty() {
+	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
 		displayResourceCount = true
 	}
 	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false, displayResourceCount)

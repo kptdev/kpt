@@ -82,6 +82,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
 	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", string(fnruntime.IfNotPresentPull),
 		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+
+	// selector flags
 	r.Command.Flags().StringVar(
 		&r.Selector.APIVersion, "match-api-version", "", "select resources matching the given apiVersion")
 	r.Command.Flags().StringVar(
@@ -90,6 +92,25 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.Selector.Name, "match-name", "", "select resources matching the given name")
 	r.Command.Flags().StringVar(
 		&r.Selector.Namespace, "match-namespace", "", "select resources matching the given namespace")
+	r.Command.Flags().StringArrayVar(
+		&r.selectorAnnotations, "match-annotations", []string{}, "select resources matching the given annotations")
+	r.Command.Flags().StringArrayVar(
+		&r.selectorLabels, "match-labels", []string{}, "select resources matching the given labels")
+
+	// exclusion flags
+	r.Command.Flags().StringVar(
+		&r.Exclusion.APIVersion, "exclude-api-version", "", "exclude resources matching the given apiVersion")
+	r.Command.Flags().StringVar(
+		&r.Exclusion.Kind, "exclude-kind", "", "exclude resources matching the given kind")
+	r.Command.Flags().StringVar(
+		&r.Exclusion.Name, "exclude-name", "", "exclude resources matching the given name")
+	r.Command.Flags().StringVar(
+		&r.Exclusion.Namespace, "exclude-namespace", "", "exclude resources matching the given namespace")
+	r.Command.Flags().StringArrayVar(
+		&r.excludeAnnotations, "exclude-annotations", []string{}, "exclude resources matching the given annotations")
+	r.Command.Flags().StringArrayVar(
+		&r.excludeLabels, "exclude-labels", []string{}, "exclude resources matching the given labels")
+
 	if err := r.Command.Flags().MarkHidden("include-meta-resources"); err != nil {
 		panic(err)
 	}
@@ -123,7 +144,14 @@ type EvalFnRunner struct {
 	IncludeMetaResources bool
 	Ctx                  context.Context
 	Selector             kptfile.Selector
+	Exclusion            kptfile.Selector
 	dataItems            []string
+
+	// we will need to parse these values into Selector and Exclusion
+	selectorLabels      []string
+	selectorAnnotations []string
+	excludeLabels       []string
+	excludeAnnotations  []string
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -152,6 +180,9 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 	}
 	if !r.Selector.IsEmpty() {
 		newFn.Selectors = []kptfile.Selector{r.Selector}
+	}
+	if !r.Exclusion.IsEmpty() {
+		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
 		_, relativePath, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
@@ -426,6 +457,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 	}
 
+	r.parseSelectors()
 	r.RunFns = runfn.RunFns{
 		Ctx:             r.Ctx,
 		Function:        fnSpec,
@@ -446,7 +478,29 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		// are deleted.
 		ContinueOnEmptyResult: true,
 		Selector:              r.Selector,
+		Exclusion:             r.Exclusion,
 	}
 
 	return nil
+}
+
+// parses annotation and label based selectors and exclusion from the command line input
+func (r *EvalFnRunner) parseSelectors() {
+	r.Selector.Annotations = parseSelectorMap(r.selectorAnnotations)
+	r.Selector.Labels = parseSelectorMap(r.selectorLabels)
+	r.Exclusion.Annotations = parseSelectorMap(r.excludeAnnotations)
+	r.Exclusion.Labels = parseSelectorMap(r.excludeLabels)
+}
+
+func parseSelectorMap(selectors []string) map[string]string {
+	if len(selectors) == 0 {
+		return nil
+	}
+	result := make(map[string]string)
+	for _, s := range selectors {
+		parts := strings.Split(s, "=")
+		key, value := parts[0], parts[1]
+		result[key] = value
+	}
+	return result
 }
