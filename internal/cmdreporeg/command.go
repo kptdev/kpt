@@ -169,7 +169,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 	if r.username != "" || r.password != "" {
 		secretName := fmt.Sprintf("%s-auth", r.name)
-		if err := apply(r.ctx, r.client, &coreapi.Secret{
+		if err := r.client.Create(r.ctx, &coreapi.Secret{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Secret",
 				APIVersion: coreapi.SchemeGroupVersion.Identifier(),
@@ -195,7 +195,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := apply(r.ctx, r.client, &configapi.Repository{
+	if err := r.client.Create(r.ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Repository",
 			APIVersion: configapi.GroupVersion.Identifier(),
@@ -218,9 +218,4 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func apply(ctx context.Context, api client.Client, obj client.Object) error {
-	//	api.Create(ctx, obj)
-	return api.Patch(ctx, obj, client.Apply, client.FieldOwner("kubectl"))
 }
