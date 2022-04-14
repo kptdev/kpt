@@ -88,6 +88,7 @@ func (in *FunctionEvalTaskSpec) DeepCopyInto(out *FunctionEvalTaskSpec) {
 			(*out)[key] = val
 		}
 	}
+	in.Config.DeepCopyInto(&out.Config)
 	out.Match = in.Match
 	return
 }

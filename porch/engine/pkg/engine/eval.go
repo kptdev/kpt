@@ -52,6 +52,13 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		} else {
 			functionConfig = cm
 		}
+	} else if len(m.task.Eval.Config.Raw) != 0 {
+		// raw is JSON (we expect), but we take advantage of the fact that YAML is a superset of JSON
+		config, err := yaml.Parse(string(m.task.Eval.Config.Raw))
+		if err != nil {
+			return repository.PackageResources{}, nil, fmt.Errorf("error parsing function config: %w", err)
+		}
+		functionConfig = config
 	}
 
 	ff := &runtimeutil.FunctionFilter{

@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // +genclient
@@ -193,9 +194,8 @@ type FunctionEvalTaskSpec struct {
 	// `ConfigMap` specifies the function config (https://kpt.dev/reference/cli/fn/eval/). Mutually exclusive with Config.
 	ConfigMap map[string]string `json:"configMap,omitempty"`
 
-	// TODO: openapi generation doesn't work for Unstructured. Use runtime.RawExtension ???
-	// // `Config` specifies the function config, arbitrary KRM resource. Mutually exclusive with ConfigMap.
-	// Config unstructured.Unstructured `json:"config,omitempty"`
+	// `Config` specifies the function config, arbitrary KRM resource. Mutually exclusive with ConfigMap.
+	Config runtime.RawExtension `json:"config,omitempty"`
 
 	// If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
 	// in the input to the function. By default it is disabled.

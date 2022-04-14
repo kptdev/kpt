@@ -240,6 +240,13 @@ func schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref common.ReferenceCa
 							},
 						},
 					},
+					"config": {
+						SchemaProps: spec.SchemaProps{
+							Description: "`Config` specifies the function config, arbitrary KRM resource. Mutually exclusive with ConfigMap.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/runtime.RawExtension"),
+						},
+					},
 					"includeMetaResources": {
 						SchemaProps: spec.SchemaProps{
 							Description: "If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included in the input to the function. By default it is disabled.",
@@ -265,7 +272,7 @@ func schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector", "k8s.io/apimachinery/pkg/runtime.RawExtension"},
 	}
 }
 

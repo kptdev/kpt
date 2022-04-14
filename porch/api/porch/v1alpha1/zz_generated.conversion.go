@@ -344,6 +344,7 @@ func autoConvert_v1alpha1_FunctionEvalTaskSpec_To_porch_FunctionEvalTaskSpec(in 
 	out.Image = in.Image
 	out.FunctionRef = (*porch.FunctionRef)(unsafe.Pointer(in.FunctionRef))
 	out.ConfigMap = *(*map[string]string)(unsafe.Pointer(&in.ConfigMap))
+	out.Config = in.Config
 	out.IncludeMetaResources = in.IncludeMetaResources
 	out.EnableNetwork = in.EnableNetwork
 	if err := Convert_v1alpha1_Selector_To_porch_Selector(&in.Match, &out.Match, s); err != nil {
@@ -362,6 +363,7 @@ func autoConvert_porch_FunctionEvalTaskSpec_To_v1alpha1_FunctionEvalTaskSpec(in 
 	out.Image = in.Image
 	out.FunctionRef = (*FunctionRef)(unsafe.Pointer(in.FunctionRef))
 	out.ConfigMap = *(*map[string]string)(unsafe.Pointer(&in.ConfigMap))
+	out.Config = in.Config
 	out.IncludeMetaResources = in.IncludeMetaResources
 	out.EnableNetwork = in.EnableNetwork
 	if err := Convert_porch_Selector_To_v1alpha1_Selector(&in.Match, &out.Match, s); err != nil {
