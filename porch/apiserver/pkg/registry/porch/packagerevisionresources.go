@@ -130,13 +130,13 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		}
 	}
 
-	nameTokens, err := ParseName(name)
+	repositoryName, err := ParseRepositoryName(name)
 	if err != nil {
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
 
 	var repositoryObj v1alpha1.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)

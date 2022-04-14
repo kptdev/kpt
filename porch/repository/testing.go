@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package porch
+package repository
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
-func ParseRepositoryName(name string) (string, error) {
-	firstIndex := strings.Index(name, ":")
-	if firstIndex < 0 {
-		return "", fmt.Errorf("invalid name %q - insufficient colons", name)
-	}
-	return name[:firstIndex], nil
+type PackageRevisionName struct {
+	Repository, Package, Revision string
+}
+
+func (n PackageRevisionName) String() string {
+	return fmt.Sprintf("Repository: %q, Package: %q, Revision: %q", n.Repository, n.Package, n.Revision)
 }

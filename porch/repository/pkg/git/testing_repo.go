@@ -21,10 +21,10 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
+	repo "github.com/GoogleContainerTools/kpt/porch/repository"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -183,29 +183,37 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 	return file
 }
 
-func findPackage(t *testing.T, revisions []repository.PackageRevision, name string) repository.PackageRevision {
+func findPackage(t *testing.T, revisions []repository.PackageRevision, name repo.PackageRevisionName) repository.PackageRevision {
 	for _, r := range revisions {
-		if r.Name() == name {
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Fatalf("GetPackageRevision of %q failed: %v", r.Name(), err)
+		}
+		if rev.Spec.RepositoryName == name.Repository &&
+			rev.Spec.PackageName == name.Package &&
+			rev.Spec.Revision == name.Revision {
 			return r
 		}
 	}
-	names := make([]string, 0, len(revisions))
-	for _, r := range revisions {
-		names = append(names, r.Name())
-	}
-	t.Fatalf("PackageRevision %q not found among %s", name, strings.Join(names, ","))
+	t.Fatalf("PackageRevision %q not found", name)
 	return nil
 }
 
-func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name string) {
+func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name repo.PackageRevisionName) {
 	for _, r := range revisions {
-		if r.Name() == name {
+		rev, err := r.GetPackageRevision()
+		if err != nil {
+			t.Fatalf("GetPackageRevision of %q failed: %v", r.Name(), err)
+		}
+		if rev.Spec.RepositoryName == name.Repository &&
+			rev.Spec.PackageName == name.Package &&
+			rev.Spec.Revision == name.Revision {
 			t.Fatalf("PackageRevision %q expected to not exist was found", name)
 		}
 	}
 }
 
-func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name string) {
+func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repo.PackageRevisionName) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
@@ -213,7 +221,7 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name str
 	findPackage(t, list, name)
 }
 
-func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name string) {
+func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repo.PackageRevisionName) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)

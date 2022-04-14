@@ -26,6 +26,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/repository"
 	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -85,9 +86,8 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	t.registerMainGitRepositoryF(ctx, "git")
 
 	// Create Package Revision
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git:test-bucket:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -119,13 +119,14 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get package resources
 	var resources porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "git:test-bucket:v1",
+		Name:      pr.Name,
 	}, &resources)
 
 	bucket, ok := resources.Spec.Resources["bucket.yaml"]
@@ -145,34 +146,21 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 	// Register Upstream Repository
 	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
 
-	var pr porchapi.PackageRevisionResourcesList
-	t.ListE(ctx, &pr, client.InNamespace(t.namespace))
+	var list porchapi.PackageRevisionList
+	t.ListE(ctx, &list, client.InNamespace(t.namespace))
 
-	// Ensure basens package exists
-	const name = "test-blueprints:basens:v1"
-	found := false
-	for _, r := range pr.Items {
-		if r.Name == name {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		t.Errorf("Repository %q doesn't contain package %q", testBlueprintsRepo, name)
-	}
+	basens := FindPackageRevision(t.T, &list, repository.PackageRevisionName{Repository: "test-blueprints", Package: "basens", Revision: "v1"})
 
 	// Register the repository as 'downstream'
 	t.registerMainGitRepositoryF(ctx, "downstream")
 
 	// Create PackageRevision from upstream repo
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "downstream:istions:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -185,20 +173,22 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 					Clone: &porchapi.PackageCloneTaskSpec{
 						Upstream: porchapi.UpstreamPackage{
 							UpstreamRef: &porchapi.PackageRevisionRef{
-								Name: "test-blueprints:basens:v1", // Clone from basens/v1
+								Name: basens.Name,
 							},
 						},
 					},
 				},
 			},
 		},
-	})
+	}
+
+	t.CreateF(ctx, pr)
 
 	// Get istions resources
 	var istions porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "downstream:istions:v1",
+		Name:      pr.Name,
 	}, &istions)
 
 	kptfile := t.ParseKptfileF(&istions)
@@ -247,21 +237,23 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 
 func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
 	// Create a new package via init, no task specified
-	const repository = "git"
-	const name = repository + ":empty-package:v1"
-	const description = "empty-package description"
+	const (
+		repository  = "git"
+		packageName = "empty-package"
+		revision    = "v1"
+		description = "empty-package description"
+	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a new package (via init)
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -269,13 +261,14 @@ func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
 			Revision:       "v1",
 			RepositoryName: repository,
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get the package
 	var newPackage porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      name,
+		Name:      pr.Name,
 	}, &newPackage)
 
 	kptfile := t.ParseKptfileF(&newPackage)
@@ -290,23 +283,25 @@ func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
 }
 
 func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
-	const repository = "git"
-	const name = repository + ":new-package:v1"
-	const description = "New Package"
-	const site = "https://kpt.dev/new-package"
+	const (
+		repository  = "git"
+		packageName = "new-package"
+		revision    = "v1"
+		description = "New Package"
+		site        = "https://kpt.dev/new-package"
+	)
 	keywords := []string{"test"}
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a new package (via init)
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -324,13 +319,14 @@ func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get the package
 	var newPackage porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      name,
+		Name:      pr.Name,
 	}, &newPackage)
 
 	kptfile := t.ParseKptfileF(&newPackage)
@@ -350,7 +346,6 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	const downstreamRepository = "deployment"
 	const downstreamPackage = "istions"
 	const downstreamRevision = "v2"
-	const downstreamName = downstreamRepository + ":" + downstreamPackage + ":" + downstreamRevision
 
 	// Register the deployment repository
 	t.registerMainGitRepositoryF(ctx, downstreamRepository, withDeployment())
@@ -358,18 +353,21 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	// Register the upstream repository
 	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
 
-	// TODO: Confirm that upstream package doesn't contain context
-
-	const upstreamPackage = "test-blueprints:basens:v1"
+	var upstreamPackages porchapi.PackageRevisionList
+	t.ListE(ctx, &upstreamPackages, client.InNamespace(t.namespace))
+	upstreamPackage := FindPackageRevision(t.T, &upstreamPackages, repository.PackageRevisionName{
+		Repository: "test-blueprints",
+		Package:    "basens",
+		Revision:   "v1",
+	})
 
 	// Create PackageRevision from upstream repo
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      downstreamName,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -382,20 +380,21 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 					Clone: &porchapi.PackageCloneTaskSpec{
 						Upstream: porchapi.UpstreamPackage{
 							UpstreamRef: &porchapi.PackageRevisionRef{
-								Name: upstreamPackage, // Package to be cloned
+								Name: upstreamPackage.Name, // Package to be cloned
 							},
 						},
 					},
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get istions resources
 	var istions porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      downstreamName,
+		Name:      pr.Name,
 	}, &istions)
 
 	kptfile := t.ParseKptfileF(&istions)
@@ -459,19 +458,17 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 		repository  = "re-render-test"
 		packageName = "simple-package"
 		revision    = "v3"
-		name        = repository + ":" + packageName + ":" + revision
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a new package (via init)
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -479,13 +476,14 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 			Revision:       revision,
 			RepositoryName: repository,
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
-	// Get the package
+	// Get the package resources
 	var newPackage porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      name,
+		Name:      pr.Name,
 	}, &newPackage)
 
 	// Add function into a pipeline
@@ -573,20 +571,18 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 		repository      = "lifecycle"
 		packageName     = "test-package"
 		packageRevision = "v1"
-		fullName        = repository + ":" + packageName + ":" + packageRevision
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a new package (via init)
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fullName,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -600,12 +596,13 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	var pkg porchapi.PackageRevision
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      fullName,
+		Name:      pr.Name,
 	}, &pkg)
 
 	// Propose the package revision to be finalized
@@ -615,7 +612,7 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	var proposed porchapi.PackageRevision
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      fullName,
+		Name:      pr.Name,
 	}, &proposed)
 
 	if got, want := proposed.Spec.Lifecycle, porchapi.PackageRevisionLifecycleProposed; got != want {
@@ -641,24 +638,23 @@ func (t *PorchSuite) TestDeleteDraft(ctx context.Context) {
 		repository  = "delete-draft"
 		packageName = "test-delete-draft"
 		revision    = "v1"
-		name        = repository + ":" + packageName + ":" + revision
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, revision)
 
 	// Check the package exists
 	var draft porchapi.PackageRevision
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &draft)
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &draft)
 
 	// Delete the package
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
-			Name:      name,
+			Name:      created.Name,
 		},
 	})
 
@@ -670,18 +666,17 @@ func (t *PorchSuite) TestDeleteProposed(ctx context.Context) {
 		repository  = "delete-proposed"
 		packageName = "test-delete-proposed"
 		revision    = "v1"
-		name        = repository + ":" + packageName + ":" + revision
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, revision)
 
 	// Check the package exists
 	var pkg porchapi.PackageRevision
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
 	// Propose the package revision to be finalized
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
@@ -691,7 +686,7 @@ func (t *PorchSuite) TestDeleteProposed(ctx context.Context) {
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
-			Name:      name,
+			Name:      created.Name,
 		},
 	})
 
@@ -703,18 +698,17 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 		repository  = "delete-final"
 		packageName = "test-delete-final"
 		revision    = "v1"
-		name        = repository + ":" + packageName + ":" + revision
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, revision)
 
 	// Check the package exists
 	var pkg porchapi.PackageRevision
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
 	// Propose the package revision to be finalized
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
@@ -723,13 +717,13 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
 
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pkg)
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
 	// Delete the package
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
-			Name:      name,
+			Name:      created.Name,
 		},
 	})
 
@@ -741,19 +735,17 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 		repository  = "clone-ls"
 		packageName = "test-clone-ls"
 		revision    = "v1"
-		name        = repository + ":" + packageName + ":" + revision
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Clone the package. Use leading slash in the directory (regression test)
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	new := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -777,10 +769,12 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 				},
 			},
 		},
-	})
+	}
+
+	t.CreateF(ctx, new)
 
 	var pr porchapi.PackageRevision
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: name}, &pr)
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: new.Name}, &pr)
 }
 
 func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
@@ -819,9 +813,8 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 	t.registerMainGitRepositoryF(ctx, "git-builtin-fn")
 
 	// Create Package Revision
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git-builtin-fn:test-builtin-fn-bucket:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -865,13 +858,14 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				// non-ConfigMap functionConfig due to a code generator issue when dealing with unstructured.
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get package resources
 	var resources porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "git-builtin-fn:test-builtin-fn-bucket:v1",
+		Name:      pr.Name,
 	}, &resources)
 
 	bucket, ok := resources.Spec.Resources["bucket.yaml"]
@@ -896,9 +890,8 @@ func (t *PorchSuite) TestExecFunctionEvaluator(ctx context.Context) {
 	t.registerMainGitRepositoryF(ctx, "git-fn")
 
 	// Create Package Revision
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git-fn:test-fn-bucket:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -942,13 +935,14 @@ for resource in ctx.resource_list["items"]:
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get package resources
 	var resources porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "git-fn:test-fn-bucket:v1",
+		Name:      pr.Name,
 	}, &resources)
 
 	bucket, ok := resources.Spec.Resources["bucket.yaml"]
@@ -977,9 +971,8 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	t.registerMainGitRepositoryF(ctx, "git-fn-pod")
 
 	// Create Package Revision
-	t.CreateF(ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
@@ -1019,13 +1012,14 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 				},
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, pr)
 
 	// Get package resources
 	var resources porchapi.PackageRevisionResources
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
-		Name:      "git-fn-pod:test-fn-pod-hierarchy:v1",
+		Name:      pr.Name,
 	}, &resources)
 
 	counter := 0
@@ -1179,14 +1173,12 @@ func withContent(content configapi.RepositoryContent) repositoryOption {
 
 // Creates an empty package draft by initializing an empty package
 func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, revision string) *porchapi.PackageRevision {
-	fullName := fmt.Sprintf("%s:%s:%s", repository, name, revision)
 	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fullName,
 			Namespace: t.namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{

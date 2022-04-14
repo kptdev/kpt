@@ -72,13 +72,13 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("upstreamRef.name is required")
 
 	}
-	parsed, err := parseUpstreamRef(ref.Name)
+	repositoryName, err := parseUpstreamRepository(ref.Name)
 	if err != nil {
 		return repository.PackageResources{}, err
 	}
 	var resolved configapi.Repository
-	if err := m.referenceResolver.ResolveReference(ctx, m.namespace, parsed.repo, &resolved); err != nil {
-		return repository.PackageResources{}, fmt.Errorf("cannot find repository %s/%s: %w", m.namespace, parsed.repo, err)
+	if err := m.referenceResolver.ResolveReference(ctx, m.namespace, repositoryName, &resolved); err != nil {
+		return repository.PackageResources{}, fmt.Errorf("cannot find repository %s/%s: %w", m.namespace, repositoryName, err)
 	}
 
 	open, err := m.cad.OpenRepository(ctx, &resolved)
@@ -184,14 +184,10 @@ func (m *clonePackageMutation) cloneFromOci(ctx context.Context, ociPackage *api
 	return repository.PackageResources{}, errors.New("clone from OCI is not implemented")
 }
 
-type parsedRef struct {
-	repo, pkg, version string
-}
-
-func parseUpstreamRef(ref string) (parsedRef, error) {
-	first, last := strings.Index(ref, ":"), strings.LastIndex(ref, ":")
-	if first == last {
-		return parsedRef{}, fmt.Errorf("invalid package name %q", ref)
+func parseUpstreamRepository(name string) (string, error) {
+	firstIndex := strings.Index(name, ":")
+	if firstIndex < 0 {
+		return "", fmt.Errorf("invalid name %q - insufficient colons", name)
 	}
-	return parsedRef{repo: ref[:first], pkg: ref[first+1 : last], version: ref[last+1:]}, nil
+	return name[:firstIndex], nil
 }

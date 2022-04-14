@@ -79,13 +79,13 @@ func (r *packageCommon) getPackage(ctx context.Context, name string) (repository
 		return nil, fmt.Errorf("namespace must be specified")
 	}
 
-	nameTokens, err := ParseName(name)
+	repositoryName, err := ParseRepositoryName(name)
 	if err != nil {
 		return nil, apierrors.NewNotFound(r.gr, name)
 	}
 
 	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, apierrors.NewNotFound(r.gr, name)
@@ -171,13 +171,13 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", newRuntimeObj))
 	}
 
-	nameTokens, err := ParseName(name)
+	repositoryName, err := ParseRepositoryName(name)
 	if err != nil {
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
 
 	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)
