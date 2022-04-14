@@ -60,14 +60,8 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		return repository.PackageResources{}, nil, err
 	}
 
-	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
-	return result, &api.Task{
-		Type: "eval",
-		Eval: &api.FunctionEvalTaskSpec{
-			Image:     "render",
-			ConfigMap: map[string]string{},
-		},
-	}, nil
+	// This is an internal task not represented in the API, we return nil to represent this.
+	return result, nil, nil
 }
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources
