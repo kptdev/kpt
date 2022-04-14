@@ -16,6 +16,8 @@ package git
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"time"
@@ -40,8 +42,17 @@ type gitPackageRevision struct {
 
 var _ repository.PackageRevision = &gitPackageRevision{}
 
+// Kubernetes resource names requirements do not allow to encode arbitrary directory
+// path: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+// Because we need a resource names that are stable over time, and avoid conflict, we
+// compute a hash of the package path and revision.
+// For implementation convenience (though this is temporary) we prepend the repository
+// name in order to aide package discovery on the server. With improvements to caching
+// layer, the prefix will be removed (this may happen without notice) so it should not
+// be relied upon by clients.
 func (p *gitPackageRevision) Name() string {
-	return p.parent.name + ":" + p.path + ":" + p.revision
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.path, p.revision)))
+	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
 
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {

@@ -44,6 +44,9 @@ Flags:
 --name
   Name of the packages to get. Any package whose name contains this value will be included in the results.
 
+--revision
+  Revision of the package to get. Any package whose revision matches this value will be included in the results.
+
 `
 )
 
@@ -68,6 +71,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	// Create flags
 	c.Flags().StringVar(&r.name, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
+	c.Flags().StringVar(&r.revision, "revision", "", "Revision of the packages to get. Any package whose revision matches this value will be included in the results.")
 	r.printFlags.AddFlags(c)
 	return r
 }
@@ -84,6 +88,7 @@ type runner struct {
 
 	// Flags
 	name       string
+	revision   string
 	printFlags *get.PrintFlags
 }
 
@@ -166,5 +171,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) match(pr *porchapi.PackageRevision) bool {
-	return strings.Contains(pr.Name, r.name)
+	if !strings.Contains(pr.Spec.PackageName, r.name) {
+		return false
+	}
+	if r.revision != "" && r.revision != pr.Spec.Revision {
+		return false
+	}
+	return true
 }

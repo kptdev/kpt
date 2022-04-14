@@ -98,6 +98,9 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", runtimeObject))
 	}
 
+	// TODO: Accpept some form of client-provided name, for example using GenerateName
+	// and figure out where we can store it (in Kptfile?). Porch can then append unique
+	// suffix to the names while respecting client-provided value as well.
 	if obj.Name != "" {
 		klog.Warningf("Client provided metadata.name %q", obj.Name)
 	}

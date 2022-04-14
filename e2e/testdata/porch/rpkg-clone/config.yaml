@@ -14,7 +14,10 @@ commands:
       - https://github.com/platkrm/test-blueprints.git
       - --directory=basens
       - --ref=basens/v1
-      - git:basens-clone:v0
+      - --repository=git
+      - --revision=v0
+      - basens-clone
+    stdout: git-317a42f437be4e9695da4f043ff2c727f6001156 created
   - args:
       - alpha
       - repo
@@ -24,16 +27,28 @@ commands:
   - args:
       - alpha
       - rpkg
+      - get
+      - --namespace=rpkg-clone
+      - --name=empty
+      - --revision=v1
+      - --output=jsonpath={.metadata.name}
+    stdout: test-blueprints-e78ee77d9560703561c2656c97c77e9abb8c4c53
+  - args:
+      - alpha
+      - rpkg
       - clone
       - --namespace=rpkg-clone
-      - test-blueprints:empty:v1
-      - git:empty-clone:v0
+      - test-blueprints-e78ee77d9560703561c2656c97c77e9abb8c4c53
+      - --repository=git
+      - --revision=v0
+      - empty-clone
+    stdout: git-94533e00ee86a2edd5e8d91cbb76cf8ef295b58c created
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-clone
-      - git:basens-clone:v0
+      - git-317a42f437be4e9695da4f043ff2c727f6001156
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
@@ -77,7 +92,7 @@ commands:
       - rpkg
       - pull
       - --namespace=rpkg-clone
-      - git:empty-clone:v0
+      - git-94533e00ee86a2edd5e8d91cbb76cf8ef295b58c
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:

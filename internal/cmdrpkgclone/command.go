@@ -43,9 +43,9 @@ SOURCE_PACKAGE:
     * http://git-repository.git/package-name
     * repository:package:revision
 
-TARGET:
-  Target package name in the format: REPOSITORY[:PACKAGE[:REVISION]]
-  Example: package-repository:package-name:v1
+NAME:
+  Target package revision name (downstream package)
+  Example: package-name
 
 Flags:
 
@@ -54,6 +54,12 @@ Flags:
 
 --ref
 	Ref in the repository where the upstream package is located (branch, tag, SHA)
+
+--repository
+  Repository to which package will be cloned (downstream repository).
+
+--revision
+  Revision of the downstream package.
 
 --strategy
   Update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace
@@ -78,10 +84,10 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:     "clone SOURCE_PACKAGE TARGET",
+		Use:     "clone SOURCE_PACKAGE NAME",
 		Short:   "Creates a clone of a source package in the target repository.",
 		Long:    longMsg,
-		Example: "kpt alpha rpkg clone git-repository:source-package:v2 target-repository:target-package-name:v1",
+		Example: "kpt alpha rpkg clone upstream-package-name target-package-name --repository target-repository --revision v1",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
@@ -92,6 +98,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		"update strategy that should be used when updating this package; one of: "+strings.Join(strategies, ","))
 	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.ref, "ref", "main", "Branch in the repository where the upstream package is located.")
+	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
+	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
 
 	return r
 }
@@ -102,13 +110,15 @@ type runner struct {
 	client  client.Client
 	Command *cobra.Command
 
-	clone  porchapi.PackageCloneTaskSpec
-	target porch.PackageName
+	clone porchapi.PackageCloneTaskSpec
 
 	// Flags
-	strategy  string
-	directory string
-	ref       string
+	strategy   string
+	directory  string
+	ref        string
+	repository string // Target repository
+	revision   string // Target package revision
+	target     string // Target package name
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -126,17 +136,15 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	r.clone.Strategy = mergeStrategy
 
 	if len(args) < 2 {
-		return errors.E(op, fmt.Errorf("SOURCE_PACKAGE and TARGET are required positional arguments; %d provided", len(args)))
+		return errors.E(op, fmt.Errorf("SOURCE_PACKAGE and NAME are required positional arguments; %d provided", len(args)))
+	}
+
+	if r.repository == "" {
+		return errors.E(op, fmt.Errorf("--repository is required to specify downstream repository"))
 	}
 
 	source := args[0]
 	target := args[1]
-
-	// Source is a KRM package name?
-	targetPackageName, nameParts := porch.ParsePartialPackageName(target)
-	if nameParts < 1 || nameParts > 3 {
-		return errors.E(op, fmt.Errorf("invalid target name: %q", target))
-	}
 
 	switch {
 	case strings.HasPrefix(source, "oci://"):
@@ -145,48 +153,22 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 			Image: source,
 		}
 
-		// TODO: Infer target package name from source
-		if targetPackageName.Package == "" {
-			return errors.E(op, fmt.Errorf("missing target package name (%q)", target))
-		}
-
 	case strings.Contains(source, "/"):
-		// TODO: better parsing
-		// git, err := parse.GitParseArgs(r.ctx, []string{source, "."})
-		// if err != nil {
-		// 	return errors.E(op, err)
-		// }
-
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
-			Repo: source,
-			Ref:  r.ref,
-			// TODO: Temporary limitation of Porch server - it does not handle leading
-			// and trailing '/' in directory names. Can be removed when PR 2913 is merged.
-			Directory: strings.Trim(r.directory, "/"),
+			Repo:      source,
+			Ref:       r.ref,
+			Directory: r.directory,
 		}
 		// TODO: support authn
-		if targetPackageName.Package == "" {
-			targetPackageName.Package = porch.LastSegment(r.directory)
-		}
 
 	default:
-		src, err := porch.ParsePackageName(source)
-		if err != nil {
-			return errors.E(op, err)
-		}
-		if targetPackageName.Package == "" {
-			targetPackageName.Package = src.Package
-		}
 		r.clone.Upstream.UpstreamRef = &porchapi.PackageRevisionRef{
-			Name: src.Original,
+			Name: source,
 		}
 	}
 
-	if targetPackageName.Revision == "" {
-		targetPackageName.Revision = "v1"
-	}
-	r.target = targetPackageName
+	r.target = target
 
 	return nil
 }
@@ -194,19 +176,18 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
-	if err := r.client.Create(r.ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.target.Identifier(),
 			Namespace: *r.cfg.Namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
-			PackageName:    r.target.Package,
-			Revision:       r.target.Revision,
-			RepositoryName: r.target.Repository,
+			PackageName:    r.target,
+			Revision:       r.revision,
+			RepositoryName: r.repository,
 			Tasks: []porchapi.Task{
 				{
 					Type:  porchapi.TaskTypeClone,
@@ -214,9 +195,12 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 				},
 			},
 		},
-	}); err != nil {
+	}
+	if err := r.client.Create(r.ctx, pr); err != nil {
 		return errors.E(op, err)
 	}
+
+	fmt.Fprintf(cmd.OutOrStdout(), "%s created", pr.Name)
 	return nil
 }
 

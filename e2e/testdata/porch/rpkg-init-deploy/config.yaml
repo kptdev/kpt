@@ -26,13 +26,16 @@ commands:
       - --keywords=test,package
       - --site
       - http://kpt.dev/deploy-package
-      - git:deploy-package:v0
+      - --repository=git
+      - --revision=v0
+      - deploy-package
+    stdout: git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae created
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-init-deploy
-      - git:deploy-package:v0
+      - git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
