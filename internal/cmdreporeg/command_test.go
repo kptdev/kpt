@@ -25,10 +25,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	fakeprinter "github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v3"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
 )
 
 var (
@@ -65,8 +66,8 @@ func TestRepoReg(t *testing.T) {
 			args: []string{"https://github.com/platkrm/test-blueprints"},
 			actions: []httpAction{
 				{
-					method:       http.MethodPatch,
-					path:         "/apis/config.porch.kpt.dev/v1alpha1/repositories/test-blueprints",
+					method:       http.MethodPost,
+					path:         "/apis/config.porch.kpt.dev/v1alpha1/namespaces/default/repositories",
 					wantRequest:  "simple-repository.yaml",
 					sendResponse: "simple-repository.yaml",
 				},
@@ -77,14 +78,14 @@ func TestRepoReg(t *testing.T) {
 			args: []string{"https://github.com/platkrm/test-blueprints.git", "--repo-username=test-username", "--repo-password=test-password"},
 			actions: []httpAction{
 				{
-					method:       http.MethodPatch,
-					path:         "/api/v1/secrets/test-blueprints-auth",
+					method:       http.MethodPost,
+					path:         "/api/v1/namespaces/default/secrets",
 					wantRequest:  "auth-secret.yaml",
 					sendResponse: "auth-secret.yaml",
 				},
 				{
-					method:       http.MethodPatch,
-					path:         "/apis/config.porch.kpt.dev/v1alpha1/repositories/test-blueprints",
+					method:       http.MethodPost,
+					path:         "/apis/config.porch.kpt.dev/v1alpha1/namespaces/default/repositories",
 					wantRequest:  "auth-repository.yaml",
 					sendResponse: "auth-repository.yaml",
 				},
@@ -104,8 +105,8 @@ func TestRepoReg(t *testing.T) {
 			},
 			actions: []httpAction{
 				{
-					method:       http.MethodPatch,
-					path:         "/apis/config.porch.kpt.dev/v1alpha1/namespaces/repository-namespace/repositories/repository-resource-name",
+					method:       http.MethodPost,
+					path:         "/apis/config.porch.kpt.dev/v1alpha1/namespaces/repository-namespace/repositories",
 					wantRequest:  "full-repository.yaml",
 					sendResponse: "full-repository.yaml",
 				},
@@ -116,19 +117,37 @@ func TestRepoReg(t *testing.T) {
 			// Create fake Porch Server
 			porch := createFakePorch(t, tc.actions, func(action httpAction, w http.ResponseWriter, r *http.Request) {
 				// TODO: contents of this function is generic; move to shared utility in testutil.
-				gotBytes, err := ioutil.ReadAll(r.Body)
-				if err != nil {
-					t.Fatalf("Failed to read request body: %v", err)
+				var requestBody []byte
+				switch r.Header.Get("Content-Encoding") {
+				case "":
+					b, err := ioutil.ReadAll(r.Body)
+					if err != nil {
+						t.Fatalf("Failed to read request body: %v", err)
+					}
+					requestBody = b
+
+				default:
+					t.Fatalf("unhandled content-encoding %q", r.Header.Get("Content-Encoding"))
 				}
-				var got interface{}
-				if err := json.Unmarshal(gotBytes, &got); err != nil {
-					t.Fatalf("Failed to unmarshal body: %v\n%s\n", err, string(gotBytes))
+
+				var body interface{}
+				switch r.Header.Get("Content-Type") {
+				case "application/json":
+					if err := json.Unmarshal(requestBody, &body); err != nil {
+						t.Fatalf("Failed to unmarshal body: %v\n%s\n", err, string(requestBody))
+					}
+
+				// case "application/vnd.kubernetes.protobuf":
+				// Proto encoding is not handled https://kubernetes.io/docs/reference/using-api/api-concepts/#protobuf-encoding
+
+				default:
+					t.Fatalf("unhandled content-type %q", r.Header.Get("Content-Type"))
 				}
 
 				wantFile := filepath.Join(testdata, action.wantRequest)
 
 				if *update {
-					data, err := yaml.Marshal(got)
+					data, err := yaml.Marshal(body)
 					if err != nil {
 						t.Fatalf("Failed to marshal request body as YAML: %v", err)
 					}
@@ -146,8 +165,8 @@ func TestRepoReg(t *testing.T) {
 					t.Fatalf("Failed to unmarshal expected body %q: %v", wantFile, err)
 				}
 
-				if !cmp.Equal(want, got) {
-					t.Errorf("Unexpected request body for %q (-want, +got) %s", r.RequestURI, cmp.Diff(want, got))
+				if !cmp.Equal(want, body) {
+					t.Errorf("Unexpected request body for %q (-want, +got) %s", r.RequestURI, cmp.Diff(want, body))
 				}
 
 				respData, err := ioutil.ReadFile(filepath.Join(testdata, action.sendResponse))
@@ -179,7 +198,15 @@ func TestRepoReg(t *testing.T) {
 			usePersistentConfig := false
 			rcg := genericclioptions.NewConfigFlags(usePersistentConfig)
 			rcg.APIServer = &url
-			ctx := fake.CtxWithDefaultPrinter()
+			rcg.WrapConfigFn = func(restConfig *rest.Config) *rest.Config {
+				// Force use of JSON encoding
+				restConfig.ContentType = "application/json"
+				return restConfig
+			}
+			namespace := "default"
+			rcg.Namespace = &namespace
+			ctx := fakeprinter.CtxWithDefaultPrinter()
+
 			cmd := NewCommand(ctx, rcg)
 			rcg.AddFlags(cmd.PersistentFlags()) // Add global flags
 			cmd.SetArgs(tc.args)
@@ -222,6 +249,7 @@ func (p *fakePorch) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.Logf("%s\n", r.RequestURI)
 	action, ok := p.actions[request{method: r.Method, url: r.URL.Path}]
 	if !ok {
+		p.Logf("handler not found for method %q url %q", r.Method, r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}

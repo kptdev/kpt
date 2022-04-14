@@ -3,6 +3,7 @@ kind: Repository
 metadata:
     creationTimestamp: null
     name: test-blueprints
+    namespace: default
 spec:
     content: Package
     git:
