@@ -86,6 +86,29 @@ func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ e
 		return newResourceStatus(id, status.TerminatingStatus, u, "Resource scheduled for deletion"), nil
 	}
 
+	if id.GroupKind.Kind == "ConfigConnectorContext" {
+		return c.readStatusForConfigConnectorContext(u, id)
+	}
+
+	return c.readStatusForObject(u, id)
+}
+
+func (c *ConfigConnectorStatusReader) readStatusForConfigConnectorContext(u *unstructured.Unstructured, id object.ObjMetadata) (*event.ResourceStatus, error) {
+	healthy, found, err := unstructured.NestedBool(u.Object, "status", "healthy")
+	if err != nil {
+		e := fmt.Errorf("looking up status.healthy from resource: %w", err)
+		return newUnknownResourceStatus(id, u, e), nil
+	}
+	if !found {
+		return newResourceStatus(id, status.InProgressStatus, u, "status.healthy property not set"), nil
+	}
+	if !healthy {
+		return newResourceStatus(id, status.InProgressStatus, u, "status.healthy is false"), nil
+	}
+	return newResourceStatus(id, status.CurrentStatus, u, "status.healthy is true"), nil
+}
+
+func (c *ConfigConnectorStatusReader) readStatusForObject(u *unstructured.Unstructured, id object.ObjMetadata) (*event.ResourceStatus, error) {
 	// ensure that the meta generation is observed
 	generation, found, err := unstructured.NestedInt64(u.Object, "metadata", "generation")
 	if err != nil {
