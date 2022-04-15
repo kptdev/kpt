@@ -34,8 +34,8 @@ import (
 	porchclient "github.com/GoogleContainerTools/kpt/porch/api/generated/clientset/versioned"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/repository"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -639,7 +639,7 @@ func normalizeYamlOrdering(t *testing.T, contents string) string {
 	return stable.String()
 }
 
-func FindPackageRevision(t *testing.T, packages *porchapi.PackageRevisionList, name repository.PackageRevisionName) *porchapi.PackageRevision {
+func MustFindPackageRevision(t *testing.T, packages *porchapi.PackageRevisionList, name repository.PackageRevisionKey) *porchapi.PackageRevision {
 	for i := range packages.Items {
 		pr := &packages.Items[i]
 		if pr.Spec.RepositoryName == name.Repository &&

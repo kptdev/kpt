@@ -26,7 +26,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/repository"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -149,7 +149,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 	var list porchapi.PackageRevisionList
 	t.ListE(ctx, &list, client.InNamespace(t.namespace))
 
-	basens := FindPackageRevision(t.T, &list, repository.PackageRevisionName{Repository: "test-blueprints", Package: "basens", Revision: "v1"})
+	basens := MustFindPackageRevision(t.T, &list, repository.PackageRevisionKey{Repository: "test-blueprints", Package: "basens", Revision: "v1"})
 
 	// Register the repository as 'downstream'
 	t.registerMainGitRepositoryF(ctx, "downstream")
@@ -355,7 +355,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 
 	var upstreamPackages porchapi.PackageRevisionList
 	t.ListE(ctx, &upstreamPackages, client.InNamespace(t.namespace))
-	upstreamPackage := FindPackageRevision(t.T, &upstreamPackages, repository.PackageRevisionName{
+	upstreamPackage := MustFindPackageRevision(t.T, &upstreamPackages, repository.PackageRevisionKey{
 		Repository: "test-blueprints",
 		Package:    "basens",
 		Revision:   "v1",

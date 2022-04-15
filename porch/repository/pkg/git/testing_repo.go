@@ -24,7 +24,6 @@ import (
 	"sync"
 	"testing"
 
-	repo "github.com/GoogleContainerTools/kpt/porch/repository"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -183,7 +182,7 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 	return file
 }
 
-func findPackage(t *testing.T, revisions []repository.PackageRevision, name repo.PackageRevisionName) repository.PackageRevision {
+func findPackage(t *testing.T, revisions []repository.PackageRevision, name repository.PackageRevisionKey) repository.PackageRevision {
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
@@ -199,7 +198,7 @@ func findPackage(t *testing.T, revisions []repository.PackageRevision, name repo
 	return nil
 }
 
-func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name repo.PackageRevisionName) {
+func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name repository.PackageRevisionKey) {
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
@@ -213,7 +212,7 @@ func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, n
 	}
 }
 
-func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repo.PackageRevisionName) {
+func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
@@ -221,7 +220,7 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name rep
 	findPackage(t, list, name)
 }
 
-func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repo.PackageRevisionName) {
+func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)

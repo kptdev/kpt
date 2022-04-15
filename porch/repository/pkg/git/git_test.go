@@ -27,7 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/repository"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -122,7 +122,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("ListPackageRevisons failed: %v", err)
 		}
 
-		original := findPackage(t, revisions, repository.PackageRevisionName{
+		original := findPackage(t, revisions, repository.PackageRevisionKey{
 			Repository: repositoryName,
 			Package:    packageName,
 			Revision:   revision,
@@ -467,7 +467,7 @@ func TestListPackagesSimple(t *testing.T) {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
 
-	want := map[repository.PackageRevisionName]v1alpha1.PackageRevisionLifecycle{
+	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
 		{Repository: "simple", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
 		{Repository: "simple", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
 		{Repository: "simple", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
@@ -482,13 +482,13 @@ func TestListPackagesSimple(t *testing.T) {
 		{Repository: "simple", Package: "istions", Revision: "main"}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
-	got := map[repository.PackageRevisionName]v1alpha1.PackageRevisionLifecycle{}
+	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
 			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
 		}
-		got[repository.PackageRevisionName{
+		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
 			Revision:   rev.Spec.Revision,
@@ -526,7 +526,7 @@ func TestListPackagesDrafts(t *testing.T) {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
 
-	want := map[repository.PackageRevisionName]v1alpha1.PackageRevisionLifecycle{
+	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
 		{Repository: "drafts", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
 		{Repository: "drafts", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
 		{Repository: "drafts", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
@@ -542,13 +542,13 @@ func TestListPackagesDrafts(t *testing.T) {
 		{Repository: "drafts", Package: "istions", Revision: "main"}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
-	got := map[repository.PackageRevisionName]v1alpha1.PackageRevisionLifecycle{}
+	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
 			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
 		}
-		got[repository.PackageRevisionName{
+		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
 			Revision:   rev.Spec.Revision,
@@ -586,7 +586,7 @@ func TestApproveDraft(t *testing.T) {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
 
-	bucket := findPackage(t, revisions, repository.PackageRevisionName{
+	bucket := findPackage(t, revisions, repository.PackageRevisionKey{
 		Repository: repositoryName,
 		Package:    "bucket",
 		Revision:   "v1",
@@ -641,7 +641,7 @@ func TestDeletePackages(t *testing.T) {
 	}
 
 	// If we delete one of these packages, we expect the reference to be deleted too
-	wantDeletedRefs := map[repository.PackageRevisionName]plumbing.ReferenceName{
+	wantDeletedRefs := map[repository.PackageRevisionKey]plumbing.ReferenceName{
 		{Repository: "delete", Package: "bucket", Revision: "v1"}:  "refs/heads/drafts/bucket/v1",
 		{Repository: "delete", Package: "none", Revision: "v1"}:    "refs/heads/drafts/none/v1",
 		{Repository: "delete", Package: "basens", Revision: "v1"}:  "refs/tags/basens/v1",
@@ -662,9 +662,9 @@ func TestDeletePackages(t *testing.T) {
 		deleting := all[0]
 		pr, err := deleting.GetPackageRevision()
 		if err != nil {
-			t.Fatalf("GetPackageRevision of %q faile: %v", deleting.Name(), err)
+			t.Fatalf("GetPackageRevision of %q failed: %v", deleting.Name(), err)
 		}
-		name := repository.PackageRevisionName{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
+		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
 			// Verify the reference still exists
@@ -730,7 +730,7 @@ func TestRefreshRepo(t *testing.T) {
 		namespace      = "refresh-namespace"
 	)
 
-	newPackageName := repository.PackageRevisionName{
+	newPackageName := repository.PackageRevisionKey{
 		Repository: "refresh",
 		Package:    "newpkg",
 		Revision:   "v3",
@@ -750,7 +750,7 @@ func TestRefreshRepo(t *testing.T) {
 	}
 
 	// Confirm we listed some package(s)
-	findPackage(t, all, repository.PackageRevisionName{Repository: "refresh", Package: "basens", Revision: "v2"})
+	findPackage(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens", Revision: "v2"})
 	packageMustNotExist(t, all, newPackageName)
 
 	// Create package in the upstream repository
@@ -825,35 +825,35 @@ func TestPruneRemotes(t *testing.T) {
 
 	for _, pair := range []struct {
 		ref plumbing.ReferenceName
-		pkg repository.PackageRevisionName
+		pkg repository.PackageRevisionKey
 	}{
 		{
 			ref: "refs/heads/drafts/bucket/v1",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "bucket", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "bucket", Revision: "v1"},
 		},
 		{
 			ref: "refs/heads/drafts/none/v1",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "none", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "none", Revision: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v1",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "basens", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v2",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "basens", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v2"},
 		},
 		{
 			ref: "refs/tags/empty/v1",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "empty", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "empty", Revision: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v1",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "istions", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v2",
-			pkg: repository.PackageRevisionName{Repository: "prune", Package: "istions", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v2"},
 		},
 	} {
 		repositoryMustHavePackageRevision(t, git, pair.pkg)

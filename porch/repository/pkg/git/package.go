@@ -44,6 +44,14 @@ func (p *gitPackageRevision) Name() string {
 	return p.parent.name + ":" + p.path + ":" + p.revision
 }
 
+func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
+	return repository.PackageRevisionKey{
+		Repository: p.parent.name,
+		Package:    p.path,
+		Revision:   p.revision,
+	}
+}
+
 func (p *gitPackageRevision) uid() types.UID {
 	return types.UID(fmt.Sprintf("uid:%s:%s", p.path, p.revision))
 }
