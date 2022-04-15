@@ -37,7 +37,7 @@ func run(ctx context.Context) error {
 	}
 
 	// This is documented not to happen
-	return fmt.Errorf("error:: ListenAndServe returned nil error")
+	return fmt.Errorf("error: ListenAndServe returned nil error")
 }
 
 func HelloHandler(w http.ResponseWriter, r *http.Request) {
