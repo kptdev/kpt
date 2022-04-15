@@ -64,6 +64,9 @@ type cadEngine struct {
 var _ CaDEngine = &cadEngine{}
 
 type mutation interface {
+	// Apply applies the mutation to the specified resources.
+	// It returns the updated resources, along with the task as it should be represented in the PackageRevision spec.tasks.
+	// A mutation can return a nil task to indicate that we should not record a task in the PackageRevision spec.tasks.
 	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
 }
 

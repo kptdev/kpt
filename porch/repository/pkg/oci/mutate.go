@@ -152,9 +152,20 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 		return fmt.Errorf("failed to write remote layer: %w", err)
 	}
 
-	taskJSON, err := json.Marshal(*task)
-	if err != nil {
-		return fmt.Errorf("failed to marshal task %T to json: %w", task, err)
+	history := v1.History{
+		Author:  "kool kat",
+		Created: v1.Time{Time: p.created},
+	}
+
+	if task != nil {
+		taskJSON, err := json.Marshal(*task)
+		if err != nil {
+			return fmt.Errorf("failed to marshal task %T to json: %w", task, err)
+		}
+
+		history.CreatedBy = "kpt:" + string(taskJSON)
+	} else {
+		// TODO: Mark as internal in some way?
 	}
 
 	digest, err := layer.Digest()
@@ -170,15 +181,12 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 	}
 
 	p.addendums = append(p.addendums, mutate.Addendum{
-		Layer: remoteLayer,
-		History: v1.History{
-			Author:    "kool kat",
-			Created:   v1.Time{Time: p.created},
-			CreatedBy: "kpt:" + string(taskJSON),
-		},
+		Layer:   remoteLayer,
+		History: history,
 	})
-
-	p.tasks = append(p.tasks, *task)
+	if task != nil {
+		p.tasks = append(p.tasks, *task)
+	}
 
 	return nil
 }

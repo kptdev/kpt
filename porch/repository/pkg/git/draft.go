@@ -41,7 +41,7 @@ type gitPackageDraft struct {
 
 var _ repository.PackageDraft = &gitPackageDraft{}
 
-func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
+func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, task *v1alpha1.Task) error {
 	ch, err := newCommitHelper(d.parent.repo.Storer, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit packgae: %w", err)
@@ -51,7 +51,13 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		ch.storeFile(path.Join(d.path, k), v)
 	}
 
-	message := fmt.Sprintf("Intermittent commit: %s", change.Type)
+	var message string
+	if task != nil {
+		message = fmt.Sprintf("Intermittent commit: %s", task.Type)
+	} else {
+		// TODO: Safe to assume it's always a render?
+		message = "Internal commit (render)"
+	}
 	commitHash, packageTree, err := ch.commit(ctx, message, d.path)
 	if err != nil {
 		return fmt.Errorf("failed to commit package: %w", err)
