@@ -431,7 +431,9 @@ func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, fo
 		if e.Mode.IsRegular() && e.Name == "Kptfile" {
 			// Found a package
 			klog.Infof("Found package %q with Kptfile hash %q", path.Join(dir, e.Name), e.Hash)
-			return found(dir, tree.Hash, e.Hash)
+			if err := found(dir, tree.Hash, e.Hash); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -442,10 +444,12 @@ func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, fo
 
 		dirTree, err := r.TreeObject(e.Hash)
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting git tree %v: %w", e.Hash, err)
 		}
 
-		discoverPackagesInTree(r, dirTree, path.Join(dir, e.Name), found)
+		if err := discoverPackagesInTree(r, dirTree, path.Join(dir, e.Name), found); err != nil {
+			return err
+		}
 	}
 	return nil
 }
