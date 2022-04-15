@@ -42,7 +42,7 @@ type gitPackageDraft struct {
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
-	ch, err := newCommitHelper(d.parent.repo.Storer, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
+	ch, err := newCommitHelper(d.parent.repo, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit packgae: %w", err)
 	}
@@ -190,7 +190,7 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
-	ch, err := newCommitHelper(repo.Storer, r.userInfoProvider, headCommit.Hash, packagePath, packageTree)
+	ch, err := newCommitHelper(repo, r.userInfoProvider, headCommit.Hash, packagePath, packageTree)
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
