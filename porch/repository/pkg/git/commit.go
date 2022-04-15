@@ -17,12 +17,15 @@ package git
 import (
 	"context"
 	"fmt"
+	"io"
+	"io/fs"
 	"path"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -36,6 +39,7 @@ const (
 )
 
 type commitHelper struct {
+	repo             *gogit.Repository
 	storer           storage.Storer
 	trees            map[string]*object.Tree
 	parent           plumbing.Hash
@@ -44,7 +48,7 @@ type commitHelper struct {
 
 // if packageTree is zero, new tree for the package will be created (effectively replacing the package with the subsequently provided
 // contents). If the packageTree is provided, the tree will be used as the initial package contents, possibly subsequently modified.
-func newCommitHelper(storer storage.Storer, userInfoProvider repository.UserInfoProvider,
+func newCommitHelper(repo *gogit.Repository, userInfoProvider repository.UserInfoProvider,
 	parent plumbing.Hash, packagePath string, packageTree plumbing.Hash) (*commitHelper, error) {
 	var root *object.Tree
 
@@ -52,7 +56,7 @@ func newCommitHelper(storer storage.Storer, userInfoProvider repository.UserInfo
 		// No parent commit, start with an empty tree
 		root = &object.Tree{}
 	} else {
-		parentCommit, err := object.GetCommit(storer, parent)
+		parentCommit, err := object.GetCommit(repo.Storer, parent)
 		if err != nil {
 			return nil, fmt.Errorf("cannot resolve parent commit hash %s to commit: %w", parent, err)
 		}
@@ -63,13 +67,14 @@ func newCommitHelper(storer storage.Storer, userInfoProvider repository.UserInfo
 		root = t
 	}
 
-	trees, err := initializeTrees(storer, root, packagePath, packageTree)
+	trees, err := initializeTrees(repo.Storer, root, packagePath, packageTree)
 	if err != nil {
 		return nil, err
 	}
 
 	ch := &commitHelper{
-		storer:           storer,
+		repo:             repo,
+		storer:           repo.Storer,
 		trees:            trees,
 		parent:           parent,
 		userInfoProvider: userInfoProvider,
@@ -145,7 +150,7 @@ func initializeTrees(storer storage.Storer, root *object.Tree, packagePath strin
 	return trees, nil
 }
 
-// Returns index of the entry if found (by name); -1 if not found
+// Returns index of the entry if found (by name); nil if not found
 func findEntry(tree *object.Tree, name string) *object.TreeEntry {
 	for i := range tree.Entries {
 		e := &tree.Entries[i]
@@ -198,6 +203,39 @@ func (h *commitHelper) storeFile(path, contents string) error {
 		return err
 	}
 	return nil
+}
+
+func (h *commitHelper) readFile(path string) ([]byte, error) {
+	dir, filename := split(path)
+	tree := h.trees[dir]
+	if tree == nil {
+		return nil, fs.ErrNotExist
+	}
+
+	entry, err := tree.FindEntry(filename)
+	if err != nil {
+		if err == object.ErrEntryNotFound {
+			return nil, fs.ErrNotExist
+		} else {
+			return nil, fmt.Errorf("error reading from git: %w", err)
+		}
+	}
+
+	blob, err := h.repo.BlobObject(entry.Hash)
+	if err != nil {
+		return nil, fmt.Errorf("error reading from git: %w", err)
+	}
+	r, err := blob.Reader()
+	if err != nil {
+		return nil, fmt.Errorf("error reading from git: %w", err)
+	}
+	defer r.Close()
+
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("error reading from git: %w", err)
+	}
+	return b, nil
 }
 
 func (h *commitHelper) commit(ctx context.Context, message string, pkgPath string) (commit, pkgTree plumbing.Hash, err error) {
