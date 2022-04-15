@@ -182,32 +182,20 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 	return file
 }
 
-func findPackage(t *testing.T, revisions []repository.PackageRevision, name repository.PackageRevisionKey) repository.PackageRevision {
+func findPackage(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) repository.PackageRevision {
 	for _, r := range revisions {
-		rev, err := r.GetPackageRevision()
-		if err != nil {
-			t.Fatalf("GetPackageRevision of %q failed: %v", r.Name(), err)
-		}
-		if rev.Spec.RepositoryName == name.Repository &&
-			rev.Spec.PackageName == name.Package &&
-			rev.Spec.Revision == name.Revision {
+		if r.Key() == key {
 			return r
 		}
 	}
-	t.Fatalf("PackageRevision %q not found", name)
+	t.Fatalf("PackageRevision %q not found", key)
 	return nil
 }
 
-func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name repository.PackageRevisionKey) {
+func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) {
 	for _, r := range revisions {
-		rev, err := r.GetPackageRevision()
-		if err != nil {
-			t.Fatalf("GetPackageRevision of %q failed: %v", r.Name(), err)
-		}
-		if rev.Spec.RepositoryName == name.Repository &&
-			rev.Spec.PackageName == name.Package &&
-			rev.Spec.Revision == name.Revision {
-			t.Fatalf("PackageRevision %q expected to not exist was found", name)
+		if key == r.Key() {
+			t.Fatalf("PackageRevision %q expected to not exist was found", key)
 		}
 	}
 }
