@@ -155,8 +155,11 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 			if err != nil {
 				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 			}
-			drafts = append(drafts, draft)
-
+			if draft != nil {
+				drafts = append(drafts, draft)
+			} else {
+				klog.Warningf("no package draft found for ref %v", ref)
+			}
 		case isTagInLocalRepo(ref.Name()):
 			tagged, err := r.loadTaggedPackages(ref)
 			if err != nil {
@@ -225,6 +228,9 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 	rev, err := r.loadDraft(head)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load draft package: %w", err)
+	}
+	if rev == nil {
+		return nil, fmt.Errorf("cannot load draft package %q (package not found)", ref.Name())
 	}
 
 	return &gitPackageDraft{
@@ -454,6 +460,7 @@ func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, fo
 	return nil
 }
 
+// loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
 func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision, error) {
 	name, revision, err := parseDraftName(ref)
 	if err != nil {
@@ -469,23 +476,29 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 		return nil, fmt.Errorf("cannot resolve package commit to tree (corrupted repository?): %w", err)
 	}
 
-	var packageTree plumbing.Hash
+	dirTree, err := tree.Tree(name)
+	if err != nil {
+		switch err {
+		case object.ErrDirectoryNotFound, object.ErrEntryNotFound:
+			// empty package
+			return nil, nil
 
-	switch dirTree, err := tree.Tree(name); err {
-	case nil:
-		packageTree = dirTree.Hash
-		if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err == nil {
-			if !kptfileEntry.Mode.IsRegular() {
-				return nil, fmt.Errorf("found Kptfile which is not a regular file: %s", kptfileEntry.Mode)
-			}
+		default:
+			return nil, fmt.Errorf("error when looking for package in the repository: %w", err)
 		}
+	}
 
-	case object.ErrDirectoryNotFound:
-	case object.ErrEntryNotFound:
-		// ok; empty package
-
-	default:
-		return nil, fmt.Errorf("error when looking for package in the repository: %w", err)
+	packageTree := dirTree.Hash
+	kptfileEntry, err := dirTree.FindEntry("Kptfile")
+	if err != nil {
+		if err == object.ErrEntryNotFound {
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("error finding Kptfile: %w", err)
+		}
+	}
+	if !kptfileEntry.Mode.IsRegular() {
+		return nil, fmt.Errorf("found Kptfile which is not a regular file: %s", kptfileEntry.Mode)
 	}
 
 	return &gitPackageRevision{
