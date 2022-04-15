@@ -15,57 +15,8 @@
 package porch
 
 import (
-	"fmt"
 	"strings"
 )
-
-type PackageName struct {
-	Original   string
-	Repository string
-	Package    string
-	Revision   string
-}
-
-func ParsePackageName(name string) (PackageName, error) {
-	parts := strings.Split(name, ":")
-	if len(parts) != 3 {
-		return PackageName{}, fmt.Errorf("invalid package name: %q", name)
-	}
-	return PackageName{
-		Original:   name,
-		Repository: parts[0],
-		Package:    parts[1],
-		Revision:   parts[2],
-	}, nil
-}
-
-func ParsePartialPackageName(name string) (PackageName, int) {
-	result := PackageName{
-		Original: name,
-	}
-
-	parts := strings.Split(name, ":")
-	count := len(parts)
-
-	if count > 0 {
-		result.Repository = parts[0]
-	}
-	if count > 1 {
-		result.Package = parts[1]
-	}
-	if count > 2 {
-		result.Revision = parts[2]
-	}
-	return result, count
-}
-
-func (name PackageName) Identifier() string {
-	return name.String()
-}
-
-func (name PackageName) String() string {
-	return fmt.Sprintf("%s:%s:%s", name.Repository, name.Package, name.Revision)
-}
 
 func LastSegment(path string) string {
 	path = strings.TrimRight(path, "/")

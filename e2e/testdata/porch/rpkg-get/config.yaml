@@ -12,23 +12,23 @@ commands:
       - rpkg
       - get
       - --namespace=rpkg-get
-      - test-blueprints:basens:v1
       - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
     stdout: |
-      NAME                        PKG      REPO              REV
-      test-blueprints:basens:v1   basens   test-blueprints   v1
+      NAME                                                       PKG      REPO              REV
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens   test-blueprints   v1
+      test-blueprints-e78ee77d9560703561c2656c97c77e9abb8c4c53   empty    test-blueprints   v1
+      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens   test-blueprints   main
+      test-blueprints-58fffeb908ead18e2c05c873e61bff11a5292963   empty    test-blueprints   main
   - args:
       - alpha
       - rpkg
       - get
       - --namespace=rpkg-get
+      - test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597
       - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
     stdout: |
-      NAME                          PKG      REPO              REV
-      test-blueprints:basens:v1     basens   test-blueprints   v1
-      test-blueprints:empty:v1      empty    test-blueprints   v1
-      test-blueprints:basens:main   basens   test-blueprints   main
-      test-blueprints:empty:main    empty    test-blueprints   main
+      NAME                                                       PKG      REPO              REV
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens   test-blueprints   v1
   - args:
       - alpha
       - rpkg
@@ -37,6 +37,6 @@ commands:
       - --name=basens
       - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
     stdout: |
-      NAME                          PKG      REPO              REV
-      test-blueprints:basens:v1     basens   test-blueprints   v1
-      test-blueprints:basens:main   basens   test-blueprints   main
+      NAME                                                       PKG      REPO              REV
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens   test-blueprints   v1
+      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens   test-blueprints   main

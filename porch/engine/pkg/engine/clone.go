@@ -185,9 +185,9 @@ func (m *clonePackageMutation) cloneFromOci(ctx context.Context, ociPackage *api
 }
 
 func parseUpstreamRepository(name string) (string, error) {
-	firstIndex := strings.Index(name, ":")
-	if firstIndex < 0 {
-		return "", fmt.Errorf("invalid name %q - insufficient colons", name)
+	lastDash := strings.LastIndex(name, "-")
+	if lastDash < 0 {
+		return "", fmt.Errorf("malformed package revision name; expected at least one hyphen: %q", name)
 	}
-	return name[:firstIndex], nil
+	return name[:lastDash], nil
 }

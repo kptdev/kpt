@@ -25,13 +25,16 @@ commands:
       - --keywords=test,package
       - --site
       - http://kpt.dev/init-package
-      - git:init-package:v0
+      - --repository=git
+      - --revision=v0
+      - init-package
+    stdout: git-e5041a7290c88ac4ac34182c8b3d658ab97d353d created
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-init
-      - git:init-package:v0
+      - git-e5041a7290c88ac4ac34182c8b3d658ab97d353d
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:

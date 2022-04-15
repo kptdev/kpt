@@ -11,93 +11,95 @@ commands:
       - rpkg
       - init
       - --namespace=rpkg-lifecycle
-      - git:lifecycle-package:v1
+      - --repository=git
+      - --revision=v1
+      - lifecycle-package
+    stdout: git-635026ba389a2dd5417b6e7577430c7ccff30f36 created
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-lifecycle
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
     stderr: |
-      git:lifecycle-package:v1 proposed
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36 proposed
   - args:
       - alpha
       - rpkg
       - get
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       LIFECYCLE
-      git:lifecycle-package:v1   Proposed
+      NAME                                           PKG                 REV   LIFECYCLE
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Proposed
   - args:
       - alpha
       - rpkg
       - reject
       - --namespace=rpkg-lifecycle
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
     stderr: |
-      git:lifecycle-package:v1 rejected
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36 rejected
   - args:
       - alpha
       - rpkg
       - get
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       LIFECYCLE
-      git:lifecycle-package:v1   Draft
+      NAME                                           PKG                 REV   LIFECYCLE
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Draft
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-lifecycle
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
     stderr: |
-      git:lifecycle-package:v1 proposed
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36 proposed
   - args:
       - alpha
       - rpkg
       - get
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       LIFECYCLE
-      git:lifecycle-package:v1   Proposed
+      NAME                                           PKG                 REV   LIFECYCLE
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Proposed
   - args:
       - alpha
       - rpkg
       - approve
       - --namespace=rpkg-lifecycle
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
     stderr: |
-      git:lifecycle-package:v1 approved
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36 approved
   - args:
       - alpha
       - rpkg
       - get
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
+      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                       LIFECYCLE
-      git:lifecycle-package:v1   Published
+      NAME                                           PKG                 REV   LIFECYCLE
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Published
   - args:
       - alpha
       - rpkg
       - delete
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
     stderr: |
-      git:lifecycle-package:v1 deleted
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36 deleted
   - args:
       - alpha
       - rpkg
       - get
-      - git:lifecycle-package:v1
+      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,LIFECYCLE:.spec.lifecycle
-    stderr: "Error: packagerevisions.porch.kpt.dev \"git:lifecycle-package:v1\" not found \n"
+    stderr: "Error: packagerevisions.porch.kpt.dev \"git-635026ba389a2dd5417b6e7577430c7ccff30f36\" not found \n"
     exitCode: 1

@@ -30,18 +30,23 @@ import (
 const (
 	command = "cmdrpkginit"
 	longMsg = `
-kpt alpha rpkg init PACKAGE
+kpt alpha rpkg init PACKAGE_NAME
 
 Initializes a new package in a repository registered with the Package Orchestrator.
 
 Args:
 
 PACKAGE:
-  Target package name in the format: REPOSITORY:PACKAGE:REVISION
-  Example: package-repository:package-name:v1
-
+  Target package name
+  Example: package-name
 
 Flags:
+
+--repository
+  Repository to which package will be cloned (downstream repository).
+
+--revision
+  Revision of the downstream package.
 
 --description
   short description of the package
@@ -65,7 +70,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:     "init PACKAGE",
+		Use:     "init PACKAGE_NAME",
 		Short:   "Initializes a new package in a repository registered with the Package Orchestrator.",
 		Long:    longMsg,
 		Example: "kpt alpha rpkg init target-repository:target-package-name:target-revision",
@@ -78,6 +83,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
 	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
+	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
+	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
 
 	return r
 }
@@ -88,12 +95,13 @@ type runner struct {
 	client  client.Client
 	Command *cobra.Command
 
-	target porch.PackageName
-
 	// Flags
 	Keywords    []string
 	Description string
 	Site        string
+	name        string // Target package name
+	repository  string // Target repository
+	revision    string // Target revision
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -106,38 +114,29 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	r.client = client
 
 	if len(args) < 1 {
-		return errors.E(op, "TARGET is a required positional argument")
+		return errors.E(op, "PACKAGE_NAME is a required positional argument")
 	}
 
-	target := args[0]
+	r.name = args[0]
 
-	targetPackageName, nameParts := porch.ParsePartialPackageName(target)
-	if nameParts < 2 || nameParts > 3 {
-		return errors.E(op, fmt.Errorf("invalid package name: %q", target))
-	}
-	if targetPackageName.Revision == "" {
-		targetPackageName.Revision = "v1"
-	}
-	r.target = targetPackageName
 	return nil
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
-	if err := r.client.Create(r.ctx, &porchapi.PackageRevision{
+	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
 			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      r.target.Original,
 			Namespace: *r.cfg.Namespace,
 		},
 		Spec: porchapi.PackageRevisionSpec{
-			PackageName:    r.target.Package,
-			Revision:       r.target.Revision,
-			RepositoryName: r.target.Repository,
+			PackageName:    r.name,
+			Revision:       r.revision,
+			RepositoryName: r.repository,
 			Tasks: []porchapi.Task{
 				{
 					Type: porchapi.TaskTypeInit,
@@ -150,8 +149,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			},
 		},
 		Status: porchapi.PackageRevisionStatus{},
-	}); err != nil {
+	}
+	if err := r.client.Create(r.ctx, pr); err != nil {
 		return errors.E(op, err)
 	}
+
+	fmt.Fprintf(cmd.OutOrStdout(), "%s created", pr.Name)
 	return nil
 }

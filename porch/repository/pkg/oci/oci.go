@@ -16,6 +16,8 @@ package oci
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -336,7 +338,8 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 }
 
 func (p *ociPackageRevision) Name() string {
-	return p.parent.name + ":" + p.packageName + ":" + p.revision
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.revision)))
+	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
 
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
