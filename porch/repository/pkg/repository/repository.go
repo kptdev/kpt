@@ -16,6 +16,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -26,12 +27,21 @@ type PackageResources struct {
 	Contents map[string]string
 }
 
+type PackageRevisionKey struct {
+	Repository, Package, Revision string
+}
+
+func (n PackageRevisionKey) String() string {
+	return fmt.Sprintf("Repository: %q, Package: %q, Revision: %q", n.Repository, n.Package, n.Revision)
+}
+
 // PackageRevision is an abstract package version.
 // We have a single object for both Revision and Resources, because conceptually they are one object.
 // The best way we've found (so far) to represent them in k8s is as two resources, but they map to the same object.
 // Interesting reading: https://github.com/zecke/Kubernetes/blob/master/docs/devel/api-conventions.md#differing-representations
 type PackageRevision interface {
 	Name() string
+	Key() PackageRevisionKey
 	GetPackageRevision() (*v1alpha1.PackageRevision, error)
 	// TODO: return PackageResources or filesystem abstraction?
 	GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error)

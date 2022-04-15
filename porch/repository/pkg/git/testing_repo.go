@@ -21,7 +21,6 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -183,29 +182,25 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 	return file
 }
 
-func findPackage(t *testing.T, revisions []repository.PackageRevision, name string) repository.PackageRevision {
+func findPackage(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) repository.PackageRevision {
 	for _, r := range revisions {
-		if r.Name() == name {
+		if r.Key() == key {
 			return r
 		}
 	}
-	names := make([]string, 0, len(revisions))
-	for _, r := range revisions {
-		names = append(names, r.Name())
-	}
-	t.Fatalf("PackageRevision %q not found among %s", name, strings.Join(names, ","))
+	t.Fatalf("PackageRevision %q not found", key)
 	return nil
 }
 
-func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, name string) {
+func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) {
 	for _, r := range revisions {
-		if r.Name() == name {
-			t.Fatalf("PackageRevision %q expected to not exist was found", name)
+		if key == r.Key() {
+			t.Fatalf("PackageRevision %q expected to not exist was found", key)
 		}
 	}
 }
 
-func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name string) {
+func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
@@ -213,7 +208,7 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name str
 	findPackage(t, list, name)
 }
 
-func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name string) {
+func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
 	list, err := git.ListPackageRevisions(context.Background())
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)

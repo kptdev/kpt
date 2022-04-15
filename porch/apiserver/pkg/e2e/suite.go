@@ -35,6 +35,7 @@ import (
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -636,4 +637,17 @@ func normalizeYamlOrdering(t *testing.T, contents string) string {
 		t.Fatalf("Failed to re-encode yaml output: %v", err)
 	}
 	return stable.String()
+}
+
+func MustFindPackageRevision(t *testing.T, packages *porchapi.PackageRevisionList, name repository.PackageRevisionKey) *porchapi.PackageRevision {
+	for i := range packages.Items {
+		pr := &packages.Items[i]
+		if pr.Spec.RepositoryName == name.Repository &&
+			pr.Spec.PackageName == name.Package &&
+			pr.Spec.Revision == name.Revision {
+			return pr
+		}
+	}
+	t.Fatalf("Failed to find package %q", name)
+	return nil
 }

@@ -339,6 +339,14 @@ func (p *ociPackageRevision) Name() string {
 	return p.parent.name + ":" + p.packageName + ":" + p.revision
 }
 
+func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
+	return repository.PackageRevisionKey{
+		Repository: p.parent.name,
+		Package:    p.packageName,
+		Revision:   p.revision,
+	}
+}
+
 func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{

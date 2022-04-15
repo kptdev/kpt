@@ -19,21 +19,10 @@ import (
 	"strings"
 )
 
-type Name struct {
-	RepositoryName string
-	ImageName      string
-	Version        string
-}
-
-func ParseName(name string) (Name, error) {
+func ParseRepositoryName(name string) (string, error) {
 	firstIndex := strings.Index(name, ":")
-	lastIndex := strings.LastIndex(name, ":")
-	if firstIndex == lastIndex {
-		return Name{}, fmt.Errorf("invalid name - insufficient colons")
+	if firstIndex < 0 {
+		return "", fmt.Errorf("invalid name %q - insufficient colons", name)
 	}
-	return Name{
-		RepositoryName: name[:firstIndex],
-		ImageName:      name[firstIndex+1 : lastIndex],
-		Version:        name[lastIndex+1:],
-	}, nil
+	return name[:firstIndex], nil
 }

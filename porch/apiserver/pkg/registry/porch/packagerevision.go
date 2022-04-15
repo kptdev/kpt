@@ -98,23 +98,17 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", runtimeObject))
 	}
 
-	expectedName := obj.Spec.RepositoryName + ":" + obj.Spec.PackageName + ":" + obj.Spec.Revision
-	name := obj.Name
-	if name == "" {
-		name = expectedName
+	if obj.Name != "" {
+		klog.Warningf("Client provided metadata.name %q", obj.Name)
 	}
 
-	if name != expectedName {
-		return nil, apierrors.NewBadRequest(fmt.Sprintf("name should be %q", expectedName))
-	}
-
-	nameTokens, err := ParseName(name)
-	if err != nil {
-		return nil, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
+	repositoryName := obj.Spec.RepositoryName
+	if repositoryName == "" {
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("spec.repositoryName is required"))
 	}
 
 	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
@@ -181,13 +175,13 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 
 	// TODO: Verify options are empty?
 
-	nameTokens, err := ParseName(name)
+	repositoryName, err := ParseRepositoryName(name)
 	if err != nil {
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
 
 	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: nameTokens.RepositoryName}
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
