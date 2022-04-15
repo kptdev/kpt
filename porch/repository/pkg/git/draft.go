@@ -17,6 +17,7 @@ package git
 import (
 	"context"
 	"fmt"
+	"os"
 	"path"
 	"time"
 
@@ -51,7 +52,17 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		ch.storeFile(path.Join(d.path, k), v)
 	}
 
-	message := fmt.Sprintf("Intermittent commit: %s", change.Type)
+	// Because we can't read the package back without a Kptfile, make sure one is present
+	{
+		p := path.Join(d.path, "Kptfile")
+		_, err := ch.readFile(p)
+		if os.IsNotExist(err) {
+			// We could write the file here; currently we return an error
+			return fmt.Errorf("package must contain Kptfile at root")
+		}
+	}
+
+	message := fmt.Sprintf("Intermediate commit: %s", change.Type)
 	commitHash, packageTree, err := ch.commit(ctx, message, d.path)
 	if err != nil {
 		return fmt.Errorf("failed to commit package: %w", err)

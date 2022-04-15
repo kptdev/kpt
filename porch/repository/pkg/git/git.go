@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,7 +31,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -389,31 +387,23 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 	}
 	lock.Commit = commit.Hash.String()
 
-	commitTree, err := commit.Tree()
+	krmPackages, err := r.DiscoverPackagesInTree(commit, path)
 	if err != nil {
-		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash %s) to tree: %w", version, hash, err)
-	}
-	treeHash := commitTree.Hash
-	if path != "" {
-		te, err := commitTree.FindEntry(path)
-		if err != nil {
-			return nil, lock, fmt.Errorf("cannot find package %s@%s: %w", path, version, err)
-		}
-		if te.Mode != filemode.Dir {
-			return nil, lock, fmt.Errorf("path %s@%s is not a directory", path, version)
-		}
-		treeHash = te.Hash
+		return nil, lock, err
 	}
 
-	return &gitPackageRevision{
-		parent:   r,
-		path:     path,
-		revision: version,
-		updated:  commit.Author.When,
-		ref:      nil, // Cannot determine ref; this package will be considered final (immutable).
-		tree:     treeHash,
-		commit:   hash,
-	}, lock, nil
+	krmPackage := krmPackages.packages[path]
+	if krmPackage == nil {
+		return nil, lock, fmt.Errorf("cannot find package %s@%s", path, version)
+	}
+
+	var ref *plumbing.Reference = nil // Cannot determine ref; this package will be considered final (immutable).
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(version, ref)
+	if err != nil {
+		return nil, lock, err
+	}
+	return packageRevision, lock, nil
 }
 
 func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]repository.PackageRevision, error) {
@@ -421,20 +411,6 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 	commit, err := git.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
-	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return nil, err
-	}
-
-	var result []repository.PackageRevision
-
-	// Recurse into the specified directory
-	if r.directory != "" {
-		tree, err = tree.Tree(r.directory)
-		if err == object.ErrDirectoryNotFound {
-			return result, nil
-		}
 	}
 
 	var revision string
@@ -447,51 +423,20 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
 	}
 
-	if err := discoverPackagesInTree(git, tree, r.directory, func(dir string, tree, kptfile plumbing.Hash) error {
-		result = append(result, &gitPackageRevision{
-			parent:   r,
-			path:     dir,
-			revision: revision,
-			updated:  commit.Author.When,
-			ref:      ref,
-			tree:     tree,
-			commit:   ref.Hash(),
-		})
-		return nil
-	}); err != nil {
+	krmPackages, err := r.DiscoverPackagesInTree(commit, r.directory)
+	if err != nil {
 		return nil, err
 	}
-	return result, nil
-}
 
-type foundPackageCallback func(dir string, tree, kptfile plumbing.Hash) error
-
-func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, found foundPackageCallback) error {
-	for _, e := range tree.Entries {
-		if e.Mode.IsRegular() && e.Name == "Kptfile" {
-			// Found a package
-			klog.Infof("Found package %q with Kptfile hash %q", path.Join(dir, e.Name), e.Hash)
-			if err := found(dir, tree.Hash, e.Hash); err != nil {
-				return err
-			}
-		}
-	}
-
-	for _, e := range tree.Entries {
-		if e.Mode != filemode.Dir {
-			continue
-		}
-
-		dirTree, err := r.TreeObject(e.Hash)
+	var result []repository.PackageRevision
+	for _, krmPackage := range krmPackages.packages {
+		packageRevision, err := krmPackage.buildGitPackageRevision(revision, ref)
 		if err != nil {
-			return fmt.Errorf("error getting git tree %v: %w", e.Hash, err)
+			return nil, err
 		}
-
-		if err := discoverPackagesInTree(r, dirTree, path.Join(dir, e.Name), found); err != nil {
-			return err
-		}
+		result = append(result, packageRevision)
 	}
-	return nil
+	return result, nil
 }
 
 // loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
@@ -510,45 +455,25 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 	if err != nil {
 		return nil, fmt.Errorf("cannot resolve draft branch to commit (corrupted repository?): %w", err)
 	}
-	tree, err := commit.Tree()
+
+	prefix := name
+	krmPackages, err := r.DiscoverPackagesInTree(commit, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("cannot resolve package commit to tree (corrupted repository?): %w", err)
+		return nil, err
 	}
 
-	dirTree, err := tree.Tree(name)
+	krmPackage := krmPackages.packages[name]
+	if krmPackage == nil {
+		klog.Warningf("draft package %q was not found in %#v", name, krmPackages.packages)
+		return nil, nil
+	}
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(revision, ref)
 	if err != nil {
-		switch err {
-		case object.ErrDirectoryNotFound, object.ErrEntryNotFound:
-			// empty package
-			return nil, nil
-
-		default:
-			return nil, fmt.Errorf("error when looking for package in the repository: %w", err)
-		}
+		return nil, err
 	}
 
-	packageTree := dirTree.Hash
-	kptfileEntry, err := dirTree.FindEntry("Kptfile")
-	if err != nil {
-		if err == object.ErrEntryNotFound {
-			return nil, nil
-		} else {
-			return nil, fmt.Errorf("error finding Kptfile: %w", err)
-		}
-	}
-	if !kptfileEntry.Mode.IsRegular() {
-		return nil, fmt.Errorf("found Kptfile which is not a regular file: %s", kptfileEntry.Mode)
-	}
-
-	return &gitPackageRevision{
-		parent:   r,
-		path:     name,
-		revision: revision,
-		updated:  commit.Author.When,
-		ref:      ref,
-		tree:     packageTree,
-		commit:   ref.Hash(),
-	}, nil
+	return packageRevision, nil
 }
 
 func parseDraftName(draft *plumbing.Reference) (name, revision string, err error) {
@@ -593,36 +518,28 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 	if err != nil {
 		return nil, fmt.Errorf("cannot resolve tag %q to commit (corrupted repository?): %w", name, err)
 	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return nil, fmt.Errorf("cannot resolve tag %q to tree (corrupted repository?): %w", name, err)
-	}
 
-	dirTree, err := tree.Tree(path)
+	krmPackages, err := r.DiscoverPackagesInTree(commit, path)
 	if err != nil {
 		klog.Warningf("Skipping %q; cannot find %q (corrupted repository?): %w", name, path, err)
 		return nil, nil
 	}
 
-	if kptfileEntry, err := dirTree.FindEntry("Kptfile"); err != nil {
+	krmPackage := krmPackages.packages[path]
+	if krmPackage == nil {
 		klog.Warningf("Skipping %q: Kptfile not found: %w", name, err)
-		return nil, nil
-	} else if !kptfileEntry.Mode.IsRegular() {
-		klog.Warningf("Skippping %q: Kptfile is not a file", name)
 		return nil, nil
 	}
 
+	packageRevision, err := krmPackage.buildGitPackageRevision(revision, tag)
+	if err != nil {
+		return nil, err
+	}
+
 	return []repository.PackageRevision{
-		&gitPackageRevision{
-			parent:   r,
-			path:     path,
-			revision: revision,
-			updated:  commit.Author.When,
-			ref:      tag,
-			tree:     dirTree.Hash,
-			commit:   tag.Hash(),
-		},
+		packageRevision,
 	}, nil
+
 }
 
 func (r *gitRepository) dumpAllRefs() {
@@ -820,6 +737,7 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 		return err
 	}
 
+	klog.Infof("pushing refs: %v", specs)
 	if err := r.repo.Push(&git.PushOptions{
 		RemoteName:        OriginName,
 		RefSpecs:          specs,
