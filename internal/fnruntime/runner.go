@@ -58,7 +58,7 @@ func NewRunner(
 		return nil, err
 	}
 	if f.Image != "" {
-		f.Image = AddDefaultImagePathPrefix(f.Image)
+		f.Image = AddDefaultImagePathPrefix(ctx, f.Image)
 	}
 
 	fnResult := &fnresult.Result{
