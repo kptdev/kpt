@@ -17,10 +17,12 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.0
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220405020624-e5817d5d2014
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220411164219-e3555a1d90a9
+	github.com/bluekeyes/go-gitdiff v0.6.1
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.3-0.20220408232334-4f916225cb2f
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-containerregistry v0.8.0
+	github.com/hexops/gotextdiff v1.0.3
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.20.0

@@ -170,11 +170,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}, nil
 
 	case api.TaskTypePatch:
-		if task.Patch == nil {
-			return nil, fmt.Errorf("patch not set for task of type %q", task.Type)
-		}
-		// TODO: support patch?
-		return nil, fmt.Errorf("patch not supported on create")
+		return buildPatchMutation(ctx, task)
 
 	case api.TaskTypeEval:
 		if task.Eval == nil {
@@ -472,10 +468,6 @@ type mutationReplaceResources struct {
 
 func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	patch := &api.PackagePatchTaskSpec{}
-	task := &api.Task{
-		Type:  "patch",
-		Patch: patch,
-	}
 
 	old := resources.Contents
 	new := m.newResources.Spec.Resources
@@ -483,15 +475,35 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	for k, newV := range new {
 		oldV, ok := old[k]
 		// New config or changed config
-		if !ok || newV != oldV {
-			patch.Patches = append(patch.Patches, k)
+		if !ok {
+			patchSpec := api.PatchSpec{
+				File:      k,
+				PatchType: api.PatchTypeCreateFile,
+				Contents:  newV,
+			}
+			patch.Patches = append(patch.Patches, patchSpec)
+		} else if newV != oldV {
+			patchSpec, err := GeneratePatch(k, oldV, newV)
+			if err != nil {
+				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
+			}
+
+			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
 	for k := range old {
 		// Deleted config
 		if _, ok := new[k]; !ok {
-			patch.Patches = append(patch.Patches, k)
+			patchSpec := api.PatchSpec{
+				File:      k,
+				PatchType: api.PatchTypeDeleteFile,
+			}
+			patch.Patches = append(patch.Patches, patchSpec)
 		}
+	}
+	task := &api.Task{
+		Type:  api.TaskTypePatch,
+		Patch: patch,
 	}
 
 	return repository.PackageResources{Contents: new}, task, nil
