@@ -29,7 +29,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/go-git/go-git/v5/storage"
 )
 
@@ -39,30 +38,41 @@ const (
 )
 
 type commitHelper struct {
-	repo             *gogit.Repository
-	storer           storage.Storer
-	trees            map[string]*object.Tree
-	parent           plumbing.Hash
+	// repo holds the git repository we are working with
+	repo *gogit.Repository
+
+	// storer is the Storer used to get/set objects in repo
+	storer storage.Storer
+
+	// trees holds a map of all the tree objects we are writing to.
+	// We reuse the existing object.Tree structures.
+	// When a tree is dirty, we set the hash as plumbing.ZeroHash.
+	trees map[string]*object.Tree
+
+	// parentCommitHash holds the hash of the parent commit, or ZeroHash if this is the first commit.
+	parentCommitHash plumbing.Hash
+
+	// userInfoProvider provides user information for the commit
 	userInfoProvider repository.UserInfoProvider
 }
 
 // if packageTree is zero, new tree for the package will be created (effectively replacing the package with the subsequently provided
 // contents). If the packageTree is provided, the tree will be used as the initial package contents, possibly subsequently modified.
 func newCommitHelper(repo *gogit.Repository, userInfoProvider repository.UserInfoProvider,
-	parent plumbing.Hash, packagePath string, packageTree plumbing.Hash) (*commitHelper, error) {
+	parentCommitHash plumbing.Hash, packagePath string, packageTree plumbing.Hash) (*commitHelper, error) {
 	var root *object.Tree
 
-	if parent.IsZero() {
+	if parentCommitHash.IsZero() {
 		// No parent commit, start with an empty tree
 		root = &object.Tree{}
 	} else {
-		parentCommit, err := object.GetCommit(repo.Storer, parent)
+		parentCommit, err := object.GetCommit(repo.Storer, parentCommitHash)
 		if err != nil {
-			return nil, fmt.Errorf("cannot resolve parent commit hash %s to commit: %w", parent, err)
+			return nil, fmt.Errorf("cannot resolve parent commit hash %s to commit: %w", parentCommitHash, err)
 		}
 		t, err := parentCommit.Tree()
 		if err != nil {
-			return nil, fmt.Errorf("cannot resolve parent commit's (%s) tree (%s) to tree object: %w", parent, parentCommit.TreeHash, err)
+			return nil, fmt.Errorf("cannot resolve parent commit's (%s) tree (%s) to tree object: %w", parentCommitHash, parentCommit.TreeHash, err)
 		}
 		root = t
 	}
@@ -76,7 +86,7 @@ func newCommitHelper(repo *gogit.Repository, userInfoProvider repository.UserInf
 		repo:             repo,
 		storer:           repo.Storer,
 		trees:            trees,
-		parent:           parent,
+		parentCommitHash: parentCommitHash,
 		userInfoProvider: userInfoProvider,
 	}
 
@@ -126,7 +136,11 @@ func initializeTrees(storer storage.Storer, root *object.Tree, packagePath strin
 		}
 
 		// Set tree in the parent
-		setOrAddDirEntry(parent, name)
+		setOrAddTreeEntry(parent, object.TreeEntry{
+			Name: name,
+			Mode: filemode.Dir,
+			Hash: plumbing.ZeroHash,
+		})
 
 		trees[strings.Join(parts[0:i+1], "/")] = current
 		parent = current
@@ -138,19 +152,23 @@ func initializeTrees(storer storage.Storer, root *object.Tree, packagePath strin
 		// Initialize with the supplied package tree.
 		packageTree, err := object.GetTree(storer, packageTreeHash)
 		if err != nil {
-			return nil, fmt.Errorf("cannot find existing package tree %s for package %q", packageTreeHash, packagePath)
+			return nil, fmt.Errorf("cannot find existing package tree %s for package %q: %w", packageTreeHash, packagePath, err)
 		}
 		trees[packagePath] = packageTree
-		setOrAddDirEntry(parent, lastPart)
+		setOrAddTreeEntry(parent, object.TreeEntry{
+			Name: lastPart,
+			Mode: filemode.Dir,
+			Hash: plumbing.ZeroHash,
+		})
 	} else {
 		// Remove the entry if one exists
-		removeDirEntry(parent, lastPart)
+		removeTreeEntry(parent, lastPart)
 	}
 
 	return trees, nil
 }
 
-// Returns index of the entry if found (by name); nil if not found
+// Returns a pointer to the entry if found (by name); nil if not found
 func findEntry(tree *object.Tree, name string) *object.TreeEntry {
 	for i := range tree.Entries {
 		e := &tree.Entries[i]
@@ -161,28 +179,21 @@ func findEntry(tree *object.Tree, name string) *object.TreeEntry {
 	return nil
 }
 
-func setOrAddDirEntry(tree *object.Tree, name string) {
-	te := object.TreeEntry{
-		Name: name,
-		Mode: filemode.Dir,
-		Hash: [20]byte{},
-	}
+// setOrAddTreeEntry will overwrite the existing entry (by name) or insert if not present.
+func setOrAddTreeEntry(tree *object.Tree, entry object.TreeEntry) {
 	for i := range tree.Entries {
 		e := &tree.Entries[i]
-		if e.Name == name {
-			if e.Hash.IsZero() {
-				// Tree entry already exists and is new (zero hash); noop
-				return
-			}
-			*e = te // Overwrite the tree entry with a new (zero hash) placeholder.
+		if e.Name == entry.Name {
+			*e = entry // Overwrite the tree entry
 			return
 		}
 	}
 	// Not found. append new
-	tree.Entries = append(tree.Entries, te)
+	tree.Entries = append(tree.Entries, entry)
 }
 
-func removeDirEntry(tree *object.Tree, name string) {
+// removeTreeEntry will remove the specified entry (by name)
+func removeTreeEntry(tree *object.Tree, name string) {
 	entries := tree.Entries
 	for i := range entries {
 		e := &entries[i]
@@ -193,18 +204,21 @@ func removeDirEntry(tree *object.Tree, name string) {
 	}
 }
 
+// storeFile writes a blob with contents at the specified path
 func (h *commitHelper) storeFile(path, contents string) error {
-	hash, err := storeBlob(h.storer, contents)
+	hash, err := h.storeBlob(contents)
 	if err != nil {
 		return err
 	}
 
-	if err := storeBlobHashInTrees(h.trees, path, hash); err != nil {
+	if err := h.storeBlobHashInTrees(path, hash); err != nil {
 		return err
 	}
 	return nil
 }
 
+// readFile returns the contents of the blob at path.
+// If the file is not found it returns an error satisfying os.IsNotExist
 func (h *commitHelper) readFile(path string) ([]byte, error) {
 	dir, filename := split(path)
 	tree := h.trees[dir]
@@ -212,17 +226,14 @@ func (h *commitHelper) readFile(path string) ([]byte, error) {
 		return nil, fs.ErrNotExist
 	}
 
-	entry, err := tree.FindEntry(filename)
-	if err != nil {
-		if err == object.ErrEntryNotFound {
-			return nil, fs.ErrNotExist
-		} else {
-			return nil, fmt.Errorf("error reading from git: %w", err)
-		}
+	entry := findEntry(tree, filename)
+	if entry == nil {
+		return nil, fs.ErrNotExist
 	}
 
 	blob, err := h.repo.BlobObject(entry.Hash)
 	if err != nil {
+		// This is an internal consistency error, so we don't return ErrNotExist
 		return nil, fmt.Errorf("error reading from git: %w", err)
 	}
 	r, err := blob.Reader()
@@ -238,8 +249,9 @@ func (h *commitHelper) readFile(path string) ([]byte, error) {
 	return b, nil
 }
 
+// commit stores all changes in git and creates a commit object.
 func (h *commitHelper) commit(ctx context.Context, message string, pkgPath string) (commit, pkgTree plumbing.Hash, err error) {
-	treeHash, err := storeTrees(h.storer, h.trees, "")
+	rootTreeHash, err := h.storeTrees("")
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
@@ -249,7 +261,7 @@ func (h *commitHelper) commit(ctx context.Context, message string, pkgPath strin
 		ui = h.userInfoProvider.GetUserInfo(ctx)
 	}
 
-	commit, err = storeCommit(h.storer, h.parent, treeHash, ui, message)
+	commit, err = h.storeCommit(h.parentCommitHash, rootTreeHash, ui, message)
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
@@ -263,9 +275,10 @@ func (h *commitHelper) commit(ctx context.Context, message string, pkgPath strin
 	return commit, pkgTree, nil
 }
 
-func storeBlob(store storer.EncodedObjectStorer, value string) (plumbing.Hash, error) {
+// storeBlob is a helper method to write a blob to the git store.
+func (h *commitHelper) storeBlob(value string) (plumbing.Hash, error) {
 	data := []byte(value)
-	eo := store.NewEncodedObject()
+	eo := h.storer.NewEncodedObject()
 	eo.SetType(plumbing.BlobObject)
 	eo.SetSize(int64(len(data)))
 
@@ -274,14 +287,20 @@ func storeBlob(store storer.EncodedObjectStorer, value string) (plumbing.Hash, e
 		return plumbing.Hash{}, err
 	}
 
-	_, err = w.Write(data)
-	w.Close()
-	if err != nil {
+	if _, err := w.Write(data); err != nil {
+		w.Close()
 		return plumbing.Hash{}, err
 	}
-	return store.SetEncodedObject(eo)
+
+	if err := w.Close(); err != nil {
+		return plumbing.Hash{}, err
+	}
+
+	return h.storer.SetEncodedObject(eo)
 }
 
+// split returns the full directory path and file name
+// If there is no directory, it returns an empty directory path and the path as the filename.
 func split(path string) (string, string) {
 	i := strings.LastIndex(path, "/")
 	if i >= 0 {
@@ -290,13 +309,15 @@ func split(path string) (string, string) {
 	return "", path
 }
 
-func ensureTree(trees map[string]*object.Tree, fullPath string) *object.Tree {
-	if tree, ok := trees[fullPath]; ok {
+// ensureTrees ensures we have a trees for all directories in fullPath.
+// fullPath is expected to be a directory path.
+func (h *commitHelper) ensureTree(fullPath string) *object.Tree {
+	if tree, ok := h.trees[fullPath]; ok {
 		return tree
 	}
 
 	dir, base := split(fullPath)
-	parent := ensureTree(trees, dir)
+	parent := h.ensureTree(dir)
 
 	te := object.TreeEntry{
 		Name: base,
@@ -315,19 +336,19 @@ func ensureTree(trees map[string]*object.Tree, fullPath string) *object.Tree {
 
 added:
 	tree := &object.Tree{}
-	trees[fullPath] = tree
+	h.trees[fullPath] = tree
 	return tree
 }
 
-func storeBlobHashInTrees(trees map[string]*object.Tree, fullPath string, hash plumbing.Hash) error {
+// storeBlobHashInTrees writes the (previously stored) blob hash at fullpath, marking all the directory trees as dirty.
+func (h *commitHelper) storeBlobHashInTrees(fullPath string, hash plumbing.Hash) error {
 	dir, file := split(fullPath)
-
 	if file == "" {
 		return fmt.Errorf("invalid resource path: %q; no file name", fullPath)
 	}
 
-	tree := ensureTree(trees, dir)
-	tree.Entries = append(tree.Entries, object.TreeEntry{
+	tree := h.ensureTree(dir)
+	setOrAddTreeEntry(tree, object.TreeEntry{
 		Name: file,
 		Mode: filemode.Regular,
 		Hash: hash,
@@ -336,8 +357,9 @@ func storeBlobHashInTrees(trees map[string]*object.Tree, fullPath string, hash p
 	return nil
 }
 
-func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree, treePath string) (plumbing.Hash, error) {
-	tree, ok := trees[treePath]
+// storeTrees writes the tree at treePath to git, first writing all child trees.
+func (h *commitHelper) storeTrees(treePath string) (plumbing.Hash, error) {
+	tree, ok := h.trees[treePath]
 	if !ok {
 		return plumbing.Hash{}, fmt.Errorf("failed to find a tree %q", treePath)
 	}
@@ -357,19 +379,19 @@ func storeTrees(store storer.EncodedObjectStorer, trees map[string]*object.Tree,
 			continue
 		}
 
-		hash, err := storeTrees(store, trees, path.Join(treePath, e.Name))
+		hash, err := h.storeTrees(path.Join(treePath, e.Name))
 		if err != nil {
 			return plumbing.Hash{}, err
 		}
 		e.Hash = hash
 	}
 
-	eo := store.NewEncodedObject()
+	eo := h.storer.NewEncodedObject()
 	if err := tree.Encode(eo); err != nil {
 		return plumbing.Hash{}, err
 	}
 
-	treeHash, err := store.SetEncodedObject(eo)
+	treeHash, err := h.storer.SetEncodedObject(eo)
 	if err != nil {
 		return plumbing.Hash{}, err
 	}
@@ -386,7 +408,8 @@ func entrySortKey(e *object.TreeEntry) string {
 	return e.Name
 }
 
-func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
+// storeCommit creates and writes a commit object to git.
+func (h *commitHelper) storeCommit(parent plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
 	now := time.Now()
 	var authorName, authorEmail string
 	if userInfo != nil {
@@ -417,9 +440,9 @@ func storeCommit(store storer.EncodedObjectStorer, parent plumbing.Hash, tree pl
 		commit.ParentHashes = []plumbing.Hash{parent}
 	}
 
-	eo := store.NewEncodedObject()
+	eo := h.storer.NewEncodedObject()
 	if err := commit.Encode(eo); err != nil {
 		return plumbing.Hash{}, err
 	}
-	return store.SetEncodedObject(eo)
+	return h.storer.SetEncodedObject(eo)
 }
