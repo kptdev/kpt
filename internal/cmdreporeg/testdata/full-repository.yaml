@@ -14,6 +14,5 @@ spec:
         repo: https://github.com/platkrm/test-blueprints.git
         secretRef:
             name: ""
-    title: '"Test Repository Title"'
     type: git
 status: {}
