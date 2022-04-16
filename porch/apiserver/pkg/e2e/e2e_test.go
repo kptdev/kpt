@@ -528,7 +528,6 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Title:       "Function Repository",
 			Description: "Test Function Repository",
 			Type:        configapi.RepositoryTypeOCI,
 			Content:     configapi.RepositoryContentFunction,
@@ -780,10 +779,8 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 	const (
 		repository = "register"
-		title      = "Test Register Repository"
 	)
 	t.registerMainGitRepositoryF(ctx, repository,
-		withTitle(title),
 		withContent(configapi.RepositoryContentPackage),
 		withType(configapi.RepositoryTypeGit),
 		withDeployment())
@@ -794,9 +791,6 @@ func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 		Name:      repository,
 	}, &repo)
 
-	if got, want := repo.Spec.Title, title; got != want {
-		t.Errorf("Repo Title: got %q, want %q", got, want)
-	}
 	if got, want := repo.Spec.Content, configapi.RepositoryContentPackage; got != want {
 		t.Errorf("Repo Content: got %q, want %q", got, want)
 	}
@@ -1051,7 +1045,6 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name stri
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Title:   "Public Git Repository",
 			Type:    configapi.RepositoryTypeGit,
 			Content: configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
@@ -1114,7 +1107,6 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Title:       "Porch Test Repository",
 			Description: "Porch Test Repository Description",
 			Type:        configapi.RepositoryTypeGit,
 			Content:     configapi.RepositoryContentPackage,
@@ -1150,12 +1142,6 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 func withDeployment() repositoryOption {
 	return func(r *configapi.Repository) {
 		r.Spec.Deployment = true
-	}
-}
-
-func withTitle(title string) repositoryOption {
-	return func(r *configapi.Repository) {
-		r.Spec.Title = title
 	}
 }
 

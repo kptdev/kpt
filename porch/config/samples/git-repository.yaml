@@ -18,7 +18,6 @@ metadata:
   name: blueprints
   namespace: default
 spec:
-  title: Blueprints
   description: Blueprints Git Repository
   content: PackageRevision
   type: git
