@@ -83,6 +83,9 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		"hello": "world",
 	}
 
+	// We require a Kptfile to indicate the package boundary
+	wantResources["Kptfile"] = "placeholder"
+
 	{
 		packageRevision := &v1alpha1.PackageRevision{
 			ObjectMeta: metav1.ObjectMeta{
