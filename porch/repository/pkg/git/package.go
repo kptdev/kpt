@@ -86,7 +86,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			PackageName:    p.path,
 			Revision:       p.revision,
 			RepositoryName: p.parent.name,
-			Lifecycle:      p.getPackageRevisionLifecycle(),
+			Lifecycle:      p.Lifecycle(),
 			Tasks:          []v1alpha1.Task{},
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
@@ -164,7 +164,7 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 		}, nil
 }
 
-func (p *gitPackageRevision) getPackageRevisionLifecycle() v1alpha1.PackageRevisionLifecycle {
+func (p *gitPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 	switch ref := p.ref; {
 	case ref == nil:
 		return v1alpha1.PackageRevisionLifecyclePublished

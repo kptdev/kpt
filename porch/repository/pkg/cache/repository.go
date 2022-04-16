@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/mod/semver"
 	"k8s.io/klog/v2"
 )
 
@@ -34,10 +35,36 @@ type cachedRepository struct {
 	cancel context.CancelFunc
 
 	mutex          sync.Mutex
-	cachedPackages []repository.PackageRevision
+	cachedPackages []*cachedPackageRevision
 	// TODO: Currently we support repositories with homogenous content (only packages xor functions). Model this more optimally?
 	cachedFunctions []repository.Function
 }
+
+// We take advantage of the cache having a global view of all the packages
+// in a repository and compute the latest package revision in the cache
+// rather than add another level of caching in the repositories themselves.
+// This also reuses the revision comparison code and ensures same behavior
+// between Git and OCI.
+type cachedPackageRevision struct {
+	repository.PackageRevision
+	isLatestRevision bool
+}
+
+func (c *cachedPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
+	rev, err := c.PackageRevision.GetPackageRevision()
+	if err != nil {
+		return nil, err
+	}
+	if c.isLatestRevision {
+		if rev.Labels == nil {
+			rev.Labels = map[string]string{}
+		}
+		rev.Labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
+	}
+	return rev, nil
+}
+
+var _ repository.PackageRevision = &cachedPackageRevision{}
 
 func newRepository(id string, repo repository.Repository) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -86,14 +113,14 @@ func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) (
 		if err != nil {
 			return nil, err
 		}
-		packages = p
+		packages = ToCachedPackageRevisionSlice(p)
 
 		r.mutex.Lock()
-		r.cachedPackages = p
+		r.cachedPackages = packages
 		r.mutex.Unlock()
 	}
 
-	return packages, nil
+	return ToPackageRevisionSlice(packages), nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -138,7 +165,9 @@ func (r *cachedRepository) CreatePackageRevision(ctx context.Context, obj *v1alp
 }
 
 func (r *cachedRepository) UpdatePackage(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
-	created, err := r.repo.UpdatePackage(ctx, old)
+	// Unwrap
+	unwrapped := old.(*cachedPackageRevision).PackageRevision
+	created, err := r.repo.UpdatePackage(ctx, unwrapped)
 	if err != nil {
 		return nil, err
 	}
@@ -153,22 +182,26 @@ func (r *cachedRepository) update(closed repository.PackageRevision) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	for i, cached := range r.cachedPackages {
-		if cached.Name() == closed.Name() {
-			if cached == closed {
-				return
-			}
+	r.cachedPackages = updateOrAppend(r.cachedPackages, &cachedPackageRevision{PackageRevision: closed})
+	// Recompute latest package revisions.
+	IdentifyLatestRevisions(r.cachedPackages)
+}
+
+func updateOrAppend(revisions []*cachedPackageRevision, new *cachedPackageRevision) []*cachedPackageRevision {
+	for i, cached := range revisions {
+		if cached.Name() == new.Name() {
 			// TODO: more sophisticated conflict reconciliation?
-			r.cachedPackages[i] = closed
-			return
+			revisions[i] = new
+			return revisions
 		}
 	}
-
-	r.cachedPackages = append(r.cachedPackages, closed)
+	return append(revisions, new)
 }
 
 func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
-	if err := r.repo.DeletePackageRevision(ctx, old); err != nil {
+	// Unwrap
+	unwrapped := old.(*cachedPackageRevision).PackageRevision
+	if err := r.repo.DeletePackageRevision(ctx, unwrapped); err != nil {
 		return err
 	}
 
@@ -212,4 +245,61 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
+}
+
+func ToCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cachedPackageRevision {
+	result := make([]*cachedPackageRevision, len(revisions))
+	for i := range revisions {
+		current := &cachedPackageRevision{
+			PackageRevision:  revisions[i],
+			isLatestRevision: false,
+		}
+		result[i] = current
+	}
+	IdentifyLatestRevisions(result)
+	return result
+}
+
+func IdentifyLatestRevisions(result []*cachedPackageRevision) {
+	// Compute the latest among the different revisions of the same package.
+	// The map is keyed by the package name; Values are the latest revision found so far.
+	latest := map[string]*cachedPackageRevision{}
+	for _, current := range result {
+		current.isLatestRevision = false // Clear all values
+
+		// Check if the current package revision is more recent than the one sen so far.
+		// Only consider Published packages
+		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
+			continue
+		}
+
+		currentKey := current.Key()
+		if previous, ok := latest[currentKey.Package]; ok {
+			previousKey := previous.Key()
+			switch cmp := semver.Compare(currentKey.Revision, previousKey.Revision); {
+			case cmp == 0:
+				// Same revision.
+			case cmp < 0:
+				// currentKey.Revision < previousKey.Revision; no change
+			case cmp > 0:
+				// currentKey.Revision > previousKey.Revision; update latest
+				latest[currentKey.Package] = current
+			}
+		} else if semver.IsValid(currentKey.Revision) {
+			// First revision of the specific package; candidate for the latest.
+			latest[currentKey.Package] = current
+		}
+	}
+	// Mark the winners as latest
+	for _, v := range latest {
+		v.isLatestRevision = true
+	}
+}
+
+func ToPackageRevisionSlice(cached []*cachedPackageRevision) []repository.PackageRevision {
+	result := make([]repository.PackageRevision, len(cached))
+	for i := range cached {
+		result[i] = cached[i]
+	}
+	return result
 }

@@ -36,6 +36,12 @@ var (
 		objects:  []runtime.Object{&Repository{}, &RepositoryList{}},
 	}
 
+	RepositoryGVK = schema.GroupVersionKind{
+		Group:   GroupVersion.Group,
+		Version: GroupVersion.Version,
+		Kind:    "Repository",
+	}
+
 	AllKinds = []KindInfo{KindRepository}
 )
 

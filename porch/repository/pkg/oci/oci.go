@@ -377,3 +377,8 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.Name())
 }
+
+func (p *ociPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
+	// TODO: implement package lifecycle for OCI.
+	return v1alpha1.PackageRevisionLifecyclePublished
+}

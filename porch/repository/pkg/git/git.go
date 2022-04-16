@@ -237,7 +237,7 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		parent:    r,
 		path:      oldGitPackage.path,
 		revision:  oldGitPackage.revision,
-		lifecycle: oldGitPackage.getPackageRevisionLifecycle(),
+		lifecycle: oldGitPackage.Lifecycle(),
 		updated:   rev.updated,
 		base:      rev.ref,
 		tree:      rev.tree,

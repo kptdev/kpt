@@ -33,6 +33,13 @@ type PackageRevision struct {
 	Status PackageRevisionStatus `json:"status,omitempty"`
 }
 
+// Key and value of the latest package revision label:
+
+const (
+	LatestPackageRevisionKey   = "kpt.dev/latest-revision"
+	LatestPackageRevisionValue = "true"
+)
+
 // PackageRevisionList
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type PackageRevisionList struct {
