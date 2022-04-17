@@ -100,6 +100,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		namespace:          namespace,
 		repo:               repo,
 		branch:             branch,
+		directory:          strings.Trim(spec.Directory, "/"),
 		secret:             spec.SecretRef.Name,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
@@ -117,6 +118,7 @@ type gitRepository struct {
 	namespace          string     // Repository resource namespace
 	secret             string     // Name of the k8s Secret resource containing credentials
 	branch             BranchName // The main branch from repository registration (defaults to 'main' if unspecified)
+	directory          string     // Directory within the repository where to look for packages.
 	repo               *git.Repository
 	cachedCredentials  transport.AuthMethod
 	credentialResolver repository.CredentialResolver
@@ -184,6 +186,10 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 }
 
 func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
+	if !packageInDirectory(obj.Spec.PackageName, r.directory) {
+		return nil, fmt.Errorf("cannot create %s outside of repository directory %q", obj.Spec.PackageName, r.directory)
+	}
+
 	var base plumbing.Hash
 	refName := r.branch.RefInLocal()
 	switch main, err := r.repo.Reference(refName, true); {
@@ -345,6 +351,10 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 }
 
 func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	if !packageInDirectory(path, r.directory) {
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find package %s@%s; package is not under the Repository.spec.directory", path, version)
+	}
+
 	git := r.repo
 
 	origin, err := git.Remote("origin")
@@ -402,6 +412,16 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 		return nil, err
 	}
 
+	var result []repository.PackageRevision
+
+	// Recurse into the specified directory
+	if r.directory != "" {
+		tree, err = tree.Tree(r.directory)
+		if err == object.ErrDirectoryNotFound {
+			return result, nil
+		}
+	}
+
 	var revision string
 	if rev, ok := getBranchNameInLocalRepo(ref.Name()); ok {
 		revision = rev
@@ -412,8 +432,7 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
 	}
 
-	var result []repository.PackageRevision
-	if err := discoverPackagesInTree(git, tree, "", func(dir string, tree, kptfile plumbing.Hash) error {
+	if err := discoverPackagesInTree(git, tree, r.directory, func(dir string, tree, kptfile plumbing.Hash) error {
 		result = append(result, &gitPackageRevision{
 			parent:   r,
 			path:     dir,
@@ -465,6 +484,11 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 	name, revision, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
+	}
+
+	// Only load drafts in the directory specified at repository registration.
+	if !packageInDirectory(name, r.directory) {
+		return nil, nil
 	}
 
 	commit, err := r.repo.CommitObject(ref.Hash())
@@ -545,6 +569,10 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 
 	// tag=<package path>/version
 	path, revision := name[:slash], name[slash+1:]
+
+	if !packageInDirectory(path, r.directory) {
+		return nil, nil
+	}
 
 	commit, err := r.repo.CommitObject(tag.Hash())
 	if err != nil {
