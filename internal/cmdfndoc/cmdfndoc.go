@@ -44,7 +44,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
 	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.FetchFunctionImages(), cobra.ShellCompDirectiveDefault
+		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
 	})
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
@@ -64,7 +64,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
+	r.Image = fnruntime.AddDefaultImagePathPrefix(c.Context(), r.Image)
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",

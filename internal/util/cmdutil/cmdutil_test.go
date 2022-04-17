@@ -20,6 +20,7 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/util/function"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -308,7 +309,7 @@ metadata:
 }
 
 func TestListImages(t *testing.T) {
-	result := listImages(`{
+	functions := parseFunctions(`{
   "apply-setters": {
     "v0.1": {
       "LatestPatchVersion": "v0.1.1",
@@ -344,6 +345,7 @@ func TestListImages(t *testing.T) {
     }
   }
 }`)
+	result := function.GetNames(functions)
 	sort.Strings(result)
 	assert.Equal(t, []string{"apply-setters:v0.1.1", "gatekeeper:v0.2.1"}, result)
 }

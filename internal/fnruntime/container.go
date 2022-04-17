@@ -27,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
@@ -174,12 +175,24 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	return ce
 }
 
-// AddDefaultImagePathPrefix adds default gcr.io/kpt-fn/ path prefix to image if only image name is specified
-func AddDefaultImagePathPrefix(image string) string {
+// AddDefaultImagePathPrefix converts the function short path to the full image url.
+// If the function is Catalog function, it adds "gcr.io/kpt-fn/".e.g. set-namespace:v0.1 --> gcr.io/kpt-fn/set-namespace:v0.1
+// If the function is porch function, it queries porch to get the function image by name and namespace.
+// e.g. default:set-namespace:v0.1 --> us-west1-docker.pkg.dev/cpa-kit-dev/packages/set-namespace:v0.1
+func AddDefaultImagePathPrefix(ctx context.Context, image string) string {
+	segments := strings.Split(image, ":")
+	if len(segments) == 4 {
+		// Porch function
+		functionName := strings.Join(segments[1:], ":")
+		function, err := porch.FunctionGetter{}.Get(ctx, functionName, segments[0])
+		if err != nil {
+			return image
+		}
+		return function.Spec.Image
+	}
 	if !strings.Contains(image, "/") {
 		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
 	}
-	// TODO(yuwenma): append porch repo prefix if the image comes from porch function.
 	return image
 }
 

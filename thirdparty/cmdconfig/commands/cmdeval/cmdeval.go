@@ -378,7 +378,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		return errors.Errorf("must specify --image or --exec")
 	}
 	if r.Image != "" {
-		r.Image = fnruntime.AddDefaultImagePathPrefix(r.Image)
+		r.Image = fnruntime.AddDefaultImagePathPrefix(c.Context(), r.Image)
 		err := cmdutil.DockerCmdAvailable()
 		if err != nil {
 			return err

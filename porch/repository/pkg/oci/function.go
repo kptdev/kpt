@@ -73,8 +73,10 @@ type ociFunction struct {
 
 var _ repository.Function = &ociFunction{}
 
+// LINT.IfChange(Name)
 func (f *ociFunction) Name() string {
 	return fmt.Sprintf("%s:%s:%s", f.parent.name, f.name, f.version)
+	// LINT.ThenChange(internal/fnruntime/container.go AddDefaultImagePathPrefix)
 }
 
 func (f *ociFunction) GetFunction() (*v1alpha1.Function, error) {

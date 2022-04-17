@@ -26,8 +26,10 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/util/function"
 	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -40,8 +42,8 @@ const (
 	Stdout                                  = "stdout"
 	Unwrap                                  = "unwrap"
 	dockerVersionTimeout      time.Duration = 5 * time.Second
-	FunctionsCatalogURL                     = "https://catalog.kpt.dev/catalog-v2.json"
 	minSupportedDockerVersion string        = "v20.10.0"
+	FunctionsCatalogURL                     = "https://catalog.kpt.dev/catalog-v2.json"
 )
 
 // FixDocs replaces instances of old with new in the docs for c
@@ -194,67 +196,75 @@ func GetKeywordsFromFlag(cmd *cobra.Command) []string {
 // SuggestFunctions looks for functions from kpt curated catalog list as well as the Porch
 // orchestrator to suggest functions.
 func SuggestFunctions(cmd *cobra.Command) []string {
-	var functions []string
-	matchers := []porch.Matcher{
-		porch.TypeMatcher{FnType: cmd.Flag("type").Value.String()},
-		porch.KeywordsMatcher{Keywords: GetKeywordsFromFlag(cmd)},
+	matchers := []function.Matcher{
+		function.TypeMatcher{FnType: cmd.Flag("type").Value.String()},
+		function.KeywordsMatcher{Keywords: GetKeywordsFromFlag(cmd)},
 	}
-	porchFunctions := porch.MatchFunctions(cmd.Context(), matchers...)
-	functions = append(functions, porch.ToShortNames(porchFunctions)...)
-	// TODO(yuwenma): We should filter these catalog.kpt.fn functions by its annotation as well! This requires changing
-	// the kpt-functions-catalog release workflow to include new annotations.
-	functions = append(functions, FetchFunctionImages()...)
-	var dedup []string
-	fnMap := map[string]bool{}
-	for _, function := range functions {
-		if _, ok := fnMap[function]; !ok {
-			dedup = append(dedup, function)
-			fnMap[function] = true
-		}
-	}
-	return dedup
+	functions := DiscoverFunctions(cmd)
+	matched := function.MatchFunctions(functions, matchers...)
+	return function.GetNames(matched)
 }
 
 // SuggestKeywords looks for all the unique keywords from Porch functions. This keywords
 // can later help users to select functions.
 func SuggestKeywords(cmd *cobra.Command) []string {
-	functions := porch.MatchFunctions(cmd.Context(), porch.TypeMatcher{FnType: cmd.Flag("type").Value.String()})
-	return porch.UnifyKeywords(functions)
+	functions := DiscoverFunctions(cmd)
+	matched := function.MatchFunctions(functions, function.TypeMatcher{FnType: cmd.Flag("type").Value.String()})
+	return porch.UnifyKeywords(matched)
 }
 
-// FetchFunctionImages returns the list of latest function images from catalog.kpt.dev
-func FetchFunctionImages() []string {
+func DiscoverFunctions(cmd *cobra.Command) []v1alpha1.Function {
+	porchFns := porch.FunctionListGetter{}.Get(cmd.Context())
+	catalogV2Fns := fetchCatalogFunctions()
+	return append(porchFns, catalogV2Fns...)
+}
+
+// fetchCatalogFunctions returns the list of latest function images from catalog.kpt.dev.
+func fetchCatalogFunctions() []v1alpha1.Function {
 	content, err := httputil.FetchContent(FunctionsCatalogURL)
 	if err != nil {
 		return nil
 	}
-
-	return listImages(content)
+	return parseFunctions(content)
 }
 
 // fnName -> v<major>.<minor> -> catalogEntry
 type catalogV2 map[string]map[string]struct {
 	LatestPatchVersion string
 	Examples           interface{}
+	Types              []string
+	Keywords           []string
 }
 
 // listImages returns the list of latest images from the input catalog content
-func listImages(content string) []string {
-	var result []string
+func parseFunctions(content string) []v1alpha1.Function {
 	var jsonData catalogV2
 	err := json.Unmarshal([]byte(content), &jsonData)
 	if err != nil {
-		return result
+		return nil
 	}
+	var functions []v1alpha1.Function
 	for fnName, fnInfo := range jsonData {
 		var latestVersion string
+		var keywords []string
+		var fnTypes []v1alpha1.FunctionType
 		for _, catalogEntry := range fnInfo {
 			version := catalogEntry.LatestPatchVersion
 			if semver.Compare(version, latestVersion) == 1 {
 				latestVersion = version
+				keywords = catalogEntry.Keywords
+				for _, tp := range catalogEntry.Types {
+					switch tp {
+					case "validator":
+						fnTypes = append(fnTypes, v1alpha1.FunctionTypeValidator)
+					case "mutator":
+						fnTypes = append(fnTypes, v1alpha1.FunctionTypeMutator)
+					}
+				}
 			}
 		}
-		result = append(result, fmt.Sprintf("%s:%s", fnName, latestVersion))
+		fnName := fmt.Sprintf("%s:%s", fnName, latestVersion)
+		functions = append(functions, function.CatalogFunction(fnName, keywords, fnTypes))
 	}
-	return result
+	return functions
 }
