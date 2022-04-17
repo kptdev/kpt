@@ -27,16 +27,12 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 )
 
-const expirationNanoSecond = 10
-
-var Expiration = time.Duration(expirationNanoSecond) * time.Second
+const Expiration time.Duration = 10 * time.Second
 
 // FunctionListGetter gets the list of v1alpha1.Functions from the cluster.
-type FunctionListGetter struct {
-	Ctx context.Context
-}
+type FunctionListGetter struct{}
 
-func (f FunctionListGetter) Get() []v1alpha1.Function {
+func (f FunctionListGetter) Get(ctx context.Context) []v1alpha1.Function {
 	kubeflags := genericclioptions.NewConfigFlags(true)
 	client, err := CreateRESTClient(kubeflags)
 	if err != nil {
@@ -52,7 +48,7 @@ func (f FunctionListGetter) Get() []v1alpha1.Function {
 		Timeout(Expiration).
 		Resource("functions").
 		VersionedParams(&metav1.GetOptions{}, codec).
-		Do(f.Ctx).
+		Do(ctx).
 		Into(&functions); err != nil {
 		return nil
 	}
@@ -60,11 +56,9 @@ func (f FunctionListGetter) Get() []v1alpha1.Function {
 }
 
 // FunctionGetter gets a specific v1alpha1.Functions by name.
-type FunctionGetter struct {
-	Ctx context.Context
-}
+type FunctionGetter struct{}
 
-func (f FunctionGetter) Get(name, namespace string) (v1alpha1.Function, error) {
+func (f FunctionGetter) Get(ctx context.Context, name, namespace string) (v1alpha1.Function, error) {
 	kubeflags := genericclioptions.NewConfigFlags(true)
 	var function v1alpha1.Function
 	client, err := CreateRESTClient(kubeflags)
@@ -82,7 +76,7 @@ func (f FunctionGetter) Get(name, namespace string) (v1alpha1.Function, error) {
 		Name(name).
 		Namespace(namespace).
 		VersionedParams(&metav1.GetOptions{}, codec).
-		Do(f.Ctx).
+		Do(ctx).
 		Into(&function)
 	return function, err
 }

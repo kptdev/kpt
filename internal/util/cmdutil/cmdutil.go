@@ -32,7 +32,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 )
@@ -215,7 +214,7 @@ func SuggestKeywords(cmd *cobra.Command) []string {
 }
 
 func DiscoverFunctions(cmd *cobra.Command) []v1alpha1.Function {
-	porchFns := porch.FunctionListGetter{Ctx: cmd.Context()}.Get()
+	porchFns := porch.FunctionListGetter{}.Get(cmd.Context())
 	catalogV2Fns := fetchCatalogFunctions()
 	return append(porchFns, catalogV2Fns...)
 }
@@ -245,10 +244,10 @@ func parseFunctions(content string) []v1alpha1.Function {
 		return nil
 	}
 	var functions []v1alpha1.Function
-	var fnTypes []v1alpha1.FunctionType
-	var keywords []string
 	for fnName, fnInfo := range jsonData {
 		var latestVersion string
+		var keywords []string
+		var fnTypes []v1alpha1.FunctionType
 		for _, catalogEntry := range fnInfo {
 			version := catalogEntry.LatestPatchVersion
 			if semver.Compare(version, latestVersion) == 1 {
@@ -265,19 +264,7 @@ func parseFunctions(content string) []v1alpha1.Function {
 			}
 		}
 		fnName := fmt.Sprintf("%s:%s", fnName, latestVersion)
-		functions = append(functions,
-			v1alpha1.Function{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      fnName,
-					Namespace: function.CatalogV2,
-				},
-				Spec: v1alpha1.FunctionSpec{
-					Image:         fmt.Sprintf("gcr.io/kpt-fn/%s", fnName),
-					FunctionTypes: fnTypes,
-					Keywords:      keywords,
-				},
-			})
+		functions = append(functions, function.CatalogFunction(fnName, keywords, fnTypes))
 	}
 	return functions
 }
