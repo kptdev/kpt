@@ -148,9 +148,6 @@ spec:
                 required:
                 - registry
                 type: object
-              title:
-                description: Title of the repository for display in the UIs.
-                type: string
               type:
                 description: Type of the repository (i.e. git, OCI)
                 type: string

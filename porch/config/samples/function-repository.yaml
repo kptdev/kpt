@@ -18,7 +18,6 @@ metadata:
   name: kpt-functions
   namespace: default
 spec:
-  title: Standard KPT Function Library
   description: Standard library of core kpt functions to manipulate KRM blueprints.
   content: Function
   type: oci

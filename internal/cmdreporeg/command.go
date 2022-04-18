@@ -47,9 +47,6 @@ Flags:
 --name
   Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
 
---title
-  Title of the package repository.
-
 --deployment
   Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.
 
@@ -85,7 +82,6 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	r.Command = c
 
-	c.Flags().StringVar(&r.title, "title", "", "Title of the package repository.")
 	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where to look for packages.")
 	c.Flags().StringVar(&r.branch, "branch", "main", "Branch in the repository where finalized packages are committed.")
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
@@ -108,7 +104,6 @@ type runner struct {
 	Command *cobra.Command
 
 	// Flags
-	title       string
 	directory   string
 	branch      string
 	name        string
@@ -205,7 +200,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Namespace: *r.cfg.Namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Title:       r.title,
 			Description: r.description,
 			Type:        rt,
 			Content:     configapi.RepositoryContentPackage,

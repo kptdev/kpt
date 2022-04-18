@@ -95,7 +95,6 @@ func TestRepoReg(t *testing.T) {
 			name: "FullRegister",
 			args: []string{
 				"https://github.com/platkrm/test-blueprints.git",
-				"--title=\"Test Repository Title\"",
 				"--name=repository-resource-name",
 				"--description=\"Test Repository Description\"",
 				"--deployment",

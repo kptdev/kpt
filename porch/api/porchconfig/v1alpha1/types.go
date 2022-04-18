@@ -49,8 +49,6 @@ const (
 // Notes:
 //  * deployment repository - in KRM API ConfigSync would be configured directly? (or via this API)
 type RepositorySpec struct {
-	// Title of the repository for display in the UIs.
-	Title string `json:"title,omitempty"`
 	// User-friendly description of the repository
 	Description string `json:"description,omitempty"`
 	// The repository is a deployment repository; final packages in this repository are deployment ready.

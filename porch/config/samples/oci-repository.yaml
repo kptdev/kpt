@@ -18,7 +18,6 @@ metadata:
   name: blueprints
   namespace: default
 spec:
-  title: Blueprints
   description: OCI Blueprints Repository for testing Porch.
   content: PackageRevision
   type: oci
