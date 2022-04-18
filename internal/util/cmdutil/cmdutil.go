@@ -188,6 +188,9 @@ func GetKeywordsFromFlag(cmd *cobra.Command) []string {
 	splitted := strings.Split(flagVal, ",")
 	var trimmed []string
 	for _, val := range splitted {
+		if strings.TrimSpace(val) == "" {
+			continue
+		}
 		trimmed = append(trimmed, strings.TrimSpace(val))
 	}
 	return trimmed

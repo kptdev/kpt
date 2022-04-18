@@ -14,4 +14,4 @@
 # limitations under the License.
 set -eo pipefail
 
-kpt fn eval -s --exec ./function.sh --fn-config=fn-config.yaml
+kpt fn eval -s -t mutator --exec ./function.sh --fn-config=fn-config.yaml
