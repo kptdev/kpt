@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -865,5 +866,69 @@ func TestPruneRemotes(t *testing.T) {
 			t.Fatalf("RemoveReference(%q) failed: %v", pair.ref, err)
 		}
 		repositoryMustNotHavePackageRevision(t, git, pair.pkg)
+	}
+}
+
+func TestNested(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "nested-repository.tar")
+	repo, address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		repositoryName = "nested"
+		namespace      = "default"
+	)
+
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+	}, tempdir, GitRepositoryOptions{})
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx)
+	if err != nil {
+		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+	}
+
+	// Check that all tags and branches have their packages.
+	want := map[string]v1alpha1.PackageRevisionLifecycle{}
+	forEachRef(t, repo, func(ref *plumbing.Reference) error {
+		switch name := string(ref.Name()); {
+		case strings.HasPrefix(name, tagsPrefixInRemoteRepo):
+			want[strings.TrimPrefix(name, tagsPrefixInRemoteRepo)] = v1alpha1.PackageRevisionLifecyclePublished
+		case strings.HasPrefix(name, draftsPrefixInRemoteRepo):
+			want[strings.TrimPrefix(name, draftsPrefixInRemoteRepo)] = v1alpha1.PackageRevisionLifecycleDraft
+		case strings.HasPrefix(name, proposedPrefixInRemoteRepo):
+			want[strings.TrimPrefix(name, proposedPrefixInRemoteRepo)] = v1alpha1.PackageRevisionLifecycleProposed
+		case name == string(DefaultMainReferenceName), name == "HEAD":
+			// skip main and HEAD
+		default:
+			// There should be no other refs in the repository.
+			return fmt.Errorf("unexpected reference: %s", ref)
+		}
+		return nil
+	})
+
+	got := map[string]v1alpha1.PackageRevisionLifecycle{}
+	for _, pr := range revisions {
+		rev, err := pr.GetPackageRevision()
+		if err != nil {
+			t.Errorf("GetPackageRevision(%s) failed: %v", pr.Key(), err)
+			continue
+		}
+
+		if rev.Spec.Revision == "main" {
+			// skip packages with "main" revision, to match the above simplified package discovery algo.
+			continue
+		}
+		got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Revision)] = rev.Spec.Lifecycle
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("Discovered packages differ: (-want,+got): %s", cmp.Diff(want, got))
 	}
 }

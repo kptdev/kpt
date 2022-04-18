@@ -42,6 +42,7 @@ func (n PackageRevisionKey) String() string {
 type PackageRevision interface {
 	Name() string
 	Key() PackageRevisionKey
+	Lifecycle() v1alpha1.PackageRevisionLifecycle
 	GetPackageRevision() (*v1alpha1.PackageRevision, error)
 	// TODO: return PackageResources or filesystem abstraction?
 	GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error)
