@@ -113,14 +113,14 @@ func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) (
 		if err != nil {
 			return nil, err
 		}
-		packages = ToCachedPackageRevisionSlice(p)
+		packages = toCachedPackageRevisionSlice(p)
 
 		r.mutex.Lock()
 		r.cachedPackages = packages
 		r.mutex.Unlock()
 	}
 
-	return ToPackageRevisionSlice(packages), nil
+	return toPackageRevisionSlice(packages), nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -184,7 +184,7 @@ func (r *cachedRepository) update(closed repository.PackageRevision) {
 
 	r.cachedPackages = updateOrAppend(r.cachedPackages, &cachedPackageRevision{PackageRevision: closed})
 	// Recompute latest package revisions.
-	IdentifyLatestRevisions(r.cachedPackages)
+	identifyLatestRevisions(r.cachedPackages)
 }
 
 func updateOrAppend(revisions []*cachedPackageRevision, new *cachedPackageRevision) []*cachedPackageRevision {
@@ -247,7 +247,7 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	}
 }
 
-func ToCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cachedPackageRevision {
+func toCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cachedPackageRevision {
 	result := make([]*cachedPackageRevision, len(revisions))
 	for i := range revisions {
 		current := &cachedPackageRevision{
@@ -256,18 +256,18 @@ func ToCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cac
 		}
 		result[i] = current
 	}
-	IdentifyLatestRevisions(result)
+	identifyLatestRevisions(result)
 	return result
 }
 
-func IdentifyLatestRevisions(result []*cachedPackageRevision) {
+func identifyLatestRevisions(result []*cachedPackageRevision) {
 	// Compute the latest among the different revisions of the same package.
 	// The map is keyed by the package name; Values are the latest revision found so far.
 	latest := map[string]*cachedPackageRevision{}
 	for _, current := range result {
 		current.isLatestRevision = false // Clear all values
 
-		// Check if the current package revision is more recent than the one sen so far.
+		// Check if the current package revision is more recent than the one seen so far.
 		// Only consider Published packages
 		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
 			continue
@@ -279,6 +279,7 @@ func IdentifyLatestRevisions(result []*cachedPackageRevision) {
 			switch cmp := semver.Compare(currentKey.Revision, previousKey.Revision); {
 			case cmp == 0:
 				// Same revision.
+				klog.Warningf("Encountered package revisions whose versions compare equal: %q, %q", currentKey, previousKey)
 			case cmp < 0:
 				// currentKey.Revision < previousKey.Revision; no change
 			case cmp > 0:
@@ -296,7 +297,7 @@ func IdentifyLatestRevisions(result []*cachedPackageRevision) {
 	}
 }
 
-func ToPackageRevisionSlice(cached []*cachedPackageRevision) []repository.PackageRevision {
+func toPackageRevisionSlice(cached []*cachedPackageRevision) []repository.PackageRevision {
 	result := make([]repository.PackageRevision, len(cached))
 	for i := range cached {
 		result[i] = cached[i]
