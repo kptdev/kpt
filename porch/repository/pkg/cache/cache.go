@@ -109,6 +109,11 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 				cr = newRepository(key, r)
 				c.repositories[key] = cr
 			}
+		} else {
+			// If there is an error from the background refresh goroutine, return it.
+			if err := cr.getRefreshError(); err != nil {
+				return nil, err
+			}
 		}
 		return cr, nil
 

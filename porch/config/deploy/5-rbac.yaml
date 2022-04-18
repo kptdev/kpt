@@ -25,7 +25,7 @@ rules:
       ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
     verbs: ["get", "watch", "list"]
   - apiGroups: ["config.porch.kpt.dev"]
-    resources: ["repositories"]
+    resources: ["repositories", "repositories/status"]
     verbs: ["get", "list", "watch", "create", "update", "patch"]
   # Needed for priority and fairness
   - apiGroups: ["flowcontrol.apiserver.k8s.io"]

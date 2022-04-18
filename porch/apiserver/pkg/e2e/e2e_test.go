@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -30,6 +31,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -1031,6 +1033,71 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	}
 	if counter != 4 {
 		t.Errorf("expected 4 Folder objects, but got %v", counter)
+	}
+}
+
+func (t *PorchSuite) TestRepositoryError(ctx context.Context) {
+	const (
+		repositoryName = "repo-with-error"
+	)
+	t.CreateF(ctx, &configapi.Repository{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       configapi.RepositoryGVK.Kind,
+			APIVersion: configapi.GroupVersion.Identifier(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      repositoryName,
+			Namespace: t.namespace,
+		},
+		Spec: configapi.RepositorySpec{
+			Description: "Repository With Error",
+			Type:        configapi.RepositoryTypeGit,
+			Content:     configapi.RepositoryContentPackage,
+			Git: &configapi.GitRepository{
+				// Use `incalid` domain: https://www.rfc-editor.org/rfc/rfc6761#section-6.4
+				Repo: "https://repo.invalid/repository.git",
+			},
+		},
+	})
+	t.Cleanup(func() {
+		t.DeleteL(ctx, &configapi.Repository{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      repositoryName,
+				Namespace: t.namespace,
+			},
+		})
+	})
+
+	giveUp := time.Now().Add(60 * time.Second)
+
+	for {
+		if time.Now().After(giveUp) {
+			t.Errorf("Timed out waiting for Repository Condition")
+			break
+		}
+
+		time.Sleep(5 * time.Second)
+
+		var repository configapi.Repository
+		t.GetF(ctx, client.ObjectKey{
+			Namespace: t.namespace,
+			Name:      repositoryName,
+		}, &repository)
+
+		available := meta.FindStatusCondition(repository.Status.Conditions, configapi.RepositoryAvailable)
+		if available == nil {
+			// Condition not yet set
+			t.Logf("Repository condition not yet available")
+			continue
+		}
+
+		if got, want := available.Status, metav1.ConditionFalse; got != want {
+			t.Errorf("Repository Available Condition Status; got %q, want %q", got, want)
+		}
+		if got, want := available.Reason, configapi.ReasonError; got != want {
+			t.Errorf("Repository Available Condition Reason: got %q, want %q", got, want)
+		}
+		break
 	}
 }
 
