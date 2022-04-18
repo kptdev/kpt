@@ -144,6 +144,8 @@ type FunctionRef struct {
 
 // RepositoryStatus defines the observed state of Repository
 type RepositoryStatus struct {
+	// Conditions describes the reconciliation state of the object.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true
