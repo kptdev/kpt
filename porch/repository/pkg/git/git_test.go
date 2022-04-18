@@ -932,3 +932,80 @@ func TestNested(t *testing.T) {
 		t.Errorf("Discovered packages differ: (-want,+got): %s", cmp.Diff(want, got))
 	}
 }
+
+func createPackageRevisionMap(revisions []repository.PackageRevision) map[string]bool {
+	result := map[string]bool{}
+	for _, pr := range revisions {
+		key := pr.Key()
+		result[fmt.Sprintf("%s/%s", key.Package, key.Revision)] = true
+	}
+	return result
+}
+
+func sliceToSet(s []string) map[string]bool {
+	result := map[string]bool{}
+	for _, v := range s {
+		result[v] = true
+	}
+	return result
+}
+
+func TestNestedDirectories(t *testing.T) {
+	ctx := context.Background()
+
+	for _, tc := range []struct {
+		directory string
+		packages  []string
+	}{
+		{
+			directory: "sample",
+			packages:  []string{"sample/v1", "sample/v2", "sample/main"},
+		},
+		{
+			directory: "nonexistent",
+			packages:  []string{},
+		},
+		{
+			directory: "catalog/gcp",
+			packages: []string{
+				"catalog/gcp/cloud-sql/v1",
+				"catalog/gcp/spanner/v1",
+				"catalog/gcp/bucket/v2",
+				"catalog/gcp/bucket/v1",
+				"catalog/gcp/bucket/main",
+			},
+		},
+	} {
+		t.Run(tc.directory, func(t *testing.T) {
+			tempdir := t.TempDir()
+			tarfile := filepath.Join("testdata", "nested-repository.tar")
+			_, address := ServeGitRepository(t, tarfile, tempdir)
+
+			const (
+				repositoryName = "directory"
+				namespace      = "default"
+			)
+
+			git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+				Repo:      address,
+				Branch:    "main",
+				Directory: tc.directory,
+			}, tempdir, GitRepositoryOptions{})
+			if err != nil {
+				t.Fatalf("Failed to open Git repository loaded from %q with directory %q: %v", tarfile, tc.directory, err)
+			}
+
+			revisions, err := git.ListPackageRevisions(ctx)
+			if err != nil {
+				t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
+			}
+
+			got := createPackageRevisionMap(revisions)
+			want := sliceToSet(tc.packages)
+
+			if !cmp.Equal(want, got) {
+				t.Errorf("Packages rooted in %q; Unexpected result (-want,+got): %s", tc.directory, cmp.Diff(want, got))
+			}
+		})
+	}
+}
