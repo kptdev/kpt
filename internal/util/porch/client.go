@@ -51,7 +51,7 @@ func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
 	return c, nil
 }
 
-func CreateDynamicClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
+func CreateDynamicClient(flags *genericclioptions.ConfigFlags) (client.WithWatch, error) {
 	config, err := flags.ToRESTConfig()
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func CreateDynamicClient(flags *genericclioptions.ConfigFlags) (client.Client, e
 		return nil, err
 	}
 
-	c, err := client.New(config, client.Options{
+	c, err := client.NewWithWatch(config, client.Options{
 		Scheme: scheme,
 	})
 	if err != nil {
