@@ -107,7 +107,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 
 	repositoryName := obj.Spec.RepositoryName
 	if repositoryName == "" {
-		return nil, apierrors.NewBadRequest(fmt.Sprintf("spec.repositoryName is required"))
+		return nil, apierrors.NewBadRequest("spec.repositoryName is required")
 	}
 
 	var repositoryObj configapi.Repository

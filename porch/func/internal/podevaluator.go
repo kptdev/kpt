@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
-	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -72,7 +71,7 @@ func NewPodEvaluator(namespace, wrapperServerImage string) (Evaluator, error) {
 	}, nil
 }
 
-func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFunctionRequest) (*pb.EvaluateFunctionResponse, error) {
+func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *evaluator.EvaluateFunctionRequest) (*evaluator.EvaluateFunctionResponse, error) {
 	ref, err := name.ParseReference(req.Image)
 	if err != nil {
 		return nil, err
@@ -83,6 +82,10 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *pb.EvaluateFu
 	}
 	// TODO: cache the config file
 	cf, err := img.ConfigFile()
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := cf.Config
 	var fnCmd []string
 	if len(cfg.Entrypoint) != 0 {
