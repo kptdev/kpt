@@ -325,12 +325,86 @@ Successfully executed 5 function(s) in 2 package(s).
 Note that the `ensure-name-substring` function is applied only to the 
 resources matching the selection criteria.
 
+If you have resources with particular labels or annotations that you want to use to
+select your resources, you can do so. For example, here is a function that will only
+be applied to resources matching the label `foo: bar`:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      selectors:
+        - labels:
+            foo: bar
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
 The following are the matchers you can specify in a selector:
 
 1. `apiVersion`: `apiVersion` field value of resources to be selected.
 2. `kind`: `kind` field value of resources to be selected.
 3. `name`: `metadata.name` field value of resources to be selected.
 4. `namespace`: `metadata.namespace` field of resources to be selected.
+5. `annotations`: resources with matching annotations will be selected.
+6. `labels`: resources with matching labels will be selected.
+
+### Specifying exclusions
+
+Similar to `selectors`, you can also specify resources that should be excluded from functions.
+
+For example, you can selectively exclude a resource if it has both kind "Deployment" and name "nginx":
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      exclude:
+        - kind: Deployment
+          name: nginx
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
+This is distinct from the following, which excludes a resource if it has either kind "Deployment" or name "nginx":
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-annotations:v0.1
+      configMap:
+        tier: mysql
+      exclude:
+        - kind: Deployment
+        - name: nginx
+  validators:
+    - image: gcr.io/kpt-fn/kubeval:v0.1
+```
+
+The following are the matchers you can specify in an exclusion:
+
+1. `apiVersion`: `apiVersion` field value of resources to be excluded.
+2. `kind`: `kind` field value of resources to be excluded.
+3. `name`: `metadata.name` field value of resources to be excluded.
+4. `namespace`: `metadata.namespace` field of resources to be excluded.
+5. `annotations`: resources with matching annotations will be excluded.
+6. `labels`: resources with matching labels will be excluded.
 
 [chapter 2]: /book/02-concepts/03-functions
 [render-doc]: /reference/cli/fn/render/
