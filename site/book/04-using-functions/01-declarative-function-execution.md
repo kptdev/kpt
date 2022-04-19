@@ -359,7 +359,7 @@ The following are the matchers you can specify in a selector:
 
 Similar to `selectors`, you can also specify resources that should be excluded from functions.
 
-For example, you can selectively exclude a resource if it has both kind "Deployment" and name "nginx":
+For example, you can exclude a resource if it has both kind "Deployment" and name "nginx":
 
 ```yaml
 apiVersion: kpt.dev/v1

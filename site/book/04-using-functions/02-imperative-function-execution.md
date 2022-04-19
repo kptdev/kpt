@@ -108,15 +108,15 @@ Here is the list of available selector matcher flags:
 
 Exclusions can be used to exclude specific resources for a function execution.
 
-For example, you can selectively add a namespace to the resources if it does
-not have the label `foo: bar`.
+For example, you can set the namespace of all resources in the wordpress package, 
+except for the ones with the label `foo: bar`:
 
 ```shell
 $ kpt fn eval wordpress -i set-namespace:v0.1 --exclude-labels foo=bar -- namespace=my-namespace
 ```
 
 If you use multiple exclusions, it will exclude resources that match all provided exclusions. For
-example, you can add a namespace to all resources, except for resources that have both kind "Deployment" 
+example, you can set the namespace of all resources, except for those that have both kind "Deployment" 
 and name "nginx":
 
 `$ kpt fn eval wordpress -i set-namespace:v0.1 --exclude-kind Deployment --exclude-name nginx -- namespace=my-namespace`
