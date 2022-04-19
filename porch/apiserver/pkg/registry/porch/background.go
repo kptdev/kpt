@@ -19,13 +19,13 @@ import (
 	"fmt"
 	"time"
 
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
+	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 )
 
 func RunBackground(ctx context.Context, coreClient client.WithWatch, cache *cache.Cache) {
@@ -161,15 +161,38 @@ func (b *background) runOnce(ctx context.Context) error {
 			}
 		}
 
-		b.cacheRepository(ctx, repo)
+		if err := b.cacheRepository(ctx, repo); err != nil {
+			klog.Errorf("Failed to cache repository: %v", err)
+		}
 	}
 
 	return nil
 }
 
 func (b *background) cacheRepository(ctx context.Context, repo *configapi.Repository) error {
-	if _, err := b.cache.OpenRepository(ctx, repo); err != nil {
-		return fmt.Errorf("error opening repository: %w", err)
+	var condition v1.Condition
+	if _, err := b.cache.OpenRepository(ctx, repo); err == nil {
+		condition = v1.Condition{
+			Type:               configapi.RepositoryReady,
+			Status:             v1.ConditionTrue,
+			ObservedGeneration: repo.Generation,
+			LastTransitionTime: v1.Now(),
+			Reason:             configapi.ReasonReady,
+		}
+	} else {
+		condition = v1.Condition{
+			Type:               configapi.RepositoryReady,
+			Status:             v1.ConditionFalse,
+			ObservedGeneration: repo.Generation,
+			LastTransitionTime: v1.Now(),
+			Reason:             configapi.ReasonError,
+			Message:            err.Error(),
+		}
+	}
+
+	meta.SetStatusCondition(&repo.Status.Conditions, condition)
+	if err := b.coreClient.Status().Update(ctx, repo); err != nil {
+		return fmt.Errorf("error updating repository status: %w", err)
 	}
 	return nil
 }

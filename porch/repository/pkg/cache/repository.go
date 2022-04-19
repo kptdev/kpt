@@ -38,6 +38,9 @@ type cachedRepository struct {
 	cachedPackages []*cachedPackageRevision
 	// TODO: Currently we support repositories with homogenous content (only packages xor functions). Model this more optimally?
 	cachedFunctions []repository.Function
+	// Error encountered on repository refresh by the refresh goroutine.
+	// This is returned back by the cache to the background goroutine when it calls periodicall to resync repositories.
+	refreshError error
 }
 
 // We take advantage of the cache having a global view of all the packages
@@ -98,9 +101,16 @@ func (r *cachedRepository) ListFunctions(ctx context.Context) ([]repository.Func
 	return functions, nil
 }
 
+func (r *cachedRepository) getRefreshError() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	return r.refreshError
+}
+
 func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) ([]repository.PackageRevision, error) {
 	r.mutex.Lock()
 	packages := r.cachedPackages
+	err := r.refreshError
 	r.mutex.Unlock()
 
 	if forceRefresh {
@@ -109,15 +119,20 @@ func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) (
 
 	if packages == nil {
 		// TODO: Avoid simultaneous fetches?
-		p, err := r.repo.ListPackageRevisions(ctx)
-		if err != nil {
-			return nil, err
+		var p []repository.PackageRevision
+		p, err = r.repo.ListPackageRevisions(ctx)
+		if err == nil {
+			packages = toCachedPackageRevisionSlice(p)
 		}
-		packages = toCachedPackageRevisionSlice(p)
 
 		r.mutex.Lock()
 		r.cachedPackages = packages
+		r.refreshError = err
 		r.mutex.Unlock()
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return toPackageRevisionSlice(packages), nil

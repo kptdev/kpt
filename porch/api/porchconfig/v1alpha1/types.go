@@ -19,7 +19,9 @@ import (
 )
 
 //+kubebuilder:object:root=true
+//+kubebuilder:subresource:status
 //+kubebuilder:resource:path=repositories,singular=repository
+//+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=='Ready')].status`
 
 // Repository
 type Repository struct {
@@ -141,6 +143,16 @@ type FunctionRef struct {
 	// `Name` is the name of the `Function` resource referenced. The resource is expected to be within the same namespace.
 	Name string `json:"name"`
 }
+
+const (
+	// Type of the Repository condition.
+	RepositoryReady = "Ready"
+
+	// Reason for the condition is error.
+	ReasonError = "Error"
+	// Reason for the condition is the repository is ready.
+	ReasonReady = "Ready"
+)
 
 // RepositoryStatus defines the observed state of Repository
 type RepositoryStatus struct {
