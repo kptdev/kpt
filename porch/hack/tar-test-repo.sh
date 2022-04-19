@@ -22,8 +22,19 @@ if [[ $# -ne 2 ]]; then
   error "Invalid # of arguments; ${#}. 2 expected: GIT_DIRECTORY OUTPUT_TAR_FILE"
 fi
 
-tar -c -f "${2}" -C "${1}" --owner=porch:0 --group=porch:0 \
-  --exclude '.git/logs' \
-  --exclude '.git/COMMIT_EDITMSG' \
-  --exclude '.git/ORIG_HEAD' \
-  .git
+GIT_DIRECTORY="${1}"
+OUTPUT_TAR_FILE="${2}"
+
+if [ -d "${GIT_DIRECTORY}" ]; then
+
+  tar -c -v -f "${OUTPUT_TAR_FILE}" -C "${GIT_DIRECTORY}" --owner=porch:0 --group=porch:0 \
+    --sort=name --mtime='PST 2022-02-02' \
+    --exclude '.git/logs' \
+    --exclude '.git/COMMIT_EDITMSG' \
+    --exclude '.git/ORIG_HEAD' \
+    --exclude '.git/info/exclude' \
+    .git
+
+else
+  error "${GIT_DIRECTORY} doesn't exist"
+fi
