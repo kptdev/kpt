@@ -173,7 +173,7 @@ func (b *background) cacheRepository(ctx context.Context, repo *configapi.Reposi
 	var condition v1.Condition
 	if _, err := b.cache.OpenRepository(ctx, repo); err == nil {
 		condition = v1.Condition{
-			Type:               configapi.RepositoryAvailable,
+			Type:               configapi.RepositoryReady,
 			Status:             v1.ConditionTrue,
 			ObservedGeneration: repo.Generation,
 			LastTransitionTime: v1.Now(),
@@ -181,7 +181,7 @@ func (b *background) cacheRepository(ctx context.Context, repo *configapi.Reposi
 		}
 	} else {
 		condition = v1.Condition{
-			Type:               configapi.RepositoryAvailable,
+			Type:               configapi.RepositoryReady,
 			Status:             v1.ConditionFalse,
 			ObservedGeneration: repo.Generation,
 			LastTransitionTime: v1.Now(),

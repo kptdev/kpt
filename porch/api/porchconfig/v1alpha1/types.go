@@ -21,7 +21,7 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:path=repositories,singular=repository
-//+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=='Available')].status`
+//+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=='Ready')].status`
 
 // Repository
 type Repository struct {
@@ -146,7 +146,7 @@ type FunctionRef struct {
 
 const (
 	// Type of the Repository condition.
-	RepositoryAvailable = "Available"
+	RepositoryReady = "Ready"
 
 	// Reason for the condition is error.
 	ReasonError = "Error"

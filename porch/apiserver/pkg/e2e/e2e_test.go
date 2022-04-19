@@ -1084,7 +1084,7 @@ func (t *PorchSuite) TestRepositoryError(ctx context.Context) {
 			Name:      repositoryName,
 		}, &repository)
 
-		available := meta.FindStatusCondition(repository.Status.Conditions, configapi.RepositoryAvailable)
+		available := meta.FindStatusCondition(repository.Status.Conditions, configapi.RepositoryReady)
 		if available == nil {
 			// Condition not yet set
 			t.Logf("Repository condition not yet available")
