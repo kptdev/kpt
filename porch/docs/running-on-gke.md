@@ -39,7 +39,7 @@ Select a GKE cluster or create a new one:
 gcloud container clusters create-auto --region us-central1 porch-dev
 ```
 
-**Note:** For development of Porch, in particular for runnign Porch tests,
+**Note:** For development of Porch, in particular for running Porch tests,
 Standard GKE cluster is currently preferable. Select a
 [GCP region](https://cloud.google.com/compute/docs/regions-zones#available)
  that works best for your needs:
@@ -115,7 +115,7 @@ shown is the Porch server image):
 IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy-no-sa
 ```
 
-If you want to use differetn repository, you can set `IMAGE_REPO` variable
+If you want to use different repository, you can set `IMAGE_REPO` variable
 (see [Makefile](https://github.com/GoogleContainerTools/kpt/blob/main/porch/Makefile#L28)
 for details).
 
