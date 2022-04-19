@@ -50,13 +50,22 @@ type GitRepository interface {
 }
 
 type GitRepositoryOptions struct {
-	CredentialResolver repository.CredentialResolver
-	UserInfoProvider   repository.UserInfoProvider
+	CredentialResolver         repository.CredentialResolver
+	UserInfoProvider           repository.UserInfoProvider
+	SkipMainBranchVerification bool
 }
 
 func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, root string, opts GitRepositoryOptions) (GitRepository, error) {
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
+
+	// Cleanup the cache directory in case initialization fails.
+	cleanup := dir
+	defer func() {
+		if cleanup != "" {
+			os.RemoveAll(cleanup)
+		}
+	}()
 
 	var repo *git.Repository
 
@@ -72,9 +81,11 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 
 		repo = r
 	} else if !fi.IsDir() {
-		// Internal error - corrupted cache.
+		// Internal error - corrupted cache. We will cleanup on the way out.
 		return nil, fmt.Errorf("cannot clone git repository %q: %w", spec.Repo, err)
 	} else {
+		cleanup = "" // Existing directory; do not delete it.
+
 		r, err := openRepository(dir)
 		if err != nil {
 			return nil, err
@@ -90,8 +101,6 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 
 	branch := MainBranch
 	if spec.Branch != "" {
-		// TODO: Validate branch name syntax (we can't check whether the branch exists;
-		// the repository may be empty).
 		branch = BranchName(spec.Branch)
 	}
 
@@ -109,6 +118,12 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	if err := repository.fetchRemoteRepository(ctx); err != nil {
 		return nil, err
 	}
+
+	if err := repository.verifyRepository(&opts); err != nil {
+		return nil, err
+	}
+
+	cleanup = "" // Success. Keep the git directory.
 
 	return repository, nil
 }
@@ -702,6 +717,22 @@ func (r *gitRepository) fetchRemoteRepository(ctx context.Context) error {
 		return fmt.Errorf("cannot fetch repository %s/%s: %w", r.namespace, r.name, err)
 	}
 
+	return nil
+}
+
+// Verifies repository. Repository must be fetched already.
+func (r *gitRepository) verifyRepository(opts *GitRepositoryOptions) error {
+	// When opening a temporary repository, such as for cloning a package
+	// from unregistered upstream, we won't be pushing into the remote so
+	// we don't need to verify presence of the main branch.
+	if !opts.SkipMainBranchVerification {
+		// Check existence of main branch. If it doesn't exist, fail.
+		// If the main branch doesn't exist, we could create draft or proposal branch
+		// which could become the default branch and those are hard to delete.
+		if _, err := r.repo.Reference(r.branch.RefInLocal(), false); err != nil {
+			return fmt.Errorf("branch %q doesn't exist: %v", r.branch, err)
+		}
+	}
 	return nil
 }
 

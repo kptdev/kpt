@@ -44,6 +44,32 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestOpenEmptyRepository(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "empty-repository.tar")
+	_, address := ServeGitRepository(t, tarfile, tempdir)
+
+	ctx := context.Background()
+	const (
+		name      = "empty"
+		namespace = "default"
+	)
+
+	repository := &configapi.GitRepository{
+		Repo:      address,
+		Branch:    "main",
+		Directory: "/",
+	}
+
+	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{}); err == nil {
+		t.Errorf("Unexpectedly succeeded opening empty repository with main branch validation enabled.")
+	}
+
+	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{SkipMainBranchVerification: true}); err != nil {
+		t.Errorf("Failed to open empty git repository with main branch validation disabled: %v", err)
+	}
+}
+
 // TestGitPackageRoundTrip creates a package in git and verifies we can read the contents back.
 func TestGitPackageRoundTrip(t *testing.T) {
 	tempdir := t.TempDir()
@@ -283,9 +309,9 @@ info:
   description: Empty Package
 `
 
-func TestListPackagesEmpty(t *testing.T) {
+func TestListPackagesTrivial(t *testing.T) {
 	tempdir := t.TempDir()
-	tarfile := filepath.Join("testdata", "empty-repository.tar")
+	tarfile := filepath.Join("testdata", "trivial-repository.tar")
 	_, address := ServeGitRepository(t, tarfile, tempdir)
 
 	ctx := context.Background()
