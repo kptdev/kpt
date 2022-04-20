@@ -16,13 +16,13 @@ package porch
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -90,20 +90,23 @@ func (f *functions) List(ctx context.Context, options *metainternalversion.ListO
 func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
 	var repositoryKey client.ObjectKey
 	if ns, ok := request.NamespaceFrom(ctx); !ok {
-		return nil, errors.New("namespace is required")
+		return nil, errors.NewBadRequest("namespace must be specified")
 	} else {
 		repositoryKey.Namespace = ns
 	}
 
 	if fn, err := parseFunctionName(name); err != nil {
-		return nil, err
+		return nil, errors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
 	} else {
 		repositoryKey.Name = fn.repository
 	}
 
 	var repository configapi.Repository
 	if err := f.coreClient.Get(ctx, repositoryKey, &repository); err != nil {
-		return nil, fmt.Errorf("cannot find repository %q", repositoryKey)
+		if errors.IsNotFound(err) {
+			return nil, errors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
+		}
+		return nil, fmt.Errorf("error getting repository %s: %w", repositoryKey, err)
 	}
 
 	// TODO: implement get to avoid listing
@@ -118,7 +121,7 @@ func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOpt
 		}
 	}
 
-	return nil, fmt.Errorf("function %s not found", name)
+	return nil, errors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
 }
 
 type functionName struct {

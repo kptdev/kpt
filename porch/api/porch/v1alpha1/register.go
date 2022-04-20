@@ -30,6 +30,7 @@ var (
 
 	PackageRevisionGVR          = SchemeGroupVersion.WithResource("packagerevisions")
 	PackageRevisionResourcesGVR = SchemeGroupVersion.WithResource("packagerevisionresources")
+	FunctionGVR                 = SchemeGroupVersion.WithResource("functions")
 )
 
 func init() {
