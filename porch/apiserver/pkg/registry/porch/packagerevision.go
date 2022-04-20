@@ -67,7 +67,12 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 		},
 	}
 
-	if err := r.packageCommon.listPackages(ctx, func(p repository.PackageRevision) error {
+	filter, err := parsePackageRevisionFieldSelector(options.FieldSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.PackageRevision) error {
 		item, err := p.GetPackageRevision()
 		if err != nil {
 			return err

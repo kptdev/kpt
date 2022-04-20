@@ -85,11 +85,12 @@ func newRepository(id string, repo repository.Repository) *cachedRepository {
 var _ repository.Repository = &cachedRepository{}
 var _ repository.FunctionRepository = &cachedRepository{}
 
-func (r *cachedRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {
-	packages, err := r.getPackages(ctx, false)
+func (r *cachedRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	packages, err := r.getPackages(ctx, filter, false)
 	if err != nil {
 		return nil, err
 	}
+
 	return packages, nil
 }
 
@@ -107,7 +108,7 @@ func (r *cachedRepository) getRefreshError() error {
 	return r.refreshError
 }
 
-func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) ([]repository.PackageRevision, error) {
+func (r *cachedRepository) getPackages(ctx context.Context, filter repository.ListPackageRevisionFilter, forceRefresh bool) ([]repository.PackageRevision, error) {
 	r.mutex.Lock()
 	packages := r.cachedPackages
 	err := r.refreshError
@@ -119,8 +120,8 @@ func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) (
 
 	if packages == nil {
 		// TODO: Avoid simultaneous fetches?
-		var p []repository.PackageRevision
-		p, err = r.repo.ListPackageRevisions(ctx)
+		// TODO: Push-down partial refresh?
+		p, err := r.repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 		if err == nil {
 			packages = toCachedPackageRevisionSlice(p)
 		}
@@ -135,7 +136,7 @@ func (r *cachedRepository) getPackages(ctx context.Context, forceRefresh bool) (
 		return nil, err
 	}
 
-	return toPackageRevisionSlice(packages), nil
+	return toPackageRevisionSlice(packages, filter), nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -204,7 +205,7 @@ func (r *cachedRepository) update(closed repository.PackageRevision) {
 
 func updateOrAppend(revisions []*cachedPackageRevision, new *cachedPackageRevision) []*cachedPackageRevision {
 	for i, cached := range revisions {
-		if cached.Name() == new.Name() {
+		if cached.KubeObjectName() == new.KubeObjectName() {
 			// TODO: more sophisticated conflict reconciliation?
 			revisions[i] = new
 			return revisions
@@ -254,7 +255,7 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	ctx, span := tracer.Start(ctx, "Repository.pollOnce", trace.WithAttributes())
 	defer span.End()
 
-	if _, err := r.getPackages(ctx, true); err != nil {
+	if _, err := r.getPackages(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
 		klog.Warningf("error polling repo packages %s: %v", r.id, err)
 	}
 	if _, err := r.getFunctions(ctx, true); err != nil {
@@ -312,10 +313,12 @@ func identifyLatestRevisions(result []*cachedPackageRevision) {
 	}
 }
 
-func toPackageRevisionSlice(cached []*cachedPackageRevision) []repository.PackageRevision {
-	result := make([]repository.PackageRevision, len(cached))
-	for i := range cached {
-		result[i] = cached[i]
+func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.ListPackageRevisionFilter) []repository.PackageRevision {
+	result := make([]repository.PackageRevision, 0, len(cached))
+	for _, p := range cached {
+		if filter.Matches(p) {
+			result = append(result, p)
+		}
 	}
 	return result
 }

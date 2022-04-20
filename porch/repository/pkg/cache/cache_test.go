@@ -22,6 +22,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
+	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -63,7 +64,7 @@ func TestLatestPackages(t *testing.T) {
 		"catalog/namespace/basens":  "v3",
 		"catalog/namespace/istions": "v3",
 	}
-	revisions, err := cachedGit.ListPackageRevisions(ctx)
+	revisions, err := cachedGit.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}

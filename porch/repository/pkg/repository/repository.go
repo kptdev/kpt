@@ -40,12 +40,24 @@ func (n PackageRevisionKey) String() string {
 // The best way we've found (so far) to represent them in k8s is as two resources, but they map to the same object.
 // Interesting reading: https://github.com/zecke/Kubernetes/blob/master/docs/devel/api-conventions.md#differing-representations
 type PackageRevision interface {
-	Name() string
+	// KubeObjectName returns an encoded name for the object that should be unique.
+	// More "readable" values are returned by Key()
+	KubeObjectName() string
+
+	// Key returns the "primary key" of the package.
 	Key() PackageRevisionKey
+
+	// Lifecycle returns the current lifecycle state of the package.
 	Lifecycle() v1alpha1.PackageRevisionLifecycle
+
+	// GetPackageRevision returns the PackageRevision ("DRY") API representation of this package-revision
 	GetPackageRevision() (*v1alpha1.PackageRevision, error)
+
+	// GetResources returns the PackageRevisionResources ("WET") API representation of this package-revision
 	// TODO: return PackageResources or filesystem abstraction?
 	GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error)
+
+	// GetUpstreamLock returns the kpt lock information.
 	GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
@@ -63,10 +75,37 @@ type Function interface {
 	GetFunction() (*v1alpha1.Function, error)
 }
 
+// ListPackageRevisionFilter is a predicate for filtering PackageRevision objects;
+// only matching PackageRevision objects will be returned.
+type ListPackageRevisionFilter struct {
+	// KubeObjectName matches the generated kubernetes object name.
+	KubeObjectName string
+
+	// Package matches the name of the package (spec.package)
+	Package string
+
+	// Revision matches the revision of the package (spec.revision)
+	Revision string
+}
+
+// Matches returns true if the provided PackageRevision satisifies the conditions in the filter.
+func (f *ListPackageRevisionFilter) Matches(p PackageRevision) bool {
+	if f.Package != "" && f.Package != p.Key().Package {
+		return false
+	}
+	if f.Revision != "" && f.Revision != p.Key().Revision {
+		return false
+	}
+	if f.KubeObjectName != "" && f.KubeObjectName != p.KubeObjectName() {
+		return false
+	}
+	return true
+}
+
 // Repository is the interface for interacting with packages in repositories
 // TODO: we may need interface to manage repositories too. Stay tuned.
 type Repository interface {
-	ListPackageRevisions(ctx context.Context) ([]PackageRevision, error)
+	ListPackageRevisions(ctx context.Context, filter ListPackageRevisionFilter) ([]PackageRevision, error)
 
 	// CreatePackageRevision creates a new package revision
 	CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (PackageDraft, error)

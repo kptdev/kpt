@@ -86,14 +86,14 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, err
 	}
 
-	revisions, err := open.ListPackageRevisions(ctx)
+	revisions, err := open.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: ref.Name})
 	if err != nil {
 		return repository.PackageResources{}, err
 	}
 
 	var revision repository.PackageRevision
 	for _, rev := range revisions {
-		if rev.Name() == ref.Name {
+		if rev.KubeObjectName() == ref.Name {
 			revision = rev
 			break
 		}
