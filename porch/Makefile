@@ -16,6 +16,7 @@ KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
 DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
+DEPLOYCONFIG_NO_SA_DIR=$(BUILDDIR)/deploy-no-sa
 
 # Modules are ordered in dependency order. A module precedes modules that depend on it.
 MODULES = \
@@ -195,3 +196,27 @@ deploy: deployment-config
 
 .PHONY: push-and-deploy
 push-and-deploy: push-images deploy
+
+# Builds deployment config without configuring GCP workload identity for
+# Porch server. This is sufficient for working with GitHub repositories.
+# Workload identity is currently required for Porch to integrate with GCP
+# Container and Artifact Registries; for those use cases, use the make
+# targets without the `-no-sa` suffix (i.e. `deployment-config`,
+# `push-and-deploy` etc.)
+.PHONY: deployment-config-no-sa
+deployment-config-no-sa:
+	rm -rf $(DEPLOYCONFIG_NO_SA_DIR) || true
+	mkdir -p $(DEPLOYCONFIG_NO_SA_DIR)
+	./hack/create-deployment-blueprint.sh \
+	  --destination "$(DEPLOYCONFIG_NO_SA_DIR)" \
+	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
+	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
+	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
+	  --wrapper-server-image "$(IMAGE_REPO)/$(PORCH_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)"
+
+.PHONY: deploy-no-sa
+deploy-no-sa: deployment-config-no-sa
+	kubectl apply -R -f $(DEPLOYCONFIG_NO_SA_DIR)
+
+.PHONY: push-and-deploy-no-sa
+push-and-deploy: push-images deploy-no-sa
