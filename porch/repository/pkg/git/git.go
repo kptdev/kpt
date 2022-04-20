@@ -863,17 +863,19 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		Order: git.LogOrderCommitterTime,
 	}
 
-	// Prune the commits we visit a bit - though the actual gate is on the gitAnnotation
-	if packagePath != "" {
-		if !strings.HasSuffix(packagePath, "/") {
-			packagePath += "/"
-		}
-		pathFilter := func(p string) bool {
-			matchesPackage := strings.HasPrefix(p, packagePath)
-			return matchesPackage
-		}
-		logOptions.PathFilter = pathFilter
-	}
+	// NOTE: We don't prune the commits with the filepath; this is because it's a relatively expensive operation,
+	// as we have to visit the whole trees.  Visiting the commits is comparatively fast.
+	// // Prune the commits we visit a bit - though the actual gate is on the gitAnnotation
+	// if packagePath != "" {
+	// 	if !strings.HasSuffix(packagePath, "/") {
+	// 		packagePath += "/"
+	// 	}
+	// 	pathFilter := func(p string) bool {
+	// 		matchesPackage := strings.HasPrefix(p, packagePath)
+	// 		return matchesPackage
+	// 	}
+	// 	logOptions.PathFilter = pathFilter
+	// }
 
 	commits, err := r.repo.Log(&logOptions)
 	if err != nil {
