@@ -1034,6 +1034,81 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	if counter != 4 {
 		t.Errorf("expected 4 Folder objects, but got %v", counter)
 	}
+
+	// Get the fn runner pods and delete them.
+	podList := &coreapi.PodList{}
+	t.ListF(ctx, podList, client.InNamespace("porch-fn-system"))
+	for _, pod := range podList.Items {
+		t.DeleteF(ctx, &pod)
+	}
+
+	// Create another Package Revision
+	pr2 := &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-pod-hierarchy",
+			Revision:       "v2",
+			RepositoryName: "git-fn-pod",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "783380ce4e6c3f21e9e90055b3a88bada0410154",
+								Directory: "catalog/hierarchy/simple",
+							},
+						},
+					},
+				},
+				// Testing pod evaluator with TS function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/generate-folders:v0.1.1", // This function is a TS based function.
+					},
+				},
+				// Testing pod evaluator with golang function
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						Image: "gcr.io/kpt-fn/set-annotations:v0.1.3", // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+						ConfigMap: map[string]string{
+							"new-test-key": "new-test-val",
+						},
+					},
+				},
+			},
+		},
+	}
+	t.CreateF(ctx, pr2)
+
+	// Get package resources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr2.Name,
+	}, &resources)
+
+	counter = 0
+	for name, obj := range resources.Spec.Resources {
+		if strings.HasPrefix(name, "hierarchy/") {
+			counter++
+			node, err := yaml.Parse(obj)
+			if err != nil {
+				t.Errorf("failed to parse Folder object: %v", err)
+			}
+			if node.GetAnnotations()["new-test-key"] != "new-test-val" {
+				t.Errorf("Folder should contain annotation `test-key:test-val`, the annotations we got: %v", node.GetAnnotations())
+			}
+		}
+	}
+	if counter != 4 {
+		t.Errorf("expected 4 Folder objects, but got %v", counter)
+	}
 }
 
 func (t *PorchSuite) TestRepositoryError(ctx context.Context) {

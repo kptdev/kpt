@@ -228,6 +228,10 @@ func (t *TestSuite) ListE(ctx context.Context, list client.ObjectList, opts ...c
 	t.list(ctx, list, opts, t.Errorf)
 }
 
+func (t *TestSuite) ListF(ctx context.Context, list client.ObjectList, opts ...client.ListOption) {
+	t.list(ctx, list, opts, t.Fatalf)
+}
+
 func (t *TestSuite) CreateF(ctx context.Context, obj client.Object, opts ...client.CreateOption) {
 	t.create(ctx, obj, opts, t.Fatalf)
 }
