@@ -38,6 +38,7 @@ type gitPackageRevision struct {
 	ref      *plumbing.Reference // ref is the Git reference at which the package exists
 	tree     plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
 	commit   plumbing.Hash       // Current version of the package (commit sha)
+	tasks    []v1alpha1.Task
 }
 
 var _ repository.PackageRevision = &gitPackageRevision{}
@@ -87,7 +88,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			Revision:       p.revision,
 			RepositoryName: p.parent.name,
 			Lifecycle:      p.Lifecycle(),
-			Tasks:          []v1alpha1.Task{},
+			Tasks:          p.tasks,
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
 	}, nil

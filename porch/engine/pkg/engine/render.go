@@ -65,7 +65,7 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		Type: "eval",
 		Eval: &api.FunctionEvalTaskSpec{
 			Image:     "render",
-			ConfigMap: map[string]string{},
+			ConfigMap: nil,
 		},
 	}, nil
 }

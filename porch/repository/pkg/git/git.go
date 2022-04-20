@@ -46,7 +46,7 @@ const (
 
 type GitRepository interface {
 	repository.Repository
-	GetPackage(ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
+	GetPackage(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
 type GitRepositoryOptions struct {
@@ -168,7 +168,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 			continue
 
 		case isProposedBranchNameInLocal(ref.Name()), isDraftBranchNameInLocal(ref.Name()):
-			draft, err := r.loadDraft(ref)
+			draft, err := r.loadDraft(ctx, ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 			}
@@ -178,7 +178,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 				klog.Warningf("no package draft found for ref %v", ref)
 			}
 		case isTagInLocalRepo(ref.Name()):
-			tagged, err := r.loadTaggedPackages(ref)
+			tagged, err := r.loadTaggedPackages(ctx, ref)
 			if err != nil {
 				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
 			}
@@ -192,7 +192,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 
 	if main != nil {
 		// TODO: ignore packages that are unchanged in main branch, compared to a tagged version?
-		mainpkgs, err := r.discoverFinalizedPackages(main)
+		mainpkgs, err := r.discoverFinalizedPackages(ctx, main)
 		if err != nil {
 			return nil, err
 		}
@@ -237,6 +237,7 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
 		updated:   time.Now(),
 		base:      nil, // Creating a new package
+		tasks:     nil, // Creating a new package
 		branch:    draft,
 		commit:    base,
 	}, nil
@@ -258,7 +259,7 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		return nil, fmt.Errorf("cannot find draft package branch %q: %w", ref.Name(), err)
 	}
 
-	rev, err := r.loadDraft(head)
+	rev, err := r.loadDraft(ctx, head)
 	if err != nil {
 		return nil, fmt.Errorf("cannot load draft package: %w", err)
 	}
@@ -275,6 +276,7 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		base:      rev.ref,
 		tree:      rev.tree,
 		commit:    rev.commit,
+		tasks:     rev.tasks,
 	}, nil
 }
 
@@ -332,7 +334,7 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	return nil
 }
 
-func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
+func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
 	git := r.repo
 
 	var hash plumbing.Hash
@@ -374,10 +376,10 @@ func (r *gitRepository) GetPackage(version, path string) (repository.PackageRevi
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find git reference (tried %v)", refNames)
 	}
 
-	return r.loadPackageRevision(version, path, hash)
+	return r.loadPackageRevision(ctx, version, path, hash)
 }
 
-func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
+func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
 	if !packageInDirectory(path, r.directory) {
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find package %s@%s; package is not under the Repository.spec.directory", path, version)
 	}
@@ -417,6 +419,11 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 		treeHash = te.Hash
 	}
 
+	tasks, err := r.loadTasks(ctx, commit, path)
+	if err != nil {
+		return nil, lock, err
+	}
+
 	return &gitPackageRevision{
 		parent:   r,
 		path:     path,
@@ -425,10 +432,11 @@ func (r *gitRepository) loadPackageRevision(version, path string, hash plumbing.
 		ref:      nil, // Cannot determine ref; this package will be considered final (immutable).
 		tree:     treeHash,
 		commit:   hash,
+		tasks:    tasks,
 	}, lock, nil
 }
 
-func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]repository.PackageRevision, error) {
+func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plumbing.Reference) ([]repository.PackageRevision, error) {
 	git := r.repo
 	commit, err := git.CommitObject(ref.Hash())
 	if err != nil {
@@ -460,6 +468,11 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 	}
 
 	if err := discoverPackagesInTree(git, tree, r.directory, func(dir string, tree, kptfile plumbing.Hash) error {
+		tasks, err := r.loadTasks(ctx, commit, dir)
+		if err != nil {
+			return err
+		}
+
 		result = append(result, &gitPackageRevision{
 			parent:   r,
 			path:     dir,
@@ -468,6 +481,7 @@ func (r *gitRepository) discoverFinalizedPackages(ref *plumbing.Reference) ([]re
 			ref:      ref,
 			tree:     tree,
 			commit:   ref.Hash(),
+			tasks:    tasks,
 		})
 		return nil
 	}); err != nil {
@@ -507,7 +521,7 @@ func discoverPackagesInTree(r *git.Repository, tree *object.Tree, dir string, fo
 }
 
 // loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
-func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision, error) {
+func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	name, revision, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
@@ -552,6 +566,11 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 		return nil, fmt.Errorf("found Kptfile which is not a regular file: %s", kptfileEntry.Mode)
 	}
 
+	tasks, err := r.loadTasks(ctx, commit, name)
+	if err != nil {
+		return nil, err
+	}
+
 	return &gitPackageRevision{
 		parent:   r,
 		path:     name,
@@ -560,6 +579,7 @@ func (r *gitRepository) loadDraft(ref *plumbing.Reference) (*gitPackageRevision,
 		ref:      ref,
 		tree:     packageTree,
 		commit:   ref.Hash(),
+		tasks:    tasks,
 	}, nil
 }
 
@@ -582,7 +602,7 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 	return name, revision, nil
 }
 
-func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repository.PackageRevision, error) {
+func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]repository.PackageRevision, error) {
 	name, ok := getTagNameInLocalRepo(tag.Name())
 	if !ok {
 		return nil, fmt.Errorf("invalid tag ref: %q", tag)
@@ -591,7 +611,7 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 
 	if slash < 0 {
 		// tag=<version>
-		return r.discoverFinalizedPackages(tag)
+		return r.discoverFinalizedPackages(ctx, tag)
 	}
 
 	// tag=<package path>/version
@@ -624,6 +644,11 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 		return nil, nil
 	}
 
+	tasks, err := r.loadTasks(ctx, commit, path)
+	if err != nil {
+		return nil, err
+	}
+
 	return []repository.PackageRevision{
 		&gitPackageRevision{
 			parent:   r,
@@ -633,6 +658,7 @@ func (r *gitRepository) loadTaggedPackages(tag *plumbing.Reference) ([]repositor
 			ref:      tag,
 			tree:     dirTree.Hash,
 			commit:   tag.Hash(),
+			tasks:    tasks,
 		},
 	}, nil
 }
@@ -841,4 +867,72 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 		return err
 	}
 	return nil
+}
+
+func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath string) ([]v1alpha1.Task, error) {
+	var logOptions = git.LogOptions{
+		From:  startCommit.Hash,
+		Order: git.LogOrderCommitterTime,
+	}
+
+	// NOTE: We don't prune the commits with the filepath; this is because it's a relatively expensive operation,
+	// as we have to visit the whole trees.  Visiting the commits is comparatively fast.
+	// // Prune the commits we visit a bit - though the actual gate is on the gitAnnotation
+	// if packagePath != "" {
+	// 	if !strings.HasSuffix(packagePath, "/") {
+	// 		packagePath += "/"
+	// 	}
+	// 	pathFilter := func(p string) bool {
+	// 		matchesPackage := strings.HasPrefix(p, packagePath)
+	// 		return matchesPackage
+	// 	}
+	// 	logOptions.PathFilter = pathFilter
+	// }
+
+	commits, err := r.repo.Log(&logOptions)
+	if err != nil {
+		return nil, fmt.Errorf("error walking commits: %w", err)
+	}
+
+	var tasks []v1alpha1.Task
+
+	visitCommit := func(commit *object.Commit) error {
+		gitAnnotations, err := ExtractGitAnnotations(commit)
+		if err != nil {
+			return err
+		}
+
+		for _, gitAnnotation := range gitAnnotations {
+			if gitAnnotation.Task != nil && gitAnnotation.PackagePath == packagePath {
+				tasks = append(tasks, *gitAnnotation.Task)
+			}
+		}
+
+		// TODO: If a commit has no annotations defined, we should treat it like a patch.
+		// This will allow direct manipulation of the git repo.
+		// We should also probably _not_ record an annotation for a patch task, so we
+		// can allow direct editing.
+		return nil
+	}
+
+	if err := commits.ForEach(visitCommit); err != nil {
+		return nil, fmt.Errorf("error visiting commits: %w", err)
+	}
+
+	// We need to reverse the tasks so they appear in chronological order
+	reverseSlice(tasks)
+
+	return tasks, nil
+}
+
+// See https://eli.thegreenplace.net/2021/generic-functions-on-slices-with-go-type-parameters/
+// func ReverseSlice[T any](s []T) { // Ready for generics!
+func reverseSlice(s []v1alpha1.Task) {
+	first := 0
+	last := len(s) - 1
+	for first < last {
+		s[first], s[last] = s[last], s[first]
+		first++
+		last--
+	}
 }
