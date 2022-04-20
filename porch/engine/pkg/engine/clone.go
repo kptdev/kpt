@@ -128,7 +128,6 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 
 	spec := configapi.GitRepository{
 		Repo:      gitPackage.Repo,
-		Branch:    gitPackage.Ref,
 		Directory: gitPackage.Directory,
 		SecretRef: configapi.SecretRef{
 			Name: gitPackage.SecretRef.Name,
@@ -142,7 +141,8 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	defer os.RemoveAll(dir)
 
 	r, err := git.OpenRepository(ctx, "", "", &spec, dir, git.GitRepositoryOptions{
-		CredentialResolver: m.credentialResolver,
+		CredentialResolver:         m.credentialResolver,
+		SkipMainBranchVerification: true, // We are only reading so we don't need the main branch to exist.
 	})
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot clone Git repository: %w", err)
