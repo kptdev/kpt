@@ -50,11 +50,11 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
 	})
 	r.Command.Flags().StringArrayVarP(
-		&r.Keywords, "keywords", "k", []string{}, "filter functions that match one or more keywords")
+		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
 	_ = r.Command.RegisterFlagCompletionFunc("keywords", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return cmdutil.SuggestKeywords(cmd), cobra.ShellCompDirectiveDefault
 	})
-	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "mutator",
+	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"mutator", "validator"}, cobra.ShellCompDirectiveDefault
@@ -361,19 +361,46 @@ func checkFnConfigPathExistence(path string) error {
 	return nil
 }
 
-func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+func (r *EvalFnRunner) validateOptionalFlags() error {
 	// Let users know that --include-meta-resources is no longer necessary
 	// since meta resources are included by default.
 	if r.IncludeMetaResources {
 		return fmt.Errorf("--include-meta-resources is no longer necessary because meta resources are now included by default")
 	}
+	// SaveFn stores function to Kptfile. If not enabled, only make in-place changes.
+	if r.SaveFn {
+		if r.FnType == "" {
+			return fmt.Errorf("--type must be specified if saving functions to Kptfile (--save=true)")
+		}
+		if r.FnType != "mutator" && r.FnType != "validator" {
+			return fmt.Errorf("--type must be either `mutator` or `validator`")
+		}
+	}
+	// ResultsDir stores the hydrated output in a structured format to result dir. If not specified, only make
+	// in-place changes.
+	if r.ResultsDir != "" {
+		err := os.MkdirAll(r.ResultsDir, 0755)
+		if err != nil {
+			return fmt.Errorf("cannot read or create results dir %q: %w", r.ResultsDir, err)
+		}
+	}
 
+	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
+	// separate the optional flag validation to fix linter issue: cyclomatic complexity
+	if err := r.validateOptionalFlags(); err != nil {
+		return err
+	}
 	if r.Dest != "" && r.Dest != cmdutil.Stdout && r.Dest != cmdutil.Unwrap {
 		if err := cmdutil.CheckDirectoryNotPresent(r.Dest); err != nil {
 			return err
 		}
 	}
-
 	if r.Image == "" && r.Exec == "" {
 		return errors.Errorf("must specify --image or --exec")
 	}
@@ -382,15 +409,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		err := cmdutil.DockerCmdAvailable()
 		if err != nil {
 			return err
-		}
-	}
-	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
-		return err
-	}
-	if r.ResultsDir != "" {
-		err := os.MkdirAll(r.ResultsDir, 0755)
-		if err != nil {
-			return fmt.Errorf("cannot read or create results dir %q: %w", r.ResultsDir, err)
 		}
 	}
 	var dataItems []string

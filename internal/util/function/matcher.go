@@ -34,6 +34,10 @@ type TypeMatcher struct {
 // Match determines whether the `function` (which can be multi-typed), belongs
 // to the matcher's FnType. type value should only be `validator` or `mutator`.
 func (m TypeMatcher) Match(function v1alpha1.Function) bool {
+	if m.FnType == "" {
+		// type is not given, shown all functions.
+		return true
+	}
 	for _, actualType := range function.Spec.FunctionTypes {
 		if string(actualType) == m.FnType {
 			return true
