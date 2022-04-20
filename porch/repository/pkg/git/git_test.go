@@ -142,12 +142,12 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		if err != nil {
 			t.Fatalf("draft.Close() failed: %v", err)
 		}
-		klog.Infof("created revision %v", revision.Name())
+		klog.Infof("created revision %v", revision.KubeObjectName())
 	}
 
 	// We approve the draft so that we can fetch it
 	{
-		revisions, err := repo.ListPackageRevisions(ctx)
+		revisions, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 		if err != nil {
 			t.Fatalf("ListPackageRevisons failed: %v", err)
 		}
@@ -170,7 +170,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("Close() of %q, %q failed: %v", packageName, revision, err)
 		}
 
-		klog.Infof("approved revision %v", approved.Name())
+		klog.Infof("approved revision %v", approved.KubeObjectName())
 	}
 
 	// Get the package again, the resources should match what we push
@@ -183,7 +183,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("GetPackage(%q, %q) failed: %v", version, path, err)
 		}
 
-		t.Logf("packageRevision is %s", packageRevision.Name())
+		t.Logf("packageRevision is %s", packageRevision.KubeObjectName())
 		t.Logf("gitLock is %#v", gitLock)
 
 		resources, err := packageRevision.GetResources(ctx)
@@ -330,7 +330,7 @@ func TestListPackagesTrivial(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
@@ -417,7 +417,7 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
@@ -492,7 +492,7 @@ func TestListPackagesSimple(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
@@ -516,7 +516,7 @@ func TestListPackagesSimple(t *testing.T) {
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
-			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+			t.Errorf("GetPackageRevision failed for %q: %v", r.KubeObjectName(), err)
 		}
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
@@ -551,7 +551,7 @@ func TestListPackagesDrafts(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
@@ -576,7 +576,7 @@ func TestListPackagesDrafts(t *testing.T) {
 	for _, r := range revisions {
 		rev, err := r.GetPackageRevision()
 		if err != nil {
-			t.Errorf("GetPackageRevision failed for %q: %v", r.Name(), err)
+			t.Errorf("GetPackageRevision failed for %q: %v", r.KubeObjectName(), err)
 		}
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
@@ -611,7 +611,7 @@ func TestApproveDraft(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
@@ -682,7 +682,7 @@ func TestDeletePackages(t *testing.T) {
 	}
 
 	// Delete all packages
-	all, err := git.ListPackageRevisions(ctx)
+	all, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
@@ -692,7 +692,7 @@ func TestDeletePackages(t *testing.T) {
 		deleting := all[0]
 		pr, err := deleting.GetPackageRevision()
 		if err != nil {
-			t.Fatalf("GetPackageRevision of %q failed: %v", deleting.Name(), err)
+			t.Fatalf("GetPackageRevision of %q failed: %v", deleting.KubeObjectName(), err)
 		}
 		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
 
@@ -702,7 +702,7 @@ func TestDeletePackages(t *testing.T) {
 		}
 
 		if err := git.DeletePackageRevision(ctx, deleting); err != nil {
-			t.Fatalf("DeletePackageRevision(%q) failed: %v", deleting.Name(), err)
+			t.Fatalf("DeletePackageRevision(%q) failed: %v", deleting.KubeObjectName(), err)
 		}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
@@ -711,7 +711,7 @@ func TestDeletePackages(t *testing.T) {
 		}
 
 		// Re-list packages and check the deleted package is absent
-		all, err = git.ListPackageRevisions(ctx)
+		all, err = git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 		if err != nil {
 			t.Fatalf("ListPackageRevisions failed: %v", err)
 		}
@@ -774,7 +774,7 @@ func TestRefreshRepo(t *testing.T) {
 		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
 	}
 
-	all, err := git.ListPackageRevisions(ctx)
+	all, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
@@ -826,7 +826,7 @@ func TestRefreshRepo(t *testing.T) {
 		t.Fatalf("Failed to create tag %s: %v", tag, err)
 	}
 
-	all, err = git.ListPackageRevisions(ctx)
+	all, err = git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions(Refresh) failed; %v", err)
 	}
@@ -915,7 +915,7 @@ func TestNested(t *testing.T) {
 		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
 	}
 
-	revisions, err := git.ListPackageRevisions(ctx)
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
@@ -1021,7 +1021,7 @@ func TestNestedDirectories(t *testing.T) {
 				t.Fatalf("Failed to open Git repository loaded from %q with directory %q: %v", tarfile, tc.directory, err)
 			}
 
-			revisions, err := git.ListPackageRevisions(ctx)
+			revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 			if err != nil {
 				t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 			}

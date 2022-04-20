@@ -63,7 +63,7 @@ type ociRepository struct {
 var _ repository.Repository = &ociRepository{}
 var _ repository.FunctionRepository = &ociRepository{}
 
-func (r *ociRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {
+func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return []repository.PackageRevision{}, nil
 	}
@@ -135,7 +135,9 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 				}
 				p.tasks = tasks
 
-				result = append(result, p)
+				if filter.Matches(p) {
+					result = append(result, p)
+				}
 			}
 		}
 	}
@@ -323,7 +325,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.Name(),
+			Name:      p.KubeObjectName(),
 			Namespace: p.parent.namespace,
 			CreationTimestamp: metav1.Time{
 				Time: p.created,
@@ -337,7 +339,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 	}, nil
 }
 
-func (p *ociPackageRevision) Name() string {
+func (p *ociPackageRevision) KubeObjectName() string {
 	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.revision)))
 	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
@@ -357,7 +359,7 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.Name(),
+			Name:      p.KubeObjectName(),
 			Namespace: p.parent.namespace,
 			CreationTimestamp: metav1.Time{
 				Time: p.created,
@@ -375,7 +377,7 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 }
 
 func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.Name())
+	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.KubeObjectName())
 }
 
 func (p *ociPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {

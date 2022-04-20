@@ -50,7 +50,7 @@ var _ repository.PackageRevision = &gitPackageRevision{}
 // name in order to aide package discovery on the server. With improvements to caching
 // layer, the prefix will be removed (this may happen without notice) so it should not
 // be relied upon by clients.
-func (p *gitPackageRevision) Name() string {
+func (p *gitPackageRevision) KubeObjectName() string {
 	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.path, p.revision)))
 	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
@@ -74,7 +74,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            p.Name(),
+			Name:            p.KubeObjectName(),
 			Namespace:       p.parent.namespace,
 			UID:             p.uid(),
 			ResourceVersion: p.commit.String(),
@@ -125,7 +125,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			APIVersion: v1alpha1.SchemeGroupVersion.Identifier(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            p.Name(),
+			Name:            p.KubeObjectName(),
 			Namespace:       p.parent.namespace,
 			UID:             p.uid(),
 			ResourceVersion: p.commit.String(),

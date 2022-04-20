@@ -41,12 +41,17 @@ type packageCommon struct {
 	updateStrategy SimpleRESTUpdateStrategy
 }
 
-func (r *packageCommon) listPackages(ctx context.Context, callback func(p repository.PackageRevision) error) error {
+func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, callback func(p repository.PackageRevision) error) error {
 	var opts []client.ListOption
 	if ns, namespaced := genericapirequest.NamespaceFrom(ctx); namespaced {
 		opts = append(opts, client.InNamespace(ns))
+
+		if filter.Namespace != "" && ns != filter.Namespace {
+			return fmt.Errorf("conflicting namespaces specified: %q and %q", ns, filter.Namespace)
+		}
 	}
 
+	// TODO: Filter on filter.Repository?
 	var repositories configapi.RepositoryList
 	if err := r.coreClient.List(ctx, &repositories, opts...); err != nil {
 		return fmt.Errorf("error listing repository objects: %w", err)
@@ -55,12 +60,16 @@ func (r *packageCommon) listPackages(ctx context.Context, callback func(p reposi
 	for i := range repositories.Items {
 		repositoryObj := &repositories.Items[i]
 
+		if filter.Repository != "" && filter.Repository != repositoryObj.GetName() {
+			continue
+		}
+
 		repository, err := r.cad.OpenRepository(ctx, repositoryObj)
 		if err != nil {
 			return err
 		}
 
-		revisions, err := repository.ListPackageRevisions(ctx)
+		revisions, err := repository.ListPackageRevisions(ctx, filter.ListPackageRevisionFilter)
 		if err != nil {
 			return err
 		}
@@ -93,17 +102,17 @@ func (r *packageCommon) getPackage(ctx context.Context, name string) (repository
 		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
 	}
 
-	repository, err := r.cad.OpenRepository(ctx, &repositoryObj)
+	repo, err := r.cad.OpenRepository(ctx, &repositoryObj)
 	if err != nil {
 		return nil, err
 	}
 
-	revisions, err := repository.ListPackageRevisions(ctx)
+	revisions, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: name})
 	if err != nil {
 		return nil, err
 	}
 	for _, rev := range revisions {
-		if rev.Name() == name {
+		if rev.KubeObjectName() == name {
 			return rev, nil
 		}
 	}

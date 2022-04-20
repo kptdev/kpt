@@ -201,7 +201,7 @@ func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, k
 }
 
 func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
-	list, err := git.ListPackageRevisions(context.Background())
+	list, err := git.ListPackageRevisions(context.Background(), repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
@@ -209,7 +209,7 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name rep
 }
 
 func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
-	list, err := git.ListPackageRevisions(context.Background())
+	list, err := git.ListPackageRevisions(context.Background(), repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}

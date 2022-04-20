@@ -19,6 +19,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/engine"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/registry/rest"
 	genericapiserver "k8s.io/apiserver/pkg/server"
@@ -69,6 +70,25 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 			"packagerevisionresources":  packageRevisionResources,
 			"functions":                 functions,
 		},
+	}
+
+	{
+		gvk := schema.GroupVersionKind{
+			Group:   porch.GroupName,
+			Version: "v1alpha1",
+			Kind:    "PackageRevision",
+		}
+
+		scheme.AddFieldLabelConversionFunc(gvk, convertPackageRevisionFieldSelector)
+	}
+	{
+		gvk := schema.GroupVersionKind{
+			Group:   porch.GroupName,
+			Version: "v1alpha1",
+			Kind:    "PackageRevisionResources",
+		}
+
+		scheme.AddFieldLabelConversionFunc(gvk, convertPackageRevisionResourcesFieldSelector)
 	}
 
 	return group, nil

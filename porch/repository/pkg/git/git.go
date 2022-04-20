@@ -140,7 +140,7 @@ type gitRepository struct {
 	userInfoProvider   repository.UserInfoProvider
 }
 
-func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.PackageRevision, error) {
+func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	if err := r.fetchRemoteRepository(ctx); err != nil {
 		return nil, err
 	}
@@ -182,7 +182,11 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 			if err != nil {
 				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
 			}
-			result = append(result, tagged...)
+			for _, p := range tagged {
+				if filter.Matches(p) {
+					result = append(result, p)
+				}
+			}
 		}
 	}
 
@@ -192,10 +196,18 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context) ([]repository.
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, mainpkgs...)
+		for _, p := range mainpkgs {
+			if filter.Matches(p) {
+				result = append(result, p)
+			}
+		}
 	}
 
-	result = append(result, drafts...)
+	for _, p := range drafts {
+		if filter.Matches(p) {
+			result = append(result, drafts...)
+		}
+	}
 
 	return result, nil
 }
