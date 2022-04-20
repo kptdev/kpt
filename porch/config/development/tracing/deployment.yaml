@@ -15,63 +15,60 @@
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  name: porch-server
+  name: jaeger
   namespace: porch-system
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: porch-server
+  name: jaeger
   namespace: porch-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: porch-server
+      app: jaeger
   template:
     metadata:
       labels:
-        app: porch-server
+        app: jaeger
     spec:
-      serviceAccountName: porch-server
-      volumes:
-        - name: cache-volume
-          emptyDir: {}
+      serviceAccountName: jaeger
       containers:
-        - name: porch-server
-          # Update image to the image of your porch apiserver build.
-          image: gcr.io/example-google-project-id/porch-server:latest
+        - name: jaeger
+          image: jaegertracing/opentelemetry-all-in-one:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
-              memory: "256Mi"
+              memory: "1024Mi"
               cpu: "250m"
             limits:
-              memory: "512Mi"
-          volumeMounts:
-            - mountPath: /cache
-              name: cache-volume
-          env:
-          # Uncomment to enable trace-reporting to jaeger
-          #- name: OTEL
-          #  value: otel://jaeger-oltp:4317
-          - name: OTEL_SERVICE_NAME
-            value: porch-server
-          args:
-            - --function-runner=function-runner:9445
-            - --cache-directory=/cache
+              memory: "1024Mi"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: api
+  name: jaeger-oltp
   namespace: porch-system
 spec:
   ports:
-    - port: 443
+    - port: 4317
       protocol: TCP
-      targetPort: 443
+      targetPort: 55680
   selector:
-    app: porch-server
+    app: jaeger
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-http
+  namespace: porch-system
+spec:
+  ports:
+    - port: 16686
+      protocol: TCP
+      targetPort: 16686
+  selector:
+    app: jaeger

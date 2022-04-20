@@ -252,7 +252,7 @@ func (r *cachedRepository) pollForever(ctx context.Context) {
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
 	klog.Infof("background-refreshing repo %q", r.id)
-	ctx, span := tracer.Start(ctx, "Repository.pollOnce", trace.WithAttributes())
+	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
 	if _, err := r.getPackages(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {

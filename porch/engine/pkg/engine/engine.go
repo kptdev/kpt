@@ -32,7 +32,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
+
+var tracer = otel.Tracer("engine")
 
 type CaDEngine interface {
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
@@ -69,10 +73,16 @@ type mutation interface {
 }
 
 func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::OpenRepository", trace.WithAttributes())
+	defer span.End()
+
 	return cad.cache.OpenRepository(ctx, repositorySpec)
 }
 
 func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::CreatePackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	// Validate package lifecycle. Cannot create a final package
 	switch obj.Spec.Lifecycle {
 	case "":
@@ -188,6 +198,9 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 }
 
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := oldObj.Spec.Lifecycle; lifecycle {
 	default:
@@ -284,6 +297,9 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {
+	ctx, span := tracer.Start(ctx, "cadEngine::DeletePackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return err
@@ -297,6 +313,9 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 }
 
 func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
+	defer span.End()
+
 	rev, err := oldPackage.GetPackageRevision()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get package revision: %w", err)
@@ -370,6 +389,9 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 }
 
 func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::ListFunctions", trace.WithAttributes())
+	defer span.End()
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
@@ -388,6 +410,9 @@ type updatePackageMutation struct {
 }
 
 func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "updatePackageMutation::Apply", trace.WithAttributes())
+	defer span.End()
+
 	// TODO: load directly from source repository
 	dir, err := ioutil.TempDir("", "kpt-pkg-update-*")
 	if err != nil {
@@ -468,6 +493,9 @@ type mutationReplaceResources struct {
 }
 
 func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "mutationReplaceResources::Apply", trace.WithAttributes())
+	defer span.End()
+
 	patch := &api.PackagePatchTaskSpec{}
 
 	old := resources.Contents

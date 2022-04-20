@@ -34,8 +34,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 )
+
+var tracer = otel.Tracer("git")
 
 const (
 	DefaultMainReferenceName plumbing.ReferenceName = "refs/heads/main"
@@ -54,6 +58,9 @@ type GitRepositoryOptions struct {
 }
 
 func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, root string, opts GitRepositoryOptions) (GitRepository, error) {
+	ctx, span := tracer.Start(ctx, "OpenRepository", trace.WithAttributes())
+	defer span.End()
+
 	replace := strings.NewReplacer("/", "-", ":", "-")
 	dir := filepath.Join(root, replace.Replace(spec.Repo))
 
@@ -139,6 +146,9 @@ type gitRepository struct {
 }
 
 func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::ListPackageRevisions", trace.WithAttributes())
+	defer span.End()
+
 	if err := r.fetchRemoteRepository(ctx); err != nil {
 		return nil, err
 	}
@@ -211,6 +221,9 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 }
 
 func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::CreatePackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	if !packageInDirectory(obj.Spec.PackageName, r.directory) {
 		return nil, fmt.Errorf("cannot create %s outside of repository directory %q", obj.Spec.PackageName, r.directory)
 	}
@@ -242,6 +255,9 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 }
 
 func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::UpdatePackage", trace.WithAttributes())
+	defer span.End()
+
 	oldGitPackage, ok := old.(*gitPackageRevision)
 	if !ok {
 		return nil, fmt.Errorf("cannot update non-git package %T", old)
@@ -279,6 +295,9 @@ func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.Packag
 }
 
 func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
+	ctx, span := tracer.Start(ctx, "gitRepository::DeletePackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	oldGit, ok := old.(*gitPackageRevision)
 	if !ok {
 		return fmt.Errorf("cannot delete non-git package: %T", old)
@@ -333,6 +352,9 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 }
 
 func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::GetPackage", trace.WithAttributes())
+	defer span.End()
+
 	git := r.repo
 
 	var hash plumbing.Hash
@@ -378,6 +400,9 @@ func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (r
 }
 
 func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::loadPackageRevision", trace.WithAttributes())
+	defer span.End()
+
 	if !packageInDirectory(path, r.directory) {
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find package %s@%s; package is not under the Repository.spec.directory", path, version)
 	}
@@ -420,6 +445,9 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 }
 
 func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plumbing.Reference) ([]repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::discoverFinalizedPackages", trace.WithAttributes())
+	defer span.End()
+
 	git := r.repo
 	commit, err := git.CommitObject(ref.Hash())
 	if err != nil {
@@ -625,6 +653,9 @@ func (r *gitRepository) getRepo() (string, error) {
 }
 
 func (r *gitRepository) fetchRemoteRepository(ctx context.Context) error {
+	ctx, span := tracer.Start(ctx, "gitRepository::fetchRemoteRepository", trace.WithAttributes())
+	defer span.End()
+
 	auth, err := r.getAuthMethod(ctx)
 	if err != nil {
 		return err

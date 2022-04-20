@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Cache allows us to keep state for repositories, rather than querying them every time.
@@ -60,6 +61,9 @@ func NewCache(cacheDir string, opts CacheOptions) *Cache {
 }
 
 func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (*cachedRepository, error) {
+	ctx, span := tracer.Start(ctx, "Cache::OpenRepository", trace.WithAttributes())
+	defer span.End()
+
 	switch repositoryType := repositorySpec.Spec.Type; repositoryType {
 	case configapi.RepositoryTypeOCI:
 		ociSpec := repositorySpec.Spec.Oci

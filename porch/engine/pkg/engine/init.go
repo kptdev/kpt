@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
@@ -35,6 +36,8 @@ type initPackageMutation struct {
 var _ mutation = &initPackageMutation{}
 
 func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "initPackageMutation::Apply", trace.WithAttributes())
+	defer span.End()
 
 	fs := filesys.MakeFsInMemory()
 	// virtual fs expected a rooted filesystem

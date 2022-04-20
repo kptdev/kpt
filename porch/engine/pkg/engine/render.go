@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -35,6 +36,9 @@ type renderPackageMutation struct {
 var _ mutation = &renderPackageMutation{}
 
 func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "renderPackageMutation::Apply", trace.WithAttributes())
+	defer span.End()
+
 	fs := filesys.MakeFsInMemory()
 
 	pkgPath, err := writeResources(fs, resources)

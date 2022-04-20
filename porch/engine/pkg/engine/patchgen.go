@@ -23,6 +23,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"github.com/bluekeyes/go-gitdiff/gitdiff"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
 
 	"github.com/hexops/gotextdiff"
@@ -52,6 +53,9 @@ type applyPatchMutation struct {
 var _ mutation = &applyPatchMutation{}
 
 func (m *applyPatchMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "applyPatchMutation:::Apply", trace.WithAttributes())
+	defer span.End()
+
 	result := repository.PackageResources{
 		Contents: map[string]string{},
 	}

@@ -18,7 +18,9 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/porch/apiserver/pkg/cmd/server"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -83,13 +85,23 @@ func (t *telemetry) Start() error {
 		return nil
 	}
 
-	if config == "otel" {
+	// TODO: Is there any convention here?
+	if strings.HasPrefix(config, "otel://") {
 		ctx := context.Background()
+
+		u, err := url.Parse(config)
+		if err != nil {
+			return fmt.Errorf("error parsing url %q: %w", config, err)
+		}
+
+		endpoint := u.Host
+
+		klog.Infof("tracing to %q", config)
 
 		// See https://github.com/open-telemetry/opentelemetry-go/issues/1484
 		driver := otlpgrpc.NewDriver(
 			otlpgrpc.WithInsecure(),
-			otlpgrpc.WithEndpoint("localhost:4317"),
+			otlpgrpc.WithEndpoint(endpoint),
 			otlpgrpc.WithDialOption(grpc.WithBlock()), // useful for testing
 		)
 

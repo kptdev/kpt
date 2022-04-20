@@ -68,7 +68,7 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 		return []repository.PackageRevision{}, nil
 	}
 
-	ctx, span := tracer.Start(ctx, "ListPackageRevisions")
+	ctx, span := tracer.Start(ctx, "ociRepository::ListPackageRevisions")
 	defer span.End()
 
 	ociRepo, err := name.NewRepository(r.spec.Registry)
@@ -150,7 +150,7 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name ImageDige
 		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)
 	}
 
-	ctx, span := tracer.Start(ctx, "buildPackageRevision")
+	ctx, span := tracer.Start(ctx, "ociRepository::buildPackageRevision")
 	defer span.End()
 
 	p := &ociPackageRevision{
@@ -232,7 +232,7 @@ func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Functio
 		return []repository.Function{}, nil
 	}
 
-	ctx, span := tracer.Start(ctx, "ListFunctions")
+	ctx, span := tracer.Start(ctx, "ociRepository::ListFunctions")
 	defer span.End()
 
 	ociRepo, err := name.NewRepository(r.spec.Registry)

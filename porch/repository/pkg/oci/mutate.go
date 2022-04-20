@@ -36,6 +36,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/google/go-containerregistry/pkg/v1/stream"
+	"go.opentelemetry.io/otel/trace"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 )
@@ -117,6 +118,9 @@ type ociPackageDraft struct {
 var _ repository.PackageDraft = (*ociPackageDraft)(nil)
 
 func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageRevisionResources, task *api.Task) error {
+	ctx, span := tracer.Start(ctx, "ociPackageDraft::UpdateResources", trace.WithAttributes())
+	defer span.End()
+
 	buf := bytes.NewBuffer(nil)
 	writer := tar.NewWriter(buf)
 
@@ -189,6 +193,9 @@ func (p *ociPackageDraft) UpdateLifecycle(ctx context.Context, new api.PackageRe
 
 // Finish round of updates.
 func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "ociPackageDraft::Close", trace.WithAttributes())
+	defer span.End()
+
 	ref := p.tag
 	option := remote.WithAuthFromKeychain(gcrane.Keychain)
 
