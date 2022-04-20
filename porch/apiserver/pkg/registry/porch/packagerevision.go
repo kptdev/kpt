@@ -80,10 +80,7 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 	}
 
 	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.PackageRevision) error {
-		item, err := p.GetPackageRevision()
-		if err != nil {
-			return err
-		}
+		item := p.GetPackageRevision()
 		result.Items = append(result.Items, *item)
 		return nil
 	}); err != nil {
@@ -142,10 +139,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInternalError(err)
 	}
 
-	created, err := rev.GetPackageRevision()
-	if err != nil {
-		return nil, apierrors.NewInternalError(err)
-	}
+	created := rev.GetPackageRevision()
 	return created, nil
 }
 
@@ -186,11 +180,7 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 		return nil, false, err
 	}
 
-	oldObj, err := oldPackage.GetPackageRevision()
-	if err != nil {
-		klog.Infof("update failed to retrieve old object: %v", err)
-		return nil, false, err
-	}
+	oldObj := oldPackage.GetPackageRevision()
 
 	if deleteValidation != nil {
 		err := deleteValidation(ctx, oldObj)

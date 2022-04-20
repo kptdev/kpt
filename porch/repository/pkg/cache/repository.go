@@ -53,18 +53,15 @@ type cachedPackageRevision struct {
 	isLatestRevision bool
 }
 
-func (c *cachedPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
-	rev, err := c.PackageRevision.GetPackageRevision()
-	if err != nil {
-		return nil, err
-	}
+func (c *cachedPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
+	rev := c.PackageRevision.GetPackageRevision()
 	if c.isLatestRevision {
 		if rev.Labels == nil {
 			rev.Labels = map[string]string{}
 		}
 		rev.Labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
 	}
-	return rev, nil
+	return rev
 }
 
 var _ repository.PackageRevision = &cachedPackageRevision{}

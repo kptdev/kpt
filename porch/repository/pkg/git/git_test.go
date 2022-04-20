@@ -375,10 +375,7 @@ func TestListPackagesTrivial(t *testing.T) {
 		t.Fatalf("draft.Close() failed: %v", err)
 	}
 
-	result, err := newRevision.GetPackageRevision()
-	if err != nil {
-		t.Fatalf("GetPackageRevision() failed: %v", err)
-	}
+	result := newRevision.GetPackageRevision()
 	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
 		t.Errorf("Newly created package type: got %q, want %q", got, want)
 	}
@@ -462,10 +459,7 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 		t.Fatalf("draft.Close() failed: %v", err)
 	}
 
-	result, err := newRevision.GetPackageRevision()
-	if err != nil {
-		t.Fatalf("GetPackageRevision() failed: %v", err)
-	}
+	result := newRevision.GetPackageRevision()
 	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
 		t.Errorf("Newly created package type: got %q, want %q", got, want)
 	}
@@ -514,10 +508,7 @@ func TestListPackagesSimple(t *testing.T) {
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
-		rev, err := r.GetPackageRevision()
-		if err != nil {
-			t.Errorf("GetPackageRevision failed for %q: %v", r.KubeObjectName(), err)
-		}
+		rev := r.GetPackageRevision()
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
@@ -574,10 +565,7 @@ func TestListPackagesDrafts(t *testing.T) {
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
-		rev, err := r.GetPackageRevision()
-		if err != nil {
-			t.Errorf("GetPackageRevision failed for %q: %v", r.KubeObjectName(), err)
-		}
+		rev := r.GetPackageRevision()
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
@@ -638,11 +626,7 @@ func TestApproveDraft(t *testing.T) {
 		t.Fatalf("Close failed: %v", err)
 	}
 
-	rev, err := new.GetPackageRevision()
-	if err != nil {
-		t.Fatalf("GetPackageRevision failed: %v", err)
-	}
-
+	rev := new.GetPackageRevision()
 	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
 		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
 	}
@@ -690,10 +674,7 @@ func TestDeletePackages(t *testing.T) {
 	for len(all) > 0 {
 		// Delete one of the packages
 		deleting := all[0]
-		pr, err := deleting.GetPackageRevision()
-		if err != nil {
-			t.Fatalf("GetPackageRevision of %q failed: %v", deleting.KubeObjectName(), err)
-		}
+		pr := deleting.GetPackageRevision()
 		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
@@ -941,12 +922,7 @@ func TestNested(t *testing.T) {
 
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
 	for _, pr := range revisions {
-		rev, err := pr.GetPackageRevision()
-		if err != nil {
-			t.Errorf("GetPackageRevision(%s) failed: %v", pr.Key(), err)
-			continue
-		}
-
+		rev := pr.GetPackageRevision()
 		if rev.Spec.Revision == "main" {
 			// skip packages with "main" revision, to match the above simplified package discovery algo.
 			continue

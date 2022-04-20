@@ -126,10 +126,7 @@ func (r *packageCommon) getPackageRevision(ctx context.Context, name string, opt
 		return nil, err
 	}
 
-	obj, err := pkg.GetPackageRevision()
-	if err != nil {
-		return nil, err
-	}
+	obj := pkg.GetPackageRevision()
 	return obj, nil
 }
 
@@ -147,12 +144,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, err
 	}
 
-	oldObj, err := oldPackage.GetPackageRevision()
-	if err != nil {
-		klog.Infof("update failed to retrieve old object: %v", err)
-		return nil, false, err
-	}
-
+	oldObj := oldPackage.GetPackageRevision()
 	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldObj)
 	if err != nil {
 		klog.Infof("update failed to construct UpdatedObject: %v", err)
@@ -199,9 +191,6 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, apierrors.NewInternalError(err)
 	}
 
-	created, err := rev.GetPackageRevision()
-	if err != nil {
-		return nil, false, apierrors.NewInternalError(err)
-	}
+	created := rev.GetPackageRevision()
 	return created, false, nil
 }

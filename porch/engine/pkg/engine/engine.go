@@ -316,10 +316,7 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
 
-	rev, err := oldPackage.GetPackageRevision()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get package revision: %w", err)
-	}
+	rev := oldPackage.GetPackageRevision()
 
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := rev.Spec.Lifecycle; lifecycle {

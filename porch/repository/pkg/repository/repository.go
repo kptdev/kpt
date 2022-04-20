@@ -51,7 +51,7 @@ type PackageRevision interface {
 	Lifecycle() v1alpha1.PackageRevisionLifecycle
 
 	// GetPackageRevision returns the PackageRevision ("DRY") API representation of this package-revision
-	GetPackageRevision() (*v1alpha1.PackageRevision, error)
+	GetPackageRevision() *v1alpha1.PackageRevision
 
 	// GetResources returns the PackageRevisionResources ("WET") API representation of this package-revision
 	// TODO: return PackageResources or filesystem abstraction?
