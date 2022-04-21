@@ -376,9 +376,7 @@ func (rgi *ResourceGroupInstaller) InstallRG(ctx context.Context) error {
 				return e.Error
 			case pollevent.ResourceUpdateEvent:
 				if e.Resource.Status == kstatus.CurrentStatus {
-					if !meta.MaybeResetRESTMapper(mapper) {
-						return fmt.Errorf("failed to reset RESTMapper: %T", mapper)
-					}
+					meta.MaybeResetRESTMapper(mapper)
 				}
 			}
 		}
