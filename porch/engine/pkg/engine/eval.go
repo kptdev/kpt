@@ -23,7 +23,9 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -42,19 +44,16 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 
 	// TODO: Apply should accept filesystem instead of PackageResources
 
-	runner, err := m.runtime.GetRunner(ctx, &v1.Function{
-		Image: e.Image,
-	})
-	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to create function runner: %w", err)
+	x := FunctionExecution{
+		Runtime:       m.runtime,
+		FunctionImage: e.Image,
+		Input:         resources,
 	}
-
-	var functionConfig *yaml.RNode
 	if m.task.Eval.ConfigMap != nil {
 		if cm, err := kpt.NewConfigMap(m.task.Eval.ConfigMap); err != nil {
 			return repository.PackageResources{}, nil, fmt.Errorf("failed to create function config: %w", err)
 		} else {
-			functionConfig = cm
+			x.FunctionConfig = cm
 		}
 	} else if len(m.task.Eval.Config.Raw) != 0 {
 		// raw is JSON (we expect), but we take advantage of the fact that YAML is a superset of JSON
@@ -62,17 +61,43 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		if err != nil {
 			return repository.PackageResources{}, nil, fmt.Errorf("error parsing function config: %w", err)
 		}
-		functionConfig = config
+		x.FunctionConfig = config
+	}
+
+	output, err := x.Run(ctx)
+	if err != nil {
+		return repository.PackageResources{}, nil, err
+	}
+	return *output, m.task, nil
+}
+
+type FunctionExecution struct {
+	Runtime        fn.FunctionRuntime
+	FunctionImage  string
+	Input          repository.PackageResources
+	FunctionConfig *yaml.RNode
+}
+
+func (f *FunctionExecution) Run(ctx context.Context) (*repository.PackageResources, error) {
+	ctx, span := tracer.Start(ctx, "runFunction", trace.WithAttributes(attribute.String("functionImage", f.FunctionImage)))
+	defer span.End()
+
+	klog.Infof("running function %s", f.FunctionImage)
+	runner, err := f.Runtime.GetRunner(ctx, &v1.Function{
+		Image: f.FunctionImage,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create function runner: %w", err)
 	}
 
 	ff := &runtimeutil.FunctionFilter{
 		Run:            runner.Run,
-		FunctionConfig: functionConfig,
+		FunctionConfig: f.FunctionConfig,
 		Results:        &yaml.RNode{},
 	}
 
 	pr := &packageReader{
-		input: resources,
+		input: f.Input,
 		extra: map[string]string{},
 	}
 
@@ -96,7 +121,11 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	}
 
 	if err := pipeline.Execute(); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function: %w", err)
+		return nil, fmt.Errorf("failed to evaluate function: %w", err)
+	}
+
+	for k, v := range result.Contents {
+		result.Contents[k] = v
 	}
 
 	// Return extras. TODO: Apply should accept FS.
@@ -104,5 +133,17 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		result.Contents[k] = v
 	}
 
-	return result, m.task, nil
+	if _, found := result.Contents["Kptfile"]; !found {
+		// TODO: Something more useful
+		result.Contents["Kptfile"] = `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: generated
+info:
+  description: generated
+`
+	}
+
+	return &result, nil
 }

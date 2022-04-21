@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
@@ -32,6 +33,7 @@ import (
 )
 
 type clonePackageMutation struct {
+	runtime            fn.FunctionRuntime
 	task               *api.Task
 	namespace          string
 	name               string // package target name
@@ -53,6 +55,8 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		cloned, err = m.cloneFromGit(ctx, git)
 	} else if oci := m.task.Clone.Upstream.Oci; oci != nil {
 		cloned, err = m.cloneFromOci(ctx, oci)
+	} else if generator := m.task.Clone.Generator; generator != nil {
+		cloned, err = m.cloneFromGenerator(ctx, generator, m.runtime)
 	} else {
 		err = errors.New("invalid clone source (neither of git, oci, nor upstream were specified)")
 	}

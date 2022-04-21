@@ -112,6 +112,9 @@ type PackageCloneTaskSpec struct {
 	// `Upstream` is the reference to the upstream package to clone.
 	Upstream UpstreamPackage `json:"upstreamRef,omitempty"`
 
+	// Generator specifies that the base is generated.
+	Generator *GeneratorSpec `json:"generator,omitempty"`
+
 	// 	Defines which strategy should be used to update the package. It defaults to 'resource-merge'.
 	//  * resource-merge: Perform a structural comparison of the original /
 	//    updated resources, and merge the changes into the local package.
@@ -155,6 +158,11 @@ const (
 	RepositoryTypeGit RepositoryType = "git"
 	RepositoryTypeOCI RepositoryType = "oci"
 )
+
+type GeneratorSpec struct {
+	// `Config` specifies the function config, arbitrary KRM resource. Mutually exclusive with ConfigMap.
+	Config runtime.RawExtension `json:"config,omitempty"`
+}
 
 // UpstreamRepository repository may be specified directly or by referencing another Repository resource.
 type UpstreamPackage struct {
