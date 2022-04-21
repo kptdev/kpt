@@ -47,7 +47,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	}
 
 	packageRevisionResources := &packageRevisionResources{
-		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisionresources")),
+		TableConvertor: packageRevisionResourcesTableConvertor,
 		packageCommon: packageCommon{
 			cad:        cad,
 			gr:         porch.Resource("packagerevisionresources"),

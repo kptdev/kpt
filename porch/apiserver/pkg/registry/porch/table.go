@@ -16,8 +16,6 @@ package porch
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -110,14 +108,35 @@ var (
 			{Name: "Repository", Type: "string"},
 		},
 	}
+
+	packageRevisionResourcesTableConvertor = tableConvertor{
+		resource: porch.Resource("packagerevisionresources"),
+		cells: func(obj runtime.Object) []interface{} {
+			pr, ok := obj.(*api.PackageRevisionResources)
+			if !ok {
+				return nil
+			}
+			return []interface{}{
+				pr.Name,
+				pr.Spec.PackageName,
+				pr.Spec.Revision,
+				pr.Spec.RepositoryName,
+				len(pr.Spec.Resources),
+			}
+		},
+		columns: []metav1.TableColumnDefinition{
+			{Name: "Name", Type: "string"},
+			{Name: "Package", Type: "string"},
+			{Name: "Revision", Type: "string"},
+			{Name: "Repository", Type: "string"},
+			{Name: "Files", Type: "integer"},
+		},
+	}
 )
 
 func isLatest(pr *api.PackageRevision) bool {
-	labels := pr.Labels
-	if labels == nil {
-		return false
-	}
-	return labels[api.LatestPackageRevisionKey] == api.LatestPackageRevisionValue
+	val, ok := pr.Labels[api.LatestPackageRevisionKey]
+	return ok && val == api.LatestPackageRevisionValue
 }
 
 func notAcceptableError(ctx context.Context, resource schema.GroupResource) error {
@@ -129,22 +148,5 @@ func notAcceptableError(ctx context.Context, resource schema.GroupResource) erro
 	}
 	return errNotAcceptable{
 		resource: resource,
-	}
-}
-
-type errNotAcceptable struct {
-	resource schema.GroupResource
-}
-
-func (e errNotAcceptable) Error() string {
-	return fmt.Sprintf("%s does not support Table format", e.resource)
-}
-
-func (e errNotAcceptable) Status() metav1.Status {
-	return metav1.Status{
-		Status:  metav1.StatusFailure,
-		Message: e.Error(),
-		Reason:  metav1.StatusReasonNotAcceptable,
-		Code:    http.StatusNotAcceptable,
 	}
 }
