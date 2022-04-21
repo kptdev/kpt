@@ -16,6 +16,8 @@ package cache
 
 import (
 	"context"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -320,5 +322,34 @@ func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.L
 			result = append(result, p)
 		}
 	}
+	sort.Slice(result, func(i, j int) bool {
+		ki, kl := result[i].Key(), result[j].Key()
+		switch res := strings.Compare(ki.Package, kl.Package); {
+		case res < 0:
+			return true
+		case res > 0:
+			return false
+		default:
+			// Equal. Compare next element
+		}
+		switch res := strings.Compare(ki.Revision, kl.Revision); {
+		case res < 0:
+			return true
+		case res > 0:
+			return false
+		default:
+			// Equal. Compare next element
+		}
+		switch res := strings.Compare(string(result[i].Lifecycle()), string(result[j].Lifecycle())); {
+		case res < 0:
+			return true
+		case res > 0:
+			return false
+		default:
+			// Equal. Compare next element
+		}
+
+		return strings.Compare(result[i].KubeObjectName(), result[j].KubeObjectName()) < 0
+	})
 	return result
 }
