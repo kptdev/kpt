@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -185,8 +186,12 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
-		_, relativePath, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
-		newFn.ConfigPath = relativePath
+		// When saving function to Kptfile, the functionConfig should be the relevant path
+		// to the kpt package, not the relevant path to the current working dir.
+		// error handling are ignored since they have been validated in preRunE.
+		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
+		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.RunFns.Path)
+		newFn.ConfigPath, _ = filepath.Rel(pkgAbsPath, fnConfigAbsPath)
 	} else {
 		data := map[string]string{}
 		for i, s := range r.dataItems {
