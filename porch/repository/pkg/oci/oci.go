@@ -319,6 +319,8 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		return nil, err
 	}
 
+	key := p.Key()
+
 	return &v1alpha1.PackageRevisionResources{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevisionResources",
@@ -334,6 +336,10 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			UID:             p.uid,
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
+			PackageName:    key.Package,
+			Revision:       key.Revision,
+			RepositoryName: key.Repository,
+
 			Resources: resources.Contents,
 		},
 	}, nil
@@ -353,6 +359,8 @@ func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 }
 
 func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
+	key := p.Key()
+
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -368,10 +376,11 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			UID:             p.uid,
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
-			PackageName:    p.packageName,
-			Revision:       p.revision,
-			RepositoryName: p.parent.name,
-			Tasks:          p.tasks,
+			PackageName:    key.Package,
+			Revision:       key.Revision,
+			RepositoryName: key.Repository,
+
+			Tasks: p.tasks,
 		},
 	}, nil
 }

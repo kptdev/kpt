@@ -738,6 +738,9 @@ func Convert_porch_PackageRevisionResourcesList_To_v1alpha1_PackageRevisionResou
 }
 
 func autoConvert_v1alpha1_PackageRevisionResourcesSpec_To_porch_PackageRevisionResourcesSpec(in *PackageRevisionResourcesSpec, out *porch.PackageRevisionResourcesSpec, s conversion.Scope) error {
+	out.PackageName = in.PackageName
+	out.Revision = in.Revision
+	out.RepositoryName = in.RepositoryName
 	out.Resources = *(*map[string]string)(unsafe.Pointer(&in.Resources))
 	return nil
 }
@@ -748,6 +751,9 @@ func Convert_v1alpha1_PackageRevisionResourcesSpec_To_porch_PackageRevisionResou
 }
 
 func autoConvert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResourcesSpec(in *porch.PackageRevisionResourcesSpec, out *PackageRevisionResourcesSpec, s conversion.Scope) error {
+	out.PackageName = in.PackageName
+	out.Revision = in.Revision
+	out.RepositoryName = in.RepositoryName
 	out.Resources = *(*map[string]string)(unsafe.Pointer(&in.Resources))
 	return nil
 }
@@ -760,8 +766,8 @@ func Convert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResou
 func autoConvert_v1alpha1_PackageRevisionSpec_To_porch_PackageRevisionSpec(in *PackageRevisionSpec, out *porch.PackageRevisionSpec, s conversion.Scope) error {
 	out.PackageName = in.PackageName
 	out.Revision = in.Revision
-	out.Parent = (*porch.ParentReference)(unsafe.Pointer(in.Parent))
 	out.RepositoryName = in.RepositoryName
+	out.Parent = (*porch.ParentReference)(unsafe.Pointer(in.Parent))
 	out.Lifecycle = porch.PackageRevisionLifecycle(in.Lifecycle)
 	out.Tasks = *(*[]porch.Task)(unsafe.Pointer(&in.Tasks))
 	return nil
@@ -775,8 +781,8 @@ func Convert_v1alpha1_PackageRevisionSpec_To_porch_PackageRevisionSpec(in *Packa
 func autoConvert_porch_PackageRevisionSpec_To_v1alpha1_PackageRevisionSpec(in *porch.PackageRevisionSpec, out *PackageRevisionSpec, s conversion.Scope) error {
 	out.PackageName = in.PackageName
 	out.Revision = in.Revision
-	out.Parent = (*ParentReference)(unsafe.Pointer(in.Parent))
 	out.RepositoryName = in.RepositoryName
+	out.Parent = (*ParentReference)(unsafe.Pointer(in.Parent))
 	out.Lifecycle = PackageRevisionLifecycle(in.Lifecycle)
 	out.Tasks = *(*[]Task)(unsafe.Pointer(&in.Tasks))
 	return nil

@@ -837,9 +837,31 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref common.Ref
 				Description: "PackageRevisionResourcesSpec represents resources (as ResourceList serialized as yaml string) of the PackageRevision.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"packageName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PackageName identifies the package in the repository.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"revision": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Revision identifies the version of the package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RepositoryName is the name of the Repository object containing this package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"resources": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"object"},
+							Description: "Resources are the content of the package.",
+							Type:        []string{"object"},
 							AdditionalProperties: &spec.SchemaOrBool{
 								Allows: true,
 								Schema: &spec.Schema{
@@ -867,26 +889,29 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 				Properties: map[string]spec.Schema{
 					"packageName": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "PackageName identifies the package in the repository.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"revision": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "Revision identifies the version of the package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RepositoryName is the name of the Repository object containing this package.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"parent": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Parent references a package that provides resources to us",
 							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference"),
-						},
-					},
-					"repository": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
 						},
 					},
 					"lifecycle": {

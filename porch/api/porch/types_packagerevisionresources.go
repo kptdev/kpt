@@ -42,5 +42,15 @@ type PackageRevisionResourcesList struct {
 
 // PackageRevisionResourcesSpec represents resources (as ResourceList serialized as yaml string) of the PackageRevision.
 type PackageRevisionResourcesSpec struct {
+	// PackageName identifies the package in the repository.
+	PackageName string `json:"packageName,omitempty"`
+
+	// Revision identifies the version of the package.
+	Revision string `json:"revision,omitempty"`
+
+	// RepositoryName is the name of the Repository object containing this package.
+	RepositoryName string `json:"repository,omitempty"`
+
+	// Resources are the content of the package.
 	Resources map[string]string `json:"resources,omitempty"`
 }
