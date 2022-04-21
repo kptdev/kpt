@@ -39,6 +39,8 @@ import (
 var tracer = otel.Tracer("engine")
 
 type CaDEngine interface {
+	Registry() CaDRegistry
+
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
@@ -64,12 +66,17 @@ type cadEngine struct {
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
 	userInfoProvider   repository.UserInfoProvider
+	registry           CaDRegistry
 }
 
 var _ CaDEngine = &cadEngine{}
 
 type mutation interface {
 	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
+}
+
+func (cad *cadEngine) Registry() CaDRegistry {
+	return cad.registry
 }
 
 func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {

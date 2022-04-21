@@ -23,6 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -36,9 +37,7 @@ func (m *clonePackageMutation) cloneFromGenerator(ctx context.Context, spec *api
 		return repository.PackageResources{}, fmt.Errorf("error parsing generator config: %w", err)
 	}
 
-	gvk := config.GetObjectKind().GroupVersionKind()
-
-	functionImage, err := m.mapToFunctionImage(ctx, gvk)
+	functionImage, err := m.mapToFunctionImage(ctx, &config)
 	if err != nil {
 		return repository.PackageResources{}, err
 	}
@@ -65,16 +64,26 @@ func (m *clonePackageMutation) cloneFromGenerator(ctx context.Context, spec *api
 	return *output, nil
 }
 
-func (m *clonePackageMutation) mapToFunctionImage(ctx context.Context, gvk schema.GroupVersionKind) (string, error) {
-	// TODO: Something more exciting!
+func (m *clonePackageMutation) mapToFunctionImage(ctx context.Context, config *unstructured.Unstructured) (string, error) {
+	gvk := config.GetObjectKind().GroupVersionKind()
 
 	// TODO:: Look at config.kubernetes.io/function annotation?
-	// e.g. https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/b766c8d1e2d2027313fd50d24f6da28e47c2d247/examples/render-helm-chart-kustomize-inline-values/kustomization.yaml#L7-L11
+       // e.g. https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/b766c8d1e2d2027313fd50d24f6da28e47c2d247/examples/render-helm-chart-kustomize-inline-values/kustomization.yaml#L7-L11
 
-	switch gvk.GroupKind() {
-	case schema.GroupKind{Group: "fn.kpt.dev", Kind: "RenderHelmChart"}:
-		return "gcr.io/kpt-fn/render-helm-chart:unstable", nil
+	registry := m.cad.Registry()
+	if registry == nil {
+		// TODO: Remove this mapping; registry should probably be required / have a public default
+		klog.Warningf("registry not configured, falling back to hard-coded mapping")
+		switch gvk.GroupKind() {
+		case schema.GroupKind{Group: "fn.kpt.dev", Kind: "RenderHelmChart"}:
+			return "gcr.io/kpt-fn/render-helm-chart:unstable", nil
+		}
+
+		return "", fmt.Errorf("registry not configured; cannot get function for %v", gvk)
 	}
-
-	return "", fmt.Errorf("unable to determine function for GVK %v", gvk)
+	functionImage, err := registry.FunctionImageForGVK(ctx, gvk)
+	if err != nil {
+		return "", err
+	}
+	return functionImage, nil
 }

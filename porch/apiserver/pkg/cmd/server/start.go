@@ -51,6 +51,9 @@ type PorchServerOptions struct {
 	CoreAPIKubeconfigPath    string
 	FunctionRunnerAddress    string
 
+	// ArtifactRegistry is the store of canonical artifacts, such as the CRD -> function mapping.
+	ArtifactRegistry string
+
 	SharedInformerFactory informers.SharedInformerFactory
 	StdOut                io.Writer
 	StdErr                io.Writer
@@ -182,6 +185,7 @@ func (o *PorchServerOptions) Config() (*apiserver.Config, error) {
 			CoreAPIKubeconfigPath: o.CoreAPIKubeconfigPath,
 			CacheDirectory:        o.CacheDirectory,
 			FunctionRunnerAddress: o.FunctionRunnerAddress,
+			ArtifactRegistry:      o.ArtifactRegistry,
 		},
 	}
 	return config, nil
@@ -224,6 +228,7 @@ func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {
 				"authorizing the requests, this flag is only intended for debugging in your workstation.")
 	}
 
+	fs.StringVar(&o.ArtifactRegistry, "artifact-registry", "", "Registry where artifacts are stored.")
 	fs.StringVar(&o.FunctionRunnerAddress, "function-runner", "", "Address of the function runner gRPC service.")
 	fs.StringVar(&o.CacheDirectory, "cache-directory", "", "Directory where Porch server stores repository and package caches.")
 }
