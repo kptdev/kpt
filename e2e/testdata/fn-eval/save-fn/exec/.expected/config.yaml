@@ -15,5 +15,4 @@
 stdErr: |
   [RUNNING] "./function.sh"
   [PASS] "./function.sh" in 0s
-  adding function to Kptfile
-  Kptfile updated
+  Added ./function.sh as mutator in the Kptfile.
