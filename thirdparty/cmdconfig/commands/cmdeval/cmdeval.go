@@ -215,11 +215,11 @@ func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Functi
 		case m.Image != "" && m.Image == r.Image:
 			newFns = append(newFns, *newFn)
 			found = true
-			message = fmt.Sprintf("Updated %v as %v in the Kptfile.", r.Image, r.FnType)
+			message = fmt.Sprintf("Updated %q as %v in the Kptfile.\n", r.Image, r.FnType)
 		case m.Exec != "" && m.Exec == r.Exec:
 			newFns = append(newFns, *newFn)
 			found = true
-			message = fmt.Sprintf("Updated %v as %v in the Kptfile.", r.Exec, r.FnType)
+			message = fmt.Sprintf("Updated %q as %v in the Kptfile.\n", r.Exec, r.FnType)
 		default:
 			newFns = append(newFns, m)
 		}
@@ -227,9 +227,9 @@ func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Functi
 	if !found {
 		newFns = append(newFns, *newFn)
 		if newFn.Image != "" {
-			message = fmt.Sprintf("Added %v as %v in the Kptfile.", r.Image, r.FnType)
+			message = fmt.Sprintf("Added %q as %v in the Kptfile.\n", r.Image, r.FnType)
 		} else if newFn.Exec != "" {
-			message = fmt.Sprintf("Added %v as %v in the Kptfile.", r.Exec, r.FnType)
+			message = fmt.Sprintf("Added %q as %v in the Kptfile.\n", r.Exec, r.FnType)
 		}
 	}
 	return newFns, message
