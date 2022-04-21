@@ -34,9 +34,9 @@ var (
 		"gcr.io/kpt-fn/apply-replacements@sha256:40d00367d46c04088d68ebd05649e1bff6ea43be3a2d3f4d257eef18c4d70f8c",
 	}
 	setNamespaceImageAliases = []string{
-		"gcr.io/kpt-fn/set-namespace:v0.3.1",
+		"gcr.io/kpt-fn/set-namespace:v0.3.4",
 		"gcr.io/kpt-fn/set-namespace:v0.3",
-		"gcr.io/kpt-fn/set-namespace@sha256:ea61ed9ea562cefaa2c2f256e8011352221cc45844aa7c9a61ba6b781b5dba47",
+		"gcr.io/kpt-fn/set-namespace@sha256:0ec0fb2380be42142a87a7c9815f0d30415e2da07468591dd9345c7c81d6c93e",
 	}
 	starlarkImageAliases = []string{
 		"gcr.io/kpt-fn/starlark:v0.4.0",
