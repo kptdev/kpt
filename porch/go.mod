@@ -14,7 +14,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.1.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.3.4
-	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.0
+	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.2
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220412175831-2afd3aec6b69
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220419065917-49bc6c977530
 	github.com/bluekeyes/go-gitdiff v0.6.1

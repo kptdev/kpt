@@ -39,9 +39,9 @@ var (
 		"gcr.io/kpt-fn/set-namespace@sha256:0ec0fb2380be42142a87a7c9815f0d30415e2da07468591dd9345c7c81d6c93e",
 	}
 	starlarkImageAliases = []string{
-		"gcr.io/kpt-fn/starlark:v0.4.0",
+		"gcr.io/kpt-fn/starlark:v0.4.2",
 		"gcr.io/kpt-fn/starlark:v0.4",
-		"gcr.io/kpt-fn/starlark@sha256:4f98e9298eb1d605ec22515771e0c495dad75606058edd926449825dc59dcd1b",
+		"gcr.io/kpt-fn/starlark@sha256:96ad5c6a7c5099adf1a74173b75558dc4192a1de9c77c3b6e24b8f269807bf6b",
 	}
 )
 

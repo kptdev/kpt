@@ -834,7 +834,7 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/starlark:v0.4.0",
+						Image: "gcr.io/kpt-fn/starlark:v0.4.2",
 						ConfigMap: map[string]string{
 							"source": `for resource in ctx.resource_list["items"]:
   resource["metadata"]["annotations"]["foo"] = "bar"`,
@@ -844,7 +844,7 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:v0.3.1",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.3.4",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
 						},
