@@ -205,29 +205,34 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 
 // Add the evaluated function to the kptfile.Function list, this Function can either be
 // `pipeline.mutators` or `pipeline.validators`
-func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) []kptfile.Function {
+func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Function, string) {
 	var newFns []kptfile.Function
-	pr := printer.FromContextOrDie(r.Ctx)
 	found := false
+	newFn := r.NewFunction()
+	var message string
 	for _, m := range oldFNs {
 		switch {
 		case m.Image != "" && m.Image == r.Image:
-			pr.Printf("found image in Kptfile, updating...\n")
-			newFns = append(newFns, *r.NewFunction())
+			newFns = append(newFns, *newFn)
 			found = true
+			message = fmt.Sprintf("Updated %q as %v in the Kptfile.\n", r.Image, r.FnType)
 		case m.Exec != "" && m.Exec == r.Exec:
-			pr.Printf("found exec in Kptfile, updating...\n")
-			newFns = append(newFns, *r.NewFunction())
+			newFns = append(newFns, *newFn)
 			found = true
+			message = fmt.Sprintf("Updated %q as %v in the Kptfile.\n", r.Exec, r.FnType)
 		default:
 			newFns = append(newFns, m)
 		}
 	}
 	if !found {
-		newFns = append(newFns, *r.NewFunction())
-		pr.Printf("adding function to Kptfile\n")
+		newFns = append(newFns, *newFn)
+		if newFn.Image != "" {
+			message = fmt.Sprintf("Added %q as %v in the Kptfile.\n", r.Image, r.FnType)
+		} else if newFn.Exec != "" {
+			message = fmt.Sprintf("Added %q as %v in the Kptfile.\n", r.Exec, r.FnType)
+		}
 	}
-	return newFns
+	return newFns, message
 }
 
 // SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` or `pipeline.validators` .
@@ -241,17 +246,18 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	if kf.Pipeline == nil {
 		kf.Pipeline = &kptfile.Pipeline{}
 	}
+	var usrMsg string
 	switch r.FnType {
 	case "mutator":
-		kf.Pipeline.Mutators = r.updateFnList(kf.Pipeline.Mutators)
+		kf.Pipeline.Mutators, usrMsg = r.updateFnList(kf.Pipeline.Mutators)
 	case "validator":
-		kf.Pipeline.Validators = r.updateFnList(kf.Pipeline.Validators)
+		kf.Pipeline.Validators, usrMsg = r.updateFnList(kf.Pipeline.Validators)
 	}
 	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
-	pr.Printf("Kptfile updated\n")
+	pr.Printf(usrMsg)
 }
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit
