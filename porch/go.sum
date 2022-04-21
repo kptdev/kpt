@@ -92,8 +92,8 @@ github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters
 github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0/go.mod h1:D+1CuvT4BecI7ZokGUVPdjnhT+z0z1/9NB6HGH4cTSI=
 github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.3.4 h1:V5sTd8pln1mL9SHeGyC4x9uP2AL4y+N+pnjEh20EE7M=
 github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.3.4/go.mod h1:es9oqMBPDWJOgjigRvOiqHxbQd37+ibLnoLBg1dVrIg=
-github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.0 h1:EgrqUigiEewdqfIZ24nk477ES5JRRiZDOBwxd9w8+R4=
-github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.0/go.mod h1:X89ClZrU47o3B0bRra9qHSjb8t+TReFKDbVTgu/ygp0=
+github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.2 h1:xwyMfOLoqV48y9B6kDYIg98OI4u2VC/hcPyTyN+piy4=
+github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.2/go.mod h1:T7YXoIrhculP6vKqZ4ec9TT4q3e1ZveySWAYJFCd6Bs=
 github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220329070820-f687d1b931e6/go.mod h1:hENpuHQH/bIfHUCuG4hvzb5i4doJ1KTId5EdWBg6AvU=
 github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220412175831-2afd3aec6b69 h1:PN0g/pvOy/qmgi9a7qWMgMKteLBo615U+doZT6G+fuE=
 github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220412175831-2afd3aec6b69/go.mod h1:hENpuHQH/bIfHUCuG4hvzb5i4doJ1KTId5EdWBg6AvU=
