@@ -69,7 +69,8 @@ license-check:
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
-	go test -cover ./...
+	# skip the tests in thirdparty since they are unrelated.
+	go test `go list ./... | grep -v thirdparty`
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
