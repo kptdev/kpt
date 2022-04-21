@@ -23,7 +23,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 )
 
@@ -44,7 +43,7 @@ func (c tableConvertor) ConvertToTable(ctx context.Context, object runtime.Objec
 	fn := func(obj runtime.Object) error {
 		cells := c.cells(obj)
 		if cells == nil || len(cells) == 0 {
-			return notAcceptableError(ctx, c.resource)
+			return newResourceNotAcceptableError(ctx, c.resource)
 		}
 		table.Rows = append(table.Rows, metav1.TableRow{
 			Cells:  cells,
@@ -137,16 +136,4 @@ var (
 func isLatest(pr *api.PackageRevision) bool {
 	val, ok := pr.Labels[api.LatestPackageRevisionKey]
 	return ok && val == api.LatestPackageRevisionValue
-}
-
-func notAcceptableError(ctx context.Context, resource schema.GroupResource) error {
-	if info, ok := genericapirequest.RequestInfoFrom(ctx); ok {
-		resource = schema.GroupResource{
-			Group:    info.APIGroup,
-			Resource: info.Resource,
-		}
-	}
-	return errNotAcceptable{
-		resource: resource,
-	}
 }

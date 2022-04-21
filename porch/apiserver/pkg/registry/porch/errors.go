@@ -15,11 +15,13 @@
 package porch
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 )
 
 type errNotAcceptable struct {
@@ -36,5 +38,17 @@ func (e errNotAcceptable) Status() metav1.Status {
 		Message: e.Error(),
 		Reason:  metav1.StatusReasonNotAcceptable,
 		Code:    http.StatusNotAcceptable,
+	}
+}
+
+func newResourceNotAcceptableError(ctx context.Context, resource schema.GroupResource) error {
+	if info, ok := genericapirequest.RequestInfoFrom(ctx); ok {
+		resource = schema.GroupResource{
+			Group:    info.APIGroup,
+			Resource: info.Resource,
+		}
+	}
+	return errNotAcceptable{
+		resource: resource,
 	}
 }
