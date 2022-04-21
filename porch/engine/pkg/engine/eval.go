@@ -23,6 +23,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -34,6 +35,9 @@ type evalFunctionMutation struct {
 }
 
 func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "evalFunctionMutation::Apply", trace.WithAttributes())
+	defer span.End()
+
 	e := m.task.Eval
 
 	// TODO: Apply should accept filesystem instead of PackageResources

@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/engine/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type clonePackageMutation struct {
@@ -40,6 +41,9 @@ type clonePackageMutation struct {
 }
 
 func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+	ctx, span := tracer.Start(ctx, "clonePackageMutation::Apply", trace.WithAttributes())
+	defer span.End()
+
 	var cloned repository.PackageResources
 	var err error
 

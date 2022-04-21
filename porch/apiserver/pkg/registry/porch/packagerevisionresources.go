@@ -21,6 +21,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/repository"
+	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,6 +58,9 @@ func (r *packageRevisionResources) NamespaceScoped() bool {
 
 // List selects resources in the storage which match to the selector. 'options' can be nil.
 func (r *packageRevisionResources) List(ctx context.Context, options *metainternalversion.ListOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packageRevisionResources::List", trace.WithAttributes())
+	defer span.End()
+
 	result := &api.PackageRevisionResourcesList{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevisionResourcesList",
@@ -85,6 +89,9 @@ func (r *packageRevisionResources) List(ctx context.Context, options *metaintern
 
 // Get implements the Getter interface
 func (r *packageRevisionResources) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packageRevisionResources::Get", trace.WithAttributes())
+	defer span.End()
+
 	pkg, err := r.packageCommon.getPackage(ctx, name)
 	if err != nil {
 		return nil, err
@@ -101,6 +108,9 @@ func (r *packageRevisionResources) Get(ctx context.Context, name string, options
 // may allow updates creates the object - they should set the created boolean
 // to true.
 func (r *packageRevisionResources) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
+	ctx, span := tracer.Start(ctx, "packageRevisionResources::Update", trace.WithAttributes())
+	defer span.End()
+
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
 	if !namespaced {
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")

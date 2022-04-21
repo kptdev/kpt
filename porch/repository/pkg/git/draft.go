@@ -26,6 +26,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type gitPackageDraft struct {
@@ -44,6 +45,9 @@ type gitPackageDraft struct {
 var _ repository.PackageDraft = &gitPackageDraft{}
 
 func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, change *v1alpha1.Task) error {
+	ctx, span := tracer.Start(ctx, "gitPackageDraft::UpdateResources", trace.WithAttributes())
+	defer span.End()
+
 	ch, err := newCommitHelper(d.parent.repo, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit packgae: %w", err)
@@ -96,6 +100,9 @@ func (d *gitPackageDraft) UpdateLifecycle(ctx context.Context, new v1alpha1.Pack
 
 // Finish round of updates.
 func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitPackageDraft::Close", trace.WithAttributes())
+	defer span.End()
+
 	return d.parent.closeDraft(ctx, d)
 }
 

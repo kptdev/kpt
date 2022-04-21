@@ -38,7 +38,7 @@ import (
 var tracer = otel.Tracer("oci")
 
 func (r *ociRepository) loadTasks(ctx context.Context, imageRef ImageDigestName) ([]api.Task, error) {
-	ctx, span := tracer.Start(ctx, "loadTasks", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(
 		attribute.Stringer("image", imageRef),
 	))
 	defer span.End()
@@ -69,7 +69,7 @@ func (r *ociRepository) loadTasks(ctx context.Context, imageRef ImageDigestName)
 }
 
 func (r *Storage) LookupImageTag(ctx context.Context, imageName ImageTagName) (*ImageDigestName, error) {
-	ctx, span := tracer.Start(ctx, "LookupImageTag", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "Storage::LookupImageTag", trace.WithAttributes(
 		attribute.Stringer("image", imageName),
 	))
 	defer span.End()
@@ -91,7 +91,7 @@ func (r *Storage) LookupImageTag(ctx context.Context, imageName ImageTagName) (*
 }
 
 func (r *Storage) LoadResources(ctx context.Context, imageName *ImageDigestName) (*repository.PackageResources, error) {
-	ctx, span := tracer.Start(ctx, "loadResources", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "Storage::loadResources", trace.WithAttributes(
 		attribute.Stringer("image", imageName),
 	))
 	defer span.End()
