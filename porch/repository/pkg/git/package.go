@@ -69,6 +69,8 @@ func (p *gitPackageRevision) uid() types.UID {
 }
 
 func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
+	key := p.Key()
+
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -84,11 +86,12 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			},
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
-			PackageName:    p.path,
-			Revision:       p.revision,
-			RepositoryName: p.parent.name,
-			Lifecycle:      p.Lifecycle(),
-			Tasks:          p.tasks,
+			PackageName:    key.Package,
+			Revision:       key.Revision,
+			RepositoryName: key.Repository,
+
+			Lifecycle: p.Lifecycle(),
+			Tasks:     p.tasks,
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
 	}, nil
@@ -120,6 +123,9 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			//resources[path.Join(p.path, file.Name)] = content
 		}
 	}
+
+	key := p.Key()
+
 	return &v1alpha1.PackageRevisionResources{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevisionResources",
@@ -136,6 +142,10 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 			OwnerReferences: []metav1.OwnerReference{}, // TODO: should point to repository resource
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
+			PackageName:    key.Package,
+			Revision:       key.Revision,
+			RepositoryName: key.Repository,
+
 			Resources: resources,
 		},
 	}, nil

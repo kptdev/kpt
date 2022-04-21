@@ -59,13 +59,17 @@ const (
 
 // PackageRevisionSpec defines the desired state of PackageRevision
 type PackageRevisionSpec struct {
+	// PackageName identifies the package in the repository.
 	PackageName string `json:"packageName,omitempty"`
-	Revision    string `json:"revision,omitempty"`
+
+	// Revision identifies the version of the package.
+	Revision string `json:"revision,omitempty"`
+
+	// RepositoryName is the name of the Repository object containing this package.
+	RepositoryName string `json:"repository,omitempty"`
 
 	// Parent references a package that provides resources to us
 	Parent *ParentReference `json:"parent,omitempty"`
-
-	RepositoryName string `json:"repository,omitempty"`
 
 	Lifecycle PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 
