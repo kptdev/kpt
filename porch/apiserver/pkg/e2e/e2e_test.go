@@ -844,7 +844,7 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:v0.3.1",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.3.4",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
 						},
