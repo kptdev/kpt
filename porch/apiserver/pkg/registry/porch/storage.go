@@ -28,7 +28,7 @@ import (
 
 func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad engine.CaDEngine, coreClient client.WithWatch) (genericapiserver.APIGroupInfo, error) {
 	packageRevisions := &packageRevisions{
-		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisions")),
+		TableConvertor: packageRevisionTableConvertor,
 		packageCommon: packageCommon{
 			cad:            cad,
 			gr:             porch.Resource("packagerevisions"),
@@ -47,7 +47,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	}
 
 	packageRevisionResources := &packageRevisionResources{
-		TableConvertor: rest.NewDefaultTableConvertor(porch.Resource("packagerevisionresources")),
+		TableConvertor: packageRevisionResourcesTableConvertor,
 		packageCommon: packageCommon{
 			cad:        cad,
 			gr:         porch.Resource("packagerevisionresources"),
