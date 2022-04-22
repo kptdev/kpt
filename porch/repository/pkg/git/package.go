@@ -68,7 +68,7 @@ func (p *gitPackageRevision) uid() types.UID {
 	return types.UID(fmt.Sprintf("uid:%s:%s", p.path, p.revision))
 }
 
-func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
+func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 	key := p.Key()
 
 	return &v1alpha1.PackageRevision{
@@ -94,7 +94,7 @@ func (p *gitPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 			Tasks:     p.tasks,
 		},
 		Status: v1alpha1.PackageRevisionStatus{},
-	}, nil
+	}
 }
 
 func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {

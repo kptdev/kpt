@@ -358,7 +358,7 @@ func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	}
 }
 
-func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, error) {
+func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 	key := p.Key()
 
 	return &v1alpha1.PackageRevision{
@@ -382,7 +382,7 @@ func (p *ociPackageRevision) GetPackageRevision() (*v1alpha1.PackageRevision, er
 
 			Tasks: p.tasks,
 		},
-	}, nil
+	}
 }
 
 func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {

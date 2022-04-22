@@ -71,10 +71,7 @@ func TestLatestPackages(t *testing.T) {
 
 	gotLatest := map[string]string{}
 	for _, pr := range revisions {
-		rev, err := pr.GetPackageRevision()
-		if err != nil {
-			t.Errorf("GetPackageRevision(%s) failed: %v", pr.Key(), err)
-		}
+		rev := pr.GetPackageRevision()
 
 		if latest, ok := rev.Labels[api.LatestPackageRevisionKey]; ok {
 			if got, want := latest, api.LatestPackageRevisionValue; got != want {
