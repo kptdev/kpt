@@ -52,7 +52,7 @@
             "mode": "auto",
             "program": "${workspaceFolder}/../main.go",
             "args": [
-                "alpha", "sync", "create", "--namespace=default", "--package=martin-blueprints:istions:v4", "deploy-istions-v4"
+                "alpha", "rpkg", "get"
             ],
             "cwd": "${workspaceFolder}/.."
         },

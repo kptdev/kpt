@@ -20,12 +20,14 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
-	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/cmd/get"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -90,10 +92,19 @@ type runner struct {
 	name       string
 	revision   string
 	printFlags *get.PrintFlags
+
+	requestTable bool
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".preRunE"
+
+	outputOption := cmd.Flags().Lookup("output").Value.String()
+	if strings.Contains(outputOption, "custom-columns") || outputOption == "yaml" || strings.Contains(outputOption, "json") {
+		r.requestTable = false
+	} else {
+		r.requestTable = true
+	}
 
 	client, err := porch.CreateClient(r.cfg)
 	if err != nil {
@@ -108,51 +119,56 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 	var objs []runtime.Object
 
+	f := util.NewFactory(r.cfg)
+
+	b := f.NewBuilder().
+		Unstructured().
+		NamespaceParam(*r.cfg.Namespace).DefaultNamespace()
+
 	if len(args) > 0 {
-		for _, pkg := range args {
-			pr := &porchapi.PackageRevision{}
-			if err := r.client.Get(r.ctx, client.ObjectKey{
-				Namespace: *r.cfg.Namespace,
-				Name:      pkg,
-			}, pr); err != nil {
-				return errors.E(op, err)
-			}
-
-			pr.Kind = "PackageRevision"
-			pr.APIVersion = porchapi.SchemeGroupVersion.Identifier()
-
-			objs = append(objs, pr)
-		}
+		b = b.ResourceNames("packagerevisions", args...)
 	} else {
-		var list porchapi.PackageRevisionList
-		if err := r.client.List(r.ctx, &list, client.InNamespace(*r.cfg.Namespace)); err != nil {
-			return errors.E(op, err)
-		}
+		b = b.SelectAllParam(true).
+			ResourceTypes("packagerevisions")
+	}
 
-		list.Kind = "PackageRevisionList"
-		list.APIVersion = porchapi.SchemeGroupVersion.Identifier()
+	b = b.ContinueOnError().
+		Latest().
+		Flatten()
 
-		for i := range list.Items {
-			pr := &list.Items[i]
-			pr.Kind = "PackageRevision"
-			pr.APIVersion = porchapi.SchemeGroupVersion.Identifier()
-		}
+	if r.requestTable {
+		b = b.TransformRequests(func(req *rest.Request) {
+			req.SetHeader("Accept", strings.Join([]string{
+				"application/json;as=Table;g=meta.k8s.io;v=v1",
+				"application/json",
+			}, ","))
+		})
+	}
 
-		if r.name == "" {
-			objs = append(objs, &list)
-		} else {
-			for i := range list.Items {
-				pr := &list.Items[i]
-				if r.match(pr) {
-					objs = append(objs, pr)
-				}
-			}
+	res := b.Do()
+	if err := res.Err(); err != nil {
+		return errors.E(op, err)
+	}
+
+	infos, err := res.Infos()
+	if err != nil {
+		return errors.E(op, err)
+	}
+
+	for _, i := range infos {
+		if r.match(i.Object) {
+			objs = append(objs, i.Object)
 		}
 	}
 
 	printer, err := r.printFlags.ToPrinter()
 	if err != nil {
 		return errors.E(op, err)
+	}
+	if r.requestTable {
+		printer = &get.TablePrinter{
+			Delegate: printer,
+		}
 	}
 
 	w := printers.GetNewTabWriter(cmd.OutOrStdout())
@@ -170,11 +186,18 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *runner) match(pr *porchapi.PackageRevision) bool {
-	if !strings.Contains(pr.Spec.PackageName, r.name) {
+func (r *runner) match(obj runtime.Object) bool {
+	unstr, ok := obj.(*unstructured.Unstructured)
+	if !ok {
+		return true // matches
+	}
+	packageName, _, _ := unstructured.NestedString(unstr.Object, "spec", "packageName")
+	revision, _, _ := unstructured.NestedString(unstr.Object, "spec", "revision")
+
+	if !strings.Contains(packageName, r.name) {
 		return false
 	}
-	if r.revision != "" && r.revision != pr.Spec.Revision {
+	if r.revision != "" && r.revision != revision {
 		return false
 	}
 	return true

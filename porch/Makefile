@@ -219,4 +219,4 @@ deploy-no-sa: deployment-config-no-sa
 	kubectl apply -R -f $(DEPLOYCONFIG_NO_SA_DIR)
 
 .PHONY: push-and-deploy-no-sa
-push-and-deploy: push-images deploy-no-sa
+push-and-deploy-no-sa: push-images deploy-no-sa
