@@ -68,14 +68,15 @@ license-check:
 	(which go-licenses || go install github.com/google/go-licenses@latest)
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
+# skip the tests in thirdparty since they are unrelated.
 test:
-	# skip the tests in thirdparty since they are unrelated.
 	go test `go list ./... | grep -v thirdparty`
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
+# skip the tests in thirdparty since they are unrelated.
 test-docker: build
-	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
+	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker `go list ./... | grep -v thirdparty`
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
