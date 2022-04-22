@@ -31,6 +31,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -52,7 +53,7 @@ const (
 )
 
 type podEvaluator struct {
-	requestCh chan *clientConnRequest
+	requestCh chan<- *clientConnRequest
 
 	podCacheManager *podCacheManager
 }
@@ -80,7 +81,7 @@ func NewPodEvaluator(namespace, wrapperServerImage string, interval, ttl time.Du
 			requestCh:      reqCh,
 			podReadyCh:     readyCh,
 			cache:          map[string]*podAndGRPCClient{},
-			waitlists:      map[string][]chan *clientConnAndError{},
+			waitlists:      map[string][]chan<- *clientConnAndError{},
 
 			podManager: &podManager{
 				kubeClient:         cl,
@@ -103,8 +104,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *evaluator.Eva
 	// make a buffer for the channel to prevent unnecessary blocking when the pod cache manager sends it to multiple waiting gorouthine in batch.
 	ccChan := make(chan *clientConnAndError, 1)
 	// Send a request to request a grpc client.
-	pe.podCacheManager.requestCh <- &clientConnRequest{
-		ctx:          ctx,
+	pe.requestCh <- &clientConnRequest{
 		image:        req.Image,
 		grpcClientCh: ccChan,
 	}
@@ -126,26 +126,25 @@ type podCacheManager struct {
 	gcScanInternal time.Duration
 	podTTL         time.Duration
 
-	// requestCh is a channel to send the request to cache manager. The cache manager will send back the grpc client in the embedded channel.
-	requestCh chan *clientConnRequest
+	// requestCh is a receive-only channel to receive
+	requestCh <-chan *clientConnRequest
 	// podReadyCh is a channel to receive the information when a pod is ready.
-	podReadyCh chan *imagePodAndGRPCClient
+	podReadyCh <-chan *imagePodAndGRPCClient
 
 	cache     map[string]*podAndGRPCClient
-	waitlists map[string][]chan *clientConnAndError
+	waitlists map[string][]chan<- *clientConnAndError
 
 	podManager *podManager
 }
 
 type clientConnRequest struct {
-	ctx   context.Context
 	image string
 
 	unavavilable     bool
 	currClientTarget string
 
 	// grpcConn is a channel that a grpc client should be sent back.
-	grpcClientCh chan *clientConnAndError
+	grpcClientCh chan<- *clientConnAndError
 }
 
 type clientConnAndError struct {
@@ -172,37 +171,49 @@ func (pcm *podCacheManager) podCacheManager() {
 			podAndCl, found := pcm.cache[req.image]
 			if found && podAndCl != nil {
 				// Ensure the pod still exists and is not being deleted before sending the gprc client back to the channel.
-				// We can't simplly return grpc client from the cache and let evaluator try to connect to the pod.
+				// We can't simply return grpc client from the cache and let evaluator try to connect to the pod.
 				// If the pod is deleted by others, it will take ~10 seconds for the evaluator to fail.
 				// Wasting 10 second is so much, so we check if the pod still exist first.
 				pod := &corev1.Pod{}
-				err := pcm.podManager.kubeClient.Get(req.ctx, podAndCl.pod, pod)
-				if err == nil && pod.DeletionTimestamp == nil {
-					klog.Infof("reusing the connection to pod %v/%v to evaluate %v", pod.Namespace, pod.Name, req.image)
-					req.grpcClientCh <- &clientConnAndError{grpcClient: podAndCl.grpcClient}
-					go patchPodWithUnixTimeAnnotation(pcm.podManager.kubeClient, podAndCl.pod)
-					break
+				err := pcm.podManager.kubeClient.Get(context.Background(), podAndCl.pod, pod)
+				deleteCacheEntry := false
+				if err == nil {
+					if pod.DeletionTimestamp == nil {
+						klog.Infof("reusing the connection to pod %v/%v to evaluate %v", pod.Namespace, pod.Name, req.image)
+						req.grpcClientCh <- &clientConnAndError{grpcClient: podAndCl.grpcClient}
+						go patchPodWithUnixTimeAnnotation(pcm.podManager.kubeClient, podAndCl.pod)
+						break
+					} else {
+						deleteCacheEntry = true
+					}
+				} else if errors.IsNotFound(err) {
+					deleteCacheEntry = true
+				}
+				// We delete the cache entry if the pod has been deleted or being deleted.
+				if deleteCacheEntry {
+					delete(pcm.cache, req.image)
 				}
 			}
 			_, found = pcm.waitlists[req.image]
 			if !found {
-				pcm.waitlists[req.image] = []chan *clientConnAndError{}
+				pcm.waitlists[req.image] = []chan<- *clientConnAndError{}
 			}
 			list := pcm.waitlists[req.image]
-			list = append(list, req.grpcClientCh)
-			pcm.waitlists[req.image] = list
-			go pcm.podManager.getFuncEvalPodClient(req.ctx, req.image)
+			pcm.waitlists[req.image] = append(list, req.grpcClientCh)
+			go pcm.podManager.getFuncEvalPodClient(context.Background(), req.image)
 		case resp := <-pcm.podReadyCh:
-			if resp.err == nil {
-				pcm.cache[resp.image] = resp.podAndGRPCClient
-				channels := pcm.waitlists[resp.image]
-				delete(pcm.waitlists, resp.image)
-				for i := range channels {
-					// The channel has one buffer size, nothing will be blocking.
-					channels[i] <- &clientConnAndError{grpcClient: resp.grpcClient}
-				}
-			} else {
+			if resp.err != nil {
 				klog.Warningf("received error from the pod manager: %v", resp.err)
+				pcm.cache[resp.image] = resp.podAndGRPCClient
+			}
+			channels := pcm.waitlists[resp.image]
+			delete(pcm.waitlists, resp.image)
+			for i := range channels {
+				// The channel has one buffer size, nothing will be blocking.
+				channels[i] <- &clientConnAndError{
+					grpcClient: resp.grpcClient,
+					err:        resp.err,
+				}
 			}
 		case <-tick:
 			// synchronous GC
@@ -227,33 +238,22 @@ func (pcm *podCacheManager) garbageCollector() {
 			continue
 		}
 		lastUse, found := pod.Annotations[lastUseTimeAnnotation]
-		// If a pod doesn't have a last-use annotation, we patch it.
+		// If a pod doesn't have a last-use annotation, we patch it. This should not happen, but if it happens,
+		// we give another TTL before deleting it.
 		if !found {
 			go patchPodWithUnixTimeAnnotation(pcm.podManager.kubeClient, client.ObjectKeyFromObject(&pod))
 			continue
 		} else {
 			lu, err := strconv.ParseInt(lastUse, 10, 64)
 			// If the annotation is ill-formatted, we patch it with the current time and will try to GC it later.
+			// This should not happen, but if it happens, we give another TTL before deleting it.
 			if err != nil {
 				klog.Warningf("unable to convert the Unix time string to int64: %w", err)
 				go patchPodWithUnixTimeAnnotation(pcm.podManager.kubeClient, client.ObjectKeyFromObject(&pod))
 				continue
 			}
 			if time.Unix(lu, 0).Add(pcm.podTTL).Before(time.Now()) {
-				image := pod.Spec.Containers[0].Image
-				podAndCl, found := pcm.cache[image]
-				if found {
-					// We delete the cache entry when its grpc client points to the old pod IP.
-					host, _, err := net.SplitHostPort(podAndCl.grpcClient.Target())
-					if err != nil {
-						klog.Warningf("unable to split the GRPC dialer target to host and port : %w", err)
-						continue
-					}
-					if host == pod.Status.PodIP {
-						delete(pcm.cache, image)
-					}
-				}
-
+				podIP := pod.Status.PodIP
 				go func(po corev1.Pod) {
 					klog.Infof("deleting pod %v/%v", po.Namespace, po.Name)
 					err := pcm.podManager.kubeClient.Delete(context.Background(), &po)
@@ -261,6 +261,21 @@ func (pcm *podCacheManager) garbageCollector() {
 						klog.Warningf("unable to delete pod %v/%v: %w", po.Namespace, po.Name, err)
 					}
 				}(podList.Items[i])
+
+				image := pod.Spec.Containers[0].Image
+				podAndCl, found := pcm.cache[image]
+				if found {
+					host, _, err := net.SplitHostPort(podAndCl.grpcClient.Target())
+					// If the client target in the cache points to a different pod IP, it means the matching pod is not the current pod.
+					// We will keep this cache entry.
+					if err == nil && host != podIP {
+						continue
+					}
+					// We delete the cache entry when the IP of the old pod match the client target in the cache
+					// or we can't split the host and port in the client target.
+					delete(pcm.cache, image)
+				}
+
 			}
 		}
 	}
@@ -274,9 +289,8 @@ type podManager struct {
 	// wrapperServerImage is the image name of the wrapper server
 	wrapperServerImage string
 
-	// podReadyCh is a channel to send the grpc client information.
-	// podCacheManager receives from this channel.
-	podReadyCh chan *imagePodAndGRPCClient
+	// podReadyCh is a channel to receive requests to get GRPC client from each function evaluation request handler.
+	podReadyCh chan<- *imagePodAndGRPCClient
 
 	// entrypointCache is a cache of image name to entrypoint.
 	// Only podManager is allowed to touch this cache.
@@ -314,8 +328,8 @@ func (pm *podManager) getFuncEvalPodClient(ctx context.Context, image string) {
 	}
 }
 
+// imageEntrypoint get the entrypoint of a container image by looking at its metadata.
 func (pm *podManager) imageEntrypoint(image string) ([]string, error) {
-	// Create pod otherwise.
 	var entrypoint []string
 	ref, err := name.ParseReference(image)
 	if err != nil {
@@ -342,8 +356,7 @@ func (pm *podManager) imageEntrypoint(image string) ([]string, error) {
 }
 
 func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string) (client.ObjectKey, error) {
-	// Try to retrieve the pod first.
-	// Lookup the pod by label to see if there is a pod that can be reused.
+	// Try to retrieve the pod. Lookup the pod by label to see if there is a pod that can be reused.
 	// Looking it up locally may not work if there are more than one instance of the function runner,
 	// since the pod may be created by one the other instance and the current instance is not aware of it.
 	// TODO: It's possible to set up a Watch in the fn runner namespace, and always try to maintain a up-to-date local cache.
