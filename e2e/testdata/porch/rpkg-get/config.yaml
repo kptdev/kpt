@@ -25,18 +25,16 @@ commands:
       - get
       - --namespace=rpkg-get
       - test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
     stdout: |
-      NAME                                                       PKG      REPO              REV
-      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens   test-blueprints   v1
+      NAME                                                       PACKAGE   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1         true     Published   test-blueprints
   - args:
       - alpha
       - rpkg
       - get
       - --namespace=rpkg-get
       - --name=basens
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REPO:.spec.repository,REV:.spec.revision
     stdout: |
-      NAME                                                       PKG      REPO              REV
-      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens   test-blueprints   main
-      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens   test-blueprints   v1
+      NAME                                                       PACKAGE   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens    main       false    Published   test-blueprints
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1         true     Published   test-blueprints

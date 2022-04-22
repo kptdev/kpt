@@ -28,6 +28,14 @@ commands:
   - args:
       - alpha
       - repo
+      - get
+      - --namespace=repo-register
+    stdout: |
+      NAME              TYPE   CONTENT   DEPLOYMENT   READY
+      test-blueprints   git    Package                True
+  - args:
+      - alpha
+      - repo
       - unregister
       - --namespace=repo-register
       - test-blueprints
@@ -36,6 +44,3 @@ commands:
       - repo
       - get
       - --namespace=repo-register
-      - --output=custom-columns=NAME:.metadata.name
-    stdout: |
-      NAME

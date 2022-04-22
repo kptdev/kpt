@@ -30,6 +30,15 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .spec.type
+      name: Type
+      type: string
+    - jsonPath: .spec.content
+      name: Content
+      type: string
+    - jsonPath: .spec.deployment
+      name: Deployment
+      type: boolean
     - jsonPath: .status.conditions[?(@.type=='Ready')].status
       name: Ready
       type: string

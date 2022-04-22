@@ -69,3 +69,11 @@ commands:
           name: kptfile.kpt.dev
       kind: ResourceList
     yaml: true
+  - args:
+      - alpha
+      - repo
+      - get
+      - --namespace=rpkg-init-deploy
+    stdout: |
+      NAME   TYPE   CONTENT   DEPLOYMENT   READY
+      git    git    Package   true         True

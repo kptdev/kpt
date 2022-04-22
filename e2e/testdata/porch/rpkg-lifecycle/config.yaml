@@ -47,10 +47,9 @@ commands:
       - get
       - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                                           PKG                 REV   LIFECYCLE
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Draft
+      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         false    Draft       git
   - args:
       - alpha
       - rpkg
@@ -65,10 +64,9 @@ commands:
       - get
       - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                                           PKG                 REV   LIFECYCLE
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Proposed
+      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         false    Proposed    git
   - args:
       - alpha
       - rpkg
@@ -83,10 +81,9 @@ commands:
       - get
       - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-      - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                                           PKG                 REV   LIFECYCLE
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Published
+      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         true     Published   git
   - args:
       - alpha
       - rpkg
