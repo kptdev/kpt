@@ -213,7 +213,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 
 	for _, p := range drafts {
 		if filter.Matches(p) {
-			result = append(result, drafts...)
+			result = append(result, p)
 		}
 	}
 
