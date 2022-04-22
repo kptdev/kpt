@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/pkg/test/porch"
 	"github.com/google/go-cmp/cmp"
@@ -70,6 +71,7 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 	}
 
 	for i := range tc.Commands {
+		time.Sleep(5 * time.Second)
 		command := &tc.Commands[i]
 		cmd := exec.Command("kpt", command.Args...)
 
