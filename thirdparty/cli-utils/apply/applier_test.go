@@ -1496,7 +1496,7 @@ func TestApplier(t *testing.T) {
 				var removed int
 				receivedEvents, removed = testutil.RemoveEqualEvents(receivedEvents, e)
 				if removed < 1 {
-					t.Fatalf("Expected status event not received: %#v", e.StatusEvent)
+					t.Errorf("Expected status event not received: %#v", e.StatusEvent)
 				}
 			}
 
