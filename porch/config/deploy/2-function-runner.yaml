@@ -25,7 +25,7 @@ metadata:
   name: function-runner
   namespace: porch-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: function-runner
