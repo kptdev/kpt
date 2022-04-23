@@ -38,10 +38,6 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const (
-	Main plumbing.ReferenceName = "refs/heads/main"
-)
-
 // GitServer is a mock git server implementing "just enough" of the git protocol
 type GitServer struct {
 	repo *gogit.Repository

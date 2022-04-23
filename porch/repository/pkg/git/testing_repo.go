@@ -31,6 +31,8 @@ import (
 )
 
 func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.Repository {
+	t.Helper()
+
 	extractTar(t, tarfile, tempdir)
 
 	git, err := gogit.PlainOpen(filepath.Join(tempdir, ".git"))
@@ -42,7 +44,10 @@ func OpenGitRepositoryFromArchive(t *testing.T, tarfile, tempdir string) *gogit.
 }
 
 func OpenGitRepositoryFromArchiveWithWorktree(t *testing.T, tarfile, path string) *gogit.Repository {
+	t.Helper()
+
 	extractTar(t, tarfile, path)
+
 	repo, err := gogit.PlainOpen(path)
 	if err != nil {
 		t.Fatalf("Failed to open Git repository extracted from %q: %v", tarfile, err)
@@ -51,6 +56,8 @@ func OpenGitRepositoryFromArchiveWithWorktree(t *testing.T, tarfile, path string
 }
 
 func InitEmptyRepositoryWithWorktree(t *testing.T, path string) *gogit.Repository {
+	t.Helper()
+
 	repo, err := gogit.PlainInit(path, false)
 	if err != nil {
 		t.Fatalf("Failed to initialize empty Git repository: %v", err)
@@ -61,12 +68,58 @@ func InitEmptyRepositoryWithWorktree(t *testing.T, path string) *gogit.Repositor
 	return repo
 }
 
+func ServeGitRepositoryWithBranch(t *testing.T, tarfile, tempdir, branch string) (*gogit.Repository, string) {
+	t.Helper()
+
+	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
+	InitializeBranch(t, git, branch)
+	return git, ServeExistingRepository(t, git)
+}
+
+func InitializeBranch(t *testing.T, git *gogit.Repository, branch string) {
+	t.Helper()
+
+	// If main branch exists, rename it to the specified ref
+	main, err := git.Reference(DefaultMainReferenceName, false)
+	switch err {
+	case nil: // found it; create the target branch
+		name := plumbing.NewBranchReferenceName(branch)
+		if name != DefaultMainReferenceName {
+			ref := plumbing.NewHashReference(name, main.Hash())
+			if err := git.Storer.SetReference(ref); err != nil {
+				t.Fatalf("Error creating target branch %q from %q: %v", ref, main, err)
+			}
+
+			t.Cleanup(func() {
+				// make sure main didn't move
+				new, err := git.Reference(DefaultMainReferenceName, false)
+				if err != nil {
+					t.Fatalf("Error getting %s branch after test run: %v", gogit.DefaultRemoteName, err)
+				}
+
+				if main.Hash() != new.Hash() {
+					t.Fatalf("%q branch moved unexpectedly during the test to %q", main, new)
+				}
+			})
+		}
+
+	case plumbing.ErrReferenceNotFound:
+		// main doesn't exist, we won't create the target branch either.
+	default:
+		t.Fatalf("Error getting %s branch: %v", DefaultMainReferenceName, err)
+	}
+}
+
 func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repository, string) {
+	t.Helper()
+
 	git := OpenGitRepositoryFromArchive(t, tarfile, tempdir)
 	return git, ServeExistingRepository(t, git)
 }
 
 func ServeExistingRepository(t *testing.T, git *gogit.Repository) string {
+	t.Helper()
+
 	server, err := NewGitServer(git)
 	if err != nil {
 		t.Fatalf("NewGitServer() failed: %v", err)
@@ -99,6 +152,8 @@ func ServeExistingRepository(t *testing.T, git *gogit.Repository) string {
 }
 
 func extractTar(t *testing.T, tarfile string, dir string) {
+	t.Helper()
+
 	reader, err := os.Open(tarfile)
 	if err != nil {
 		t.Fatalf("Open(%q) failed: %v", tarfile, err)
@@ -131,6 +186,8 @@ func extractTar(t *testing.T, tarfile string, dir string) {
 }
 
 func saveToFile(t *testing.T, path string, src io.Reader) {
+	t.Helper()
+
 	dst, err := os.Create(path)
 	if err != nil {
 		t.Fatalf("Create(%q) failed; %v", path, err)
@@ -142,6 +199,8 @@ func saveToFile(t *testing.T, path string, src io.Reader) {
 }
 
 func resolveReference(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) *plumbing.Reference {
+	t.Helper()
+
 	ref, err := repo.Reference(name, true)
 	if err != nil {
 		t.Fatalf("Failed to resolve %q: %v", name, err)
@@ -150,6 +209,8 @@ func resolveReference(t *testing.T, repo *gogit.Repository, name plumbing.Refere
 }
 
 func getCommitObject(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *object.Commit {
+	t.Helper()
+
 	commit, err := repo.CommitObject(hash)
 	if err != nil {
 		t.Fatalf("Failed to find commit object for %q: %v", hash, err)
@@ -158,6 +219,8 @@ func getCommitObject(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *
 }
 
 func getCommitTree(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *object.Tree {
+	t.Helper()
+
 	commit := getCommitObject(t, repo, hash)
 	tree, err := commit.Tree()
 	if err != nil {
@@ -167,6 +230,8 @@ func getCommitTree(t *testing.T, repo *gogit.Repository, hash plumbing.Hash) *ob
 }
 
 func findTreeEntry(t *testing.T, tree *object.Tree, path string) *object.TreeEntry {
+	t.Helper()
+
 	entry, err := tree.FindEntry(path)
 	if err != nil {
 		t.Fatalf("Failed to find path %q in tree %q: %v", path, tree.Hash, err)
@@ -175,6 +240,8 @@ func findTreeEntry(t *testing.T, tree *object.Tree, path string) *object.TreeEnt
 }
 
 func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
+	t.Helper()
+
 	file, err := tree.File(path)
 	if err != nil {
 		t.Fatalf("Failed to find file %q under the root commit tree %q: %v", path, tree.Hash, err)
@@ -183,6 +250,8 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 }
 
 func findPackage(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) repository.PackageRevision {
+	t.Helper()
+
 	for _, r := range revisions {
 		if r.Key() == key {
 			return r
@@ -193,6 +262,8 @@ func findPackage(t *testing.T, revisions []repository.PackageRevision, key repos
 }
 
 func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) {
+	t.Helper()
+
 	for _, r := range revisions {
 		if key == r.Key() {
 			t.Fatalf("PackageRevision %q expected to not exist was found", key)
@@ -201,6 +272,8 @@ func packageMustNotExist(t *testing.T, revisions []repository.PackageRevision, k
 }
 
 func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
+	t.Helper()
+
 	list, err := git.ListPackageRevisions(context.Background(), repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
@@ -209,6 +282,8 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name rep
 }
 
 func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {
+	t.Helper()
+
 	list, err := git.ListPackageRevisions(context.Background(), repository.ListPackageRevisionFilter{})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
@@ -217,6 +292,8 @@ func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name 
 }
 
 func refMustExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {
+	t.Helper()
+
 	switch _, err := repo.Reference(name, false); err {
 	case nil:
 		// ok
@@ -228,6 +305,8 @@ func refMustExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceN
 }
 
 func refMustNotExist(t *testing.T, repo *gogit.Repository, name plumbing.ReferenceName) {
+	t.Helper()
+
 	switch ref, err := repo.Reference(name, false); err {
 	case nil:
 		t.Fatalf("Reference %s must not exist but was found: %s", name, ref)
@@ -239,16 +318,20 @@ func refMustNotExist(t *testing.T, repo *gogit.Repository, name plumbing.Referen
 }
 
 func forEachRef(t *testing.T, repo *gogit.Repository, fn func(*plumbing.Reference) error) {
+	t.Helper()
+
 	refs, err := repo.References()
 	if err != nil {
 		t.Fatalf("Failed to create references iterator: %v", err)
 	}
 	if err := refs.ForEach(fn); err != nil {
-		t.Fatalf("References.ForEach faile: %v", err)
+		t.Fatalf("References.ForEach failed: %v", err)
 	}
 }
 
 func logRefs(t *testing.T, repo *gogit.Repository, logPrefix string) {
+	t.Helper()
+
 	forEachRef(t, repo, func(ref *plumbing.Reference) error {
 		t.Logf("%s%s", logPrefix, ref)
 		return nil
@@ -256,6 +339,8 @@ func logRefs(t *testing.T, repo *gogit.Repository, logPrefix string) {
 }
 
 func fetch(t *testing.T, repo *gogit.Repository) {
+	t.Helper()
+
 	switch err := repo.Fetch(&gogit.FetchOptions{
 		RemoteName: OriginName,
 		Tags:       gogit.NoTags,

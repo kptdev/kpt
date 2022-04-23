@@ -44,10 +44,41 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestOpenEmptyRepository(t *testing.T) {
+func TestGit(t *testing.T) {
+	for _, gs := range []GitSuite{
+		{branch: "main"},
+		{branch: "feature"},
+		{branch: "nested/release"},
+	} {
+		name := strings.ReplaceAll(gs.branch, "/", "-")
+		t.Run(name, func(t *testing.T) {
+			Run(gs, t)
+		})
+	}
+}
+
+func Run(suite interface{}, t *testing.T) {
+	sv := reflect.ValueOf(suite)
+	st := reflect.TypeOf(suite)
+
+	for i, max := 0, st.NumMethod(); i < max; i++ {
+		m := st.Method(i)
+		if strings.HasPrefix(m.Name, "Test") {
+			t.Run(m.Name, func(t *testing.T) {
+				m.Func.Call([]reflect.Value{sv, reflect.ValueOf((t))})
+			})
+		}
+	}
+}
+
+type GitSuite struct {
+	branch string
+}
+
+func (g GitSuite) TestOpenEmptyRepository(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "empty-repository.tar")
-	_, address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -57,7 +88,7 @@ func TestOpenEmptyRepository(t *testing.T) {
 
 	repository := &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 	}
 
@@ -71,12 +102,12 @@ func TestOpenEmptyRepository(t *testing.T) {
 }
 
 // TestGitPackageRoundTrip creates a package in git and verifies we can read the contents back.
-func TestGitPackageRoundTrip(t *testing.T) {
+func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 	tempdir := t.TempDir()
 	p := filepath.Join(tempdir, "repo")
 	serverRepo := InitEmptyRepositoryWithWorktree(t, p)
 
-	if err := initRepo(serverRepo); err != nil {
+	if err := g.initRepo(serverRepo); err != nil {
 		t.Fatalf("failed to init repo: %v", err)
 	}
 
@@ -92,7 +123,8 @@ func TestGitPackageRoundTrip(t *testing.T) {
 		namespace      = "default"
 	)
 	spec := &configapi.GitRepository{
-		Repo: gitServerURL,
+		Repo:   gitServerURL,
+		Branch: g.branch,
 	}
 
 	root := filepath.Join(tempdir, "work")
@@ -200,7 +232,7 @@ func TestGitPackageRoundTrip(t *testing.T) {
 }
 
 // initRepo is a helper that creates a first commit, ensuring the repo is not empty.
-func initRepo(repo *gogit.Repository) error {
+func (g GitSuite) initRepo(repo *gogit.Repository) error {
 	store := repo.Storer
 
 	var objectHash plumbing.Hash
@@ -282,18 +314,19 @@ func initRepo(repo *gogit.Repository) error {
 	}
 
 	{
-		ref := plumbing.NewHashReference(Main, commitHash)
+		name := plumbing.NewBranchReferenceName(g.branch)
+		ref := plumbing.NewHashReference(name, commitHash)
 		if err := repo.Storer.SetReference(ref); err != nil {
-			return fmt.Errorf("error setting reference %q: %w", Main, err)
+			return fmt.Errorf("error setting reference %q: %w", name, err)
 		}
 
 		// gogit uses suboptimal default reference name; delete it
 		repo.Storer.RemoveReference(plumbing.Master)
 
-		// create correct HEAD as a symbolic reference of main branch
-		head := plumbing.NewSymbolicReference(plumbing.HEAD, Main)
+		// create correct HEAD as a symbolic reference of the branch
+		head := plumbing.NewSymbolicReference(plumbing.HEAD, name)
 		if err := repo.Storer.SetReference(head); err != nil {
-			return fmt.Errorf("error creating HEAD ref: %w", err)
+			return fmt.Errorf("error creating HEAD ref to %q: %w", ref, err)
 		}
 	}
 
@@ -309,10 +342,10 @@ info:
   description: Empty Package
 `
 
-func TestListPackagesTrivial(t *testing.T) {
+func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "trivial-repository.tar")
-	_, address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -322,7 +355,7 @@ func TestListPackagesTrivial(t *testing.T) {
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
 	}, tempdir, GitRepositoryOptions{})
@@ -393,10 +426,10 @@ func TestListPackagesTrivial(t *testing.T) {
 }
 
 // trivial-repository.tar has a repon with a `main` branch and a single empty commit.
-func TestCreatePackageInTrivialRepository(t *testing.T) {
+func (g GitSuite) TestCreatePackageInTrivialRepository(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "trivial-repository.tar")
-	_, address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -406,7 +439,7 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
 	}, tempdir, GitRepositoryOptions{})
@@ -465,10 +498,10 @@ func TestCreatePackageInTrivialRepository(t *testing.T) {
 	}
 }
 
-func TestListPackagesSimple(t *testing.T) {
+func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "simple-repository.tar")
-	_, address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -478,7 +511,7 @@ func TestListPackagesSimple(t *testing.T) {
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
 	}, tempdir, GitRepositoryOptions{})
@@ -501,9 +534,9 @@ func TestListPackagesSimple(t *testing.T) {
 		// TODO: may want to filter these out, for example by including only those package
 		// revisions from main branch that differ in content (their tree hash) from another
 		// taged revision of the package.
-		{Repository: "simple", Package: "empty", Revision: "main"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: "main"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: "main"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -521,10 +554,10 @@ func TestListPackagesSimple(t *testing.T) {
 	}
 }
 
-func TestListPackagesDrafts(t *testing.T) {
+func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
-	_, address := ServeGitRepository(t, tarfile, tempdir)
+	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -534,7 +567,7 @@ func TestListPackagesDrafts(t *testing.T) {
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 		SecretRef: configapi.SecretRef{},
 	}, tempdir, GitRepositoryOptions{})
@@ -558,9 +591,9 @@ func TestListPackagesDrafts(t *testing.T) {
 		{Repository: "drafts", Package: "none", Revision: "v1"}:   v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
-		{Repository: "drafts", Package: "basens", Revision: "main"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "empty", Revision: "main"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: "main"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -578,10 +611,10 @@ func TestListPackagesDrafts(t *testing.T) {
 	}
 }
 
-func TestApproveDraft(t *testing.T) {
+func (g GitSuite) TestApproveDraft(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
-	repo, address := ServeGitRepository(t, tarfile, tempdir)
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	const (
 		repositoryName                            = "approve"
@@ -592,7 +625,7 @@ func TestApproveDraft(t *testing.T) {
 	ctx := context.Background()
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
@@ -636,10 +669,10 @@ func TestApproveDraft(t *testing.T) {
 	refMustExist(t, repo, finalReferenceName)
 }
 
-func TestDeletePackages(t *testing.T) {
+func (g GitSuite) TestDeletePackages(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
-	repo, address := ServeGitRepository(t, tarfile, tempdir)
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	const (
 		repositoryName = "delete"
@@ -648,7 +681,8 @@ func TestDeletePackages(t *testing.T) {
 
 	ctx := context.Background()
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
-		Repo: address,
+		Repo:   address,
+		Branch: g.branch,
 	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
@@ -706,7 +740,11 @@ func TestDeletePackages(t *testing.T) {
 		got[ref.Name()] = true
 		return nil
 	})
+
+	// branch may be `refs/heads/main` for some test runs
+	branch := plumbing.NewBranchReferenceName(g.branch)
 	want := map[plumbing.ReferenceName]bool{
+		branch:                   true,
 		DefaultMainReferenceName: true,
 		"HEAD":                   true,
 	}
@@ -715,7 +753,7 @@ func TestDeletePackages(t *testing.T) {
 	}
 
 	// And there should be no packages in main branch
-	main := resolveReference(t, repo, DefaultMainReferenceName)
+	main := resolveReference(t, repo, branch)
 	tree := getCommitTree(t, repo, main.Hash())
 	if len(tree.Entries) > 0 {
 		var b bytes.Buffer
@@ -724,16 +762,17 @@ func TestDeletePackages(t *testing.T) {
 			fmt.Fprintf(&b, "%s: %s (%s)", e.Name, e.Hash, e.Mode)
 		}
 		// Tree is not empty after deleting all packages
-		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", DefaultMainReferenceName, b.String())
+		t.Errorf("%q branch has non-empty tree after all packages have been deleted: %s", branch, b.String())
 	}
 }
 
 // Test introduces package in the upstream repo and lists is after refresh.
-func TestRefreshRepo(t *testing.T) {
+func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	upstreamDir := t.TempDir()
 	downstreamDir := t.TempDir()
 	tarfile := filepath.Join("testdata", "simple-repository.tar")
 	upstream := OpenGitRepositoryFromArchiveWithWorktree(t, tarfile, upstreamDir)
+	InitializeBranch(t, upstream, g.branch)
 	address := ServeExistingRepository(t, upstream)
 
 	const (
@@ -770,7 +809,8 @@ func TestRefreshRepo(t *testing.T) {
 		t.Fatalf("Worktree failed: %v", err)
 	}
 
-	main := resolveReference(t, upstream, "refs/heads/main")
+	name := plumbing.NewBranchReferenceName(g.branch)
+	main := resolveReference(t, upstream, name)
 	if err := wt.Checkout(&gogit.CheckoutOptions{
 		Branch: main.Name(),
 		Force:  true,
@@ -816,10 +856,10 @@ func TestRefreshRepo(t *testing.T) {
 
 // The test deletes packages on the upstream one by one and validates they were
 // pruned in the registered repository on refresh.
-func TestPruneRemotes(t *testing.T) {
+func (g GitSuite) TestPruneRemotes(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
-	repo, address := ServeGitRepository(t, tarfile, tempdir)
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	const (
 		name      = "prune"
@@ -828,7 +868,8 @@ func TestPruneRemotes(t *testing.T) {
 
 	ctx := context.Background()
 	git, err := OpenRepository(ctx, name, namespace, &configapi.GitRepository{
-		Repo: address,
+		Repo:   address,
+		Branch: g.branch,
 	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
 		t.Fatalf("OpenRepository(%q) failed: %v", address, err)
@@ -876,10 +917,10 @@ func TestPruneRemotes(t *testing.T) {
 	}
 }
 
-func TestNested(t *testing.T) {
+func (g GitSuite) TestNested(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "nested-repository.tar")
-	repo, address := ServeGitRepository(t, tarfile, tempdir)
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -889,7 +930,7 @@ func TestNested(t *testing.T) {
 
 	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 		Repo:      address,
-		Branch:    "main",
+		Branch:    g.branch,
 		Directory: "/",
 	}, tempdir, GitRepositoryOptions{})
 	if err != nil {
@@ -901,6 +942,9 @@ func TestNested(t *testing.T) {
 		t.Fatalf("Failed to list packages from %q: %v", tarfile, err)
 	}
 
+	// Name of the registered branch
+	branch := plumbing.NewBranchReferenceName(g.branch)
+
 	// Check that all tags and branches have their packages.
 	want := map[string]v1alpha1.PackageRevisionLifecycle{}
 	forEachRef(t, repo, func(ref *plumbing.Reference) error {
@@ -911,6 +955,8 @@ func TestNested(t *testing.T) {
 			want[strings.TrimPrefix(name, draftsPrefixInRemoteRepo)] = v1alpha1.PackageRevisionLifecycleDraft
 		case strings.HasPrefix(name, proposedPrefixInRemoteRepo):
 			want[strings.TrimPrefix(name, proposedPrefixInRemoteRepo)] = v1alpha1.PackageRevisionLifecycleProposed
+		case name == string(branch):
+			// Skip the registered 'main' branch.
 		case name == string(DefaultMainReferenceName), name == "HEAD":
 			// skip main and HEAD
 		default:
@@ -923,8 +969,9 @@ func TestNested(t *testing.T) {
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
 	for _, pr := range revisions {
 		rev := pr.GetPackageRevision()
-		if rev.Spec.Revision == "main" {
-			// skip packages with "main" revision, to match the above simplified package discovery algo.
+		if rev.Spec.Revision == g.branch {
+			// skip packages with the revision of the main registered branch,
+			// to match the above simplified package discovery algo.
 			continue
 		}
 		got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Revision)] = rev.Spec.Lifecycle
@@ -952,7 +999,7 @@ func sliceToSet(s []string) map[string]bool {
 	return result
 }
 
-func TestNestedDirectories(t *testing.T) {
+func (g GitSuite) TestNestedDirectories(t *testing.T) {
 	ctx := context.Background()
 
 	for _, tc := range []struct {
@@ -961,7 +1008,7 @@ func TestNestedDirectories(t *testing.T) {
 	}{
 		{
 			directory: "sample",
-			packages:  []string{"sample/v1", "sample/v2", "sample/main"},
+			packages:  []string{"sample/v1", "sample/v2", "sample/" + g.branch},
 		},
 		{
 			directory: "nonexistent",
@@ -974,14 +1021,14 @@ func TestNestedDirectories(t *testing.T) {
 				"catalog/gcp/spanner/v1",
 				"catalog/gcp/bucket/v2",
 				"catalog/gcp/bucket/v1",
-				"catalog/gcp/bucket/main",
+				"catalog/gcp/bucket/" + g.branch,
 			},
 		},
 	} {
 		t.Run(tc.directory, func(t *testing.T) {
 			tempdir := t.TempDir()
 			tarfile := filepath.Join("testdata", "nested-repository.tar")
-			_, address := ServeGitRepository(t, tarfile, tempdir)
+			_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 			const (
 				repositoryName = "directory"
@@ -990,7 +1037,7 @@ func TestNestedDirectories(t *testing.T) {
 
 			git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
 				Repo:      address,
-				Branch:    "main",
+				Branch:    g.branch,
 				Directory: tc.directory,
 			}, tempdir, GitRepositoryOptions{})
 			if err != nil {
