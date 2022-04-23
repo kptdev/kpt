@@ -25,6 +25,7 @@ import (
 //+kubebuilder:printcolumn:name="Content",type=string,JSONPath=`.spec.content`
 //+kubebuilder:printcolumn:name="Deployment",type=boolean,JSONPath=`.spec.deployment`
 //+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=='Ready')].status`
+//+kubebuilder:printcolumn:name="Address",type=string,JSONPath=`.spec['git','oci']['repo','registry']`
 
 // Repository
 type Repository struct {
