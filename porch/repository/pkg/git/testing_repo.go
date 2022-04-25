@@ -82,31 +82,35 @@ func InitializeBranch(t *testing.T, git *gogit.Repository, branch string) {
 	// If main branch exists, rename it to the specified ref
 	main, err := git.Reference(DefaultMainReferenceName, false)
 	switch err {
-	case nil: // found it; create the target branch
-		name := plumbing.NewBranchReferenceName(branch)
-		if name != DefaultMainReferenceName {
-			ref := plumbing.NewHashReference(name, main.Hash())
-			if err := git.Storer.SetReference(ref); err != nil {
-				t.Fatalf("Error creating target branch %q from %q: %v", ref, main, err)
-			}
-
-			t.Cleanup(func() {
-				// make sure main didn't move
-				new, err := git.Reference(DefaultMainReferenceName, false)
-				if err != nil {
-					t.Fatalf("Error getting %s branch after test run: %v", gogit.DefaultRemoteName, err)
-				}
-
-				if main.Hash() != new.Hash() {
-					t.Fatalf("%q branch moved unexpectedly during the test to %q", main, new)
-				}
-			})
-		}
-
+	case nil:
+		// found `main branch`
 	case plumbing.ErrReferenceNotFound:
 		// main doesn't exist, we won't create the target branch either.
+		return
 	default:
 		t.Fatalf("Error getting %s branch: %v", DefaultMainReferenceName, err)
+		return
+	}
+
+	// `main` branch was found. Create the target branch off of it if needed.
+	name := plumbing.NewBranchReferenceName(branch)
+	if name != DefaultMainReferenceName {
+		ref := plumbing.NewHashReference(name, main.Hash())
+		if err := git.Storer.SetReference(ref); err != nil {
+			t.Fatalf("Error creating target branch %q from %q: %v", ref, main, err)
+		}
+
+		t.Cleanup(func() {
+			// Verify that main didn't move during the test
+			new, err := git.Reference(DefaultMainReferenceName, false)
+			if err != nil {
+				t.Fatalf("Error getting %s branch after test run: %v", gogit.DefaultRemoteName, err)
+			}
+
+			if main.Hash() != new.Hash() {
+				t.Fatalf("%q branch moved unexpectedly during the test to %q", main, new)
+			}
+		})
 	}
 }
 
