@@ -39,6 +39,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitPackage":                   schema_porch_api_porch_v1alpha1_GitPackage(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.OciPackage":                   schema_porch_api_porch_v1alpha1_OciPackage(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec":         schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec":          schema_porch_api_porch_v1alpha1_PackageEditTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec":          schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec":         schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevision":              schema_porch_api_porch_v1alpha1_PackageRevision(ref),
@@ -542,6 +543,25 @@ func schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref common.ReferenceCa
 		},
 		Dependencies: []string{
 			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PackageEditTaskSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"sourceRef": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionRef"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionRef"},
 	}
 }
 
@@ -1116,6 +1136,11 @@ func schema_porch_api_porch_v1alpha1_Task(ref common.ReferenceCallback) common.O
 							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec"),
 						},
 					},
+					"edit": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec"),
+						},
+					},
 					"eval": {
 						SchemaProps: spec.SchemaProps{
 							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec"),
@@ -1126,7 +1151,7 @@ func schema_porch_api_porch_v1alpha1_Task(ref common.ReferenceCallback) common.O
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec"},
 	}
 }
 

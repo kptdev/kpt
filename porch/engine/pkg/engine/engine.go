@@ -183,6 +183,18 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	case api.TaskTypePatch:
 		return buildPatchMutation(ctx, task)
 
+	case api.TaskTypeEdit:
+		if task.Edit == nil {
+			return nil, fmt.Errorf("edit not set for task of type %q", task.Type)
+		}
+		return &editPackageMutation{
+			task:              task,
+			namespace:         obj.Namespace,
+			name:              obj.Spec.PackageName,
+			cad:               cad,
+			referenceResolver: cad.referenceResolver,
+		}, nil
+
 	case api.TaskTypeEval:
 		if task.Eval == nil {
 			return nil, fmt.Errorf("eval not set for task of type %q", task.Type)

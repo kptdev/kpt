@@ -86,6 +86,7 @@ const (
 	TaskTypeInit  TaskType = "init"
 	TaskTypeClone TaskType = "clone"
 	TaskTypePatch TaskType = "patch"
+	TaskTypeEdit  TaskType = "edit"
 	TaskTypeEval  TaskType = "eval"
 )
 
@@ -94,6 +95,7 @@ type Task struct {
 	Init  *PackageInitTaskSpec  `json:"init,omitempty"`
 	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
 	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
+	Edit  *PackageEditTaskSpec  `json:"edit,omitempty"`
 	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
 }
 
@@ -151,6 +153,10 @@ type PatchSpec struct {
 	File      string    `json:"file,omitempty"`
 	Contents  string    `json:"contents,omitempty"`
 	PatchType PatchType `json:"patchType,omitempty"`
+}
+
+type PackageEditTaskSpec struct {
+	Source *PackageRevisionRef `json:"sourceRef,omitempty"`
 }
 
 type RepositoryType string
