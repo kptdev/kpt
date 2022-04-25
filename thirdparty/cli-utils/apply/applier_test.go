@@ -809,38 +809,12 @@ func TestApplier(t *testing.T) {
 				InventoryPolicy:  inventory.PolicyMustMatch,
 				EmitStatusEvents: true,
 			},
-			statusEvents: []pollevent.Event{
-				{
-					Type: pollevent.ResourceUpdateEvent,
-					Resource: &pollevent.ResourceStatus{
-						Identifier: testutil.ToIdentifier(t, resources["deployment"]),
-						Status:     status.InProgressStatus,
-					},
-				},
-				{
-					Type: pollevent.ResourceUpdateEvent,
-					Resource: &pollevent.ResourceStatus{
-						Identifier: testutil.ToIdentifier(t, resources["deployment"]),
-						Status:     status.CurrentStatus,
-					},
-				},
-			},
-			expectedStatusEvents: []testutil.ExpEvent{
-				{
-					EventType: event.StatusType,
-					StatusEvent: &testutil.ExpStatusEvent{
-						Identifier: testutil.ToIdentifier(t, resources["deployment"]),
-						Status:     status.InProgressStatus,
-					},
-				},
-				{
-					EventType: event.StatusType,
-					StatusEvent: &testutil.ExpStatusEvent{
-						Identifier: testutil.ToIdentifier(t, resources["deployment"]),
-						Status:     status.CurrentStatus,
-					},
-				},
-			},
+			// There could be some status events for the existing Deployment,
+			// but we can't always expect to receive them before the applier
+			// exits, because the WaitTask is skipped when the ApplyTask errors.
+			// So don't bother sending or expecting them.
+			statusEvents:         []pollevent.Event{},
+			expectedStatusEvents: []testutil.ExpEvent{},
 			expectedEvents: []testutil.ExpEvent{
 				{
 					EventType: event.InitType,
@@ -1933,7 +1907,7 @@ func TestApplierCancel(t *testing.T) {
 				var removed int
 				receivedEvents, removed = testutil.RemoveEqualEvents(receivedEvents, e)
 				if removed < 1 {
-					t.Fatalf("Expected status event not received: %#v", e.StatusEvent)
+					t.Errorf("Expected status event not received: %#v", e.StatusEvent)
 				}
 			}
 
