@@ -16,19 +16,21 @@ package cmdrpkgget
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
+	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/cmd/get"
-	"k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -85,7 +87,6 @@ func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.
 type runner struct {
 	ctx     context.Context
 	cfg     *genericclioptions.ConfigFlags
-	client  client.Client
 	Command *cobra.Command
 
 	// Flags
@@ -97,20 +98,12 @@ type runner struct {
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = command + ".preRunE"
-
 	outputOption := cmd.Flags().Lookup("output").Value.String()
 	if strings.Contains(outputOption, "custom-columns") || outputOption == "yaml" || strings.Contains(outputOption, "json") {
 		r.requestTable = false
 	} else {
 		r.requestTable = true
 	}
-
-	client, err := porch.CreateClient(r.cfg)
-	if err != nil {
-		return errors.E(op, err)
-	}
-	r.client = client
 	return nil
 }
 
@@ -118,10 +111,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
 	var objs []runtime.Object
-
-	f := util.NewFactory(r.cfg)
-
-	b := f.NewBuilder().
+	b := resource.NewBuilder(r.cfg).
 		Unstructured().
 		NamespaceParam(*r.cfg.Namespace).DefaultNamespace()
 
@@ -156,8 +146,17 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, i := range infos {
-		if r.match(i.Object) {
-			objs = append(objs, i.Object)
+		switch obj := i.Object.(type) {
+		case *unstructured.Unstructured:
+			o, err := r.tranformAndMatch(obj)
+			if err != nil {
+				return errors.E(op, err)
+			}
+			if o != nil {
+				objs = append(objs, o)
+			}
+		default:
+			return errors.E(op, fmt.Sprintf("Unrecognized response %T", obj))
 		}
 	}
 
@@ -165,10 +164,9 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	if r.requestTable {
-		printer = &get.TablePrinter{
-			Delegate: printer,
-		}
+		printer = &get.TablePrinter{Delegate: printer}
 	}
 
 	w := printers.GetNewTabWriter(cmd.OutOrStdout())
@@ -186,19 +184,87 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *runner) match(obj runtime.Object) bool {
-	unstr, ok := obj.(*unstructured.Unstructured)
-	if !ok {
-		return true // matches
-	}
-	packageName, _, _ := unstructured.NestedString(unstr.Object, "spec", "packageName")
-	revision, _, _ := unstructured.NestedString(unstr.Object, "spec", "revision")
+var tableGVK = metav1.SchemeGroupVersion.WithKind("Table")
+var packageRevisionGVK = api.SchemeGroupVersion.WithKind("PackageRevision")
 
+func (r *runner) tranformAndMatch(obj *unstructured.Unstructured) (runtime.Object, error) {
+	switch gvk := obj.GroupVersionKind(); gvk {
+	case tableGVK:
+		return r.matchTable(obj)
+	case packageRevisionGVK:
+		return r.matchPackageRevision(obj)
+	default:
+		fmt.Fprintf(r.Command.OutOrStderr(), "Unrecognized response type %s", gvk)
+		return obj, nil // unrecognized, attempt to print
+	}
+}
+
+func (r *runner) matchPackageRevision(o *unstructured.Unstructured) (runtime.Object, error) {
+	packageName, _, err := unstructured.NestedString(o.Object, "spec", "packageName")
+	if err != nil {
+		return nil, err
+	}
+	revision, _, err := unstructured.NestedString(o.Object, "spec", "revision")
+	if err != nil {
+		return nil, err
+	}
 	if !strings.Contains(packageName, r.name) {
-		return false
+		return nil, nil
 	}
 	if r.revision != "" && r.revision != revision {
-		return false
+		return nil, nil
 	}
-	return true
+	return o, nil
+}
+
+func findColumn(cols []metav1.TableColumnDefinition, name string) int {
+	for i := range cols {
+		if cols[i].Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func getStringCell(cells []interface{}, col int) (string, bool) {
+	if col < 0 {
+		return "", false
+	}
+	s, ok := cells[col].(string)
+	return s, ok
+}
+
+func (r *runner) matchTable(u *unstructured.Unstructured) (runtime.Object, error) {
+	table := &metav1.Table{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(u.Object, table); err != nil {
+		return nil, err
+	}
+
+	filtered := make([]metav1.TableRow, 0, len(table.Rows))
+	nameCol := findColumn(table.ColumnDefinitions, "Package")
+	revisionCol := findColumn(table.ColumnDefinitions, "Revision")
+
+	for i := range table.Rows {
+		row := &table.Rows[i]
+		if row.Object.Object != nil {
+			fmt.Fprintf(r.Command.OutOrStderr(), "Found non-nil Object in table: %s",
+				row.Object.Object.GetObjectKind().GroupVersionKind())
+		} else {
+			if name, ok := getStringCell(row.Cells, nameCol); ok {
+				if !strings.Contains(name, r.name) {
+					continue
+				}
+			}
+			if revision, ok := getStringCell(row.Cells, revisionCol); ok {
+				if r.revision != "" && r.revision != revision {
+					continue
+				}
+			}
+		}
+
+		// Row matches
+		filtered = append(filtered, *row)
+	}
+	table.Rows = filtered
+	return table, nil
 }

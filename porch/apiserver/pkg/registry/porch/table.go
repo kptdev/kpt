@@ -65,6 +65,8 @@ func (c tableConvertor) ConvertToTable(ctx context.Context, object runtime.Objec
 	}
 
 	// Populate table metadata
+	table.APIVersion = metav1.SchemeGroupVersion.Identifier()
+	table.Kind = "Table"
 	if l, err := meta.ListAccessor(object); err == nil {
 		table.ResourceVersion = l.GetResourceVersion()
 		table.SelfLink = l.GetSelfLink()

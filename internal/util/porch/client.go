@@ -21,6 +21,7 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	coreapi "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -103,6 +104,7 @@ func createScheme() (*runtime.Scheme, error) {
 		configapi.AddToScheme,
 		porchapi.AddToScheme,
 		coreapi.AddToScheme,
+		metav1.AddMetaToScheme,
 	}) {
 		if err := api(scheme); err != nil {
 			return nil, err
@@ -116,6 +118,7 @@ func createRESTMapper() meta.RESTMapper {
 		configapi.GroupVersion,
 		porchapi.SchemeGroupVersion,
 		coreapi.SchemeGroupVersion,
+		metav1.SchemeGroupVersion,
 	})
 
 	for _, r := range []struct {
@@ -127,6 +130,7 @@ func createRESTMapper() meta.RESTMapper {
 		{kind: porchapi.SchemeGroupVersion.WithKind("PackageRevisionResources"), plural: "packagerevisionresources", singular: "packagerevisionresources"},
 		{kind: porchapi.SchemeGroupVersion.WithKind("Function"), plural: "functions", singular: "function"},
 		{kind: coreapi.SchemeGroupVersion.WithKind("Secret"), plural: "secrets", singular: "secret"},
+		{kind: metav1.SchemeGroupVersion.WithKind("Table"), plural: "tables", singular: "table"},
 	} {
 		rm.AddSpecific(
 			r.kind,

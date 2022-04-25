@@ -16,16 +16,16 @@ package cmdrepoget
 
 import (
 	"context"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
-	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/spf13/cobra"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
+	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/cmd/get"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -67,51 +67,62 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 type runner struct {
 	ctx     context.Context
 	cfg     *genericclioptions.ConfigFlags
-	client  client.Client
 	Command *cobra.Command
 
 	// Flags
 	printFlags *get.PrintFlags
+
+	requestTable bool
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	const op errors.Op = command + ".preRunE"
-	client, err := porch.CreateClient(r.cfg)
-	if err != nil {
-		return errors.E(op, err)
+	outputOption := cmd.Flags().Lookup("output").Value.String()
+	if strings.Contains(outputOption, "custom-columns") || outputOption == "yaml" || strings.Contains(outputOption, "json") {
+		r.requestTable = false
+	} else {
+		r.requestTable = true
 	}
-	r.client = client
 	return nil
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
-	var objs []runtime.Object
+	// For some reason our use of k8s libraries result in error when decoding
+	// RepositoryList when we use strongly typed data. Therefore for now we
+	// use unstructured communication.
+	// The error is: `no kind "RepositoryList" is registered for the internal
+	// version of group "config.porch.kpt.dev" in scheme`. Of course there _is_
+	// no such kind since CRDs seem to have only versioned resources.
+	b := resource.NewBuilder(r.cfg).
+		Unstructured().
+		NamespaceParam(*r.cfg.Namespace).DefaultNamespace()
 
 	if len(args) > 0 {
-		for _, repo := range args {
-			var repository configapi.Repository
-			if err := r.client.Get(r.ctx, client.ObjectKey{
-				Namespace: *r.cfg.Namespace,
-				Name:      repo,
-			}, &repository); err != nil {
-				return errors.E(op, err)
-			}
-
-			repository.Kind = "Repository"
-			repository.APIVersion = configapi.GroupVersion.Identifier()
-
-			objs = append(objs, &repository)
-		}
+		b.ResourceNames("repository", args...)
 	} else {
-		var repositories configapi.RepositoryList
-		if err := r.client.List(r.ctx, &repositories, client.InNamespace(*r.cfg.Namespace)); err != nil {
-			return errors.E(op, err)
-		}
-		repositories.Kind = "RepositoryList"
-		repositories.APIVersion = configapi.GroupVersion.Identifier()
-		objs = append(objs, &repositories)
+		b = b.SelectAllParam(true).
+			ResourceTypes("repository")
+	}
+
+	b = b.ContinueOnError().Latest().Flatten()
+
+	if r.requestTable {
+		b = b.TransformRequests(func(req *rest.Request) {
+			req.SetHeader("Accept", strings.Join([]string{
+				"application/json;as=Table;g=meta.k8s.io;v=v1",
+				"application/json",
+			}, ","))
+		})
+	}
+	res := b.Do()
+	if err := res.Err(); err != nil {
+		return errors.E(op, err)
+	}
+
+	infos, err := res.Infos()
+	if err != nil {
+		return errors.E(op, err)
 	}
 
 	printer, err := r.printFlags.ToPrinter()
@@ -119,10 +130,16 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
+	if r.requestTable {
+		printer = &get.TablePrinter{
+			Delegate: printer,
+		}
+	}
+
 	w := printers.GetNewTabWriter(cmd.OutOrStdout())
 
-	for _, obj := range objs {
-		if err := printer.PrintObj(obj, w); err != nil {
+	for _, i := range infos {
+		if err := printer.PrintObj(i.Object, w); err != nil {
 			return errors.E(op, err)
 		}
 	}

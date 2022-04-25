@@ -21,6 +21,9 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 //+kubebuilder:resource:path=repositories,singular=repository
+//+kubebuilder:printcolumn:name="Type",type=string,JSONPath=`.spec.type`
+//+kubebuilder:printcolumn:name="Content",type=string,JSONPath=`.spec.content`
+//+kubebuilder:printcolumn:name="Deployment",type=boolean,JSONPath=`.spec.deployment`
 //+kubebuilder:printcolumn:name="Ready",type=string,JSONPath=`.status.conditions[?(@.type=='Ready')].status`
 
 // Repository
