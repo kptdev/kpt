@@ -63,7 +63,8 @@ Our implementation of the Configuration as Data approach (
 [Config Sync](https://cloud.google.com/anthos-config-management/docs/config-sync-overview),
 and [Package Orchestration](https://github.com/GoogleContainerTools/kpt/tree/main/porch))
 build on the fuondation of
-[Kubernetes Resource Model](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md) (KRM).
+[Kubernetes Resource Model](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md)
+(KRM).
 
 **Note**: Even though KRM is not a requirement of Config as Data (just like
 Python or Go templates or Jinja are not specifically requirements for
@@ -158,6 +159,6 @@ For more information about Configuration as Data and Kubernetes Resource Model,
 visit the following links:
 
 * [Understanding Configuration as Data](https://cloud.google.com/blog/products/containers-kubernetes/understanding-configuration-as-data-in-kubernetes)
-blog post.
+  blog post.
 * [Kubernetes Resource Model](https://cloud.google.com/blog/topics/developers-practitioners/build-platform-krm-part-1-whats-platform)
-blog post series
+  blog post series
