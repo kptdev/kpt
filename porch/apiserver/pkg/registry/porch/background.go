@@ -153,14 +153,6 @@ func (b *background) runOnce(ctx context.Context) error {
 	for i := range repositories.Items {
 		repo := &repositories.Items[i]
 
-		if repo.Spec.Content == "PackageRevision" {
-			// Upgrade to "Package"
-			repo.Spec.Content = configapi.RepositoryContentPackage
-			if err := b.coreClient.Update(ctx, repo); err != nil {
-				klog.Errorf("Failed to upgrade Repo content PackageRevision --> Package: %v", err)
-			}
-		}
-
 		if err := b.cacheRepository(ctx, repo); err != nil {
 			klog.Errorf("Failed to cache repository: %v", err)
 		}

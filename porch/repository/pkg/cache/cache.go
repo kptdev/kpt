@@ -127,14 +127,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 }
 
 func isPackageContent(content configapi.RepositoryContent) bool {
-	switch content {
-	case "PackageRevision":
-		return true // TODO: remove this once migration to "Package" is complete.
-	case configapi.RepositoryContentPackage:
-		return true
-	default:
-		return false
-	}
+	return content == configapi.RepositoryContentPackage
 }
 
 func (c *Cache) CloseRepository(repositorySpec *configapi.Repository) error {
