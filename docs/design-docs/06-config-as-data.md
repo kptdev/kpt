@@ -45,15 +45,15 @@ A system based on CaD *should* observe the following key principles:
   can be operated on by given code (functions)
 * finds and/or filters / queries / selects code (functions) that can operate on
   resource types contained within a body of configuration data
-* separates configuration data transformations from actuation, enabling
-  actuation by performing bulk changes to the configuration data; *actuation*,
-  including sequencing, orchestration, and dependent data resolution occurs in
-  the actuation layers
-* transformations, particular value propagation, are preferable to wholesale
+* *actuation* (reconciliation of configuration data with live state) is separate
+  from transformation of configuration data, and is driven by the declarative
+  data model
+* transformations, particularly value propagation, are preferable to wholesale
   configuration generation except when the expansion is dramatic (say, >10x)
 * transformation input generation should usually be decoupled from propagation
 * deployment context inputs should be taken from well defined “provider context”
-  objects identifiers and references should be declarative
+  objects
+* identifiers and references should be declarative
 * live state should be linked back to sources of truth (configuration)
 
 ## KRM CaD
@@ -72,7 +72,7 @@ Python or Go templates or Jinja are not specifically requirements for
 another foundational config reporesentation format would necessitate
 implementing adapters for all types of infrastructure and applications
 configured, including Kubernetes, CRDs, GCP resources and more. Likewise, choice
-of another configuration format owuld require redesign of a number of the
+of another configuration format would require redesign of a number of the
 configuration management mechanisms that have already been designed for KRM,
 such as 3-way merge, structural merge patch, schema descriptions, resource
 metadata, references, status conventions, etc.
@@ -137,8 +137,8 @@ at all.
 * cooperative editing of configuration by humans and automation, such as for
   security remediation (which is usually implemented against live-state APIs)
 * reusability of configuration transformation code across multiple bodies of
-  configuration data containing the same resource types
-* amortizing the effort of writing, testing, documenting the code
+  configuration data containing the same resource types, amortizing the effort
+  of writing, testing, documenting the code
 * combination of independent configuration transformations
 * implementation of config transformations using the languages of choice,
   including both programming and scripting approaches
@@ -158,6 +158,7 @@ at all.
 For more information about Configuration as Data and Kubernetes Resource Model,
 visit the following links:
 
+* [Rationale for kpt](https://kpt.dev/guides/rationale)
 * [Understanding Configuration as Data](https://cloud.google.com/blog/products/containers-kubernetes/understanding-configuration-as-data-in-kubernetes)
   blog post.
 * [Kubernetes Resource Model](https://cloud.google.com/blog/topics/developers-practitioners/build-platform-krm-part-1-whats-platform)
