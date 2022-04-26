@@ -38,7 +38,7 @@ func (n PackageRevisionKey) String() string {
 // PackageRevision is an abstract package version.
 // We have a single object for both Revision and Resources, because conceptually they are one object.
 // The best way we've found (so far) to represent them in k8s is as two resources, but they map to the same object.
-// Interesting reading: https://github.com/zecke/Kubernetes/blob/master/docs/devel/api-conventions.md#differing-representations
+// Interesting reading: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#differing-representations
 type PackageRevision interface {
 	// KubeObjectName returns an encoded name for the object that should be unique.
 	// More "readable" values are returned by Key()
