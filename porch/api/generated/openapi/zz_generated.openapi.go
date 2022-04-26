@@ -36,6 +36,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef":                  schema_porch_api_porch_v1alpha1_FunctionRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionSpec":                 schema_porch_api_porch_v1alpha1_FunctionSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionStatus":               schema_porch_api_porch_v1alpha1_FunctionStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GeneratorSpec":                schema_porch_api_porch_v1alpha1_GeneratorSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitPackage":                   schema_porch_api_porch_v1alpha1_GitPackage(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.OciPackage":                   schema_porch_api_porch_v1alpha1_OciPackage(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec":         schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref),
@@ -449,6 +450,27 @@ func schema_porch_api_porch_v1alpha1_FunctionStatus(ref common.ReferenceCallback
 	}
 }
 
+func schema_porch_api_porch_v1alpha1_GeneratorSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"config": {
+						SchemaProps: spec.SchemaProps{
+							Description: "`Config` specifies the function config, arbitrary KRM resource. Mutually exclusive with ConfigMap.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("k8s.io/apimachinery/pkg/runtime.RawExtension"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/runtime.RawExtension"},
+	}
+}
+
 func schema_porch_api_porch_v1alpha1_GitPackage(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -530,6 +552,12 @@ func schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref common.ReferenceCa
 							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage"),
 						},
 					},
+					"generator": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Generator specifies that the base is generated.",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GeneratorSpec"),
+						},
+					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
 							Description: "\n\tDefines which strategy should be used to update the package. It defaults to 'resource-merge'.\n * resource-merge: Perform a structural comparison of the original /\n   updated resources, and merge the changes into the local package.\n * fast-forward: Fail without updating if the local package was modified\n   since it was fetched.\n * force-delete-replace: Wipe all the local changes to the package and replace\n   it with the remote version.",
@@ -541,7 +569,7 @@ func schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref common.ReferenceCa
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GeneratorSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage"},
 	}
 }
 

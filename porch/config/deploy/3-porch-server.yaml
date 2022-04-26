@@ -60,6 +60,7 @@ spec:
             value: porch-server
           args:
             - --function-runner=function-runner:9445
+            #- --artifact-registry=us-west1-docker.pkg.dev/example-google-project-id/registry
             - --cache-directory=/cache
 
 ---

@@ -114,3 +114,10 @@ func WithUserInfoProvider(provider repository.UserInfoProvider) EngineOption {
 		return nil
 	})
 }
+
+func WithRegistry(registry CaDRegistry) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.registry = registry
+		return nil
+	})
+}

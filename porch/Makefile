@@ -178,6 +178,8 @@ apply-dev-config:
 	# TODO: Replace with kpt function
 	cat config/samples/deployment-repository.yaml | sed -e s/example-google-project-id/${GCP_PROJECT_ID}/g | kubectl apply -f -
 
+	gcloud artifacts repositories describe  --location=us-west1 registry --format="value(name)" || gcloud artifacts repositories create  --location=us-west1 --repository-format=docker registry
+
 .PHONY: deployment-config
 deployment-config:
 	rm -rf $(DEPLOYCONFIGDIR) || true

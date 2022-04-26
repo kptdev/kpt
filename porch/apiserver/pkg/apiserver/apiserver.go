@@ -67,6 +67,8 @@ type ExtraConfig struct {
 	CoreAPIKubeconfigPath string
 	CacheDirectory        string
 	FunctionRunnerAddress string
+	// ArtifactRegistry is the store of canonical artifacts, such as the CRD -> function mapping.
+	ArtifactRegistry string
 }
 
 // Config defines the config for the apiserver
@@ -172,7 +174,8 @@ func (c completedConfig) New() (*PorchServer, error) {
 		CredentialResolver: credentialResolver,
 		UserInfoProvider:   userInfoProvider,
 	})
-	cad, err := engine.NewCaDEngine(
+
+	options := []engine.EngineOption{
 		engine.WithCache(cache),
 		// The order of registering the function runtimes matters here. When
 		// evaluating a function, the runtimes will be tried in the same
@@ -183,7 +186,17 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),
 		engine.WithUserInfoProvider(userInfoProvider),
-	)
+	}
+
+	if c.ExtraConfig.ArtifactRegistry != "" {
+		registry, err := engine.NewOCIRegistry(c.ExtraConfig.ArtifactRegistry)
+		if err != nil {
+			return nil, err
+		}
+		options = append(options, engine.WithRegistry(registry))
+	}
+
+	cad, err := engine.NewCaDEngine(options...)
 	if err != nil {
 		return nil, err
 	}
