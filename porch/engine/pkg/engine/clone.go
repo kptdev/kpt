@@ -74,36 +74,14 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {
 	if ref.Name == "" {
 		return repository.PackageResources{}, fmt.Errorf("upstreamRef.name is required")
-
 	}
-	repositoryName, err := parseUpstreamRepository(ref.Name)
+
+	revision, err := (&PackageFetcher{
+		cad:               m.cad,
+		referenceResolver: m.referenceResolver,
+	}).FetchRevision(ctx, ref, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, err
-	}
-	var resolved configapi.Repository
-	if err := m.referenceResolver.ResolveReference(ctx, m.namespace, repositoryName, &resolved); err != nil {
-		return repository.PackageResources{}, fmt.Errorf("cannot find repository %s/%s: %w", m.namespace, repositoryName, err)
-	}
-
-	open, err := m.cad.OpenRepository(ctx, &resolved)
-	if err != nil {
-		return repository.PackageResources{}, err
-	}
-
-	revisions, err := open.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: ref.Name})
-	if err != nil {
-		return repository.PackageResources{}, err
-	}
-
-	var revision repository.PackageRevision
-	for _, rev := range revisions {
-		if rev.KubeObjectName() == ref.Name {
-			revision = rev
-			break
-		}
-	}
-	if revision == nil {
-		return repository.PackageResources{}, fmt.Errorf("cannot find package revision %q", ref.Name)
+		return repository.PackageResources{}, fmt.Errorf("failed to fetch package revision %q: %w", ref.Name, err)
 	}
 
 	resources, err := revision.GetResources(ctx)
