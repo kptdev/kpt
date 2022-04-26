@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -185,8 +186,9 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
-		_, relativePath, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
-		newFn.ConfigPath = relativePath
+		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
+		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.RunFns.Path)
+		newFn.ConfigPath, _ = filepath.Rel(pkgAbsPath, fnConfigAbsPath)
 	} else {
 		data := map[string]string{}
 		for i, s := range r.dataItems {
@@ -253,6 +255,9 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	case "validator":
 		kf.Pipeline.Validators, usrMsg = r.updateFnList(kf.Pipeline.Validators)
 	}
+	// When saving function to Kptfile, the functionConfig should be the relative path
+	// to the kpt package, not the relative path to the current working dir.
+	// error handling are ignored since they have been validated in preRunE.
 	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
@@ -480,7 +485,14 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 			return err
 		}
 	}
-
+	if r.SaveFn && r.FnConfigPath != "" {
+		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
+		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(path)
+		if !strings.HasPrefix(fnConfigAbsPath, pkgAbsPath) {
+			return fmt.Errorf("--fn-config must be under %v if saving functions to Kptfile (--save=true)",
+				pkgAbsPath)
+		}
+	}
 	r.parseSelectors()
 	r.RunFns = runfn.RunFns{
 		Ctx:             r.Ctx,
