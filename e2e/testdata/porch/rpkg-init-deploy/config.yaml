@@ -75,5 +75,5 @@ commands:
       - get
       - --namespace=rpkg-init-deploy
     stdout: |
-      NAME   TYPE   CONTENT   DEPLOYMENT   READY
-      git    git    Package   true         True
+      NAME   TYPE   CONTENT   DEPLOYMENT   READY   ADDRESS
+      git    git    Package   true         True    http://git-server.test-git-namespace.svc.cluster.local:8080

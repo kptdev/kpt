@@ -31,8 +31,8 @@ commands:
       - get
       - --namespace=repo-register
     stdout: |
-      NAME              TYPE   CONTENT   DEPLOYMENT   READY
-      test-blueprints   git    Package                True
+      NAME              TYPE   CONTENT   DEPLOYMENT   READY   ADDRESS
+      test-blueprints   git    Package                True    https://github.com/platkrm/test-blueprints.git
   - args:
       - alpha
       - repo
