@@ -5,7 +5,7 @@
 
 ## Why
 
-This document provides bacgrdound context for Package Orchestration, which is
+This document provides background context for Package Orchestration, which is
 further elaborated in a dedicated [document](07-package-orchestration.md).
 
 ## Configuration as Data
@@ -62,14 +62,14 @@ Our implementation of the Configuration as Data approach (
 [kpt](https://kpt.dev),
 [Config Sync](https://cloud.google.com/anthos-config-management/docs/config-sync-overview),
 and [Package Orchestration](https://github.com/GoogleContainerTools/kpt/tree/main/porch))
-build on the fuondation of
+build on the foundation of
 [Kubernetes Resource Model](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md)
 (KRM).
 
 **Note**: Even though KRM is not a requirement of Config as Data (just like
 Python or Go templates or Jinja are not specifically requirements for
 [IaC](https://en.wikipedia.org/wiki/Infrastructure_as_code)), the choice of
-another foundational config reporesentation format would necessitate
+another foundational config representation format would necessitate
 implementing adapters for all types of infrastructure and applications
 configured, including Kubernetes, CRDs, GCP resources and more. Likewise, choice
 of another configuration format would require redesign of a number of the
