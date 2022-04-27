@@ -1,0 +1,73 @@
+commands:
+  - args:
+      - alpha
+      - repo
+      - register
+      - --namespace=rpkg-edit
+      - --name=git
+      - http://git-server.test-git-namespace.svc.cluster.local:8080
+  - args:
+      - alpha
+      - rpkg
+      - clone
+      - --namespace=rpkg-edit
+      - https://github.com/platkrm/test-blueprints.git
+      - --directory=basens
+      - --ref=basens/v1
+      - --repository=git
+      - --revision=v0
+      - basens-edit
+    stdout: git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 created
+  - args:
+      - alpha
+      - rpkg
+      - edit
+      - --namespace=rpkg-edit
+      - --repository=git
+      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
+      - basens-new-edit
+    stdout: git-85f4237aefaf996af6ce27fe0993d1ccb9a8c9ef created
+  - args:
+      - alpha
+      - rpkg
+      - pull
+      - --namespace=rpkg-edit
+      - git-85f4237aefaf996af6ce27fe0993d1ccb9a8c9ef
+    stdout: |
+      apiVersion: config.kubernetes.io/v1
+      items:
+      - apiVersion: kpt.dev/v1
+        info:
+          description: sample description
+        kind: Kptfile
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: Kptfile
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: basens-new-edit
+        upstream:
+          git:
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints.git
+          type: git
+        upstreamLock:
+          git:
+            commit: 67f29546028f0a48c6bbb08614934d0e070cdd3a
+            directory: basens
+            ref: basens/v1
+            repo: https://github.com/platkrm/test-blueprints.git
+          type: git
+      - apiVersion: v1
+        kind: Namespace
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: namespace.yaml
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: namespace.yaml
+          name: example
+      kind: ResourceList
+    yaml: true
