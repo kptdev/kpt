@@ -31,7 +31,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -193,7 +193,8 @@ func (pcm *podCacheManager) warmupCache(podTTLConfig string) error {
 		go func(img, ttlSt string) {
 			klog.Infof("preloading pod cache for function %v with TTL %v", img, ttlSt)
 			defer wg.Done()
-			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
 			ttl, err := time.ParseDuration(ttlSt)
 			if err != nil {
 				klog.Warningf("unable to parse duration from the config file for function %v: %w", fnImage, err)
