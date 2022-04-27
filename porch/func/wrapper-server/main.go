@@ -24,6 +24,7 @@ import (
 	"os/exec"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
+	"github.com/GoogleContainerTools/kpt/porch/func/healthchecker"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -73,7 +74,7 @@ func (o *options) run() error {
 	// Start the gRPC server
 	server := grpc.NewServer()
 	pb.RegisterFunctionEvaluatorServer(server, evaluator)
-	healthService := NewHealthChecker()
+	healthService := healthchecker.NewHealthChecker()
 	grpc_health_v1.RegisterHealthServer(server, healthService)
 
 	if err := server.Serve(lis); err != nil {
@@ -108,24 +109,4 @@ func (e *singleFunctionEvaluator) EvaluateFunction(ctx context.Context, req *pb.
 		ResourceList: outbytes,
 		Log:          stderr.Bytes(),
 	}, nil
-}
-
-type HealthChecker struct{}
-
-func NewHealthChecker() *HealthChecker {
-	return &HealthChecker{}
-}
-
-func (s *HealthChecker) Check(ctx context.Context, req *grpc_health_v1.HealthCheckRequest) (*grpc_health_v1.HealthCheckResponse, error) {
-	klog.Info("Serving the Check request for health check")
-	return &grpc_health_v1.HealthCheckResponse{
-		Status: grpc_health_v1.HealthCheckResponse_SERVING,
-	}, nil
-}
-
-func (s *HealthChecker) Watch(req *grpc_health_v1.HealthCheckRequest, server grpc_health_v1.Health_WatchServer) error {
-	klog.Info("Serving the Watch request for health check")
-	return server.Send(&grpc_health_v1.HealthCheckResponse{
-		Status: grpc_health_v1.HealthCheckResponse_SERVING,
-	})
 }

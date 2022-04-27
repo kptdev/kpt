@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 COPY porch/go.mod porch/go.sum porch/
 COPY porch/api/go.mod porch/api/go.sum porch/api/
 
-RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.8
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
 COPY porch/func/ porch/func/
 RUN cd porch/func ; go build -v -o /wrapper-server/wrapper-server ./wrapper-server
 RUN cp $GOPATH/bin/grpc-health-probe /wrapper-server/
