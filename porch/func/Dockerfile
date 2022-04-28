@@ -27,6 +27,9 @@ FROM gcr.io/kpt-fn/upsert-resource:v0.2.0 as upsert-resource
 FROM golang:1.17.6-alpine3.15 as builder
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
+RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
+RUN cp $GOPATH/bin/grpc-health-probe /grpc-health-probe
+
 COPY go.mod go.sum ./
 COPY porch/go.mod porch/go.sum porch/
 COPY porch/api/go.mod porch/api/go.sum porch/api/
@@ -52,7 +55,7 @@ COPY --from=set-namespace          /usr/local/bin/function /functions/set-namesp
 COPY --from=set-project-id         /usr/local/bin/function /functions/set-project-id
 COPY --from=starlark               /usr/local/bin/star     /functions/starlark
 COPY --from=upsert-resource        /usr/local/bin/function /functions/upsert-resource
-COPY --from=builder                /server /config.yaml /
+COPY --from=builder                /server /grpc-health-probe /config.yaml /
 
 EXPOSE 9445/tcp
 ENTRYPOINT [ "/server", "--config=/config.yaml", "--functions=/functions" ]
