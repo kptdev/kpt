@@ -25,7 +25,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/applyset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
-	"github.com/GoogleContainerTools/kpt/porch/repository/pkg/oci"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

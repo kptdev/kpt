@@ -82,7 +82,7 @@ main apiserver. Configure `kubectl` context to interact with the main k8s apiser
 Docker container:
 
 ```sh
-export KUBECONFIG=${PWD}/hack/local/kubeconfig
+export KUBECONFIG=${PWD}/deployments/local/kubeconfig
 
 # Confirm Porch is running
 kubectl api-resources | grep porch

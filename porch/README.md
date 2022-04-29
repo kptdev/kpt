@@ -120,7 +120,7 @@ sure that the service account has appropriate level of access to your OCI reposi
 Once you have one or more repositories registered, you can list the package revisions:
 
 ```sh
-export KUBECONFIG="${PWD}/hack/local/kubeconfig"
+export KUBECONFIG="${PWD}/deployments/local/kubeconfig"
 
 # List all package revisions
 kubectl get packagerevisions

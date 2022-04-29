@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KUBECONFIG=$(CURDIR)/hack/local/kubeconfig
+KUBECONFIG=$(CURDIR)/deployments/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
 DEPLOYCONFIGDIR=$(BUILDDIR)/deploy
 DEPLOYCONFIG_NO_SA_DIR=$(BUILDDIR)/deploy-no-sa
+KPTDIR=$(abspath $(CURDIR)/..)
 
 # Modules are ordered in dependency order. A module precedes modules that depend on it.
 MODULES = \
- config/samples/apps/hello-server \
+ examples/apps/hello-server \
  api \
  . \
 
@@ -54,7 +55,7 @@ stop:
 
 .PHONY: start-etcd
 start-etcd:
-	docker buildx build -t etcd --output=type=docker hack/local/etcd
+	docker buildx build -t etcd --output=type=docker -f ./build/Dockerfile.etcd ./build
 	mkdir -p $(BUILDDIR)/data/etcd
 	docker stop etcd || true
 	docker rm etcd || true
@@ -66,10 +67,10 @@ start-etcd:
 
 .PHONY: start-kube-apiserver
 start-kube-apiserver:
-	docker buildx build -t kube-apiserver --output=type=docker hack/local/kube-apiserver
+	docker buildx build -t kube-apiserver --output=type=docker -f ./build/Dockerfile.apiserver ./build
 	docker stop kube-apiserver || true
 	docker rm kube-apiserver || true
-	hack/local/makekeys.sh
+	deployments/local/makekeys.sh
 	docker run --detach --user `id -u`:`id -g` \
 	  --network=porch \
 	  --ip 192.168.8.201 \
@@ -123,7 +124,7 @@ PORCH = $(BUILDDIR)/porch
 
 .PHONY: run-local
 run-local: porch
-	KUBECONFIG=$(KUBECONFIG) kubectl apply -f hack/local/localconfig.yaml
+	KUBECONFIG=$(KUBECONFIG) kubectl apply -f deployments/local/localconfig.yaml
 	KUBECONFIG=$(KUBECONFIG) kubectl apply -f api/porchconfig/v1alpha1/
 	$(PORCH) \
 	--secure-port 9443 \
@@ -138,7 +139,7 @@ run-jaeger:
 
 .PHONY: porch
 porch:
-	cd apiserver; go build -o $(PORCH) ./cmd/porch
+	go build -o $(PORCH) ./cmd/porch
 
 .PHONY: fix-headers
 fix-headers:
@@ -150,14 +151,14 @@ fix-all: fix-headers fmt tidy
 
 .PHONY: push-images
 push-images:
-	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ push-image
+	docker buildx build --push --tag $(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG) -f ./build/Dockerfile.porch "$(KPTDIR)"
 	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ push-image
 	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" WRAPPER_SERVER_IMAGE_NAME="$(PORCH_WRAPPER_SERVER_IMAGE)" make -C func/ push-image
 	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ push-image
 
 .PHONY: build-images
 build-images:
-	IMAGE_NAME="$(PORCH_SERVER_IMAGE)" make -C apiserver/ build-image
+	docker buildx build --load --tag $(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG) -f ./build/Dockerfile.porch "$(KPTDIR)"
 	IMAGE_NAME="$(PORCH_CONTROLLERS_IMAGE)" make -C controllers/ build-image
 	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" WRAPPER_SERVER_IMAGE_NAME="$(PORCH_WRAPPER_SERVER_IMAGE)" make -C func/ build-image
 	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ build-image
@@ -182,7 +183,7 @@ apply-dev-config:
 deployment-config:
 	rm -rf $(DEPLOYCONFIGDIR) || true
 	mkdir -p $(DEPLOYCONFIGDIR)
-	./hack/create-deployment-blueprint.sh \
+	./scripts/create-deployment-blueprint.sh \
 	  --destination "$(DEPLOYCONFIGDIR)" \
 	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
@@ -207,7 +208,7 @@ push-and-deploy: push-images deploy
 deployment-config-no-sa:
 	rm -rf $(DEPLOYCONFIG_NO_SA_DIR) || true
 	mkdir -p $(DEPLOYCONFIG_NO_SA_DIR)
-	./hack/create-deployment-blueprint.sh \
+	./scripts/create-deployment-blueprint.sh \
 	  --destination "$(DEPLOYCONFIG_NO_SA_DIR)" \
 	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \

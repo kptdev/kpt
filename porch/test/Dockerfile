@@ -40,7 +40,7 @@ COPY internal internal
 COPY pkg pkg
 COPY porch/api porch/api
 COPY porch/controllers porch/controllers
-COPY porch/repository porch/repository
+COPY porch/pkg porch/pkg
 COPY porch/test porch/test
 
 RUN cd porch/test; go build -v -o /git-server ./git

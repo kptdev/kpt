@@ -20,12 +20,12 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/apiserver/cmd/porch/main.go",
+            "program": "${workspaceFolder}/cmd/porch/main.go",
             "args": [
                 "--secure-port=9443",
                 "--v=7",
                 "--standalone-debug-mode",
-                "--kubeconfig=${workspaceFolder}/hack/local/kubeconfig",
+                "--kubeconfig=${workspaceFolder}/deployments/local/kubeconfig",
                 "--cache-directory=${workspaceFolder}/.cache",
                 "--function-runner=192.168.8.202:9445"
             ],
