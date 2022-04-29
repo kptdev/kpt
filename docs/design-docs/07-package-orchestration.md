@@ -64,6 +64,9 @@ packages in a deployment repository is considered deployment-ready.
 [kpt]: https://kpt.dev/
 [git]: https://git-scm.org/
 [optimistic-concurrency]: https://en.wikipedia.org/wiki/Optimistic_concurrency_control
+[apiserver]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/apiserver-aggregation/
+[representation]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#differing-representations
+[crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 
 ## CaD Core Components
 
@@ -832,7 +835,7 @@ deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1       
 deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1         false    Draft       deployments
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1         false    Draft       deployments
 
-# Propose that a package revision be published
+# Propose two packge revisions to be be published
 $ kpt alpha rpkg propose \
   deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 \
   deployments-c32b851b591b860efda29ba0e006725c8c1f7764 \
@@ -841,7 +844,7 @@ $ kpt alpha rpkg propose \
 deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 proposed
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764 proposed
 
-# Confirm the package revision lifecycles
+# Confirm the package revisions are now Proposed
 $ kpt alpha rpkg get
 NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
 ...
