@@ -41,7 +41,7 @@ SOURCE_PACKAGE:
   Source package. Can be a reference to an OCI package, Git package, or an package resource name:
     * oci://oci-repository/package-name
     * http://git-repository.git/package-name
-    * packge-revision-name
+    * package-revision-name
 
 NAME:
   Target package revision name (downstream package)
