@@ -68,6 +68,12 @@ func NewPodEvaluator(namespace, wrapperServerImage string, interval, ttl time.Du
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rest config: %w", err)
 	}
+	// Give it a slightly higher QPS to prevent unnecessary client-side throttling.
+	if restCfg.QPS < 30 {
+		restCfg.QPS = 30.0
+		restCfg.Burst = 45
+	}
+
 	cl, err := client.New(restCfg, client.Options{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create client: %w", err)
