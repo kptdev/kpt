@@ -33,18 +33,19 @@ import (
 const (
 	execRuntime = "exec"
 	podRuntime  = "pod"
+
+	wrapperServerImageEnv = "WRAPPER_SERVER_IMAGE"
 )
 
 var (
-	port               = flag.Int("port", 9445, "The server port")
-	functions          = flag.String("functions", "./functions", "Path to cached functions.")
-	config             = flag.String("config", "./config.yaml", "Path to the config file.")
-	podCacheConfig     = flag.String("pod-cache-config", "/pod-cache-config/pod-cache-config.yaml", "Path to the pod cache config file. The file is map of function name to TTL.")
-	podNamespace       = flag.String("pod-namespace", "porch-fn-system", "Namespace to run KRM functions pods.")
-	podTTL             = flag.Duration("pod-ttl", 30*time.Minute, "TTL for pods before GC.")
-	scanInterval       = flag.Duration("scan-interval", time.Minute, "The interval of GC between scans.")
-	wrapperServerImage = flag.String("wrapper-server-image", "", "Image name of the wrapper server.")
-	disableRuntimes    = flag.String("disable-runtimes", "", fmt.Sprintf("The runtime(s) to disable. Multiple runtimes should separated by `,`. Available runtimes: `%v`, `%v`.", execRuntime, podRuntime))
+	port            = flag.Int("port", 9445, "The server port")
+	functions       = flag.String("functions", "./functions", "Path to cached functions.")
+	config          = flag.String("config", "./config.yaml", "Path to the config file.")
+	podCacheConfig  = flag.String("pod-cache-config", "/pod-cache-config/pod-cache-config.yaml", "Path to the pod cache config file. The file is map of function name to TTL.")
+	podNamespace    = flag.String("pod-namespace", "porch-fn-system", "Namespace to run KRM functions pods.")
+	podTTL          = flag.Duration("pod-ttl", 30*time.Minute, "TTL for pods before GC.")
+	scanInterval    = flag.Duration("scan-interval", time.Minute, "The interval of GC between scans.")
+	disableRuntimes = flag.String("disable-runtimes", "", fmt.Sprintf("The runtime(s) to disable. Multiple runtimes should separated by `,`. Available runtimes: `%v`, `%v`.", execRuntime, podRuntime))
 )
 
 func main() {
@@ -83,7 +84,11 @@ func run() error {
 			}
 			runtimes = append(runtimes, execEval)
 		case podRuntime:
-			podEval, err := internal.NewPodEvaluator(*podNamespace, *wrapperServerImage, *scanInterval, *podTTL, *podCacheConfig)
+			wrapperServerImage := os.Getenv(wrapperServerImageEnv)
+			if wrapperServerImage == "" {
+				return fmt.Errorf("environment variable %v must be set to use pod function evaluator runtime", wrapperServerImageEnv)
+			}
+			podEval, err := internal.NewPodEvaluator(*podNamespace, wrapperServerImage, *scanInterval, *podTTL, *podCacheConfig)
 			if err != nil {
 				return fmt.Errorf("failed to initialize pod evaluator: %w", err)
 			}

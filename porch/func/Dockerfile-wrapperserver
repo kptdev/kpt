@@ -2,6 +2,9 @@ FROM golang:1.17.8-alpine3.15 as builder
 
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
+# Ensure the wrapper server and grpc-health-probe is statically linked so that they works in distroless-based images.
+ENV CGO_ENABLED=0
+
 COPY go.mod go.sum ./
 COPY porch/go.mod porch/go.sum porch/
 COPY porch/api/go.mod porch/api/go.sum porch/api/

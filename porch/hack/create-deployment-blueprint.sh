@@ -126,14 +126,30 @@ function customize-image {
     "newTag=${TAG}"
 }
 
-function customize-image-in-command {
+function customize-image-in-env {
   local OLD="${1}"
   local NEW="${2}"
+  local TAG="${NEW##*:}"
+  local IMG="${NEW%:*}"
 
-  kpt fn eval "${DESTINATION}" --image search-replace:v0.2.0 -- \
-	  "by-path=spec.template.spec.containers[*].command[*]" \
-	  "by-value-regex=(.*)${OLD}" \
-	  "put-value=\${1}${NEW}"
+  cat > set-image-config.yaml << EOF
+apiVersion: fn.kpt.dev/v1alpha1
+kind: SetImage
+metadata:
+  name: my-func-config
+image:
+  name: ${OLD}
+  newName: ${IMG}
+  newTag: ${TAG}
+additionalImageFields:
+- group: apps
+  version: v1
+  kind: Deployment
+  path: spec/template/spec/containers[]/env[]/value
+EOF
+
+  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 --fn-config set-image-config.yaml
+  rm set-image-config.yaml
 }
 
 function customize-sa {
@@ -170,7 +186,7 @@ function main() {
   customize-image \
     "gcr.io/example-google-project-id/porch-controllers:latest" \
     "${CONTROLLERS_IMAGE}"
-  customize-image-in-command \
+  customize-image-in-env \
     "gcr.io/example-google-project-id/porch-wrapper-server:latest" \
     "${WRAPPER_SERVER_IMAGE}"
 

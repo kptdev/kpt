@@ -266,11 +266,12 @@ func (pcm *podCacheManager) podCacheManager() {
 			channels := pcm.waitlists[resp.image]
 			delete(pcm.waitlists, resp.image)
 			for i := range channels {
-				// The channel has one buffer size, nothing will be blocking.
-				channels[i] <- &clientConnAndError{
-					grpcClient: resp.grpcClient,
-					err:        resp.err,
+				cce := &clientConnAndError{err: resp.err}
+				if resp.podAndGRPCClient != nil {
+					cce.grpcClient = resp.podAndGRPCClient.grpcClient
 				}
+				// The channel has one buffer size, nothing will be blocking.
+				channels[i] <- cce
 			}
 		case <-tick:
 			// synchronous GC
@@ -497,8 +498,10 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 					Name:  "copy-wrapper-server",
 					Image: pm.wrapperServerImage,
 					Command: []string{
-						"sh", "-c",
-						fmt.Sprintf("cp /wrapper-server/* %v", volumeMountPath),
+						"cp",
+						"-a",
+						"/wrapper-server/.",
+						volumeMountPath,
 					},
 					VolumeMounts: []corev1.VolumeMount{
 						{
@@ -510,12 +513,9 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 			},
 			Containers: []corev1.Container{
 				{
-					Name:  "function",
-					Image: image,
-					Command: []string{
-						"sh", "-c",
-						strings.Join(cmd, " "),
-					},
+					Name:    "function",
+					Image:   image,
+					Command: cmd,
 					ReadinessProbe: &corev1.Probe{
 						ProbeHandler: corev1.ProbeHandler{
 							Exec: &corev1.ExecAction{
