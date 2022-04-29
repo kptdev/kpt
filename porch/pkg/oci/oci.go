@@ -129,6 +129,12 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 				}
 				p.uid = constructUID(p.packageName + ":" + p.revision)
 
+				lifecycle, err := r.getLifecycle(ctx, p.digestName)
+				if err != nil {
+					return nil, err
+				}
+				p.lifecycle = lifecycle
+
 				tasks, err := r.loadTasks(ctx, p.digestName)
 				if err != nil {
 					return nil, err
@@ -162,6 +168,12 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name ImageDige
 		resourceVersion: constructResourceVersion(created),
 	}
 	p.uid = constructUID(p.packageName + ":" + p.revision)
+
+	lifecycle, err := r.getLifecycle(ctx, p.digestName)
+	if err != nil {
+		return nil, err
+	}
+	p.lifecycle = lifecycle
 
 	tasks, err := r.loadTasks(ctx, p.digestName)
 	if err != nil {
@@ -309,6 +321,8 @@ type ociPackageRevision struct {
 	parent *ociRepository
 
 	tasks []v1alpha1.Task
+
+	lifecycle v1alpha1.PackageRevisionLifecycle
 }
 
 var _ repository.PackageRevision = &ociPackageRevision{}
@@ -380,7 +394,8 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
-			Tasks: p.tasks,
+			Lifecycle: p.Lifecycle(),
+			Tasks:     p.tasks,
 		},
 	}
 }
@@ -394,6 +409,5 @@ func (p *ociPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, 
 }
 
 func (p *ociPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
-	// TODO: implement package lifecycle for OCI.
-	return v1alpha1.PackageRevisionLifecyclePublished
+	return p.lifecycle
 }
