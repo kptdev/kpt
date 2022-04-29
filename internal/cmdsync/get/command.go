@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -51,7 +52,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Aliases: []string{"register"},
 		Short:   "Gets a RootSync resource with which package was deployed.",
 		Long:    longMsg,
-		Example: "kpt alpha sync get sync-resource --namespace=default",
+		Example: "kpt alpha sync get sync-resource",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
@@ -96,8 +97,12 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	name := args[0]
+	namespace := cmdsync.RootSyncNamespace
+	if *r.cfg.Namespace != "" {
+		namespace = *r.cfg.Namespace
+	}
 	key := client.ObjectKey{
-		Namespace: *r.cfg.Namespace,
+		Namespace: namespace,
 		Name:      name,
 	}
 	rs := unstructured.Unstructured{

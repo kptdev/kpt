@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -45,7 +46,6 @@ Flags:
 --package
   Package revision to sync into the deployment cluster. Required flag.
 `
-	rootSyncNamespace = "config-management-system"
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -147,7 +147,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      fmt.Sprintf("%s-auth", syncName),
-				Namespace: rootSyncNamespace,
+				Namespace: cmdsync.RootSyncNamespace,
 			},
 			Data: map[string][]byte{
 				"username": repositorySecret.Data["username"],
@@ -180,7 +180,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			"kind":       "RootSync",
 			"metadata": map[string]interface{}{
 				"name":      syncName,
-				"namespace": rootSyncNamespace,
+				"namespace": cmdsync.RootSyncNamespace,
 			},
 			"spec": map[string]interface{}{
 				"sourceFormat": "unstructured",
