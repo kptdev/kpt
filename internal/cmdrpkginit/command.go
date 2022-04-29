@@ -43,19 +43,19 @@ PACKAGE:
 Flags:
 
 --repository
-  Repository to which package will be cloned (downstream repository).
+  Repository in which the package will be created.
 
 --revision
-  Revision of the downstream package.
+  Revision of the new package.
 
 --description
-  short description of the package
+  Short description of the package
 
 --keywords
-  list of keywords for the package
+  List of keywords for the package
 
 --site
-  link to page with information about the package
+  Link to page with information about the package
 
 `
 )
