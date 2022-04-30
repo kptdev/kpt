@@ -157,19 +157,28 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock: %w", err)
 	}
 
+	if p.ref == nil {
+		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock; package has no ref")
+	}
+
+	ref, err := refInRemoteFromRefInLocal(p.ref.Name())
+	if err != nil {
+		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock for %q: %v", p.ref, err)
+	}
+
 	return kptfile.Upstream{
 			Type: kptfile.GitOrigin,
 			Git: &kptfile.Git{
 				Repo:      repo,
 				Directory: p.path,
-				Ref:       p.revision,
+				Ref:       ref.Short(),
 			},
 		}, kptfile.UpstreamLock{
 			Type: kptfile.GitOrigin,
 			Git: &kptfile.GitLock{
 				Repo:      repo,
 				Directory: p.path,
-				Ref:       p.revision,
+				Ref:       ref.Short(),
 				Commit:    p.commit.String(),
 			},
 		}, nil
