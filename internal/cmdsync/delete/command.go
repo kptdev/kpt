@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -123,7 +124,10 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	name := args[0]
-	namespace := *r.cfg.Namespace
+	namespace := cmdsync.RootSyncNamespace
+	if *r.cfg.Namespace != "" {
+		namespace = *r.cfg.Namespace
+	}
 	key := client.ObjectKey{
 		Namespace: namespace,
 		Name:      name,
