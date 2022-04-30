@@ -40,9 +40,13 @@ spec:
           image: gcr.io/example-google-project-id/porch-function-runner:latest
           imagePullPolicy: IfNotPresent
           command:
-            - sh
-            - -c
-            - /server --config=/config.yaml --functions=/functions --pod-namespace=porch-fn-system --wrapper-server-image=gcr.io/example-google-project-id/porch-wrapper-server:latest
+            - /server
+            - --config=/config.yaml
+            - --functions=/functions
+            - --pod-namespace=porch-fn-system
+          env:
+            - name: WRAPPER_SERVER_IMAGE
+              value: gcr.io/example-google-project-id/porch-wrapper-server:latest
           ports:
             - containerPort: 9445
           # Add grpc readiness probe to ensure the cache is ready
