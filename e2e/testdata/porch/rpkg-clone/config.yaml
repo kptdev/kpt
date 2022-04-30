@@ -109,14 +109,14 @@ commands:
         upstream:
           git:
             directory: empty
-            ref: v1
+            ref: empty/v1
             repo: https://github.com/platkrm/test-blueprints.git
           type: git
         upstreamLock:
           git:
             commit: 3de8635354eda8e7de756494a4e0eb5c12af01ab
             directory: empty
-            ref: v1
+            ref: empty/v1
             repo: https://github.com/platkrm/test-blueprints.git
           type: git
       kind: ResourceList
