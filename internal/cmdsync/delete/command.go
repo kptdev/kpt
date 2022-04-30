@@ -132,12 +132,8 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		Namespace: namespace,
 		Name:      name,
 	}
-	rs := unstructured.Unstructured{
-		Object: map[string]interface{}{
-			"apiVersion": rootSyncGVK.GroupVersion().String(),
-			"kind":       rootSyncGVK.Kind,
-		},
-	}
+	rs := unstructured.Unstructured{}
+	rs.SetGroupVersionKind(rootSyncGVK)
 	if err := r.client.Get(r.ctx, key, &rs); err != nil {
 		return errors.E(op, fmt.Errorf("cannot get %s: %v", key, err))
 	}
@@ -182,7 +178,15 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := r.client.Delete(r.ctx, &rs); err != nil {
-		return errors.E(op, err)
+		return errors.E(op, fmt.Errorf("failed to clean up RootSync: %w", err))
+	}
+
+	rg := unstructured.Unstructured{}
+	rg.SetGroupVersionKind(resourceGroupGVK)
+	rg.SetName(rs.GetName())
+	rg.SetNamespace(rs.GetNamespace())
+	if err := r.client.Delete(r.ctx, &rg); err != nil {
+		return errors.E(op, fmt.Errorf("failed to clean up ResourceGroup: %w", err))
 	}
 
 	if r.keepSecret {
