@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -38,24 +39,6 @@ import (
 
 const (
 	command = "cmdrpkgpull"
-	longMsg = `
-kpt alpha rpkg pull PACKAGE [DIR]
-
-Args:
-
-PACKAGE:
-  Name of the package containing the resources.
-
-DIR:
-  Optional path to a local directory to write resources to. The directory must not already exist.
-
-
-Flags:
-
---namespace
-  Namespace containing the package.
-
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -67,9 +50,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "pull PACKAGE [DIR]",
 		Aliases:    []string{"source", "read"},
 		SuggestFor: []string{},
-		Short:      "Reads package resources.",
-		Long:       longMsg,
-		Example:    "kpt alpha rpkg pull package-name ./package-directory",
+		Short:      rpkgdocs.PullShort,
+		Long:       rpkgdocs.PullShort + "\n" + rpkgdocs.PullLong,
+		Example:    rpkgdocs.PullExamples,
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,

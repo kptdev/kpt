@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/repodocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -30,21 +31,6 @@ import (
 
 const (
 	command = "cmdrepounreg"
-	longMsg = `
-kpt alpha repo unreg REPOSITORY [flags]
-
-Unregisters a package repository from Package Orchestrator.
-
-Args:
-
-REPOSITORY:
-  Name of the registered repoisitory resource to unregister.
-
-Flags:
-
---keep-auth-secret
-  Do not delete the repository authentication secret, if it exists.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -59,9 +45,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:     "unreg REPOSITORY [flags]",
 		Aliases: []string{"unregister"},
-		Short:   "Unregisters a package repository from Package Orchestrator.",
-		Long:    longMsg,
-		Example: "kpt alpha repo unregister registered-repository --keep-auth-secret",
+		Short:   repodocs.UnregShort,
+		Long:    repodocs.UnregShort + "\n" + repodocs.UnregLong,
+		Example: repodocs.UnregExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

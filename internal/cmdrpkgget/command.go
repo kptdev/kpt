@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -35,23 +36,6 @@ import (
 
 const (
 	command = "cmdrpkgget"
-	longMsg = `
-kpt alpha rpkg get [PACKAGE ...] [flags]
-
-Args:
-
-PACKAGE:
-  Name of the package revision to get.
-
-Flags:
-
---name
-  Name of the packages to get. Any package whose name contains this value will be included in the results.
-
---revision
-  Revision of the package to get. Any package whose revision matches this value will be included in the results.
-
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -64,9 +48,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "get",
 		Aliases:    []string{"list"},
 		SuggestFor: []string{},
-		Short:      "Gets or lists packages in registered repositories.",
-		Long:       longMsg,
-		Example:    "kpt alpha rpkg get package-name --namespace=default",
+		Short:      rpkgdocs.GetShort,
+		Long:       rpkgdocs.GetShort + "\n" + rpkgdocs.GetLong,
+		Example:    rpkgdocs.GetExamples,
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,

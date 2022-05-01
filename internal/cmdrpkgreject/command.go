@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -30,16 +31,6 @@ import (
 
 const (
 	command = "cmdrpkgreject"
-	longMsg = `
-kpt alpha rpkg reject [PACKAGE...] [flags]
-
-Rejects a proposal to finalize a package revision
-
-Args:
-
-PACKAGE:
-  Name of the proposed package revision to reject.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -55,9 +46,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c := &cobra.Command{
 		Use:     "reject PACKAGE",
-		Short:   "Rejects a proposal to finalize a package revision",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg reject package-name",
+		Short:   rpkgdocs.RejectShort,
+		Long:    rpkgdocs.RejectShort + "\n" + rpkgdocs.RejectLong,
+		Example: rpkgdocs.RejectExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

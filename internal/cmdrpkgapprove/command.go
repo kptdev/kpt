@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -30,16 +31,6 @@ import (
 
 const (
 	command = "cmdrpkgapprove"
-	longMsg = `
-kpt alpha rpkg approve [PACKAGE ...] [flags]
-
-Approves a proposal to finalize a package revision
-
-Args:
-
-PACKAGE:
-  Name of the proposed package revisions to approve.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -55,9 +46,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c := &cobra.Command{
 		Use:     "approve PACKAGE",
-		Short:   "Approves a proposal to finalize a package revision.",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg approve package-name",
+		Short:   rpkgdocs.ApproveShort,
+		Long:    rpkgdocs.ApproveShort + "\n" + rpkgdocs.ApproveLong,
+		Example: rpkgdocs.ApproveExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

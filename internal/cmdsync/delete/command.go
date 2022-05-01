@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/syncdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -34,21 +35,6 @@ import (
 
 const (
 	command = "cmdsync.delete"
-	longMsg = `
-kpt alpha sync delete NAME [flags]
-
-Deletes a package RootSync resource.
-
-Args:
-
-NAME:
-  Name of the sync resource. Required argument.
-
-Flags:
-
---keep-auth-secret
-  Do not delete the repository authentication secret, if it exists.
-`
 	// TODO: Find a better location for this git repo.
 	emptyRepo       = "https://github.com/mortent/empty"
 	emptyRepoBranch = "main"
@@ -80,9 +66,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:     "del REPOSITORY [flags]",
 		Aliases: []string{"delete"},
-		Short:   "Deletes the package RootSync.",
-		Long:    longMsg,
-		Example: "kpt alpha sync del deployed-blueprint",
+		Short:   syncdocs.DeleteShort,
+		Long:    syncdocs.DeleteShort + "\n" + syncdocs.DeleteLong,
+		Example: syncdocs.DeleteExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

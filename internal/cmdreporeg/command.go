@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/repodocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -31,38 +32,6 @@ import (
 
 const (
 	command = "cmdreporeg"
-	longMsg = `
-kpt alpha repo reg[ister] REPOSITORY [flags]
-
-Args:
-
-REPOSITORY:
-  Address of the repository to register. Required argument.
-
-Flags:
-
---description
-  Brief description of the package repository.
-
---name
-  Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.
-
---deployment
-  Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.
-
---repo-basic-username
-  Username for repository authentication with basic auth.
-
---repo-basic-password
-  Password for repository authentication with basic auth.
-
---directory
-  Directory within the repository where to look for packages.
-
---branch
-  Branch in the repository where finalized packages are committed.
-
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -73,9 +42,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:     "reg REPOSITORY",
 		Aliases: []string{"register"},
-		Short:   "Registers a package repository with Package Orchestrator.",
-		Long:    longMsg,
-		Example: "kpt alpha repo register https://github.com/platkrm/demo-blueprints.git --namespace=default",
+		Short:   repodocs.RegShort,
+		Long:    repodocs.RegShort + "\n" + repodocs.RegLong,
+		Example: repodocs.RegExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
