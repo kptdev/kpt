@@ -217,7 +217,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 		Git: &kptfilev1.GitLock{
 			Repo:      testBlueprintsRepo,
 			Directory: "basens",
-			Ref:       "v1",
+			Ref:       "basens/v1",
 		},
 	}
 	if !cmp.Equal(want, got) {
@@ -230,7 +230,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 		Git: &kptfilev1.Git{
 			Repo:      testBlueprintsRepo,
 			Directory: "basens",
-			Ref:       "v1",
+			Ref:       "basens/v1",
 		},
 	}); !cmp.Equal(want, got) {
 		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
@@ -423,7 +423,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 		Git: &kptfilev1.GitLock{
 			Repo:      testBlueprintsRepo,
 			Directory: "basens",
-			Ref:       "v1",
+			Ref:       "basens/v1",
 		},
 	}
 	if !cmp.Equal(want, got) {
@@ -436,7 +436,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 		Git: &kptfilev1.Git{
 			Repo:      testBlueprintsRepo,
 			Directory: "basens",
-			Ref:       "v1",
+			Ref:       "basens/v1",
 		},
 	}); !cmp.Equal(want, got) {
 		t.Errorf("unexpected upstream returned (-want, +got) %s", cmp.Diff(want, got))
