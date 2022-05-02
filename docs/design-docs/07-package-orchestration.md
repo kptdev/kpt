@@ -570,7 +570,7 @@ blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3  istions  v2        true    
 ```
 
 The `LATEST` column indicates whether the package revision is the latest among
-the revisions of the same package. In the output above, v4 is the latest
+the revisions of the same package. In the output above, `v2` is the latest
 revision of `istions` package and `v1` is the latest revision of `basens`
 package.
 
