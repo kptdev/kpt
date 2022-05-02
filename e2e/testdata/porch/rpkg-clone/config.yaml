@@ -11,9 +11,7 @@ commands:
       - rpkg
       - clone
       - --namespace=rpkg-clone
-      - https://github.com/platkrm/test-blueprints.git
-      - --directory=basens
-      - --ref=basens/v1
+      - https://github.com/platkrm/test-blueprints.git/basens@basens/v1
       - --repository=git
       - --revision=v0
       - basens-clone

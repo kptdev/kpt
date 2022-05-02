@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
@@ -48,12 +49,6 @@ NAME:
   Example: package-name
 
 Flags:
-
---directory
-  Directory within the repository where the upstream package is located.
-
---ref
-	Ref in the repository where the upstream package is located (branch, tag, SHA)
 
 --repository
   Repository to which package will be cloned (downstream repository).
@@ -96,8 +91,6 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c.Flags().StringVar(&r.strategy, "strategy", string(porchapi.ResourceMerge),
 		"update strategy that should be used when updating this package; one of: "+strings.Join(strategies, ","))
-	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where the upstream package is located.")
-	c.Flags().StringVar(&r.ref, "ref", "main", "Branch in the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
 	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
 
@@ -114,8 +107,6 @@ type runner struct {
 
 	// Flags
 	strategy   string
-	directory  string
-	ref        string
 	repository string // Target repository
 	revision   string // Target package revision
 	target     string // Target package name
@@ -154,11 +145,15 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		}
 
 	case strings.Contains(source, "/"):
+		gitArgs, err := parse.GitParseArgs(context.Background(), args)
+		if err != nil {
+			return err
+		}
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
-			Repo:      source,
-			Ref:       r.ref,
-			Directory: r.directory,
+			Repo:      gitArgs.Repo,
+			Ref:       gitArgs.Ref,
+			Directory: gitArgs.Directory,
 		}
 		// TODO: support authn
 
