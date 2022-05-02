@@ -193,13 +193,15 @@ func (r *cachedRepository) UpdatePackage(ctx context.Context, old repository.Pac
 	}, nil
 }
 
-func (r *cachedRepository) update(closed repository.PackageRevision) {
+func (r *cachedRepository) update(closed repository.PackageRevision) *cachedPackageRevision {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	r.cachedPackages = updateOrAppend(r.cachedPackages, &cachedPackageRevision{PackageRevision: closed})
+	cached := &cachedPackageRevision{PackageRevision: closed}
+	r.cachedPackages = updateOrAppend(r.cachedPackages, cached)
 	// Recompute latest package revisions.
 	identifyLatestRevisions(r.cachedPackages)
+	return cached
 }
 
 func updateOrAppend(revisions []*cachedPackageRevision, new *cachedPackageRevision) []*cachedPackageRevision {
