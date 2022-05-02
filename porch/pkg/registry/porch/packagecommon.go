@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	unversionedapi "github.com/GoogleContainerTools/kpt/porch/api/porch"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
@@ -34,6 +35,9 @@ import (
 )
 
 type packageCommon struct {
+	// scheme holds our scheme, for type conversions etc
+	scheme *runtime.Scheme
+
 	cad engine.CaDEngine
 	// coreClient is a client back to the core kubernetes API server, useful for querying CRDs etc
 	coreClient     client.Client
@@ -139,32 +143,74 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
+	// isCreate tracks whether this is an update that creates an object (this happens in server-side apply)
+	isCreate := false
+
 	oldPackage, err := r.getPackage(ctx, name)
 	if err != nil {
-		return nil, false, err
+		if forceAllowCreate && apierrors.IsNotFound(err) {
+			// For server-side apply, we can create the object here
+			isCreate = true
+		} else {
+			return nil, false, err
+		}
 	}
 
-	oldObj := oldPackage.GetPackageRevision()
-	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldObj)
+	var oldRuntimeObj runtime.Object // We have to be runtime.Object (and not *api.PackageRevision) or else nil-checks fail (because a nil object is not a nil interface)
+	if !isCreate {
+		oldRuntimeObj = oldPackage.GetPackageRevision()
+	}
+
+	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldRuntimeObj)
 	if err != nil {
 		klog.Infof("update failed to construct UpdatedObject: %v", err)
 		return nil, false, err
 	}
 
-	r.updateStrategy.PrepareForUpdate(ctx, newRuntimeObj, oldObj)
+	// This type conversion is necessary because mutations work with unversioned types
+	// (mostly for historical reasons).  So the server-side-apply library returns an unversioned object.
+	if unversioned, isUnversioned := newRuntimeObj.(*unversionedapi.PackageRevision); isUnversioned {
+		klog.Warningf("converting from unversioned to versioned object")
+		typed := &api.PackageRevision{}
+		if err := r.scheme.Convert(unversioned, typed, nil); err != nil {
+			return nil, false, fmt.Errorf("failed to convert %T to %T: %w", unversioned, typed, err)
+		}
+		newRuntimeObj = typed
+	}
 
-	if updateValidation != nil {
-		err := updateValidation(ctx, newRuntimeObj, oldObj)
-		if err != nil {
-			klog.Infof("update failed validation: %v", err)
-			return nil, false, err
+	r.updateStrategy.PrepareForUpdate(ctx, newRuntimeObj, oldRuntimeObj)
+
+	if !isCreate {
+		if updateValidation != nil {
+			err := updateValidation(ctx, newRuntimeObj, oldRuntimeObj)
+			if err != nil {
+				klog.Infof("update failed validation: %v", err)
+				return nil, false, err
+			}
+		}
+
+		fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldRuntimeObj)
+		if len(fieldErrors) > 0 {
+			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
 		}
 	}
 
-	fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldObj)
-	if len(fieldErrors) > 0 {
-		return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), oldObj.Name, fieldErrors)
+	if isCreate {
+		if createValidation != nil {
+			err := createValidation(ctx, newRuntimeObj)
+			if err != nil {
+				klog.Infof("update failed create validation: %v", err)
+				return nil, false, err
+			}
+		}
+
+		// TODO: ValidateCreate function ?
+		// fieldErrors := r.updateStrategy.ValidateCreate(ctx, newRuntimeObj, oldRuntimeObj)
+		// if len(fieldErrors) > 0 {
+		// 	return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
+		// }
 	}
+
 	r.updateStrategy.Canonicalize(newRuntimeObj)
 
 	newObj, ok := newRuntimeObj.(*api.PackageRevision)
@@ -176,21 +222,39 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 	if err != nil {
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
+	if isCreate {
+		repositoryName = newObj.Spec.RepositoryName
+		if repositoryName == "" {
+			return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid repositoryName %q", name))
+		}
+	}
 
 	var repositoryObj configapi.Repository
 	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)
+			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
 		}
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldPackage, oldObj, newObj)
-	if err != nil {
-		return nil, false, apierrors.NewInternalError(err)
-	}
+	if !isCreate {
+		rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldPackage, oldRuntimeObj.(*api.PackageRevision), newObj)
+		if err != nil {
+			return nil, false, apierrors.NewInternalError(err)
+		}
 
-	created := rev.GetPackageRevision()
-	return created, false, nil
+		updated := rev.GetPackageRevision()
+
+		return updated, false, nil
+	} else {
+		rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, newObj)
+		if err != nil {
+			klog.Infof("error creating package: %v", err)
+			return nil, false, apierrors.NewInternalError(err)
+		}
+
+		created := rev.GetPackageRevision()
+		return created, true, nil
+	}
 }

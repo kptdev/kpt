@@ -172,6 +172,11 @@ build-images:
 	IMAGE_NAME="$(PORCH_FUNCTION_RUNNER_IMAGE)" WRAPPER_SERVER_IMAGE_NAME="$(PORCH_WRAPPER_SERVER_IMAGE)" make -C func/ build-image
 	IMAGE_NAME="$(TEST_GIT_SERVER_IMAGE)" make -C test/ build-image
 
+.PHONY: dev-server
+dev-server:
+	docker buildx build --push --tag $(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG) -f ./build/Dockerfile.porch "$(KPTDIR)"
+	kubectl set image -n porch-system deployment/porch-server porch-server=$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):${IMAGE_TAG}
+
 .PHONY: apply-dev-config
 apply-dev-config:
 	# TODO: Replace with KCC (or self-host a registry?)

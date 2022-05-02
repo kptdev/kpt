@@ -16,6 +16,7 @@ package porch
 
 import (
 	"github.com/GoogleContainerTools/kpt/porch/api/porch"
+	apiv1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,6 +31,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	packageRevisions := &packageRevisions{
 		TableConvertor: packageRevisionTableConvertor,
 		packageCommon: packageCommon{
+			scheme:         scheme,
 			cad:            cad,
 			gr:             porch.Resource("packagerevisions"),
 			coreClient:     coreClient,
@@ -39,6 +41,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 
 	packageRevisionsApproval := &packageRevisionsApproval{
 		common: packageCommon{
+			scheme:         scheme,
 			cad:            cad,
 			coreClient:     coreClient,
 			gr:             porch.Resource("packagerevisions"),
@@ -49,6 +52,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	packageRevisionResources := &packageRevisionResources{
 		TableConvertor: packageRevisionResourcesTableConvertor,
 		packageCommon: packageCommon{
+			scheme:     scheme,
 			cad:        cad,
 			gr:         porch.Resource("packagerevisionresources"),
 			coreClient: coreClient,
@@ -64,7 +68,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	group := genericapiserver.NewDefaultAPIGroupInfo(porch.GroupName, scheme, metav1.ParameterCodec, codecs)
 
 	group.VersionedResourcesStorageMap = map[string]map[string]rest.Storage{
-		"v1alpha1": {
+		apiv1alpha1.SchemeGroupVersion.Version: {
 			"packagerevisions":          packageRevisions,
 			"packagerevisions/approval": packageRevisionsApproval,
 			"packagerevisionresources":  packageRevisionResources,
@@ -74,8 +78,8 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 
 	{
 		gvk := schema.GroupVersionKind{
-			Group:   porch.GroupName,
-			Version: "v1alpha1",
+			Group:   apiv1alpha1.GroupName,
+			Version: apiv1alpha1.SchemeGroupVersion.Version,
 			Kind:    "PackageRevision",
 		}
 
@@ -83,8 +87,8 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	}
 	{
 		gvk := schema.GroupVersionKind{
-			Group:   porch.GroupName,
-			Version: "v1alpha1",
+			Group:   apiv1alpha1.GroupName,
+			Version: apiv1alpha1.SchemeGroupVersion.Version,
 			Kind:    "PackageRevisionResources",
 		}
 
