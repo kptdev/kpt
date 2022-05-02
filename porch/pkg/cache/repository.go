@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 )
 
@@ -53,15 +54,20 @@ type cachedRepository struct {
 	// This is returned back by the cache to the background goroutine when it calls periodicall to resync repositories.
 	refreshRevisionsError error
 	refreshPkgsError      error
+
+	objectCache *objectCache
 }
 
-func newRepository(id string, repo repository.Repository) *cachedRepository {
+func newRepository(id string, repo repository.Repository, objectCache *objectCache) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &cachedRepository{
-		id:     id,
-		repo:   repo,
-		cancel: cancel,
+		id:          id,
+		repo:        repo,
+		cancel:      cancel,
+		objectCache: objectCache,
 	}
+
+	// TODO: Should we fetch the packages here?
 
 	go r.pollForever(ctx)
 
@@ -323,13 +329,13 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// TODO: Push-down partial refresh?
 
 	// TODO: Can we avoid holding the lock for the ListPackageRevisions / identifyLatestRevisions section?
-	newPackagesRevisions, err := r.repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
+	newPackageRevisions, err := r.repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
 		return nil, nil, fmt.Errorf("error listing packages: %w", err)
 	}
 
-	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackagesRevisions))
-	for _, newPackage := range newPackagesRevisions {
+	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
+	for _, newPackage := range newPackageRevisions {
 		k := newPackage.Key()
 		if newPackageRevisionMap[k] != nil {
 			klog.Warningf("found duplicate packages with key %v", k)
@@ -348,15 +354,32 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		if !newPackageRevision.isLatestRevision {
 			continue
 		}
-
 		// TODO: Build package?
 		// newPackage := &cachedPackage{
 		// }
 		// newPackageMap[newPackage.Key()] = newPackage
 	}
 
+	oldPackageRevisions := r.cachedPackageRevisions
 	r.cachedPackageRevisions = newPackageRevisionMap
 	r.cachedPackages = newPackageMap
+
+	for k, newPackage := range r.cachedPackageRevisions {
+		oldPackage := oldPackageRevisions[k]
+		if oldPackage == nil {
+			r.objectCache.notifyPackageRevisionChange(watch.Added, newPackage)
+		} else {
+			// TODO: only if changed
+			klog.Warningf("over-notifying of package updates (even on unchanged packages)")
+			r.objectCache.notifyPackageRevisionChange(watch.Modified, newPackage)
+		}
+	}
+
+	for k, oldPackage := range oldPackageRevisions {
+		if newPackageRevisionMap[k] == nil {
+			r.objectCache.notifyPackageRevisionChange(watch.Deleted, oldPackage)
+		}
+	}
 
 	return newPackageMap, newPackageRevisionMap, nil
 }

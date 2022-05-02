@@ -44,6 +44,8 @@ type Cache struct {
 	cacheDir           string
 	credentialResolver repository.CredentialResolver
 	userInfoProvider   repository.UserInfoProvider
+
+	objectCache *objectCache
 }
 
 type CacheOptions struct {
@@ -52,12 +54,20 @@ type CacheOptions struct {
 }
 
 func NewCache(cacheDir string, opts CacheOptions) *Cache {
+	objectCache := &objectCache{}
+
 	return &Cache{
 		repositories:       make(map[string]*cachedRepository),
 		cacheDir:           cacheDir,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
+		objectCache:        objectCache,
 	}
+}
+
+// ObjectCache() is a cache of all our objects.
+func (c *Cache) ObjectCache() ObjectCache {
+	return c.objectCache
 }
 
 func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (*cachedRepository, error) {
@@ -81,7 +91,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			if err != nil {
 				return nil, err
 			}
-			cr = newRepository(key, r)
+			cr = newRepository(key, r, c.objectCache)
 			c.repositories[key] = cr
 		}
 		return cr, nil
@@ -117,7 +127,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			}); err != nil {
 				return nil, err
 			} else {
-				cr = newRepository(key, r)
+				cr = newRepository(key, r, c.objectCache)
 				c.repositories[key] = cr
 			}
 		} else {
