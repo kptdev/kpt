@@ -36,7 +36,7 @@ jobs:
       - name: Run Porch Unit Tests
         uses: actions/checkout@v2
       - name: Verify format / headers etc
-        run: hack/verify-fix-all.sh
+        run: scripts/verify-fix-all.sh
         working-directory: ./porch
       - name: Build
         run: make porch

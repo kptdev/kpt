@@ -42,7 +42,7 @@ COPY internal/ internal/
 COPY pkg/ pkg/
 COPY porch/api/ porch/api/
 COPY porch/controllers/ porch/controllers/
-COPY porch/repository/ porch/repository/
+COPY porch/pkg/ porch/pkg/
 
 WORKDIR /workspace/porch/controllers/remoterootsync/
 RUN CGO_ENABLED=0 go build -o /porch-controllers -v .

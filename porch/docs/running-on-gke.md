@@ -202,7 +202,7 @@ make apply-dev-config
 # Push a sample hello-world app
 make -C config/samples/apps/hello-server push-image
 # Create a package for the sample hello-world app
-./config/samples/create-deployment-package.sh
+./scripts/create-deployment-package.sh
 ```
 
 To test out remoterootsync self-applying:
