@@ -291,7 +291,7 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 }
 
 // BuildObjectsToApply config root sync
-func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, subject *api.RemoteRootSyncSet) ([]*unstructured.Unstructured, error) {
+func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, subject *api.RemoteRootSyncSet) ([]applyset.ApplyableObject, error) {
 	repository := subject.GetSpec().GetTemplate().GetOCI().GetRepository()
 	if repository == "" {
 		return nil, fmt.Errorf("spec.template.oci.repository is not set")
@@ -312,7 +312,7 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 		return nil, err
 	}
 
-	var objects []*unstructured.Unstructured
+	var objects []applyset.ApplyableObject
 
 	for filePath, fileContents := range resources.Contents {
 		ext := path.Ext(filePath)

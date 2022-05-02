@@ -16,12 +16,12 @@ package applyset
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
@@ -75,7 +75,7 @@ func New(options Options) (*ApplySet, error) {
 
 // ReplaceAllObjects is used to replace the desired state of all the objects.
 // Any objects not specified are removed from the "desired" set.
-func (a *ApplySet) ReplaceAllObjects(objects []*unstructured.Unstructured) error {
+func (a *ApplySet) ReplaceAllObjects(objects []ApplyableObject) error {
 	a.mutex.Lock()
 	defer a.mutex.Unlock()
 
@@ -161,7 +161,7 @@ func (a *ApplySet) ApplyOnce(ctx context.Context) (*ApplyResults, error) {
 
 		name := obj.GetName()
 		ns := obj.GetNamespace()
-		gvk := obj.GetObjectKind().GroupVersionKind()
+		gvk := obj.GroupVersionKind()
 		nn := types.NamespacedName{Namespace: ns, Name: name}
 
 		restMapping, err := a.restMapper.RESTMapping(gvk.GroupKind(), gvk.Version)
@@ -190,7 +190,7 @@ func (a *ApplySet) ApplyOnce(ctx context.Context) (*ApplyResults, error) {
 			return nil, fmt.Errorf("unknown scope for gvk %s: %q", gvk, restMapping.Scope.Name())
 		}
 
-		j, err := obj.MarshalJSON()
+		j, err := json.Marshal(obj)
 		if err != nil {
 			// TODO: Differentiate between server-fixable vs client-fixable errors?
 			results.applyError(gvk, nn, fmt.Errorf("failed to marshal object to JSON: %w", err))
