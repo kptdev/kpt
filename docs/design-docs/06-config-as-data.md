@@ -84,7 +84,7 @@ Data* which:
 * uses [Kptfile](https://kpt.dev/reference/schema/kptfile/) to store package
   metadata
 * uses [ResourceList](https://kpt.dev/reference/schema/resource-list/) as a
-  serialized packge wire-format
+  serialized package wire-format
 * uses a function `ResourceList → ResultList` (`kpt` function) as the
   foundational, composable unit of package-manipulation code (note that other
   forms of code can manipulate packages as well, i.e. UIs, custom algorithms

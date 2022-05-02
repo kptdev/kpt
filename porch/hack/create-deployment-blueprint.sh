@@ -140,7 +140,7 @@ metadata:
 image:
   name: ${OLD}
   newName: ${IMG}
-  newTag: ${TAG}
+  newTag: "${TAG}"
 additionalImageFields:
 - group: apps
   version: v1
