@@ -57,7 +57,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:     "approve PACKAGE",
 		Short:   "Approves a proposal to finalize a package revision.",
 		Long:    longMsg,
-		Example: "kpt alpha rpkg approve git-repository:package-revision:v3",
+		Example: "kpt alpha rpkg approve package-name",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

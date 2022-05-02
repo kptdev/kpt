@@ -156,7 +156,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	fmt.Println("Deleting package resources..")
+	fmt.Println("Deleting synced resources..")
 	if err := r.client.Update(r.ctx, &rs); err != nil {
 		return errors.E(op, err)
 	}
@@ -207,7 +207,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, fmt.Errorf("failed to delete Secret %s: %w", secret, err))
 	}
 
-	fmt.Printf("Package %s successfully deleted\n", name)
+	fmt.Printf("Sync %s successfully deleted\n", name)
 	return nil
 }
 

@@ -57,7 +57,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:     "reject PACKAGE",
 		Short:   "Rejects a proposal to finalize a package revision",
 		Long:    longMsg,
-		Example: "kpt alpha rpkg reject git-repository:package-revision:v3",
+		Example: "kpt alpha rpkg reject package-name",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
