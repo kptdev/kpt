@@ -131,8 +131,9 @@ function customize-image-in-env {
   local NEW="${2}"
   local TAG="${NEW##*:}"
   local IMG="${NEW%:*}"
+  local FN_CONFIG="${PORCH_DIR}/.build/set-image-config.yaml"
 
-  cat > set-image-config.yaml << EOF
+  cat > "${FN_CONFIG}" << EOF
 apiVersion: fn.kpt.dev/v1alpha1
 kind: SetImage
 metadata:
@@ -140,7 +141,7 @@ metadata:
 image:
   name: ${OLD}
   newName: ${IMG}
-  newTag: "${TAG}"
+  newTag: ${TAG}
 additionalImageFields:
 - group: apps
   version: v1
@@ -148,8 +149,9 @@ additionalImageFields:
   path: spec/template/spec/containers[]/env[]/value
 EOF
 
-  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 --fn-config set-image-config.yaml
-  rm set-image-config.yaml
+  trap "rm -f ${FN_CONFIG}" EXIT
+
+  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 --fn-config "${FN_CONFIG}" || echo "kpt fn eval failed"
 }
 
 function customize-sa {
