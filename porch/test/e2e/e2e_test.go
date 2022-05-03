@@ -958,6 +958,83 @@ for resource in ctx.resource_list["items"]:
 	}
 }
 
+func (t *PorchSuite) TestPodFunctionEvaluatorWithDistrolessImage(ctx context.Context) {
+	t.registerMainGitRepositoryF(ctx, "git-fn-distroless")
+
+	// Create Package Revision
+	pr := &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-redis-bucket",
+			Revision:       "v1",
+			RepositoryName: "git-fn-distroless",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "redis-bucket-blueprint-v0.3.2",
+								Directory: "catalog/redis-bucket",
+							},
+						},
+					},
+				},
+				{
+					Type: "patch",
+					Patch: &porchapi.PackagePatchTaskSpec{
+						Patches: []porchapi.PatchSpec{
+							{
+								File: "configmap.yaml",
+								Contents: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kptfile.kpt.dev
+data:
+  name: bucket-namespace
+`,
+								PatchType: porchapi.PatchTypeCreateFile,
+							},
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						// This image is a mirror of gcr.io/cad-demo-sdk/set-namespace@sha256:462e44020221e72e3eb337ee59bc4bc3e5cb50b5ed69d377f55e05bec3a93d11
+						// which uses gcr.io/distroless/base-debian11:latest as the base image.
+						Image: "gcr.io/kpt-fn-demo/set-namespace:v0.1.0",
+					},
+				},
+			},
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	// Get package resources
+	var resources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &resources)
+
+	bucket, ok := resources.Spec.Resources["bucket.yaml"]
+	if !ok {
+		t.Errorf("'bucket.yaml' not found among package resources")
+	}
+	node, err := yaml.Parse(bucket)
+	if err != nil {
+		t.Errorf("yaml.Parse(\"bucket.yaml\") failed: %v", err)
+	}
+	if got, want := node.GetNamespace(), "bucket-namespace"; got != want {
+		t.Errorf("StorageBucket namespace: got %q, want %q", got, want)
+	}
+}
+
 func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	if t.local {
 		t.Skipf("Skipping due to not having pod evalutor in local mode")
