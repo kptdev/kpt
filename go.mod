@@ -17,15 +17,15 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
-	k8s.io/api v0.24.0-rc.0
-	k8s.io/apiextensions-apiserver v0.24.0-rc.0
-	k8s.io/apimachinery v0.24.0-rc.0
-	k8s.io/cli-runtime v0.24.0-rc.0
-	k8s.io/client-go v0.24.0-rc.0
-	k8s.io/component-base v0.24.0-rc.0
+	k8s.io/api v0.24.0
+	k8s.io/apiextensions-apiserver v0.24.0
+	k8s.io/apimachinery v0.24.0
+	k8s.io/cli-runtime v0.24.0
+	k8s.io/client-go v0.24.0
+	k8s.io/component-base v0.24.0
 	k8s.io/klog/v2 v2.60.1
-	k8s.io/kubectl v0.24.0-rc.0
-	sigs.k8s.io/cli-utils v0.29.2
+	k8s.io/kubectl v0.24.0
+	sigs.k8s.io/cli-utils v0.29.4
 	sigs.k8s.io/controller-runtime v0.11.0
 	sigs.k8s.io/kustomize/api v0.11.4
 	sigs.k8s.io/kustomize/kyaml v0.13.7-0.20220418212550-9d5491c2e20c

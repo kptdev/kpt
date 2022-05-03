@@ -237,5 +237,5 @@ func pollerFactoryFunc(f util.Factory) (poller.Poller, error) {
 }
 
 func invClient(f util.Factory) (inventory.Client, error) {
-	return inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc)
+	return inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll)
 }
