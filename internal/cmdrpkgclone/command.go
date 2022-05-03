@@ -151,7 +151,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		}
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
-			Repo:      gitArgs.Repo,
+			Repo:      gitArgs.Repo + ".git",
 			Ref:       gitArgs.Ref,
 			Directory: gitArgs.Directory,
 		}
