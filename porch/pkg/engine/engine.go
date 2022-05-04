@@ -582,7 +582,6 @@ func healConfig(old, new map[string]string) (map[string]string, error) {
 							}
 							if id == nil {
 								continue
-
 							}
 
 							n.Pipe(yaml.SetAnnotation(kioutil.IdAnnotation, id.YNode().Value))
