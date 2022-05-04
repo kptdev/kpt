@@ -84,6 +84,7 @@ func (w *packageWriter) Write(nodes []*yaml.RNode) error {
 			Writer: buf,
 			ClearAnnotations: []string{
 				kioutil.PathAnnotation,
+				kioutil.LegacyPathAnnotation,
 			},
 		}
 		if err := bw.Write(nodes); err != nil {

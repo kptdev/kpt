@@ -17,6 +17,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -34,6 +35,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var tracer = otel.Tracer("engine")
@@ -508,7 +513,10 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	patch := &api.PackagePatchTaskSpec{}
 
 	old := resources.Contents
-	new := m.newResources.Spec.Resources
+	new, err := healConfig(old, m.newResources.Spec.Resources)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to heal resources: %w", err)
+	}
 
 	for k, newV := range new {
 		oldV, ok := old[k]
@@ -545,4 +553,78 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	}
 
 	return repository.PackageResources{Contents: new}, task, nil
+}
+
+func healConfig(old, new map[string]string) (map[string]string, error) {
+	// The processor simply replaces the old resource list with new one,
+	// matching resources by names and copying their IDs over
+	ff := runtimeutil.FunctionFilter{
+		Run: func(reader io.Reader, writer io.Writer) error {
+			items, err := (&kio.ByteReader{
+				Reader:             reader,
+				WrappingAPIVersion: kio.ResourceListAPIVersion,
+				WrappingKind:       kio.ResourceListKind,
+			}).Read()
+			if err != nil {
+				return fmt.Errorf("failed to parse old config with resource IDs: %w", err)
+			}
+
+			var copyID kio.FilterFunc = func(r []*yaml.RNode) ([]*yaml.RNode, error) {
+				for _, n := range r {
+					for _, original := range items {
+						if n.GetNamespace() == original.GetNamespace() &&
+							n.GetName() == original.GetName() &&
+							n.GetApiVersion() == original.GetApiVersion() &&
+							n.GetKind() == original.GetKind() {
+							id, err := original.Pipe(yaml.GetAnnotation(kioutil.IdAnnotation))
+							if err != nil {
+								continue
+							}
+							if id == nil {
+								continue
+
+							}
+
+							n.Pipe(yaml.SetAnnotation(kioutil.IdAnnotation, id.YNode().Value))
+						}
+					}
+				}
+				return r, nil
+			}
+
+			return kio.Pipeline{
+				Inputs: []kio.Reader{&packageReader{
+					input: repository.PackageResources{Contents: new},
+					extra: map[string]string{},
+				}},
+				Filters: []kio.Filter{copyID},
+				Outputs: []kio.Writer{&kio.ByteWriter{
+					Writer:                writer,
+					KeepReaderAnnotations: true,
+					WrappingAPIVersion:    kio.ResourceListAPIVersion,
+					WrappingKind:          kio.ResourceListKind,
+				}},
+			}.Execute()
+		},
+		GlobalScope: true,
+	}
+
+	out := &packageWriter{
+		output: repository.PackageResources{
+			Contents: map[string]string{},
+		},
+	}
+	if err := (kio.Pipeline{
+		Inputs: []kio.Reader{&packageReader{
+			input: repository.PackageResources{Contents: old},
+			extra: map[string]string{},
+		}},
+		Filters:               []kio.Filter{&ff},
+		Outputs:               []kio.Writer{out},
+		ContinueOnEmptyResult: true,
+	}).Execute(); err != nil {
+		return nil, err
+	}
+
+	return out.output.Contents, nil
 }
