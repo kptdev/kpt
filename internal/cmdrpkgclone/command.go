@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
@@ -43,6 +44,11 @@ SOURCE_PACKAGE:
     * http://git-repository.git/package-name
     * package-revision-name
 
+  With git URLs, you can either include the package directory and ref in SOURCE_PACKAGE, or
+  you can individually specify the repo, ref, and directory using flags:
+    * kpt alpha rpkg clone http://git-repository.git/package-name@main target --repository=repo
+    * kpt alpha rpkg clone http://git-repository.git target --directory=package-name --ref=main --repository=repo
+
 NAME:
   Target package revision name (downstream package)
   Example: package-name
@@ -53,7 +59,7 @@ Flags:
   Directory within the repository where the upstream package is located.
 
 --ref
-	Ref in the repository where the upstream package is located (branch, tag, SHA)
+  Ref in the repository where the upstream package is located (branch, tag, SHA). The default is 'main'.
 
 --repository
   Repository to which package will be cloned (downstream repository).
@@ -62,7 +68,7 @@ Flags:
   Revision of the downstream package.
 
 --strategy
-  Update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace
+  Update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace.
 `
 )
 
@@ -96,8 +102,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c.Flags().StringVar(&r.strategy, "strategy", string(porchapi.ResourceMerge),
 		"update strategy that should be used when updating this package; one of: "+strings.Join(strategies, ","))
-	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where the upstream package is located.")
-	c.Flags().StringVar(&r.ref, "ref", "main", "Branch in the repository where the upstream package is located.")
+	c.Flags().StringVar(&r.directory, "directory", "", "Directory within the repository where the upstream package is located.")
+	c.Flags().StringVar(&r.ref, "ref", "", "Branch in the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
 	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
 
@@ -154,6 +160,35 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		}
 
 	case strings.Contains(source, "/"):
+		if parse.HasGitSuffix(source) { // extra parsing required
+			repo, dir, ref, err := parse.ParseURL(source)
+			if err != nil {
+				return err
+			}
+			// throw error if values set by flags contradict values parsed from SOURCE_PACKAGE
+			if r.directory != "" && dir != "" && r.directory != dir {
+				return errors.E(op, fmt.Errorf("directory %s specified by --directory contradicts directory %s specified by SOURCE_PACKAGE",
+					r.directory, dir))
+			}
+			if r.ref != "" && ref != "" && r.ref != ref {
+				return errors.E(op, fmt.Errorf("ref %s specified by --ref contradicts ref %s specified by SOURCE_PACKAGE",
+					r.ref, ref))
+			}
+			// grab the values parsed from SOURCE_PACKAGE
+			if r.directory == "" {
+				r.directory = dir
+			}
+			if r.ref == "" {
+				r.ref = ref
+			}
+			source = repo + ".git" // parse.ParseURL removes the git suffix, we need to add it back
+		}
+		if r.ref == "" {
+			r.ref = "main"
+		}
+		if r.directory == "" {
+			r.directory = "/"
+		}
 		r.clone.Upstream.Type = porchapi.RepositoryTypeGit
 		r.clone.Upstream.Git = &porchapi.GitPackage{
 			Repo:      source,
@@ -169,7 +204,6 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	r.target = target
-
 	return nil
 }
 
