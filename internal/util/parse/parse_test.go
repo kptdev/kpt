@@ -201,7 +201,7 @@ func Test_parseURL(t *testing.T) {
 		},
 		"no ref": {
 			ghURL:    "https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/apply-replacements-simple",
-			expected: expected{repo: "https://github.com/GoogleContainerTools/kpt-functions-catalog", dir: "/examples/apply-replacements-simple", version: "master"},
+			expected: expected{repo: "https://github.com/GoogleContainerTools/kpt-functions-catalog", dir: "/examples/apply-replacements-simple", version: ""},
 		},
 		".git appears in the middle": {
 			ghURL:    "https://my-site.com/root.gitops.git/foo@main",
@@ -211,8 +211,7 @@ func Test_parseURL(t *testing.T) {
 	for name, test := range tests {
 		test := test // capture range variable
 		t.Run(name, func(t *testing.T) {
-			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
-			repo, dir, version, err := parseURL(ctx, test.ghURL)
+			repo, dir, version, err := ParseURL(test.ghURL)
 			assert.NoError(t, err)
 			assert.Equal(t, expected{repo: repo, dir: dir, version: version}, test.expected)
 		})
