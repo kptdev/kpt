@@ -43,9 +43,11 @@ SOURCE_PACKAGE:
     * oci://oci-repository/package-name
     * http://git-repository.git/package-name
     * package-revision-name
-  With git URLs containing the ".git" suffix, you can optionally include the package directory 
-  and ref in the source package:
-    * http://git-repository.git/package-name/directory@main
+
+  With git URLs, you can either include the package directory and ref in SOURCE_PACKAGE, or
+  you can individually specify the repo, ref, and directory using flags:
+    * kpt alpha rpkg clone http://git-repository.git/package-name@main target --repository=repo
+    * kpt alpha rpkg clone http://git-repository.git target --directory=package-name --ref=main --repository=repo
 
 NAME:
   Target package revision name (downstream package)
@@ -165,10 +167,12 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 			}
 			// throw error if values set by flags contradict values parsed from SOURCE_PACKAGE
 			if r.directory != "" && dir != "" && r.directory != dir {
-				return errors.E(op, fmt.Errorf("directory specified by --directory contradicts directory specified by SOURCE_PACKAGE"))
+				return errors.E(op, fmt.Errorf("directory %s specified by --directory contradicts directory %s specified by SOURCE_PACKAGE",
+					r.directory, dir))
 			}
 			if r.ref != "" && ref != "" && r.ref != ref {
-				return errors.E(op, fmt.Errorf("ref specified by --ref contradicts ref specified by SOURCE_PACKAGE"))
+				return errors.E(op, fmt.Errorf("ref %s specified by --ref contradicts ref %s specified by SOURCE_PACKAGE",
+					r.ref, ref))
 			}
 			// grab the values parsed from SOURCE_PACKAGE
 			if r.directory == "" {

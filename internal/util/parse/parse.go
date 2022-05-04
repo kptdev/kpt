@@ -93,6 +93,9 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, 
 	if err != nil {
 		return g, err
 	}
+	if dir == "" {
+		dir = "/"
+	}
 	if ref == "" {
 		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
 		if err != nil {
@@ -121,7 +124,7 @@ func ParseURL(pkgURL string) (repo string, dir string, ref string, err error) {
 	index := strings.Index(pkgURL, parts[0])
 	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")
 	switch {
-	case len(parts) == 1:
+	case len(parts) == 1 || parts[1] == "":
 		// do nothing
 	case strings.Contains(parts[1], "@"):
 		parts := strings.Split(parts[1], "@")
