@@ -28,7 +28,16 @@ MODULES = \
 # GCP project to use for development
 export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
 export IMAGE_REPO ?= gcr.io/$(GCP_PROJECT_ID)
-export IMAGE_TAG ?= latest
+export IMAGE_TAG
+ifndef IMAGE_TAG
+  git_tag := $(shell git rev-parse --short HEAD || "latest" )
+  $(shell git diff --quiet)
+  ifneq ($(.SHELLSTATUS), 0)
+    git_tag := $(git_tag)-dirty
+  endif
+
+  IMAGE_TAG=$(git_tag)
+endif
 
 PORCH_SERVER_IMAGE ?= porch-server
 PORCH_FUNCTION_RUNNER_IMAGE ?= porch-function-runner
