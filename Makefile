@@ -15,6 +15,7 @@
 .PHONY: docs license fix vet fmt lint test build tidy
 
 GOBIN := $(shell go env GOPATH)/bin
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # T refers to an e2e test case matcher. This enables running e2e tests
 # selectively.  For example,
@@ -27,7 +28,7 @@ T ?= ".*"
 all: generate license fix vet fmt lint license-check test build buildall tidy
 
 build:
-	go build -o $(GOBIN)/kpt -v .
+	go build -ldflags "-X github.com/GoogleContainerTools/kpt/run.version=${GIT_COMMIT}" -o $(GOBIN)/kpt -v .
 
 buildall:
 	GOOS=windows go build -o /dev/null
