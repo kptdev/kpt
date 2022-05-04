@@ -13,14 +13,18 @@ make generate
 Porch comprises of several software components:
 
 * [api](../api): Definition of the KRM API supported by the Porch extension apiserver
-* [apiserver](../apiserver): The Porch apiserver implementation, REST handlers, Porch `main` function
-* [engine](../engine): Core logic of Package Orchestration - operations on package contents
+* [apiserver](../pkg/apiserver/): The Porch apiserver implementation, REST handlers, Porch `main` function
+* [engine](../pkg/engine/): Core logic of Package Orchestration - operations on package contents
 * [func](../func): KRM function evaluator microservice; exposes gRPC API
-* [repository](../repository): Integration with Git and OCI package repositories, and package caching
+* [repository](../pkg/repository/): Repository integration packge
+* [git](../pkg/git/): Integration with Git repository.
+* [oci](../pkg/oci/): Integration with OCI repository.
+* [cache](../pkg/cache/): Package caching.
 * [controllers](../controllers): `Repository` CRD. No controller;
   Porch apiserver watches these resources for changes as repositories are (un-)registered.
 * [remoterootsync](../controllers/remoterootsync): CRD and controller for deploying packages
-* [test](../test): Test Git Server for Porch e2e testing
+* [test](../test): Test Git Server for Porch e2e testing, and
+  [e2e](../test/e2e/) tests.
 
 ## Running Porch
 
@@ -64,13 +68,13 @@ Update the launch arguments to your needs.
 
 Some useful code pointers:
 
-* Porch REST API handlers in [registry/porch](../apiserver/pkg/registry/porch), for example
-  [packagerevision.go](../apiserver/pkg/registry/porch/packagerevision.go)
-* Background task handling cache updates in [background.go](../apiserver/pkg/registry/porch/background.go)
-* Git repository integration in [repository/pkg/git](../repository/pkg/git)
-* OCI repository integration in [repository/pkg/oci](../repository/pkg/oci)
-* CaD Engine in [engine](../engine/pkg/engine)
-* e2e tests in [e2e](../apiserver/pkg/e2e). See below more on testing.
+* Porch REST API handlers in [registry/porch](../pkg/registry/porch/), for example
+  [packagerevision.go](../pkg/registry/porch/packagerevision.go)
+* Background task handling cache updates in [background.go](../pkg/registry/porch/background.go)
+* Git repository integration in [pkg/git](../pkg/git)
+* OCI repository integration in [pkg/oci](../pkg/oci)
+* CaD Engine in [engine](../pkg/engine)
+* e2e tests in [e2e](../test/e2e/). See below more on testing.
 
 ## Running Tests
 
