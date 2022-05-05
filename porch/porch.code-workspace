@@ -5,7 +5,7 @@
 		},
 		{
 			"name": "hello-server",
-			"path": "config/samples/apps/hello-server"
+			"path": "examples/apps/hello-server"
 		},
 		{
 			"name": "porch",
