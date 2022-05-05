@@ -43,6 +43,7 @@ type packageCommon struct {
 	coreClient     client.Client
 	gr             schema.GroupResource
 	updateStrategy SimpleRESTUpdateStrategy
+	createStrategy SimpleRESTCreateStrategy
 }
 
 func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, callback func(p repository.PackageRevision) error) error {
@@ -204,11 +205,10 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 			}
 		}
 
-		// TODO: ValidateCreate function ?
-		// fieldErrors := r.updateStrategy.ValidateCreate(ctx, newRuntimeObj, oldRuntimeObj)
-		// if len(fieldErrors) > 0 {
-		// 	return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
-		// }
+		fieldErrors := r.createStrategy.Validate(ctx, newRuntimeObj)
+		if len(fieldErrors) > 0 {
+			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
+		}
 	}
 
 	r.updateStrategy.Canonicalize(newRuntimeObj)

@@ -29,6 +29,16 @@ type SimpleRESTUpdateStrategy interface {
 	Canonicalize(obj runtime.Object)
 }
 
+// SimpleRESTCreateStrategy is similar to rest.RESTCreateStrategy, though only contains
+// methods currently required.
+type SimpleRESTCreateStrategy interface {
+	// Validate returns an ErrorList with validation errors or nil.  Validate
+	// is invoked after default fields in the object have been filled in
+	// before the object is persisted.  This method should not mutate the
+	// object.
+	Validate(ctx context.Context, obj runtime.Object) field.ErrorList
+}
+
 type NoopUpdateStrategy struct{}
 
 func (s NoopUpdateStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {}

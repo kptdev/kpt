@@ -36,6 +36,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 			gr:             porch.Resource("packagerevisions"),
 			coreClient:     coreClient,
 			updateStrategy: packageRevisionStrategy{},
+			createStrategy: packageRevisionStrategy{},
 		},
 	}
 
@@ -46,6 +47,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 			coreClient:     coreClient,
 			gr:             porch.Resource("packagerevisions"),
 			updateStrategy: packageRevisionApprovalStrategy{},
+			createStrategy: packageRevisionApprovalStrategy{},
 		},
 	}
 
