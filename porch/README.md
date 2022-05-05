@@ -64,8 +64,8 @@ underlying KRM configuration package. `PackageRevision` represents the package m
 ## Registering a Repository
 
 To register a package repository with Porch, you can start with the example configs:
-* [git-repository.yaml](./config/samples/git-repository.yaml), or
-* [oci-repository.yaml](./config/samples/oci-repository.yaml)
+* [git-repository.yaml](./examples/config/git-repository.yaml), or
+* [oci-repository.yaml](./examples/config/oci-repository.yaml)
 
 These examples show how to create the Repository resource for your Git repository or
 OCI repository respectively.
@@ -83,11 +83,11 @@ OCI repository respectively.
     --from-literal=username=<GitHub username> \
     --from-literal=password=<GitHub Personal Access Token>
   ```
-* Update the [git-repository.yaml](./config/samples/git-repository.yaml) with your repository address,
+* Update the [git-repository.yaml](./examples/config/git-repository.yaml) with your repository address,
   for example: `https://githug.com/my-organization/my-repository.git`
 * Register the repository:
   ```sh
-  kubectl apply -f ./config/samples/git-repository.yaml
+  kubectl apply -f ./examples/config/git-repository.yaml
   ```
 
 Alternatively, you can use `kpt alpha repo register` feature:
@@ -100,7 +100,7 @@ kpt alpha repo register https://github.com/platkrm/demo-blueprints.git --namespa
 ### Registering an OCI Repository:
 
 * Create an [Artifact Registry repository](https://console.cloud.google.com/artifacts)
-* Update the [oci-repository.yaml](./config/samples/oci-repository.yaml) with your OCI repository address
+* Update the [oci-repository.yaml](./examples/config/oci-repository.yaml) with your OCI repository address
 * (If running Porch locally) Make sure your application default credentials are up-to-date,
   i.e. by running:
   ```sh
@@ -108,7 +108,7 @@ kpt alpha repo register https://github.com/platkrm/demo-blueprints.git --namespa
   ```
 * Register the repository with Porch
   ```sh
-  kubectl apply -f ./config/samples/oci-repository.yaml
+  kubectl apply -f ./examples/config/oci-repository.yaml
   ```
 
 When running on GKE, Porch will authenticate with the OCI repository using the GCP service account
@@ -150,13 +150,13 @@ colon-separated parts:
 
 ### Initialize a New Package
 
-To create a new package revision, start with [new-package.yaml](./config/samples/new-package.yaml).
+To create a new package revision, start with [new-package.yaml](./examples/config/new-package.yaml).
 Update the package name to match your registered repository.
 Porch server creates and initializes the package and saves it (as a draft) into the registered repository.
 
 ```sh
 # Initialize a new package; make sure to update the file first!
-kubectl apply -f ./config/samples/new-package.yaml
+kubectl apply -f ./examples/config/new-package.yaml
 
 # Inspect the package resources
 kubectl get packagerevisionsresources --namespace default <resource name> -oyaml
@@ -181,14 +181,14 @@ kpt alpha rpkg pull --namespace default blueprints:new-package:v0
 ### Clone a Package
 
 To create a new package revision by cloning another (upstream) package, you can start by
-updating the [bucket-label.yaml](./config/samples/bucket-label.yaml) sample.
+updating the [bucket-label.yaml](./examples/config/bucket-label.yaml) sample.
 Make sure to update the resource name. The `bucket-label.yaml` example demonstrates
 creation of package by cloning an upstream package and then evaluating a function
 on the package resources.
 
 ```sh
 # Create a package revision by cloning an upstream package
-kubectl apply -f ./config/samples/bucket-label.yaml
+kubectl apply -f ./examples/config/bucket-label.yaml
 ```
 
 Or, using `kpt alpha` feature (note that `kpt alpha rpkg clone` only clones the package;
@@ -237,7 +237,7 @@ To unregister a repository, delete the `Repository` resource:
 Using `kubectl`:
 
 ```sh
-kubectl delete -f ./config/samples/git-repository.yaml
+kubectl delete -f ./examples/config/git-repository.yaml
 ```
 
 Alternatively, you can use `kpt alpha repo unregister` feature:
