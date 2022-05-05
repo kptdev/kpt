@@ -17,7 +17,6 @@ package applyset
 import (
 	"reflect"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -30,7 +29,7 @@ type objectTrackerList struct {
 
 // objectTracker tracks the state for a single object
 type objectTracker struct {
-	desired     *unstructured.Unstructured
+	desired     ApplyableObject
 	lastApplied runtime.Object
 
 	desiredIsApplied bool
@@ -47,7 +46,7 @@ type objectKey struct {
 }
 
 // computeKey returns the unique key for the object.
-func computeKey(u *unstructured.Unstructured) objectKey {
+func computeKey(u ApplyableObject) objectKey {
 	gvk := u.GroupVersionKind()
 	return objectKey{
 		Group:     gvk.Group,
@@ -61,7 +60,7 @@ func computeKey(u *unstructured.Unstructured) objectKey {
 // replaceAllObjects completely replaces the set of objects we are interested in.
 // We aim to reuse the current state where it carries over.
 // Because objectTrackerList is immutable, we copy-on-write to a new objectTrackerList and return it.
-func (l *objectTrackerList) replaceAllObjects(objects []*unstructured.Unstructured) *objectTrackerList {
+func (l *objectTrackerList) replaceAllObjects(objects []ApplyableObject) *objectTrackerList {
 	existingTrackers := make(map[objectKey]*objectTracker)
 	for i := range l.items {
 		tracker := &l.items[i]
