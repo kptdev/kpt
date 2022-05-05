@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmdrpkgedit
+package cmdrpkgcopy
 
 import (
 	"context"
@@ -28,9 +28,9 @@ import (
 )
 
 const (
-	command = "cmdrpkgedit"
+	command = "cmdrpkgcopy"
 	longMsg = `
-kpt alpha rpkg edit SOURCE_PACKAGE NAME
+kpt alpha rpkg copy SOURCE_PACKAGE NAME
 
 Creates a new copy of a source package in the target repository.
 
@@ -63,10 +63,11 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		cfg: rcg,
 	}
 	c := &cobra.Command{
-		Use:     "edit SOURCE_PACKAGE NAME",
+		Use:     "copy SOURCE_PACKAGE NAME",
+		Aliases: []string{"edit"},
 		Short:   "Creates a copy of a source package in the target repository.",
 		Long:    longMsg,
-		Example: "kpt alpha rpkg edit upstream-package-name target-package-name --repository target-repository --revision v1",
+		Example: "kpt alpha rpkg copy upstream-package-name target-package-name --repository target-repository --revision v1",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
@@ -85,7 +86,7 @@ type runner struct {
 	client  client.Client
 	Command *cobra.Command
 
-	edit porchapi.PackageEditTaskSpec
+	copy porchapi.PackageEditTaskSpec
 
 	repository string // Target repository
 	revision   string // Target package revision
@@ -111,7 +112,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	source := args[0]
 	target := args[1]
 
-	r.edit.Source = &porchapi.PackageRevisionRef{
+	r.copy.Source = &porchapi.PackageRevisionRef{
 		Name: source,
 	}
 
@@ -138,7 +139,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Tasks: []porchapi.Task{
 				{
 					Type: porchapi.TaskTypeEdit,
-					Edit: &r.edit,
+					Edit: &r.copy,
 				},
 			},
 		},
