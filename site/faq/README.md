@@ -4,61 +4,47 @@
 
 Please visit the [roadmap document] and the [kpt milestones].
 
-### What does kpt provide that git clone doesn't?
-
-kpt enables out-of-the-box workflows that `git clone` does not. Such as: cloning
-and versioning git subdirectories, updating from upstream by performing
-structured merges on resources, programmatically editing configuration (rather
-than with an editor), etc.
-
 ### How is kpt different from other solutions?
 
-Rather than expressing configuration as code, kpt represents configuration
-packages as data, in particular as YAML or JSON objects adhering to [The
-Kubernetes Resource Model].
+Rather than expressing configuration as code that generates configuration,
+kpt represents [Configuration as Data], in particular as YAML or JSON objects
+adhering to [The Kubernetes Resource Model], and uses a transformation-based
+approach to customization. This enables interoperability of a variety of generators,
+transformers, and validators. One doesn’t have to make all changes through a monolithic
+generator implementation.
 
 ### What's the difference between kpt and kustomize?
 
-[Kustomize] is a CNCF project that is a part of Kubernetes. While both kpt and
-kustomize support customization of KRM manifests without use of templates or
-DSL(s), there are important differences in both feature set and the scope of
-these projects. kpt supports end-to-end solutions for packaging, customization
-and actuation of resources. In kustomize, packaging is explicitly out of scope
-and actuation is deferred to kubectl.
-
-Here are the strengths and investment areas for these products:
-
-_kpt_
-
-- Supports both in-place and out-of-place customization. kustomize is only
-  focused on providing out-of-place hydration using the [overlay pattern].
-- Allows you to edit the configuration in-place without creating complex patches.
-- Focuses on rebase with resource merge strategy allowing for edited config to
-  be updated.
-- Has a continuous learning curve as you usually start small with modifying
-  several YAML files using an editor and then want to scale with complexity of
-  the application.
-- Enables workflows that combine programmatic changes (functions) with manual
-  edits.
+While both kpt and kustomize support customization of KRM resources via a transformation-based approach,
+there are important differences in both feature sets and the scopes of these projects. 
 
 _kustomize_
 
-- Treats base layers as immutable.
-- Programmatic changes (plugins) do not have to be idempotent.
-- Provide overlays and components that assemble that “build” the final
-  configuration.
+- Builds the final configuration out of place, primarily using the [overlay pattern].
+- Treats base layers as immutable, but enables nearly arbitrary overrides.
+
+_kpt_
+
+- Optimizes for WYSIWYG configuration and in-place customization.
+- Allows edits to the configuration in-place without creating complex patches.
+- Supports rebase with resource merge strategy allowing for edited config to
+  be updated.
+- Enables workflows that combine programmatic changes ([functions]) with manual
+  edits.
+- Aims to support mutating and validating admission control on derived packages.
+- Also supports packages, [package orchestration], resource actuation, and GitOps.
 
 ### Do kpt and kustomize work together?
 
 The goal of kpt project is to provide a seamless UX spanning packaging,
-hydration, and live functionality. At the same time, kpt follows a modular
-design principle to make it possible to use each of its three command groups
-(pkg, fn, live) independently if needed. For example:
+transformation, and actuation functionality. At the same time, kpt follows a modular
+design principle to make it possible to use each of its functionality
+independently if needed. For example:
 
 - You can use packaging without declaring functions
-- You can use imperative functions to operate on vanilla directories of k8s
+- You can use imperative functions to operate on vanilla directories of Kubernetes
   resources
-- You can use apply logic without buying into full the packaging story (still
+- You can use apply logic without buying into the full packaging story (still
   need a minimal `Kptfile` though)
 
 We have created a [kustomize solution] which allows you to use kpt for packaging
@@ -69,8 +55,7 @@ and actuation, and kustomize for customization.
 As explained in [Declarative application management in Kubernetes], using
 resource configuration provides a number of desirable properties:
 
-1. it clearly **represents the intended state** of the infrastructure -- no for
-   loops, http calls, etc to interpret
+1. it clearly **represents the intended state** of the infrastructure
 
 2. it **aligns with how tools developed by the Kubernetes project are written**
    -- `kubectl`, `kustomize`, etc
@@ -89,14 +74,10 @@ resource configuration provides a number of desirable properties:
 
    - develop CLIs and UIs for working with configuration rather than using `vim`
 
-6. it **supports customizing generated resources** so the templates don't need
-   to be modified
-
-   - artifacts generated from templates or DSLs may be modified directly, and
-     then merged when they are regenerated to keep the modifications.
-
-7. it **supports display in UI and tools** which use either OpenAPI or the
+6. it **supports display in UI and tools** which use either OpenAPI or the
    YAML/JSON directly.
+
+For a more complete explanation, see the [rationale].
 
 ### I really like DSL / templating solution X. Can I use it with kpt?
 
@@ -121,11 +102,16 @@ don't have to alias it. It is pronounced "kept".
 
 [Please reach out!][contact]
 
+[Configuration as Data]:
+  https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/06-config-as-data.md
+[package orchestration]:
+  https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md
 [the kubernetes resource model]:
   https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
 [declarative application management in kubernetes]:
   https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
-[functions]: /reference/cli/fn/run/
+[rationale]: https://kpt.dev/guides/rationale
+[functions]: /reference/cli/fn/eval/
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
@@ -135,6 +121,5 @@ don't have to alias it. It is pronounced "kept".
 [kustomize solution]:
   https://github.com/GoogleContainerTools/kpt/tree/main/package-examples/kustomize
 [kustomize]: https://kustomize.io
-[workflow]: /book/02-concepts/02-workflows
 [overlay pattern]:
   https://github.com/kubernetes-sigs/kustomize/tree/master/examples/multibases
