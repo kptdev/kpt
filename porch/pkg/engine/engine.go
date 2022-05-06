@@ -34,6 +34,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"sigs.k8s.io/kustomize/kyaml/comments"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 var tracer = otel.Tracer("engine")
@@ -508,7 +511,10 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	patch := &api.PackagePatchTaskSpec{}
 
 	old := resources.Contents
-	new := m.newResources.Spec.Resources
+	new, err := healConfig(old, m.newResources.Spec.Resources)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to heal resources: %w", err)
+	}
 
 	for k, newV := range new {
 		oldV, ok := old[k]
@@ -545,4 +551,49 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	}
 
 	return repository.PackageResources{Contents: new}, task, nil
+}
+
+func healConfig(old, new map[string]string) (map[string]string, error) {
+	// Copy comments from old config to new
+	oldResources, err := (&packageReader{
+		input: repository.PackageResources{Contents: old},
+		extra: map[string]string{},
+	}).Read()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read old packge resources: %w", err)
+	}
+
+	var filter kio.FilterFunc = func(r []*yaml.RNode) ([]*yaml.RNode, error) {
+		for _, n := range r {
+			for _, original := range oldResources {
+				if n.GetNamespace() == original.GetNamespace() &&
+					n.GetName() == original.GetName() &&
+					n.GetApiVersion() == original.GetApiVersion() &&
+					n.GetKind() == original.GetKind() {
+					comments.CopyComments(original, n)
+				}
+			}
+		}
+		return r, nil
+	}
+
+	out := &packageWriter{
+		output: repository.PackageResources{
+			Contents: map[string]string{},
+		},
+	}
+
+	if err := (kio.Pipeline{
+		Inputs: []kio.Reader{&packageReader{
+			input: repository.PackageResources{Contents: new},
+			extra: map[string]string{},
+		}},
+		Filters:               []kio.Filter{filter},
+		Outputs:               []kio.Writer{out},
+		ContinueOnEmptyResult: true,
+	}).Execute(); err != nil {
+		return nil, err
+	}
+
+	return out.output.Contents, nil
 }

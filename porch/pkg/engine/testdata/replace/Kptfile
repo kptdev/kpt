@@ -1,0 +1,23 @@
+# top comment
+apiVersion: kpt.dev/v1
+# Kptfile info
+info:
+  # Kptfile description
+  description: A Google Cloud Storage bucket
+# Kptfile kind
+kind: Kptfile
+# Kptfile metadata
+metadata:
+  annotations:
+    blueprints.cloud.google.com/title: Google Cloud Storage Bucket blueprint
+  name: simple-bucket
+# Kptfile pipeline
+pipeline:
+  # Kptfile mutators
+  mutators:
+  - configMap:
+      name: updated-bucket-name
+      namespace: updated-namespace
+      project-id: updated-project-id
+      storage-class: updated-storage-class
+    image: gcr.io/kpt-fn/apply-setters:v0.2.0

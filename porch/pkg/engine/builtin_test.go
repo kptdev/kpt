@@ -16,7 +16,6 @@ package engine
 
 import (
 	"context"
-	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,14 +24,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-var (
-	update = flag.Bool("update", false, "update golden files")
+const (
+	updateGoldenFiles = "UPDATE_GOLDEN_FILES"
 )
-
-func TestMain(m *testing.M) {
-	flag.Parse()
-	os.Exit(m.Run())
-}
 
 func TestUnknownBuiltinFunctionMutation(t *testing.T) {
 	const doesNotExist = "function-does-not-exist"
@@ -62,7 +56,7 @@ func TestPackageContext(t *testing.T) {
 
 	expectedPackage := filepath.Join(testdata, "expected")
 
-	if *update {
+	if os.Getenv(updateGoldenFiles) != "" {
 		if err := os.RemoveAll(expectedPackage); err != nil {
 			t.Fatalf("Failed to update golden files: %v", err)
 		}

@@ -5,7 +5,6 @@ metadata:
   namespace: bucket-namespace
   annotations:
     cnrm.cloud.google.com/project-id: bucket-project
-    config.kubernetes.io/path: 'bucket.yaml'
 spec:
   storageClass: standard
   uniformBucketLevelAccess: true
