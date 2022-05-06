@@ -111,7 +111,7 @@ don't have to alias it. It is pronounced "kept".
 [declarative application management in kubernetes]:
   https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
 [rationale]: https://kpt.dev/guides/rationale
-[functions]: /reference/cli/fn/run/
+[functions]: /reference/cli/fn/eval/
 [using functions]: /book/04-using-functions/
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
@@ -121,6 +121,5 @@ don't have to alias it. It is pronounced "kept".
 [kustomize solution]:
   https://github.com/GoogleContainerTools/kpt/tree/main/package-examples/kustomize
 [kustomize]: https://kustomize.io
-[workflow]: /book/02-concepts/02-workflows
 [overlay pattern]:
   https://github.com/kubernetes-sigs/kustomize/tree/master/examples/multibases
