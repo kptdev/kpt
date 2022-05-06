@@ -24,7 +24,7 @@ kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/k
 
 kpt also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging, and provides a [package orchestration service](../../docs/design-docs/07-package-orchestration.md) in addition to a client-side CLI.
 
-kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional imperative tools, thus eliminating this dichtomy:
+kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional imperative tools, thus eliminating this dichotomy:
 <img src="../../docs/design-docs/CaD%20Overview.svg">
 
 Configuration as Data is a novel approach that doesn’t sacrifice usability or the potential for higher-level automation in order to enable reproducibility. Instead, it supports an interoperable, WYSIWYG, automatable configuration authoring and editing experience.
