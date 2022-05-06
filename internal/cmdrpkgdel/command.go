@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -31,14 +32,6 @@ import (
 
 const (
 	command = "cmdrpkgdel"
-	longMsg = `
-kpt alpha rpkg del[ete] [PACKAGE ...] [flags]
-
-Args:
-
-PACKAGE:
-  One or more ames of the package revisions to delete.
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -50,9 +43,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "del PACKAGE",
 		Aliases:    []string{"delete"},
 		SuggestFor: []string{},
-		Short:      "Deletes one or more packages in registered repositories.",
-		Long:       longMsg,
-		Example:    "kpt alpha rpkg del repository:package:v1 --namespace=default",
+		Short:      rpkgdocs.DelShort,
+		Long:       rpkgdocs.DelShort + "\n" + rpkgdocs.DelLong,
+		Example:    rpkgdocs.DelExamples,
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,

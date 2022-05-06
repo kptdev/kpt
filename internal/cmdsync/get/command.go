@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/syncdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -31,14 +32,6 @@ import (
 
 const (
 	command = "cmdsync.get"
-	longMsg = `
-kpt alpha sync get NAME [flags]
-
-Args:
-
-NAME:
-  Name of the sync resource. Required argument.
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -49,10 +42,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	c := &cobra.Command{
 		Use:     "get NAME",
-		Aliases: []string{"register"},
-		Short:   "Gets a RootSync resource with which package was deployed.",
-		Long:    longMsg,
-		Example: "kpt alpha sync get sync-resource",
+		Short:   syncdocs.GetShort,
+		Long:    syncdocs.GetShort + "\n" + syncdocs.GetLong,
+		Example: syncdocs.GetExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

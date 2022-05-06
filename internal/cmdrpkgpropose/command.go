@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -29,16 +30,6 @@ import (
 
 const (
 	command = "cmdrpkgpropose"
-	longMsg = `
-kpt alpha rpkg propose [PACKAGE...] [flags]
-
-Proposes a package revision draft to be finalized
-
-Args:
-
-PACKAGE:
-  Name of the package revisions to propose to be finalized.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -54,9 +45,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c := &cobra.Command{
 		Use:     "propose [PACKAGE ...] [flags]",
-		Short:   "Proposes to finalize a package revision draft",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg propose git-repository:package-revision:v3",
+		Short:   rpkgdocs.ProposeShort,
+		Long:    rpkgdocs.ProposeShort + "\n" + rpkgdocs.ProposeLong,
+		Example: rpkgdocs.ProposeExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

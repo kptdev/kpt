@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync/create"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync/delete"
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync/get"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/syncdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -31,8 +32,8 @@ import (
 func NewSyncCommand(ctx context.Context, version string) *cobra.Command {
 	sync := &cobra.Command{
 		Use:   "sync",
-		Short: "[Alpha] Sync packages with deployment clusters.",
-		Long:  "[Alpha] The `sync` command group contains subcommands for managing syncing of packages with deployment clusters using Config Sync.",
+		Short: "[Alpha] " + syncdocs.SyncShort,
+		Long:  "[Alpha] " + syncdocs.SyncLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {

@@ -18,6 +18,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/repodocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -30,11 +31,6 @@ import (
 
 const (
 	command = "cmdrepoget"
-	longMsg = `
-kpt alpha repo get [flags]
-
-Lists repositories registered with Package Orchestrator.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -48,11 +44,11 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		printFlags: get.NewGetPrintFlags(),
 	}
 	c := &cobra.Command{
-		Use:     "get [REPOSITORY]",
+		Use:     "get [REPOSITORY_NAME]",
 		Aliases: []string{"ls", "list"},
-		Short:   "Lists repositories registered with Package Orchestrator.",
-		Long:    longMsg,
-		Example: "kpt alpha repo list --namespace default",
+		Short:   repodocs.GetShort,
+		Long:    repodocs.GetShort + "\n" + repodocs.GetLong,
+		Example: repodocs.GetExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

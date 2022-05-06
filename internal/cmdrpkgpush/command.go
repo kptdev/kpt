@@ -24,6 +24,7 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -40,23 +41,6 @@ import (
 
 const (
 	command = "cmdrpkgpush"
-	longMsg = `
-kpt alpha rpkg push PACKAGE [DIR]
-
-Args:
-
-PACKAGE:
-  Name of the package where to push the resources.
-
-DIR:
-  Optional path to a local directory to read resources from.
-
-Flags:
-
---namespace
-  Namespace containing the package.
-
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -68,9 +52,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:        "push PACKAGE [DIR]",
 		Aliases:    []string{"sink", "write"},
 		SuggestFor: []string{},
-		Short:      "Pushes package resources into a remote package.",
-		Long:       longMsg,
-		Example:    "kpt alpha rpkg push repository:package:v1 ./package-directory",
+		Short:      rpkgdocs.PushShort,
+		Long:       rpkgdocs.PushShort + "\n" + rpkgdocs.PushLong,
+		Example:    rpkgdocs.PushExamples,
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
 		Hidden:     porch.HidePorchCommands,

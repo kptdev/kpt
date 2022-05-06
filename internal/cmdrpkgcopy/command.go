@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -29,28 +30,6 @@ import (
 
 const (
 	command = "cmdrpkgcopy"
-	longMsg = `
-kpt alpha rpkg copy SOURCE_PACKAGE NAME
-
-Creates a new copy of a source package in the target repository.
-
-Args:
-
-SOURCE_PACKAGE:
-  Source package. Must be a package resource name: <repository>-<hash>
-
-NAME:
-  Target package revision name
-  Example: package-name
-
-Flags:
-
---repository
-  Repository to which package will be copied.
-
---revision
-  Revision of the downstream package.
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -65,9 +44,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:     "copy SOURCE_PACKAGE NAME",
 		Aliases: []string{"edit"},
-		Short:   "Creates a copy of a source package in the target repository.",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg copy upstream-package-name target-package-name --repository target-repository --revision v1",
+		Short:   rpkgdocs.CopyShort,
+		Long:    rpkgdocs.CopyShort + "\n" + rpkgdocs.CopyLong,
+		Example: rpkgdocs.CopyExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

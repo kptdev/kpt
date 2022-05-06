@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -31,45 +32,6 @@ import (
 
 const (
 	command = "cmdrpkgclone"
-	longMsg = `
-kpt alpha rpkg clone SOURCE_PACKAGE TARGET
-
-Creates a clone of a source package in the target repository.
-
-Args:
-
-SOURCE_PACKAGE:
-  Source package. Can be a reference to an OCI package, Git package, or an package resource name:
-    * oci://oci-repository/package-name
-    * http://git-repository.git/package-name
-    * package-revision-name
-
-  With git URLs, you can either include the package directory and ref in SOURCE_PACKAGE, or
-  you can individually specify the repo, ref, and directory using flags:
-    * kpt alpha rpkg clone http://git-repository.git/package-name@main target --repository=repo
-    * kpt alpha rpkg clone http://git-repository.git target --directory=package-name --ref=main --repository=repo
-
-NAME:
-  Target package revision name (downstream package)
-  Example: package-name
-
-Flags:
-
---directory
-  Directory within the repository where the upstream package is located.
-
---ref
-  Ref in the repository where the upstream package is located (branch, tag, SHA). The default is 'main'.
-
---repository
-  Repository to which package will be cloned (downstream repository).
-
---revision
-  Revision of the downstream package.
-
---strategy
-  Update strategy that should be used when updating this package; one of: resource-merge, fast-forward, force-delete-replace.
-`
 )
 
 var (
@@ -91,9 +53,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	c := &cobra.Command{
 		Use:     "clone SOURCE_PACKAGE NAME",
-		Short:   "Creates a clone of a source package in the target repository.",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg clone upstream-package-name target-package-name --repository target-repository --revision v1",
+		Short:   rpkgdocs.CloneShort,
+		Long:    rpkgdocs.CloneShort + "\n" + rpkgdocs.CloneLong,
+		Example: rpkgdocs.CloneExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

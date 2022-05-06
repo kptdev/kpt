@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdsync"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/syncdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -33,19 +34,6 @@ import (
 
 const (
 	command = "cmdsync.create"
-	longMsg = `
-kpt alpha sync create NAME [flags]
-
-Args:
-
-NAME:
-  Name of the sync resource. Required argument.
-
-Flags:
-
---package
-  Package revision to sync into the deployment cluster. Required flag.
-`
 )
 
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
@@ -55,9 +43,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	c := &cobra.Command{
 		Use:     "create NAME",
-		Short:   "Creates a sync of a package in the deployment cluster.",
-		Long:    longMsg,
-		Example: "kpt alpha sync create deployed-blueprint --package=repo:blueprint:v1 --namespace=default",
+		Short:   syncdocs.CreateShort,
+		Long:    syncdocs.CreateShort + "\n" + syncdocs.CreateLong,
+		Example: syncdocs.CreateExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

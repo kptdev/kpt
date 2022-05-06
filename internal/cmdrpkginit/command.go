@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -29,35 +30,6 @@ import (
 
 const (
 	command = "cmdrpkginit"
-	longMsg = `
-kpt alpha rpkg init PACKAGE_NAME
-
-Initializes a new package in a repository registered with the Package Orchestrator.
-
-Args:
-
-PACKAGE:
-  Target package name
-  Example: package-name
-
-Flags:
-
---repository
-  Repository in which the package will be created.
-
---revision
-  Revision of the new package.
-
---description
-  Short description of the package
-
---keywords
-  List of keywords for the package
-
---site
-  Link to page with information about the package
-
-`
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -71,9 +43,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	c := &cobra.Command{
 		Use:     "init PACKAGE_NAME",
-		Short:   "Initializes a new package in a repository registered with the Package Orchestrator.",
-		Long:    longMsg,
-		Example: "kpt alpha rpkg init target-repository:target-package-name:target-revision",
+		Short:   rpkgdocs.CloneShort,
+		Long:    rpkgdocs.CloneShort + "\n" + rpkgdocs.CloneLong,
+		Example: rpkgdocs.CloneExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,

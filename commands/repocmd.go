@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdrepoget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdreporeg"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrepounreg"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/repodocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -32,8 +33,8 @@ func NewRepoCommand(ctx context.Context, version string) *cobra.Command {
 	repo := &cobra.Command{
 		Use:     "repo",
 		Aliases: []string{"repository"},
-		Short:   "[Alpha] Manage package repositories.",
-		Long:    "[Alpha] The `repo` command group contains subcommands for managing package repositories.",
+		Short:   "[Alpha] " + repodocs.RepoShort,
+		Long:    "[Alpha] " + repodocs.RepoLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
