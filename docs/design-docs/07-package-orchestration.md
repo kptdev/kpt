@@ -14,9 +14,9 @@ of WYSIWYG package authoring which supports broader package lifecycle, including
 package authoring with *guardrails*, approval workflow, package deployment, and
 more, is not yet available.
 
-*Package Orchestration* service is the component that completes the set of core
-Configuration as Data components - *CaD Core* - and enables building the
-delightful UI experience supporting the configuration lifecycle.
+*Package Orchestration* service is part of the implementation of the
+Configuration as Data approach, and enables building the delightful UI
+experience supporting the configuration lifecycle.
 
 ## Core Concepts
 
@@ -52,7 +52,7 @@ repository to be applied to all packages on changes.
 ([more details](#functions))
 
 A repository can be designated as ***deployment repository***. *Published*
-packages in a deployment repository is considered deployment-ready.
+packages in a deployment repository are considered deployment-ready.
 ([more details](#deployment))
 
 <!-- Reference links -->
@@ -68,7 +68,7 @@ packages in a deployment repository is considered deployment-ready.
 [representation]: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#differing-representations
 [crds]: https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/
 
-## CaD Core Components
+## Core Components of Configuration as Data Implementation
 
 The Core implementation of Configuration as Data, *CaD Core*, is a set of
 components and APIs which collectively enable:
@@ -95,8 +95,9 @@ At the high level, the Core CaD functionality comprises:
   * package discovery, authoring and lifecycle management
 * [kpt][] - a Git-native, schema-aware, extensible client-side tool for
   managing KRM packages
-* [Config Sync][] - configuration distribution and deployment mechanism with
-  observability of the status of deployed resources
+* a GitOps-based deployment mechanism (for example [Config Sync][]), which
+  distributes and deploys configuration, and provides observability of the
+  status of deployed resources
 * a task-specific UI supporting repository management, package discovery,
   authoring, and lifecycle
 
@@ -108,10 +109,11 @@ Concepts briefly introduced above are elaborated in more detail in this section.
 
 ### Repositories
 
-[Config Sync][] and [kpt][] currently integrate with [git][] repositories, and
+[kpt][] and [Config Sync][] currently integrate with [git][] repositories, and
 there is an existing design to add [OCI support](./02-oci-support.md) to kpt.
-Initially, the CaD Core system will prioritize integration with [git][], and
-support for additional repository types may be added in the future as required.
+Initially, the Package Orchestration service will prioritize integration with
+[git][], and support for additional repository types may be added in the future
+as required.
 
 Requirements applicable to all repositories include: ability to store packages,
 their versions, and sufficient metadata associated with package to capture:
@@ -159,7 +161,12 @@ the downstream package.
 
 ### Deployment
 
-[Config Sync][] is the deployment mechanism used by CaD Core implementation.
+The deployment mechanism is responsible for deploying configuration packages
+from a repository and affecting the live state. Because the configuration
+is stored in standard repositories (Git, and in the future OCI), the deployment
+component is pluggable. By default, [Config Sync][] is the deployment mechanism
+used by CaD Core implementation but others can be used as well.
+
 Here we highlight some key attributes of the deployment mechanism and its
 integration within the CaD Core:
 
@@ -345,7 +352,7 @@ of the basic roles. For example, only permitted roles can:
 ### Porch Architecture
 
 The Package Orchestration service, **Porch** is designed to be hosted in a
-[Kubernetes](https://kubernetes.io/) cluster, just like [Config Sync][].
+[Kubernetes](https://kubernetes.io/) cluster.
 
 The overall architecture is shown below, and includes also existing components
 (k8s apiserver and Config Sync).
