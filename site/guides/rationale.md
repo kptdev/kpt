@@ -25,5 +25,5 @@ kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/k
 kpt currently provides a client-side CLI, but we plan to develop APIs to enable other clients to leverage its capabilities. It’s not just another package tool, but the kernel of a package orchestration service.
 
 This enables WYSIWYG management of configuration similar to how the live state can be modified with traditional imperative tools:
-<img src="./wysiwyg.svg">
+<img src="../../docs/design-docs/CaD%20Overview.svg">
 
