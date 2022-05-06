@@ -509,8 +509,8 @@ GITHUB_TOKEN=<GitHub Personal Access Token>
 
 $ kpt alpha repo register \
   --namespace default \
-  --repo-username=${GITHUB_USERNAME} \
-  --repo-password=${GITHUB_TOKEN} \
+  --repo-basic-username=${GITHUB_USERNAME} \
+  --repo-basic-password=${GITHUB_TOKEN} \
   https://github.com/${GITHUB_USERNAME}/blueprints.git
 ```
 
@@ -526,8 +526,8 @@ All command line flags supported:
 * `--deployment` - Boolean value; If specified, repository is a deployment
   repository; published packages in a deployment repository are considered
   deployment-ready.
-* `--repo-username` - Username for repository authentication.
-* `--repo-password` - Password for repository authentication.
+* `--repo-basic-username` - Username for repository authentication using basic auth.
+* `--repo-basic-password` - Password for repository authentication using basic auth.
 
 Additionally, common `kubectl` command line flags for controlling aspects of
 interaction with the Kubernetes apiserver, logging, and more (this is true for
