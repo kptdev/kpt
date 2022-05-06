@@ -50,11 +50,11 @@ Flags:
 --deployment
   Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.
 
---repo-username
-  Username for repository authentication.
+--repo-basic-username
+  Username for repository authentication with basic auth.
 
---repo-password
-  Password for repository authentication.
+--repo-basic-password
+  Password for repository authentication with basic auth.
 
 --directory
   Directory within the repository where to look for packages.
@@ -87,8 +87,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
 	c.Flags().StringVar(&r.description, "description", "", "Brief description of the package repository.")
 	c.Flags().BoolVar(&r.deployment, "deployment", false, "Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.")
-	c.Flags().StringVar(&r.username, "repo-username", "", "Username for repository authentication.")
-	c.Flags().StringVar(&r.password, "repo-password", "", "Password for repository authentication.")
+	c.Flags().StringVar(&r.username, "repo-basic-username", "", "Username for repository authentication using basic auth.")
+	c.Flags().StringVar(&r.password, "repo-basic-password", "", "Password for repository authentication using basic auth.")
 
 	return r
 }

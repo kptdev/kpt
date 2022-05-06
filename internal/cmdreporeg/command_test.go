@@ -75,7 +75,7 @@ func TestRepoReg(t *testing.T) {
 		},
 		{
 			name: "AuthRegister",
-			args: []string{"https://github.com/platkrm/test-blueprints.git", "--repo-username=test-username", "--repo-password=test-password"},
+			args: []string{"https://github.com/platkrm/test-blueprints.git", "--repo-basic-username=test-username", "--repo-basic-password=test-password"},
 			actions: []httpAction{
 				{
 					method:       http.MethodPost,
