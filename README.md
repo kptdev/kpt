@@ -1,3 +1,6 @@
+<img src="logo/KptLogoLarge.png" width="220">
+
+
 # kpt
 
 kpt is a package-centric toolchain that enables a WYSIWYG configuration 

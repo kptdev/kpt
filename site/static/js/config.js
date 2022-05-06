@@ -1,5 +1,5 @@
 window.$docsify = {
-  name: `<img src="/static/images/logo.svg" alt="kpt" />`,
+  name: `<img src="/static/images/logo.png" alt="kpt" />`,
   nameLink: window.location.origin,
   search: {
     maxAge: 43200000,
