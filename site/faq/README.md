@@ -29,7 +29,7 @@ _kpt_
 - Allows edits to the configuration in-place without creating complex patches.
 - Supports rebase with resource merge strategy allowing for edited config to
   be updated.
-- Enables workflows that combine programmatic changes (functions) with manual
+- Enables workflows that combine programmatic changes ([functions]) with manual
   edits.
 - Aims to support mutating and validating admission control on derived packages.
 - Also supports packages, [package orchestration], resource actuation, and GitOps.
