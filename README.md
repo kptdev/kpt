@@ -1,20 +1,17 @@
 # kpt
 
-kpt is a git-native, schema-aware, extensible client-side tool for packaging, 
-customizing, validating, and applying Kubernetes resources.
+kpt is a package-centric toolchain that enables a WYSIWYG configuration 
+authoring, automation, and delivery experience, which simplifies managing
+Kubernetes platforms and KRM-driven infrastructure at scale by manipulating
+declarative Configuration as Data, separated from the code that transforms it.
 
 ## Why kpt?
 
-1. kpt allows you to share, use and update packages of Kubernetes resources
-using any git repo.  No special setup is necessary.
-2. kpt allows customization of packages using an editor of your choice. The 
-resource merge feature of kpt will handle a lot of the scenarios of merging 
-upstream changes on update.
-3. Customization in kpt is done without templates, domain specific languages
-and paramters. Any engineer who is familiar with Kubernetes to work on the 
-infrastructure configuration.
-4. kpt apply addresses some of the functional gaps in `kubectl apply` such as
-pruning and reconciling status.
+kpt enables WYSIWYG editing and interoperable automation applied to declarative
+configuration data, similar to how the live state can be modified with imperative
+tools. 
+
+See [the rationale](https://kpt.dev/guides/rationale) for more background.
 
 The best place to get started and learn about specific features of kpt is 
 to visit the [kpt website](https://kpt.dev/).
