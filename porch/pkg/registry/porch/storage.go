@@ -54,10 +54,11 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 	packageRevisionResources := &packageRevisionResources{
 		TableConvertor: packageRevisionResourcesTableConvertor,
 		packageCommon: packageCommon{
-			scheme:     scheme,
-			cad:        cad,
-			gr:         porch.Resource("packagerevisionresources"),
-			coreClient: coreClient,
+			scheme:         scheme,
+			cad:            cad,
+			gr:             porch.Resource("packagerevisionresources"),
+			coreClient:     coreClient,
+			createStrategy: packageRevisionResourcesStrategy{},
 		},
 	}
 

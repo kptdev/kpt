@@ -20,6 +20,7 @@ import (
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -27,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/klog/v2"
@@ -169,4 +171,90 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewInternalError(err)
 	}
 	return created, false, nil
+}
+
+// Create implements the Creater interface.
+func (r *packageRevisionResources) Create(ctx context.Context, runtimeObject runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packageRevisionResources::Create", trace.WithAttributes())
+	defer span.End()
+
+	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
+	if !namespaced {
+		return nil, apierrors.NewBadRequest("namespace must be specified")
+	}
+
+	obj, ok := runtimeObject.(*api.PackageRevisionResources)
+	if !ok {
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevisionResources object, got %T", runtimeObject))
+	}
+
+	// TODO: Accpept some form of client-provided name, for example using GenerateName
+	// and figure out where we can store it (in Kptfile?). Porch can then append unique
+	// suffix to the names while respecting client-provided value as well.
+	if obj.Name != "" {
+		klog.Warningf("Client provided metadata.name %q", obj.Name)
+	}
+
+	repositoryName := obj.Spec.RepositoryName
+	if repositoryName == "" {
+		return nil, apierrors.NewBadRequest("spec.repositoryName is required")
+	}
+
+	var repositoryObj configapi.Repository
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
+	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
+		}
+		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
+	}
+
+	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
+	if len(fieldErrors) > 0 {
+		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), obj.Name, fieldErrors)
+	}
+
+	// We currently create the PackageRevision, and then attach the resources
+	// TODO: Can we streamline this - create the package with its resources, or maybe return the draft?
+
+	packageRevision := &api.PackageRevision{}
+	packageRevision.ObjectMeta = obj.ObjectMeta
+	// TODO: Lifecycle?
+	// packageRevision.Spec.Lifecycle = obj.Spec.Lifecycle
+	packageRevision.Spec.PackageName = obj.Spec.PackageName
+	packageRevision.Spec.RepositoryName = obj.Spec.RepositoryName
+	packageRevision.Spec.Revision = obj.Spec.Revision
+	rev1, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, packageRevision)
+	if err != nil {
+		return nil, apierrors.NewInternalError(err)
+	}
+	resources1, err := rev1.GetResources(ctx)
+	if err != nil {
+		// TODO: Delete rev1?
+		return nil, apierrors.NewInternalError(err)
+	}
+	rev2, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, rev1, resources1, obj)
+	if err != nil {
+		// TODO: Delete rev1?
+		return nil, apierrors.NewInternalError(err)
+	}
+
+	created := rev2.GetPackageRevision()
+	return created, nil
+}
+
+type packageRevisionResourcesStrategy struct{}
+
+var _ SimpleRESTCreateStrategy = packageRevisionResourcesStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageRevisionResourcesStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	// obj := runtimeObj.(*api.PackageRevisionResources)
+
+	return allErrs
 }
