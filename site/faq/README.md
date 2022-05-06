@@ -44,7 +44,7 @@ independently if needed. For example:
 - You can use packaging without declaring functions
 - You can use imperative functions to operate on vanilla directories of Kubernetes
   resources
-- You can use apply logic without buying into full the packaging story (still
+- You can use apply logic without buying into the full packaging story (still
   need a minimal `Kptfile` though)
 
 We have created a [kustomize solution] which allows you to use kpt for packaging
