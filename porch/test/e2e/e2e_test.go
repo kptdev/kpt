@@ -1040,6 +1040,11 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 		t.Skipf("Skipping due to not having pod evalutor in local mode")
 	}
 
+	const (
+		generateFolderImage = "gcr.io/kpt-fn/generate-folders:v0.1.1" // This function is a TS based function.
+		setAnnotationsImage = "gcr.io/kpt-fn/set-annotations:v0.1.3"  // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+	)
+
 	// Register the repository as 'git-fn'
 	t.registerMainGitRepositoryF(ctx, "git-fn-pod")
 
@@ -1070,14 +1075,14 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/generate-folders:v0.1.1", // This function is a TS based function.
+						Image: generateFolderImage,
 					},
 				},
 				// Testing pod evaluator with golang function
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-annotations:v0.1.3", // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+						Image: setAnnotationsImage,
 						ConfigMap: map[string]string{
 							"test-key": "test-val",
 						},
@@ -1116,7 +1121,10 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	podList := &coreapi.PodList{}
 	t.ListF(ctx, podList, client.InNamespace("porch-fn-system"))
 	for _, pod := range podList.Items {
-		t.DeleteF(ctx, &pod)
+		img := pod.Spec.Containers[0].Image
+		if img == generateFolderImage || img == setAnnotationsImage {
+			t.DeleteF(ctx, &pod)
+		}
 	}
 
 	// Create another Package Revision
@@ -1146,14 +1154,14 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/generate-folders:v0.1.1", // This function is a TS based function.
+						Image: generateFolderImage,
 					},
 				},
 				// Testing pod evaluator with golang function
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-annotations:v0.1.3", // set-annotations:v0.1.3 is an older version that porch maps it neither to built-in nor exec.
+						Image: setAnnotationsImage,
 						ConfigMap: map[string]string{
 							"new-test-key": "new-test-val",
 						},
@@ -1185,6 +1193,53 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 	}
 	if counter != 4 {
 		t.Errorf("expected 4 Folder objects, but got %v", counter)
+	}
+}
+
+func (t *PorchSuite) TestPodEvaluatorWithFailure(ctx context.Context) {
+	if t.local {
+		t.Skipf("Skipping due to not having pod evalutor in local mode")
+	}
+
+	t.registerMainGitRepositoryF(ctx, "git-fn-pod-failure")
+
+	// Create Package Revision
+	pr := &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "test-fn-pod-bucket",
+			Revision:       "v1",
+			RepositoryName: "git-fn-pod-failure",
+			Tasks: []porchapi.Task{
+				{
+					Type: "clone",
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							Type: "git",
+							Git: &porchapi.GitPackage{
+								Repo:      "https://github.com/GoogleCloudPlatform/blueprints.git",
+								Ref:       "bucket-blueprint-v0.4.3",
+								Directory: "catalog/bucket",
+							},
+						},
+					},
+				},
+				{
+					Type: "eval",
+					Eval: &porchapi.FunctionEvalTaskSpec{
+						// This function is expect to fail due to not knowing schema for some CRDs.
+						Image: "gcr.io/kpt-fn/kubeval:v0.2.0",
+					},
+				},
+			},
+		},
+	}
+	err := t.client.Create(ctx, pr)
+	expectedErrMsg := "Validating arbitrary CRDs is not supported"
+	if err == nil || !strings.Contains(err.Error(), expectedErrMsg) {
+		t.Fatalf("expected the error to contain %q, but got %v", expectedErrMsg, err)
 	}
 }
 
