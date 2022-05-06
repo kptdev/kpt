@@ -91,3 +91,17 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 }
 
 func (s packageRevisionApprovalStrategy) Canonicalize(obj runtime.Object) {}
+
+var _ SimpleRESTCreateStrategy = packageRevisionApprovalStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageRevisionApprovalStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	// obj := runtimeObj.(*api.PackageRevision)
+
+	return allErrs
+}

@@ -134,6 +134,11 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
+	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
+	if len(fieldErrors) > 0 {
+		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), obj.Name, fieldErrors)
+	}
+
 	rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, obj)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
@@ -264,4 +269,30 @@ func (s packageRevisionStrategy) Canonicalize(obj runtime.Object) {
 		// Set default
 		pr.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
 	}
+}
+
+var _ SimpleRESTCreateStrategy = packageRevisionStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageRevisionStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	obj := runtimeObj.(*api.PackageRevision)
+
+	switch lifecycle := obj.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only created as %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+			}, ",")),
+		))
+	}
+
+	return allErrs
 }
