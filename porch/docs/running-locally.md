@@ -29,9 +29,9 @@ make tidy
 ## Running Porch
 
 Porch consists of:
-* k8s extension apiserver [porch](../porch/apiserver)
-* kpt function evaluator [func](../porch/func)
-* k8s [controllers](../porch/controllers)
+* k8s extension apiserver [porch](../pkg/apiserver/)
+* kpt function evaluator [func](../func/)
+* k8s [controllers](../controllers)
 
 In addition, to run Porch locally, we need to run the main k8s apiserver and its backing storage, etcd.
 
