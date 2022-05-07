@@ -113,7 +113,7 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:v0.2.0",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.4.1",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
 						},
@@ -844,7 +844,7 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/set-namespace:v0.3.4",
+						Image: "gcr.io/kpt-fn/set-namespace:v0.4.1",
 						ConfigMap: map[string]string{
 							"namespace": "bucket-namespace",
 						},

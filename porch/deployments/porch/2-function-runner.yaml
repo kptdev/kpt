@@ -90,7 +90,7 @@ metadata:
   namespace: porch-system
 data:
   pod-cache-config.yaml: |
-    gcr.io/kpt-fn/apply-replacements:v0.1.0: 30m
+    gcr.io/kpt-fn/apply-replacements:v0.1.1: 30m
     gcr.io/kpt-fn/apply-setters:v0.2.0: 30m
     gcr.io/kpt-fn/create-setters:v0.1.0: 30m
     gcr.io/kpt-fn/ensure-name-substring:v0.2.0: 30m
@@ -99,10 +99,10 @@ data:
     gcr.io/kpt-fn/search-replace:v0.2.0: 30m
     gcr.io/kpt-fn/set-annotations:v0.1.4: 30m
     gcr.io/kpt-fn/set-enforcement-action:v0.1.0: 30m
-    gcr.io/kpt-fn/set-image:v0.1.0: 30m
+    gcr.io/kpt-fn/set-image:v0.1.1: 30m
     gcr.io/kpt-fn/set-labels:v0.1.5: 30m
-    gcr.io/kpt-fn/set-namespace:v0.3.4: 30m
-    gcr.io/kpt-fn/starlark:v0.4.2: 30m
+    gcr.io/kpt-fn/set-namespace:v0.4.1: 30m
+    gcr.io/kpt-fn/starlark:v0.4.3: 30m
     gcr.io/kpt-fn/upsert-resource:v0.2.0: 30m
     gcr.io/kpt-fn/enable-gcp-services:v0.1.0: 30m
     gcr.io/kpt-fn/export-terraform:v0.1.0: 30m

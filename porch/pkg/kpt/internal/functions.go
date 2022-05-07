@@ -21,7 +21,7 @@ import (
 var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
 	"gcr.io/kpt-fn/apply-setters:v0.2.0": applySetters,
 	"gcr.io/kpt-fn/set-labels:v0.1.5":    setLabels,
-	"gcr.io/kpt-fn/set-namespace:v0.2.0": setNamespace,
+	"gcr.io/kpt-fn/set-namespace:v0.4.1": setNamespace,
 }
 
 func FindProcessor(image string) framework.ResourceListProcessorFunc {

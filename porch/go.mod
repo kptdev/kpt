@@ -11,11 +11,11 @@ replace (
 require (
 	cloud.google.com/go/container v1.2.0
 	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
-	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.1.0
+	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.1.1
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
-	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.3.4
-	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.2
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220412175831-2afd3aec6b69
+	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.4.1
+	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.3
+	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220426215627-4db5feb3a360
 	github.com/bluekeyes/go-gitdiff v0.6.1
 	github.com/go-git/go-billy/v5 v5.3.1
@@ -100,7 +100,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1 // indirect
-	github.com/google/gnostic v0.6.8 // indirect
+	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -162,7 +162,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
+	golang.org/x/net v0.0.0-20220425223048-2871e0cb64e4 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
@@ -177,7 +177,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	k8s.io/apiextensions-apiserver v0.24.0 // indirect
 	k8s.io/cli-runtime v0.24.0 // indirect
-	k8s.io/kube-openapi v0.0.0-20220401212409-b28bf2818661 // indirect
+	k8s.io/kube-openapi v0.0.0-20220413171646-5e7f5fdc6da6 // indirect
 	k8s.io/kubectl v0.24.0 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.30 // indirect
 	sigs.k8s.io/cli-utils v0.29.4 // indirect
