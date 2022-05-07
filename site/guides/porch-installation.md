@@ -1,4 +1,8 @@
-# Running on GKE
+# Installing Porch
+
+You can install Porch by either using one of the
+[released versions](https://github.com/GoogleContainerTools/kpt/releases), or
+building Porch from sources.
 
 ## Prerequisites
 

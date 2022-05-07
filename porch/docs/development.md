@@ -31,7 +31,7 @@ Porch comprises of several software components:
 See dedicated documentation on running Porch:
 
 * [locally](running-locally.md)
-* [on GKE](running-on-gke.md)
+* [on GKE](../../site/guides/porch-installation.md)
 
 ## Build the Container Images
 
