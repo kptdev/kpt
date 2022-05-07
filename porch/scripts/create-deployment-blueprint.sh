@@ -120,7 +120,7 @@ function customize-image {
   local TAG="${NEW##*:}"
   local IMG="${NEW%:*}"
 
-  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 -- \
+  kpt fn eval "${DESTINATION}" --image set-image:v0.1.1 -- \
     "name=${OLD}" \
     "newName=${IMG}" \
     "newTag=${TAG}"
@@ -151,7 +151,7 @@ EOF
 
   trap "rm -f ${FN_CONFIG}" EXIT
 
-  kpt fn eval "${DESTINATION}" --image set-image:v0.1.0 --fn-config "${FN_CONFIG}" || echo "kpt fn eval failed"
+  kpt fn eval "${DESTINATION}" --image set-image:v0.1.1 --fn-config "${FN_CONFIG}" || echo "kpt fn eval failed"
 }
 
 function customize-sa {

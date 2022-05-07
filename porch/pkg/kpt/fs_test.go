@@ -63,7 +63,7 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
       configMap:
         namespace: staging
     - image: gcr.io/kpt-fn/set-labels:v0.1.5
@@ -140,7 +140,7 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
       configMap:
         namespace: staging
     - image: gcr.io/kpt-fn/set-labels:v0.1.5
@@ -159,7 +159,7 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
       configMap:
         namespace: db
     - image: gcr.io/kpt-fn/set-labels:v0.1.5
