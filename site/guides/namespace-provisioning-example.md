@@ -341,9 +341,9 @@ application team) will now use this published package to create deployable
 instances of it. There are different ways to create deployable instances of
 this package:
 
-1.[Use package orchestration UI](TODO)
-2.[Use package orchestration CLI](TODO)
-3.[Use kpt CLI without package orchestration](TODO)
+- [Use package orchestration CLI](guides/porch-user-guide.md)
+- Use package orchestration UI (coming soon)
+- Use kpt CLI without package orchestration as described in the next section.
 
 ### Package Consumption Workflow (without package orchestration)
 
