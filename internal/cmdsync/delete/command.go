@@ -34,9 +34,8 @@ import (
 )
 
 const (
-	command = "cmdsync.delete"
-	// TODO: Find a better location for this git repo.
-	emptyRepo       = "https://github.com/mortent/empty"
+	command         = "cmdsync.delete"
+	emptyRepo       = "https://github.com/platkrm/empty"
 	emptyRepoBranch = "main"
 	defaultTimeout  = 2 * time.Minute
 )
