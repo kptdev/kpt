@@ -22,6 +22,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"time"
 
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/func/healthchecker"
@@ -96,6 +97,8 @@ func (e *singleFunctionEvaluator) EvaluateFunction(ctx context.Context, req *pb.
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
+	start := time.Now()
+
 	err := cmd.Run()
 	var exitErr *exec.ExitError
 	if err != nil && !errors.As(err, &exitErr) {
@@ -103,7 +106,7 @@ func (e *singleFunctionEvaluator) EvaluateFunction(ctx context.Context, req *pb.
 	}
 
 	outbytes := stdout.Bytes()
-	klog.Infof("Evaluated %q: stdout length: %d\nstderr:\n%v", req.Image, len(outbytes), stderr.String())
+	klog.Infof("Evaluated %q: duration=%v\nstdout length: %d\nstderr:\n%v", req.Image, time.Since(start).Round(time.Millisecond), len(outbytes), stderr.String())
 
 	return &pb.EvaluateFunctionResponse{
 		ResourceList: outbytes,
