@@ -90,5 +90,7 @@
 - [Guides](guides/)
   - [The Rationale behind kpt](guides/rationale.md)
   - [Tenant Onboarding](guides/tenant-onboarding.md)
+  - [Porch Installation Guide](guides/porch-installation.md)
+  - [Porch User Guide](guides/porch-user-guide.md)
 - [FAQ](faq/)
 - [Contact](contact/)
