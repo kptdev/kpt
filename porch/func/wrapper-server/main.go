@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	pb "github.com/GoogleContainerTools/kpt/porch/func/evaluator"
 	"github.com/GoogleContainerTools/kpt/porch/func/healthchecker"
 	"github.com/spf13/cobra"
@@ -98,15 +99,26 @@ func (e *singleFunctionEvaluator) EvaluateFunction(ctx context.Context, req *pb.
 
 	err := cmd.Run()
 	var exitErr *exec.ExitError
-	if err != nil && !errors.As(err, &exitErr) {
-		return nil, status.Errorf(codes.Internal, "Failed to execute function %q: %s (%s)", req.Image, err, stderr.String())
+	outbytes := stdout.Bytes()
+	stderrStr := stderr.String()
+	if err != nil {
+		if errors.As(err, &exitErr) {
+			// If the exit code is non-zero, we will try to embed the structured results and content from stderr into the error message.
+			rl, pe := fn.ParseResourceList(outbytes)
+			if pe != nil {
+				// If we can't parse the output resource list, we only surface the content in stderr.
+				return nil, status.Errorf(codes.Internal, "failed to evaluate function %q with stderr %v", req.Image, stderrStr)
+			}
+			return nil, status.Errorf(codes.Internal, "failed to evaluate function %q with structured results: %v and stderr: %v", req.Image, rl.Results.Error(), stderrStr)
+		} else {
+			return nil, status.Errorf(codes.Internal, "Failed to execute function %q: %s (%s)", req.Image, err, stderrStr)
+		}
 	}
 
-	outbytes := stdout.Bytes()
-	klog.Infof("Evaluated %q: stdout length: %d\nstderr:\n%v", req.Image, len(outbytes), stderr.String())
+	klog.Infof("Evaluated %q: stdout length: %d\nstderr:\n%v", req.Image, len(outbytes), stderrStr)
 
 	return &pb.EvaluateFunctionResponse{
 		ResourceList: outbytes,
-		Log:          stderr.Bytes(),
+		Log:          []byte(stderrStr),
 	}, nil
 }

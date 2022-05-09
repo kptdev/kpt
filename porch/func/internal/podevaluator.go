@@ -134,6 +134,10 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *evaluator.Eva
 	if err != nil {
 		return nil, fmt.Errorf("unable to evaluate %v with pod evaluator: %w", req.Image, err)
 	}
+	// Log stderr when the function succeeded. If the function fails, stderr will be surfaced to the users.
+	if len(resp.Log) > 0 {
+		klog.Warningf("evaluating %v succeeded, but stderr is: %v", req.Image, string(resp.Log))
+	}
 	return resp, nil
 }
 
@@ -581,7 +585,7 @@ func (pm *podManager) podIpIfRunningAndReady(ctx context.Context, podKey client.
 		}
 		return false, nil
 	}); e != nil {
-		return "", fmt.Errorf("error when waiting the pod to be ready: %w", e)
+		return "", fmt.Errorf("error occured when waiting the pod to be ready. If the error is caused by timeout, you may want to examine the pods in namespace %q. Error: %w", pm.namespace, e)
 	}
 	return pod.Status.PodIP, nil
 }
