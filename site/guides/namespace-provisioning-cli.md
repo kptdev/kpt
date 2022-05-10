@@ -1,4 +1,4 @@
-# Namespace provisioning example via kpt CLI
+# Namespace provisioning using kpt CLI
 
 In this guide, we will learn how to create a kpt package from scratch using
 `kpt CLI`. We will also learn how to enable customization of the package
