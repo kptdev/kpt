@@ -225,7 +225,7 @@ Resources that are selected are passed as input to the function.
 Resources that are not selected are passed through unchanged.
 
 For example, let's add a function to the pipeline that adds an annotation to 
-resources with name `mysql` only:
+resources with name `wordpress-mysql` only:
 
 ```yaml
 # wordpress/Kptfile (Excerpt)
