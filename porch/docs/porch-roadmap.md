@@ -31,6 +31,10 @@ document outlining future direction and work in different Porch subsystems.
 * Support updating repository registration, for example when `Repository`
   resource is modified to point to a different repository, or even a different
   type of a repository (Git --> OCI).
+* Support read only repositories. Porch will allow package discovery in a read
+  only repository but attempt to create/modify package in read only repository
+  will result in an error. Consider supporting via RBAC so different principals
+  can have different level of access to the same repository.
 * Implement repository cache eviction policy
 * Support `ObjectMeta.GenerateName` for `PackageRevision` creation. Currently
   package names are computed as <repository>-<sha>. Ideally Porch would accept

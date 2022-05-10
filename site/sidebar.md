@@ -34,6 +34,7 @@
 		- [7.1 Single Value Replacement](book/07-effective-customizations/01-single-value-replacement.md)
 		- [7.2 Limiting Package Changes](book/07-effective-customizations/02-limiting-package-changes.md)
 		- [7.3 Generation](book/07-effective-customizations/03-generation.md)
+	- [8 Package Orchestration](book/08-package-orchestration/)
 - [Reference](reference/)
   - [Annotations](reference/annotations/)
     - [apply-time mutation](reference/annotations/apply-time-mutation/)

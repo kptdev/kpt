@@ -126,7 +126,7 @@ The command `kpt alpha repo unregister` can be used to unregister a repository:
 
 ```sh
 # Unregister a repository
-$ kpt alpha repo unregister deployments
+$ kpt alpha repo unregister deployments --namespace default
 ```
 
 ## Package Discovery And Introspection
