@@ -329,10 +329,10 @@ Now that we have a basic namespace package in place, let's publish it so that
 other users can consume it.
 
 ```shell
-$cd .. && git add basens && git commit -am "initial pkg"
-$git push origin main
+$ cd .. && git add basens && git commit -am "initial pkg"
+$ git push origin main
 
-$git tag basens/v0 && git push origin basens/v0
+$ git tag basens/v0 && git push origin basens/v0
 ```
 
 So, now the package should be available in the `blueprint` repo. Consumers
