@@ -18,9 +18,9 @@ again.
 ## Contributing large features
 
 Larger features and all the features that affect the interface (CLI or API) of
-kpt need to have a reviewed and merged design document.  It is OK to start with
-a prototype in your private fork but if you intend for your feature to be
-shipped in kpt please create a design document with this 
+kpt components need to have a reviewed and merged design document.  It is OK to
+start with a prototype in your private fork but if you intend for your feature
+to be shipped in kpt please create a design document with this
 [design template](/docs/design-docs/00-template.md).
 
 You should create a copy of the template and submit a PR for comments and 
@@ -39,6 +39,13 @@ information on using pull requests.
 This project follows [Google's Open Source Community Guidelines] and a [Code of
 Conduct].
 
+## Community Discussion Groups
+
+Join following groups/channels to discuss ideas with other kpt contributors.
+
+1. Join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
+1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt)
+
 ## Style Guides
 
 Contributions are required to follow these style guides:
@@ -46,7 +53,16 @@ Contributions are required to follow these style guides:
 - [Error Message Style Guide]
 - [Documentation Style Guide]
 
-## Building the Source
+## Contributing to `kpt`
+
+The kpt toolchain has several components such as `kpt CLI`, `package orchestrator`,
+`function catalog`, `function SDKs`, `Backstage UI plugin` and `config sync`. Each
+component has their own development process.
+Refer to the pointers below to learn more:
+
+### kpt CLI
+
+#### Building the Source
 
 1. Clone the project
 
@@ -67,18 +83,28 @@ Contributions are required to follow these style guides:
    make all
    ```
 
-## Contribution to the Functions Catalog
+### Package Orchestrator
 
-Refer to the
+Package orchestrator code live under `porch` directory in this repo. Please see the
+[developer docs for porch](porch/docs/development.md) to learn more.
+
+### Function Catalog
+
+Function catalog has its own repository. Refer to the
 [documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
 repo.
 
-## Contributing to Documentation
+### Config Sync
+
+Config Sync has its own [repository](https://github.com/GoogleContainerTools/kpt-config-sync).
+Refer to the [documentation in the config-sync repo](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/contributing.md).
+
+### Documentation
 
 If you are updating the documentation, please do it in separate PRs from code
 changes and PR description should start with `Docs:`.
 
-### Run the docs locally
+#### Run the docs locally
 
 Make docs changes and test them by running the site in a docker container with
 `make site-run-server`.
@@ -88,12 +114,12 @@ It's usually a good idea to test locally for the following:
 - Broken links
 - Rendering static content
 
-### Update docs
+#### Update docs
 
 Docs are under [site/] and use [docsify] to present the source markdown files.
 The sidebar is automatically updated for the site at deployment time.
 
-### Docs Hygiene
+#### Docs Hygiene
 
 The kpt website uses markdownlint to lint docs for formatting and style. Use
 prettier with the `"prettier.proseWrap": "always"` setting to auto-format docs
