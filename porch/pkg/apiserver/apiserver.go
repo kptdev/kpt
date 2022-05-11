@@ -152,7 +152,7 @@ func (c completedConfig) getCoreClient() (client.WithWatch, error) {
 
 // New returns a new instance of PorchServer from the given config.
 func (c completedConfig) New() (*PorchServer, error) {
-	genericServer, err := c.GenericConfig.New("sample-apiserver", genericapiserver.NewEmptyDelegate())
+	genericServer, err := c.GenericConfig.New("porch-apiserver", genericapiserver.NewEmptyDelegate())
 	if err != nil {
 		return nil, err
 	}
