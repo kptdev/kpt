@@ -35,6 +35,8 @@
 		- [7.2 Limiting Package Changes](book/07-effective-customizations/02-limiting-package-changes.md)
 		- [7.3 Generation](book/07-effective-customizations/03-generation.md)
 	- [8 Package Orchestration](book/08-package-orchestration/)
+		- [8.1 System Requirements](book/08-package-orchestration/01-system-requirements.md)
+		- [8.2 Quickstart](book/08-package-orchestration/02-quickstart.md)
 - [Reference](reference/)
   - [Annotations](reference/annotations/)
     - [apply-time mutation](reference/annotations/apply-time-mutation/)
