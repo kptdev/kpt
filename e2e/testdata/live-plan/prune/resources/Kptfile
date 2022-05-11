@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: prune
+inventory:
+  namespace: prune
+  name: prune
+  inventoryID: prune

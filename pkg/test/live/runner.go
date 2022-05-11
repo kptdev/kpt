@@ -72,9 +72,8 @@ func (r *Runner) RunPreApply(t *testing.T) {
 }
 
 func (r *Runner) RunApply(t *testing.T) (string, string, error) {
-	args := append([]string{"live", "apply"}, r.Config.KptArgs...)
-	t.Logf("Running command: kpt %s", strings.Join(args, " "))
-	cmd := exec.Command("kpt", args...)
+	t.Logf("Running command: kpt %s", strings.Join(r.Config.KptArgs, " "))
+	cmd := exec.Command("kpt", r.Config.KptArgs...)
 	cmd.Dir = filepath.Join(r.Path, "resources")
 
 	var outBuf bytes.Buffer
@@ -106,7 +105,11 @@ func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
 }
 
 func prepOutput(t *testing.T, s string) string {
-	return strings.TrimSpace(substituteTimestamps(removeStatusEvents(t, s)))
+	txt := removeStatusEvents(t, s)
+	txt = substituteTimestamps(txt)
+	txt = substituteUIDs(txt)
+	txt = substituteResourceVersion(txt)
+	return strings.TrimSpace(txt)
 }
 
 func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
@@ -178,6 +181,18 @@ var timestampRegexp = regexp.MustCompile(`\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z`)
 
 func substituteTimestamps(text string) string {
 	return timestampRegexp.ReplaceAllString(text, "<TIMESTAMP>")
+}
+
+var uidRegexp = regexp.MustCompile(`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`)
+
+func substituteUIDs(text string) string {
+	return uidRegexp.ReplaceAllLiteralString(text, "<UID>")
+}
+
+var resourceVersionRegexp = regexp.MustCompile(`resourceVersion: "[0-9]+"`)
+
+func substituteResourceVersion(text string) string {
+	return resourceVersionRegexp.ReplaceAllLiteralString(text, "resourceVersion: \"<RV>\"")
 }
 
 var statuses = []status.Status{

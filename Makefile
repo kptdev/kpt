@@ -86,9 +86,13 @@ test-fn-render: build
 test-fn-eval: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
-# target to run e2e tests for "kpt fn eval" command
+# target to run e2e tests for "kpt live apply" command
 test-live-apply: build
 	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
+
+# target to run e2e tests for "kpt live plan" command
+test-live-plan: build
+	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLivePlan/testdata/live-plan/$(T)  ./e2e/
 
 test-porch: build
 	PATH=$(GOBIN):$(PATH) go test -v --count=1 --tags=porch ./e2e/

@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: false
-noResourceGroup: true
-kptArgs:
-  - "live"
-  - "apply"
-  - "--reconcile-timeout=1m"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-stdErr: |
-  installing inventory ResourceGroup CRD.
-inventory:
-  - group: apps
-    kind: Deployment
-    name: nginx-deployment
-    namespace: install-rg-on-apply
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: prune
+  name: prune
+  namespace: prune
+spec:
+  resources:
+    - group: ""
+      kind: ConfigMap
+      name: cm
+      namespace: prune
+    - group: apps
+      kind: Deployment
+      name: dep
+      namespace: prune

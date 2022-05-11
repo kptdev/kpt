@@ -1,3 +1,4 @@
+//go:build kind
 // +build kind
 
 // Copyright 2021 Google LLC
@@ -27,6 +28,10 @@ import (
 
 func TestLiveApply(t *testing.T) {
 	runTests(t, filepath.Join(".", "testdata", "live-apply"))
+}
+
+func TestLivePlan(t *testing.T) {
+	runTests(t, filepath.Join(".", "testdata", "live-plan"))
 }
 
 func runTests(t *testing.T, path string) {
@@ -62,8 +67,8 @@ func runTests(t *testing.T, path string) {
 			defer livetest.RemoveNamespace(t, ns)
 
 			(&livetest.Runner{
-				Config:    c,
-				Path:      p,
+				Config: c,
+				Path:   p,
 			}).Run(t)
 		})
 	}

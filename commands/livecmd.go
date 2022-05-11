@@ -16,8 +16,6 @@ package commands
 
 import (
 	"context"
-	"flag"
-	"fmt"
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
@@ -26,12 +24,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
-	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
 	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
-	cluster "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 )
 
@@ -70,16 +66,4 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	liveCmd.AddCommand(migrateCmd)
 
 	return liveCmd
-}
-
-func newFactory(cmd *cobra.Command, version string) cluster.Factory {
-	flags := cmd.PersistentFlags()
-	kubeConfigFlags := genericclioptions.NewConfigFlags(true).WithDeprecatedPasswordFlag()
-	kubeConfigFlags.AddFlags(flags)
-	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
-		Delegate:  kubeConfigFlags,
-		UserAgent: fmt.Sprintf("kpt/%s", version),
-	}
-	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	return cluster.NewFactory(userAgentKubeConfigFlags)
 }

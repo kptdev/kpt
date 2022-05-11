@@ -12,19 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-parallel: false
-noResourceGroup: true
-kptArgs:
-  - "live"
-  - "apply"
-  - "--reconcile-timeout=1m"
-stdOut: |
-  deployment.apps/nginx-deployment created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-stdErr: |
-  installing inventory ResourceGroup CRD.
-inventory:
-  - group: apps
-    kind: Deployment
-    name: nginx-deployment
-    namespace: install-rg-on-apply
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: foo
+  namespace: create
+data:
+  key: value

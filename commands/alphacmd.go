@@ -44,6 +44,7 @@ func GetAlphaCommand(ctx context.Context, name, version string) *cobra.Command {
 		NewRepoCommand(ctx, version),
 		NewRpkgCommand(ctx, version),
 		NewSyncCommand(ctx, version),
+		GetAlphaLiveCommand(ctx, "", version),
 	)
 
 	return alpha
