@@ -107,3 +107,8 @@ To stop Porch and all associated Docker containers, including the Docker network
 ```sh
 make stop
 ```
+
+## Troubleshooting
+
+If you run into issues that look like `git: authentication required`, make sure you have SSH
+keys set up on your local machine.
