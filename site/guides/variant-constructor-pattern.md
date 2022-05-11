@@ -1,7 +1,7 @@
 # Variant construction pattern
 
-If you look at the config workflows, you will notice that creating variant
-of a package is a very common and frequent operation, so reducing the steps
+If you look at the config workflows, you will notice that creating a variant
+of a package is a very frequent operation, so reducing the steps
 required to create a variant can have significant benefits for the
 package consumers. In this guide, we will look at some techniques
 that a package author can use to enable automatic variant construction of a package.
@@ -9,7 +9,7 @@ that a package author can use to enable automatic variant construction of a pack
 ## Types of packages
 
 kpt packages comes in two flavors:  `abstract package` and
-`deployable package instance`. An `abstract` package is a reususable package that
+`deployable instance`. An `abstract` package is a reususable package that
 is used to create deployable instances that can be deployed to a
 kubernetes cluster. In programming language terms, you can think of an `abstract`
 packages as the class and `deployable instance` as the instances of the class.
@@ -23,9 +23,9 @@ using gitops tools such as `config-sync`, `fluxcd`, `argocd`.
 
 ![variant constructor pkg repo diagram](/static/images/variant-constructor-pkg-repo-diagram.png)
 
-Resources in an `abstract` package have placeholder values that needs to be
-substituated with actual values to make them ready for deployment.
-For example, name of the namespace resource below has `example` as a placeholder
+Resources in an `abstract` package have placeholder values that need to be
+substituted with actual values to make them ready for deployment.
+For example, the name of the namespace resource below has `example` as a placeholder
 value. This is a part of the `abstract package`.
 
 ```yaml
@@ -40,13 +40,14 @@ metadata:
 A kpt package contains kubernetes resources. Whenever you are creating a
 variant of the package, first step is to ensure unique identity of the
 resources in that variant. For example, if the abstract package contains a
-`namespace` resource, then the variant package should contain namespace resource
+`namespace` resource, then the variant package should contain a `namespace` resource
 corresponding to that variant.
 
 In a kubernetes cluster, resources are identified by their group, version, kind,
-namespace and name (aka GVKNN). If resource is cluster scoped, then the
-`metadata.name` uniquely identifies the resource in a cluster. If the resource
-is namespace scoped, then (namespace, name) together identifies the resource uniquely.
+namespace and name (also referred to as GVKNN). If resource is cluster scoped,
+then the `metadata.name` uniquely identifies the resource in a cluster. If the resource
+is namespace scoped, then (`metadata.namespace`, `name`) together identifies the
+resource uniquely.
 
 [kpt-function-catalog](https://catalog.kpt.dev) provides two function that helps
 with customizing the identify of the resources:
@@ -56,12 +57,12 @@ with customizing the identify of the resources:
 2. [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.2/):
    sets the name of the resources in the package.
 
-So you can use the appropriate functions from the catalog or implement a custom
+You can use the appropriate functions from the catalog or implement a custom
 function to ensure unique identity of the resources.
 
 ## Customizing non-identifier fields of resources
 
-Package can use other functions such as `set-labels`, `set-annotations`, `apply-replacements`
+Packages can use other functions such as `set-labels`, `set-annotations`, `apply-replacements`
 or custom functions to transform other fields of resources.
 
 ## Core mechanism
@@ -87,19 +88,16 @@ pipeline:
 ```
 
 Now let's talk about the input to the functions. In most cases, variant's name
-(deployable package instance name) itself can be used to derive unique identity
+(deployable instance name) itself can be used to derive unique identity
 of the resources in the variant. For example, if I create a variant of
-`microservice` package, I will name the deployable package instance to
+`microservice` package, I will name the deployable instance to
 `user-service` or `order-service`. So if the package's name is available to the
 functions, then they can use it to customize the name/namespace of the resources.
-So, starting with `kpt v1.0.0-beta.15+` , kpt makes `package's name` available
-in a local `ConfigMap` at a well-known path `package-context.yaml` that contains
-the package instance name and is available to functions during
-`kpt fn render` or `kpt fn eval`.
+So, starting with `kpt v1.0.0-beta.15+`, kpt makes `package name` available
+in a `ConfigMap` at a well-known path `package-context.yaml` in `data.name` field.
+The `package-context.yaml` is available to functions during `kpt fn render|eval`.
 
-Examples of `package-context.yaml` for abstract and deployable instance, For
-abstract package the value of `name` field is `example` and for deployable
-instance it contains actual value of the package name.
+Here are examples of `package-context.yaml` for abstract and deployable instance:
 
 ```yaml
 # package-context.yaml
@@ -108,7 +106,7 @@ instance it contains actual value of the package name.
 apiVersion: v1
 kind: ConfigMap
 data:
-  name: example
+  name: example # <-- placeholder value
 ```
 
 ```yaml
@@ -118,11 +116,11 @@ data:
 apiVersion: v1
 kind: ConfigMap
 data:
-  name: my-pkg-instance
+  name: my-pkg-instance # <- deployable instance name
 ```
 
-kpt supports a way to create `deployable pkg instance` such that `package-context`
-is automatically populated with the deployable instance's name.
+kpt supports a way to create `deployable instance` such that `package-context.yaml`
+is automatically populated with the `deployable instance`'s name.
 
 ```shell
 $kpt pkg get <pkg-location> my-pkg-instance --for-deployment
@@ -130,7 +128,7 @@ $kpt pkg get <pkg-location> my-pkg-instance --for-deployment
 
 Now, let's look at how to provide the input to the functions.
 
-So if you are using `set-namespace` function in your package, then
+If you are using `set-namespace` function in your package, then
 `set-namespace` function supports reading input from `package-context.yaml`.
 Here is an example:
 
@@ -143,9 +141,10 @@ pipeline:
 ...
 ```
 
-So by using `package-context.yaml` as input, `set-namespace` uses `example` value
-for an `abstract` package and variant's name for a deployable instance. same pattern
-can be applied to other functions also. For example, [`namespace provisioning`](https://github.com/GoogleContainerTools/kpt-samples/tree/main/basens)
+By using `package-context.yaml` as input, `set-namespace` uses the value `example`
+for an `abstract` package and variant's name for a deployable instance. The
+same pattern can be applied to other functions also. For example, the
+[`namespace provisioning`](https://github.com/GoogleContainerTools/kpt-samples/tree/main/basens)
 package uses `apply-replacements` function to set the RoleBinding group
 using the name of the package.
 
@@ -171,7 +170,7 @@ check out [`namespace provisioning using kpt CLI guide`](/guides/namespace-provi
 
 ## Summary
 
-So with the above pattern and workflow, you can how package publisher can
+With the above pattern and workflow, you can see - how a package publisher can
 enable automatic customization of deployable instance of a package with minimal
 input i.e. package instance name.
 
