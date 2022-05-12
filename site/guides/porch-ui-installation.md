@@ -6,11 +6,6 @@ browser. Running the container locally simplifies the overall setup by allowing
 the UI to use your local kubeconfig and Google credentials to access the GKE
 cluster with Porch installed. This guide will show you how to do this.
 
-For Production, the Configuration as Data UI can be installed by adding the
-[Configuration as Data Plugin](https://github.com/GoogleContainerTools/kpt-backstage-plugins/tree/main/plugins/cad)
-to an existing [Backstage](https://backstage.io) application by following the
-instructions on the README of the plugin.
-
 ## Prerequisites
 
 To access the Configuration as Data UI with a docker container, you will need:
@@ -21,7 +16,7 @@ To access the Configuration as Data UI with a docker container, you will need:
 *   [git](https://git-scm.com/)
 *   [docker](https://docs.docker.com/get-docker/)
 
-## Using a Docker Container to access the UI
+## Running locally in a container
 
 First, clone the
 [kpt-backstage-plugins](https://github.com/GoogleContainerTools/kpt-backstage-plugins)
@@ -48,3 +43,10 @@ docker run -v ~/.kube/config:/root/.kube/config -v ~/.config/gcloud:/root/.confi
 
 And now access the Configuration as Data UI by opening your browser to
 http://localhost:7007/config-as-data.
+
+## Running in Backstage
+
+The Configuration as Data UI can be added to an existing
+[Backstage](https://backstage.io) application by following the instructions on
+the
+[Configuration as Data Plugin README](https://github.com/GoogleContainerTools/kpt-backstage-plugins/tree/main/plugins/cad/README.md).
