@@ -1,4 +1,4 @@
-In this quickstart you will use Porch to discover configuration packages
+​​In this quickstart you will use Porch to discover configuration packages
 in a [sample repository](https://github.com/GoogleContainerTools/kpt-samples).
 
 You will use the kpt CLI - the new `kpt alpha` command sub-groups to interact
@@ -37,7 +37,7 @@ kpt-samples  git   Package              True   https://github.com/GoogleContaine
 From the output you can see that:
 
 * the repository was registered by the name `kpt-samples`. This was chosen
-  by kpt automatically from the repsitory URL, but can be overriden
+  by kpt automatically from the repository URL, but can be overridden
 * it is a `git` repository (OCI repositories are also supported, though
   currently with some limitations)
 * the repository is *not* a deployment repository. Repository can be marked
@@ -89,7 +89,7 @@ within the directory specified. By default Porch will analyze the whole
 repository.
 
 The `secretRef` can contain a name of a Kubernetes [Secret][secret] resource
-whith authentication credentials for Porch to access the repository.
+with authentication credentials for Porch to access the repository.
 
 ### kubectl
 
@@ -124,7 +124,7 @@ kpt-samples-afcf4d1fac605a60ba1ea4b87b5b5b82e222cb69   basens    v0         true
 ?> The `r` prefix of the `rpkg` command group stands for `remote`. The commands
 in the `kpt alpha rpkg` group interact with packages managed (remotely) by Porch
 server. The commands in the `rpkg` group are similar to the `kpt pkg` commands
-except that they operate on remote packges managed by Porch server rather than
+except that they operate on remote packages managed by Porch server rather than
 on a local disk.
 
 The output shows that Porch discovered the `basens` package, and found two
@@ -150,7 +150,7 @@ You can use the command to output the resources as a
 directory:
 
 ```sh
-# View contents of the basens/v0 packge revision
+# View contents of the basens/v0 package revision
 $ kpt alpha rpkg pull kpt-samples-afcf4d1fac605a60ba1ea4b87b5b5b82e222cb69 -ndefault
 
 apiVersion: config.kubernetes.io/v1
