@@ -1,5 +1,4 @@
-You can use the `kyaml` library to develop functions in Go. Doing so provides
-the following features:
+You can develop a KRM function in Go using the kpt function toolkit.
 
 - **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
   is a general-purpose programming language that provides:
@@ -13,121 +12,157 @@ the following features:
   manipulating comments; however, it comes at the cost of complexity compared to
   representing resources as idiomatic data structures.
 
+## Prerequisites
+
+#### Install kpt
+
+`kpt` is used to get the example Go projects "get-started" and provides an easy way to generate the function specification
+object `ResourceList`.
+[kpt.dev/installation](https://kpt.dev/installation/)
+
+#### Install Docker
+
+The KRM function can be released as an OCI image or an executable. This guide uses Docker to build
+the image. It also shows the executable approach.
+[docker installation](https://docs.docker.com/get-docker/)
+
 ## Quickstart
 
-### Create the go module
+### Initialize your project
+
+We start from a "get-started" package which contains a `main.go` file with some scaffolding code.
 
 ```shell
-$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.12.0
+export FUNCTION_NAME=<your KRM function name>
+
+# Get the "get-started" package.
+kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+
+cd ${FUNCTION_NAME}
+
+# Initialize the Go module
+go mod init
+go mod tidy
 ```
 
-### Create the `main.go`
-
-This is a simple function that adds the annotation `myannotation` with the
-provided value:
-
+### Write the KRM function logic
+ 
 ```go
 // main.go
 package main
 
 import (
-	"os"
+  "fmt"
+  "os"
 
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+  "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 )
 
-func main() {
-	// create a struct matching the structure of ResourceList.FunctionConfig to hold its data
-	var config struct {
-		Data map[string]string `yaml:"data"`
-	}
-	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-		for i := range items {
-			// set the annotation on each resource item
-			err := items[i].PipeE(yaml.SetAnnotation("myannotation", config.Data["myannotation"]))
-			if err != nil {
-				return nil, err
-			}
-		}
-		return items, nil
-	}
-	p := framework.SimpleProcessor{Filter: kio.FilterFunc(fn), Config: &config}
-	cmd := command.Build(p, command.StandaloneDisabled, false)
-  // Adds a "gen" subcommand to create a Dockerfile for building the function into a container image.
-  command.AddGenerateDockerfile(cmd)
+// EDIT THIS FUNCTION!
+// This is the main logic. rl is the input `ResourceList` which has the `FunctionConfig` and `Items` fields.
+// You can modify the `Items` and add result information to `rl.Result`.
+func Run()(rl *fn.ResourceList) (bool, error) {
+// Your code
+}
 
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+func main() {
+  // CUSTOMIZE IF NEEDED
+  // `AsMain` accepts a `ResourceListProcessor` interface.
+  // You can explore other `ResourceListProcessor` structs in the SDK or define your own.
+  if err := fn.AsMain(fn.ResourceListProcessorFunc(Run)); err != nil {
+    os.Exit(1)
+  }
 }
 ```
 
-### Build and test the function
+The `fn` library provides a series of KRM level operations for `ResourceList`. 
+Basically, the KRM resource `ResourceList.FunctionConfig` and KRM resources `ResourceList.Items` are both converted to 
+`KubeObject` objects. You can use `KubeObject` similar as [`unstructured.Unstrucutred`](https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured).
 
-Build the go binary:
+To learn more about the `KubeObject`, see https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
 
-```shell
-$ go mod tidy; go build -o my-fn .
-```
 
-Fetch the wordpress package:
+### Test the KRM function
 
-```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.8
-```
-
-Test it by running the function imperatively:
+The "get-started" package contains a `./data` directory. You can use this to test out your functions. 
 
 ```shell
-$ kpt fn eval wordpress --exec ./my-fn -- myannotation=foo
+# Modify the `data/resources.yaml` with your targeting KRM resource
+vim data/resources.yaml
+
+# Define your `ResourceList.FunctionConfig` object. 
+vim data/fn-config.yaml
+
+# Convert the KRM resources and FunctionConfig resource to `ResourceList`.
+kpt fn source data --fn-config data/fn-config.yaml
+
+# Pass the ResourceList as StdIn to your function
+kpt fn source data --fn-config data/fn-config.yaml | go run main.go
+
+# Verify the output `ResourceList`
 ```
+
+### Build the KRM function as an executable
 
 During iterative development, `--exec` flag can be used to execute the
 function binary directly instead of requiring the function to be containerized
-first. Once you have a function binary that works, you can then proceed to
-creating the container image.
+first.
 
-### Publish the function
+After editing your function, you can release it as an executable
+```shell
+go build main.go -o ${FUNCTION_NAME}
+# Change permission mode if needed
+chmod -x ${FUNCTION_NAME}
+```
 
-Generate a Dockerfile for the function image:
+#### Run the executable imperatively via kpt
+```shell
+export PATH=<a path to your KRM resources directory>
+export FN_PATH=<a path to your FunctionConfig .yaml file>
+
+kpt fn eval ${PATH} --exec ./${FUNCTION_NAME} --fn-config ${FN_PATH}
+```
+
+#### Run the executable declaratively via kpt
+
+You can add the function to `Kptfile` via `--save` flag
 
 ```shell
-$ go run ./main.go gen ./
+kpt fn eval ${PATH} --save --exec ./${FUNCTION_NAME} --fn-config ${FN_PATH}
+
+# Run the executable in the Kptfile pipeline
+kpt fn render --allow-exec ${PATH}
+```
+
+Once you have a function binary that works, you can then proceed to
+creating the container image.
+
+### Build the KRM function as a Docker image
+
+Generate a Dockerfile for the function image:
+```shell
+cat > Dockerfile << EOF 
+FROM golang:1.17-alpine3.15
+ENV CGO_ENABLED=0
+WORKDIR /go/src/
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o /usr/local/bin/function ./
+FROM alpine:3.15
+COPY --from=0 /usr/local/bin/function /usr/local/bin/function
+ENTRYPOINT ["function"]
+EOF
 ```
 
 Build the image:
 
 ```shell
-$ docker build . -t gcr.io/project/fn-name:tag
+export FN_CONTAINER_REGISTRY=<Your GCR or dockerh host>
+$ docker build . -t ${FN_CONTAINER_REGISTRY}
 ```
 
-Optionally, push the image to a container registry:
-
+To verify the image using the same `./data` resources
 ```shell
-$ docker push gcr.io/project/fn-name:tag
+kpt fn eval ${PATH} --image ${FN_CONTAINER_REGISTRY} --fn-config ${FN_PATH}
 ```
-
-Run the function imperatively as a container function:
-
-```shell
-$ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- myannotation=foo
-```
-
-## Next Steps
-
-- Read the package documentation:
-
-| Package                                    | Purpose               |
-| ------------------------------------------ | --------------------- |
-| [sigs.k8s.io/kustomize/kyaml/fn/framework] | Functions Framework   |
-| [sigs.k8s.io/kustomize/kyaml/yaml]         | Modify YAML resources |
-
-- Take a look at the source code for [functions in the catalog] to better
-  understand how to develop functions in Go
-
-[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/fn/framework#pkg-index
-[sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/yaml
-[functions in the catalog]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go
