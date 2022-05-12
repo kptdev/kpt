@@ -834,7 +834,8 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 				{
 					Type: "eval",
 					Eval: &porchapi.FunctionEvalTaskSpec{
-						Image: "gcr.io/kpt-fn/starlark:v0.4.2",
+						//
+						Image: "gcr.io/kpt-fn/starlark:v0.4.3",
 						ConfigMap: map[string]string{
 							"source": `for resource in ctx.resource_list["items"]:
   resource["metadata"]["annotations"]["foo"] = "bar"`,
@@ -959,6 +960,10 @@ for resource in ctx.resource_list["items"]:
 }
 
 func (t *PorchSuite) TestPodFunctionEvaluatorWithDistrolessImage(ctx context.Context) {
+	if t.local {
+		t.Skipf("Skipping due to not having pod evalutor in local mode")
+	}
+
 	t.registerMainGitRepositoryF(ctx, "git-fn-distroless")
 
 	// Create Package Revision
