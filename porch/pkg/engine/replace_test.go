@@ -17,6 +17,7 @@ package engine
 import (
 	"bytes"
 	"context"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -63,20 +64,30 @@ func removeComments(t *testing.T, r repository.PackageResources) repository.Pack
 	}
 
 	for k, v := range r.Contents {
-		var data interface{}
-		if err := yaml.Unmarshal([]byte(v), &data); err != nil {
-			t.Fatalf("Failed to unmarshal %q: %v", k, err)
+		base := path.Base(k)
+		ext := path.Ext(base)
+
+		if ext == ".yaml" || ext == ".yml" || base == "Kptfile" {
+			v = removeCommentsFromFile(t, k, v)
 		}
 
-		var nocomment bytes.Buffer
-		encoder := yaml.NewEncoder(&nocomment)
-		encoder.SetIndent(0)
-		if err := encoder.Encode(data); err != nil {
-			t.Fatalf("Failed to re-encode yaml output: %v", err)
-		}
+		out.Contents[k] = v
+	}
+	return out
+}
 
-		out.Contents[k] = nocomment.String()
+func removeCommentsFromFile(t *testing.T, name, contents string) string {
+	var data interface{}
+	if err := yaml.Unmarshal([]byte(contents), &data); err != nil {
+		t.Fatalf("Failed to unmarshal %q: %v", name, err)
 	}
 
-	return out
+	var nocomment bytes.Buffer
+	encoder := yaml.NewEncoder(&nocomment)
+	encoder.SetIndent(0)
+	if err := encoder.Encode(data); err != nil {
+		t.Fatalf("Failed to re-encode yaml output: %v", err)
+	}
+
+	return nocomment.String()
 }
