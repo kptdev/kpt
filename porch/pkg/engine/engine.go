@@ -583,10 +583,12 @@ func healConfig(old, new map[string]string) (map[string]string, error) {
 		},
 	}
 
+	extra := map[string]string{}
+
 	if err := (kio.Pipeline{
 		Inputs: []kio.Reader{&packageReader{
 			input: repository.PackageResources{Contents: new},
-			extra: map[string]string{},
+			extra: extra,
 		}},
 		Filters:               []kio.Filter{filter},
 		Outputs:               []kio.Writer{out},
@@ -595,5 +597,11 @@ func healConfig(old, new map[string]string) (map[string]string, error) {
 		return nil, err
 	}
 
-	return out.output.Contents, nil
+	healed := out.output.Contents
+
+	for k, v := range extra {
+		healed[k] = v
+	}
+
+	return healed, nil
 }
