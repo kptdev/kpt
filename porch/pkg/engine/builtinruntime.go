@@ -27,6 +27,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 )
 
+// When updating the version for the builtin functions, please also update the image version
+// in test TestBuiltinFunctionEvaluator in porch/test/e2e/e2e_test.go, if the versions mismatch
+// the e2e test will fail in local deployment mode.
 var (
 	applyReplacementsImageAliases = []string{
 		"gcr.io/kpt-fn/apply-replacements:v0.1.1",
