@@ -97,5 +97,6 @@
   - [Porch Installation Guide](guides/porch-installation.md)
   - [Porch User Guide](guides/porch-user-guide.md)
   - [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
+  - [Value Propagation Pattern](guides/value-propagation.md)
 - [FAQ](faq/)
 - [Contact](contact/)
