@@ -64,7 +64,7 @@ deployments-8baf4892d6bdeda0f26ef4b1088fddb85c5a2486 rejected
 ```
 
 ?> Refer to the [approve][rpkg-approve] and [reject][rpkg-reject] command
-?> reference for usage.
+reference for usage.
 
 Now, confirm lifecycle stages of the package revisions:
 
