@@ -1,7 +1,7 @@
 There are several ways to author a package revision, including creating
 a completely new one, cloning an existing package, or creating a new revision
-of an existing package. In this section we will exploer the different ways to
-author packge revisions, and also explore how to modify packge contents.
+of an existing package. In this section we will explore the different ways to
+author package revisions, and explore how to modify package contents.
 
 ## Create a new package revision
 
@@ -36,7 +36,7 @@ means that the package is being authored.
 > assigned by Porch are stable, and computed as hash of the repository name,
 > directory path within the repository, and revision.
 
-The contents of the new package revicion are the same as if it was created using
+The contents of the new package revision are the same as if it was created using
 the [`kpt pkg init`](/book/03-packages/06-creating-a-package) command, except it
 was created by the Package Orchestration service in your repository.
 
@@ -70,9 +70,9 @@ deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b   istions   v1         fals
 
 ?> Refer to the [clone command reference][rpkg-clone] for usage.
 
-Cloning a packge using the Package Orchestration service is an action similar to
+Cloning a package using the Package Orchestration service is an action similar to
 [`kpt pkg get`](/book/03-packages/01-getting-a-package) command. Porch will
-create the appropriate upstream packge links in the new package's `Kptfile`.
+create the appropriate upstream package links in the new package's `Kptfile`.
 Let's take a look:
 
 ```sh
@@ -141,7 +141,7 @@ from it.
 $ kpt alpha rpkg propose deployments-c32b851b591b860efda29ba0e006725c8c1f7764 -ndefault
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764 proposed
 
-# Approve the proposed packge revision for publishing
+# Approve the proposed package revision for publishing
 $ kpt alpha rpkg approve deployments-c32b851b591b860efda29ba0e006725c8c1f7764 -ndefault
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764 approved
 ```
@@ -177,17 +177,17 @@ deployments-93bb9ac8c2fb7a5759547a38f5f48b369f42d08a   new-package   v2         
 ?> Refer to the [copy command reference][rpkg-copy] for usage.
 
 Unlike `clone` of a package which establishes the upstream-downstream
-relationship betweek the respective packages, and updates the `Kptfile`
+relationship between the respective packages, and updates the `Kptfile`
 to reflect the relationship, the `copy` command does *not* change the
 upstream-downstream relationships. The copy of a package shares the same
-upstream packge as the package from which it was copied. Specifically,
-in this case both `newpackage/v1` and `newpackage/v2` have identical contents,
+upstream package as the package from which it was copied. Specifically,
+in this case both `new-package/v1` and `new-package/v2` have identical contents,
 including upstream information, and differ in revision only.
 
 ## Editing package revision resources
 
 One of the driving motivations for the Package Orchestration service is enabling
-WYSIWYG authoring of packages, including their contents, in a highly usable UIs.
+WYSIWYG authoring of packages, including their contents, in highly usable UIs.
 Porch therefore supports reading and updating package *contents*.
 
 In addition to using a [UI](/guides/namespace-provisioning-ui) with Porch, we
@@ -204,9 +204,9 @@ $ kpt alpha rpkg pull deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b ./ist
 The command downloaded the `istions/v1` package revision contents and saved
 them in the `./istions` directory. Now you will make some changes.
 
-First, note tha even though Porch updated the namespace name (in
+First, note that even though Porch updated the namespace name (in
 `namespace.yaml`) to `istions` when the package was cloned, the `README.md`
-was not update. Let's fix it first.
+was not updated. Let's fix it first.
 
 Open the `README.md` in your favorite editor and update its contents, for
 example:
@@ -274,9 +274,9 @@ metadata:
 spec: {}
 ```
 
-The udpated namespace now has new labels! What happened?
+The updated namespace now has new labels! What happened?
 
-Whenever packge is updated during the authoring process, Porch automatically
+Whenever package is updated during the authoring process, Porch automatically
 re-renders the package to make sure that all mutators and validators are
 executed. So when we added the new `set-labels` mutator, as soon as we pushed
 the updated package contents to Porch, Porch re-rendered the package and
