@@ -19,6 +19,6 @@ find . -type f \
 ! -path "./site/*" \
 ! -path "./docs/*" \
 ! -path "**/.expected/results.yaml" \
-! -path "**/testData/*" \
+! -path "**/testdata/*" \
 ! -path "**/generated/*" \
-| xargs $GOBIN/addlicense -y 2021 -l apache
+| xargs $GOBIN/addlicense -y 2022 -l apache
