@@ -19,14 +19,12 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type editPackageMutation struct {
 	task              *api.Task
-	name              string
 	namespace         string
 	cad               CaDEngine
 	referenceResolver ReferenceResolver
@@ -46,11 +44,6 @@ func (m *editPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	}).FetchResources(ctx, sourceRef, m.namespace)
 	if err != nil {
 		return repository.PackageResources{}, nil, fmt.Errorf("failed to fetch resources for package %q: %w", sourceRef.Name, err)
-	}
-
-	// Update Kptfile
-	if err := kpt.UpdateKptfileName(m.name, sourceResources.Spec.Resources); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to update package name %q: %w", sourceRef.Name, err)
 	}
 
 	return repository.PackageResources{

@@ -3,14 +3,14 @@ commands:
       - alpha
       - repo
       - register
-      - --namespace=rpkg-edit
+      - --namespace=rpkg-copy
       - --name=git
       - http://git-server.test-git-namespace.svc.cluster.local:8080
   - args:
       - alpha
       - rpkg
       - clone
-      - --namespace=rpkg-edit
+      - --namespace=rpkg-copy
       - https://github.com/platkrm/test-blueprints.git
       - --directory=basens
       - --ref=basens/v1
@@ -21,18 +21,17 @@ commands:
   - args:
       - alpha
       - rpkg
-      - edit
-      - --namespace=rpkg-edit
-      - --repository=git
+      - copy
+      - --namespace=rpkg-copy
+      - --revision=v1
       - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
-      - basens-new-edit
-    stdout: git-85f4237aefaf996af6ce27fe0993d1ccb9a8c9ef created
+    stdout: git-66579ccd78cf67f80a3cafaf63dc121db4d92b83 created
   - args:
       - alpha
       - rpkg
       - pull
-      - --namespace=rpkg-edit
-      - git-85f4237aefaf996af6ce27fe0993d1ccb9a8c9ef
+      - --namespace=rpkg-copy
+      - git-66579ccd78cf67f80a3cafaf63dc121db4d92b83
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
@@ -46,7 +45,7 @@ commands:
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
-          name: basens-new-edit
+          name: basens-edit
         upstream:
           git:
             directory: basens

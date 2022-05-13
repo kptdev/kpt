@@ -70,7 +70,6 @@ info:
 			},
 		},
 		namespace:         "test-namespace",
-		name:              "test-package",
 		referenceResolver: &fakeReferenceResolver{},
 		cad:               cad,
 	}
@@ -84,7 +83,7 @@ info:
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
-  name: test-package
+  name: example
   annotations:
     config.kubernetes.io/local-config: "true"
 info:
