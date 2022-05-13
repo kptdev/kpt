@@ -10,5 +10,5 @@
     src="https://www.youtube.com/embed/L_x7z4CXHDw"> </iframe>
 
 
-[Why kpt](/guides/rationale.md)
+[Why kpt](guides/rationale.md)
 [Get Started](?id=overview)
