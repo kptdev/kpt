@@ -7,7 +7,7 @@
 > separated from the code that transforms it.
 
 <iframe id="ytplayer" type="text/html" width="550" height="360"
-    src="https://www.youtube.com/embed/L_x7z4CXHDw"> </iframe>
+    src="https://www.youtube.com/embed/L_x7z4CXHDw" allowFullScreen="allowFullScreen"> </iframe>
 
 
 [Why kpt](guides/rationale.md)
