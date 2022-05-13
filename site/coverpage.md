@@ -6,4 +6,9 @@
 > by manipulating declarative Configuration as Data, 
 > separated from the code that transforms it.
 
-[Learn More](?id=overview)
+<iframe id="ytplayer" type="text/html" width="550" height="360"
+    src="https://www.youtube.com/embed/L_x7z4CXHDw"> </iframe>
+
+
+[Why kpt](guides/rationale.md)
+[Get Started](?id=overview)
