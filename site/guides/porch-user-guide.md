@@ -256,7 +256,7 @@ and save it in the specified repository.
 
 ```sh
 # Initialize a new (empty) package revision:
-$ kpt alpha rpkg init new-package --repository=deployments --revision=v1 --ndefault
+$ kpt alpha rpkg init new-package --repository=deployments --revision=v1 -ndefault
 
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764 created
 
