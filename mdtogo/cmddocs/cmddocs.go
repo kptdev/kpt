@@ -64,7 +64,6 @@ func parse(path, value string) []doc {
 	docsByName := make(map[string]doc)
 	var docBuilder doc
 	for _, match := range matches {
-
 		if match[1] == "" {
 			docBuilder = docsByName[name]
 			docBuilder.Name = name

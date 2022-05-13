@@ -52,8 +52,11 @@ type InitOptions struct {
 // DefaultInitilizer implements Initializer interface.
 type DefaultInitializer struct{}
 
-func (i *DefaultInitializer) Initialize(ctx context.Context, fsys filesys.FileSystem, opts InitOptions) error {
-
+func (i *DefaultInitializer) Initialize(
+	ctx context.Context,
+	fsys filesys.FileSystem,
+	opts InitOptions,
+) error {
 	p, err := pkg.New(fsys, opts.PkgPath)
 	if err != nil {
 		return err

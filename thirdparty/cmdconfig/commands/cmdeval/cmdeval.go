@@ -267,9 +267,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit
 // function config
-func (r *EvalFnRunner) getCLIFunctionConfig(dataItems []string) (
-	*yaml.RNode, error) {
-
+func (r *EvalFnRunner) getCLIFunctionConfig(dataItems []string) (*yaml.RNode, error) {
 	if r.Image == "" && r.Exec == "" {
 		return nil, nil
 	}
@@ -351,7 +349,6 @@ func (r *EvalFnRunner) getFunctionSpec() (*runtimeutil.FunctionSpec, []string, e
 			fn.Exec.Path = s[0]
 			execArgs = s[1:]
 		}
-
 	}
 	return fn, execArgs, nil
 }

@@ -148,7 +148,6 @@ func TestCmdMainBranch_execute(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 // TestCmd_fail verifies that that command returns an error rather than exiting the process

@@ -113,7 +113,6 @@ func loadFromStream(f util.Factory, r io.Reader, rgfile string) ([]*unstructured
 		if diskInv.IsValid() {
 			invInfo = diskInv
 		}
-
 	}
 
 	// Stream does not contain a valid inventory and no local inventory does not exist, or is not valid.

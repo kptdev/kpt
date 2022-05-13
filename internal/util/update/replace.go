@@ -61,7 +61,6 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		} else {
-
 			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}

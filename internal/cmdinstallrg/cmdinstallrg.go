@@ -26,9 +26,11 @@ import (
 )
 
 // NewRunner returns a command runner
-func NewRunner(ctx context.Context, factory cmdutil.Factory,
-	ioStreams genericclioptions.IOStreams) *Runner {
-
+func NewRunner(
+	ctx context.Context,
+	factory cmdutil.Factory,
+	ioStreams genericclioptions.IOStreams,
+) *Runner {
 	r := &Runner{
 		ctx:       ctx,
 		ioStreams: ioStreams,
@@ -46,8 +48,11 @@ func NewRunner(ctx context.Context, factory cmdutil.Factory,
 	return r
 }
 
-func NewCommand(ctx context.Context, factory cmdutil.Factory,
-	ioStreams genericclioptions.IOStreams) *cobra.Command {
+func NewCommand(
+	ctx context.Context,
+	factory cmdutil.Factory,
+	ioStreams genericclioptions.IOStreams,
+) *cobra.Command {
 	return NewRunner(ctx, factory, ioStreams).Command
 }
 

@@ -39,9 +39,11 @@ import (
 )
 
 // NewRunner returns a command runner
-func NewRunner(ctx context.Context, factory util.Factory,
-	ioStreams genericclioptions.IOStreams) *Runner {
-
+func NewRunner(
+	ctx context.Context,
+	factory util.Factory,
+	ioStreams genericclioptions.IOStreams,
+) *Runner {
 	r := &Runner{
 		ctx:         ctx,
 		ioStreams:   ioStreams,

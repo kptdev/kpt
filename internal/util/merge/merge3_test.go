@@ -571,7 +571,6 @@ spec:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-
 			// setup the local directory
 			dir := t.TempDir()
 

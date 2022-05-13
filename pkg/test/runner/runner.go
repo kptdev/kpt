@@ -391,7 +391,6 @@ func (r *Runner) runFnRender() error {
 		if fnErr != nil {
 			break
 		}
-
 	}
 	return nil
 }

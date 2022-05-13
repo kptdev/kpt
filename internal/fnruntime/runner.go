@@ -48,11 +48,15 @@ const (
 // NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewRunner(
-	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
-	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, setPkgPathAnnotation, displayResourceCount bool,
-	runtime fn.FunctionRuntime) (kio.Filter, error) {
-
+	ctx context.Context,
+	fsys filesys.FileSystem,
+	f *kptfilev1.Function,
+	pkgPath types.UniquePath,
+	fnResults *fnresult.ResultList,
+	imagePullPolicy ImagePullPolicy,
+	setPkgPathAnnotation, displayResourceCount bool,
+	runtime fn.FunctionRuntime,
+) (kio.Filter, error) {
 	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err

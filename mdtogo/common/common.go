@@ -40,7 +40,6 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 	} else {
 		if filepath.Ext(source) == markdownExtension {
 			filePaths = append(filePaths, source)
-
 		} else {
 			files, err := ioutil.ReadDir(source)
 			if err != nil {

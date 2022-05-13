@@ -952,7 +952,6 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	}.Run(fake.CtxWithDefaultPrinter())
 
 	assert.Contains(t, err.Error(), "must have an upstream reference")
-
 }
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid

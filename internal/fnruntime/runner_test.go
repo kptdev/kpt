@@ -101,7 +101,6 @@ data: {foo: bar}
 }
 
 func TestMultilineFormatter(t *testing.T) {
-
 	type testcase struct {
 		ml       *multiLineFormatter
 		expected string
