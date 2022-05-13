@@ -59,7 +59,7 @@ func (p *PkgRepoDirtyError) Error() string {
 	return fmt.Sprintf("package %q contains uncommitted changes", p.Path.String())
 }
 
-type UpdateOptions struct {
+type Options struct {
 	// RelPackagePath is the relative path of a subpackage to the root. If the
 	// package is root, the value here will be ".".
 	RelPackagePath string
@@ -83,7 +83,7 @@ type UpdateOptions struct {
 
 // Updater updates a local package
 type Updater interface {
-	Update(options UpdateOptions) error
+	Update(options Options) error
 }
 
 var strategies = map[kptfilev1.UpdateStrategyType]func() Updater{
@@ -143,7 +143,7 @@ func (u Command) Run(ctx context.Context) error {
 
 	for s.Len() > 0 {
 		p := s.Pop()
-		packageCount += 1
+		packageCount++
 
 		if err := u.updateRootPackage(ctx, p); err != nil {
 			return errors.E(op, p.UniquePath, err)
@@ -452,7 +452,7 @@ func (u Command) mergePackage(ctx context.Context, localPath, updatedPath, origi
 			fmt.Errorf("unrecognized update strategy %s", u.Strategy))
 	}
 	pr.Printf("Updating package %q with strategy %q.\n", packageName(localPath), pkgKf.Upstream.UpdateStrategy)
-	if err := updater().Update(UpdateOptions{
+	if err := updater().Update(Options{
 		RelPackagePath: relPath,
 		LocalPath:      localPath,
 		UpdatedPath:    updatedPath,

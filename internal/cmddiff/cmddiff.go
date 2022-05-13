@@ -87,14 +87,14 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 	if r.diffType == "" {
 		// pick sensible defaults for diff-type
-		r.DiffType = diff.DiffTypeLocal
+		r.DiffType = diff.TypeLocal
 		if version != "" {
 			// if target version is specified, default to 'combined' diff-type.
 			// xref: https://github.com/GoogleContainerTools/kpt/issues/139
-			r.DiffType = diff.DiffTypeCombined
+			r.DiffType = diff.TypeCombined
 		}
 	} else {
-		r.DiffType = diff.DiffType(r.diffType)
+		r.DiffType = diff.Type(r.diffType)
 	}
 
 	resolvedPath, err := argutil.ResolveSymlink(r.ctx, dir)

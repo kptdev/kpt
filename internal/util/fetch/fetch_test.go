@@ -477,7 +477,6 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 		},
 	}
 	for tn, tc := range testCases {
-
 		t.Run(tn, func(t *testing.T) {
 			expectedName := "expected"
 			repos, rw, clean := testutil.SetupReposAndWorkspace(t, map[string][]testutil.Content{

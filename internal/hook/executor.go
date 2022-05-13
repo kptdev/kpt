@@ -32,7 +32,7 @@ import (
 
 // ErrAllowedExecNotSpecified indicates user need to authorize to invoke
 // exec binaries.
-var ErrAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
+var ErrAllowedExecNotSpecified = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
 // Executor executes a hook.
 type Executor struct {

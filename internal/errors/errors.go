@@ -269,4 +269,4 @@ func UnwrapErrors(err error) (error, bool) {
 // ErrAlreadyHandled is an error that is already handled by
 // a kpt command and nothing needs to be done by the global
 // error handler except to return a non-zero exit code.
-var ErrAlreadyHandled error = fmt.Errorf("already handled error")
+var ErrAlreadyHandled = fmt.Errorf("already handled error")

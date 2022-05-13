@@ -162,7 +162,6 @@ func TestKptfileValidate(t *testing.T) {
 				t.Fatal("kptfile should not be valid")
 			}
 		})
-
 	}
 }
 
@@ -249,7 +248,6 @@ func TestValidateFunctionName(t *testing.T) {
 				t.Fatalf("function name %s should not be valid", n.Name)
 			}
 		})
-
 	}
 }
 

@@ -281,7 +281,6 @@ spec:
 	if !assert.Equal(t, `invalid input for --output flag "foo/bar", must be "stdout" or "unwrap"`, err.Error()) {
 		t.FailNow()
 	}
-
 }
 
 func TestSourceCommand_DefaultDir(t *testing.T) {

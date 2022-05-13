@@ -20,7 +20,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -83,7 +82,9 @@ func (c Command) Run(ctx context.Context) error {
 	// normalize path to a filepath
 	repoDir := c.Git.Directory
 	if !strings.HasSuffix(repoDir, "file://") {
-		repoDir = filepath.Join(path.Split(repoDir))
+		// Convert from separator to slash and back.
+		// This ensures all separators are compatible with the local OS.
+		repoDir = filepath.FromSlash(filepath.ToSlash(repoDir))
 	}
 	c.Git.Directory = repoDir
 
@@ -162,7 +163,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 		}
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
-			packageCount += 1
+			packageCount++
 			pr.PrintPackage(p, !(p == rootPkg))
 			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			err := (&fetch.Command{

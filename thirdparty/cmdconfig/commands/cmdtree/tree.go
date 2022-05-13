@@ -128,20 +128,26 @@ func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 }
 
 // node wraps a tree node, and any children nodes
-//nolint
+//nolint:unused
 type node struct {
 	p TreeWriter
 	*yaml.RNode
 	children []*node
 }
 
-func (a node) Len() int      { return len(a.children) }
+//nolint:unused
+func (a node) Len() int { return len(a.children) }
+
+//nolint:unused
 func (a node) Swap(i, j int) { a.children[i], a.children[j] = a.children[j], a.children[i] }
+
+//nolint:unused
 func (a node) Less(i, j int) bool {
 	return compareNodes(a.children[i].RNode, a.children[j].RNode)
 }
 
 // Tree adds this node to the root
+//nolint:unused
 func (a node) Tree(root treeprint.Tree) error {
 	sort.Sort(a)
 	branch := root

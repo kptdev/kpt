@@ -48,11 +48,15 @@ const (
 // NewRunner returns a kio.Filter given a specification of a function
 // and it's config.
 func NewRunner(
-	ctx context.Context, fsys filesys.FileSystem, f *kptfilev1.Function,
-	pkgPath types.UniquePath, fnResults *fnresult.ResultList,
-	imagePullPolicy ImagePullPolicy, setPkgPathAnnotation, displayResourceCount bool,
-	runtime fn.FunctionRuntime) (kio.Filter, error) {
-
+	ctx context.Context,
+	fsys filesys.FileSystem,
+	f *kptfilev1.Function,
+	pkgPath types.UniquePath,
+	fnResults *fnresult.ResultList,
+	imagePullPolicy ImagePullPolicy,
+	setPkgPathAnnotation, displayResourceCount bool,
+	runtime fn.FunctionRuntime,
+) (kio.Filter, error) {
 	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -481,7 +485,7 @@ func (ri *multiLineFormatter) String() string {
 
 func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
-	var fn errors.Fn = errors.Fn(f.Image)
+	fn := errors.Fn(f.Image)
 
 	var node *yaml.RNode
 	switch {

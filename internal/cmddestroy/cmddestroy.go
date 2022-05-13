@@ -34,9 +34,11 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/printers"
 )
 
-func NewRunner(ctx context.Context, factory util.Factory,
-	ioStreams genericclioptions.IOStreams) *Runner {
-
+func NewRunner(
+	ctx context.Context,
+	factory util.Factory,
+	ioStreams genericclioptions.IOStreams,
+) *Runner {
 	r := &Runner{
 		ctx:           ctx,
 		ioStreams:     ioStreams,

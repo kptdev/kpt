@@ -23,6 +23,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func ParseCmdDocs(files []string) []doc {
@@ -61,7 +64,6 @@ func parse(path, value string) []doc {
 	docsByName := make(map[string]doc)
 	var docBuilder doc
 	for _, match := range matches {
-
 		if match[1] == "" {
 			docBuilder = docsByName[name]
 			docBuilder.Name = name
@@ -94,7 +96,7 @@ func parse(path, value string) []doc {
 }
 
 func cleanName(name string) string {
-	name = strings.Title(name)
+	name = cases.Title(language.English).String(name)
 	name = strings.ReplaceAll(name, "-", "")
 	return name
 }

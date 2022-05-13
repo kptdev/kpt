@@ -425,8 +425,6 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 					}
 				case All:
 					packagePaths[path] = true
-				default:
-
 				}
 				if !recursive {
 					return filepath.SkipDir

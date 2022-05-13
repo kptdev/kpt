@@ -153,7 +153,6 @@ func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
 	sort.Slice(inventory, inventorySortFunc(inventory))
 
 	assert.Equal(t, expectedInventory, inventory)
-
 }
 
 func inventorySortFunc(inv []InventoryEntry) func(i, j int) bool {

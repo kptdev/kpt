@@ -211,7 +211,7 @@ func Test_parseURL(t *testing.T) {
 	for name, test := range tests {
 		test := test // capture range variable
 		t.Run(name, func(t *testing.T) {
-			repo, dir, version, err := ParseURL(test.ghURL)
+			repo, dir, version, err := URL(test.ghURL)
 			assert.NoError(t, err)
 			assert.Equal(t, expected{repo: repo, dir: dir, version: version}, test.expected)
 		})

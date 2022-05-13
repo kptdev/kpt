@@ -21,21 +21,19 @@ import (
 )
 
 // New returns a new stack for elements of string type.
-func New() *stack {
-	return &stack{
-		slice: make([]string, 0),
-	}
+func New() *Stack {
+	return &Stack{}
 }
 
-type stack struct {
+type Stack struct {
 	slice []string
 }
 
-func (s *stack) Push(str string) {
+func (s *Stack) Push(str string) {
 	s.slice = append(s.slice, str)
 }
 
-func (s *stack) Pop() string {
+func (s *Stack) Pop() string {
 	l := len(s.slice)
 	if l == 0 {
 		panic(fmt.Errorf("can't pop an empty stack"))
@@ -45,33 +43,31 @@ func (s *stack) Pop() string {
 	return str
 }
 
-func (s *stack) Len() int {
+func (s *Stack) Len() int {
 	return len(s.slice)
 }
 
 // NewPkgStack returns a new stack for elements of *pkg.Pkg type.
-func NewPkgStack() *pkgStack {
-	return &pkgStack{
-		slice: make([]*pkg.Pkg, 0),
-	}
+func NewPkgStack() *PkgStack {
+	return &PkgStack{}
 }
 
-type pkgStack struct {
+type PkgStack struct {
 	slice []*pkg.Pkg
 }
 
-func (ps *pkgStack) Push(p *pkg.Pkg) {
+func (ps *PkgStack) Push(p *pkg.Pkg) {
 	ps.slice = append(ps.slice, p)
 }
 
-func (ps *pkgStack) PushAll(pkgs []*pkg.Pkg) {
+func (ps *PkgStack) PushAll(pkgs []*pkg.Pkg) {
 	for i := range pkgs {
 		p := pkgs[i]
 		ps.Push(p)
 	}
 }
 
-func (ps *pkgStack) Pop() *pkg.Pkg {
+func (ps *PkgStack) Pop() *pkg.Pkg {
 	l := len(ps.slice)
 	if l == 0 {
 		panic(fmt.Errorf("can't pop an empty stack"))
@@ -81,6 +77,6 @@ func (ps *pkgStack) Pop() *pkg.Pkg {
 	return p
 }
 
-func (ps *pkgStack) Len() int {
+func (ps *PkgStack) Len() int {
 	return len(ps.slice)
 }

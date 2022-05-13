@@ -952,7 +952,6 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	}.Run(fake.CtxWithDefaultPrinter())
 
 	assert.Contains(t, err.Error(), "must have an upstream reference")
-
 }
 
 // TestCommand_Run_failInvalidPath verifies Run fails if the path is invalid
@@ -3773,7 +3772,7 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			err = ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
-			tg.AssertEqual(t, local, filepath.Join(expectedLocal), false)
+			tg.AssertEqual(t, local, expectedLocal, false)
 		})
 	}
 }

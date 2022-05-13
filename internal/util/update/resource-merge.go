@@ -39,7 +39,7 @@ import (
 // packages, and performing a 3-way merge of the Resources.
 type ResourceMergeUpdater struct{}
 
-func (u ResourceMergeUpdater) Update(options UpdateOptions) error {
+func (u ResourceMergeUpdater) Update(options Options) error {
 	const op errors.Op = "update.Update"
 	if !options.IsRoot {
 		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)

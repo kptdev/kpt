@@ -141,7 +141,6 @@ error message`,
 }
 
 func TestDockerCLIOutputFilter(t *testing.T) {
-
 	testcases := []struct {
 		name     string
 		input    string

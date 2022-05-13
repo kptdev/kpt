@@ -36,18 +36,18 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-// DiffType represents type of comparison to be performed.
-type DiffType string
+// Type represents type of diff comparison to be performed.
+type Type string
 
 const (
-	// DiffTypeLocal shows the changes in local pkg relative to upstream source pkg at original version
-	DiffTypeLocal DiffType = "local"
-	// DiffTypeRemote shows changes in the upstream source pkg between original and target version
-	DiffTypeRemote DiffType = "remote"
-	// DiffTypeCombined shows changes in local pkg relative to upstream source pkg at target version
-	DiffTypeCombined DiffType = "combined"
+	// TypeLocal shows the changes in local pkg relative to upstream source pkg at original version
+	TypeLocal Type = "local"
+	// TypeRemote shows changes in the upstream source pkg between original and target version
+	TypeRemote Type = "remote"
+	// TypeCombined shows changes in local pkg relative to upstream source pkg at target version
+	TypeCombined Type = "combined"
 	// 3way shows changes in local and remote changes side-by-side
-	DiffType3Way DiffType = "3way"
+	Type3Way Type = "3way"
 )
 
 // A collection of user-readable "source" definitions for diffed packages.
@@ -69,11 +69,11 @@ const (
 )
 
 // String implements Stringer.
-func (dt DiffType) String() string {
+func (dt Type) String() string {
 	return string(dt)
 }
 
-var SupportedDiffTypes = []DiffType{DiffTypeLocal, DiffTypeRemote, DiffTypeCombined, DiffType3Way}
+var SupportedDiffTypes = []Type{TypeLocal, TypeRemote, TypeCombined, Type3Way}
 
 func SupportedDiffTypesLabel() string {
 	var labels []string
@@ -93,7 +93,7 @@ type Command struct {
 	Ref string
 
 	// DiffType specifies the type of changes to show
-	DiffType DiffType
+	DiffType Type
 
 	// Difftool refers to diffing commandline tool for showing changes.
 	DiffTool string
@@ -176,9 +176,9 @@ func (c *Command) Run(ctx context.Context) error {
 		}
 	}
 
-	if c.DiffType == DiffTypeRemote ||
-		c.DiffType == DiffTypeCombined ||
-		c.DiffType == DiffType3Way {
+	if c.DiffType == TypeRemote ||
+		c.DiffType == TypeCombined ||
+		c.DiffType == Type3Way {
 		// get the upstream pkg at the target version
 		upstreamTargetPkgName := NameStagingDirectory(TargetRemotePackageSource,
 			c.Ref)
@@ -198,13 +198,13 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	switch c.DiffType {
-	case DiffTypeLocal:
+	case TypeLocal:
 		return c.PkgDiffer.Diff(currPkg, upstreamPkg)
-	case DiffTypeRemote:
+	case TypeRemote:
 		return c.PkgDiffer.Diff(upstreamPkg, upstreamTargetPkg)
-	case DiffTypeCombined:
+	case TypeCombined:
 		return c.PkgDiffer.Diff(currPkg, upstreamTargetPkg)
-	case DiffType3Way:
+	case Type3Way:
 		return c.PkgDiffer.Diff(currPkg, upstreamPkg, upstreamTargetPkg)
 	default:
 		return errors.Errorf("unsupported diff type '%s'", c.DiffType)
@@ -213,15 +213,15 @@ func (c *Command) Run(ctx context.Context) error {
 
 func (c *Command) Validate() error {
 	switch c.DiffType {
-	case DiffTypeLocal, DiffTypeCombined, DiffTypeRemote, DiffType3Way:
+	case TypeLocal, TypeCombined, TypeRemote, Type3Way:
 	default:
-		return errors.Errorf("invalid diff-type '%s'. Supported diff-types are: %s",
+		return errors.Errorf("invalid diff-type '%s': supported diff-types are: %s",
 			c.DiffType, SupportedDiffTypesLabel())
 	}
 
 	path, err := exec.LookPath(c.DiffTool)
 	if err != nil {
-		return errors.Errorf("diff-tool '%s' not found in the PATH.", c.DiffTool)
+		return errors.Errorf("diff-tool '%s' not found in the PATH", c.DiffTool)
 	}
 	c.DiffTool = path
 	return nil
@@ -253,7 +253,7 @@ type PkgDiffer interface {
 
 type defaultPkgDiffer struct {
 	// DiffType specifies the type of changes to show
-	DiffType DiffType
+	DiffType Type
 
 	// Difftool refers to diffing commandline tool for showing changes.
 	DiffTool string

@@ -54,9 +54,12 @@ type MigrateRunner struct {
 }
 
 // NewRunner returns a pointer to an initial MigrateRunner structure.
-func NewRunner(ctx context.Context, factory util.Factory, cmLoader manifestreader.ManifestLoader,
-	ioStreams genericclioptions.IOStreams) *MigrateRunner {
-
+func NewRunner(
+	ctx context.Context,
+	factory util.Factory,
+	cmLoader manifestreader.ManifestLoader,
+	ioStreams genericclioptions.IOStreams,
+) *MigrateRunner {
 	r := &MigrateRunner{
 		ctx:             ctx,
 		factory:         factory,

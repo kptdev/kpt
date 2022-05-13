@@ -62,7 +62,7 @@ license:
 	scripts/update-license.sh
 
 lint:
-	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.1
 	$(GOBIN)/golangci-lint run ./...
 
 license-check:

@@ -30,7 +30,7 @@ import (
 // delete the local package.  This will wipe all local changes.
 type ReplaceUpdater struct{}
 
-func (u ReplaceUpdater) Update(options UpdateOptions) error {
+func (u ReplaceUpdater) Update(options Options) error {
 	const op errors.Op = "update.Update"
 	paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
@@ -61,7 +61,6 @@ func (u ReplaceUpdater) Update(options UpdateOptions) error {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		} else {
-
 			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}

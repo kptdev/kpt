@@ -285,7 +285,7 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 
 			updater := &ResourceMergeUpdater{}
 
-			err := updater.Update(UpdateOptions{
+			err := updater.Update(Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

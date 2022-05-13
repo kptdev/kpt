@@ -266,9 +266,7 @@ func (gur *GitUpstreamRepo) GetDefaultBranch(ctx context.Context) (string, error
 // cached information about refs in the upstream repo. If the branch doesn't exist
 // in the upstream repo, the last return value will be false.
 func (gur *GitUpstreamRepo) ResolveBranch(branch string) (string, bool) {
-	if strings.HasPrefix(branch, "refs/heads/") {
-		branch = strings.TrimPrefix(branch, "refs/heads/")
-	}
+	branch = strings.TrimPrefix(branch, "refs/heads/")
 	for head, commit := range gur.Heads {
 		if head == branch {
 			return commit, true
@@ -281,9 +279,7 @@ func (gur *GitUpstreamRepo) ResolveBranch(branch string) (string, bool) {
 // cached information about refs in the upstream repo. If the tag doesn't exist
 // in the upstream repo, the last return value will be false.
 func (gur *GitUpstreamRepo) ResolveTag(tag string) (string, bool) {
-	if strings.HasPrefix(tag, "refs/tags/") {
-		tag = strings.TrimPrefix(tag, "refs/tags/")
-	}
+	tag = strings.TrimPrefix(tag, "refs/tags/")
 	for t, commit := range gur.Tags {
 		if t == tag {
 			return commit, true

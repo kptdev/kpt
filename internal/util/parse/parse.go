@@ -89,7 +89,7 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
 func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, error) {
 	g := Target{}
-	repo, dir, ref, err := ParseURL(pkgURL)
+	repo, dir, ref, err := URL(pkgURL)
 	if err != nil {
 		return g, err
 	}
@@ -118,8 +118,8 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string) (Target, 
 	return g, nil
 }
 
-// ParseURL parses a pkg url (must contain ".git") and returns the repo, directory, and version
-func ParseURL(pkgURL string) (repo string, dir string, ref string, err error) {
+// URL parses a pkg url (must contain ".git") and returns the repo, directory, and version
+func URL(pkgURL string) (repo string, dir string, ref string, err error) {
 	parts := regexp.MustCompile(gitSuffixRegexp).Split(pkgURL, 2)
 	index := strings.Index(pkgURL, parts[0])
 	repo = strings.Join([]string{pkgURL[:index], parts[0]}, "")

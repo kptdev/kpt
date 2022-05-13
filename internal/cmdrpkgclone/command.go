@@ -123,7 +123,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 	case strings.Contains(source, "/"):
 		if parse.HasGitSuffix(source) { // extra parsing required
-			repo, dir, ref, err := parse.ParseURL(source)
+			repo, dir, ref, err := parse.URL(source)
 			if err != nil {
 				return err
 			}
