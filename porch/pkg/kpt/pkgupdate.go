@@ -170,7 +170,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// 	return errors.E(op, p.UniquePath, err)
 		// }
 
-		updateOptions := update.UpdateOptions{
+		updateOptions := update.Options{
 			RelPackagePath: relPath,
 			LocalPath:      localPath,
 			UpdatedPath:    updatedPath,

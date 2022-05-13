@@ -40,7 +40,7 @@ func TestCommand_Diff(t *testing.T) {
 		updatedLocal              testutil.Content
 		fetchRef                  string
 		diffRef                   string
-		diffType                  DiffType
+		diffType                  Type
 		diffTool                  string
 		diffOpts                  string
 		expDiff                   string
@@ -68,7 +68,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: DiffTypeRemote,
+			diffType: TypeRemote,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -108,7 +108,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: DiffTypeCombined,
+			diffType: TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -149,7 +149,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: DiffTypeCombined,
+			diffType: TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -195,7 +195,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: DiffTypeCombined,
+			diffType: TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -246,7 +246,7 @@ locally changed: foo
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: DiffTypeCombined,
+			diffType: TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -301,7 +301,7 @@ locally changed: foo
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: DiffTypeCombined,
+			diffType: TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -382,7 +382,7 @@ func TestCommand_InvalidRef(t *testing.T) {
 	err := (&Command{
 		Path:         g.LocalWorkspace.FullPackagePath(),
 		Ref:          "hurdygurdy", // ref should not exist in upstream
-		DiffType:     DiffTypeCombined,
+		DiffType:     TypeCombined,
 		DiffTool:     "diff",
 		DiffToolOpts: "-r -i -w",
 		Output:       diffOutput,
@@ -422,7 +422,7 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 	err := (&Command{
 		Path:         g.LocalWorkspace.FullPackagePath(),
 		Ref:          "master",
-		DiffType:     DiffType3Way,
+		DiffType:     Type3Way,
 		DiffTool:     "echo", // this is a proxy for 3 way diffing to validate we pass proper values
 		DiffToolOpts: "",
 		Output:       diffOutput,
@@ -456,7 +456,7 @@ func TestCommand_NotAKptDirectory(t *testing.T) {
 			cmdErr := (&Command{
 				Path:         tc.directory,
 				Ref:          "master",
-				DiffType:     DiffTypeCombined,
+				DiffType:     TypeCombined,
 				DiffTool:     "diff",
 				DiffToolOpts: "-r -i -w",
 				Output:       diffOutput,

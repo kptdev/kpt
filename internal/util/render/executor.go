@@ -40,7 +40,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-var errAllowedExecNotSpecified error = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
+var errAllowedExecNotSpecified = fmt.Errorf("must run with `--allow-exec` option to allow running function binaries")
 
 // Renderer hydrates a given pkg by running the functions in the input pipeline
 type Renderer struct {
@@ -433,7 +433,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		if err != nil {
 			return nil, err
 		}
-		hctx.executedFunctionCnt += 1
+		hctx.executedFunctionCnt++
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// merge the output resources with input resources

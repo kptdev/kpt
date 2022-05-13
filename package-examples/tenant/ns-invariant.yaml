@@ -7,7 +7,7 @@ source: |
     num_ns = 0
     for resource in resource_list["items"]:
       if resource["apiVersion"] == "v1" and resource["kind"] == "Namespace":
-        num_ns += 1
+        num_ns++
     # only one namespace is allowed
     if num_ns > 1:
       fail("pkg must contain single namespace") 

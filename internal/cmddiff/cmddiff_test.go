@@ -37,7 +37,7 @@ func TestCmdInvalidDiffType(t *testing.T) {
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
-		"invalid diff-type 'invalid'. Supported diff-types are: local, remote, combined, 3way")
+		"invalid diff-type 'invalid': supported diff-types are: local, remote, combined, 3way")
 }
 
 func TestCmdInvalidDiffTool(t *testing.T) {
@@ -46,7 +46,7 @@ func TestCmdInvalidDiffTool(t *testing.T) {
 	err := runner.C.Execute()
 	assert.EqualError(t,
 		err,
-		"diff-tool 'nodiff' not found in the PATH.")
+		"diff-tool 'nodiff' not found in the PATH")
 }
 
 func TestCmdExecute(t *testing.T) {

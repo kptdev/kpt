@@ -43,7 +43,7 @@ var kptfileSet = func() sets.String {
 }()
 
 // We should try to pull the common code up into the Update command.
-func (u FastForwardUpdater) Update(options UpdateOptions) error {
+func (u FastForwardUpdater) Update(options Options) error {
 	const op errors.Op = "update.Update"
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.

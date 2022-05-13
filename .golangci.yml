@@ -2,6 +2,8 @@
 
 run:
   deadline: 5m
+  skip-dirs:
+    thirdparty/
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
@@ -16,25 +18,24 @@ linters:
     - errcheck
 # funlen triggers on test functions which it shouldn't
 #    - funlen
+    - exportloopref
     - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - golint
 #    - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - lll
     - misspell
     - nakedret
-    - scopelint
     - staticcheck
     - structcheck
     - stylecheck
+    - revive
     - typecheck
     - unconvert
     - unparam
