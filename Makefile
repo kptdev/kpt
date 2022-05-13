@@ -59,7 +59,7 @@ tidy:
 	go mod tidy
 
 license:
-	GOBIN=$(GOBIN) scripts/update-license.sh
+	scripts/update-license.sh
 
 lint:
 	(which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.31.0)

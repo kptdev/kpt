@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# don't add licenses to the site directory, it will break the docs
-# and will add them to the theme which is a submodule (bad)
-which addlicense || go install github.com/google/addlicense@latest
-find . -type f \
-! -path "./site/*" \
-! -path "./docs/*" \
-! -path "**/.expected/results.yaml" \
-! -path "**/testData/*" \
-! -path "**/generated/*" \
-| xargs $GOBIN/addlicense -y 2021 -l apache
+set -o nounset
+set -o errexit
+set -o pipefail
+
+# TODO: switch to google/addlicense once we have https://github.com/google/addlicense/pull/104
+go run github.com/justinsb/addlicense@v1.0.1 \
+  -c "Google LLC" -l apache \
+  --ignore ".build/**" \
+  --ignore "site/**" \
+  --ignore "docs/**" \
+  --ignore "**/.expected/results.yaml" \
+  --ignore "**/testdata/**" \
+  --ignore "**/generated/**" \
+  . 2>&1 | ( grep -v "skipping: " || true )
