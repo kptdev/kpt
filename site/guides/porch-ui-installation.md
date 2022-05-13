@@ -23,7 +23,7 @@ First, clone the
 repository.
 
 ```sh
-git clone https://github.com/GoogleContainerTools/kpt-backstage-plugins.git kpt-backstage-plugins
+git clone https://github.com/GoogleContainerTools/kpt-backstage-plugins.git
 cd kpt-backstage-plugins
 ```
 
