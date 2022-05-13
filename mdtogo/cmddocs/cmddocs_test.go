@@ -32,7 +32,7 @@ func TestParsingDocWithNameFromFolder(t *testing.T) {
 	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
 	assert.NoError(t, err)
 
-	testData := []byte(`
+	testdata := []byte(`
 <!--mdtogo:Short
 Short documentation.
 -->
@@ -58,7 +58,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testData, os.ModePerm)
+	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -76,7 +76,7 @@ func TestParsingDocWithBackticks(t *testing.T) {
 	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
 	assert.NoError(t, err)
 
-	testData := []byte(`
+	testdata := []byte(`
 <!--mdtogo:Short
 Short ` +
 		"`documentation`" +
@@ -90,7 +90,7 @@ Test document.
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testData, os.ModePerm)
+	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -107,7 +107,7 @@ func TestParsingDocWithNameFromComment(t *testing.T) {
 	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
 	assert.NoError(t, err)
 
-	testData := []byte(`
+	testdata := []byte(`
 <!--mdtogo:FirstShort
 First short documentation.
 -->
@@ -136,7 +136,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testData, os.ModePerm)
+	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
