@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,6 +29,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
+	"sigs.k8s.io/cli-utils/pkg/testutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -97,18 +99,20 @@ func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 }
 
 func (r *Runner) VerifyStdout(t *testing.T, stdout string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdOut), prepOutput(t, stdout))
+	testutil.AssertEqual(t, strings.TrimSpace(r.Config.StdOut), r.prepOutput(t, stdout))
 }
 
 func (r *Runner) VerifyStderr(t *testing.T, stderr string) {
-	assert.Equal(t, strings.TrimSpace(r.Config.StdErr), prepOutput(t, stderr))
+	testutil.AssertEqual(t, strings.TrimSpace(r.Config.StdErr), r.prepOutput(t, stderr))
 }
 
-func prepOutput(t *testing.T, s string) string {
-	txt := removeStatusEvents(t, s)
+func (r *Runner) prepOutput(t *testing.T, txt string) string {
+	txt = removeStatusEvents(t, txt)
 	txt = substituteTimestamps(txt)
 	txt = substituteUIDs(txt)
 	txt = substituteResourceVersion(txt)
+	txt = r.removeOptionalEvents(t, txt)
+	txt = removeClientSideThrottlingEvents(t, txt)
 	return strings.TrimSpace(txt)
 }
 
@@ -194,26 +198,31 @@ func substituteResourceVersion(text string) string {
 	return resourceVersionRegexp.ReplaceAllLiteralString(text, "resourceVersion: \"<RV>\"")
 }
 
-var statuses = []status.Status{
-	status.InProgressStatus,
-	status.CurrentStatus,
-	status.FailedStatus,
-	status.TerminatingStatus,
-	status.UnknownStatus,
-	status.NotFoundStatus,
+// statuses is a list of all status enums from the kstatus library.
+var statuses = []string{
+	status.InProgressStatus.String(),
+	status.CurrentStatus.String(),
+	status.FailedStatus.String(),
+	status.TerminatingStatus.String(),
+	status.UnknownStatus.String(),
+	status.NotFoundStatus.String(),
 }
 
+// removeStatusEvents removes all lines from the input string that match the
+// StatusEvent printer output from the cli-utils event printer.
 func removeStatusEvents(t *testing.T, text string) string {
 	scanner := bufio.NewScanner(strings.NewReader(text))
 	var lines []string
 
-scan:
+	// Match StatusEvent printer output
+	// https://github.com/kubernetes-sigs/cli-utils/blob/master/pkg/printers/events/formatter.go#L166
+	statusMatchStr := strings.Join(statuses, "|")
+	pattern := regexp.MustCompile(fmt.Sprintf("^(.*)/(.*) is (%s): (.*)", statusMatchStr))
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		for _, s := range statuses {
-			if strings.Contains(line, s.String()) {
-				continue scan
-			}
+		if pattern.MatchString(line) {
+			continue
 		}
 		lines = append(lines, line)
 	}
@@ -221,4 +230,56 @@ scan:
 		t.Fatalf("error scanning output: %v", err)
 	}
 	return strings.Join(lines, "\n")
+}
+
+// removeClientSideThrottlingEvents removes all lines from the input string that
+// match the client-side throttling log message from the client-go RESTClient.
+func removeClientSideThrottlingEvents(t *testing.T, text string) string {
+	scanner := bufio.NewScanner(strings.NewReader(text))
+	var lines []string
+
+	// Match RESTClient's client-side throtting error, which gets logged at
+	// level 1 if the delay is longer than 1s, and level 3 otherwise.
+	// https://github.com/kubernetes/client-go/blob/v0.24.0/rest/request.go#L529
+	pattern := regexp.MustCompile(".* Waited for .* due to client-side throttling, not priority and fairness, request: .*")
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if pattern.MatchString(line) {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		t.Fatalf("error scanning output: %v", err)
+	}
+	return strings.Join(lines, "\n")
+}
+
+// removeOptionalEvents removes all lines from the input string that exactly
+// match entries in the Runner.Config.OptionalStdOut list
+func (r *Runner) removeOptionalEvents(t *testing.T, text string) string {
+	scanner := bufio.NewScanner(strings.NewReader(text))
+	var lines []string
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if equalsAny(line, r.Config.OptionalStdOut) {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		t.Fatalf("error scanning output: %v", err)
+	}
+	return strings.Join(lines, "\n")
+}
+
+func equalsAny(s string, strs []string) bool {
+	for _, str := range strs {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }

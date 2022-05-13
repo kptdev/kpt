@@ -20,14 +20,29 @@ kptArgs:
   - "--reconcile-timeout=1m"
 
 stdOut: |
-  customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev created
-  customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev reconcile pending
-  customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev reconciled
-  custom.kpt.dev/cr created
-  2 resource(s) applied. 2 created, 0 unchanged, 0 configured, 0 failed
-  custom.kpt.dev/cr reconcile pending
-  custom.kpt.dev/cr reconciled
-  2 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
+  inventory update started
+  inventory update finished
+  apply phase started
+  customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev apply successful
+  apply phase finished
+  reconcile phase started
+  customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev reconcile successful
+  reconcile phase finished
+  apply phase started
+  custom.kpt.dev/cr apply successful
+  apply phase finished
+  reconcile phase started
+  custom.kpt.dev/cr reconcile successful
+  reconcile phase finished
+  inventory update started
+  inventory update finished
+  apply result: 2 attempted, 2 successful, 0 skipped, 0 failed
+  reconcile result: 2 attempted, 2 successful, 0 skipped, 0 failed, 0 timed out
+
+optionalStdOut:
+  - customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev reconcile pending
+  - custom.kpt.dev/cr reconcile pending
+
 inventory:
   - group: apiextensions.k8s.io
     kind: CustomResourceDefinition

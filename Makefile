@@ -39,6 +39,30 @@ update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master
 	go get sigs.k8s.io/kustomize/kyaml@master
 
+.PHONY: install-mdrip
+install-mdrip:
+	go install github.com/monopole/mdrip@v1.0.2
+
+.PHONY: install-kind
+install-kind:
+	go install sigs.k8s.io/kind@v0.13.0
+
+.PHONY: install-golangci-lint
+install-golangci-lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.1
+
+.PHONY: install-go-licenses
+install-go-licenses:
+	go install github.com/google/go-licenses@v1.2.0
+
+.PHONY: install-swagger
+install-swagger:
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.27.0
+
+.PHONY: install-mdtogo
+install-mdtogo:
+	go install ./mdtogo
+
 fix:
 	go fix ./...
 
@@ -48,8 +72,7 @@ fmt:
 schema:
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
-generate:
-	go install ./mdtogo 
+generate: install-mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
 	GOBIN=$(GOBIN) go generate ./...
@@ -61,12 +84,10 @@ tidy:
 license:
 	scripts/update-license.sh
 
-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.1
+lint: install-golangci-lint
 	$(GOBIN)/golangci-lint run ./...
 
-license-check:
-	(which go-licenses || go install github.com/google/go-licenses@latest)
+license-check: install-go-licenses
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
@@ -122,5 +143,5 @@ site-check:
 	make site-run-server
 	./scripts/check-site.sh
 
-site-verify-examples:
+site-verify-examples: install-mdrip install-kind
 	./scripts/verifyExamples.sh

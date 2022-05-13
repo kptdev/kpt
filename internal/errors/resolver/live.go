@@ -194,7 +194,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var resultError *common.ResultError
 	if errors.As(err, &resultError) {
 		return ResolvedResult{
-			Message:  resultError.Error(),
+			Message:  "", // Printer summary now replaces ResultError message
 			ExitCode: 3,
 		}, true
 	}

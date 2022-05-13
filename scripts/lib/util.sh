@@ -673,7 +673,10 @@ function kube::util::ensure-cfssl {
     CFSSLJSON_BIN="${cfssldir}/cfssljson"
     if [[ ! -x ${CFSSL_BIN} || ! -x ${CFSSLJSON_BIN} ]]; then
       echo "Failed to download 'cfssl'. Please install cfssl and cfssljson and verify they are in \$PATH."
-      echo "Hint: export PATH=\$PATH:\$GOPATH/bin; go get -u github.com/cloudflare/cfssl/cmd/..."
+      echo "Example:"
+      echo "export PATH=\$PATH:\$GOPATH/bin"
+      echo "go install github.com/cloudflare/cfssl/cmd/cfssl@latest"
+      echo "go install github.com/cloudflare/cfssl/cmd/cfssljson@latest"
       exit 1
     fi
   popd > /dev/null || return 1

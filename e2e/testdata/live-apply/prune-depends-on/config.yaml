@@ -20,18 +20,37 @@ kptArgs:
   - "--reconcile-timeout=1m"
 
 stdOut: |
-  configmap/cm created
-  1 resource(s) applied. 1 created, 0 unchanged, 0 configured, 0 failed
-  configmap/cm reconcile pending
-  configmap/cm reconciled
-  deployment.apps/second-nginx pruned
-  deployment.apps/second-nginx reconcile pending
-  deployment.apps/second-nginx reconciled
-  deployment.apps/first-nginx pruned
-  2 resource(s) pruned, 0 skipped, 0 failed to prune
-  deployment.apps/first-nginx reconcile pending
-  deployment.apps/first-nginx reconciled
-  3 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
+  inventory update started
+  inventory update finished
+  apply phase started
+  configmap/cm apply successful
+  apply phase finished
+  reconcile phase started
+  configmap/cm reconcile successful
+  reconcile phase finished
+  prune phase started
+  deployment.apps/second-nginx prune successful
+  prune phase finished
+  reconcile phase started
+  deployment.apps/second-nginx reconcile successful
+  reconcile phase finished
+  prune phase started
+  deployment.apps/first-nginx prune successful
+  prune phase finished
+  reconcile phase started
+  deployment.apps/first-nginx reconcile successful
+  reconcile phase finished
+  inventory update started
+  inventory update finished
+  apply result: 1 attempted, 1 successful, 0 skipped, 0 failed
+  prune result: 2 attempted, 2 successful, 0 skipped, 0 failed
+  reconcile result: 3 attempted, 3 successful, 0 skipped, 0 failed, 0 timed out
+
+
+optionalStdOut:
+  - configmap/cm reconcile pending
+  - deployment.apps/second-nginx reconcile pending
+  - deployment.apps/first-nginx reconcile pending
 
 inventory:
   - kind: ConfigMap

@@ -33,6 +33,11 @@ type TestCaseConfig struct {
 	// Default: ""
 	StdOut string `yaml:"stdOut,omitempty"`
 
+	// OptionalStdOut is a list of lines that are optional in the standard
+	// output from running the command.
+	// Default: nil
+	OptionalStdOut []string `yaml:"optionalStdOut,omitempty"`
+
 	// Inventory is the expected list of resource present in the inventory.
 	Inventory []InventoryEntry `yaml:"inventory,omitempty"`
 

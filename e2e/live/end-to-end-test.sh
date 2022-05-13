@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ###########################################################################
 # Copyright 2020 Google LLC
 #
@@ -239,7 +239,7 @@ function createTestSuite {
     kind delete cluster > /dev/null 2>&1
     echo -e "Deleting kind cluster...${GREEN}SUCCESS${NC}"
     echo "Creating kind cluster..."
-    kind create cluster --image=kindest/node:v${K8S_VERSION} > $OUTPUT_DIR/k8sstartup 2>&1
+    kind create cluster --image=kindest/node:v${K8S_VERSION} --wait=2m > $OUTPUT_DIR/k8sstartup 2>&1
     kubectl wait node/kind-control-plane --for condition=ready --timeout=2m
     echo -e "Creating kind cluster...${GREEN}SUCCESS${NC}"
     echo
@@ -267,6 +267,158 @@ function waitForDefaultServiceAccount {
     ((n < 300))
     echo "Waiting for default service account...CREATED"
     echo
+}
+
+# assertKptLiveApplyEquals checks that the STDIN equals the content of the
+# $OUTPUT_DIR/status file, after filtering and sorting.
+function assertKptLiveApplyEquals {
+  local expected="$(cat | processKptLiveOutput)"
+  local received="$(cat "$OUTPUT_DIR/status" | processKptLiveOutput)"
+  local diff_result="$( diff -u <(echo -e "${expected}") <(echo -e "${received}") --label "expected" --label "received")"
+  if [[ -z "${diff_result}" ]]; then
+    echo -n '.'
+  else
+    echo -n 'E'
+    echo -e "error: expected output ():\n${diff_result}" >> "$OUTPUT_DIR/errors"
+    HAS_TEST_FAILURE=1
+  fi
+}
+
+function processKptLiveOutput {
+    trimTrailingNewlines | \
+    filterReconcilePending | \
+    sortReconcileEvents | \
+    sortActuationEvents
+}
+
+function trimTrailingNewlines {
+    sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+}
+
+function filterReconcilePending {
+  grep -v " reconcile pending$" || true
+}
+
+# sortReconcileEvents sorts reconcile events: successful > failed.
+# Not sorted: skipped (always first) & timeout (always last).
+function sortReconcileEvents {
+  local input="$(cat)" # read full input before sorting
+  local status=""
+  local successfulBuffer=""
+  local failedBuffer=""
+  local pattern="^.* reconcile (successful|failed).*$"
+  while IFS="" read -r line; do
+    if [[ "${line}" =~ ${pattern} ]]; then
+      # match - add line to buffer
+      status="${BASH_REMATCH[1]}"
+      if [[ "${status}" == "successful" ]]; then
+        successfulBuffer+="${line}\n"
+      elif [[ "${status}" == "failed" ]]; then
+        failedBuffer+="${line}\n"
+      else
+        echo "ERROR: Unexpected reconcile status: ${status}"
+        return
+      fi
+    else
+      # no match - dump buffers & print line
+      if [[ -n "${successfulBuffer}" ]]; then
+        echo -en "${successfulBuffer}" | sort
+        successfulBuffer=""
+      fi
+      if [[ -n "${failedBuffer}" ]]; then
+        echo -en "${failedBuffer}" | sort
+        failedBuffer=""
+      fi
+      echo "${line}"
+    fi
+  done <<< "${input}"
+  # end of input - dump buffers
+  if [[ -n "${successfulBuffer}" ]]; then
+    echo -en "${successfulBuffer}" | sort
+    successfulBuffer=""
+  fi
+  if [[ -n "${failedBuffer}" ]]; then
+    echo -en "${failedBuffer}" | sort
+    failedBuffer=""
+  fi
+}
+
+# sortActuationEvents sorts apply/prune/delete events: skipped > successful > failed.
+# Only events with the same actuation type and resource type are sorted.
+function sortActuationEvents {
+  local input="$(cat)" # read full input before sorting
+  local status=""
+  local resource=""
+  local actuation=""
+  local skippedBuffer=""
+  local successfulBuffer=""
+  local failedBuffer=""
+  local pattern="^(.*)/(.*) (apply|prune|delete) (skipped|successful|failed).*$"
+  while IFS="" read -r line; do
+    if [[ "${line}" =~ ${pattern} ]]; then
+      # match
+      if [[ "${resource}" != "${BASH_REMATCH[1]}" ]] || [[ "${actuation}" != "${BASH_REMATCH[3]}" ]]; then
+        # different resource/actuation - dump buffers & update resource/actuation
+        if [[ -n "${skippedBuffer}" ]]; then
+          echo -en "${skippedBuffer}" | sort
+          skippedBuffer=""
+        fi
+        if [[ -n "${successfulBuffer}" ]]; then
+          echo -en "${successfulBuffer}" | sort
+          successfulBuffer=""
+        fi
+        if [[ -n "${failedBuffer}" ]]; then
+          echo -en "${failedBuffer}" | sort
+          failedBuffer=""
+        fi
+        resource="${BASH_REMATCH[1]}"
+        actuation="${BASH_REMATCH[3]}"
+      fi
+
+      # add line to buffer
+      status="${BASH_REMATCH[4]}"
+      if [[ "${status}" == "skipped" ]]; then
+        skippedBuffer+="${line}\n"
+      elif [[ "${status}" == "successful" ]]; then
+        successfulBuffer+="${line}\n"
+      elif [[ "${status}" == "failed" ]]; then
+        failedBuffer+="${line}\n"
+      else
+        echo "ERROR: Unexpected ${actuation} status: ${status}"
+        return
+      fi
+    else
+      # no match - dump buffers & print line
+      if [[ -n "${skippedBuffer}" ]]; then
+        echo -en "${skippedBuffer}" | sort
+        skippedBuffer=""
+      fi
+      if [[ -n "${successfulBuffer}" ]]; then
+        echo -en "${successfulBuffer}" | sort
+        successfulBuffer=""
+      fi
+      if [[ -n "${failedBuffer}" ]]; then
+        echo -en "${failedBuffer}" | sort
+        failedBuffer=""
+      fi
+      echo "${line}"
+      resource=""
+      actuation=""
+    fi
+  done <<< "${input}"
+  # end of input - dump buffers
+  if [[ -n "${skippedBuffer}" ]]; then
+    echo -en "${skippedBuffer}" | sort
+    skippedBuffer=""
+  fi
+  if [[ -n "${successfulBuffer}" ]]; then
+    echo -en "${successfulBuffer}" | sort
+    successfulBuffer=""
+  fi
+  if [[ -n "${failedBuffer}" ]]; then
+    echo -en "${failedBuffer}" | sort
+    failedBuffer=""
+  fi
 }
 
 # assertContains checks that the passed string is a substring of
@@ -312,6 +464,7 @@ function assertCMInventory {
     local ns=$1
     local numInv=$2
     
+    echo "kubectl get cm -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers"
     inv=$(kubectl get cm -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers)
     echo $inv | awk '{print $1}' > $OUTPUT_DIR/invname
     echo $inv | awk '{print $2}' > $OUTPUT_DIR/numinv
@@ -347,6 +500,7 @@ function assertCMInventory {
 function assertRGInventory {
     local ns=$1
     
+    echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}'"
     kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $OUTPUT_DIR/invname
 
     test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
@@ -369,7 +523,9 @@ function assertPodExists {
     local podName=$1
     local namespace=$2
 
+    echo "kubectl wait --for=condition=Ready -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s"
     kubectl wait --for=condition=Ready -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s > /dev/null 2>&1
+    echo "kubectl get po -n $namespace $podName -o name | awk '{print $1}'"
     kubectl get po -n $namespace $podName -o name | awk '{print $1}' > $OUTPUT_DIR/podname
 
     test 1 == $(grep $podName $OUTPUT_DIR/podname | wc -l);
@@ -392,7 +548,9 @@ function assertPodNotExists {
     local podName=$1
     local namespace=$2
 
+    echo "kubectl wait --for=delete -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s"
     kubectl wait --for=delete -n $namespace pod/$podName --timeout=${TIMEOUT_SECS}s > /dev/null 2>&1
+    echo "kubectl get po -n $namespace $podName -o name"
     kubectl get po -n $namespace $podName -o name > $OUTPUT_DIR/podname 2>&1
     
     test 1 == $(grep "(NotFound)" $OUTPUT_DIR/podname | wc -l);
@@ -426,6 +584,20 @@ function wait {
     local numSecs=$1
 
     sleep $numSecs
+}
+
+SEMVER_PATTERN="v(.*)\.(.*)\.(.*)"
+
+function kubeServerVersion {
+  kubectl version --output=json | jq -r '.serverVersion.gitVersion'
+}
+
+function kubeServerMinorVersion {
+  if [[ "$(kubeServerVersion)" =~ ${SEMVER_PATTERN} ]]; then
+    echo "${BASH_REMATCH[2]}"
+  else
+    return 1
+  fi
 }
 
 ###########################################################################
@@ -481,28 +653,66 @@ echo "[ResourceGroup] Testing create inventory CRD before basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup inventory CRD is automatically installed on the initial apply.
-assertContains "installing inventory ResourceGroup CRD"
-assertContains "namespace/rg-test-namespace unchanged"
-assertContains "pod/pod-a created"
-assertContains "pod/pod-b created"
-assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+installing inventory ResourceGroup CRD.
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
+printResult
 
 # Apply again, but the ResourceGroup CRD is not re-installed.
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "installing inventory ResourceGroup CRD"  # Not applied again
-assertContains "namespace/rg-test-namespace unchanged"
-assertContains "pod/pod-a unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
-assertContains "4 resource(s) applied. 0 created, 4 unchanged, 0 configured, 0 failed"
-wait 2
-
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
 printResult
 
 # Cleanup by resetting Kptfile
@@ -579,11 +789,22 @@ printResult
 echo "[ResourceGroup] Testing initial apply dry-run"
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
-assertContains "namespace/rg-test-namespace created"
-assertContains "pod/pod-a created"
-assertContains "pod/pod-b created"
-assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 4 created, 0 unchanged, 0 configured, 0 failed"
+assertKptLiveApplyEquals << EOF
+Dry-run strategy: client
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+EOF
 printResult
 
 # Test: Basic kpt live apply
@@ -592,13 +813,32 @@ echo "[ResourceGroup] Testing basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
-assertNotContains "installing inventory ResourceGroup CRD"
-assertContains "namespace/rg-test-namespace unchanged"
-assertContains "pod/pod-a created"
-assertContains "pod/pod-b created"
-assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
@@ -614,12 +854,33 @@ echo "kpt live apply link-to-rg-test-case-1a"
 ${BIN_DIR}/kpt live apply link-to-rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
 assertNotContains "installing inventory ResourceGroup CRD"
-assertContains "namespace/rg-test-namespace unchanged"
-assertContains "pod/pod-a unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
-assertContains "4 resource(s) applied. 0 created, 4 unchanged, 0 configured, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+[WARN] resolved symlink "link-to-rg-test-case-1a" to "e2e/live/testdata/rg-test-case-1a", please note that the symlinks within the package are ignored
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
@@ -635,11 +896,15 @@ echo "kpt live status link-to-rg-test-case-1a"
 ${BIN_DIR}/kpt live status link-to-rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
 assertNotContains "installing inventory ResourceGroup CRD"
-assertContains "namespace/rg-test-namespace is Current: Resource is current"
-assertContains "pod/pod-a is Current: Pod is Ready"
-assertContains "pod/pod-b is Current: Pod is Ready"
-assertContains "pod/pod-c is Current: Pod is Ready"
-wait 2
+assertKptLiveApplyEquals << EOF
+[WARN] resolved symlink "link-to-rg-test-case-1a" to "e2e/live/testdata/rg-test-case-1a", please note that the symlinks within the package are ignored
+namespace/rg-test-namespace is Current: Resource is current
+pod/pod-a is Current: Pod is Ready
+pod/pod-b is Current: Pod is Ready
+pod/pod-c is Current: Pod is Ready
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
@@ -653,14 +918,28 @@ echo "[ResourceGroup] Testing basic apply dry-run"
 cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b/
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
-assertContains "namespace/rg-test-namespace configured"
-assertContains "pod/pod-b configured"
-assertContains "pod/pod-c configured"
-assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 0 unchanged, 3 configured, 0 failed"
-assertContains "pod/pod-a pruned"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+Dry-run strategy: client
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+apply phase started
+pod/pod-b apply successful
+pod/pod-c apply successful
+pod/pod-d apply successful
+apply phase finished
+prune phase started
+pod/pod-a prune successful
+prune phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+prune result: 1 attempted, 1 successful, 0 skipped, 0 failed
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
@@ -675,14 +954,39 @@ echo "[ResourceGroup] Testing basic prune"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
-assertContains "namespace/rg-test-namespace unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
-assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
-assertContains "pod/pod-a pruned"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/rg-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-b apply successful
+pod/pod-c apply successful
+pod/pod-d apply successful
+apply phase finished
+reconcile phase started
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+pod/pod-d reconcile successful
+reconcile phase finished
+prune phase started
+pod/pod-a prune successful
+prune phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+prune result: 1 attempted, 1 successful, 0 skipped, 0 failed
+reconcile result: 5 attempted, 5 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources in the cluster
 # ConfigMap inventory with four inventory items.
 assertRGInventory "rg-test-namespace" "4"
@@ -696,11 +1000,22 @@ printResult
 echo "[ResourceGroup] Testing basic destroy dry-run"
 echo "kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
-assertContains "pod/pod-d deleted"
-assertContains "pod/pod-c deleted"
-assertContains "pod/pod-b deleted"
-assertContains "namespace/rg-test-namespace deleted"
-assertContains "4 resource(s) deleted, 0 skipped"
+assertKptLiveApplyEquals << EOF
+Dry-run strategy: client
+delete phase started
+pod/pod-d delete successful
+pod/pod-c delete successful
+pod/pod-b delete successful
+delete phase finished
+delete phase started
+namespace/rg-test-namespace delete successful
+delete phase finished
+inventory update started
+inventory update finished
+delete result: 4 attempted, 4 successful, 0 skipped, 0 failed
+EOF
+printResult
+
 # Validate resources NOT DESTROYED in the cluster
 assertPodExists "pod-b" "rg-test-namespace"
 assertPodExists "pod-c" "rg-test-namespace"
@@ -712,11 +1027,30 @@ printResult
 echo "[ResourceGroup] Testing basic destroy"
 echo "kpt live destroy e2e/live/testdata/rg-test-case-1b"
 ${BIN_DIR}/kpt live destroy e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
-assertContains "pod/pod-d deleted"
-assertContains "pod/pod-c deleted"
-assertContains "pod/pod-b deleted"
-assertContains "namespace/rg-test-namespace deleted"
-assertContains "4 resource(s) deleted, 0 skipped"
+assertKptLiveApplyEquals << EOF
+delete phase started
+pod/pod-d delete successful
+pod/pod-c delete successful
+pod/pod-b delete successful
+delete phase finished
+reconcile phase started
+pod/pod-c reconcile successful
+pod/pod-b reconcile successful
+pod/pod-d reconcile successful
+reconcile phase finished
+delete phase started
+namespace/rg-test-namespace delete successful
+delete phase finished
+reconcile phase started
+namespace/rg-test-namespace reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+delete result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources NOT in the cluster
 assertPodNotExists "pod-b" "rg-test-namespace"
 assertPodNotExists "pod-c" "rg-test-namespace"
@@ -728,11 +1062,32 @@ printResult
 echo "Testing apply/status/destroy from stdin"
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - 2>&1 | tee $OUTPUT_DIR/status
-assertContains "pod/pod-a created"
-assertContains "pod/pod-b created"
-assertContains "pod/pod-c created"
-assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/stdin-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/stdin-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
 printResult
+
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live status -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live status - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/stdin-test-namespace is Current: Resource is current"
@@ -740,12 +1095,31 @@ assertContains "pod/pod-a is Current: Pod is Ready"
 assertContains "pod/pod-b is Current: Pod is Ready"
 assertContains "pod/pod-c is Current: Pod is Ready"
 printResult
+
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - 2>&1 | tee $OUTPUT_DIR/status
-assertContains "pod/pod-a deleted"
-assertContains "pod/pod-b deleted"
-assertContains "pod/pod-c deleted"
-assertContains "4 resource(s) deleted, 0 skipped"
+assertKptLiveApplyEquals << EOF
+delete phase started
+pod/pod-c delete successful
+pod/pod-b delete successful
+pod/pod-a delete successful
+delete phase finished
+reconcile phase started
+pod/pod-c reconcile successful
+pod/pod-b reconcile successful
+pod/pod-a reconcile successful
+reconcile phase finished
+delete phase started
+namespace/stdin-test-namespace delete successful
+delete phase finished
+reconcile phase started
+namespace/stdin-test-namespace reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+delete result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
 printResult
 
 # Test: kpt live apply continue-on-error
@@ -755,11 +1129,44 @@ echo "kpt live init e2e/live/testdata/continue-on-error"
 ${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
 diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/Kptfile 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace: continue-err-namespace"
+printResult
+
 echo "kpt live apply e2e/live/testdata/continue-on-error"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
+
+if [[ "$(kubeServerMinorVersion)" -ge 20 ]]; then # >= 1.20.x
+  # https://github.com/kubernetes/kubernetes/blob/v1.20.0/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L199
+  RFC1123_ERROR="a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character"
+else # < 1.20.x
+  # https://github.com/kubernetes/kubernetes/blob/v1.19.0/staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go#L199
+  RFC1123_ERROR="a DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character"
+fi
+
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/continue-err-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/continue-err-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-B apply failed: error when creating "pod-b.yaml": Pod "pod-B" is invalid: metadata.name: Invalid value: "pod-B": ${RFC1123_ERROR} (e.g. 'example.com', regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+apply phase finished
+reconcile phase started
+pod/pod-B reconcile skipped
+pod/pod-a reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 3 attempted, 2 successful, 0 skipped, 1 failed
+reconcile result: 3 attempted, 2 successful, 1 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 assertRGInventory "continue-err-namespace" "2"
-assertContains "pod/pod-a created"
-assertContains "pod/pod-B apply failed"
 assertPodExists "pod-a" "continue-err-namespace"
 assertPodNotExists "pod-B" "continue-err-namespace"
 printResult
@@ -769,11 +1176,12 @@ echo "Testing RBAC error during apply"
 # Setup: create a service account and bind a Role to it so it has administrative
 # privileges on the "test" namespace, but no permissions on the default
 # namespace.
-echo "kubectl apply e2e/live/testdata/rbac-error-step-1"
+echo "kubectl apply -f e2e/live/testdata/rbac-error-step-1"
 kubectl apply -f e2e/live/testdata/rbac-error-step-1 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/rbac-error created"
 assertContains "rolebinding.rbac.authorization.k8s.io/admin created"
 assertContains "serviceaccount/user created"
+printResult
 wait 2
 
 # Setup: use the service account just created. It does not have permissions
@@ -783,7 +1191,7 @@ echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
 SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
 if [[ -z "${SECRET_NAME}" ]]; then
   # K8s 1.24+ doesn't auto-generate service account secrets any more.
-  echo "kubectl apply e2e/live/testdata/rbac-error-step-2"
+  echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
   kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
   assertContains "secret/user-credentials created"
   wait 2
@@ -797,16 +1205,21 @@ echo "kubectl config set-context kind-kind:user --cluster=kind-kind"
 kubectl config set-context kind-kind:user --cluster=kind-kind --user=user 2>&1 | tee $OUTPUT_DIR/status
 echo "kubectl config use-context kind-kind:user"
 kubectl config use-context kind-kind:user 2>&1 | tee $OUTPUT_DIR/status
+printResult
 wait 2
 
 # Attempt to apply two ConfigMaps: one in the default namespace (fails), and one
 # in the "rbac-error" namespace (succeeds).
 echo "kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-3"
 ${BIN_DIR}/kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-3 2>&1 | tee $OUTPUT_DIR/status
-assertRGInventory "rbac-error" "1"
-assertContains "configmap/error-config-map apply failed"
-assertContains "configmap/valid-config-map created"
-assertContains "2 resource(s) applied. 1 created, 0 unchanged, 0 configured, 1 failed"
+assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
+assertContains 'error: polling for status failed: failed to list /v1, Kind=ConfigMap: configmaps is forbidden: User "system:serviceaccount:default:user" cannot list resource "configmaps" in API group "" at the cluster scope'
+printResult
+
+# No inventory expected - permission error causes early exit
+echo "kubectl get resourcegroups.kpt.dev -n 'rbac-error' --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers"
+kubectl get resourcegroups.kpt.dev -n 'rbac-error' --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers 2>&1 | tee $OUTPUT_DIR/status
+assertContains "No resources found"
 printResult
 
 ###########################################################
@@ -832,6 +1245,8 @@ assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
 assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
 assertContains "0 resource(s) pruned, 0 skipped, 0 failed"
+printResult
+
 # Validate resources in the cluster
 assertCMInventory "test-rg-namespace" "4"
 assertPodExists "pod-a" "test-rg-namespace"
@@ -853,6 +1268,8 @@ assertContains "migrate inventory to ResourceGroup...success"
 assertContains "deleting old ConfigMap inventory object...success"
 assertContains "deleting inventory template file"
 assertContains "inventory migration...success"
+printResult
+
 # Migrate did not actually happen in dry-run, so ConfigMap inventory still exists
 assertCMInventory "test-rg-namespace" "4"
 printResult
@@ -871,11 +1288,15 @@ assertContains "migrate inventory to ResourceGroup...success"
 assertContains "deleting old ConfigMap inventory object...success"
 assertContains "deleting inventory template file"
 assertContains "inventory migration...success"
+printResult
+
 # Validate resources in the cluster
 assertPodExists "pod-a" "test-rg-namespace"
 assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
 assertRGInventory "test-rg-namespace"
+printResult
+
 # Run it again, and validate the output
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
@@ -889,14 +1310,39 @@ echo "Testing apply/prune after migrate"
 cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b/
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b 2>&1 | tee $OUTPUT_DIR/status
-assertContains "namespace/test-rg-namespace unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
-assertContains "pod/pod-d created"
-assertContains "4 resource(s) applied. 1 created, 3 unchanged, 0 configured, 0 failed"
-assertContains "pod/pod-a pruned"
-assertContains "1 resource(s) pruned, 0 skipped, 0 failed"
-wait 2
+assertKptLiveApplyEquals << EOF
+inventory update started
+inventory update finished
+apply phase started
+namespace/test-rg-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/test-rg-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-b apply successful
+pod/pod-c apply successful
+pod/pod-d apply successful
+apply phase finished
+reconcile phase started
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+pod/pod-d reconcile successful
+reconcile phase finished
+prune phase started
+pod/pod-a prune successful
+prune phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+prune result: 1 attempted, 1 successful, 0 skipped, 0 failed
+reconcile result: 5 attempted, 5 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+printResult
+
 # Validate resources in the cluster
 # ResourceGroup inventory with four inventory items.
 assertRGInventory "test-rg-namespace" "4"
@@ -926,19 +1372,60 @@ assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
 assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
 printResult
+
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - 2>&1 | tee $OUTPUT_DIR/status
-assertContains "namespace/stdin-test-namespace unchanged"
-assertContains "pod/pod-a unchanged"
-assertContains "pod/pod-b unchanged"
-assertContains "pod/pod-c unchanged"
+assertKptLiveApplyEquals << EOF
+installing inventory ResourceGroup CRD.
+inventory update started
+inventory update finished
+apply phase started
+namespace/stdin-test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/stdin-test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
 printResult
+
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - 2>&1 | tee $OUTPUT_DIR/status
-assertContains "pod/pod-a deleted"
-assertContains "pod/pod-b deleted"
-assertContains "pod/pod-c deleted"
-assertContains "4 resource(s) deleted, 0 skipped"
+assertKptLiveApplyEquals << EOF
+delete phase started
+pod/pod-c delete successful
+pod/pod-b delete successful
+pod/pod-a delete successful
+delete phase finished
+reconcile phase started
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+pod/pod-a reconcile successful
+reconcile phase finished
+delete phase started
+namespace/stdin-test-namespace delete successful
+delete phase finished
+reconcile phase started
+namespace/stdin-test-namespace reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+delete result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
 printResult
 
 # Test: don't have permission to update the ResourceGroup CRD
@@ -963,7 +1450,7 @@ echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
 SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
 if [[ -z "${SECRET_NAME}" ]]; then
   # K8s 1.24+ doesn't auto-generate service account secrets any more.
-  echo "kubectl apply e2e/live/testdata/rbac-error-step-2"
+  echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
   kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
   assertContains "secret/user-credentials created"
   wait 2
