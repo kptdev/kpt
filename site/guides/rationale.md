@@ -14,7 +14,7 @@ It is an emerging trend to provide GUIs over GitOps, but their ability to automa
 
 Fortunately, code-like representations are not a requirement in order to represent the desired state declaratively. The Kubernetes API was [designed to be natively declarative](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md#declarative-configuration). The serialized configuration format of resources is [identical to their API wire format](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md#configuration-using-rest-api-resource-specifications). These resource representations were intended to form the core of a declarative data model, which is sufficient in order to support pre-deployment validation, preview, and approval and post-deployment auditing, versioning, and undo. 
 
-kpt supports management of [Configuration as Data](../../docs/design-docs/06-config-as-data.md). The core ideas are simple:
+kpt supports management of [Configuration as Data](https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/06-config-as-data.md). The core ideas are simple:
 * uses a uniform, serializable data model to represent configuration ([KRM](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md))
 * makes configuration data (packages) the source of truth, stored separately from the live state 
 * separates code that acts on the configuration (functions) from the configuration data
@@ -22,7 +22,7 @@ kpt supports management of [Configuration as Data](../../docs/design-docs/06-con
 
 kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/kustomize/). Like kustomize, kpt uses a transformation-based approach, but optimizes for in-place configuration transformation rather than out-of-place transformation. As with typical API clients, this enables interoperability of a variety of generators, transformers, and validators. One doesn't need to make all changes through a monolithic generator implementation. 
 
-kpt also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging, and provides a [package orchestration service](../../docs/design-docs/07-package-orchestration.md) in addition to a client-side CLI.
+kpt also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging, and provides a [package orchestration service](https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md) in addition to a client-side CLI.
 
 kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional imperative tools, thus eliminating this dichotomy:
 <img src="https://raw.githubusercontent.com/GoogleContainerTools/kpt/main/docs/design-docs/CaD%20Overview.svg">
