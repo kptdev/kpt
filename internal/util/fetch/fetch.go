@@ -62,7 +62,7 @@ func (c Command) Run(ctx context.Context) error {
 		Path:    g.Directory,
 		Ref:     g.Ref,
 	}
-	err = cloneAndCopy(ctx, repoSpec, c.Pkg.UniquePath.String())
+	err = NewCloner(repoSpec).cloneAndCopy(ctx, c.Pkg.UniquePath.String())
 	if err != nil {
 		return errors.E(op, c.Pkg.UniquePath, err)
 	}
@@ -94,21 +94,62 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	return nil
 }
 
+type Cloner struct {
+	// repoSpec spec to clone
+	repoSpec *git.RepoSpec
+
+	// cachedRepos
+	cachedRepo map[git.RepoSpec]*gitutil.GitUpstreamRepo
+
+	// fetchedRefs keeps track of refs already fetched from remote
+	fetchedRefs map[string]bool
+}
+
+type NewClonerOption func(*Cloner)
+
+func WithCachedRepo(r map[git.RepoSpec]*gitutil.GitUpstreamRepo) NewClonerOption {
+	return func(c *Cloner) {
+		c.cachedRepo = r
+	}
+}
+
+func WithAlreadyFetchedRefs(a map[string]bool) NewClonerOption {
+	return func(c *Cloner) {
+		c.fetchedRefs = a
+	}
+}
+
+func NewCloner(r *git.RepoSpec, opts ...NewClonerOption) *Cloner {
+	c := &Cloner{
+		repoSpec: r,
+	}
+	for _, opt := range opts {
+		opt(c)
+	}
+	if c.cachedRepo == nil {
+		c.cachedRepo = make(map[git.RepoSpec]*gitutil.GitUpstreamRepo)
+	}
+	if c.fetchedRefs == nil {
+		c.fetchedRefs = map[string]bool{}
+	}
+	return c
+}
+
 // cloneAndCopy fetches the provided repo and copies the content into the
 // directory specified by dest. The provided name is set as `metadata.name`
 // of the Kptfile of the package.
-func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
+func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 	const op errors.Op = "fetch.cloneAndCopy"
 	pr := printer.FromContextOrDie(ctx)
 
-	err := ClonerUsingGitExec(ctx, r)
+	err := c.ClonerUsingGitExec(ctx)
 	if err != nil {
 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
 	}
-	defer os.RemoveAll(r.Dir)
+	defer os.RemoveAll(c.repoSpec.Dir)
 
-	sourcePath := filepath.Join(r.Dir, r.Path)
-	pr.Printf("Adding package %q.\n", strings.TrimPrefix(r.Path, "/"))
+	sourcePath := filepath.Join(c.repoSpec.Dir, c.repoSpec.Path)
+	pr.Printf("Adding package %q.\n", strings.TrimPrefix(c.repoSpec.Path, "/"))
 	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
@@ -117,7 +158,7 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 
-	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, r); err != nil {
+	if err := kptfileutil.UpdateUpstreamLockFromGit(dest, c.repoSpec); err != nil {
 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
 	}
 	return nil
@@ -129,46 +170,51 @@ func cloneAndCopy(ctx context.Context, r *git.RepoSpec, dest string) error {
 // for versioning multiple kpt packages in a single repo independently. It
 // relies on the private clonerUsingGitExec function to try fetching different
 // refs.
-func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
+func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	const op errors.Op = "fetch.ClonerUsingGitExec"
 
 	// Create a local representation of the upstream repo. This will initialize
 	// the cache for the specified repo uri if it isn't already there. It also
 	// fetches and caches all tag and branch refs from the upstream repo.
-	upstreamRepo, err := gitutil.NewGitUpstreamRepo(ctx, repoSpec.CloneSpec())
-	if err != nil {
-		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+	upstreamRepo, exists := c.cachedRepo[*c.repoSpec]
+	if !exists {
+		newUpstreamRemp, err := gitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec(), gitutil.WithFetchedRefs(c.fetchedRefs))
+		if err != nil {
+			return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
+		}
+		upstreamRepo = newUpstreamRemp
+		c.cachedRepo[*c.repoSpec] = upstreamRepo
 	}
 
 	// Check if we have a ref in the upstream that matches the package-specific
 	// reference. If we do, we use that reference.
-	ps := strings.Split(repoSpec.Path, "/")
+	ps := strings.Split(c.repoSpec.Path, "/")
 	for len(ps) != 0 {
 		p := path.Join(ps...)
-		packageRef := path.Join(strings.TrimLeft(p, "/"), repoSpec.Ref)
+		packageRef := path.Join(strings.TrimLeft(p, "/"), c.repoSpec.Ref)
 		if _, found := upstreamRepo.ResolveTag(packageRef); found {
-			repoSpec.Ref = packageRef
+			c.repoSpec.Ref = packageRef
 			break
 		}
 		ps = ps[:len(ps)-1]
 	}
 
 	// Pull the required ref into the repo git cache.
-	dir, err := upstreamRepo.GetRepo(ctx, []string{repoSpec.Ref})
+	dir, err := upstreamRepo.GetRepo(ctx, []string{c.repoSpec.Ref})
 	if err != nil {
-		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
 
 	gitRunner, err := gitutil.NewLocalGitRunner(dir)
 	if err != nil {
-		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
 
 	// Find the commit SHA for the ref that was just fetched. We need the SHA
 	// rather than the ref to be able to do a hard reset of the cache repo.
-	commit, found := upstreamRepo.ResolveRef(repoSpec.Ref)
+	commit, found := upstreamRepo.ResolveRef(c.repoSpec.Ref)
 	if !found {
-		commit = repoSpec.Ref
+		commit = c.repoSpec.Ref
 	}
 
 	// Reset the local repo to the commit we need. Doing a hard reset instead of
@@ -178,34 +224,34 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 	_, err = gitRunner.Run(ctx, "reset", "--hard", commit)
 	if err != nil {
 		gitutil.AmendGitExecError(err, func(e *gitutil.GitExecError) {
-			e.Repo = repoSpec.CloneSpec()
+			e.Repo = c.repoSpec.CloneSpec()
 			e.Ref = commit
 		})
-		return errors.E(op, errors.Git, errors.Repo(repoSpec.CloneSpec()), err)
+		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
 
 	// We need to create a temp directory where we can copy the content of the repo.
 	// During update, we need to checkout multiple versions of the same repo, so
 	// we can't do merges directly from the cache.
-	repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
+	c.repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
 	}
-	repoSpec.Commit = commit
+	c.repoSpec.Commit = commit
 
-	pkgPath := filepath.Join(dir, repoSpec.Path)
+	pkgPath := filepath.Join(dir, c.repoSpec.Path)
 	// Verify that the requested path exists in the repo.
 	_, err = os.Stat(pkgPath)
 	if os.IsNotExist(err) {
 		return errors.E(op,
 			errors.Internal,
 			err,
-			fmt.Errorf("path %q does not exist in repo %q", repoSpec.Path, repoSpec.OrgRepo))
+			fmt.Errorf("path %q does not exist in repo %q", c.repoSpec.Path, c.repoSpec.OrgRepo))
 	}
 
 	// Copy the content of the pkg into the temp directory.
 	// Note that we skip the content outside the package directory.
-	err = copyDir(ctx, pkgPath, repoSpec.AbsPath())
+	err = copyDir(ctx, pkgPath, c.repoSpec.AbsPath())
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error copying package: %w", err))
 	}
@@ -226,7 +272,7 @@ func ClonerUsingGitExec(ctx context.Context, repoSpec *git.RepoSpec) error {
 		var kfError *pkg.KptfileError
 		if errors.As(err, &kfError) {
 			return &pkg.RemoteKptfileError{
-				RepoSpec: repoSpec,
+				RepoSpec: c.repoSpec,
 				Err:      kfError.Err,
 			}
 		}

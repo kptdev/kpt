@@ -137,12 +137,25 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	}, nil
 }
 
-// NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
-func NewGitUpstreamRepo(ctx context.Context, uri string) (*GitUpstreamRepo, error) {
-	const op errors.Op = "gitutil.NewGitUpstreamRepo"
+type NewGitUpstreamRepoOption func(*GitUpstreamRepo)
 
+func WithFetchedRefs(a map[string]bool) NewGitUpstreamRepoOption {
+	return func(g *GitUpstreamRepo) {
+		g.fetchedRefs = a
+	}
+}
+
+// NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
+func NewGitUpstreamRepo(ctx context.Context, uri string, opts ...NewGitUpstreamRepoOption) (*GitUpstreamRepo, error) {
+	const op errors.Op = "gitutil.NewGitUpstreamRepo"
 	g := &GitUpstreamRepo{
 		URI: uri,
+	}
+	for _, opt := range opts {
+		opt(g)
+	}
+	if g.fetchedRefs == nil {
+		g.fetchedRefs = map[string]bool{}
 	}
 	if err := g.updateRefs(ctx); err != nil {
 		return nil, errors.E(op, errors.Repo(uri), err)
@@ -161,6 +174,9 @@ type GitUpstreamRepo struct {
 	// Tags contains all tag refs in the upstream repo as well as the
 	// each of the are referencing.
 	Tags map[string]string
+
+	// fetchedRefs keeps track of refs already fetched from remote
+	fetchedRefs map[string]bool
 }
 
 // updateRefs fetches all refs from the upstream git repo, parses the results
@@ -378,19 +394,24 @@ loop:
 		// commit sha.
 		validFullSha := s == strings.TrimSpace(rr.Stdout)
 		_, resolved := gur.ResolveRef(s)
-
+		// fetchedRefWithURI is the cache key created from repo URI SHA and ref
+		fetchedRefWithURI := fmt.Sprintf("%s-%s", uriSha, s)
+		_, fetched := gur.fetchedRefs[fetchedRefWithURI]
 		switch {
 		case resolved || validFullSha:
 			// If the ref references a branch or a tag, or is a valid commit
-			// sha, we can fetch just a single commit.
-			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
-				AmendGitExecError(err, func(e *GitExecError) {
-					e.Repo = uri
-					e.Command = "origin"
-					e.Ref = s
-				})
-				return "", errors.E(op, errors.Git, fmt.Errorf(
-					"error running `git fetch` for ref %q: %w", s, err))
+			// sha and has not already been fetched, we can fetch just a single commit.
+			if !fetched {
+				if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
+					AmendGitExecError(err, func(e *GitExecError) {
+						e.Repo = uri
+						e.Command = "fetch"
+						e.Ref = s
+					})
+					return "", errors.E(op, errors.Git, fmt.Errorf(
+						"error running `git fetch` for ref %q: %w", s, err))
+				}
+				gur.fetchedRefs[fetchedRefWithURI] = true
 			}
 		default:
 			// In other situations (like a short commit sha), we have to do

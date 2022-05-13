@@ -86,7 +86,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 		// 	return errors.E(op, p.UniquePath, err)
 		// }
 		updated := *upstream
-		if err := fetch.ClonerUsingGitExec(ctx, &updated); err != nil {
+		if err := fetch.NewCloner(&updated).ClonerUsingGitExec(ctx); err != nil {
 			return err
 		}
 		defer os.RemoveAll(updated.AbsPath())
@@ -102,7 +102,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 			// if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
 			// 	return errors.E(op, p.UniquePath, err)
 			// }
-			if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
+			if err := fetch.NewCloner(originRepoSpec).ClonerUsingGitExec(ctx); err != nil {
 				return err //errors.E(op, p.UniquePath, err)
 			}
 			originDir = originRepoSpec.AbsPath()
