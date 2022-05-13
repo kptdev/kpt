@@ -61,13 +61,16 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
-KIND_1_21_VERSION=1.21.1
-KIND_1_20_VERSION=1.20.7
-KIND_1_19_VERSION=1.19.11
-KIND_1_18_VERSION=1.18.19
+KIND_1_24_VERSION=1.24.0
+KIND_1_23_VERSION=1.23.6
+KIND_1_22_VERSION=1.22.9
+KIND_1_21_VERSION=1.21.12
+KIND_1_20_VERSION=1.20.15
+KIND_1_19_VERSION=1.19.16
+KIND_1_18_VERSION=1.18.20
 KIND_1_17_VERSION=1.17.17
 KIND_1_16_VERSION=1.16.15
-DEFAULT_K8S_VERSION=${KIND_1_20_VERSION}
+DEFAULT_K8S_VERSION=${KIND_1_21_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -97,6 +100,14 @@ while getopts $options opt; do
 		      ;;
 		1.21) K8S_VERSION=$KIND_1_21_VERSION
 		      ;;
+		1.22) K8S_VERSION=$KIND_1_22_VERSION
+		      ;;
+		1.23) K8S_VERSION=$KIND_1_23_VERSION
+		      ;;
+		1.24) K8S_VERSION=$KIND_1_24_VERSION
+		      ;;
+        *) K8S_VERSION=$short_version
+		      ;;
 	    esac
 	    ;;
 	\? ) echo "Usage: $0 [-b] [-k k8s-version]" >&2; exit 1;;
@@ -121,16 +132,17 @@ NC='\033[0m' # No Color
 
 function downloadPreviousKpt {
   set -e
-  echo "Downloading previous kpt binary..."
+  KPT_VERSION=0.39.2
+  echo "Downloading v${KPT_VERSION} kpt binary..."
   uname="$(uname -s)"
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.2/kpt_linux_amd64-0.39.2.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v0.39.2/kpt_darwin_amd64-0.39.2.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   else
     echo -e "${RED}ERROR${NC}: Unknown OS $uname"
     exit 1
@@ -144,16 +156,17 @@ function downloadPreviousKpt {
 
 function downloadKpt1.0 {
   set -e
-  echo "Downloading v1.0.0-beta.13 kpt binary..."
+  KPT_VERSION=1.0.0-beta.13
+  echo "Downloading v${KPT_VERSION} kpt binary..."
   uname="$(uname -s)"
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.13/kpt_linux_amd64-1.0.0-beta.13.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-      curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.13/kpt_darwin_amd64-1.0.0-beta.13.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+      curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
     else
       echo -e "${RED}ERROR${NC}: Unknown OS $uname"
       exit 1
@@ -242,7 +255,7 @@ function waitForDefaultServiceAccount {
     sp="/-\|"
     n=1
     until ((n >= 300)); do
-	kubectl -n default get serviceaccount default -o name > $OUTPUT_DIR/status 2>&1
+	kubectl -n default get serviceaccount default -o name 2>&1 | tee $OUTPUT_DIR/status
 	test 1 == $(grep "serviceaccount/default" $OUTPUT_DIR/status | wc -l)
 	if [ $? == 0 ]; then
 	    echo
@@ -455,17 +468,18 @@ waitForDefaultServiceAccount
 # Basic init as setup for follow-on tests
 # Test: Apply dry-run without ResourceGroup CRD installation fails
 echo "[ResourceGroup] Testing initial apply dry-run without ResourceGroup inventory CRD"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
+echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
 printResult
 
 # Test: Apply installs ResourceGroup CRD
 echo "[ResourceGroup] Testing create inventory CRD before basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup inventory CRD is automatically installed on the initial apply.
 assertContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace unchanged"
@@ -479,7 +493,8 @@ wait 2
 assertRGInventory "rg-test-namespace" "4"
 
 # Apply again, but the ResourceGroup CRD is not re-installed.
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "installing inventory ResourceGroup CRD"  # Not applied again
 assertContains "namespace/rg-test-namespace unchanged"
 assertContains "pod/pod-a unchanged"
@@ -491,7 +506,7 @@ wait 2
 printResult
 
 # Cleanup by resetting Kptfile
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
 
 ###########################################################
 #  Tests operations with ResourceGroup inventory CRD
@@ -502,33 +517,38 @@ waitForDefaultServiceAccount
 
 # Test: Installing ResourceGroup CRD
 echo "Installing ResourceGroup CRD"
-echo "kpt live install-resource-group"
 # First, check that the ResourceGroup CRD does NOT exist
-kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
+echo "kubectl get resourcegroups.kpt.dev"
+kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
-${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status
+echo "kpt live install-resource-group"
+${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
 assertContains "installing inventory ResourceGroup CRD...success"
-kubectl get resourcegroups.kpt.dev > $OUTPUT_DIR/status 2>&1
+echo "kubectl get resourcegroups.kpt.dev"
+kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
 assertContains "No resources found"
 # Add a simple ResourceGroup custom resource, and verify it exists in the cluster.
-kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml > $OUTPUT_DIR/status
+echo "kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml"
+kubectl apply -f e2e/live/testdata/install-rg-crd/example-resource-group.yaml 2>&1 | tee $OUTPUT_DIR/status
 assertContains "resourcegroup.kpt.dev/example-inventory created"
-kubectl get resourcegroups.kpt.dev --no-headers > $OUTPUT_DIR/status
+echo "kubectl get resourcegroups.kpt.dev --no-headers"
+kubectl get resourcegroups.kpt.dev --no-headers 2>&1 | tee $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
-${BIN_DIR}/kpt live install-resource-group > $OUTPUT_DIR/status 2>&1
+echo "kpt live install-resource-group"
+${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
 assertContains "...success"
 printResult
 
 # Test: Basic Kptfile/ResourceGroup inititalizing inventory info
 echo "Testing init for Kptfile/ResourceGroup"
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
-diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile > $OUTPUT_DIR/status 2>&1
+diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile 2>&1 | tee $OUTPUT_DIR/status
 assertContains "inventory:"
 assertContains "namespace: rg-test-namespace"
 assertContains "name: inventory-"
@@ -537,20 +557,20 @@ printResult
 
 echo "Testing init Kptfile/ResourceGroup already initialized"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...failed"
 assertContains "Error: Inventory information has already been added to the package Kptfile."
 printResult
 
 echo "Testing init force Kptfile/ResourceGroup"
 echo "kpt live init --force e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --force e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live init --force e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
 echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status 2>&1
+${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "initializing Kptfile inventory info"
 printResult
 
@@ -558,7 +578,7 @@ printResult
 # Apply run-run for "rg-test-case-1a" directory
 echo "[ResourceGroup] Testing initial apply dry-run"
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/rg-test-namespace created"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -570,7 +590,7 @@ printResult
 # Apply run for "rg-test-case-1a" directory
 echo "[ResourceGroup] Testing basic apply"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
 assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace unchanged"
@@ -587,9 +607,11 @@ printResult
 # Test: Basic kpt live apply on symlink
 # Apply run for "rg-test-case-1a" directory
 echo "[ResourceGroup] Testing basic apply on symlink"
+rm -f link-to-rg-test-case-1a # Delete if exists
 ln -s e2e/live/testdata/rg-test-case-1a/ link-to-rg-test-case-1a
+trap "rm -f ${PWD}/link-to-rg-test-case-1a" EXIT
 echo "kpt live apply link-to-rg-test-case-1a"
-${BIN_DIR}/kpt live apply link-to-rg-test-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply link-to-rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
 assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace unchanged"
@@ -606,9 +628,11 @@ printResult
 # Test: Basic kpt live status on symlink
 # Apply run for "rg-test-case-1a" directory
 echo "[ResourceGroup] Testing basic status on symlink"
+rm -f link-to-rg-test-case-1a # Delete if exists
 ln -s e2e/live/testdata/rg-test-case-1a/ link-to-rg-test-case-1a
-echo "kpt live apply link-to-rg-test-case-1a"
-${BIN_DIR}/kpt live status link-to-rg-test-case-1a > $OUTPUT_DIR/status
+trap "rm -f ${PWD}/link-to-rg-test-case-1a" EXIT
+echo "kpt live status link-to-rg-test-case-1a"
+${BIN_DIR}/kpt live status link-to-rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 # The ResourceGroup CRD is already installed.
 assertNotContains "installing inventory ResourceGroup CRD"
 assertContains "namespace/rg-test-namespace is Current: Resource is current"
@@ -626,9 +650,9 @@ rm -rf link-to-rg-test-case-1a
 # Test: kpt live apply dry-run of with prune
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "[ResourceGroup] Testing basic apply dry-run"
+cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b/
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b"
-cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b
-${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/rg-test-namespace configured"
 assertContains "pod/pod-b configured"
 assertContains "pod/pod-c configured"
@@ -649,7 +673,7 @@ printResult
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "[ResourceGroup] Testing basic prune"
 echo "kpt live apply e2e/live/testdata/rg-test-case-1b"
-${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "installing inventory ResourceGroup CRD"  # CRD already installed
 assertContains "namespace/rg-test-namespace unchanged"
 assertContains "pod/pod-b unchanged"
@@ -671,7 +695,7 @@ printResult
 # Basic kpt live destroy --dry-run
 echo "[ResourceGroup] Testing basic destroy dry-run"
 echo "kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b"
-${BIN_DIR}/kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live destroy --dry-run e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -687,7 +711,7 @@ printResult
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "[ResourceGroup] Testing basic destroy"
 echo "kpt live destroy e2e/live/testdata/rg-test-case-1b"
-${BIN_DIR}/kpt live destroy e2e/live/testdata/rg-test-case-1b > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live destroy e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-d deleted"
 assertContains "pod/pod-c deleted"
 assertContains "pod/pod-b deleted"
@@ -703,21 +727,21 @@ printResult
 # 
 echo "Testing apply/status/destroy from stdin"
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
 assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
 printResult
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live status -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live status - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live status - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/stdin-test-namespace is Current: Resource is current"
 assertContains "pod/pod-a is Current: Pod is Ready"
 assertContains "pod/pod-b is Current: Pod is Ready"
 assertContains "pod/pod-c is Current: Pod is Ready"
 printResult
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-a deleted"
 assertContains "pod/pod-b deleted"
 assertContains "pod/pod-c deleted"
@@ -726,12 +750,13 @@ printResult
 
 # Test: kpt live apply continue-on-error
 echo "[ResourceGroup] Testing continue-on-error"
-echo "kpt live apply e2e/live/testdata/continue-on-error"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error
-${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status 2>&1
-diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/Kptfile > $OUTPUT_DIR/status 2>&1
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/
+echo "kpt live init e2e/live/testdata/continue-on-error"
+${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
+diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/Kptfile 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace: continue-err-namespace"
-${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error > $OUTPUT_DIR/status
+echo "kpt live apply e2e/live/testdata/continue-on-error"
+${BIN_DIR}/kpt live apply e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
 assertRGInventory "continue-err-namespace" "2"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-B apply failed"
@@ -741,12 +766,11 @@ printResult
 
 # Test: RBAC error applying a resource
 echo "Testing RBAC error during apply"
-echo "kpt live apply e2e/live/testdata/rbac-error-step-1"
-echo "kpt live apply e2e/live/testdata/rbac-error-step-2"
 # Setup: create a service account and bind a Role to it so it has administrative
 # privileges on the "test" namespace, but no permissions on the default
 # namespace.
-kubectl apply -f e2e/live/testdata/rbac-error-step-1 > $OUTPUT_DIR/status
+echo "kubectl apply e2e/live/testdata/rbac-error-step-1"
+kubectl apply -f e2e/live/testdata/rbac-error-step-1 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/rbac-error created"
 assertContains "rolebinding.rbac.authorization.k8s.io/admin created"
 assertContains "serviceaccount/user created"
@@ -755,16 +779,30 @@ wait 2
 # Setup: use the service account just created. It does not have permissions
 # on the default namespace, so it will give a permissions error on apply
 # for anything attempted to apply to the default namespace.
-kubectl config set-credentials user --token="$(kubectl get secrets -ojsonpath='{.data.token}' \
-  "$(kubectl get sa user -ojsonpath='{.secrets[0].name}')" \
-  | base64 -d)" > $OUTPUT_DIR/status
-kubectl config set-context kind-kind:user --cluster=kind-kind --user=user > $OUTPUT_DIR/status
-kubectl config use-context kind-kind:user > $OUTPUT_DIR/status
+echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
+SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
+if [[ -z "${SECRET_NAME}" ]]; then
+  # K8s 1.24+ doesn't auto-generate service account secrets any more.
+  echo "kubectl apply e2e/live/testdata/rbac-error-step-2"
+  kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
+  assertContains "secret/user-credentials created"
+  wait 2
+  SECRET_NAME="user-credentials"
+fi
+echo "kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d"
+SECRET_TOKEN="$(kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d)"
+echo "kubectl config set-credentials user --token \"<REDACTED>\""
+kubectl config set-credentials user --token "${SECRET_TOKEN}" 2>&1 | tee $OUTPUT_DIR/status
+echo "kubectl config set-context kind-kind:user --cluster=kind-kind"
+kubectl config set-context kind-kind:user --cluster=kind-kind --user=user 2>&1 | tee $OUTPUT_DIR/status
+echo "kubectl config use-context kind-kind:user"
+kubectl config use-context kind-kind:user 2>&1 | tee $OUTPUT_DIR/status
 wait 2
 
 # Attempt to apply two ConfigMaps: one in the default namespace (fails), and one
 # in the "rbac-error" namespace (succeeds).
-${BIN_DIR}/kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status
+echo "kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-3"
+${BIN_DIR}/kpt live apply --install-resource-group=false e2e/live/testdata/rbac-error-step-3 2>&1 | tee $OUTPUT_DIR/status
 assertRGInventory "rbac-error" "1"
 assertContains "configmap/error-config-map apply failed"
 assertContains "configmap/valid-config-map created"
@@ -781,13 +819,13 @@ waitForDefaultServiceAccount
 # Setup: kpt live apply ConfigMap inventory
 # Applies resources in "migrate-case-1a" directory.
 echo "Testing kpt live apply with ConfigMap inventory"
-echo "kpt live apply e2e/live/testdata/migrate-case-1a"
 # Prerequisite: set up the ConfigMap inventory file
 # Copy Kptfile into "migrate-case-1a" WITHOUT inventory information. This ensures
 # the apply uses the ConfigMap inventory-template.yaml during the apply.
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a/
 cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
-${BIN_DIR}/previouskpt live apply e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+echo "previouskpt live apply e2e/live/testdata/migrate-case-1a"
+${BIN_DIR}/previouskpt live apply e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
@@ -804,9 +842,9 @@ printResult
 # Test: kpt live migrate from ConfigMap to ResourceGroup inventory
 # Migrates resources in "migrate-case-1a" directory.
 echo "Testing migrate dry-run from ConfigMap to ResourceGroup inventory"
-echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a"
 # Run migrate dry-run and verify that the migrate did not actually happen
-${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a"
+${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
 assertContains "updating Kptfile inventory values...success"
@@ -821,10 +859,10 @@ printResult
 
 # Now actually run the migrate and verify the new ResourceGroup inventory exists
 echo "Testing migrate from ConfigMap to ResourceGroup inventory"
-echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
 # Prerequisite: set up the ConfigMap inventory file
 cp -f e2e/live/testdata/template-rg-namespace.yaml e2e/live/testdata/migrate-case-1a/inventory-template.yaml
-${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
 assertContains "updating Kptfile inventory values...success"
@@ -839,7 +877,7 @@ assertPodExists "pod-b" "test-rg-namespace"
 assertPodExists "pod-c" "test-rg-namespace"
 assertRGInventory "test-rg-namespace"
 # Run it again, and validate the output
-${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
 assertContains "inventory migration...success"
@@ -848,9 +886,9 @@ printResult
 # Test: kpt live apply/prune
 # "rg-test-case-1b" directory is "rg-test-case-1a" directory with "pod-a" removed and "pod-d" added.
 echo "Testing apply/prune after migrate"
+cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b/
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
-cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
-${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b > $OUTPUT_DIR/status
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/test-rg-namespace unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
@@ -882,21 +920,21 @@ waitForDefaultServiceAccount
 # It updates the ResourceGroup CRD and apply/prune works as expected.
 echo "Testing apply with kpt 1.0.0 and re-apply/prune with built kpt"
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt1.0.0 live apply -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt1.0.0 live apply - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt1.0.0 live apply - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-a created"
 assertContains "pod/pod-b created"
 assertContains "pod/pod-c created"
 assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
 printResult
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live apply -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live apply - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/stdin-test-namespace unchanged"
 assertContains "pod/pod-a unchanged"
 assertContains "pod/pod-b unchanged"
 assertContains "pod/pod-c unchanged"
 printResult
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"
-cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - > $OUTPUT_DIR/status 2>&1
+cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live destroy - 2>&1 | tee $OUTPUT_DIR/status
 assertContains "pod/pod-a deleted"
 assertContains "pod/pod-b deleted"
 assertContains "pod/pod-c deleted"
@@ -907,11 +945,12 @@ printResult
 # should see an error message
 echo "Testing updating ResourceGroup CRD during apply"
 echo "Apply the previous ResourceGroup CRD"
-${BIN_DIR}/kpt1.0.0 live install-resource-group > $OUTPUT_DIR/status 2>&1
-echo "kubectl apply -f e2e/live/testdata/update-rg-crd"
+echo "kpt1.0.0 live install-resource-group"
+${BIN_DIR}/kpt1.0.0 live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
 # Setup: create a service account and bind a Role to it so it has administrative
 # privileges on the "test" namespace, but no permissions to Get or Update CRD.
-kubectl apply -f e2e/live/testdata/rbac-error-step-1 > $OUTPUT_DIR/status
+echo "kubectl apply -f e2e/live/testdata/rbac-error-step-1"
+kubectl apply -f e2e/live/testdata/rbac-error-step-1 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace/rbac-error created"
 assertContains "rolebinding.rbac.authorization.k8s.io/admin created"
 assertContains "serviceaccount/user created"
@@ -920,26 +959,40 @@ wait 2
 # Setup: use the service account just created. It does not have permissions
 # on the default namespace, so it will give a permissions error on apply
 # for anything attempted to apply to the default namespace.
-kubectl config set-credentials user --token="$(kubectl get secrets -ojsonpath='{.data.token}' \
-  "$(kubectl get sa user -ojsonpath='{.secrets[0].name}')" \
-  | base64 -d)" > $OUTPUT_DIR/status
-kubectl config set-context kind-kind:user --cluster=kind-kind --user=user > $OUTPUT_DIR/status
-kubectl config use-context kind-kind:user > $OUTPUT_DIR/status
+echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
+SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
+if [[ -z "${SECRET_NAME}" ]]; then
+  # K8s 1.24+ doesn't auto-generate service account secrets any more.
+  echo "kubectl apply e2e/live/testdata/rbac-error-step-2"
+  kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
+  assertContains "secret/user-credentials created"
+  wait 2
+  SECRET_NAME="user-credentials"
+fi
+echo "kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d"
+SECRET_TOKEN="$(kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d)"
+echo "kubectl config set-credentials user --token \"<REDACTED>\""
+kubectl config set-credentials user --token "${SECRET_TOKEN}" 2>&1 | tee $OUTPUT_DIR/status
+echo "kubectl config set-context kind-kind:user --cluster=kind-kind --user=user"
+kubectl config set-context kind-kind:user --cluster=kind-kind --user=user 2>&1 | tee $OUTPUT_DIR/status
+echo "kubectl config use-context kind-kind:user"
+kubectl config use-context kind-kind:user 2>&1 | tee $OUTPUT_DIR/status
 wait 2
 
 # Attempt to apply a kpt package. It fails with an error message.
-${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-2 > $OUTPUT_DIR/status 2>&1
+echo "kpt live apply e2e/live/testdata/rbac-error-step-3"
+${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-3 2>&1 | tee $OUTPUT_DIR/status
 assertContains "error: Type ResourceGroup CRD needs update."
 printResult
 
 # Clean-up the k8s cluster
 echo "Cleaning up cluster"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1b
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1b
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1b/
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1a/
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-case-1b/
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/migrate-error/
 kind delete cluster
 echo -e "Cleaning up cluster...${GREEN}SUCCESS${NC}"
 
