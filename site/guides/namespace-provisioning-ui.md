@@ -84,7 +84,7 @@ blueprint using the UI.
 - Click on Kptfile resource, add a new mutator
   - Search for `namespace` and select `set-namespace` with the latest version
     available for selection.
-  - Select `kptfile.kpt.dev` in the config map dropdown
+  - Select `ConfigMap: kptfile.kpt.dev` for the function config
   - By setting both of these values, anytime the blueprint is rendered (for
     instance, on save or when a deployable instance of the blueprint is
     created), the namespace will be set to the name of the package.
@@ -106,7 +106,7 @@ blueprint using the UI.
 - Click on the Kptfile resource, add a new mutator
   - Search for `replacements` and select `apply-replacements` with the latest
     version available for selection
-  - Select the `ApplyReplacements update-rolebinding` local config object
+  - Select the `ApplyReplacements: update-rolebinding` for the function config
   - After adding the mutator, the Kptifle should have two mutators
     ![kptfile-mutators](/static/images/porch-ui/blueprint/edit-kptfile-mutators.png)
 - After you are done with the above, you should have the following resources
