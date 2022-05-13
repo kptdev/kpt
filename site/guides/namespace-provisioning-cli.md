@@ -16,8 +16,8 @@ In this guide, we will create a package that will be used for provisioning a nam
 ### Repositories
 
 Platform teams will have to setup two repos:
-1.Blueprint repo where reusable kpt packages will live.
-2.Deployment repo where instances of packages that will be deployed to a
+1. Blueprint repo where reusable kpt packages will live.
+2. Deployment repo where instances of packages that will be deployed to a
 kubernetes cluster will live. Users will create deployable packages from the
 packages in the blueprint repo.
 

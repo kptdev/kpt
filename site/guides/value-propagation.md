@@ -1,7 +1,7 @@
 [starlark]: https://catalog.kpt.dev/starlark/v0.4/
 [apply-replacements]: https://catalog.kpt.dev/apply-replacements/v0.1/
 
-# Value propagation
+# Value propagation pattern
 
 Generating a string value and propagating that value to another place
 (or many other places) in your configuration is a very common pattern. 
