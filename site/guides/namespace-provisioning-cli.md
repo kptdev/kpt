@@ -42,8 +42,8 @@ $ gh repo create deployment
 
 # clone and enter the blueprint repo
 $ USER=<YOUR GITHUB USERNAME>
-$ BLUEPRINT_REPO=[git@github.com](mailto:git@github.com):${USER}/blueprint.git 
-$ DEPLOYMENT_REPO=[git@github.com](mailto:git@github.com):${USER}/deployment.git
+$ BLUEPRINT_REPO=git@github.com:${USER}/blueprint.git
+$ DEPLOYMENT_REPO=git@github.com:${USER}/deployment.git
 
 $ git clone ${BLUEPRINT_REPO}
 $ git clone ${DEPLOYMENT_REPO}
