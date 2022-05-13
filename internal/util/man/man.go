@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -72,12 +71,12 @@ func (m Command) Run() error {
 		if err != nil {
 			return errors.Errorf("no manual entry for %q", m.Path)
 		}
-		k.Info.Man = filepath.Join(ManFilename)
+		k.Info.Man = ManFilename
 	}
 
-	// the path separator needs to converted to the OS path.
-	// e.g. the separator will be different for windows.
-	p := filepath.Join(path.Split(k.Info.Man))
+	// Convert from separator to slash and back.
+	// This ensures all separators are compatible with the local OS.
+	p := filepath.FromSlash(filepath.ToSlash(k.Info.Man))
 
 	// verify the man page is in the package
 	apPkg, err := filepath.Abs(m.Path)

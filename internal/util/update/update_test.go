@@ -3773,7 +3773,7 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			err = ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
-			tg.AssertEqual(t, local, filepath.Join(expectedLocal), false)
+			tg.AssertEqual(t, local, expectedLocal, false)
 		})
 	}
 }

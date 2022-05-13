@@ -481,7 +481,7 @@ func (ri *multiLineFormatter) String() string {
 
 func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.UniquePath) (*yaml.RNode, error) {
 	const op errors.Op = "fn.readConfig"
-	var fn errors.Fn = errors.Fn(f.Image)
+	fn := errors.Fn(f.Image)
 
 	var node *yaml.RNode
 	switch {
