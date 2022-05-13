@@ -1,0 +1,210 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+parallel: true
+
+kptArgs:
+  - "live"
+  - "plan"
+
+stdOut: |
+  apiVersion: config.kubernetes.io/v1
+  kind: ResourceList
+  items:
+  - apiVersion: config.google.com/v1alpha1
+    kind: Plan
+    metadata:
+      name: plan
+    spec:
+      actions:
+      - action: ApplyChanges
+        kind: ConfigMap
+        name: cm
+        namespace: prune
+        before:
+          object:
+            apiVersion: v1
+            data:
+              key: value
+            kind: ConfigMap
+            metadata:
+              annotations:
+                config.k8s.io/owning-inventory: prune
+                kubectl.kubernetes.io/last-applied-configuration: |
+                  {"apiVersion":"v1","data":{"key":"value"},"kind":"ConfigMap","metadata":{"annotations":{"config.k8s.io/owning-inventory":"prune"},"name":"cm","namespace":"prune"}}
+              creationTimestamp: "<TIMESTAMP>"
+              managedFields:
+              - apiVersion: v1
+                fieldsType: FieldsV1
+                fieldsV1:
+                  f:data:
+                    .: {}
+                    f:key: {}
+                  f:metadata:
+                    f:annotations:
+                      .: {}
+                      f:config.k8s.io/owning-inventory: {}
+                      f:kubectl.kubernetes.io/last-applied-configuration: {}
+                manager: kubectl-client-side-apply
+                operation: Update
+                time: "<TIMESTAMP>"
+              name: cm
+              namespace: prune
+              resourceVersion: "<RV>"
+              uid: <UID>
+        after:
+          object:
+            apiVersion: v1
+            data:
+              key: value
+            kind: ConfigMap
+            metadata:
+              annotations:
+                config.k8s.io/owning-inventory: prune
+                kubectl.kubernetes.io/last-applied-configuration: |
+                  {"apiVersion":"v1","data":{"key":"value"},"kind":"ConfigMap","metadata":{"annotations":{"config.k8s.io/owning-inventory":"prune"},"name":"cm","namespace":"prune"}}
+              creationTimestamp: "<TIMESTAMP>"
+              managedFields:
+              - apiVersion: v1
+                fieldsType: FieldsV1
+                fieldsV1:
+                  f:data:
+                    f:key: {}
+                  f:metadata:
+                    f:annotations:
+                      f:config.k8s.io/owning-inventory: {}
+                manager: kubectl
+                operation: Apply
+                time: "<TIMESTAMP>"
+              - apiVersion: v1
+                fieldsType: FieldsV1
+                fieldsV1:
+                  f:data:
+                    .: {}
+                    f:key: {}
+                  f:metadata:
+                    f:annotations:
+                      .: {}
+                      f:config.k8s.io/owning-inventory: {}
+                      f:kubectl.kubernetes.io/last-applied-configuration: {}
+                manager: kubectl-client-side-apply
+                operation: Update
+                time: "<TIMESTAMP>"
+              name: cm
+              namespace: prune
+              resourceVersion: "<RV>"
+              uid: <UID>
+      - action: PrunePruned
+        apiVersion: apps
+        kind: Deployment
+        name: dep
+        namespace: prune
+        before:
+          object:
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              annotations:
+                config.k8s.io/owning-inventory: prune
+                kubectl.kubernetes.io/last-applied-configuration: |
+                  {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"config.k8s.io/owning-inventory":"prune"},"name":"dep","namespace":"prune"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"dep"}},"template":{"metadata":{"labels":{"app":"dep"}},"spec":{"containers":[{"image":"nginx:1.14.2","name":"nginx","ports":[{"containerPort":80}]}]}}}}
+              creationTimestamp: "<TIMESTAMP>"
+              generation: 1
+              managedFields:
+              - apiVersion: apps/v1
+                fieldsType: FieldsV1
+                fieldsV1:
+                  f:metadata:
+                    f:annotations:
+                      .: {}
+                      f:config.k8s.io/owning-inventory: {}
+                      f:kubectl.kubernetes.io/last-applied-configuration: {}
+                  f:spec:
+                    f:progressDeadlineSeconds: {}
+                    f:replicas: {}
+                    f:revisionHistoryLimit: {}
+                    f:selector: {}
+                    f:strategy:
+                      f:rollingUpdate:
+                        .: {}
+                        f:maxSurge: {}
+                        f:maxUnavailable: {}
+                      f:type: {}
+                    f:template:
+                      f:metadata:
+                        f:labels:
+                          .: {}
+                          f:app: {}
+                      f:spec:
+                        f:containers:
+                          k:{"name":"nginx"}:
+                            .: {}
+                            f:image: {}
+                            f:imagePullPolicy: {}
+                            f:name: {}
+                            f:ports:
+                              .: {}
+                              k:{"containerPort":80,"protocol":"TCP"}:
+                                .: {}
+                                f:containerPort: {}
+                                f:protocol: {}
+                            f:resources: {}
+                            f:terminationMessagePath: {}
+                            f:terminationMessagePolicy: {}
+                        f:dnsPolicy: {}
+                        f:restartPolicy: {}
+                        f:schedulerName: {}
+                        f:securityContext: {}
+                        f:terminationGracePeriodSeconds: {}
+                manager: kubectl-client-side-apply
+                operation: Update
+                time: "<TIMESTAMP>"
+              name: dep
+              namespace: prune
+              resourceVersion: "<RV>"
+              uid: <UID>
+            spec:
+              progressDeadlineSeconds: 600
+              replicas: 1
+              revisionHistoryLimit: 10
+              selector:
+                matchLabels:
+                  app: dep
+              strategy:
+                rollingUpdate:
+                  maxSurge: 25%
+                  maxUnavailable: 25%
+                type: RollingUpdate
+              template:
+                metadata:
+                  creationTimestamp: null
+                  labels:
+                    app: dep
+                spec:
+                  containers:
+                  - image: nginx:1.14.2
+                    imagePullPolicy: IfNotPresent
+                    name: nginx
+                    ports:
+                    - containerPort: 80
+                      protocol: TCP
+                    resources: {}
+                    terminationMessagePath: /dev/termination-log
+                    terminationMessagePolicy: File
+                  dnsPolicy: ClusterFirst
+                  restartPolicy: Always
+                  schedulerName: default-scheduler
+                  securityContext: {}
+                  terminationGracePeriodSeconds: 30
+            status: {}
