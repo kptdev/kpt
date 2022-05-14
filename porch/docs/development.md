@@ -55,11 +55,11 @@ IMAGE_TAG=$(git rev-parse --short HEAD) make push-images
 
 ## Running Locally
 
-Follow [running-locally.md](./running-locally-md) to run Porch locally.
+Follow [running-locally.md](./running-locally.md) to run Porch locally.
 
 ## Debugging
 
-To debug Porch, run Porch locally [running-locally.md](./running-locally-md), exit porch server running in the shell,
+To debug Porch, run Porch locally [running-locally.md](./running-locally.md), exit porch server running in the shell,
 and launch Porch under the debugger. VSCode debug session is preconfigured in [launch.json](../.vscode/launch.json).
 
 Update the launch arguments to your needs.
