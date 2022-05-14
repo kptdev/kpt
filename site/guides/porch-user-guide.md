@@ -477,8 +477,18 @@ actuation target as a means of deployment) and include:
 * `del` - Deletes the package RootSync.
 * `get` - Gets a RootSync resource with which package was deployed.
 
-
 ```sh
+# Make sure Config Sync is configured to use multirepo mode
+kubectl apply -f - <<EOF
+# config-management.yaml
+apiVersion: configmanagement.gke.io/v1
+kind: ConfigManagement
+metadata:
+  name: config-management
+spec:
+  enableMultiRepo: true
+EOF
+
 # Create a sync resource to deploy a package using Config Sync
 $ kpt alpha sync create -ndefault \
   --package=deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 \
@@ -487,7 +497,7 @@ $ kpt alpha sync create -ndefault \
 Created RootSync config-management-system/sync-istions-clone
 
 # Get the status of the sync resource
-$ kpt alpha sync get -nconfig-management-system sync-istions-clone -oyaml
+$ kpt alpha sync get sync-istions-clone -oyaml
 apiVersion: configsync.gke.io/v1beta1
 kind: RootSync
 metadata:
@@ -496,7 +506,7 @@ metadata:
 ...
 
 # Delete the sync resource
-$ kpt alpha sync delete -nconfig-management-system sync-istions-clone
+$ kpt alpha sync delete sync-istions-clone
 Deleting synced resources
 Waiting for deleted resources to be removed
 Sync sync-istions-clone successfully deleted
