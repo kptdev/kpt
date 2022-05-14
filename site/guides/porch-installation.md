@@ -69,7 +69,7 @@ To run a released version of Porch, download the release config bundle from
 Untar and applly the config bundle. This will install:
 
 * Porch server
-* [Config Sync](https://cloud.google.com/anthos-config-management/docs/config-sync-overview)
+* [Config Sync](https://kpt.dev/gitops/configsync)
 
 ```sh
 mkdir porch-install
@@ -125,7 +125,7 @@ for details).
 
 The `make push-and-deploy-no-sa` target will install Porch but not Config Sync.
 You can install Config Sync in your k8s cluster manually following the
-[documentation](https://cloud.google.com/anthos-config-management/docs/how-to/installing-kubectl).
+[documentation](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/installation.md).
 
 **Note**: The `-no-sa` (no service account) targets create Porch deployment
 configuration which does not associate Kubernetes service accounts with GCP
