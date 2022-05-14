@@ -190,5 +190,5 @@ As above, you can verify that Porch is running by querying the `api-resources`:
 kubectl api-resources | grep porch
 ```
 
-And start [using Porch](guides/porch-user-guide.md) if the Porch resources are
+And start [using Porch](./porch-user-guide.md) if the Porch resources are
 available.
