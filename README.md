@@ -56,7 +56,7 @@ The kpt toolchain includes the following components:
   leverages [Kustomize](https://kustomize.io) to automatically render manifests on the fly when needed. It uses the same apply
   logic as the kpt CLI.
 
-- **Backstage UI plugin**: We've created a proof-of-concept UI in the form of a [Backstage](https://backstage.io/)[UI plugin](https://github.com/GoogleContainerTools/kpt-backstage-plugins) to demonstrate the WYSIWYG experience that's possible on top of the
+- **Backstage UI plugin**: We've created a proof-of-concept UI in the form of a [Backstage](https://backstage.io/) [UI plugin](https://github.com/GoogleContainerTools/kpt-backstage-plugins) to demonstrate the WYSIWYG experience that's possible on top of the
   package orchestrator. More scenarios can be supported by implementing form-based editors for additional Kubernetes resource types.
 
 ## Roadmap
