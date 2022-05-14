@@ -120,7 +120,7 @@ func (r *Runner) RunE(c *cobra.Command, args []string) error {
 
 	// Load the resources from disk or stdin and extract the
 	// inventory information.
-	objs, inv, err := live.Load(r.factory, path, "", c.InOrStdin())
+	objs, inv, err := live.Load(r.factory, path, c.InOrStdin())
 	if err != nil {
 		return err
 	}

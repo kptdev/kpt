@@ -73,7 +73,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 			},
 			expectedErrMsg: "no ResourceGroup object was provided within the stream or package",
 		},
-		"function config is included by default": {
+		"function config is excluded": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
@@ -99,6 +99,11 @@ func TestLoad_LocalDisk(t *testing.T) {
 						WithFile("deployment.yaml", deploymentA),
 				),
 			namespace: "foo",
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+			},
 			expectedObjs: []object.ObjMetadata{
 				{
 					GroupKind: schema.GroupKind{
@@ -116,12 +121,6 @@ func TestLoad_LocalDisk(t *testing.T) {
 					Namespace: "foo",
 				},
 			},
-			expectedInv: kptfile.Inventory{
-				Name:        "foo",
-				Namespace:   "bar",
-				InventoryID: "foo-bar",
-			},
-			expectedObjs: []object.ObjMetadata{},
 		},
 		"inventory info is taken from the root Kptfile": {
 			pkg: pkgbuilder.NewRootPkg().
@@ -512,7 +511,7 @@ func TestValidateInventory(t *testing.T) {
 				Name: "foo",
 			},
 			expectErr:           true,
-			expectedErrorFields: []string{"namespace"},
+			expectedErrorFields: []string{"namespace", "inventoryID"},
 		},
 	}
 

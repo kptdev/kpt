@@ -138,21 +138,9 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	if err := mr.applyCRD(); err != nil {
 		return err
 	}
-<<<<<<< HEAD
-	// Retrieve the current ConfigMap inventory objects.
-	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
-	if err != nil {
-		if _, ok := err.(*inventory.NoInventoryObjError); ok {
-			// No ConfigMap inventory means the migration has already run before.
-			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
-			return nil
-		}
-		klog.V(4).Infof("error retrieving ConfigMap inventory object: %s", err)
-=======
 
 	// Check if we need to migrate from ConfigMap to ResourceGroup.
 	if err := mr.migrateCMToRG(stdinBytes, args); err != nil {
->>>>>>> 67122c32 (feat: Use external resourcegroup object file to store inventory)
 		return err
 	}
 

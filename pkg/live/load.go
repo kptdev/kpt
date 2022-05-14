@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -76,33 +75,6 @@ func loadFromStream(f util.Factory, r io.Reader) ([]*unstructured.Unstructured, 
 	if err != nil {
 		return nil, kptfilev1.Inventory{}, err
 	}
-
-	// Check resourcegroup file for inventory information if file is specified.
-	if rgfile != "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, kptfilev1.Inventory{}, err
-		}
-
-		diskInv, err := readInvInfoFromDisk(cwd, rgfile)
-		if err != nil {
-			return nil, kptfilev1.Inventory{}, err
-		}
-
-		if diskInv.IsValid() && invInfo.IsValid() {
-			return nil, kptfilev1.Inventory{}, &MultipleInventoryInfoError{}
-		}
-
-		if !diskInv.IsValid() && !invInfo.IsValid() {
-			return nil, kptfilev1.Inventory{}, &NoInvInfoError{}
-		}
-
-		if diskInv.IsValid() {
-			invInfo = diskInv
-		}
-	}
-
-	// Stream does not contain a valid inventory and no local inventory does not exist, or is not valid.
 	if !invInfo.IsValid() {
 		return nil, kptfilev1.Inventory{}, &pkg.InvInfoInvalid{}
 	}
@@ -310,6 +282,14 @@ func validateInventory(inventory kptfilev1.Inventory) error {
 			Value:  inventory.Namespace,
 			Type:   errors.Missing,
 			Reason: "\"inventory.namespace\" must not be empty",
+		})
+	}
+	if inventory.InventoryID == "" {
+		violations = append(violations, errors.Violation{
+			Field:  "inventoryID",
+			Value:  inventory.InventoryID,
+			Type:   errors.Missing,
+			Reason: "\"inventory.inventoryID\" must not be empty",
 		})
 	}
 	if len(violations) > 0 {

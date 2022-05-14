@@ -11,7 +11,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -70,6 +72,7 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 
 	cmd := &cobra.Command{
 		Use:     "init [PKG_PATH]",
+		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Short:   livedocs.InitShort,
 		Long:    livedocs.InitShort + "\n" + livedocs.InitLong,
@@ -81,7 +84,7 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
-	cmd.Flags().StringVar(&r.RGFile, "rg-file", rgfilev1alpha1.RGFileName, "The file path to the ResourceGroup object.")
+	cmd.Flags().StringVar(&r.RGFileName, "rg-filename", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
 	return r
 }
 
@@ -98,10 +101,17 @@ type Runner struct {
 	ioStreams   genericclioptions.IOStreams
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
-	namespace   string // Inventory object namespace
-	RGFile      string // resourcegroup object filepath
+	RGFileName  string // resourcegroup object filename
 	InventoryID string // Inventory object unique identifier label
 	Quiet       bool   // Output message during initialization
+}
+
+func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
+	dir := filepath.Dir(filepath.Clean(r.RGFileName))
+	if dir != "." {
+		return fmt.Errorf("rg-filename must be a valid filename")
+	}
+	return nil
 }
 
 func (r *Runner) runE(_ *cobra.Command, args []string) error {
@@ -136,7 +146,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		Quiet:       r.Quiet,
 		Name:        r.Name,
 		InventoryID: r.InventoryID,
-		RGFileName:  r.RGFile,
+		RGFileName:  r.RGFileName,
 		Force:       r.Force,
 	}).Run(r.ctx)
 	if err != nil {
@@ -170,7 +180,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	}
 	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
-		pr.Printf("initializing %s data (namespace: %s)...", c.RGFileName, namespace)
+		pr.Printf("initializing %q data (namespace: %s)...", c.RGFileName, namespace)
 	}
 
 	// Autogenerate the name if it is not provided through the flag.
@@ -181,7 +191,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 
 	// Autogenerate the inventory ID if not provided through the flag.
 	if c.InventoryID == "" {
-		c.InventoryID, err = generateHash(namespace, c.Name)
+		c.InventoryID, err = generateID(namespace, c.Name, time.Now())
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, err)
 		}
@@ -280,6 +290,19 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 	return nil
+}
+
+// generateID returns the string which is a SHA1 hash of the passed namespace
+// and name, with the unix timestamp string concatenated. Returns an error
+// if either the namespace or name are empty.
+func generateID(namespace string, name string, t time.Time) (string, error) {
+	const op errors.Op = "cmdliveinit.generateID"
+	hashStr, err := generateHash(namespace, name)
+	if err != nil {
+		return "", errors.E(op, err)
+	}
+	timeStr := strconv.FormatInt(t.UTC().UnixNano(), 10)
+	return fmt.Sprintf("%s-%s", hashStr, timeStr), nil
 }
 
 // generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
