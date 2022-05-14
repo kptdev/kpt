@@ -5,9 +5,10 @@
 > which simplifies managing Kubernetes platforms and KRM-driven infrastructure at scale 
 > by manipulating declarative Configuration as Data, 
 > separated from the code that transforms it.
-
-<iframe id="ytplayer" type="text/html" width="330" height="216"
+<div class="container">
+<iframe id="ytplayer" type="text/html" width="330" height="216" scrolling="auto" class="video"
     src="https://www.youtube.com/embed/L_x7z4CXHDw" align="left" allowFullScreen="allowFullScreen"> </iframe>
+</div>
 
 
 [Why kpt](guides/rationale.md)
