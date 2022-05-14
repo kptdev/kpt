@@ -36,7 +36,7 @@ The kpt toolchain includes the following components:
   the YAML KRM input/output format, but we provide SDKs to simplify the function authoring process, in 
   [Go](https://kpt.dev/book/05-developing-functions/02-developing-in-Go), 
   [Typescript](https://kpt.dev/book/05-developing-functions/03-developing-in-Typescript), and 
-  [Starlark](https://catalog.kpt.dev/starlark/v0.2/), a Python-like embedded language.
+  [Starlark](https://kpt.dev/book/05-developing-functions/04-developing-in-Starlark), a Python-like embedded language.
 
 - **Function catalog**: A [catalog](https://catalog.kpt.dev/) of off-the-shelf, tested functions. kpt makes configuration
   easy to create and transform, via reusable functions. Because they are expected to be used for in-place transformation,

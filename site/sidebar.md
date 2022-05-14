@@ -25,7 +25,7 @@
 		- [5.1 Functions Specification](book/05-developing-functions/01-functions-specification.md)
 		- [5.2 Developing in Go](book/05-developing-functions/02-developing-in-Go.md)
 		- [5.3 Developing in Typescript](book/05-developing-functions/03-developing-in-Typescript.md)
-		- [5.4 Executable Configuration](book/05-developing-functions/04-executable-configuration.md)
+		- [5.4 Developing in Starlark](book/05-developing-functions/04-developing-in-Starlark.md)
 	- [6 Deploying Packages](book/06-deploying-packages/)
 		- [6.1 Initializing a Package for Apply](book/06-deploying-packages/01-initializing-a-package-for-apply.md)
 		- [6.2 Applying a Package](book/06-deploying-packages/02-applying-a-package.md)
