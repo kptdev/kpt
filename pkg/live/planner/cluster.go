@@ -96,9 +96,12 @@ func (r *ClusterPlanner) BuildPlan(ctx context.Context, inv inventory.Info, obje
 	}, nil
 }
 
-func (r *ClusterPlanner) dryRunForPlan(ctx context.Context, inv inventory.Info,
-	objects []*unstructured.Unstructured, o Options) ([]planv1alpha1.Action, error) {
-
+func (r *ClusterPlanner) dryRunForPlan(
+	ctx context.Context,
+	inv inventory.Info,
+	objects []*unstructured.Unstructured,
+	o Options,
+) ([]planv1alpha1.Action, error) {
 	eventCh := r.applier.Run(ctx, inv, objects, apply.ApplierOptions{
 		DryRunStrategy:    common.DryRunServer,
 		ServerSideOptions: o.ServerSideOptions,
