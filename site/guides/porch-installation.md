@@ -69,7 +69,7 @@ To run a released version of Porch, download the release config bundle from
 Untar and applly the config bundle. This will install:
 
 * Porch server
-* [Config Sync](https://kpt.dev/gitops/configsync)
+* [Config Sync](https://kpt.dev/gitops/configsync/)
 
 ```sh
 mkdir porch-install
