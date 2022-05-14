@@ -1,5 +1,4 @@
-You can use the `kyaml` library to develop functions in Go. Doing so provides
-the following features:
+You can develop a KRM function in Go using [the kpt function SDK].
 
 - **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
   is a general-purpose programming language that provides:
@@ -7,127 +6,131 @@ the following features:
   - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
   - Robust community support and detailed documentation
-- **YAML-centric**: As opposed to other frameworks discussed in this chapter,
-  the `kyaml` library exposes the YAML Abstract Syntax Tree (AST) to the user.
-  This enables you to control every aspect of the YAML file including
-  manipulating comments; however, it comes at the cost of complexity compared to
-  representing resources as idiomatic data structures.
+
+## Prerequisites
+
+- [Install kpt](https://kpt.dev/installation/)
+
+- [Install Docker](https://docs.docker.com/get-docker/)
 
 ## Quickstart
 
-### Create the go module
+In this quickstart, we will write a function that adds an annotation 
+`config.kubernetes.io/managed-by=kpt` to all `Deployment` resources.
+
+### Initialize your project
+
+We start from a "get-started" package which contains a `main.go` file with some scaffolding code.
 
 ```shell
-$ go mod init github.com/user/repo; go get sigs.k8s.io/kustomize/kyaml@v0.12.0
+# Set your KRM function name.
+export FUNCTION_NAME=set-annotation
+
+# Get the "get-started" package.
+kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+
+cd ${FUNCTION_NAME}
+
+# Initialize the Go module
+go mod init
+go mod tidy
 ```
 
-### Create the `main.go`
-
-This is a simple function that adds the annotation `myannotation` with the
-provided value:
+### Write the KRM function logic
+ 
+Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
 // main.go
 package main
 
 import (
-	"os"
+  "fmt"
+  "os"
 
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework/command"
-	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
+  "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 )
 
-func main() {
-	// create a struct matching the structure of ResourceList.FunctionConfig to hold its data
-	var config struct {
-		Data map[string]string `yaml:"data"`
-	}
-	fn := func(items []*yaml.RNode) ([]*yaml.RNode, error) {
-		for i := range items {
-			// set the annotation on each resource item
-			err := items[i].PipeE(yaml.SetAnnotation("myannotation", config.Data["myannotation"]))
-			if err != nil {
-				return nil, err
-			}
-		}
-		return items, nil
-	}
-	p := framework.SimpleProcessor{Filter: kio.FilterFunc(fn), Config: &config}
-	cmd := command.Build(p, command.StandaloneDisabled, false)
-  // Adds a "gen" subcommand to create a Dockerfile for building the function into a container image.
-  command.AddGenerateDockerfile(cmd)
+// EDIT THIS FUNCTION!
+// This is the main logic. rl is the input `ResourceList` which has the `FunctionConfig` and `Items` fields.
+// You can modify the `Items` and add result information to `rl.Results`.
+func Run(rl *fn.ResourceList) (bool, error) {
+  // Your code
+}
 
-	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
-	}
+func main() {
+  // CUSTOMIZE IF NEEDED
+  // `AsMain` accepts a `ResourceListProcessor` interface.
+  // You can explore other `ResourceListProcessor` structs in the SDK or define your own.
+  if err := fn.AsMain(fn.ResourceListProcessorFunc(Run)); err != nil {
+    os.Exit(1)
+  }
 }
 ```
 
-### Build and test the function
+The [`fn`] library provides a series of KRM level operations for [`ResourceList`]. 
+Basically, the KRM resource `ResourceList.FunctionConfig` and KRM resources `ResourceList.Items` are both converted to 
+`KubeObject` objects. You can use `KubeObject` similar as [`unstructured.Unstrucutred`].
 
-Build the go binary:
+The set-annotation function (see below) iterates the `ResourceList.Items`, finds out the `Deployment` resources and
+adds the annotation. After the iteration, it adds some user message to the `ResourceList.Results`
 
-```shell
-$ go mod tidy; go build -o my-fn .
+```go
+func Run(rl *fn.ResourceList) (bool, error) {
+    for _, kubeObject := range rl.Items {
+        if kubeObject.IsGVK("v1", "Deployment") {
+            kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
+        }
+    }
+    // This result message will be displayed in the function evaluation time. 
+    rl.Results = append(rl.Results, fn.GeneralResult("Add config.kubernetes.io/managed-by=kpt to all `Deployment` resources", fn.Info))
+    return true, nil
+}
 ```
 
-Fetch the wordpress package:
+Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn).
+
+
+### Test the KRM function
+
+The "get-started" package contains a `./data` directory. You can use this to test out your functions. 
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.8
+# Edit the `data/resources.yaml` with your KRM resources. 
+# resources.yaml already has a `Deployment` and `Service` as test data. 
+vim data/resources.yaml
+
+# Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
+# then pipe the ResourceList as StdIn to your function
+kpt fn source data | go run main.go
+
+# Verify the KRM function behavior in the StdOutput `ResourceList`
 ```
 
-Test it by running the function imperatively:
+### Build the KRM function as a Docker image
+
+Build the image
+
+The "get-started" package provides the `Dockerfile`.
 
 ```shell
-$ kpt fn eval wordpress --exec ./my-fn -- myannotation=foo
+export FN_CONTAINER_REGISTRY=<Your GCR or docker hub>
+export TAG=<Your KRM function tag>
+docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
-During iterative development, `--exec` flag can be used to execute the
-function binary directly instead of requiring the function to be containerized
-first. Once you have a function binary that works, you can then proceed to
-creating the container image.
-
-### Publish the function
-
-Generate a Dockerfile for the function image:
-
+To verify the image using the same `./data` resources
 ```shell
-$ go run ./main.go gen ./
-```
-
-Build the image:
-
-```shell
-$ docker build . -t gcr.io/project/fn-name:tag
-```
-
-Optionally, push the image to a container registry:
-
-```shell
-$ docker push gcr.io/project/fn-name:tag
-```
-
-Run the function imperatively as a container function:
-
-```shell
-$ kpt fn eval wordpress -i gcr.io/project/fn-name:tag -- myannotation=foo
+kpt fn eval ./data --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ## Next Steps
 
-- Read the package documentation:
+- See other [go doc examples] to use KubeObject.
+- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
 
-| Package                                    | Purpose               |
-| ------------------------------------------ | --------------------- |
-| [sigs.k8s.io/kustomize/kyaml/fn/framework] | Functions Framework   |
-| [sigs.k8s.io/kustomize/kyaml/yaml]         | Modify YAML resources |
-
-- Take a look at the source code for [functions in the catalog] to better
-  understand how to develop functions in Go
-
-[sigs.k8s.io/kustomize/kyaml/fn/framework]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/fn/framework#pkg-index
-[sigs.k8s.io/kustomize/kyaml/yaml]: https://pkg.go.dev/sigs.k8s.io/kustomize/kyaml@v0.11.1/yaml
-[functions in the catalog]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go
+[the kpt function SDK]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
+[go doc examples]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn/examples
+[`fn`]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
+[`ResourceList`]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
+[`unstructured.Unstrucutred`]: https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
