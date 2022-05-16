@@ -28,6 +28,7 @@ $ kpt version
 
 kpt provides auto-completion support for several of the common shells.
 To see the options for enabling shell auto-completion:
+
 ```shell
 $ kpt completion -h
 ```
@@ -35,9 +36,11 @@ $ kpt completion -h
 ### Prerequisites
 Previous installations of kpt completion may have added the following line to
 the shell's config file (e.g. `.bashrc`, `.zshrc`, etc.):
+
 ```shell
-complete -C <KPT_PATH> kpt
+$ complete -C <KPT_PATH> kpt
 ```
+
 This line needs to be removed for kpt's completion implementation to function
 properly.
 
