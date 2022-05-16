@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/pkg/api/plan/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	kptplanner "github.com/GoogleContainerTools/kpt/pkg/live/planner"
 	"github.com/spf13/cobra"
@@ -154,34 +153,34 @@ func (r *Runner) RunE(c *cobra.Command, args []string) error {
 	return fmt.Errorf("unknown output format %s", r.output)
 }
 
-func printText(plan *v1alpha1.Plan, objs []*unstructured.Unstructured, ioStreams genericclioptions.IOStreams) error {
+func printText(plan *kptplanner.Plan, objs []*unstructured.Unstructured, ioStreams genericclioptions.IOStreams) error {
 	if !hasChanges(plan) {
 		fmt.Fprint(ioStreams.Out, "no changes found\n")
 		return nil
 	}
 
 	fmt.Fprintf(ioStreams.Out, "kpt will perform the following actions:\n")
-	for i := range plan.Spec.Actions {
-		action := plan.Spec.Actions[i]
+	for i := range plan.Actions {
+		action := plan.Actions[i]
 		switch action.Type {
-		case v1alpha1.Create:
+		case kptplanner.Create:
 			printEntryWithColor("+", print.GREEN, action, ioStreams)
 			u, ok := findResource(objs, action.Group, action.Kind, action.Namespace, action.Name)
 			if !ok {
 				panic("can't find resource")
 			}
 			printKRMWithPrefix(u, ContentPrefix, ioStreams)
-		case v1alpha1.Unchanged:
+		case kptplanner.Unchanged:
 			// Do nothing.
-		case v1alpha1.Delete:
+		case kptplanner.Delete:
 			printEntryWithColor("-", print.RED, action, ioStreams)
-		case v1alpha1.Update:
+		case kptplanner.Update:
 			printEntry(" ", action, ioStreams)
-			findAndPrintDiff(action.Before, action.After, ContentPrefix, ioStreams)
-		case v1alpha1.Skip:
+			findAndPrintDiff(action.Original, action.Updated, ContentPrefix, ioStreams)
+		case kptplanner.Skip:
 			// TODO: provide more information about why the resource was skipped.
 			printEntryWithColor("=", print.YELLOW, action, ioStreams)
-		case v1alpha1.Error:
+		case kptplanner.Error:
 			printEntry("!", action, ioStreams)
 			printWithPrefix(action.Error, ContentPrefix, ioStreams)
 		}
@@ -190,21 +189,21 @@ func printText(plan *v1alpha1.Plan, objs []*unstructured.Unstructured, ioStreams
 	return nil
 }
 
-func hasChanges(plan *v1alpha1.Plan) bool {
-	for _, a := range plan.Spec.Actions {
-		if a.Type != v1alpha1.Unchanged {
+func hasChanges(plan *kptplanner.Plan) bool {
+	for _, a := range plan.Actions {
+		if a.Type != kptplanner.Unchanged {
 			return true
 		}
 	}
 	return false
 }
 
-func printEntryWithColor(prefix string, color print.Color, action v1alpha1.Action, ioStreams genericclioptions.IOStreams) {
+func printEntryWithColor(prefix string, color print.Color, action kptplanner.Action, ioStreams genericclioptions.IOStreams) {
 	txt := print.SprintfWithColor(color, "%s%s %s/%s %s/%s\n", EntryPrefix, prefix, action.Group, action.Kind, action.Namespace, action.Name)
 	fmt.Fprint(ioStreams.Out, txt)
 }
 
-func printEntry(prefix string, action v1alpha1.Action, ioStreams genericclioptions.IOStreams) {
+func printEntry(prefix string, action kptplanner.Action, ioStreams genericclioptions.IOStreams) {
 	fmt.Fprintf(ioStreams.Out, "%s%s %s/%s %s/%s\n", EntryPrefix, prefix, action.Group, action.Kind, action.Namespace, action.Name)
 }
 
@@ -265,24 +264,82 @@ func printWithPrefix(text, prefix string, ioStreams genericclioptions.IOStreams)
 
 // printKRM outputs the plan inside a ResourceList so the output format
 // follows the KRM function wire format.
-func printKRM(plan *v1alpha1.Plan, ioStreams genericclioptions.IOStreams) error {
-	b, err := yaml.Marshal(plan)
+func printKRM(
+	plan *kptplanner.Plan,
+	ioStreams genericclioptions.IOStreams,
+) error {
+	planResource, err := yaml.Parse(strings.TrimSpace(`
+apiVersion: kpt.dev/v1alpha1
+kind: Plan
+metadata:
+  name: plan
+  annotations:
+    config.kubernetes.io/local-config: true	
+`))
 	if err != nil {
-		return fmt.Errorf("failed to marshall plan into yaml: %w", err)
+		return fmt.Errorf("unable to create yaml document: %w", err)
 	}
-	rn, err := yaml.Parse(string(b))
+
+	sNode, err := planResource.Pipe(yaml.LookupCreate(yaml.SequenceNode, "spec", "actions"))
 	if err != nil {
-		return fmt.Errorf("failed to parse plan: %w", err)
+		return fmt.Errorf("unable to update yaml document: %w", err)
 	}
+
+	for i := range plan.Actions {
+		action := plan.Actions[i]
+		a := yaml.NewRNode(&yaml.Node{Kind: yaml.MappingNode})
+		fields := map[string]*yaml.RNode{
+			"action":     yaml.NewScalarRNode(string(action.Type)),
+			"apiVersion": yaml.NewScalarRNode(action.Group),
+			"kind":       yaml.NewScalarRNode(action.Kind),
+			"name":       yaml.NewScalarRNode(action.Name),
+			"namespace":  yaml.NewScalarRNode(action.Namespace),
+		}
+		if action.Original != nil {
+			r, err := unstructuredToRNode(action.Original)
+			if err != nil {
+				return err
+			}
+			fields["original"] = r
+		}
+		if action.Updated != nil {
+			r, err := unstructuredToRNode(action.Updated)
+			if err != nil {
+				return err
+			}
+			fields["updated"] = r
+		}
+		if action.Error != "" {
+			fields["error"] = yaml.NewScalarRNode(action.Error)
+		}
+
+		for key, val := range fields {
+			if err := a.PipeE(yaml.SetField(key, val)); err != nil {
+				return fmt.Errorf("unable to update yaml document: %w", err)
+			}
+		}
+		if err := sNode.PipeE(yaml.Append(a.YNode())); err != nil {
+			return fmt.Errorf("unable to update yaml document: %w", err)
+		}
+	}
+
 	writer := &kio.ByteWriter{
 		Writer:                ioStreams.Out,
 		KeepReaderAnnotations: true,
 		WrappingAPIVersion:    kio.ResourceListAPIVersion,
 		WrappingKind:          kio.ResourceListKind,
 	}
-	err = writer.Write([]*yaml.RNode{rn})
+	err = writer.Write([]*yaml.RNode{planResource})
 	if err != nil {
 		return fmt.Errorf("failed to write resources: %w", err)
 	}
 	return nil
+}
+
+func unstructuredToRNode(u *unstructured.Unstructured) (*yaml.RNode, error) {
+	b, err := yaml.Marshal(u.Object)
+	if err != nil {
+		return nil, err
+	}
+	return yaml.Parse((string(b)))
 }

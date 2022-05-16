@@ -18,7 +18,6 @@ import (
 	"context"
 	"testing"
 
-	planv1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/plan/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -47,7 +46,7 @@ func TestClusterPlanner(t *testing.T) {
 		clusterResources []*unstructured.Unstructured
 		events           []event.Event
 
-		expectedPlan *planv1alpha1.Plan
+		expectedPlan *Plan
 	}{
 		"single new resource": {
 			resources: []*unstructured.Unstructured{
@@ -79,18 +78,15 @@ func TestClusterPlanner(t *testing.T) {
 					},
 				},
 			},
-			expectedPlan: &planv1alpha1.Plan{
-				ResourceMeta: planv1alpha1.ResourceMeta,
-				Spec: planv1alpha1.PlanSpec{
-					Actions: []planv1alpha1.Action{
-						{
-							Type:      planv1alpha1.Create,
-							Name:      "foo",
-							Namespace: "default",
-							Group:     "apps",
-							Kind:      "Deployment",
-							After:     testutil.Unstructured(t, deploymentYAML),
-						},
+			expectedPlan: &Plan{
+				Actions: []Action{
+					{
+						Type:      Create,
+						Name:      "foo",
+						Namespace: "default",
+						Group:     "apps",
+						Kind:      "Deployment",
+						Updated:   testutil.Unstructured(t, deploymentYAML),
 					},
 				},
 			},
