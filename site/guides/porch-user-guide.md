@@ -61,7 +61,8 @@ To use Porch with a Git repository, you will need:
 
 * A Git repository for your blueprints.
 * A [Personal Access Token](https://github.com/settings/tokens) (when using
-  GitHub repository) for Porch to authenticate with the repository.
+  GitHub repository) for Porch to authenticate with the repository. Porch requires
+  the 'repo' scope.
 * Or Basic Auth credentials for Porch to authenticate with the repository.
 
 To use Porch with an OCI repository
