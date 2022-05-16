@@ -137,7 +137,7 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 		Namespace(*r.cfg.Namespace).
 		Resource("packagerevisions").
 		Name(r.copy.Source.Name).
-		Do(context.Background()).
+		Do(r.ctx).
 		Into(&result)
 	if err != nil {
 		return nil, err
