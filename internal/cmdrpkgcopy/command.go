@@ -24,6 +24,7 @@ import (
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -52,9 +53,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command = c
-
-	c.Flags().StringVar(&r.repository, "repository", "", "Repository in which the copy will be created.")
-	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the copied package.")
+	// TODO (natasha41575): Make the default "latest+1"
+	c.Flags().StringVar(&r.revision, "revision", "", "Revision of the copied package.")
 
 	return r
 }
@@ -67,9 +67,7 @@ type runner struct {
 
 	copy porchapi.PackageEditTaskSpec
 
-	repository string // Target repository
-	revision   string // Target package revision
-	target     string // Target package name
+	revision string // Target package revision
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -80,29 +78,32 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 	r.client = client
 
-	if len(args) < 2 {
-		return errors.E(op, fmt.Errorf("SOURCE_PACKAGE and NAME are required positional arguments; %d provided", len(args)))
+	if len(args) < 1 {
+		return errors.E(op, fmt.Errorf("SOURCE_PACKAGE is a required positional argument"))
+	}
+	if len(args) > 1 {
+		return errors.E(op, fmt.Errorf("too many arguments; SOURCE_PACKAGE is the only accepted positional arguments"))
 	}
 
-	if r.repository == "" {
-		return errors.E(op, fmt.Errorf("--repository is required to specify target repository"))
+	// TODO(natasha41575): This is temporarily required until we can set a default value for the revision. Now that we are disallowing
+	//   package name changes or editing outside the repository, the copy needs to have a new revision number.
+	if r.revision == "" {
+		return errors.E(op, fmt.Errorf("--revision is a required flag"))
 	}
-
-	source := args[0]
-	target := args[1]
 
 	r.copy.Source = &porchapi.PackageRevisionRef{
-		Name: source,
+		Name: args[0],
 	}
-
-	r.target = target
-
 	return nil
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
+	revisionSpec, err := r.getPackageRevisionSpec()
+	if err != nil {
+		return errors.E(op, err)
+	}
 	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -111,22 +112,43 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: *r.cfg.Namespace,
 		},
-		Spec: porchapi.PackageRevisionSpec{
-			PackageName:    r.target,
-			Revision:       r.revision,
-			RepositoryName: r.repository,
-			Tasks: []porchapi.Task{
-				{
-					Type: porchapi.TaskTypeEdit,
-					Edit: &r.copy,
-				},
-			},
-		},
+		Spec: *revisionSpec,
 	}
 	if err := r.client.Create(r.ctx, pr); err != nil {
 		return errors.E(op, err)
 	}
-
 	fmt.Fprintf(cmd.OutOrStdout(), "%s created", pr.Name)
 	return nil
+}
+
+func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error) {
+	newScheme := runtime.NewScheme()
+	if err := porchapi.SchemeBuilder.AddToScheme(newScheme); err != nil {
+		return nil, err
+	}
+	restClient, err := porch.CreateRESTClient(r.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	result := porchapi.PackageRevision{}
+	err = restClient.
+		Get().
+		Namespace(*r.cfg.Namespace).
+		Resource("packagerevisions").
+		Name(r.copy.Source.Name).
+		Do(r.ctx).
+		Into(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO(natasha41575): Set a default revision of "latest + 1"
+	spec := &porchapi.PackageRevisionSpec{
+		PackageName:    result.Spec.PackageName,
+		Revision:       r.revision,
+		RepositoryName: result.Spec.RepositoryName,
+	}
+	spec.Tasks = []porchapi.Task{{Type: porchapi.TaskTypeEdit, Edit: &r.copy}}
+	return spec, nil
 }
