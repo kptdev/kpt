@@ -5,7 +5,7 @@ lowest-level, _editing_ a package is simply a process that either:
 - Changes the resources within that package. Examples:
   - Authoring new a Deployment resource
   - Customizing an existing Deployment resource
-  - Modifying the Kptfile or other meta resources
+  - Modifying the Kptfile
 - Changes the package hierarchy, also called _package composition_. Examples:
   - Adding a subpackage.
   - Create a new dependent subpackage.
@@ -40,8 +40,8 @@ $ code wordpress
 ## Automation
 
 Oftentimes, you want to automate repetitive or complex operations. Having standardized on KRM for
-all resources in a package (including meta resources) allows us to easily develop automation in
-different toolchains and languages, as well as at levels of abstraction.
+all resources in a package allows us to easily develop automation in different
+toolchains and languages, as well as at levels of abstraction.
 
 For example, setting a label on all the resources in the `wordpress` package can be done
 using the following function:

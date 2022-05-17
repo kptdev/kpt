@@ -43,11 +43,6 @@ This _package hierarchy_ contains two packages:
    `Kptfile`. This package contains 3 resources in
    `wordpress/mysql/deployment.yaml` file.
 
-The `Kptfile` is an example of a _meta resource_ in kpt. Meta resources are
-resources that are only consumed by the kpt tool. They do not have extrinsic
-meaning and are not applied to a cluster. We will see other types of a meta
-resources in the next section.
-
 kpt uses Git as the underlying version control system. A typical workflow starts
 by fetching an _upstream_ package from a Git repository to the local filesystem
 using `kpt pkg` commands. All other functionality (i.e. `kpt fn` and `kpt live`)

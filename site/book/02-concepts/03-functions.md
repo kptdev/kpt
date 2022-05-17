@@ -70,8 +70,7 @@ fundamentally different approaches:
   the `functionConfig` is specified as CLI argument. This is an imperative way
   to run functions. Since the function is provided explicitly by the user, an
   imperative invocation can be more privileged and low-level than an declarative
-  invocation. For example, it can optionally operate on meta resources or have
-  access to the host system.
+  invocation. For example, it can have access to the host system.
 
 We will discuss how to run functions in Chapter 4 and how to develop functions
 in Chapter 5.
