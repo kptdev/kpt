@@ -21,6 +21,20 @@ commands:
   - args:
       - alpha
       - rpkg
+      - propose
+      - --namespace=rpkg-copy
+      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
+    stderr: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 proposed\n"
+  - args:
+      - alpha
+      - rpkg
+      - approve
+      - --namespace=rpkg-copy
+      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
+    stderr: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 approved\n"
+  - args:
+      - alpha
+      - rpkg
       - copy
       - --namespace=rpkg-copy
       - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
