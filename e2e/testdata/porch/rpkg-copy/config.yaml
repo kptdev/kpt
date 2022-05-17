@@ -23,7 +23,6 @@ commands:
       - rpkg
       - copy
       - --namespace=rpkg-copy
-      - --revision=v1
       - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
     stdout: git-66579ccd78cf67f80a3cafaf63dc121db4d92b83 created
   - args:
