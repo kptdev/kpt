@@ -21,14 +21,13 @@ import (
 
 	planv1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/plan/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/pkg/status"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/apply"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/kubectl/pkg/cmd/util"
+	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -46,15 +45,9 @@ func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
 		return nil, err
 	}
 
-	statusPoller, err := status.NewStatusPoller(f)
-	if err != nil {
-		return nil, err
-	}
-
 	applier, err := apply.NewApplierBuilder().
 		WithFactory(f).
 		WithInventoryClient(invClient).
-		WithStatusPoller(statusPoller).
 		Build()
 	if err != nil {
 		return nil, err
@@ -161,10 +154,10 @@ func handleApplyEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action 
 		a.Type = planv1alpha1.Error
 		a.Error = e.ApplyEvent.Error.Error()
 	} else {
-		switch e.ApplyEvent.Operation {
-		case event.Unchanged:
+		switch e.ApplyEvent.Status {
+		case event.ApplySkipped:
 			a.Type = planv1alpha1.Skip
-		case event.ServersideApplied:
+		case event.ApplySuccessful:
 			a.After = e.ApplyEvent.Resource
 			if a.Before != nil {
 				// TODO: Unclear if we should diff the full resources here. It doesn't work
@@ -189,8 +182,8 @@ func handlePruneEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action 
 		a.Type = planv1alpha1.Error
 		a.Error = e.PruneEvent.Error.Error()
 	} else {
-		switch e.PruneEvent.Operation {
-		case event.Pruned:
+		switch e.PruneEvent.Status {
+		case event.PruneSuccessful:
 			a.Type = planv1alpha1.Delete
 		// Lifecycle directives can cause resources to remain in the
 		// live state even if they would normally be pruned.
@@ -208,8 +201,8 @@ func handleDeleteEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action
 		a.Type = planv1alpha1.Error
 		a.Error = e.DeleteEvent.Error.Error()
 	} else {
-		switch e.DeleteEvent.Operation {
-		case event.Deleted:
+		switch e.DeleteEvent.Status {
+		case event.DeleteSuccessful:
 			a.Type = planv1alpha1.Delete
 		case event.DeleteSkipped:
 			a.Type = planv1alpha1.Skip

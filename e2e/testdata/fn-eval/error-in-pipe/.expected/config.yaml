@@ -22,7 +22,6 @@ stdErr: |
       "[error] /// : failed to configure function: input namespace cannot be empty"
     Exit code: 1
   
-   
   [RUNNING] "gcr.io/kpt-fn/dne"
   [FAIL] "gcr.io/kpt-fn/dne" in 0s
     Stderr:

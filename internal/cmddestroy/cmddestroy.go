@@ -23,12 +23,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/pkg/status"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/apply"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/flagutils"
+	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/printers"
@@ -165,16 +164,10 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 		return err
 	}
 
-	statusPoller, err := status.NewStatusPoller(r.factory)
-	if err != nil {
-		return err
-	}
-
 	destroyer, err := apply.NewDestroyer(r.factory, invClient)
 	if err != nil {
 		return err
 	}
-	destroyer.StatusPoller = statusPoller
 
 	options := apply.DestroyerOptions{
 		InventoryPolicy:  r.inventoryPolicy,

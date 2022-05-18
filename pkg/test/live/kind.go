@@ -31,15 +31,15 @@ const (
 
 func InstallResourceGroup(t *testing.T) {
 	cmd := exec.Command("kpt", "live", "install-resource-group")
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("error installing ResourceGroup CRD: %v", err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("error installing ResourceGroup CRD: %v\n%s", err, out)
 	}
 }
 
 func RemoveResourceGroup(t *testing.T) {
 	cmd := exec.Command("kubectl", "delete", "crd", "resourcegroups.kpt.dev")
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("error removing ResourceGroup CRD: %v", err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("error removing ResourceGroup CRD: %v\n%s", err, out)
 	}
 	if CheckIfResourceGroupInstalled(t) {
 		t.Fatalf("couldn't remove ResourceGroup CRD")
@@ -84,28 +84,28 @@ func CreateKindCluster(t *testing.T) {
 		args = append(args, fmt.Sprintf("--image=kindest/node:v%s", k8sVersion))
 	}
 	cmd := exec.Command("kind", args...)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to create new kind cluster: %v", err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to create new kind cluster: %v\n%s", err, out)
 	}
 }
 
 func RemoveKindCluster(t *testing.T) {
 	cmd := exec.Command("kind", "delete", "cluster", fmt.Sprintf("--name=%s", KindClusterName))
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("failed to remove existing cluster: %v", err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to remove existing cluster: %v\n%s", err, out)
 	}
 }
 
 func CreateNamespace(t *testing.T, namespace string) {
 	cmd := exec.Command("kubectl", "create", "ns", namespace)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("error creating namespace %s: %v", namespace, err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("error creating namespace %s: %v\n%s", namespace, err, out)
 	}
 }
 
 func RemoveNamespace(t *testing.T, namespace string) {
 	cmd := exec.Command("kubectl", "delete", "ns", namespace, "--wait=false")
-	if err := cmd.Run(); err != nil {
-		t.Logf("error deleting namespace %s: %v", namespace, err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Logf("error deleting namespace %s: %v\n%s", namespace, err, out)
 	}
 }

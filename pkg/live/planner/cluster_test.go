@@ -19,10 +19,10 @@ import (
 	"testing"
 
 	planv1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/plan/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/apply"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
@@ -74,7 +74,7 @@ func TestClusterPlanner(t *testing.T) {
 					ApplyEvent: event.ApplyEvent{
 						GroupName:  "apply-1",
 						Identifier: testutil.ToIdentifier(t, deploymentYAML),
-						Operation:  event.ServersideApplied,
+						Status:     event.ApplySuccessful,
 						Resource:   testutil.Unstructured(t, deploymentYAML),
 					},
 				},

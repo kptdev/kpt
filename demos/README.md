@@ -6,4 +6,4 @@ Requires:
 
 - `git`
 - [kpt](https://github.com/GoogleContainerTools/kpt)
-  - `go get -v github.com/GoogleContainerTools/kpt`
+  - `go install -v github.com/GoogleContainerTools/kpt`

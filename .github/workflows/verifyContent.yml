@@ -36,7 +36,7 @@ jobs:
           make build
       - name: Get dependencies
         run: |
-          go install github.com/monopole/mdrip@latest
-          go install sigs.k8s.io/kind@v0.13.0
+          make install-mdrip
+          make install-kind
       - name: Verify Examples
         run: make site-verify-examples

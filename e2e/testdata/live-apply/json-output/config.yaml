@@ -19,21 +19,43 @@ kptArgs:
   - "--output=json"
   - "--reconcile-timeout=2m"
 stdOut: |
-  {"eventType":"resourceApplied","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"eventType":"resourceReconciled","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourceReconciled","group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourceApplied","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Created","timestamp":"<TIMESTAMP>","type":"apply"}
-  {"configuredCount":0,"count":2,"createdCount":2,"eventType":"completed","failedCount":0,"serverSideCount":0,"timestamp":"<TIMESTAMP>","type":"apply","unchangedCount":0}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourcePruned","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Pruned","timestamp":"<TIMESTAMP>","type":"prune"}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourcePruned","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Pruned","timestamp":"<TIMESTAMP>","type":"prune"}
-  {"eventType":"completed","failed":0,"pruned":2,"skipped":0,"timestamp":"<TIMESTAMP>","type":"prune"}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"resourceReconciled","group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","operation":"Reconciled","timestamp":"<TIMESTAMP>","type":"wait"}
-  {"eventType":"completed","failed":0,"reconciled":4,"skipped":0,"timeout":0,"timestamp":"<TIMESTAMP>","type":"wait"}
+  {"action":"Inventory","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Inventory","status":"Finished","timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Apply","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"apply"}
+  {"action":"Apply","count":1,"failed":0,"skipped":0,"status":"Finished","successful":1,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Wait","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"action":"Wait","count":1,"failed":0,"skipped":0,"status":"Finished","successful":1,"timeout":0,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Apply","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"apply"}
+  {"action":"Apply","count":2,"failed":0,"skipped":0,"status":"Finished","successful":2,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Wait","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"action":"Wait","count":2,"failed":0,"skipped":0,"status":"Finished","successful":2,"timeout":0,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Prune","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"prune"}
+  {"action":"Prune","count":1,"failed":0,"skipped":0,"status":"Finished","successful":1,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Wait","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"action":"Wait","count":3,"failed":0,"skipped":0,"status":"Finished","successful":3,"timeout":0,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Prune","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"prune"}
+  {"action":"Prune","count":2,"failed":0,"skipped":0,"status":"Finished","successful":2,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Wait","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","status":"Successful","timestamp":"<TIMESTAMP>","type":"wait"}
+  {"action":"Wait","count":4,"failed":0,"skipped":0,"status":"Finished","successful":4,"timeout":0,"timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Inventory","status":"Started","timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Inventory","status":"Finished","timestamp":"<TIMESTAMP>","type":"group"}
+  {"action":"Apply","count":2,"failed":0,"skipped":0,"successful":2,"timestamp":"<TIMESTAMP>","type":"summary"}
+  {"action":"Prune","count":2,"failed":0,"skipped":0,"successful":2,"timestamp":"<TIMESTAMP>","type":"summary"}
+  {"action":"Wait","count":4,"failed":0,"skipped":0,"successful":4,"timeout":0,"timestamp":"<TIMESTAMP>","type":"summary"}
+
+optionalStdOut:
+  - '{"group":"","kind":"ConfigMap","name":"cm","namespace":"json-output","status":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}'
+  - '{"group":"apps","kind":"Deployment","name":"nginx","namespace":"json-output","status":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}'
+  - '{"group":"apps","kind":"Deployment","name":"second-nginx","namespace":"json-output","status":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}'
+  - '{"group":"apps","kind":"Deployment","name":"first-nginx","namespace":"json-output","status":"Pending","timestamp":"<TIMESTAMP>","type":"wait"}'
 
 inventory:
   - kind: ConfigMap

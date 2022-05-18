@@ -25,14 +25,13 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/pkg/status"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/apply"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/flagutils"
+	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/printers"
@@ -68,8 +67,6 @@ func NewRunner(
 		"The client owner of the fields being applied on the server-side.")
 	c.Flags().StringVar(&r.output, "output", printers.DefaultPrinter(),
 		fmt.Sprintf("Output format, must be one of %s", strings.JoinStringsWithQuotes(printers.SupportedPrinters())))
-	c.Flags().DurationVar(&r.period, "poll-period", 2*time.Second,
-		"Polling period for resource statuses.")
 	c.Flags().DurationVar(&r.reconcileTimeout, "reconcile-timeout", time.Duration(0),
 		"Timeout threshold for waiting for all resources to reach the Current status.")
 	c.Flags().StringVar(&r.prunePropagationPolicyString, "prune-propagation-policy",
@@ -104,7 +101,6 @@ type Runner struct {
 	installCRD                   bool
 	serverSideOptions            common.ServerSideOptions
 	output                       string
-	period                       time.Duration
 	reconcileTimeout             time.Duration
 	prunePropagationPolicyString string
 	pruneTimeout                 time.Duration
@@ -227,15 +223,9 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 		return err
 	}
 
-	statusPoller, err := status.NewStatusPoller(r.factory)
-	if err != nil {
-		return err
-	}
-
 	applier, err := apply.NewApplierBuilder().
 		WithFactory(r.factory).
 		WithInventoryClient(invClient).
-		WithStatusPoller(statusPoller).
 		Build()
 	if err != nil {
 		return err
@@ -243,7 +233,6 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 
 	ch := applier.Run(r.ctx, invInfo, objs, apply.ApplierOptions{
 		ServerSideOptions:      r.serverSideOptions,
-		PollInterval:           r.period,
 		ReconcileTimeout:       r.reconcileTimeout,
 		EmitStatusEvents:       true, // We are always waiting for reconcile.
 		DryRunStrategy:         dryRunStrategy,

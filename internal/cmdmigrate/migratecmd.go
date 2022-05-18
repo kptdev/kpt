@@ -159,7 +159,7 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	// Retrieve the current ConfigMap inventory objects.
 	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
 	if err != nil {
-		if _, ok := err.(inventory.NoInventoryObjError); ok {
+		if _, ok := err.(*inventory.NoInventoryObjError); ok {
 			// No ConfigMap inventory means the migration has already run before.
 			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
 			return nil
@@ -265,7 +265,7 @@ func (mr *MigrateRunner) retrieveConfigMapInv(reader io.Reader, args []string) (
 	if cmInvObj == nil {
 		// No ConfigMap inventory means the migration has already run before.
 		fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
-		return nil, inventory.NoInventoryObjError{}
+		return nil, &inventory.NoInventoryObjError{}
 	}
 	cmInv := inventory.WrapInventoryInfoObj(cmInvObj)
 	fmt.Fprintf(mr.ioStreams.Out, "success (inventory-id: %s)\n", cmInv.ID())
@@ -523,7 +523,7 @@ func (mr *MigrateRunner) migrateCMToRG(stdinBytes []byte, args []string) error {
 	// Retrieve the current ConfigMap inventory objects.
 	cmInvObj, err := mr.retrieveConfigMapInv(bytes.NewReader(stdinBytes), args)
 	if err != nil {
-		if _, ok := err.(inventory.NoInventoryObjError); ok {
+		if _, ok := err.(*inventory.NoInventoryObjError); ok {
 			// No ConfigMap inventory means the migration has already run before.
 			klog.V(4).Infoln("swallowing no ConfigMap inventory error")
 			mr.cmNotMigrated = true
