@@ -15,6 +15,16 @@
 name: Go
 on:
   pull_request:
+    paths-ignore:
+      - "Formula/**"
+      - "demos/**"
+      - "docs/**"
+      - "firebase/**"
+      - "logo/**"
+      - "package-examples/**"
+      - "release/**"
+      - "site/**"
+      - "**.md"
   push:
 
 jobs:
