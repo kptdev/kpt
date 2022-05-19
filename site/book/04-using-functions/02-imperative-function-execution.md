@@ -41,7 +41,6 @@ When you have one of these use cases:
 - Perform a one-time operation
 - Execute a function from a CI/CD system on packages authored by other teams
 - Develop shell scripts and chain functions with the Unix pipe (`|`)
-- Mutate meta resources such as the `Kptfile` (Not allowed by `render`)
 - Execute the function with privilege (Not allowed by `render`)
 
 We will cover these topics in detail.
@@ -134,8 +133,7 @@ Here is the list of available exclusion flags:
 
 Since the function is provided explicitly by the user, `eval` can be more
 privileged and low-level than a declarative invocation using `render`. For
-example, it can optionally operate on meta resources or have access to the host
-system.
+example, it can have access to the host system.
 
 In general, we recommend against having functions that require privileged access
 to the host since they can only be executed imperatively and pose a challenge in
@@ -177,26 +175,6 @@ in read-write mode.
 
 ```
 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir,rw=true
-```
-
-### Mutate Meta Resources
-
-By default, functions cannot mutate meta resources i.e. `Kptfile` and
-functionConfig(s). There are use cases for having _meta functions_ that can
-operate on meta resources. For example, they can perform the following:
-
-- Enforce a policy on functions declared in all `Kptfile`(s) in the package
-  hierarchy
-- Add a function to the `validators` list in the `Kptfile`
-- Set the `info.license` field in the `Kptfile` to `Apache-2.0`
-
-This is enabled using the `--include-meta-resources` flag.
-
-For instance, the following will set the labels on all resources in the
-`wordpress` package, including the `Kptfile`:
-
-```shell
-$ kpt fn eval wordpress -i set-labels:v0.1 --include-meta-resources -- app=wordpress env=prod
 ```
 
 ## Chaining functions using the Unix pipe

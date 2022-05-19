@@ -39,8 +39,8 @@ DIR:
   Path to the file containing `functionConfig`.
 
 --include-meta-resources:
-  If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
-  in the output of the command. By default it is disabled.
+  (DEPRECATED) include-meta-resources is no longer necessary because meta
+  resources are included by default with kpt version v1.0.0-beta.15+.
 
 --output, o:
   If specified, the output resources are written to stdout in provided format.

@@ -21,9 +21,6 @@ from A is then written to the local filesystem in-place.
 
 `render` formats the resources before writing them to the local filesystem.
 
-Meta resources (i.e. `Kptfile` and `functionConfig`) are excluded from the
-inputs to the functions.
-
 If any of the functions in the pipeline fails, then the entire pipeline is
 aborted and the local filesystem is left intact.
 

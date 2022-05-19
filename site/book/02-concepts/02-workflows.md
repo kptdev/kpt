@@ -11,7 +11,7 @@ For example, when consuming an upstream package, the initial workflow can look l
 - **Get**: Using `kpt pkg get`
 - **Explore**: Using an editor or running commands such as `kpt pkg tree`
 - **Edit**: Customize the package either manually or automatically using `kpt fn eval`. This may
-  involve editing meta resources such as the functions pipeline in the `Kptfile` which is executed
+  involve editing the functions pipeline in the `Kptfile` which is executed
   in the next stage.
 - **Render**: Using `kpt fn render`
 

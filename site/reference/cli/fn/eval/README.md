@@ -103,8 +103,8 @@ fn-args:
   If using never, kpt will only use images from the local cache.
 
 --include-meta-resources, m:
-  If enabled, meta resources (i.e. `Kptfile` and `functionConfig`) are included
-  in the input to the function. By default it is disabled.
+  (DEPRECATED) include-meta-resources is no longer necessary because meta
+  resources are included by default with kpt version v1.0.0-beta.15+.
 
 --mount:
   List of storage options to enable reading from the local filesytem. By default,
