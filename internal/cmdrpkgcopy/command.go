@@ -179,8 +179,7 @@ func (r *runner) defaultPackageRevision(packageName, repository string, restClie
 
 	for _, rev := range packageRevisionList.Items {
 		if packageName != rev.Spec.PackageName ||
-			repository != rev.Spec.RepositoryName ||
-			*r.cfg.Namespace != rev.Namespace {
+			repository != rev.Spec.RepositoryName {
 			continue
 		}
 
@@ -206,7 +205,7 @@ func (r *runner) defaultPackageRevision(packageName, repository string, restClie
 }
 
 func nextRevisionNumber(latestRevision string) (string, error) {
-	match, err := regexp.MatchString("v[0-9]+", latestRevision)
+	match, err := regexp.MatchString("^v[0-9]+$", latestRevision)
 	if err != nil {
 		return "", err
 	}
