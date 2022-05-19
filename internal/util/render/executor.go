@@ -28,7 +28,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -198,10 +197,6 @@ type hydrationContext struct {
 	// to be run during pipeline execution. Running function binaries is a
 	// privileged operation, so explicit permission is required.
 	allowExec bool
-
-	// bookkeeping to ensure docker command availability check is done once
-	// during rendering
-	dockerCheckDone bool
 
 	fileSystem filesys.FileSystem
 
@@ -480,16 +475,6 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if function.Exec != "" && !hctx.allowExec {
 			return errAllowedExecNotSpecified
 		}
-		if function.Image != "" && !hctx.dockerCheckDone {
-			if hctx.runtime == nil {
-				// Check for Docker when using standard runner.
-				err := cmdutil.DockerCmdAvailable()
-				if err != nil {
-					return err
-				}
-			}
-			hctx.dockerCheckDone = true
-		}
 		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, true, displayResourceCount, hctx.runtime)
 		if err != nil {
 			return err
@@ -596,16 +581,6 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		}
 		if function.Exec != "" && !hctx.allowExec {
 			return nil, errAllowedExecNotSpecified
-		}
-		if function.Image != "" && !hctx.dockerCheckDone {
-			if hctx.runtime == nil {
-				// Check for Docker when using standard runner.
-				err := cmdutil.DockerCmdAvailable()
-				if err != nil {
-					return nil, err
-				}
-			}
-			hctx.dockerCheckDone = true
 		}
 		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, true, displayResourceCount, hctx.runtime)
 		if err != nil {

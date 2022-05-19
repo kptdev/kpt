@@ -15,9 +15,9 @@
 
 set -eo pipefail
 
-kpt fn eval - --image gcr.io/kpt-fn/search-replace:v0.1\
+kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1
 
-docker image inspect gcr.io/kpt-fn/search-replace:v0.1
+${KPT_FN_RUNTIME} image inspect gcr.io/kpt-fn/search-replace:v0.1
 if [[ $? != 0 ]]; then
     echo "ERR: Image could not be found locally and may not have been pulled"
     exit 1

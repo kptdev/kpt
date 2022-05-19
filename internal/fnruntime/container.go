@@ -21,32 +21,51 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
+
+// We may create multiple instance of ContainerFn, but we only want to check
+// if container runtime is available once.
+var checkContainerRuntimeOnce sync.Once
 
 // containerNetworkName is a type for network name used in container
 type containerNetworkName string
 
 const (
-	networkNameNone    containerNetworkName = "none"
-	networkNameHost    containerNetworkName = "host"
-	defaultLongTimeout time.Duration        = 5 * time.Minute
-	dockerBin          string               = "docker"
+	networkNameNone           containerNetworkName = "none"
+	networkNameHost           containerNetworkName = "host"
+	defaultLongTimeout        time.Duration        = 5 * time.Minute
+	dockerVersionTimeout      time.Duration        = 5 * time.Second
+	minSupportedDockerVersion string               = "v20.10.0"
+
+	dockerBin string = "docker"
+	podmanBin string = "podman"
 
 	AlwaysPull       ImagePullPolicy = "Always"
 	IfNotPresentPull ImagePullPolicy = "IfNotPresent"
 	NeverPull        ImagePullPolicy = "Never"
+
+	ContainerRuntimeEnv = "KPT_FN_RUNTIME"
+
+	Docker ContainerRuntime = "docker"
+	Podman ContainerRuntime = "podman"
 )
 
 type ImagePullPolicy string
+
+type ContainerRuntime string
 
 // ContainerFnPermission contains the permission of container
 // function such as network access.
@@ -86,8 +105,30 @@ type ContainerFn struct {
 // It reads the input from the given reader and writes the output
 // to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
+	// If the env var is empty, stringToContainerRuntime defaults it to docker.
+	runtime, err := stringToContainerRuntime(os.Getenv(ContainerRuntimeEnv))
+	if err != nil {
+		return err
+	}
+
+	checkContainerRuntimeOnce.Do(func() {
+		err = containerRuntimeAvailable(runtime)
+	})
+	if err != nil {
+		return err
+	}
+
+	switch runtime {
+	case Podman:
+		return f.runCLI(reader, writer, podmanBin, filterPodmanCLIOutput)
+	default:
+		return f.runCLI(reader, writer, dockerBin, filterDockerCLIOutput)
+	}
+}
+
+func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, filterCLIOutputFn func(io.Reader) string) error {
 	errSink := bytes.Buffer{}
-	cmd, cancel := f.getDockerCmd()
+	cmd, cancel := f.getCmd(bin)
 	defer cancel()
 	cmd.Stdin = reader
 	cmd.Stdout = writer
@@ -99,7 +140,7 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
-				Stderr:         filterDockerCLIOutput(&errSink),
+				Stderr:         filterCLIOutputFn(&errSink),
 				TruncateOutput: printer.TruncateOutput,
 			}
 		}
@@ -107,12 +148,14 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	}
 
 	if errSink.Len() > 0 {
-		f.FnResult.Stderr = filterDockerCLIOutput(&errSink)
+		f.FnResult.Stderr = filterCLIOutputFn(&errSink)
 	}
 	return nil
 }
 
-func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
+// getCmd assembles a command for docker or podman. The input binName is expected
+// to be either "docker" or "podman".
+func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 	network := networkNameNone
 	if f.Perm.AllowNetwork {
 		network = networkNameHost
@@ -134,7 +177,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 	case NeverPull:
 		args = append(args, "--pull", "never")
 	case AlwaysPull:
-		args = append(args, "--pull", "pull")
+		args = append(args, "--pull", "always")
 	case IfNotPresentPull:
 		args = append(args, "--pull", "missing")
 	default:
@@ -152,7 +195,7 @@ func (f *ContainerFn) getDockerCmd() (*exec.Cmd, context.CancelFunc) {
 		timeout = f.Timeout
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	return exec.CommandContext(ctx, dockerBin, args...), cancel
+	return exec.CommandContext(ctx, binName, args...), cancel
 }
 
 // NewContainerEnvFromStringSlice returns a new ContainerEnv pointer with parsing
@@ -253,4 +296,120 @@ func isdockerCLIoutput(s string) bool {
 		return true
 	}
 	return false
+}
+
+// filterPodmanCLIOutput filters out podman CLI messages
+// from the given buffer.
+func filterPodmanCLIOutput(in io.Reader) string {
+	s := bufio.NewScanner(in)
+	var lines []string
+
+	for s.Scan() {
+		txt := s.Text()
+		if !isPodmanCLIoutput(txt) {
+			lines = append(lines, txt)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+var sha256Matcher = regexp.MustCompile(`^[A-Fa-f0-9]{64}$`)
+
+// isPodmanCLIoutput is helper method to determine if
+// the given string is a podman CLI output message.
+// Example podman output:
+//  "Trying to pull gcr.io/kpt-fn/starlark:v0.3..."
+//  "Getting image source signatures"
+//  "Copying blob sha256:aafbf7df3ddf625f4ababc8e55b4a09131651f9aac340b852b5f40b1a53deb65"
+//  "Copying config sha256:17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
+//  "Writing manifest to image destination"
+//  "Storing signatures"
+//  "17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
+//
+func isPodmanCLIoutput(s string) bool {
+	if strings.Contains(s, "Trying to pull") ||
+		strings.Contains(s, "Getting image source signatures") ||
+		strings.Contains(s, "Copying blob sha256:") ||
+		strings.Contains(s, "Copying config sha256:") ||
+		strings.Contains(s, "Writing manifest to image destination") ||
+		strings.Contains(s, "Storing signatures") ||
+		sha256Matcher.MatchString(s) {
+		return true
+	}
+	return false
+}
+
+func stringToContainerRuntime(v string) (ContainerRuntime, error) {
+	switch strings.ToLower(v) {
+	case string(Docker):
+		return Docker, nil
+	case string(Podman):
+		return Podman, nil
+	case "":
+		return Docker, nil
+	default:
+		return "", fmt.Errorf("unsupported runtime: %q the runtime must be either %s or %s", v, Docker, Podman)
+	}
+}
+
+func containerRuntimeAvailable(runtime ContainerRuntime) error {
+	switch runtime {
+	case Docker:
+		return dockerCmdAvailable()
+	case Podman:
+		return podmanCmdAvailable()
+	default:
+		return dockerCmdAvailable()
+	}
+}
+
+// dockerCmdAvailable runs `docker version` to check that the docker command is
+// available and is a supported version. Returns an error with installation
+// instructions if it is not
+func dockerCmdAvailable() error {
+	suggestedText := `docker must be running to use this command
+To install docker, follow the instructions at https://docs.docker.com/get-docker/.
+`
+	cmdOut := &bytes.Buffer{}
+
+	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "docker", "version", "--format", "{{.Client.Version}}")
+	cmd.Stdout = cmdOut
+	err := cmd.Run()
+	if err != nil || cmdOut.String() == "" {
+		return fmt.Errorf("%s", suggestedText)
+	}
+	return isSupportedDockerVersion(strings.TrimSuffix(cmdOut.String(), "\n"))
+}
+
+// isSupportedDockerVersion returns an error if a given docker version is invalid
+// or is less than minSupportedDockerVersion
+func isSupportedDockerVersion(v string) error {
+	suggestedText := fmt.Sprintf(`docker client version must be %s or greater`, minSupportedDockerVersion)
+	// docker version output does not have a leading v which is required by semver, so we prefix it
+	currentDockerVersion := fmt.Sprintf("v%s", v)
+	if !semver.IsValid(currentDockerVersion) {
+		return fmt.Errorf("%s: found invalid version %s", suggestedText, currentDockerVersion)
+	}
+	// if currentDockerVersion is less than minDockerClientVersion, compare returns +1
+	if semver.Compare(minSupportedDockerVersion, currentDockerVersion) > 0 {
+		return fmt.Errorf("%s: found %s", suggestedText, currentDockerVersion)
+	}
+	return nil
+}
+
+func podmanCmdAvailable() error {
+	suggestedText := `podman must be installed.
+To install podman, follow the instructions at https://podman.io/getting-started/installation.
+`
+
+	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "podman", "version")
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("%s", suggestedText)
+	}
+	return nil
 }

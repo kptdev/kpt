@@ -15,17 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnruntime_test
+package fnruntime
 
 import (
 	"bytes"
 	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContainerFn(t *testing.T) {
@@ -52,7 +52,7 @@ func TestContainerFn(t *testing.T) {
 		ctx := context.Background()
 		t.Run(tt.name, func(t *testing.T) {
 			errBuff := &bytes.Buffer{}
-			instance := fnruntime.ContainerFn{
+			instance := ContainerFn{
 				Ctx:   printer.WithContext(ctx, printer.New(nil, errBuff)),
 				Image: tt.image,
 				FnResult: &fnresult.Result{
@@ -70,6 +70,46 @@ func TestContainerFn(t *testing.T) {
 			}
 			if !assert.Equal(t, tt.output, output.String()) {
 				t.FailNow()
+			}
+		})
+	}
+}
+
+func TestIsSupportedDockerVersion(t *testing.T) {
+	tests := []struct {
+		name   string
+		inputV string
+		errMsg string
+	}{
+		{
+			name:   "greater than min version",
+			inputV: "20.10.1",
+		},
+		{
+			name:   "equal to min version",
+			inputV: "20.10.0",
+		},
+		{
+			name:   "less than min version",
+			inputV: "20.9.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found v20.9.1",
+		},
+		{
+			name:   "invalid semver",
+			inputV: "20..12.1",
+			errMsg: "docker client version must be v20.10.0 or greater: found invalid version v20..12.1",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			require := require.New(t)
+			err := isSupportedDockerVersion(tt.inputV)
+			if tt.errMsg != "" {
+				require.NotNil(err)
+				require.Contains(err.Error(), tt.errMsg)
+			} else {
+				require.NoError(err)
 			}
 		})
 	}
