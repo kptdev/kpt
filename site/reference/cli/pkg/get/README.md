@@ -60,6 +60,11 @@ LOCAL_DEST_DIRECTORY:
       since it was fetched.
     * force-delete-replace: Wipe all the local changes to the package and replace
       it with the remote version.
+
+--for-deployment:
+  (Experimental) indicates if the fetched package is a deployable instance that
+  will be deployed to a cluster.
+  It is `false` by default.
 ```
 
 #### Env Vars
@@ -114,6 +119,14 @@ $ kpt pkg get https://github.com/kubernetes/examples.git/staging/cockroachdb@mas
 # git hash.
 # This will create a new directory 'examples' for the package.
 $ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792
+```
+
+<!-- @pkgGet @verifyExamples-->
+
+```shell
+# Create a deployable instance of examples package from github.com/kubernetes/examples
+# This will create a new directory 'examples' for the package.
+$ kpt pkg get https://github.com/kubernetes/examples.git/@6fe2792 --for-deployment
 ```
 
 <!--mdtogo-->

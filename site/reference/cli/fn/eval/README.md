@@ -104,7 +104,7 @@ fn-args:
 
 --include-meta-resources, m:
   (DEPRECATED) include-meta-resources is no longer necessary because meta
-  resources are now included by default.
+  resources are included by default with kpt version v1.0.0-beta.15+.
 
 --mount:
   List of storage options to enable reading from the local filesytem. By default,

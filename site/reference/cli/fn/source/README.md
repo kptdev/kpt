@@ -40,7 +40,7 @@ DIR:
 
 --include-meta-resources:
   (DEPRECATED) include-meta-resources is no longer necessary because meta
-  resources are now included by default.
+  resources are included by default with kpt version v1.0.0-beta.15+.
 
 --output, o:
   If specified, the output resources are written to stdout in provided format.
