@@ -25,9 +25,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/thirdparty/kyaml/runfn"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/order"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -245,6 +247,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 		pr.Printf("function not added: Kptfile not exists\n")
 		return
 	}
+
 	if kf.Pipeline == nil {
 		kf.Pipeline = &kptfile.Pipeline{}
 	}
@@ -255,14 +258,45 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	case "validator":
 		kf.Pipeline.Validators, usrMsg = r.updateFnList(kf.Pipeline.Validators)
 	}
+
+	mutatedKfAsYNode, err := r.preserveCommentsAndFieldOrder(kf)
+	if err != nil {
+		pr.Printf("function is not added to Kptfile: %v\n", err)
+	}
+
 	// When saving function to Kptfile, the functionConfig should be the relative path
 	// to the kpt package, not the relative path to the current working dir.
 	// error handling are ignored since they have been validated in preRunE.
-	if err = kptfileutil.WriteFile(r.RunFns.Path, kf); err != nil {
+	if err := kptfileutil.WriteFile(r.RunFns.Path, mutatedKfAsYNode); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
 	pr.Printf(usrMsg)
+}
+
+// preserveCommentsAndFieldOrder syncs the mutated Kptfile with the original to preserve
+// comments and field order, and returns the result as a yaml Node
+func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml.Node, error) {
+	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.RunFns.Path, kptfile.KptFileName))
+	if err != nil {
+		return nil, fmt.Errorf("could not read Kptfile: %v", err)
+	}
+	mutatedKfAsBytes, err := yaml.Marshal(kf)
+	if err != nil {
+		return nil, fmt.Errorf("could not Marshal Kptfile into bytes: %v", err)
+	}
+	mutatedKfAsRNode, err := yaml.Parse(string(mutatedKfAsBytes))
+	if err != nil {
+		return nil, fmt.Errorf("could not parse Kptfile: %v", err)
+	}
+	// preserve comments and sync field order
+	if err := comments.CopyComments(kfAsRNode, mutatedKfAsRNode); err != nil {
+		return nil, fmt.Errorf("could not preserve Kptfile comments: %v", err)
+	}
+	if err := order.SyncOrder(kfAsRNode, mutatedKfAsRNode); err != nil {
+		return nil, fmt.Errorf("could not preserve Kptfile field order %v", err)
+	}
+	return mutatedKfAsRNode.YNode(), nil
 }
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit

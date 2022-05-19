@@ -34,7 +34,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
 
-func WriteFile(dir string, k *kptfilev1.KptFile) error {
+func WriteFile(dir string, k interface{}) error {
 	const op errors.Op = "kptfileutil.WriteFile"
 	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {

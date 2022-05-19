@@ -1,0 +1,6 @@
+# header comment
+apiVersion: kpt.dev/v1
+kind: Kptfile # comment 1
+metadata:
+  # comment 2
+  name: app # comment 3
