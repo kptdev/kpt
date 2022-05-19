@@ -4,11 +4,11 @@ committing them to a Git repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.9
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit
-SHA. In this case, we are specifying tag `v0.7`.
+SHA. In this case, we are specifying tag `v0.9`.
 
 ?> Refer to the [get command reference][get-doc] for usage.
 
@@ -26,15 +26,15 @@ upstream:
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: v0.7
+    ref: v0.9
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/GoogleContainerTools/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.7
-    commit: cbd342d350b88677e522bf0d9faa0675edb8bbc1
+    ref: package-examples/wordpress/v0.9
+    commit: b9ea0bca019dafa9f9f91fd428385597c708518c
 info:
   emails:
     - kpt-team@google.com
@@ -45,7 +45,7 @@ pipeline:
       configMap:
         app: wordpress
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1
+    - image: gcr.io/kpt-fn/kubeval:v0.3
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -101,7 +101,7 @@ For example, the following fetches the packages to a directory named
 `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.7 mywordpress
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.9 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a
