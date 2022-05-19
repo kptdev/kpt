@@ -9,7 +9,7 @@ package of configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.7
+$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.9
 ```
 
 Subsequent commands are run from the `nginx` directory:
@@ -87,7 +87,7 @@ using their OpenAPI schema.
 ```yaml
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1
+    - image: gcr.io/kpt-fn/kubeval:v0.3
 ```
 
 You might want to label all resources in the package. To achieve that, you can
@@ -155,10 +155,10 @@ First, commit your local changes:
 $ git add .; git commit -m "My customizations"
 ```
 
-Then update to version `v0.8`:
+Then update to version `v0.10`:
 
 ```shell
-$ kpt pkg update @v0.8
+$ kpt pkg update @v0.10
 ```
 
 This merges the upstream changes with your local changes using a schema-aware
