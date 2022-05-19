@@ -524,6 +524,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
+	t.Log("Debug of TestFunctionRepository")
 	t.CreateF(ctx, &configapi.Repository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "function-repository",
