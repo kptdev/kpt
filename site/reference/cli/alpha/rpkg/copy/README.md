@@ -19,7 +19,7 @@ revision.
 <!--mdtogo:Long-->
 
 ```
-kpt alpha rpkg copy SOURCE_PACKAGE_REV_NAME TARGET_PACKAGE_NAME [flags]
+kpt alpha rpkg copy SOURCE_PACKAGE_REV_NAME [flags]
 ```
 
 #### Args
@@ -28,19 +28,15 @@ kpt alpha rpkg copy SOURCE_PACKAGE_REV_NAME TARGET_PACKAGE_NAME [flags]
 SOURCE_PACKAGE_REV_NAME:
   The name of the package revision that will be used as the source
   for creating a new package revision.
-
-TARGET_PACKAGE_NAME:
-  The name of the new package.
 ```
 
 #### Flags
 
 ```
---repository
-  Repository in which the new package revision will be created.
-
 --revision
-  Revision for the new package.
+  Revision for the new package. If this is not specified, the default
+  revision will be `latest + 1`. The default can only be used if the
+  latest package revision is of the format `^v[0-9]+$`.
 ```
 
 <!--mdtogo-->
@@ -50,8 +46,8 @@ TARGET_PACKAGE_NAME:
 <!--mdtogo:Examples-->
 
 ```shell
-# create a new package foo from package blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2 
-$ kpt alpha rpkg copy blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2 foo --repository=blueprint --revision=v10 --namespace=default
+# create a new package from package blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2
+$ kpt alpha rpkg copy blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2 --revision=v10 --namespace=default
 ```
 
 <!--mdtogo-->
