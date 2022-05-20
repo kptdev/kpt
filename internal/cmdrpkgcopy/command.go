@@ -17,6 +17,8 @@ package cmdrpkgcopy
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strconv"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -26,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -42,7 +45,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		ctx: ctx,
 		cfg: rcg,
 	}
-	c := &cobra.Command{
+	r.Command = &cobra.Command{
 		Use:     "copy SOURCE_PACKAGE NAME",
 		Aliases: []string{"edit"},
 		Short:   rpkgdocs.CopyShort,
@@ -52,10 +55,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
 	}
-	r.Command = c
-	// TODO (natasha41575): Make the default "latest+1"
-	c.Flags().StringVar(&r.revision, "revision", "", "Revision of the copied package.")
-
+	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the copied package.")
 	return r
 }
 
@@ -83,12 +83,6 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 	if len(args) > 1 {
 		return errors.E(op, fmt.Errorf("too many arguments; SOURCE_PACKAGE is the only accepted positional arguments"))
-	}
-
-	// TODO(natasha41575): This is temporarily required until we can set a default value for the revision. Now that we are disallowing
-	//   package name changes or editing outside the repository, the copy needs to have a new revision number.
-	if r.revision == "" {
-		return errors.E(op, fmt.Errorf("--revision is a required flag"))
 	}
 
 	r.copy.Source = &porchapi.PackageRevisionRef{
@@ -131,24 +125,98 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 		return nil, err
 	}
 
-	result := porchapi.PackageRevision{}
+	packageRevision := porchapi.PackageRevision{}
 	err = restClient.
 		Get().
 		Namespace(*r.cfg.Namespace).
 		Resource("packagerevisions").
 		Name(r.copy.Source.Name).
 		Do(r.ctx).
-		Into(&result)
+		Into(&packageRevision)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(natasha41575): Set a default revision of "latest + 1"
+	if r.revision == "" {
+		var err error
+		r.revision, err = r.defaultPackageRevision(
+			packageRevision.Spec.PackageName,
+			packageRevision.Spec.RepositoryName,
+			restClient,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	spec := &porchapi.PackageRevisionSpec{
-		PackageName:    result.Spec.PackageName,
+		PackageName:    packageRevision.Spec.PackageName,
 		Revision:       r.revision,
-		RepositoryName: result.Spec.RepositoryName,
+		RepositoryName: packageRevision.Spec.RepositoryName,
 	}
 	spec.Tasks = []porchapi.Task{{Type: porchapi.TaskTypeEdit, Edit: &r.copy}}
 	return spec, nil
+}
+
+// defaultPackageRevision attempts to return a default package revision number
+// of "latest + 1" given a package name, repository, and namespace. It only
+// understands revisions following `v[0-9]+` formats.
+func (r *runner) defaultPackageRevision(packageName, repository string, restClient rest.Interface) (string, error) {
+	// get all package revisions
+	packageRevisionList := porchapi.PackageRevisionList{}
+	err := restClient.
+		Get().
+		Namespace(*r.cfg.Namespace).
+		Resource("packagerevisions").
+		Do(r.ctx).
+		Into(&packageRevisionList)
+	if err != nil {
+		return "", err
+	}
+
+	var latestRevision string
+	allRevisions := make(map[string]bool) // this is a map for quick access
+
+	for _, rev := range packageRevisionList.Items {
+		if packageName != rev.Spec.PackageName ||
+			repository != rev.Spec.RepositoryName {
+			continue
+		}
+
+		if latest, ok := rev.Labels[porchapi.LatestPackageRevisionKey]; ok {
+			if latest == porchapi.LatestPackageRevisionValue {
+				latestRevision = rev.Spec.Revision
+			}
+		}
+		allRevisions[rev.Spec.Revision] = true
+	}
+	if latestRevision == "" {
+		return "", fmt.Errorf("no published packages exist; explicit --revision flag is required")
+	}
+
+	next, err := nextRevisionNumber(latestRevision)
+	if err != nil {
+		return "", err
+	}
+	if _, ok := allRevisions[next]; ok {
+		return "", fmt.Errorf("default revision %q already exists; explicit --revision flag is required", next)
+	}
+	return next, err
+}
+
+func nextRevisionNumber(latestRevision string) (string, error) {
+	match, err := regexp.MatchString("^v[0-9]+$", latestRevision)
+	if err != nil {
+		return "", err
+	}
+	if !match {
+		return "", fmt.Errorf("could not understand format of latest revision %q; explicit --revision flag is required", latestRevision)
+	}
+	i, err := strconv.Atoi(latestRevision[1:])
+	if err != nil {
+		return "", err
+	}
+	i++
+	next := "v" + strconv.Itoa(i)
+	return next, nil
 }
