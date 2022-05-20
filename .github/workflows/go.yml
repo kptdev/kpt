@@ -29,8 +29,11 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build-test-kpt-CLI
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runtime: [docker, podman]
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v1
@@ -45,3 +48,5 @@ jobs:
           git config --global user.name Your Name
           make all
           make test-docker
+        env:
+          KPT_FN_RUNTIME: ${{ matrix.runtime }}

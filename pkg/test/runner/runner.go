@@ -20,9 +20,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -220,7 +222,7 @@ func (r *Runner) runFnEval() error {
 			}
 			cmd = getCommand("", r.kptBin, kptArgs)
 		}
-		r.t.Logf("running command %q", cmd.String())
+		r.t.Logf("running command: %v=%v %v", fnruntime.ContainerRuntimeEnv, os.Getenv(fnruntime.ContainerRuntimeEnv), cmd.String())
 		stdout, stderr, fnErr := runCommand(cmd)
 		if fnErr != nil {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
@@ -367,7 +369,7 @@ func (r *Runner) runFnRender() error {
 			}
 			cmd = getCommand("", r.kptBin, kptArgs)
 		}
-		r.t.Logf("running command %q", cmd.String())
+		r.t.Logf("running command: %v=%v %v", fnruntime.ContainerRuntimeEnv, os.Getenv(fnruntime.ContainerRuntimeEnv), cmd.String())
 		stdout, stderr, fnErr := runCommand(cmd)
 		// Update the diff file or results file if updateExpectedEnv is set.
 		if strings.ToLower(os.Getenv(updateExpectedEnv)) == "true" {
@@ -477,6 +479,16 @@ func (r *Runner) compareOutput(stdout string, stderr string) error {
 	if !strings.Contains(stderr, expectedStderr) {
 		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, stderr))
 		return fmt.Errorf("wanted stderr %q, got %q", expectedStderr, stderr)
+	}
+	stdErrRegEx := r.testCase.Config.StdErrRegEx
+	if stdErrRegEx != "" {
+		r, err := regexp.Compile(stdErrRegEx)
+		if err != nil {
+			return fmt.Errorf("unable to compile the regular expression %q: %w", stdErrRegEx, err)
+		}
+		if !r.MatchString(stderr) {
+			return fmt.Errorf("unable to match regular expression %q, got %v", stdErrRegEx, stderr)
+		}
 	}
 	expectedStdout := r.testCase.Config.StdOut
 	if !strings.Contains(stdout, expectedStdout) {

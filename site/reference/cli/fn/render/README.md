@@ -71,6 +71,13 @@ PKG_PATH:
   If not specified, no result files are written to the local filesystem.
 ```
 
+#### Environment Variables
+
+```
+KPT_FN_RUNTIME:
+  The runtime to run kpt functions. It must be one of "docker" or "podman".
+```
+
 <!--mdtogo-->
 
 ### Examples
@@ -109,6 +116,11 @@ $ kpt fn render -o unwrap | kubectl apply -f -
 # the transformed resources are written to another directory
 $ kpt fn render -o stdout \
 | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+```
+
+```shell
+# Render my-package-dir with podman as runtime for functions
+$ KPT_FN_RUNTIME=podman kpt fn render my-package-dir --runtime podman
 ```
 
 <!--mdtogo-->

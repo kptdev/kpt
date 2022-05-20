@@ -130,6 +130,11 @@ Flags:
     it doesn't exist. Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
+
+Environment Variables:
+
+  KPT_FN_RUNTIME:
+    The runtime to run kpt functions. It must be one of "docker" or "podman".
 `
 var EvalExamples = `
   # execute container my-fn on the resources in DIR directory and
@@ -193,6 +198,10 @@ var EvalExamples = `
   # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
   # in current directory
   kpt fn eval -i set-namespace:v0.1 --by-kind Deployment --by-name foo -- namespace=staging
+
+  # execute container my-fn with podman on the resources in DIR directory and
+  # write output back to DIR
+  $ KPT_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 `
 
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
@@ -263,6 +272,11 @@ Flags:
     it doesn't exist. Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
+
+Environment Variables:
+
+  KPT_FN_RUNTIME:
+    The runtime to run kpt functions. It must be one of "docker" or "podman".
 `
 var RenderExamples = `
   # Render the package in current directory
@@ -286,6 +300,9 @@ var RenderExamples = `
   # the transformed resources are written to another directory
   $ kpt fn render -o stdout \
   | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+
+  # Render my-package-dir with podman as runtime for functions
+  $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir --runtime podman
 `
 
 var SinkShort = `Write resources to a local directory`

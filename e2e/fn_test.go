@@ -18,9 +18,12 @@
 package e2e_test
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
 )
 
@@ -55,6 +58,20 @@ func runTests(t *testing.T, cases *runner.TestCases, sequential bool) {
 		c := c // capture range variable
 		if c.Config.Sequential != sequential {
 			continue
+		}
+		// If the current function runtime doesn't match, we skip this test case.
+		currRuntime := strings.ToLower(os.Getenv(fnruntime.ContainerRuntimeEnv))
+		if len(c.Config.Runtimes) > 0 {
+			skip := true
+			for _, rt := range c.Config.Runtimes {
+				if currRuntime == strings.ToLower(rt) {
+					skip = false
+					break
+				}
+			}
+			if skip {
+				continue
+			}
 		}
 		t.Run(c.Path, func(t *testing.T) {
 			if !c.Config.Sequential {

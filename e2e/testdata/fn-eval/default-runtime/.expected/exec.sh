@@ -1,3 +1,4 @@
+#! /bin/bash
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-imagePullPolicy: Never
-exitCode: 1
-# The output in stderr is different depending on the runtime.
-# "No such image" is from docker and "image not known" is from podman.
-stdErrRegEx: No such image|image not known
+set -eo pipefail
+
+# clear environment variable KPT_FN_RUNTIME if it matches the default
+if [ "${KPT_FN_RUNTIME}" = "docker" ]; then
+   unset KPT_FN_RUNTIME
+fi
+
+echo "KPT_FN_RUNTIME is ${KPT_FN_RUNTIME}"
+# run eval with KPT_FN_RUNTIME unset.
+kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1.3 -- namespace=staging

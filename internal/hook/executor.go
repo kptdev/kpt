@@ -22,7 +22,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
@@ -50,10 +49,6 @@ type Executor struct {
 	// fnResults stores function results gathered
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
-
-	// bookkeeping to ensure docker command availability check is done once
-	// during rendering
-	dockerCheckDone bool
 }
 
 // Execute executes given hook.
@@ -90,13 +85,6 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 		fn := fns[i]
 		if fn.Exec != "" && !e.AllowExec {
 			return nil, ErrAllowedExecNotSpecified
-		}
-		if fn.Image != "" && !e.dockerCheckDone {
-			err := cmdutil.DockerCmdAvailable()
-			if err != nil {
-				return nil, err
-			}
-			e.dockerCheckDone = true
 		}
 		runner, err = fnruntime.NewRunner(ctx,
 			e.FileSystem,

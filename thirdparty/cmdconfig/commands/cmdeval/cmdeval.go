@@ -448,10 +448,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 	if r.Image != "" {
 		r.Image = fnruntime.AddDefaultImagePathPrefix(c.Context(), r.Image)
-		err := cmdutil.DockerCmdAvailable()
-		if err != nil {
-			return err
-		}
 	}
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {

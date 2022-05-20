@@ -16,4 +16,6 @@ testType: eval
 image: gcr.io/kpt-fn/not-exist:v0.1
 imagePullPolicy: Never
 exitCode: 1
-stdErr: "No such image"
+# The output in stderr is different depending on the runtime.
+# "No such image" is from docker and "image not known" is from podman.
+stdErrRegEx: No such image|image not known

@@ -23,6 +23,9 @@ in `.expected`:
   - `exitCode`: The expected exit code for the command. Default: 0.
   - `skip`: Runner will skip the test if `skip` is set to true. Default: false.
   - `sequential`: This test case should be run sequentially. Default: false.
+  - `runtimes`: If the current runtime doesn't match any of the desired runtimes
+    here, the test case will be skipped. Valid values are `docker` and `podman`.
+    If unspecified, it will match any runtime.
   - `imagePullPolicy`: The image pull policy to be used. It can be set to one of
     `Always`, `IfNotPresent` and `Never`. Default value is inherited from the
     CLI flag.
@@ -34,6 +37,7 @@ in `.expected`:
     - Keep the temporary directory used to run the test cases after test.
   - `stdOut`: The expected standard output from running the command. Default: "".
   - `stdErr`: The expected standard error from running the command. Default: "".
+  - `StdErrRegEx`: A regular expression that is expected to match the standard error. Default: "".
   - `disableOutputTruncate`: Control should error output be truncated. Default:
     false.
   - Configurations only apply to `eval` tests:

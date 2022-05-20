@@ -58,6 +58,9 @@ type TestCaseConfig struct {
 	// StdErr is the expected standard error output and should be checked
 	// when a nonzero exit code is expected. Default: ""
 	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
+	// StdErrRegEx is the regular expression to match standard error output and should be checked
+	// when a nonzero exit code is expected. Default: ""
+	StdErrRegEx string `json:"stdErrRegEx,omitempty" yaml:"stdErrRegEx,omitempty"`
 
 	// StdOut is the expected standard output from running the command.
 	// Default: ""
@@ -70,6 +73,11 @@ type TestCaseConfig struct {
 	// of `Always`, `IfNotPresent` and `Never`. If unspecified, the default will
 	// be the same as the CLI flag.
 	ImagePullPolicy string `json:"imagePullPolicy,omitempty" yaml:"imagePullPolicy,omitempty"`
+
+	// Runtimes controls if a test case should be skipped. If the current runtime doesn't match
+	// any of the desired runtimes here, the test case will be skipped. Valid values are `docker`
+	// and `podman`. If unspecified, it will match any runtime.
+	Runtimes []string `json:"runtimes,omitempty" yaml:"runtimes,omitempty"`
 
 	// AllowExec determines if `fn render` needs to be invoked with `--allow-exec` flag
 	AllowExec bool `json:"allowExec,omitempty" yaml:"allowExec,omitempty"`

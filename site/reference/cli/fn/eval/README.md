@@ -132,6 +132,13 @@ fn-args:
   If not specified, no result files are written to the local filesystem.
 ```
 
+#### Environment Variables
+
+```
+KPT_FN_RUNTIME:
+  The runtime to run kpt functions. It must be one of "docker" or "podman".
+```
+
 <!--mdtogo-->
 
 ## Examples
@@ -226,6 +233,12 @@ $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging
 # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
 # in current directory
 kpt fn eval -i set-namespace:v0.1 --by-kind Deployment --by-name foo -- namespace=staging
+```
+
+```shell
+# execute container my-fn with podman on the resources in DIR directory and
+# write output back to DIR
+$ KPT_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 ```
 
 <!--mdtogo-->
