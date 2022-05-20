@@ -1187,16 +1187,11 @@ wait 2
 # Setup: use the service account just created. It does not have permissions
 # on the default namespace, so it will give a permissions error on apply
 # for anything attempted to apply to the default namespace.
-echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
-SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
-if [[ -z "${SECRET_NAME}" ]]; then
-  # K8s 1.24+ doesn't auto-generate service account secrets any more.
-  echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
-  kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
-  assertContains "secret/user-credentials created"
-  wait 2
-  SECRET_NAME="user-credentials"
-fi
+echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
+kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
+assertContains "secret/user-credentials created"
+wait 2
+SECRET_NAME="user-credentials"
 echo "kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d"
 SECRET_TOKEN="$(kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d)"
 echo "kubectl config set-credentials user --token \"<REDACTED>\""
@@ -1446,16 +1441,11 @@ wait 2
 # Setup: use the service account just created. It does not have permissions
 # on the default namespace, so it will give a permissions error on apply
 # for anything attempted to apply to the default namespace.
-echo "kubectl get sa user -ojsonpath='{.secrets[0].name}'"
-SECRET_NAME="$(kubectl get sa user -ojsonpath='{.secrets[0].name}')"
-if [[ -z "${SECRET_NAME}" ]]; then
-  # K8s 1.24+ doesn't auto-generate service account secrets any more.
-  echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
-  kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
-  assertContains "secret/user-credentials created"
-  wait 2
-  SECRET_NAME="user-credentials"
-fi
+echo "kubectl apply -f e2e/live/testdata/rbac-error-step-2"
+kubectl apply -f e2e/live/testdata/rbac-error-step-2 2>&1 | tee $OUTPUT_DIR/status
+assertContains "secret/user-credentials created"
+wait 2
+SECRET_NAME="user-credentials"
 echo "kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d"
 SECRET_TOKEN="$(kubectl get secrets -ojsonpath='{.data.token}' "${SECRET_NAME}" | base64 -d)"
 echo "kubectl config set-credentials user --token \"<REDACTED>\""
