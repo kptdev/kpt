@@ -50,6 +50,10 @@ PKG_PATH:
   for the package. If not provided, kpt will check if all the resources
   in the package belong in the same namespace. If they do, that namespace will
   be used. If they do not, the namespace in the user's context will be chosen.
+
+--rg-file:
+  The name used for the file created for the ResourceGroup CR. Defaults to
+  'resourcegroup.yaml'.
 ```
 
 <!--mdtogo-->

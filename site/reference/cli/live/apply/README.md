@@ -26,8 +26,8 @@ kpt live apply [PKG_PATH | -] [flags]
 ```
 PKG_PATH | -:
   Path to the local package which should be applied to the cluster. It must
-  contain a Kptfile with inventory information. Defaults to the current working
-  directory.
+  contain a Kptfile or a ResourceGroup manifest with inventory metadata.
+  Defaults to the current working directory.
   Using '-' as the package path will cause kpt to read resources from stdin.
 ```
 

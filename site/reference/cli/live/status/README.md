@@ -25,7 +25,8 @@ kpt live status [PKG_PATH | -] [flags]
 ```
 PKG_PATH | -:
   Path to the local package for which the status of the package in the cluster
-  should be displayed. It must contain a Kptfile with inventory information.
+  should be displayed. It must contain either a Kptfile or a ResourceGroup CR
+  with inventory metadata.
   Defaults to the current working directory.
   Using '-' as the package path will cause kpt to read resources from stdin.
 ```

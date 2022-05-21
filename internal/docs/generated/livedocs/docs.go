@@ -15,8 +15,8 @@ Args:
 
   PKG_PATH | -:
     Path to the local package which should be applied to the cluster. It must
-    contain a Kptfile with inventory information. Defaults to the current working
-    directory.
+    contain a Kptfile or a ResourceGroup manifest with inventory metadata.
+    Defaults to the current working directory.
     Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
@@ -114,8 +114,8 @@ Args:
 
   PKG_PATH | -:
     Path to the local package which should be deleted from the cluster. It must
-    contain a Kptfile with inventory information. Defaults to the current working
-    directory.
+    contain a Kptfile or a ResourceGroup manifest with inventory metadata.
+    Defaults to the current working directory.
     Using '-' as the package path will cause kpt to read resources from stdin.
 
 Flags:
@@ -188,6 +188,10 @@ Flags:
     for the package. If not provided, kpt will check if all the resources
     in the package belong in the same namespace. If they do, that namespace will
     be used. If they do not, the namespace in the user's context will be chosen.
+  
+  --rg-file:
+    The name used for the file created for the ResourceGroup CR. Defaults to
+    'resourcegroup.yaml'.
 `
 var InitExamples = `
   # initialize a package in the current directory.
@@ -213,8 +217,9 @@ var MigrateLong = `
 Args:
 
   PKG_PATH:
-    Path to the local package. It must have a Kptfile and an existing inventory
-    template in the root of the package. It defaults to the current directory.
+    Path to the local package. It must have a Kptfile and inventory metadata
+    in the package in either the ConfigMap, Kptfile or ResourceGroup format.
+    It defaults to the current directory.
 
 Flags:
 
@@ -222,18 +227,18 @@ Flags:
     Go through the steps of migration, but don't make any changes.
   
   --force:
-    Forces the inventory values in the Kptfile to be updated, even if they are
-    already set. Defaults to false.
+    Forces the inventory values in the ResourceGroup manfiest to be updated,
+    even if they are already set. Defaults to false.
   
   --name:
     The name for the ResourceGroup resource that contains the inventory
-    for the package. Defaults to the same name as the existing ConfigMap
-    inventory object.
+    for the package. Defaults to the same name as the existing inventory
+    object.
   
   --namespace:
     The namespace for the ResourceGroup resource that contains the inventory
     for the package. If not provided, it defaults to the same namespace as the
-    existing ConfigMap inventory object.
+    existing inventory object.
 `
 var MigrateExamples = `
   # Migrate the package in the current directory.
@@ -248,7 +253,8 @@ Args:
 
   PKG_PATH | -:
     Path to the local package for which the status of the package in the cluster
-    should be displayed. It must contain a Kptfile with inventory information.
+    should be displayed. It must contain either a Kptfile or a ResourceGroup CR
+    with inventory metadata.
     Defaults to the current working directory.
     Using '-' as the package path will cause kpt to read resources from stdin.
 
