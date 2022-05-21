@@ -78,7 +78,7 @@ adds the annotation. After the iteration, it adds some user message to the `Reso
 ```go
 func Run(rl *fn.ResourceList) (bool, error) {
     for _, kubeObject := range rl.Items {
-        if kubeObject.IsGVK("v1", "Deployment") {
+        if kubeObject.IsGVK("apps/v1", "Deployment") {
             kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
         }
     }
