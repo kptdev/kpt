@@ -58,18 +58,6 @@ fn-args:
   By default, container function is executed as `nobody` user. You may want to use
   this flag to run higher privilege operations such as mounting the local filesystem.
 
---match-api-version:
-  Select resources matching the given apiVersion.
-
---match-kind
-  Select resources matching the given kind.
-
---match-name:
-  Select resources matching the given name.
-  
---match-namespace:
-  Select resources matching the given namespace.
-
 --env, e:
   List of local environment variables to be exported to the container function.
   By default, none of local environment variables are made available to the
@@ -106,6 +94,18 @@ fn-args:
   (DEPRECATED) include-meta-resources is no longer necessary because meta
   resources are included by default with kpt version v1.0.0-beta.15+.
 
+--match-api-version:
+  Select resources matching the given apiVersion.
+
+--match-kind
+  Select resources matching the given kind.
+
+--match-name:
+  Select resources matching the given name.
+  
+--match-namespace:
+  Select resources matching the given namespace.
+
 --mount:
   List of storage options to enable reading from the local filesytem. By default,
   container functions can not access the local filesystem. It accepts the same options
@@ -125,11 +125,21 @@ fn-args:
   3. OUT_DIR_PATH: output resources are written to provided directory.
      The provided directory must not already exist.
 
+--type, t;
+  Specify the function type. Accept value `mutator` (default), `validator`. 
+  If used with `--save`, this flag will save the evaluated function to the corresponding
+   Kptfile section: `.pipeline.mutators` if type is `mutator`; `.pipeline.validators` if type
+    is `validator`.
+
 --results-dir:
   Path to a directory to write structured results. Directory will be created if
   it doesn't exist. Structured results emitted by the functions are aggregated and saved
   to `results.yaml` file in the specified directory.
   If not specified, no result files are written to the local filesystem.
+  
+--save, s:
+  Save the function image and fn-config to Kptfile. Require ` + "`" + `--image` + "`" + `.
+  
 ```
 
 #### Environment Variables
@@ -160,6 +170,16 @@ $ kpt fn eval DIR -i gcr.io/example.com/my-fn --fn-config my-fn-config
 ```shell
 # execute container my-fn with an input ConfigMap containing `data: {foo: bar}`
 $ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+```
+
+```shell
+# execute container my-fn and save it to Kptfile `pipeline.mutators` (Default) list.
+$ kpt fn eval DIR -s -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+```
+
+```shell
+# execute container my-fn and save it to Kptfile `pipeline.validators` list.
+$ kpt fn eval DIR -s -t validator -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 ```
 
 ```shell
