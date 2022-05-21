@@ -58,18 +58,6 @@ Flags:
     By default, container function is executed as ` + "`" + `nobody` + "`" + ` user. You may want to use
     this flag to run higher privilege operations such as mounting the local filesystem.
   
-  --match-api-version:
-    Select resources matching the given apiVersion.
-  
-  --match-kind
-    Select resources matching the given kind.
-  
-  --match-name:
-    Select resources matching the given name.
-    
-  --match-namespace:
-    Select resources matching the given namespace.
-  
   --env, e:
     List of local environment variables to be exported to the container function.
     By default, none of local environment variables are made available to the
@@ -106,6 +94,18 @@ Flags:
     (DEPRECATED) include-meta-resources is no longer necessary because meta
     resources are included by default with kpt version v1.0.0-beta.15+.
   
+  --match-api-version:
+    Select resources matching the given apiVersion.
+  
+  --match-kind
+    Select resources matching the given kind.
+  
+  --match-name:
+    Select resources matching the given name.
+    
+  --match-namespace:
+    Select resources matching the given namespace.
+  
   --mount:
     List of storage options to enable reading from the local filesytem. By default,
     container functions can not access the local filesystem. It accepts the same options
@@ -130,6 +130,12 @@ Flags:
     it doesn't exist. Structured results emitted by the functions are aggregated and saved
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
+  
+  --save, s:
+    Save the function image and fn-config to Kptfile (declarative form). This flag will only 
+    add the function after ` + "`" + `kpt fn eval` + "`" + ` successfully executes. This flag should be used 
+    together with --image flag, and the function should be declarative and give idempotent results. 
+    
 
 Environment Variables:
 
@@ -147,6 +153,9 @@ var EvalExamples = `
 
   # execute container my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
   $ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+
+  # execute container my-fn and add it to Kptfile after execution.
+  $ kpt fn eval DIR -s -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
