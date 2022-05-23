@@ -138,6 +138,8 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 		return errors.E(op, errors.Git, types.UniquePath(dest), err)
 	}
 	defer os.RemoveAll(c.repoSpec.Dir)
+	// update cache before removing clone dir
+	defer delete(c.cachedRepo, *c.repoSpec)
 
 	sourcePath := filepath.Join(c.repoSpec.Dir, c.repoSpec.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(c.repoSpec.Path, "/"))
