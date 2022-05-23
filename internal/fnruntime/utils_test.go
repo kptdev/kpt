@@ -151,8 +151,8 @@ func TestNewConfigMap(t *testing.T) {
 	m, err := NewConfigMap(data)
 	assert.NoError(t, err)
 	mapAsString := m.MustString()
-	assert.Contains(t, mapAsString, `bool: true`)
+	assert.Contains(t, mapAsString, `bool: "true"`)
 	assert.Contains(t, mapAsString, `normal string: abc`)
-	assert.Contains(t, mapAsString, `integer: 8081`)
-	assert.Contains(t, mapAsString, `float: 1.23`)
+	assert.Contains(t, mapAsString, `integer: "8081"`)
+	assert.Contains(t, mapAsString, `float: "1.23"`)
 }

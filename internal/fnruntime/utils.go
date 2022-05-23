@@ -235,6 +235,14 @@ metadata:
   name: function-input
 data: {}
 `)
+	if err := node.VisitFields(func(node *yaml.MapNode) error {
+		v := node.Value.YNode()
+		v.Tag = yaml.NodeTagString
+		node.Value.SetYNode(v)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
 	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
 		return nil, err
 	}
