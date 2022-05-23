@@ -394,10 +394,9 @@ loop:
 		// commit sha.
 		validFullSha := s == strings.TrimSpace(rr.Stdout)
 		_, resolved := gur.ResolveRef(s)
-		// fetchedRefWithURI is the cache key created from repo URI SHA and ref
-		fetchedRefWithURI := fmt.Sprintf("%s-%s", uriSha, s)
 		// check if ref was previously fetched
-		_, fetched := gur.fetchedRefs[fetchedRefWithURI]
+		// we use the ref s as the cache key
+		_, fetched := gur.fetchedRefs[s]
 		switch {
 		case fetched:
 			// skip refetching if previously fetched
@@ -414,7 +413,7 @@ loop:
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error running `git fetch` for ref %q: %w", s, err))
 			}
-			gur.fetchedRefs[fetchedRefWithURI] = true
+			gur.fetchedRefs[s] = true
 		default:
 			// In other situations (like a short commit sha), we have to do
 			// a full fetch from the remote.
@@ -434,7 +433,7 @@ loop:
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error verifying results from fetch: %w", err))
 			}
-			gur.fetchedRefs[fetchedRefWithURI] = true
+			gur.fetchedRefs[s] = true
 			// If we did a full fetch, we already have all refs, so we can just
 			// exit the loop.
 			break loop
