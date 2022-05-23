@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -51,7 +51,7 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 
 	var functionConfig *yaml.RNode
 	if m.task.Eval.ConfigMap != nil {
-		if cm, err := kpt.NewConfigMap(m.task.Eval.ConfigMap); err != nil {
+		if cm, err := fnruntime.NewConfigMap(m.task.Eval.ConfigMap); err != nil {
 			return repository.PackageResources{}, nil, fmt.Errorf("failed to create function config: %w", err)
 		} else {
 			functionConfig = cm

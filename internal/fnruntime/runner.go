@@ -508,19 +508,7 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 		// directly use the config from file
 		return node, nil
 	case len(f.ConfigMap) != 0:
-		node = yaml.NewMapRNode(&f.ConfigMap)
-		if node == nil {
-			return nil, nil
-		}
-		// create a ConfigMap only for configMap config
-		configNode := yaml.MustParse(`
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: function-input
-data: {}
-`)
-		err := configNode.PipeE(yaml.SetField("data", node))
+		configNode, err := NewConfigMap(f.ConfigMap)
 		if err != nil {
 			return nil, errors.E(op, fn, err)
 		}

@@ -140,3 +140,19 @@ spec:
 		})
 	}
 }
+
+func TestNewConfigMap(t *testing.T) {
+	data := map[string]string{
+		"normal string": "abc",
+		"integer":       "8081",
+		"float":         "1.23",
+		"bool":          "true",
+	}
+	m, err := NewConfigMap(data)
+	assert.NoError(t, err)
+	mapAsString := m.MustString()
+	assert.Contains(t, mapAsString, `bool: "true"`)
+	assert.Contains(t, mapAsString, `normal string: abc`)
+	assert.Contains(t, mapAsString, `integer: "8081"`)
+	assert.Contains(t, mapAsString, `float: "1.23"`)
+}

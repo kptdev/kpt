@@ -221,3 +221,30 @@ func annoMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	}
 	return true
 }
+
+func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
+	node := yaml.NewMapRNode(&data)
+	if node == nil {
+		return nil, nil
+	}
+	// create a ConfigMap only for configMap config
+	configMap := yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: function-input
+data: {}
+`)
+	if err := node.VisitFields(func(node *yaml.MapNode) error {
+		v := node.Value.YNode()
+		v.Tag = yaml.NodeTagString
+		node.Value.SetYNode(v)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	if err := configMap.PipeE(yaml.SetField("data", node)); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}

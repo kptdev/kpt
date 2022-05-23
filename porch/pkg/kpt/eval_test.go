@@ -20,6 +20,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -56,7 +57,7 @@ func TestSetLabels(t *testing.T) {
 		t.Errorf("GetRunner failed: %v", err)
 	}
 
-	config, err := NewConfigMap(map[string]string{
+	config, err := fnruntime.NewConfigMap(map[string]string{
 		"label-key": "label-value",
 	})
 	if err != nil {
