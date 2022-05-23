@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata: # kpt-merge: /example
+  name: example
+  labels:
+    app.kubernetes.io/app: example
+spec: {}

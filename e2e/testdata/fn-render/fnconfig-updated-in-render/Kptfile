@@ -1,0 +1,32 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/app: example
+  annotations:
+    config.kubernetes.io/local-config: "true"
+upstream:
+  type: git
+  git:
+    repo: https://github.com/droot/app-example
+    directory: /
+    ref: main
+  updateStrategy: resource-merge
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/droot/app-example
+    directory: /
+    ref: main
+    commit: 82448a8796f4f49611e3cda7f28362a222113fd9
+info:
+  description: sample description
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+      configPath: package-context.yaml
+    - image: gcr.io/kpt-fn/apply-replacements:v0.1
+      configPath: update-labels.yaml
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
+      configPath: label-input.yaml

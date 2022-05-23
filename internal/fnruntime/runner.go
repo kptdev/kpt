@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
-	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -45,7 +44,7 @@ const (
 	FuncGenPkgContext = "builtins/gen-pkg-context"
 )
 
-// NewRunner returns a kio.Filter given a specification of a function
+// NewRunner returns a FunctionRunner given a specification of a function
 // and it's config.
 func NewRunner(
 	ctx context.Context,
@@ -56,7 +55,7 @@ func NewRunner(
 	imagePullPolicy ImagePullPolicy,
 	setPkgPathAnnotation, displayResourceCount bool,
 	runtime fn.FunctionRuntime,
-) (kio.Filter, error) {
+) (*FunctionRunner, error) {
 	config, err := newFnConfig(fsys, f, pkgPath)
 	if err != nil {
 		return nil, err
@@ -125,7 +124,7 @@ func NewRunner(
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, setPkgPathAnnotation, displayResourceCount)
 }
 
-// NewFunctionRunner returns a kio.Filter given a specification of a function
+// NewFunctionRunner returns a FunctionRunner given a specification of a function
 // and it's config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
@@ -133,7 +132,7 @@ func NewFunctionRunner(ctx context.Context,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	setPkgPathAnnotation bool,
-	displayResourceCount bool) (kio.Filter, error) {
+	displayResourceCount bool) (*FunctionRunner, error) {
 	name := fnResult.Image
 	if name == "" {
 		name = fnResult.ExecPath
@@ -194,6 +193,11 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		printFnStderr(fr.ctx, fr.fnResult.Stderr)
 	}
 	return output, err
+}
+
+// SetFnConfig updates the functionConfig for the FunctionRunner instance.
+func (fr *FunctionRunner) SetFnConfig(conf *yaml.RNode) {
+	fr.filter.FunctionConfig = conf
 }
 
 // do executes the kpt function and returns the modified resources.

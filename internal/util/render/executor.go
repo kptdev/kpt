@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -400,6 +401,29 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	for i, mutator := range mutators {
+		if pl.Mutators[i].ConfigPath != "" {
+			// kpt v1.0.0-beta15+ onwards, functionConfigs are included in the
+			// function inputs during `render` and as a result, they can be
+			// mutated during the `render`.
+			// So functionConfigs needs be updated in the FunctionRunner instance
+			// before every run.
+			for _, r := range input {
+				pkgPath, err := pkg.GetPkgPathAnnotation(r)
+				if err != nil {
+					return nil, err
+				}
+				currPath, _, err := kioutil.GetFileAnnotations(r)
+				if err != nil {
+					return nil, err
+				}
+				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
+					(path.Clean(currPath) == path.Clean(pl.Mutators[i].ConfigPath)) { // configPath matches
+					mutator.SetFnConfig(r)
+					break
+				}
+			}
+		}
+
 		selectors := pl.Mutators[i].Selectors
 		exclusions := pl.Mutators[i].Exclusions
 
@@ -501,7 +525,7 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 // are written to the file system at the root package level, so
 // the path annotation in each resources needs to be adjusted to be relative to the rootPkg.
 // adjustRelPath updates the path annotation by prepending the path of the package
-// a resource relative to the root package.
+// relative to the root package.
 func adjustRelPath(hctx *hydrationContext) error {
 	resources := hctx.root.resources
 	for _, r := range resources {
@@ -569,11 +593,11 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]kio.Filter, error) {
-	var runners []kio.Filter
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, error) {
+	var runners []*fnruntime.FunctionRunner
 	for i := range fns {
 		var err error
-		var runner kio.Filter
+		var runner *fnruntime.FunctionRunner
 		function := fns[i]
 		displayResourceCount := false
 		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
