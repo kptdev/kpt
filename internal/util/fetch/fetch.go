@@ -94,15 +94,15 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 	return nil
 }
 
+// Cloner clones an upstream repo defined by a repoSpec.
+// Optionally, previously cloned repos can be cached
+// rather than recloning them each time.
 type Cloner struct {
 	// repoSpec spec to clone
 	repoSpec *git.RepoSpec
 
 	// cachedRepos
 	cachedRepo map[git.RepoSpec]*gitutil.GitUpstreamRepo
-
-	// fetchedRefs keeps track of refs already fetched from remote
-	fetchedRefs map[string]bool
 }
 
 type NewClonerOption func(*Cloner)
@@ -110,12 +110,6 @@ type NewClonerOption func(*Cloner)
 func WithCachedRepo(r map[git.RepoSpec]*gitutil.GitUpstreamRepo) NewClonerOption {
 	return func(c *Cloner) {
 		c.cachedRepo = r
-	}
-}
-
-func WithAlreadyFetchedRefs(a map[string]bool) NewClonerOption {
-	return func(c *Cloner) {
-		c.fetchedRefs = a
 	}
 }
 
@@ -128,9 +122,6 @@ func NewCloner(r *git.RepoSpec, opts ...NewClonerOption) *Cloner {
 	}
 	if c.cachedRepo == nil {
 		c.cachedRepo = make(map[git.RepoSpec]*gitutil.GitUpstreamRepo)
-	}
-	if c.fetchedRefs == nil {
-		c.fetchedRefs = map[string]bool{}
 	}
 	return c
 }
@@ -178,7 +169,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	// fetches and caches all tag and branch refs from the upstream repo.
 	upstreamRepo, exists := c.cachedRepo[*c.repoSpec]
 	if !exists {
-		newUpstreamRemp, err := gitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec(), gitutil.WithFetchedRefs(c.fetchedRefs))
+		newUpstreamRemp, err := gitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec())
 		if err != nil {
 			return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 		}

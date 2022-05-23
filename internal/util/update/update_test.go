@@ -86,8 +86,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			}
 
 			// Expect cached contents
-			assert.Equal(t, 1, len(cmd.GetCachedUpstreamRepos()))
-			assert.Equal(t, 1, len(cmd.GetFetchedRefs()))
+			assert.Equal(t, 2, len(cmd.GetCachedUpstreamRepos()))
 
 			// Expect the local package to have Dataset2
 			if !g.AssertLocalDataEquals(testutil.Dataset2, true) {

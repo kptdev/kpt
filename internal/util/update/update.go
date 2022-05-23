@@ -106,9 +106,6 @@ type Command struct {
 
 	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec
 	cachedUpstreamRepos map[git.RepoSpec]*gitutil.GitUpstreamRepo
-
-	// fetchedRefs keeps track of refs already fetched from remote
-	fetchedRefs map[string]bool
 }
 
 // Run runs the Command.
@@ -142,9 +139,6 @@ func (u *Command) Run(ctx context.Context) error {
 	}
 	if u.cachedUpstreamRepos == nil {
 		u.cachedUpstreamRepos = make(map[git.RepoSpec]*gitutil.GitUpstreamRepo)
-	}
-	if u.fetchedRefs == nil {
-		u.fetchedRefs = make(map[string]bool)
 	}
 	packageCount := 0
 
@@ -197,11 +191,6 @@ func (u *Command) Run(ctx context.Context) error {
 // GetCachedUpstreamRepos returns repos cached during update
 func (u Command) GetCachedUpstreamRepos() map[git.RepoSpec]*gitutil.GitUpstreamRepo {
 	return u.cachedUpstreamRepos
-}
-
-// GetFetchedRefs returns refs fetched during update
-func (u Command) GetFetchedRefs() map[string]bool {
-	return u.fetchedRefs
 }
 
 // updateSubKf updates subpackage with given ref and update strategy
@@ -272,7 +261,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-	cloner := fetch.NewCloner(updated, fetch.WithCachedRepo(u.cachedUpstreamRepos), fetch.WithAlreadyFetchedRefs(u.fetchedRefs))
+	cloner := fetch.NewCloner(updated, fetch.WithCachedRepo(u.cachedUpstreamRepos))
 	if err := cloner.ClonerUsingGitExec(ctx); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -283,7 +272,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 		gLock := kf.UpstreamLock.Git
 		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-		if err := fetch.NewCloner(originRepoSpec).ClonerUsingGitExec(ctx); err != nil {
+		if err := fetch.NewCloner(originRepoSpec, fetch.WithCachedRepo(u.cachedUpstreamRepos)).ClonerUsingGitExec(ctx); err != nil {
 			return errors.E(op, p.UniquePath, err)
 		}
 		origin = originRepoSpec

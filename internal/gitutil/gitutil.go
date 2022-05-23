@@ -396,23 +396,25 @@ loop:
 		_, resolved := gur.ResolveRef(s)
 		// fetchedRefWithURI is the cache key created from repo URI SHA and ref
 		fetchedRefWithURI := fmt.Sprintf("%s-%s", uriSha, s)
+		// check if ref was previously fetched
 		_, fetched := gur.fetchedRefs[fetchedRefWithURI]
 		switch {
+		case fetched:
+			// skip refetching if previously fetched
+			break
 		case resolved || validFullSha:
 			// If the ref references a branch or a tag, or is a valid commit
 			// sha and has not already been fetched, we can fetch just a single commit.
-			if !fetched {
-				if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
-					AmendGitExecError(err, func(e *GitExecError) {
-						e.Repo = uri
-						e.Command = "fetch"
-						e.Ref = s
-					})
-					return "", errors.E(op, errors.Git, fmt.Errorf(
-						"error running `git fetch` for ref %q: %w", s, err))
-				}
-				gur.fetchedRefs[fetchedRefWithURI] = true
+			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
+				AmendGitExecError(err, func(e *GitExecError) {
+					e.Repo = uri
+					e.Command = "fetch"
+					e.Ref = s
+				})
+				return "", errors.E(op, errors.Git, fmt.Errorf(
+					"error running `git fetch` for ref %q: %w", s, err))
 			}
+			gur.fetchedRefs[fetchedRefWithURI] = true
 		default:
 			// In other situations (like a short commit sha), we have to do
 			// a full fetch from the remote.
@@ -432,6 +434,7 @@ loop:
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error verifying results from fetch: %w", err))
 			}
+			gur.fetchedRefs[fetchedRefWithURI] = true
 			// If we did a full fetch, we already have all refs, so we can just
 			// exit the loop.
 			break loop
