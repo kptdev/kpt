@@ -72,7 +72,7 @@ func NewRunner(
 		// Pkg: string(pkgPath),
 	}
 
-	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config}
+	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config, GlobalScope: true}
 
 	if runtime != nil {
 		if runner, err := runtime.GetRunner(ctx, f); err != nil {

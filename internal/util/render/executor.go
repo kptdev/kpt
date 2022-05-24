@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -417,9 +416,10 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 					return nil, err
 				}
 				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
-					(path.Clean(currPath) == path.Clean(pl.Mutators[i].ConfigPath)) { // configPath matches
+					currPath == pl.Mutators[i].ConfigPath { // configPath matches
+					fmt.Printf("\n%s\n", r.MustString())
 					mutator.SetFnConfig(r)
-					break
+					continue
 				}
 			}
 		}
