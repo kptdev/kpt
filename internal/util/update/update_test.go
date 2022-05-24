@@ -85,8 +85,15 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 				return
 			}
 
-			// Expect cached contents
-			assert.Equal(t, 2, len(cmd.GetCachedUpstreamRepos()))
+			// Expect upstream repo to be cached
+			cachedGURs := cmd.GetCachedUpstreamRepos()
+			assert.Equal(t, 1, len(cachedGURs))
+			for _, gur := range cachedGURs {
+				assert.Equal(t, upstreamRepo.RepoDirectory, gur.URI)
+				// Expect two fetched refs
+				// 1 for upstream ref (master) and 1 for previous upstream lock
+				assert.Equal(t, []string{masterBranch, upstreamRepo.Commits[0]}, gur.GetFetchedRefs())
+			}
 
 			// Expect the local package to have Dataset2
 			if !g.AssertLocalDataEquals(testutil.Dataset2, true) {
@@ -3699,6 +3706,97 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 			testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 		})
 	}
+}
+
+// TestMultiUpdateCache verifies that multiple sub packages
+// with same upstream leverage the cache.
+func TestMultiUpdateCache(t *testing.T) {
+	numSubPkgs := 10
+	blueprintsUpstream := "blueprints"
+	// Generate multiple subpackages referencing blueprintsUpstream
+	subPkgs := make([]*pkgbuilder.SubPkg, 0, numSubPkgs)
+	for i := 1; i <= numSubPkgs; i++ {
+		sub := pkgbuilder.NewSubPkg(fmt.Sprintf("subpkg-%d", i)).
+			WithKptfile(
+				pkgbuilder.NewKptfile().
+					WithUpstreamRef(blueprintsUpstream, "/", masterBranch, "fast-forward").
+					WithUpstreamLockRef(blueprintsUpstream, "/", masterBranch, 0),
+			).
+			WithResource(pkgbuilder.DeploymentResource)
+		subPkgs = append(subPkgs, sub)
+	}
+
+	reposChanges := map[string][]testutil.Content{
+		testutil.Upstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithSubPackages(subPkgs...),
+				Branch: masterBranch,
+			},
+		},
+		blueprintsUpstream: {
+			{
+				Pkg: pkgbuilder.NewRootPkg().
+					WithResource(pkgbuilder.DeploymentResource),
+				Branch: masterBranch,
+			},
+		},
+	}
+
+	expectedLocal := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
+				WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0),
+		).
+		WithSubPackages(subPkgs...)
+
+	repos, w, clean := testutil.SetupReposAndWorkspace(t, reposChanges)
+	defer clean()
+
+	w.PackageDir = testPackageName
+	kf := kptfileutil.DefaultKptfile(testPackageName)
+	kf.Upstream = &kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
+			Repo:      repos[testutil.Upstream].RepoDirectory,
+			Directory: "/",
+			Ref:       masterBranch,
+		},
+		UpdateStrategy: kptfilev1.ResourceMerge,
+	}
+	testutil.AddKptfileToWorkspace(t, w, kf)
+	cmd := Command{
+		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+	}
+	err := cmd.Run(fake.CtxWithDefaultPrinter())
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	// Expect 2 cached repo refs - testutil.Upstream and blueprintsUpstream
+	cachedGURs := cmd.GetCachedUpstreamRepos()
+	assert.Equal(t, 2, len(cachedGURs))
+
+	// Assert cached refs for each upstream repo
+	upstreamRepo := repos[testutil.Upstream].RepoDirectory
+	blueprintsRepo := repos[blueprintsUpstream].RepoDirectory
+	blueprintsRepoCommit := repos[blueprintsUpstream].Commits
+	for cr, gur := range cachedGURs {
+		switch cr {
+		case upstreamRepo:
+			// Expect only upstream ref master to be cached as there was no lock
+			assert.Equal(t, []string{masterBranch}, gur.GetFetchedRefs())
+		case blueprintsRepo:
+			// Expect both upstream ref master and upstream lock commit to be cached
+			assert.Equal(t, []string{masterBranch, blueprintsRepoCommit[0]}, gur.GetFetchedRefs())
+		default:
+			t.Fatalf("Unexpected upstream repo %s", cr)
+		}
+	}
+
+	expectedPath := expectedLocal.ExpandPkgWithName(t, testPackageName, testutil.ToReposInfo(repos))
+	testutil.KptfileAwarePkgEqual(t, expectedPath, w.FullPackagePath(), true)
 }
 
 type nonKRMTestCase struct {
