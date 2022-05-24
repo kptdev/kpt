@@ -102,12 +102,12 @@ type Cloner struct {
 	repoSpec *git.RepoSpec
 
 	// cachedRepos
-	cachedRepo map[git.RepoSpec]*gitutil.GitUpstreamRepo
+	cachedRepo map[string]*gitutil.GitUpstreamRepo
 }
 
 type NewClonerOption func(*Cloner)
 
-func WithCachedRepo(r map[git.RepoSpec]*gitutil.GitUpstreamRepo) NewClonerOption {
+func WithCachedRepo(r map[string]*gitutil.GitUpstreamRepo) NewClonerOption {
 	return func(c *Cloner) {
 		c.cachedRepo = r
 	}
@@ -121,7 +121,7 @@ func NewCloner(r *git.RepoSpec, opts ...NewClonerOption) *Cloner {
 		opt(c)
 	}
 	if c.cachedRepo == nil {
-		c.cachedRepo = make(map[git.RepoSpec]*gitutil.GitUpstreamRepo)
+		c.cachedRepo = make(map[string]*gitutil.GitUpstreamRepo)
 	}
 	return c
 }
@@ -139,7 +139,7 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 	}
 	defer os.RemoveAll(c.repoSpec.Dir)
 	// update cache before removing clone dir
-	defer delete(c.cachedRepo, *c.repoSpec)
+	defer delete(c.cachedRepo, c.repoSpec.CloneSpec())
 
 	sourcePath := filepath.Join(c.repoSpec.Dir, c.repoSpec.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(c.repoSpec.Path, "/"))
@@ -169,14 +169,14 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	// Create a local representation of the upstream repo. This will initialize
 	// the cache for the specified repo uri if it isn't already there. It also
 	// fetches and caches all tag and branch refs from the upstream repo.
-	upstreamRepo, exists := c.cachedRepo[*c.repoSpec]
+	upstreamRepo, exists := c.cachedRepo[c.repoSpec.CloneSpec()]
 	if !exists {
 		newUpstreamRemp, err := gitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec())
 		if err != nil {
 			return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 		}
 		upstreamRepo = newUpstreamRemp
-		c.cachedRepo[*c.repoSpec] = upstreamRepo
+		c.cachedRepo[c.repoSpec.CloneSpec()] = upstreamRepo
 	}
 
 	// Check if we have a ref in the upstream that matches the package-specific

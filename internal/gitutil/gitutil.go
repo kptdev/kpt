@@ -179,6 +179,14 @@ type GitUpstreamRepo struct {
 	fetchedRefs map[string]bool
 }
 
+func (gur *GitUpstreamRepo) GetFetchedRefs() []string {
+	fetchedRefs := make([]string, 0, len(gur.fetchedRefs))
+	for ref := range gur.fetchedRefs {
+		fetchedRefs = append(fetchedRefs, ref)
+	}
+	return fetchedRefs
+}
+
 // updateRefs fetches all refs from the upstream git repo, parses the results
 // and caches all refs and the commit they reference. Not that this doesn't
 // download any objects, only refs.

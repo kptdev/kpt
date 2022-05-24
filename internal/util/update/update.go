@@ -104,8 +104,8 @@ type Command struct {
 	// Strategy is the update strategy to use
 	Strategy kptfilev1.UpdateStrategyType
 
-	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec
-	cachedUpstreamRepos map[git.RepoSpec]*gitutil.GitUpstreamRepo
+	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec CloneRef
+	cachedUpstreamRepos map[string]*gitutil.GitUpstreamRepo
 }
 
 // Run runs the Command.
@@ -138,7 +138,7 @@ func (u *Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	if u.cachedUpstreamRepos == nil {
-		u.cachedUpstreamRepos = make(map[git.RepoSpec]*gitutil.GitUpstreamRepo)
+		u.cachedUpstreamRepos = make(map[string]*gitutil.GitUpstreamRepo)
 	}
 	packageCount := 0
 
@@ -189,7 +189,7 @@ func (u *Command) Run(ctx context.Context) error {
 }
 
 // GetCachedUpstreamRepos returns repos cached during update
-func (u Command) GetCachedUpstreamRepos() map[git.RepoSpec]*gitutil.GitUpstreamRepo {
+func (u Command) GetCachedUpstreamRepos() map[string]*gitutil.GitUpstreamRepo {
 	return u.cachedUpstreamRepos
 }
 
