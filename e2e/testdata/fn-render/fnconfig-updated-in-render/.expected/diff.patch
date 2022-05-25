@@ -1,0 +1,91 @@
+diff --git a/Kptfile b/Kptfile
+index 4da4f76..bdc385f 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -3,7 +3,7 @@ kind: Kptfile
+ metadata:
+   name: frontend
+   labels:
+-    app.kubernetes.io/app: example
++    app.kubernetes.io/app: frontend
+   annotations:
+     config.kubernetes.io/local-config: "true"
+ info:
+diff --git a/app.yaml b/app.yaml
+index 3361e5b..33f2627 100644
+--- a/app.yaml
++++ b/app.yaml
+@@ -2,9 +2,9 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata: # kpt-merge: example/deployment
+   name: deployment
+-  namespace: example
++  namespace: frontend
+   labels:
+-    app.kubernetes.io/app: example
++    app.kubernetes.io/app: frontend
+ spec:
+   replicas: 3
+   template:
+@@ -16,7 +16,7 @@ spec:
+         - containerPort: 80
+     metadata:
+       labels:
+-        app.kubernetes.io/app: example
++        app.kubernetes.io/app: frontend
+   selector:
+     matchLabels:
+-      app.kubernetes.io/app: example
++      app.kubernetes.io/app: frontend
+diff --git a/label-input.yaml b/label-input.yaml
+index 26dab6c..cdff6e0 100644
+--- a/label-input.yaml
++++ b/label-input.yaml
+@@ -5,6 +5,6 @@ metadata: # kpt-merge: /label-input
+   annotations:
+     config.kubernetes.io/local-config: "true"
+   labels:
+-    app.kubernetes.io/app: example
++    app.kubernetes.io/app: frontend
+ data:
+-  app.kubernetes.io/app: example
++  app.kubernetes.io/app: frontend
+diff --git a/namespace.yaml b/namespace.yaml
+index 9db1da3..e112378 100644
+--- a/namespace.yaml
++++ b/namespace.yaml
+@@ -1,7 +1,7 @@
+ apiVersion: v1
+ kind: Namespace
+ metadata: # kpt-merge: /example
+-  name: example
++  name: frontend
+   labels:
+-    app.kubernetes.io/app: example
++    app.kubernetes.io/app: frontend
+ spec: {}
+diff --git a/package-context.yaml b/package-context.yaml
+index 2340959..bbf7167 100644
+--- a/package-context.yaml
++++ b/package-context.yaml
+@@ -4,5 +4,7 @@ metadata:
+   name: kptfile.kpt.dev
+   annotations:
+     config.kubernetes.io/local-config: "true"
++  labels:
++    app.kubernetes.io/app: frontend
+ data:
+   name: frontend
+diff --git a/update-labels.yaml b/update-labels.yaml
+index 7aae6c7..cabf787 100644
+--- a/update-labels.yaml
++++ b/update-labels.yaml
+@@ -5,7 +5,7 @@ metadata: # kpt-merge: /update-labels
+   annotations:
+     config.kubernetes.io/local-config: "true"
+   labels:
+-    app.kubernetes.io/app: example
++    app.kubernetes.io/app: frontend
+ replacements:
+ - source:
+     kind: ConfigMap
