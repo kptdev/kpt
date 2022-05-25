@@ -6,20 +6,6 @@ metadata:
     app.kubernetes.io/app: example
   annotations:
     config.kubernetes.io/local-config: "true"
-upstream:
-  type: git
-  git:
-    repo: https://github.com/droot/app-example
-    directory: /
-    ref: main
-  updateStrategy: resource-merge
-upstreamLock:
-  type: git
-  git:
-    repo: https://github.com/droot/app-example
-    directory: /
-    ref: main
-    commit: 82448a8796f4f49611e3cda7f28362a222113fd9
 info:
   description: sample description
 pipeline:

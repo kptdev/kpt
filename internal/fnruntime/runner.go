@@ -72,7 +72,14 @@ func NewRunner(
 		// Pkg: string(pkgPath),
 	}
 
-	fltr := &runtimeutil.FunctionFilter{FunctionConfig: config, GlobalScope: true}
+	fltr := &runtimeutil.FunctionFilter{
+		FunctionConfig: config,
+		// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
+		// directory specified by the functionConfig, kpt v1+ doesn't scope resources
+		// during function execution, so marking the scope to global.
+		// See https://github.com/GoogleContainerTools/kpt/issues/3230 for more details.
+		GlobalScope: true,
+	}
 
 	if runtime != nil {
 		if runner, err := runtime.GetRunner(ctx, f); err != nil {
@@ -137,8 +144,10 @@ func NewFunctionRunner(ctx context.Context,
 	if name == "" {
 		name = fnResult.ExecPath
 	}
-	// by default, runtimeutil.FunctionFilter scope resources to the
-	// directory specified with functionConfig. Setting it to global.
+	// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
+	// directory specified by the functionConfig, kpt v1+ doesn't scope resources
+	// during function execution, so marking the scope to global.
+	// See https://github.com/GoogleContainerTools/kpt/issues/3230 for more details.
 	fltr.GlobalScope = true
 	return &FunctionRunner{
 		ctx:                  ctx,
