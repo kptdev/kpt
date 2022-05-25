@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index c1ee815..0ed7964 100644
+index 4da4f76..bdc385f 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -3,7 +3,7 @@ kind: Kptfile
@@ -10,7 +10,7 @@ index c1ee815..0ed7964 100644
 +    app.kubernetes.io/app: frontend
    annotations:
      config.kubernetes.io/local-config: "true"
- upstream:
+ info:
 diff --git a/app.yaml b/app.yaml
 index 3361e5b..33f2627 100644
 --- a/app.yaml
