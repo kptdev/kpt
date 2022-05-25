@@ -417,7 +417,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 				}
 				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
 					currPath == pl.Mutators[i].ConfigPath { // configPath matches
-					fmt.Printf("\n%s\n", r.MustString())
 					mutator.SetFnConfig(r)
 					continue
 				}
