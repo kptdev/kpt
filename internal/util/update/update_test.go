@@ -92,7 +92,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 				assert.Equal(t, upstreamRepo.RepoDirectory, gur.URI)
 				// Expect two fetched refs
 				// 1 for upstream ref (master) and 1 for previous upstream lock
-				assert.Equal(t, []string{masterBranch, upstreamRepo.Commits[0]}, gur.GetFetchedRefs())
+				assert.ElementsMatch(t, []string{masterBranch, upstreamRepo.Commits[0]}, gur.GetFetchedRefs())
 			}
 
 			// Expect the local package to have Dataset2
@@ -3785,10 +3785,10 @@ func TestMultiUpdateCache(t *testing.T) {
 		switch cr {
 		case upstreamRepo:
 			// Expect only upstream ref master to be cached as there was no lock
-			assert.Equal(t, []string{masterBranch}, gur.GetFetchedRefs())
+			assert.ElementsMatch(t, []string{masterBranch}, gur.GetFetchedRefs())
 		case blueprintsRepo:
 			// Expect both upstream ref master and upstream lock commit to be cached
-			assert.Equal(t, []string{masterBranch, blueprintsRepoCommit[0]}, gur.GetFetchedRefs())
+			assert.ElementsMatch(t, []string{masterBranch, blueprintsRepoCommit[0]}, gur.GetFetchedRefs())
 		default:
 			t.Fatalf("Unexpected upstream repo %s", cr)
 		}
