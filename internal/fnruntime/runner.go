@@ -137,6 +137,9 @@ func NewFunctionRunner(ctx context.Context,
 	if name == "" {
 		name = fnResult.ExecPath
 	}
+	// by default, runtimeutil.FunctionFilter scope resources to the
+	// directory specified with functionConfig. Setting it to global.
+	fltr.GlobalScope = true
 	return &FunctionRunner{
 		ctx:                  ctx,
 		name:                 name,
