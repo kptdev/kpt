@@ -137,12 +137,25 @@ func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, 
 	}, nil
 }
 
-// NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
-func NewGitUpstreamRepo(ctx context.Context, uri string) (*GitUpstreamRepo, error) {
-	const op errors.Op = "gitutil.NewGitUpstreamRepo"
+type NewGitUpstreamRepoOption func(*GitUpstreamRepo)
 
+func WithFetchedRefs(a map[string]bool) NewGitUpstreamRepoOption {
+	return func(g *GitUpstreamRepo) {
+		g.fetchedRefs = a
+	}
+}
+
+// NewGitUpstreamRepo returns a new GitUpstreamRepo for an upstream package.
+func NewGitUpstreamRepo(ctx context.Context, uri string, opts ...NewGitUpstreamRepoOption) (*GitUpstreamRepo, error) {
+	const op errors.Op = "gitutil.NewGitUpstreamRepo"
 	g := &GitUpstreamRepo{
 		URI: uri,
+	}
+	for _, opt := range opts {
+		opt(g)
+	}
+	if g.fetchedRefs == nil {
+		g.fetchedRefs = map[string]bool{}
 	}
 	if err := g.updateRefs(ctx); err != nil {
 		return nil, errors.E(op, errors.Repo(uri), err)
@@ -161,6 +174,17 @@ type GitUpstreamRepo struct {
 	// Tags contains all tag refs in the upstream repo as well as the
 	// each of the are referencing.
 	Tags map[string]string
+
+	// fetchedRefs keeps track of refs already fetched from remote
+	fetchedRefs map[string]bool
+}
+
+func (gur *GitUpstreamRepo) GetFetchedRefs() []string {
+	fetchedRefs := make([]string, 0, len(gur.fetchedRefs))
+	for ref := range gur.fetchedRefs {
+		fetchedRefs = append(fetchedRefs, ref)
+	}
+	return fetchedRefs
 }
 
 // updateRefs fetches all refs from the upstream git repo, parses the results
@@ -374,20 +398,26 @@ loop:
 		// commit sha.
 		validFullSha := s == strings.TrimSpace(rr.Stdout)
 		_, resolved := gur.ResolveRef(s)
-
+		// check if ref was previously fetched
+		// we use the ref s as the cache key
+		_, fetched := gur.fetchedRefs[s]
 		switch {
+		case fetched:
+			// skip refetching if previously fetched
+			break
 		case resolved || validFullSha:
 			// If the ref references a branch or a tag, or is a valid commit
-			// sha, we can fetch just a single commit.
+			// sha and has not already been fetched, we can fetch just a single commit.
 			if _, err := gitRunner.RunVerbose(ctx, "fetch", "origin", "--depth=1", s); err != nil {
 				AmendGitExecError(err, func(e *GitExecError) {
 					e.Repo = uri
-					e.Command = "origin"
+					e.Command = "fetch"
 					e.Ref = s
 				})
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error running `git fetch` for ref %q: %w", s, err))
 			}
+			gur.fetchedRefs[s] = true
 		default:
 			// In other situations (like a short commit sha), we have to do
 			// a full fetch from the remote.
@@ -407,6 +437,7 @@ loop:
 				return "", errors.E(op, errors.Git, fmt.Errorf(
 					"error verifying results from fetch: %w", err))
 			}
+			gur.fetchedRefs[s] = true
 			// If we did a full fetch, we already have all refs, so we can just
 			// exit the loop.
 			break loop
