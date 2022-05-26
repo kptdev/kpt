@@ -83,20 +83,22 @@ type PackageRevisionStatus struct {
 type TaskType string
 
 const (
-	TaskTypeInit  TaskType = "init"
-	TaskTypeClone TaskType = "clone"
-	TaskTypePatch TaskType = "patch"
-	TaskTypeEdit  TaskType = "edit"
-	TaskTypeEval  TaskType = "eval"
+	TaskTypeInit    TaskType = "init"
+	TaskTypeClone   TaskType = "clone"
+	TaskTypePatch   TaskType = "patch"
+	TaskTypeEdit    TaskType = "edit"
+	TaskTypeRestore TaskType = "restore"
+	TaskTypeEval    TaskType = "eval"
 )
 
 type Task struct {
-	Type  TaskType              `json:"type"`
-	Init  *PackageInitTaskSpec  `json:"init,omitempty"`
-	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
-	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
-	Edit  *PackageEditTaskSpec  `json:"edit,omitempty"`
-	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
+	Type     TaskType                `json:"type"`
+	Init     *PackageInitTaskSpec    `json:"init,omitempty"`
+	Clone    *PackageCloneTaskSpec   `json:"clone,omitempty"`
+	Patch    *PackagePatchTaskSpec   `json:"patch,omitempty"`
+	Edit     *PackageEditTaskSpec    `json:"edit,omitempty"`
+	Rollback *PackageRestoreTaskSpec `json:"restore,omitempty"`
+	Eval     *FunctionEvalTaskSpec   `json:"eval,omitempty"`
 }
 
 // PackageInitTaskSpec defines the package initialization task.
@@ -156,6 +158,10 @@ type PatchSpec struct {
 }
 
 type PackageEditTaskSpec struct {
+	Source *PackageRevisionRef `json:"sourceRef,omitempty"`
+}
+
+type PackageRestoreTaskSpec struct {
 	Source *PackageRevisionRef `json:"sourceRef,omitempty"`
 }
 

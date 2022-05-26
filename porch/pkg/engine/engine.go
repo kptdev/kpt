@@ -89,8 +89,14 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	// Validate package lifecycle. Cannot create a final package
 	switch obj.Spec.Lifecycle {
 	case "":
-		// Set draft as default
-		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
+		if isRestore(obj) {
+			// If restoring an older version, we make create the revision
+			// with lifecycle Published.
+			obj.Spec.Lifecycle = api.PackageRevisionLifecyclePublished
+		} else {
+			// Otherwise, revisions are created with lifecycle Draft.
+			obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
+		}
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// These values are ok
 	case api.PackageRevisionLifecyclePublished:
@@ -160,6 +166,15 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	return draft.Close(ctx)
 }
 
+func isRestore(obj *api.PackageRevision) bool {
+	for _, task := range obj.Spec.Tasks {
+		if task.Type == api.TaskTypeRestore {
+			return true
+		}
+	}
+	return false
+}
+
 func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task) (mutation, error) {
 	switch task.Type {
 	case api.TaskTypeInit:
@@ -191,6 +206,17 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			return nil, fmt.Errorf("edit not set for task of type %q", task.Type)
 		}
 		return &editPackageMutation{
+			task:              task,
+			namespace:         obj.Namespace,
+			cad:               cad,
+			referenceResolver: cad.referenceResolver,
+		}, nil
+
+	case api.TaskTypeRestore:
+		if task.Restore == nil {
+			return nil, fmt.Errorf("restore not set for task of type %q", task.Type)
+		}
+		return &restorePackageMutation{
 			task:              task,
 			namespace:         obj.Namespace,
 			cad:               cad,
