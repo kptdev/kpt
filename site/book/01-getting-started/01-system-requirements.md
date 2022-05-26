@@ -17,20 +17,22 @@ kpt requires that you have [Git] installed and configured.
 
 `kpt` requires you to have at least one of the following runtimes installed and configured.
 
-Environment variable can be used to control which container runtime to use. More
-details can be found in the reference documents for [`kpt fn render`](/reference/cli/fn/render/)
-and [`kpt fn eval`](/reference/cli/fn/eval/).
+
 
 ### Docker
 
-Here is the [instructions][install-docker] to have Docker installed and configured.
+Please follow the [instructions][install-docker] to install and configure Docker.
 
 ### Podman
 
-Here is the [instructions][install-podman] to have Podman installed and configured.
+Please follow the [instructions][install-podman] to install and configure Podman.
 
 If you want to set up rootless container runtime, [this][rootless] may be a
 useful resource for you.
+
+Environment variable can be used to control which container runtime to use. More
+details can be found in the reference documents for [`kpt fn render`](/reference/cli/fn/render/)
+and [`kpt fn eval`](/reference/cli/fn/eval/).
 
 ## Kubernetes cluster
 
