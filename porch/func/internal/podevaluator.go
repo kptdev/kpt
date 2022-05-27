@@ -488,6 +488,9 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 			Namespace: pm.namespace,
 			Annotations: map[string]string{
 				reclaimAfterAnnotation: fmt.Sprintf("%v", time.Now().Add(ttl).Unix()),
+				// Add the following annotation to make it work well with the cluster autoscaler.
+				// https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/FAQ.md#what-types-of-pods-can-prevent-ca-from-removing-a-node
+				"cluster-autoscaler.kubernetes.io/safe-to-evict": "true",
 			},
 			// The function runner can use the label to retrieve the pod. Label is function name + part of its digest.
 			// If a function has more than one tags pointing to the same digest, we can reuse the same pod.
