@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"reflect"
 
-	planv1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/plan/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -33,6 +32,19 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/object"
 )
+
+type Applier interface {
+	Run(ctx context.Context, invInfo inventory.Info, objects object.UnstructuredSet, options apply.ApplierOptions) <-chan event.Event
+}
+
+type ResourceFetcher interface {
+	FetchResource(ctx context.Context, id object.ObjMetadata) (*unstructured.Unstructured, bool, error)
+}
+
+type ClusterPlanner struct {
+	applier         Applier
+	resourceFetcher ResourceFetcher
+}
 
 func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
 	fetcher, err := NewResourceFetcher(f)
@@ -59,33 +71,43 @@ func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
 	}, nil
 }
 
-type Applier interface {
-	Run(ctx context.Context, invInfo inventory.Info, objects object.UnstructuredSet, options apply.ApplierOptions) <-chan event.Event
+type ActionType string
+
+const (
+	Create    ActionType = "Create"
+	Unchanged ActionType = "Unchanged"
+	Delete    ActionType = "Delete"
+	Update    ActionType = "Update"
+	Skip      ActionType = "Skip"
+	Error     ActionType = "Error"
+)
+
+type Plan struct {
+	Actions []Action
 }
 
-type ResourceFetcher interface {
-	FetchResource(ctx context.Context, id object.ObjMetadata) (*unstructured.Unstructured, bool, error)
-}
-
-type ClusterPlanner struct {
-	applier         Applier
-	resourceFetcher ResourceFetcher
+type Action struct {
+	Type      ActionType
+	Group     string
+	Kind      string
+	Name      string
+	Namespace string
+	Original  *unstructured.Unstructured
+	Updated   *unstructured.Unstructured
+	Error     string
 }
 
 type Options struct {
 	ServerSideOptions common.ServerSideOptions
 }
 
-func (r *ClusterPlanner) BuildPlan(ctx context.Context, inv inventory.Info, objects []*unstructured.Unstructured, o Options) (*planv1alpha1.Plan, error) {
+func (r *ClusterPlanner) BuildPlan(ctx context.Context, inv inventory.Info, objects []*unstructured.Unstructured, o Options) (*Plan, error) {
 	actions, err := r.dryRunForPlan(ctx, inv, objects, o)
 	if err != nil {
 		return nil, err
 	}
-	return &planv1alpha1.Plan{
-		ResourceMeta: planv1alpha1.ResourceMeta,
-		Spec: planv1alpha1.PlanSpec{
-			Actions: actions,
-		},
+	return &Plan{
+		Actions: actions,
 	}, nil
 }
 
@@ -94,13 +116,13 @@ func (r *ClusterPlanner) dryRunForPlan(
 	inv inventory.Info,
 	objects []*unstructured.Unstructured,
 	o Options,
-) ([]planv1alpha1.Action, error) {
+) ([]Action, error) {
 	eventCh := r.applier.Run(ctx, inv, objects, apply.ApplierOptions{
 		DryRunStrategy:    common.DryRunServer,
 		ServerSideOptions: o.ServerSideOptions,
 	})
 
-	var actions []planv1alpha1.Action
+	var actions []Action
 	var err error
 	for e := range eventCh {
 		if e.Type == event.InitType {
@@ -149,70 +171,70 @@ func (r *ClusterPlanner) dryRunForPlan(
 	return actions, err
 }
 
-func handleApplyEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action {
+func handleApplyEvent(e event.Event, a Action) Action {
 	if e.ApplyEvent.Error != nil {
-		a.Type = planv1alpha1.Error
+		a.Type = Error
 		a.Error = e.ApplyEvent.Error.Error()
 	} else {
 		switch e.ApplyEvent.Status {
 		case event.ApplySkipped:
-			a.Type = planv1alpha1.Skip
+			a.Type = Skip
 		case event.ApplySuccessful:
-			a.After = e.ApplyEvent.Resource
-			if a.Before != nil {
+			a.Updated = e.ApplyEvent.Resource
+			if a.Original != nil {
 				// TODO: Unclear if we should diff the full resources here. It doesn't work
 				// well with client-side apply as the managedFields property shows up as
 				// changes. It also means there is a race with controllers that might change
 				// the status of resources.
-				if reflect.DeepEqual(a.Before, a.After) {
-					a.Type = planv1alpha1.Unchanged
+				if reflect.DeepEqual(a.Original, a.Updated) {
+					a.Type = Unchanged
 				} else {
-					a.Type = planv1alpha1.Update
+					a.Type = Update
 				}
 			} else {
-				a.Type = planv1alpha1.Create
+				a.Type = Create
 			}
 		}
 	}
 	return a
 }
 
-func handlePruneEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action {
+func handlePruneEvent(e event.Event, a Action) Action {
 	if e.PruneEvent.Error != nil {
-		a.Type = planv1alpha1.Error
+		a.Type = Error
 		a.Error = e.PruneEvent.Error.Error()
 	} else {
 		switch e.PruneEvent.Status {
 		case event.PruneSuccessful:
-			a.Type = planv1alpha1.Delete
+			a.Type = Delete
 		// Lifecycle directives can cause resources to remain in the
 		// live state even if they would normally be pruned.
 		// TODO: Handle reason for skipped resources that has recently
 		// been added to the actuation library.
 		case event.PruneSkipped:
-			a.Type = planv1alpha1.Skip
+			a.Type = Skip
 		}
 	}
 	return a
 }
 
-func handleDeleteEvent(e event.Event, a planv1alpha1.Action) planv1alpha1.Action {
+func handleDeleteEvent(e event.Event, a Action) Action {
 	if e.DeleteEvent.Error != nil {
-		a.Type = planv1alpha1.Error
+		a.Type = Error
 		a.Error = e.DeleteEvent.Error.Error()
 	} else {
 		switch e.DeleteEvent.Status {
 		case event.DeleteSuccessful:
-			a.Type = planv1alpha1.Delete
+			a.Type = Delete
 		case event.DeleteSkipped:
-			a.Type = planv1alpha1.Skip
+			a.Type = Skip
 		}
 	}
 	return a
 }
 
-func (r *ClusterPlanner) fetchResources(ctx context.Context, e event.Event) ([]planv1alpha1.Action, error) {
-	var actions []planv1alpha1.Action
+func (r *ClusterPlanner) fetchResources(ctx context.Context, e event.Event) ([]Action, error) {
+	var actions []Action
 	for _, ag := range e.InitEvent.ActionGroups {
 		// We only care about the Apply, Prune and Delete actions.
 		if !(ag.Action == event.ApplyAction || ag.Action == event.PruneAction || ag.Action == event.DeleteAction) {
@@ -224,12 +246,12 @@ func (r *ClusterPlanner) fetchResources(ctx context.Context, e event.Event) ([]p
 			if err != nil && !meta.IsNoMatchError(err) {
 				return nil, err
 			}
-			actions = append(actions, planv1alpha1.Action{
+			actions = append(actions, Action{
 				Group:     id.GroupKind.Group,
 				Kind:      id.GroupKind.Kind,
 				Name:      id.Name,
 				Namespace: id.Namespace,
-				Before:    u,
+				Original:  u,
 			})
 		}
 	}
@@ -279,7 +301,7 @@ func (rf *resourceFetcher) FetchResource(ctx context.Context, id object.ObjMetad
 	return u, true, nil
 }
 
-func indexForIdentifier(id object.ObjMetadata, actions []planv1alpha1.Action) int {
+func indexForIdentifier(id object.ObjMetadata, actions []Action) int {
 	for i := range actions {
 		a := actions[i]
 		if a.Group == id.GroupKind.Group &&
