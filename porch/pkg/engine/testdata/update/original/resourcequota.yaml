@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: default
+  namespace: example
+spec:
+  hard:
+    cpu: "40"
+    memory: 40G

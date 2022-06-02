@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 )
 
 type clonePackageMutation struct {
@@ -68,7 +69,16 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		}
 	}
 
-	return cloned, m.task, nil
+	// ensure merge-key comment is added to newly added resources.
+	// this operation is done on best effort basis because if upstream contains
+	// valid YAML but invalid KRM resources, merge-key operation will fail
+	// but shouldn't result in overall clone operation.
+	result, err := ensureMergeKey(ctx, cloned)
+	if err != nil {
+		klog.Infof("failed to add merge-key to resources %v", err)
+	}
+
+	return result, m.task, nil
 }
 
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {

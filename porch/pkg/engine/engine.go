@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/debug"
@@ -34,6 +33,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -279,9 +279,11 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			}
 			mutation := &updatePackageMutation{
 				task:              newTask,
+				oldTask:           oldTask,
 				cad:               cad,
 				referenceResolver: cad.referenceResolver,
 				namespace:         repositoryObj.Namespace,
+				pkgName:           oldObj.GetName(),
 			}
 			mutations = append(mutations, mutation)
 
@@ -448,61 +450,93 @@ func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configap
 }
 
 type updatePackageMutation struct {
+	oldTask           *api.Task
 	task              *api.Task
 	cad               CaDEngine
 	referenceResolver ReferenceResolver
 	namespace         string
+	pkgName           string
 }
 
 func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "updatePackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
-	// TODO: load directly from source repository
-	dir, err := ioutil.TempDir("", "kpt-pkg-update-*")
-	if err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-	defer os.RemoveAll(dir)
-
-	if err := writeResourcesToDirectory(dir, resources); err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-
-	var ref string
-	var packageDir string
-	upstream := m.task.Clone.Upstream
-	switch upstream.Type {
-	case api.RepositoryTypeGit:
-		ref = upstream.Git.Ref
-		packageName := filepath.Base(m.task.Clone.Upstream.Git.Directory)
-		packageName = strings.TrimPrefix(packageName, ".git")
-		packageDir = filepath.Join(dir, packageName)
-	case api.RepositoryTypeOCI:
-		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for oci packages")
-	default:
-		revision, err := (&PackageFetcher{
-			cad:               m.cad,
-			referenceResolver: m.referenceResolver,
-		}).FetchRevision(ctx, upstream.UpstreamRef, m.namespace)
-		if err != nil {
-			return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package revisions %s", upstream.UpstreamRef.Name)
-		}
-		revisionKey := revision.Key()
-		ref = fmt.Sprintf("%s/%s", revisionKey.Package, revisionKey.Revision)
-		packageDir = dir
-	}
-
-	if err := kpt.PkgUpdate(ctx, ref, packageDir, kpt.PkgUpdateOpts{}); err != nil {
-		return repository.PackageResources{}, nil, err
-	}
-
-	loaded, err := loadResourcesFromDirectory(dir)
+	currUpstreamPkgRef, err := m.currUpstream()
 	if err != nil {
 		return repository.PackageResources{}, nil, err
 	}
 
-	return loaded, m.task, nil
+	targetUpstream := m.task.Clone.Upstream
+	if targetUpstream.Type == api.RepositoryTypeGit || targetUpstream.Type == api.RepositoryTypeOCI {
+		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
+	}
+
+	originalResources, err := (&PackageFetcher{
+		cad:               m.cad,
+		referenceResolver: m.referenceResolver,
+	}).FetchResources(ctx, currUpstreamPkgRef, m.namespace)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package %s with ref %+v",
+			m.pkgName, *currUpstreamPkgRef)
+	}
+
+	upstreamRevision, err := (&PackageFetcher{
+		cad:               m.cad,
+		referenceResolver: m.referenceResolver,
+	}).FetchRevision(ctx, targetUpstream.UpstreamRef, m.namespace)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching revision for target upstream %s", targetUpstream.UpstreamRef.Name)
+	}
+	upstreamResources, err := upstreamRevision.GetResources(ctx)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching resources for target upstream %s", targetUpstream.UpstreamRef.Name)
+	}
+
+	klog.Infof("performing pkg upgrade operation for pkg %s resource counts local[%d] original[%d] upstream[%d]",
+		m.pkgName, len(resources.Contents), len(originalResources.Spec.Resources), len(upstreamResources.Spec.Resources))
+
+	// May be have packageUpdater part of engine to make it easy for testing ?
+	updatedResources, err := (&defaultPackageUpdater{}).Update(ctx,
+		resources,
+		repository.PackageResources{
+			Contents: originalResources.Spec.Resources,
+		},
+		repository.PackageResources{
+			Contents: upstreamResources.Spec.Resources,
+		})
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("error updating the package to revision %s", targetUpstream.UpstreamRef.Name)
+	}
+
+	newUpstream, newUpstreamLock, err := upstreamRevision.GetLock()
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package revisions %s", targetUpstream.UpstreamRef.Name)
+	}
+	if err := kpt.UpdateKptfileUpstream("", updatedResources.Contents, newUpstream, newUpstreamLock); err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to apply upstream lock to package %q: %w", m.pkgName, err)
+	}
+
+	// ensure merge-key comment is added to newly added resources.
+	result, err := ensureMergeKey(ctx, updatedResources)
+	if err != nil {
+		klog.Infof("failed to add merge key comments: %v", err)
+	}
+	return result, m.task, nil
+}
+
+// Currently assumption is that downstream packages will be forked from a porch package.
+// As per current implementation, upstream package ref is stored in an old clone task, but this may
+// change so the logic of figuring out current upstream will live in this function.
+func (m *updatePackageMutation) currUpstream() (*api.PackageRevisionRef, error) {
+	if m.oldTask == nil || m.oldTask.Clone == nil {
+		return nil, fmt.Errorf("package %s does not have upstream info", m.pkgName)
+	}
+	upstream := m.oldTask.Clone.Upstream
+	if upstream.Type == api.RepositoryTypeGit || upstream.Type == api.RepositoryTypeOCI {
+		return nil, fmt.Errorf("upstream package must be porch native package. Found it to be %s", upstream.Type)
+	}
+	return upstream.UpstreamRef, nil
 }
 
 func writeResourcesToDirectory(dir string, resources repository.PackageResources) error {

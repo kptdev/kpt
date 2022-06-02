@@ -203,6 +203,10 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 	return *kf.Upstream, *kf.UpstreamLock, nil
 }
 
+func (p *gitPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	return p.findParent()
+}
+
 func (p *gitPackageRevision) findParent() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	repo, err := p.parent.getRepo()
 	if err != nil {

@@ -59,6 +59,10 @@ type PackageRevision interface {
 
 	// GetUpstreamLock returns the kpt lock information.
 	GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
+
+	// GetLock returns the current revision's lock information.
+	// This will be the upstream info for downstream revisions.
+	GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
 type PackageDraft interface {
