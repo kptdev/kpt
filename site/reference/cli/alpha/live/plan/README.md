@@ -10,9 +10,11 @@ description: >
     Output a plan for the changes that will happen when applying a package.
 -->
 
+?> This feature is still in alpha, so the UX and the output format is subject to change.
+
 `plan` does a dry-run of applying a package to the cluster. It outputs the results
 in combination with a diff for every resource that will be updated, which gives an
-overview of the impact of apply a package.
+overview of the impact of applying a package.
 
 Note that `plan` does only works reliably with server-side apply.
 
