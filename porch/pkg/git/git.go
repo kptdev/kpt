@@ -790,7 +790,7 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 	return nil
 }
 
-func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath string) ([]v1alpha1.Task, error) {
+func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision string) ([]v1alpha1.Task, error) {
 	var logOptions = git.LogOptions{
 		From:  startCommit.Hash,
 		Order: git.LogOrderCommitterTime,
@@ -824,8 +824,17 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		}
 
 		for _, gitAnnotation := range gitAnnotations {
-			if gitAnnotation.Task != nil && gitAnnotation.PackagePath == packagePath {
-				tasks = append(tasks, *gitAnnotation.Task)
+			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+				if gitAnnotation.Task != nil {
+					tasks = append(tasks, *gitAnnotation.Task)
+				}
+				// Iterate in reverse order here. The reason is that tasks in
+				// separate commits end up in reverse order while we include
+				// multiple tasks in a single commit in the actual order.
+				for i := len(gitAnnotation.Tasks) - 1; i >= 0; i-- {
+					t := gitAnnotation.Tasks[i]
+					tasks = append(tasks, *t)
+				}
 			}
 		}
 

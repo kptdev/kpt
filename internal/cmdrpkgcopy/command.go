@@ -26,9 +26,8 @@ import (
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -98,6 +97,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.E(op, err)
 	}
+
 	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -116,23 +116,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error) {
-	newScheme := runtime.NewScheme()
-	if err := porchapi.SchemeBuilder.AddToScheme(newScheme); err != nil {
-		return nil, err
-	}
-	restClient, err := porch.CreateRESTClient(r.cfg)
-	if err != nil {
-		return nil, err
-	}
-
 	packageRevision := porchapi.PackageRevision{}
-	err = restClient.
-		Get().
-		Namespace(*r.cfg.Namespace).
-		Resource("packagerevisions").
-		Name(r.copy.Source.Name).
-		Do(r.ctx).
-		Into(&packageRevision)
+	err := r.client.Get(r.ctx, types.NamespacedName{
+		Name:      r.copy.Source.Name,
+		Namespace: *r.cfg.Namespace,
+	}, &packageRevision)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +130,6 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 		r.revision, err = r.defaultPackageRevision(
 			packageRevision.Spec.PackageName,
 			packageRevision.Spec.RepositoryName,
-			restClient,
 		)
 		if err != nil {
 			return nil, err
@@ -154,22 +141,17 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 		Revision:       r.revision,
 		RepositoryName: packageRevision.Spec.RepositoryName,
 	}
-	spec.Tasks = []porchapi.Task{{Type: porchapi.TaskTypeEdit, Edit: &r.copy}}
+	spec.Tasks = packageRevision.Spec.Tasks
 	return spec, nil
 }
 
 // defaultPackageRevision attempts to return a default package revision number
 // of "latest + 1" given a package name, repository, and namespace. It only
 // understands revisions following `v[0-9]+` formats.
-func (r *runner) defaultPackageRevision(packageName, repository string, restClient rest.Interface) (string, error) {
+func (r *runner) defaultPackageRevision(packageName, repository string) (string, error) {
 	// get all package revisions
 	packageRevisionList := porchapi.PackageRevisionList{}
-	err := restClient.
-		Get().
-		Namespace(*r.cfg.Namespace).
-		Resource("packagerevisions").
-		Do(r.ctx).
-		Into(&packageRevisionList)
+	err := r.client.List(r.ctx, &packageRevisionList, client.InNamespace(*r.cfg.Namespace))
 	if err != nil {
 		return "", err
 	}

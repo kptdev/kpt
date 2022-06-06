@@ -142,10 +142,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Render package after creation.
-	mutations = append(mutations, &renderPackageMutation{
-		renderer: cad.renderer,
-		runtime:  cad.runtime,
-	})
+	mutations = cad.conditionalAddRender(mutations)
 
 	baseResources := repository.PackageResources{}
 	if err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
@@ -201,10 +198,19 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		if task.Eval == nil {
 			return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
 		}
-		return &evalFunctionMutation{
-			runtime: cad.runtime,
-			task:    task,
-		}, nil
+		// TODO: We should find a different way to do this. Probably a separate
+		// task for render.
+		if task.Eval.Image == "render" {
+			return &renderPackageMutation{
+				renderer: cad.renderer,
+				runtime:  cad.runtime,
+			}, nil
+		} else {
+			return &evalFunctionMutation{
+				runtime: cad.runtime,
+				task:    task,
+			}, nil
+		}
 
 	default:
 		return nil, fmt.Errorf("task of type %q not supported", task.Type)
@@ -274,12 +280,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Re-render if we are making changes.
-	if len(mutations) > 0 {
-		mutations = append(mutations, &renderPackageMutation{
-			renderer: cad.renderer,
-			runtime:  cad.runtime,
-		})
-	}
+	mutations = cad.conditionalAddRender(mutations)
 
 	draft, err := repo.UpdatePackage(ctx, oldPackage)
 	if err != nil {
@@ -308,6 +309,25 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 
 	// Updates are done.
 	return draft.Close(ctx)
+}
+
+// conditionalAddRender adds a render mutation to the end of the mutations slice if the last
+// entry is not already a render mutation.
+func (cad *cadEngine) conditionalAddRender(mutations []mutation) []mutation {
+	if len(mutations) == 0 {
+		return mutations
+	}
+
+	lastMutation := mutations[len(mutations)-1]
+	_, isRender := lastMutation.(*renderPackageMutation)
+	if isRender {
+		return mutations
+	}
+
+	return append(mutations, &renderPackageMutation{
+		renderer: cad.renderer,
+		runtime:  cad.runtime,
+	})
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {

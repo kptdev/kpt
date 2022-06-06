@@ -69,7 +69,8 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 
 	annotation := &gitAnnotation{
 		PackagePath: d.path,
-		Task:        change,
+		Revision:    d.revision,
+		Tasks:       []*v1alpha1.Task{change},
 	}
 	message := "Intermediate commit"
 	if change != nil {
@@ -229,9 +230,23 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
-	message := fmt.Sprintf("Approve %s", packagePath)
 
-	// TODO: Should we annotate this in some way?  Should we include the tasks?
+	// Add the tasks to the commit message.
+	var tasks []*v1alpha1.Task
+	for i := range d.tasks {
+		t := d.tasks[i]
+		tasks = append(tasks, &t)
+	}
+	annotation := &gitAnnotation{
+		PackagePath: d.path,
+		Revision:    d.revision,
+		Tasks:       tasks,
+	}
+	message := fmt.Sprintf("Approve %s", packagePath)
+	message, err = AnnotateCommitMessage(message, annotation)
+	if err != nil {
+		return zero, zero, nil, err
+	}
 
 	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
