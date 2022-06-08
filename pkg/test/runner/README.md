@@ -22,6 +22,7 @@ in `.expected`:
     used to run the test. Default: `render`.
   - `exitCode`: The expected exit code for the command. Default: 0.
   - `skip`: Runner will skip the test if `skip` is set to true. Default: false.
+  - `skipIfLocal`: Runner will skip the test if the env var IN_CI is "false" or not set. Default: false.
   - `sequential`: This test case should be run sequentially. Default: false.
   - `runtimes`: If the current runtime doesn't match any of the desired runtimes
     here, the test case will be skipped. Valid values are `docker` and `podman`.

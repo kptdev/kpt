@@ -85,6 +85,9 @@ type TestCaseConfig struct {
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 
+	// SkipIfLocal means should this test case be skipped if the env var IN_CI is "false" or not set. Default: false
+	SkipIfLocal bool `json:"skipIfLocal,omitempty" yaml:"skipIfLocal,omitempty"`
+
 	// Debug means will the debug behavior be enabled. Default: false
 	// Debug behavior:
 	//  1. Keep the temporary directory used to run the test cases

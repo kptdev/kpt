@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -499,7 +500,19 @@ func (r *Runner) compareOutput(stdout string, stderr string) error {
 }
 
 func (r *Runner) Skip() bool {
-	return r.testCase.Config.Skip
+	if r.testCase.Config.Skip {
+		return true
+	}
+	if r.testCase.Config.SkipIfLocal {
+		// default to the value of env var IS_CI
+		var inCI bool
+		if value, exists := os.LookupEnv("IN_CI"); exists {
+			inCI, _ = strconv.ParseBool(strings.TrimSpace(value))
+		}
+		// if IN_CI is false, we are running locally, and we should skip the test.
+		return !inCI
+	}
+	return false
 }
 
 func readActualResults(resultsPath string) (string, error) {

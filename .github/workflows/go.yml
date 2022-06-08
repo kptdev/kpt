@@ -46,7 +46,7 @@ jobs:
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
-          make all
-          make test-docker
+          IN_CI=true make all
+          IN_CI=true make test-docker
         env:
           KPT_FN_RUNTIME: ${{ matrix.runtime }}
