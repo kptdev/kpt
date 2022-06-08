@@ -84,7 +84,7 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
-	cmd.Flags().StringVar(&r.RGFileName, "rg-filename", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
+	cmd.Flags().StringVar(&r.RGFileName, "rg-file", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
 	return r
 }
 
@@ -109,7 +109,7 @@ type Runner struct {
 func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 	dir := filepath.Dir(filepath.Clean(r.RGFileName))
 	if dir != "." {
-		return fmt.Errorf("rg-filename must be a valid filename")
+		return fmt.Errorf("rg-file must be a valid filename")
 	}
 	return nil
 }

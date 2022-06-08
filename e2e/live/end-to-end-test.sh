@@ -1607,12 +1607,12 @@ waitForDefaultServiceAccount
 # Setup: kpt live init with custom resourcegroup file
 # Applies resources in "test-case-1c" directory
 echo "Testing kpt live init with custom ResourceGroup file"
-echo "kpt live init --rg-filename=custom-rg.yaml e2e/live/testdata/test-case-1c"
-${BIN_DIR}/kpt live init --rg-filename=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c"
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...success"
 printResult
 # Re-running live init should fail as ResourceGroup file already exists
-${BIN_DIR}/kpt live init --rg-filename=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...failed"
 printResult
 
