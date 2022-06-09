@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
@@ -73,10 +74,21 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		r.Image,
 		"--help",
 	}
-	cmd := exec.Command("docker", dockerRunArgs...)
+	// If the env var is empty, stringToContainerRuntime defaults it to docker.
+	runtime, err := fnruntime.StringToContainerRuntime(os.Getenv(fnruntime.ContainerRuntimeEnv))
+	if err != nil {
+		return err
+	}
+
+	err = fnruntime.ContainerRuntimeAvailable(runtime)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(runtime.GetBin(), dockerRunArgs...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
-	err := cmd.Run()
+	err = cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
 		pr.Printf(errout.String())
