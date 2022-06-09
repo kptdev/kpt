@@ -72,6 +72,7 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 
 	cmd := &cobra.Command{
 		Use:     "init [PKG_PATH]",
+		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Short:   livedocs.InitShort,
 		Long:    livedocs.InitShort + "\n" + livedocs.InitLong,
@@ -80,9 +81,10 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	r.Command = cmd
 
 	cmd.Flags().StringVar(&r.Name, "name", "", "Inventory object name")
-	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile")
+	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
+	cmd.Flags().StringVar(&r.RGFileName, "rg-file", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
 	return r
 }
 
@@ -99,10 +101,17 @@ type Runner struct {
 	ioStreams   genericclioptions.IOStreams
 	Force       bool   // Set inventory values even if already set in Kptfile
 	Name        string // Inventory object name
-	namespace   string // Inventory object namespace
-	RGFile      string // resourcegroup object filepath
+	RGFileName  string // resourcegroup object filename
 	InventoryID string // Inventory object unique identifier label
 	Quiet       bool   // Output message during initialization
+}
+
+func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
+	dir := filepath.Dir(filepath.Clean(r.RGFileName))
+	if dir != "." {
+		return fmt.Errorf("rg-file must be a valid filename")
+	}
+	return nil
 }
 
 func (r *Runner) runE(_ *cobra.Command, args []string) error {
@@ -137,7 +146,7 @@ func (r *Runner) runE(_ *cobra.Command, args []string) error {
 		Quiet:       r.Quiet,
 		Name:        r.Name,
 		InventoryID: r.InventoryID,
-		RGFileName:  r.RGFile,
+		RGFileName:  r.RGFileName,
 		Force:       r.Force,
 	}).Run(r.ctx)
 	if err != nil {
@@ -162,74 +171,7 @@ type ConfigureInventoryInfo struct {
 
 // Run updates the inventory info in the package given by the Path.
 func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
-	// Use ResourceGroup file for inventory logic if the resourcegroup file
-	// is set directly. For this feature gate, the resourcegroup must be directly set
-	// through our tests since we are not exposing this through the command surface as a
-	// flag, currently. When we promote this, the resourcegroup filename can be empty and
-	// the default filename value will be inferred/used.
-	if c.RGFileName != "" {
-		return c.runLiveInitWithRGFile(ctx)
-	}
-
 	const op errors.Op = "cmdliveinit.Run"
-	pr := printer.FromContextOrDie(ctx)
-
-	var name, namespace, inventoryID string
-
-	ns, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
-	}
-	namespace = strings.TrimSpace(ns)
-	if !c.Quiet {
-		pr.Printf("initializing Kptfile inventory info (namespace: %s)...", namespace)
-	}
-
-	// Autogenerate the name if it is not provided through the flag.
-	if c.Name == "" {
-		randomSuffix := common.RandomStr()
-		name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
-	} else {
-		name = c.Name
-	}
-	// Generate the inventory id if one is not specified through a flag.
-	if c.InventoryID == "" {
-		id, err := generateID(namespace, name, time.Now())
-		if err != nil {
-			return errors.E(op, c.Pkg.UniquePath, err)
-		}
-		inventoryID = id
-	} else {
-		inventoryID = c.InventoryID
-	}
-	// Finally, update these values in the Inventory section of the Kptfile.
-	err = updateKptfile(c.Pkg, &kptfilev1.Inventory{
-		Namespace:   namespace,
-		Name:        name,
-		InventoryID: inventoryID,
-	}, c.Force)
-	if !c.Quiet {
-		if err == nil {
-			pr.Printf("success\n")
-		} else {
-			pr.Printf("failed\n")
-		}
-	}
-	if err != nil {
-		return errors.E(op, c.Pkg.UniquePath, err)
-	}
-	// add metrics annotation to package resources to track the usage as the resources
-	// will be applied using kpt live group
-	at := attribution.Attributor{PackagePaths: []string{c.Pkg.UniquePath.String()}, CmdGroup: "live"}
-	at.Process()
-	return nil
-}
-
-// func runLiveInitWithRGFile is a modified version of ConfigureInventoryInfo.Run that stores the
-// package inventory information in a separate resourcegroup file. The logic for this is branched into
-// a separate function to enable feature gating.
-func (c *ConfigureInventoryInfo) runLiveInitWithRGFile(ctx context.Context) error {
-	const op errors.Op = "cmdliveinit.runLiveInitWithRGFile"
 	pr := printer.FromContextOrDie(ctx)
 
 	namespace, err := config.FindNamespace(c.Factory.ToRawKubeConfigLoader(), c.Pkg.UniquePath.String())
@@ -238,13 +180,21 @@ func (c *ConfigureInventoryInfo) runLiveInitWithRGFile(ctx context.Context) erro
 	}
 	namespace = strings.TrimSpace(namespace)
 	if !c.Quiet {
-		pr.Printf("initializing ResourceGroup inventory info (namespace: %s)...", namespace)
+		pr.Printf("initializing %q data (namespace: %s)...", c.RGFileName, namespace)
 	}
 
 	// Autogenerate the name if it is not provided through the flag.
 	if c.Name == "" {
 		randomSuffix := common.RandomStr()
 		c.Name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
+	}
+
+	// Autogenerate the inventory ID if not provided through the flag.
+	if c.InventoryID == "" {
+		c.InventoryID, err = generateID(namespace, c.Name, time.Now())
+		if err != nil {
+			return errors.E(op, c.Pkg.UniquePath, err)
+		}
 	}
 
 	// Finally, create a ResourceGroup containing the inventory information.
@@ -280,30 +230,34 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	}
 
 	// Read the Kptfile to ensure that inventory information is not in Kptfile either.
+	// Ignore error if Kptfile not found as we now support live init without a Kptfile since
+	// inventory information is stored in a ResourceGroup object.
 	kf, err := p.Kptfile()
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return errors.E(op, p.UniquePath, err)
 	}
 	// Validate the inventory values don't exist in Kptfile.
-	isEmpty := kptfileInventoryEmpty(kf.Inventory)
-	if !isEmpty && !force {
-		return errors.E(op, p.UniquePath, &InvInKfExistsError{})
+	isEmpty := true
+	if kf != nil {
+		isEmpty = kptfileInventoryEmpty(kf.Inventory)
+		if !isEmpty && !force {
+			return errors.E(op, p.UniquePath, &InvInKfExistsError{})
+		}
+
+		// Set the Kptfile inventory to be nil if we force write to resourcegroup instead.
+		kf.Inventory = nil
 	}
-	// Set the Kptfile inventory to be nil if we force write to resourcegroup instead.
-	kf.Inventory = nil
 
 	// Validate the inventory values don't already exist in Resourcegroup.
 	if rg != nil && !force {
-		return errors.E(op, p.UniquePath, &InvExistsError{})
+		return errors.E(op, p.UniquePath, &InvInRGExistsError{})
 	}
 	// Initialize new resourcegroup object, as rg should have been nil.
 	rg = &rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
 	// // Finally, set the inventory parameters in the ResourceGroup object and write it.
 	rg.Name = inv.Name
 	rg.Namespace = inv.Namespace
-	if inv.InventoryID != "" {
-		rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
-	}
+	rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
 	if err := writeRGFile(p.UniquePath.String(), rg, filename); err != nil {
 		return errors.E(op, p.UniquePath, err)
 	}
@@ -334,27 +288,6 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 	err = ioutil.WriteFile(filepath.Join(dir, filename), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
-	}
-	return nil
-}
-
-// Run fills in the inventory object values into the Kptfile.
-func updateKptfile(p *pkg.Pkg, inv *kptfilev1.Inventory, force bool) error {
-	const op errors.Op = "cmdliveinit.updateKptfile"
-	// Read the Kptfile io io.dir
-	kf, err := p.Kptfile()
-	if err != nil {
-		return errors.E(op, p.UniquePath, err)
-	}
-	// Validate the inventory values don't already exist
-	isEmpty := kptfileInventoryEmpty(kf.Inventory)
-	if !isEmpty && !force {
-		return errors.E(op, p.UniquePath, &InvExistsError{})
-	}
-	// Finally, set the inventory parameters in the Kptfile and write it.
-	kf.Inventory = inv
-	if err := kptfileutil.WriteFile(p.UniquePath.String(), kf); err != nil {
-		return errors.E(op, p.UniquePath, err)
 	}
 	return nil
 }

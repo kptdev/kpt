@@ -2,7 +2,3 @@ apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: crd-and-cr
-inventory:
-  namespace: crd-and-cr
-  name: crd-and-cr
-  inventoryID: crd-and-cr

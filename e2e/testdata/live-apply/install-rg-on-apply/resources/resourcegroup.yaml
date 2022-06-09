@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: install-rg-on-apply
+  namespace: install-rg-on-apply
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: install-rg-on-apply

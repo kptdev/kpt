@@ -715,8 +715,9 @@ reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
 EOF
 printResult
 
-# Cleanup by resetting Kptfile
+# Cleanup by resetting Kptfile and deleting resourcegroup file
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
+rm e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml
 
 ###########################################################
 #  Tests operations with ResourceGroup inventory CRD
@@ -755,33 +756,39 @@ printResult
 echo "Testing init for Kptfile/ResourceGroup"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
 ${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
-assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
+assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile 2>&1 | tee $OUTPUT_DIR/status
-assertContains "inventory:"
+assertNotContains "inventory:"
+assertNotContains "namespace: rg-test-namespace"
+assertNotContains "name: inventory-"
+assertNotContains "inventoryID:"
+# ResourceGroup file should contain inventory information
+cat e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
+assertContains "kind: ResourceGroup"
 assertContains "namespace: rg-test-namespace"
 assertContains "name: inventory-"
-assertContains "inventoryID:"
 printResult
 
 echo "Testing init Kptfile/ResourceGroup already initialized"
 echo "kpt live init e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
-assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...failed"
-assertContains "Error: Inventory information has already been added to the package Kptfile."
+assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...failed"
+assertContains "Error: Inventory information has already been added to the package ResourceGroup object."
 printResult
 
 echo "Testing init force Kptfile/ResourceGroup"
 echo "kpt live init --force e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init --force e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
-assertContains "initializing Kptfile inventory info (namespace: rg-test-namespace)...success"
+assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...success"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
 echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
-assertNotContains "initializing Kptfile inventory info"
+assertNotContains "initializing resourcegroup"
 printResult
 
 # Test: Basic kpt live apply dry-run
@@ -917,6 +924,8 @@ rm -rf link-to-rg-test-case-1a
 echo "[ResourceGroup] Testing basic apply dry-run"
 cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b/
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b"
+cp -f e2e/live/testdata/rg-test-case-1a/Kptfile e2e/live/testdata/rg-test-case-1b
+cp -f e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml e2e/live/testdata/rg-test-case-1b
 ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertKptLiveApplyEquals << EOF
 Dry-run strategy: client
@@ -1124,10 +1133,10 @@ printResult
 
 # Test: kpt live apply continue-on-error
 echo "[ResourceGroup] Testing continue-on-error"
-cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/
-echo "kpt live init e2e/live/testdata/continue-on-error"
+echo "kpt live apply e2e/live/testdata/continue-on-error"
+cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error
 ${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
-diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/Kptfile 2>&1 | tee $OUTPUT_DIR/status
+diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace: continue-err-namespace"
 printResult
 
@@ -1257,7 +1266,7 @@ echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a"
 ${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
-assertContains "updating Kptfile inventory values...success"
+assertContains "creating ResourceGroup object file...success"
 assertContains "retrieve ConfigMap inventory objs...success (4 inventory objects)"
 assertContains "migrate inventory to ResourceGroup...success"
 assertContains "deleting old ConfigMap inventory object...success"
@@ -1277,7 +1286,7 @@ echo "kpt live migrate e2e/live/testdata/migrate-case-1a"
 ${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "ensuring ResourceGroup CRD exists in cluster...success"
 assertContains "retrieve the current ConfigMap inventory...success (inventory-id:"
-assertContains "updating Kptfile inventory values...success"
+assertContains "creating ResourceGroup object file...success"
 assertContains "retrieve ConfigMap inventory objs...success (4 inventory objects)"
 assertContains "migrate inventory to ResourceGroup...success"
 assertContains "deleting old ConfigMap inventory object...success"
@@ -1304,6 +1313,8 @@ printResult
 echo "Testing apply/prune after migrate"
 cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b/
 echo "kpt live apply e2e/live/testdata/migrate-case-1b"
+cp -f e2e/live/testdata/migrate-case-1a/Kptfile e2e/live/testdata/migrate-case-1b
+cp -f e2e/live/testdata/migrate-case-1a/resourcegroup.yaml e2e/live/testdata/migrate-case-1b
 ${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-1b 2>&1 | tee $OUTPUT_DIR/status
 assertKptLiveApplyEquals << EOF
 inventory update started
@@ -1460,6 +1471,225 @@ wait 2
 echo "kpt live apply e2e/live/testdata/rbac-error-step-3"
 ${BIN_DIR}/kpt live apply e2e/live/testdata/rbac-error-step-3 2>&1 | tee $OUTPUT_DIR/status
 assertContains "error: Type ResourceGroup CRD needs update."
+printResult
+
+###########################################################
+#  Test Migrate from Kptfile inventory to ResourceGroup
+###########################################################
+
+createTestSuite
+waitForDefaultServiceAccount
+
+# Setup: kpt live apply ConfigMap inventory
+# Applies resources in "migrate-case-2a" directory.
+echo "Initialize Kptfile with inventory for migration to ResourceGroup tests"
+echo "kpt live init e2e/live/testdata/migrate-case-2a"
+${BIN_DIR}/kpt1.0.0 live init e2e/live/testdata/migrate-case-2a 2>&1 | tee $OUTPUT_DIR/status
+assertContains "initializing Kptfile inventory info (namespace: test-namespace)...success"
+printResult
+
+echo "Testing kpt live apply with Kptfile inventory"
+echo "kpt live apply e2e/live/testdata/migrate-case-2a"
+${BIN_DIR}/kpt1.0.0 live apply e2e/live/testdata/migrate-case-2a 2>&1 | tee $OUTPUT_DIR/status
+assertContains "installing inventory ResourceGroup CRD"
+assertContains "namespace/test-namespace unchanged"
+assertContains "pod/pod-a created"
+assertContains "pod/pod-b created"
+assertContains "pod/pod-c created"
+assertContains "4 resource(s) applied. 3 created, 1 unchanged, 0 configured, 0 failed"
+# Validate resources in the cluster
+assertRGInventory "test-namespace" "4"
+assertPodExists "pod-a" "test-namespace"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+printResult
+
+# Test: kpt live migrate from Kptfile inventory to ResourceGroup inventory
+# Migrates resources in "migrate-case-2" directory.
+echo "Testing migrate dry-run from Kptfile to ResourceGroup inventory"
+echo "kpt live migrate --dry-run e2e/live/testdata/migrate-case-2a"
+# Run migrate dry-run and verify that the migrate did not actually happen
+${BIN_DIR}/kpt live migrate --dry-run e2e/live/testdata/migrate-case-2a 2>&1 | tee $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
+assertContains "reading existing Kptfile...success"
+assertContains "inventory migration...success"
+printResult
+# Ensure resourcegroup.yaml was not created
+ls e2e/live/testdata/migrate-case-2a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
+assertContains "ls: cannot access 'e2e/live/testdata/migrate-case-2a/resourcegroup.yaml': No such file or directory"
+printResult
+
+# Now actually run the migrate and verify the new ResourceGroup file exists
+echo "Testing migrate from Kptfile to ResourceGroup inventory"
+echo "kpt live migrate e2e/live/testdata/migrate-case-2a"
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-2a 2>&1 | tee $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
+assertContains "reading existing Kptfile...success"
+assertContains "inventory migration...success"
+# Validate resources in the cluster
+assertPodExists "pod-a" "test-namespace"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+assertRGInventory "test-namespace"
+# ResourceGroup file should contain inventory information
+cat e2e/live/testdata/migrate-case-2a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
+assertContains "kind: ResourceGroup"
+assertContains "namespace: test-namespace"
+assertContains "name: inventory-"
+printResult
+
+# Run it again, and validate the output
+${BIN_DIR}/kpt live migrate e2e/live/testdata/migrate-case-2a 2>&1 | tee $OUTPUT_DIR/status
+assertContains "ensuring ResourceGroup CRD exists in cluster...success"
+assertContains "retrieve the current ConfigMap inventory...no ConfigMap inventory...completed"
+assertContains "reading existing Kptfile...inventory migration...success"
+printResult
+
+# Test: kpt live apply/prune
+# "migrate-case-2b" directory is "migrate-case-2a" directory with "pod-a" removed and "pod-d" added.
+echo "Testing apply/prune after migrate"
+echo "kpt live apply e2e/live/testdata/migrate-case-2b"
+cp -f e2e/live/testdata/migrate-case-2a/Kptfile e2e/live/testdata/migrate-case-2b
+cp -f e2e/live/testdata/migrate-case-2a/resourcegroup.yaml e2e/live/testdata/migrate-case-2b
+${BIN_DIR}/kpt live apply e2e/live/testdata/migrate-case-2b 2>&1 | tee $OUTPUT_DIR/status
+assertKptLiveApplyEquals << EOF
+installing inventory ResourceGroup CRD.
+inventory update started
+inventory update finished
+apply phase started
+namespace/test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-b apply successful
+pod/pod-c apply successful
+pod/pod-d apply successful
+apply phase finished
+reconcile phase started
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+pod/pod-d reconcile pending
+pod/pod-d reconcile successful
+reconcile phase finished
+prune phase started
+pod/pod-a prune successful
+prune phase finished
+reconcile phase started
+pod/pod-a reconcile pending
+pod/pod-a reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+prune result: 1 attempted, 1 successful, 0 skipped, 0 failed
+reconcile result: 5 attempted, 5 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+# Validate resources in the cluster
+# ResourceGroup inventory with four inventory items.
+assertRGInventory "test-namespace" "4"
+assertPodNotExists "pod-a" "test-namespace"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+assertPodExists "pod-d" "test-namespace"
+printResult
+
+###########################################################
+#  Test --rg-file flag on live init commands
+###########################################################
+
+createTestSuite
+waitForDefaultServiceAccount
+
+# Setup: kpt live init with custom resourcegroup file
+# Applies resources in "test-case-1c" directory
+echo "Testing kpt live init with custom ResourceGroup file"
+echo "kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c"
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...success"
+printResult
+# Re-running live init should fail as ResourceGroup file already exists
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...failed"
+printResult
+
+# Run: kpt live apply with custom resourcegroup file
+echo "Testing kpt live apply with custom ResourceGroup filename"
+echo "kpt live apply e2e/live/testdata/test-case-1c"
+${BIN_DIR}/kpt live apply e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+cat $OUTPUT_DIR/status
+assertKptLiveApplyEquals << EOF
+installing inventory ResourceGroup CRD.
+inventory update started
+inventory update finished
+apply phase started
+namespace/test-namespace apply successful
+apply phase finished
+reconcile phase started
+namespace/test-namespace reconcile successful
+reconcile phase finished
+apply phase started
+pod/pod-a apply successful
+pod/pod-b apply successful
+pod/pod-c apply successful
+apply phase finished
+reconcile phase started
+pod/pod-a reconcile pending
+pod/pod-b reconcile pending
+pod/pod-c reconcile pending
+pod/pod-a reconcile successful
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+apply result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+# Validate resources in the cluster
+# ResourceGroup inventory with four inventory items.
+assertRGInventory "test-namespace" "4"
+assertPodExists "pod-a" "test-namespace"
+assertPodExists "pod-b" "test-namespace"
+assertPodExists "pod-c" "test-namespace"
+printResult
+
+echo "Testing live destroy with custom ResourceGroup filename"
+echo "kpt live destroy --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c"
+${BIN_DIR}/kpt live destroy e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+assertKptLiveApplyEquals << EOF
+delete phase started
+pod/pod-c delete successful
+pod/pod-b delete successful
+pod/pod-a delete successful
+delete phase finished
+reconcile phase started
+pod/pod-c reconcile pending
+pod/pod-b reconcile pending
+pod/pod-a reconcile pending
+pod/pod-b reconcile successful
+pod/pod-c reconcile successful
+pod/pod-a reconcile successful
+reconcile phase finished
+delete phase started
+namespace/test-namespace delete successful
+delete phase finished
+reconcile phase started
+namespace/test-namespace reconcile pending
+namespace/test-namespace reconcile successful
+reconcile phase finished
+inventory update started
+inventory update finished
+delete result: 4 attempted, 4 successful, 0 skipped, 0 failed
+reconcile result: 4 attempted, 4 successful, 0 skipped, 0 failed, 0 timed out
+EOF
+# Validate resources DESTROYED in the cluster
+assertPodNotExists "pod-a" "test-namespace"
+assertPodNotExists "pod-b" "test-namespace"
+assertPodNotExists "pod-c" "test-namespace"
 printResult
 
 # Clean-up the k8s cluster

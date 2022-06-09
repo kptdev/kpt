@@ -115,28 +115,6 @@ func TestCmd_generateID(t *testing.T) {
 	}
 }
 
-func TestCmd_Run_NoKptfile(t *testing.T) {
-	// Set up fake test factory
-	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
-	defer tf.Cleanup()
-	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
-
-	w, clean := testutil.SetupWorkspace(t)
-	defer clean()
-
-	revert := testutil.Chdir(t, w.WorkspaceDirectory)
-	defer revert()
-
-	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
-	runner.Command.SetArgs([]string{})
-	err := runner.Command.Execute()
-
-	if !assert.Error(t, err) {
-		t.FailNow()
-	}
-	assert.Contains(t, err.Error(), "error reading Kptfile at")
-}
-
 func TestCmd_Run(t *testing.T) {
 	testCases := map[string]struct {
 		kptfile           string
@@ -153,17 +131,18 @@ func TestCmd_Run(t *testing.T) {
 		"Fields are defaulted if not provided": {
 			kptfile:         kptFile,
 			name:            "",
+			rgfilename:      "resourcegroup.yaml",
 			namespace:       "testns",
 			inventoryID:     "",
 			expectAutoGenID: true,
 			expectedInventory: kptfilev1.Inventory{
-				Namespace:   "testns",
-				Name:        "inventory-*",
-				InventoryID: "33ee4887f9638ef63efe71a9a9a632d3e9e2488e-*",
+				Namespace: "testns",
+				Name:      "inventory-*",
 			},
 		},
 		"Provided values are used": {
 			kptfile:     kptFile,
+			rgfilename:  "custom-rg.yaml",
 			name:        "my-pkg",
 			namespace:   "my-ns",
 			inventoryID: "my-inv-id",
@@ -188,6 +167,7 @@ func TestCmd_Run(t *testing.T) {
 		"Kptfile with inventory already set is error": {
 			kptfile:          kptFileWithInventory,
 			name:             inventoryName,
+			rgfilename:       "custom-rg.yaml",
 			namespace:        inventoryNamespace,
 			inventoryID:      inventoryID,
 			force:            false,
@@ -216,6 +196,7 @@ func TestCmd_Run(t *testing.T) {
 		"The force flag allows changing inventory information even if already set in Kptfile": {
 			kptfile:     kptFileWithInventory,
 			name:        inventoryName,
+			rgfilename:  "resourcegroup.yaml",
 			namespace:   inventoryNamespace,
 			inventoryID: inventoryID,
 			force:       true,
@@ -269,8 +250,7 @@ func TestCmd_Run(t *testing.T) {
 			defer revert()
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
-			runner.namespace = tc.namespace
-			runner.RGFile = tc.rgfilename
+			runner.RGFileName = tc.rgfilename
 			args := []string{
 				"--name", tc.name,
 				"--inventory-id", tc.inventoryID,
@@ -323,7 +303,6 @@ func TestCmd_Run(t *testing.T) {
 			expectedInv := tc.expectedInventory
 			assertInventoryName(t, expectedInv.Name, actualInv.Name)
 			assert.Equal(t, expectedInv.Namespace, actualInv.Namespace)
-
 			if tc.expectAutoGenID {
 				assertGenInvID(t, actualInv.Name, actualInv.Namespace, actualInv.InventoryID)
 			} else {
