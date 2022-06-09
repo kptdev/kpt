@@ -101,18 +101,27 @@ type ContainerFn struct {
 	FnResult *fnresult.Result
 }
 
+func (r ContainerRuntime) GetBin() string {
+	switch r {
+	case Podman:
+		return podmanBin
+	default:
+		return dockerBin
+	}
+}
+
 // Run runs the container function using docker runtime.
 // It reads the input from the given reader and writes the output
 // to the provided writer.
 func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	// If the env var is empty, stringToContainerRuntime defaults it to docker.
-	runtime, err := stringToContainerRuntime(os.Getenv(ContainerRuntimeEnv))
+	runtime, err := StringToContainerRuntime(os.Getenv(ContainerRuntimeEnv))
 	if err != nil {
 		return err
 	}
 
 	checkContainerRuntimeOnce.Do(func() {
-		err = containerRuntimeAvailable(runtime)
+		err = ContainerRuntimeAvailable(runtime)
 	})
 	if err != nil {
 		return err
@@ -339,7 +348,7 @@ func isPodmanCLIoutput(s string) bool {
 	return false
 }
 
-func stringToContainerRuntime(v string) (ContainerRuntime, error) {
+func StringToContainerRuntime(v string) (ContainerRuntime, error) {
 	switch strings.ToLower(v) {
 	case string(Docker):
 		return Docker, nil
@@ -352,7 +361,7 @@ func stringToContainerRuntime(v string) (ContainerRuntime, error) {
 	}
 }
 
-func containerRuntimeAvailable(runtime ContainerRuntime) error {
+func ContainerRuntimeAvailable(runtime ContainerRuntime) error {
 	switch runtime {
 	case Docker:
 		return dockerCmdAvailable()
