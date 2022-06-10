@@ -24,6 +24,8 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sts/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/version"
 	genericapiserver "k8s.io/apiserver/pkg/server"
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -107,16 +110,14 @@ func (cfg *Config) Complete() CompletedConfig {
 	return CompletedConfig{&c}
 }
 
-func (c completedConfig) getCoreClient() (client.WithWatch, error) {
-	var restConfig *rest.Config
-
+func (c completedConfig) getRestConfig() (*rest.Config, error) {
 	kubeconfig := c.ExtraConfig.CoreAPIKubeconfigPath
 	if kubeconfig == "" {
 		icc, err := rest.InClusterConfig()
 		if err != nil {
 			return nil, fmt.Errorf("failed to load in-cluster config (specify --kubeconfig if not running in-cluster): %w", err)
 		}
-		restConfig = icc
+		return icc, nil
 	} else {
 		loadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
 		loader := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, &clientcmd.ConfigOverrides{})
@@ -125,7 +126,14 @@ func (c completedConfig) getCoreClient() (client.WithWatch, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to load config %q: %w", kubeconfig, err)
 		}
-		restConfig = cc
+		return cc, nil
+	}
+}
+
+func (c completedConfig) getCoreClient() (client.WithWatch, error) {
+	restConfig, err := c.getRestConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	// set high qps/burst limits since this will effectively limit API server responsiveness
@@ -150,6 +158,19 @@ func (c completedConfig) getCoreClient() (client.WithWatch, error) {
 	return coreClient, nil
 }
 
+func (c completedConfig) getCoreV1Client() (*corev1client.CoreV1Client, error) {
+	restConfig, err := c.getRestConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	corev1Client, err := corev1client.NewForConfig(restConfig)
+	if err != nil {
+		return nil, fmt.Errorf("error building corev1 client: %w", err)
+	}
+	return corev1Client, nil
+}
+
 // New returns a new instance of PorchServer from the given config.
 func (c completedConfig) New() (*PorchServer, error) {
 	genericServer, err := c.GenericConfig.New("porch-apiserver", genericapiserver.NewEmptyDelegate())
@@ -162,7 +183,22 @@ func (c completedConfig) New() (*PorchServer, error) {
 		return nil, fmt.Errorf("failed to build client for core apiserver: %w", err)
 	}
 
-	credentialResolver := porch.NewCredentialResolver(coreClient)
+	coreV1Client, err := c.getCoreV1Client()
+	if err != nil {
+		return nil, err
+	}
+
+	stsClient, err := sts.NewService(context.Background(), option.WithoutAuthentication())
+	if err != nil {
+		return nil, fmt.Errorf("failed to build sts client: %w", err)
+	}
+
+	resolverChain := []porch.Resolver{
+		porch.NewBasicAuthResolver(),
+		porch.NewGcloudWIResolver(coreV1Client, stsClient),
+	}
+
+	credentialResolver := porch.NewCredentialResolver(coreClient, resolverChain)
 	referenceResolver := porch.NewReferenceResolver(coreClient)
 	userInfoProvider := &porch.ApiserverUserInfoProvider{}
 

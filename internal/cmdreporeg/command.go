@@ -58,6 +58,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().BoolVar(&r.deployment, "deployment", false, "Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.")
 	c.Flags().StringVar(&r.username, "repo-basic-username", "", "Username for repository authentication using basic auth.")
 	c.Flags().StringVar(&r.password, "repo-basic-password", "", "Password for repository authentication using basic auth.")
+	c.Flags().BoolVar(&r.workloadIdentity, "repo-workload-identity", false, "Use workload identity for authentication with the repo")
 
 	return r
 }
@@ -73,13 +74,14 @@ type runner struct {
 	Command *cobra.Command
 
 	// Flags
-	directory   string
-	branch      string
-	name        string
-	description string
-	deployment  bool
-	username    string
-	password    string
+	directory        string
+	branch           string
+	name             string
+	description      string
+	deployment       bool
+	username         string
+	password         string
+	workloadIdentity bool
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -131,31 +133,20 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if r.username != "" || r.password != "" {
-		secretName := fmt.Sprintf("%s-auth", r.name)
-		if err := r.client.Create(r.ctx, &coreapi.Secret{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Secret",
-				APIVersion: coreapi.SchemeGroupVersion.Identifier(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      secretName,
-				Namespace: *r.cfg.Namespace,
-			},
-			Data: map[string][]byte{
-				"username": []byte(r.username),
-				"password": []byte(r.password),
-			},
-			Type: coreapi.SecretTypeBasicAuth,
-		}); err != nil {
+	secret, err := r.buildAuthSecret()
+	if err != nil {
+		return err
+	}
+	if secret != nil {
+		if err := r.client.Create(r.ctx, secret); err != nil {
 			return errors.E(op, err)
 		}
 
 		if git != nil {
-			git.SecretRef.Name = secretName
+			git.SecretRef.Name = secret.Name
 		}
 		if oci != nil {
-			oci.SecretRef.Name = secretName
+			oci.SecretRef.Name = secret.Name
 		}
 	}
 
@@ -181,4 +172,52 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (r *runner) buildAuthSecret() (*coreapi.Secret, error) {
+	var basicAuth bool
+	var workloadIdentity bool
+
+	if r.username != "" || r.password != "" {
+		basicAuth = true
+	}
+
+	workloadIdentity = r.workloadIdentity
+
+	if workloadIdentity && basicAuth {
+		return nil, fmt.Errorf("both username/password and workload identity specified")
+	}
+
+	switch {
+	case workloadIdentity:
+		return &coreapi.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: coreapi.SchemeGroupVersion.Identifier(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("%s-auth", r.name),
+				Namespace: *r.cfg.Namespace,
+			},
+			Data: map[string][]byte{},
+			Type: "kpt.dev/workload-identity-auth",
+		}, nil
+	case basicAuth:
+		return &coreapi.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: coreapi.SchemeGroupVersion.Identifier(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      fmt.Sprintf("%s-auth", r.name),
+				Namespace: *r.cfg.Namespace,
+			},
+			Data: map[string][]byte{
+				"username": []byte(r.username),
+				"password": []byte(r.password),
+			},
+			Type: coreapi.SecretTypeBasicAuth,
+		}, nil
+	}
+	return nil, nil
 }
