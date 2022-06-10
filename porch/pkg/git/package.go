@@ -20,8 +20,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -71,6 +73,21 @@ func (p *gitPackageRevision) uid() types.UID {
 func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 	key := p.Key()
 
+	_, lock, _ := p.GetUpstreamLock()
+
+	// TODO: Use kpt definition of UpstreamLock in the package revision status
+	// when https://github.com/GoogleContainerTools/kpt/issues/3297 is complete.
+	// Until then, we have to translate from one type to another.
+	lockCopy := &v1alpha1.UpstreamLock{
+		Type: v1alpha1.OriginType(lock.Type),
+		Git: &v1alpha1.GitLock{
+			Repo:      lock.Git.Repo,
+			Directory: lock.Git.Directory,
+			Commit:    lock.Git.Commit,
+			Ref:       lock.Git.Ref,
+		},
+	}
+
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -93,7 +110,9 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			Lifecycle: p.Lifecycle(),
 			Tasks:     p.tasks,
 		},
-		Status: v1alpha1.PackageRevisionStatus{},
+		Status: v1alpha1.PackageRevisionStatus{
+			UpstreamLock: lockCopy,
+		},
 	}
 }
 
@@ -152,6 +171,29 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 }
 
 func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	resources, err := p.GetResources(context.Background())
+	if err != nil {
+		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock; cannot retrieve resources: %w", err)
+	}
+
+	// get the upstream package URL from the Kptfile
+	var kf *kptfile.KptFile
+	if contents, found := resources.Spec.Resources[kptfile.KptFileName]; found {
+		kf, err = pkg.DecodeKptfile(strings.NewReader(contents))
+		if err != nil {
+			return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot decode Kptfile: %w", err)
+		}
+	}
+
+	if kf.Upstream == nil || kf.UpstreamLock == nil || kf.Upstream.Git == nil {
+		// upstream information is not in Kptfile yet (this can happen when we clone from the upstream for the first time),
+		// so we get it from the parent repo instead.
+		return p.findParent()
+	}
+	return *kf.Upstream, *kf.UpstreamLock, nil
+}
+
+func (p *gitPackageRevision) findParent() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	repo, err := p.parent.getRepo()
 	if err != nil {
 		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock: %w", err)

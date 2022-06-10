@@ -86,6 +86,7 @@ type ParentReference struct {
 
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
+	UpstreamLock *UpstreamLock
 }
 
 type TaskType string
@@ -261,4 +262,38 @@ type Selector struct {
 	Name string `json:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `json:"namespace,omitempty"`
+}
+
+// The following types (UpstreamLock, OriginType, and GitLock) are duplicates from the kpt library.
+// We are repeating them here to avoid cyclic dependencies, but these duplicate type should be removed when
+// https://github.com/GoogleContainerTools/kpt/issues/3297 is resolved.
+
+type OriginType string
+
+// UpstreamLock is a resolved locator for the last fetch of the package.
+type UpstreamLock struct {
+	// Type is the type of origin.
+	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
+
+	// Git is the resolved locator for a package on Git.
+	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+}
+
+// GitLock is the resolved locator for a package on Git.
+type GitLock struct {
+	// Repo is the git repository that was fetched.
+	// e.g. 'https://github.com/kubernetes/examples.git'
+	Repo string `yaml:"repo,omitempty" json:"repo,omitempty"`
+
+	// Directory is the sub directory of the git repository that was fetched.
+	// e.g. 'staging/cockroachdb'
+	Directory string `yaml:"directory,omitempty" json:"directory,omitempty"`
+
+	// Ref can be a Git branch, tag, or a commit SHA-1 that was fetched.
+	// e.g. 'master'
+	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
+
+	// Commit is the SHA-1 for the last fetch of the package.
+	// This is set by kpt for bookkeeping purposes.
+	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
 }

@@ -89,6 +89,11 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("cannot read contents of package %q: %w", ref.Name, err)
 	}
 
+	// If the upstream we cloned from has its own upstream information, we need to clear and replace it
+	if err := kpt.UpdateKptfileUpstream(m.name, resources.Spec.Resources, v1.Upstream{}, v1.UpstreamLock{}); err != nil {
+		return repository.PackageResources{}, fmt.Errorf("failed to clear upstream lock to package %q: %w", ref.Name, err)
+	}
+
 	upstream, lock, err := revision.GetUpstreamLock()
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot determine upstream lock for package %q: %w", ref.Name, err)
@@ -96,7 +101,7 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 
 	// Update Kptfile
 	if err := kpt.UpdateKptfileUpstream(m.name, resources.Spec.Resources, upstream, lock); err != nil {
-		return repository.PackageResources{}, fmt.Errorf("failed to apply upstream lock to pakcage %q: %w", ref.Name, err)
+		return repository.PackageResources{}, fmt.Errorf("failed to apply upstream lock to package %q: %w", ref.Name, err)
 	}
 
 	return repository.PackageResources{
