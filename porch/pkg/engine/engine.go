@@ -266,11 +266,22 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			if newTask.Clone == nil {
 				return nil, fmt.Errorf("clone not set for task of type %q", newTask.Type)
 			}
-			if i != 0 {
-				return nil, fmt.Errorf("clone only supported as first task")
+
+			var isLastCloneTask = true
+			for j := i + 1; j < len(oldObj.Spec.Tasks); j++ {
+				if oldObj.Spec.Tasks[j].Type == api.TaskTypeClone {
+					isLastCloneTask = false
+				}
+			}
+
+			if !isLastCloneTask {
+				return nil, fmt.Errorf("only the last clone task for the revision can be changed")
 			}
 			mutation := &updatePackageMutation{
-				task: newTask,
+				task:              newTask,
+				cad:               cad,
+				referenceResolver: cad.referenceResolver,
+				namespace:         repositoryObj.Namespace,
 			}
 			mutations = append(mutations, mutation)
 
@@ -437,7 +448,10 @@ func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configap
 }
 
 type updatePackageMutation struct {
-	task *api.Task
+	task              *api.Task
+	cad               CaDEngine
+	referenceResolver ReferenceResolver
+	namespace         string
 }
 
 func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
@@ -455,13 +469,30 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		return repository.PackageResources{}, nil, err
 	}
 
-	ref := m.task.Clone.Upstream.Git.Ref
+	var ref string
+	var packageDir string
+	upstream := m.task.Clone.Upstream
+	switch upstream.Type {
+	case api.RepositoryTypeGit:
+		ref = upstream.Git.Ref
+		packageName := filepath.Base(m.task.Clone.Upstream.Git.Directory)
+		packageName = strings.TrimPrefix(packageName, ".git")
+		packageDir = filepath.Join(dir, packageName)
+	case api.RepositoryTypeOCI:
+		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for oci packages")
+	default:
+		revision, err := (&PackageFetcher{
+			cad:               m.cad,
+			referenceResolver: m.referenceResolver,
+		}).FetchRevision(ctx, upstream.UpstreamRef, m.namespace)
+		if err != nil {
+			return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package revisions %s", upstream.UpstreamRef.Name)
+		}
+		revisionKey := revision.Key()
+		ref = fmt.Sprintf("%s/%s", revisionKey.Package, revisionKey.Revision)
+		packageDir = dir
+	}
 
-	// TODO: This is a hack
-	packageName := filepath.Base(m.task.Clone.Upstream.Git.Directory)
-	packageName = strings.TrimPrefix(packageName, ".git")
-
-	packageDir := filepath.Join(dir, packageName)
 	if err := kpt.PkgUpdate(ctx, ref, packageDir, kpt.PkgUpdateOpts{}); err != nil {
 		return repository.PackageResources{}, nil, err
 	}
