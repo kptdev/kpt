@@ -503,13 +503,13 @@ func (r *Runner) Skip() bool {
 	if r.testCase.Config.Skip {
 		return true
 	}
-	if r.testCase.Config.SkipIfLocal {
-		// default to the value of env var IS_CI
+	if r.testCase.Config.SkipLocal {
+		// default to the value of env var CI
 		var inCI bool
-		if value, exists := os.LookupEnv("IN_CI"); exists {
+		if value, exists := os.LookupEnv("CI"); exists {
 			inCI, _ = strconv.ParseBool(strings.TrimSpace(value))
 		}
-		// if IN_CI is false, we are running locally, and we should skip the test.
+		// if CI is false, we are running locally, and we should skip the test.
 		return !inCI
 	}
 	return false
