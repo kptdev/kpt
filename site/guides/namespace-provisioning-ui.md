@@ -3,26 +3,26 @@
 In this guide, we will use the Config as Data UI to:
 
 - Register blueprint and deployment repositories
-- Create a `kpt` package from scratch in blueprint repo
+- Create a `kpt` package from scratch in blueprint repository
 - Create a deployable instance of the `kpt` package
-- Deploy the package in a kubernetes cluster
+- Deploy the package in a Kubernetes cluster
 
 ## Prerequisites
 
 Before we begin, ensure that you are able to access the Config as Data UI. The
-UI is provided as [Backstage](https://backstage.io) plugin and can be accessed
+UI is provided as a [Backstage](https://backstage.io) plugin and can be accessed
 at `[BACKSTAGE_BASE_URL]/config-as-data`.
 
-_If you don't have a UI installed, follow the steps in
+_If you don't have a UI installed, follow the steps in the
 [UI installation guide](guides/porch-ui-installation.md) to install the UI._
 
 ## Repository Registration
 
 ### Registering blueprint repository
 
-To register a blueprint repo, start by clicking `Register Repository` button in
-the upper right corner. Enter the following details in the Register Repository
-flow:
+To register a blueprint repo, start by clicking the `Register Repository` button
+in the upper right corner. Enter the following details in the Register
+Repository flow:
 
 - In `Repository Details`, the Repository URL is the clone url from your
   repository. Branch and directory can be left blank. Branch will default to
@@ -37,9 +37,9 @@ back to the Repositories view.
 
 ### Registering deployment repository
 
-To register a deployment repo, start by clicking `Register Repository` button in
-the upper right corner. Enter the following details in the Register Repository
-flow:
+To register a deployment repo, start by clicking the `Register Repository`
+button in the upper right corner. Enter the following details in the Register
+Repository flow:
 
 - In `Repository Details`, the Repository URL is the clone url from your
   repository. Branch and Directory can be left blank. Branch will default to
@@ -59,12 +59,12 @@ back to the Repositories view.
 Now that we have our repositories registered, we are ready to create our first
 blueprint using the UI.
 
-- Click on `Blueprints` tab to see the blueprint repositories. Select a
-  blueprint repo where you want to add new blueprint by clicking on it.
-- Clicking on it will take you to a new screen where you can see the
+- Click on the `Blueprints` tab to see the blueprint repositories. Click the row
+  of the blueprint repository where you want to add the new blueprint to.
+- Clicking on the row will take you to a new screen where you can see the
   packages/blueprints that exist in the selected repository. If this is a new
-  repo, list will be empty.
-- Click on `Add Blueprint` button in the upper right corner to create a new
+  repo, the list will be empty.
+- Click on the `Add Blueprint` button in the upper right corner to create a new
   blueprint.
 - In `Add Blueprint`, create a new blueprint with the name `simplens`.
   ![add-blueprint](/static/images/porch-ui/blueprint/add-blueprint.png)
@@ -81,7 +81,7 @@ blueprint using the UI.
   ![add-resources](/static/images/porch-ui/blueprint/edit-new-blueprint.png)
 - Using the `Add Resource` button, add a new Namespace resource. Name the
   namespace `example`.
-- Click on Kptfile resource, add a new mutator
+- Click on the Kptfile resource and add a new mutator
   - Search for `namespace` and select `set-namespace` with the latest version
     available for selection.
   - Select `ConfigMap: kptfile.kpt.dev` for the function config
@@ -103,7 +103,7 @@ blueprint using the UI.
 - Using the `Add Resource` button, add a new Resource Quota resource
   - Name the resource `base`
   - Set Max CPU Requests to 40 and Max Memory Requests to 40G
-- Click on the Kptfile resource, add a new mutator
+- Click on the Kptfile resource and add a new mutator
   - Search for `replacements` and select `apply-replacements` with the latest
     version available for selection
   - Select the `ApplyReplacements: update-rolebinding` for the function config
@@ -123,7 +123,7 @@ blueprint using the UI.
   ![finalized-blueprint](/static/images/porch-ui/blueprint/finalized-blueprint.png)
 
 So, with that, we created a blueprint from scratch and published it in blueprint
-repo. You should be able to see the blueprint in the `git` repo as well.
+repo. You should be able to see the blueprint in the `git` repository as well.
 
 ## Create deployable instance of a blueprint
 
@@ -156,14 +156,14 @@ instance of a blueprint.
   deployment by adding/removing/updating resources.
   ![draft-deployment](/static/images/porch-ui/deployment/draft-deployment.png)
 - Once the deployment is published, click `Create Sync` to have `Config Sync`
-  sync the deployment to the kubernetes cluster.
+  sync the deployment to the Kubernetes cluster.
   ![published-deployment](/static/images/porch-ui/deployment/published-deployment.png)
 - After a few seconds, you`ll see the Sync status update in the upper right hand
   corner.
   ![synced-deployment](/static/images/porch-ui/deployment/synced-deployment.png)
 - If you navigate back to the `deployment` repo, you will see `sync` status next
-  to each deployement instance.
+  to each deployment instance.
   ![synced-deployment-screenshot](/static/images/porch-ui/deployment/synced-deployment-list.png)
 
 So, this completes our end to end workflow of creating a blueprint from scratch
-and deploying it to a kubernetes cluster using the Config as Data UI.
+and deploying it to a Kubernetes cluster using the Config as Data UI.
