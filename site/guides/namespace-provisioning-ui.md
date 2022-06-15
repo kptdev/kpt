@@ -1,6 +1,6 @@
 # Namespace provisioning example using UI
 
-In this guide, we will use the package orchestration UI to:
+In this guide, we will use the Config as Data UI to:
 
 - Register blueprint and deployment repositories
 - Create a `kpt` package from scratch in blueprint repo
@@ -9,9 +9,9 @@ In this guide, we will use the package orchestration UI to:
 
 ## Prerequisites
 
-Before we begin, ensure that you are able to access the Configuration as Data
-UI. The UI is provided as [Backstage](https://backstage.io) plugin and can be
-accessed at `[BACKSTAGE_BASE_URL]/config-as-data`.
+Before we begin, ensure that you are able to access the Config as Data UI. The
+UI is provided as [Backstage](https://backstage.io) plugin and can be accessed
+at `[BACKSTAGE_BASE_URL]/config-as-data`.
 
 _If you don't have a UI installed, follow the steps in
 [UI installation guide](guides/porch-ui-installation.md) to install the UI._
@@ -66,7 +66,7 @@ blueprint using the UI.
   repo, list will be empty.
 - Click on `Add Blueprint` button in the upper right corner to create a new
   blueprint.
-- In `Add Blueprint`, create a new blueprint with the name `basens`.
+- In `Add Blueprint`, create a new blueprint with the name `simplens`.
   ![add-blueprint](/static/images/porch-ui/blueprint/add-blueprint.png)
 - After completing the above flow, you`ll be taken to your newly created
   blueprint (see screenshot below). Here you will have a chance to add, edit,
@@ -136,10 +136,10 @@ instance of a blueprint.
 - Select a deployment repository by clicking on it.
   ![deployment-repo-empty](/static/images/porch-ui/deployment/deployment-repo-empty.png)
 - Click on the `Upstream Repository` link to navigate to the blueprints
-  repository and here you should see `basens` blueprint.
+  repository and here you should see `simplens` blueprint.
   ![blueprints-list](/static/images/porch-ui/deployment/blueprints-list.png)
-- Click on the `basens` blueprint.
-  ![show-basens-blueprint](/static/images/porch-ui/deployment/show-basens-blueprint.png)
+- Click on the `simplens` blueprint.
+  ![show-blueprint](/static/images/porch-ui/deployment/show-blueprint.png)
 - Click the `Deploy` button in the upper right corner to take you to the
   `Add Deployment` flow. Create the new deployment with the name `backend`.
   ![add-deployment](/static/images/porch-ui/deployment/add-deployment.png)
@@ -166,4 +166,4 @@ instance of a blueprint.
   ![synced-deployment-screenshot](/static/images/porch-ui/deployment/synced-deployment-list.png)
 
 So, this completes our end to end workflow of creating a blueprint from scratch
-and deploying it to a kubernetes cluster using package orchestraction UI.
+and deploying it to a kubernetes cluster using the Config as Data UI.
