@@ -59,7 +59,7 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 	}
 
 	return &gitPackageRevision{
-		parent:   repo,
+		repo:     repo,
 		path:     p.path,
 		revision: revision,
 		updated:  p.parent.commit.Author.When,

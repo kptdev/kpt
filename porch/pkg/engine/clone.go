@@ -86,7 +86,7 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("upstreamRef.name is required")
 	}
 
-	revision, err := (&PackageFetcher{
+	upstreamRevision, err := (&PackageFetcher{
 		cad:               m.cad,
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, ref, m.namespace)
@@ -94,17 +94,12 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("failed to fetch package revision %q: %w", ref.Name, err)
 	}
 
-	resources, err := revision.GetResources(ctx)
+	resources, err := upstreamRevision.GetResources(ctx)
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot read contents of package %q: %w", ref.Name, err)
 	}
 
-	// If the upstream we cloned from has its own upstream information, we need to clear and replace it
-	if err := kpt.UpdateKptfileUpstream(m.name, resources.Spec.Resources, v1.Upstream{}, v1.UpstreamLock{}); err != nil {
-		return repository.PackageResources{}, fmt.Errorf("failed to clear upstream lock to package %q: %w", ref.Name, err)
-	}
-
-	upstream, lock, err := revision.GetUpstreamLock()
+	upstream, lock, err := upstreamRevision.GetLock()
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot determine upstream lock for package %q: %w", ref.Name, err)
 	}
