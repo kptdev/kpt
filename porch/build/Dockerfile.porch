@@ -54,6 +54,6 @@ COPY porch/func porch/func
 RUN cd porch; go build -v -o /porch ./cmd/porch
 
 FROM debian:bullseye
-RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt && rm -rf /var/cache/apt
+RUN apt update && apt install -y ca-certificates && apt install -y git && rm -rf /var/lib/apt && rm -rf /var/cache/apt
 COPY --from=builder /porch /porch
 ENTRYPOINT ["/porch"]

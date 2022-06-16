@@ -778,6 +778,86 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: new.Name}, &pr)
 }
 
+func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
+	const (
+		gitRepository = "package-update"
+	)
+
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+
+	var list porchapi.PackageRevisionList
+	t.ListE(ctx, &list, client.InNamespace(t.namespace))
+
+	basensV1 := MustFindPackageRevision(t.T, &list, repository.PackageRevisionKey{Repository: "test-blueprints", Package: "basens", Revision: "v1"})
+	basensV2 := MustFindPackageRevision(t.T, &list, repository.PackageRevisionKey{Repository: "test-blueprints", Package: "basens", Revision: "v2"})
+
+	// Register the repository as 'downstream'
+	t.registerMainGitRepositoryF(ctx, gitRepository)
+
+	// Create PackageRevision from upstream repo
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "testns",
+			Revision:       "v1",
+			RepositoryName: gitRepository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeClone,
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							UpstreamRef: &porchapi.PackageRevisionRef{
+								Name: basensV1.Name,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	t.CreateF(ctx, pr)
+
+	var revisionResources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &revisionResources)
+
+	filename := filepath.Join("testdata", "update-resources", "add-config-map.yaml")
+	cm, err := ioutil.ReadFile(filename)
+	if err != nil {
+		t.Fatalf("Failed to read ConfigMap from %q: %v", filename, err)
+	}
+	revisionResources.Spec.Resources["config-map.yaml"] = string(cm)
+	t.UpdateF(ctx, &revisionResources)
+
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, pr)
+
+	pr.Spec.Tasks[0].Clone.Upstream.UpstreamRef.Name = basensV2.Name
+
+	t.UpdateE(ctx, pr, &client.UpdateOptions{})
+
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &revisionResources)
+
+	if _, found := revisionResources.Spec.Resources["resourcequota.yaml"]; !found {
+		t.Errorf("Updated package should contain 'resourcequota.yaml` file")
+	}
+
+}
+
 func (t *PorchSuite) TestRegisterRepository(ctx context.Context) {
 	const (
 		repository = "register"
