@@ -27,7 +27,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func (g GitSuite) TestUpstreamLock(t *testing.T) {
+func (g GitSuite) TestLock(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
 	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
@@ -69,7 +69,7 @@ func (g GitSuite) TestUpstreamLock(t *testing.T) {
 			continue
 		}
 
-		upstream, lock, err := rev.GetUpstreamLock()
+		upstream, lock, err := rev.GetLock()
 		if err != nil {
 			t.Errorf("GetUpstreamLock(%q) failed: %v", rev.Key(), err)
 		}
