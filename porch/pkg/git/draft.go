@@ -175,7 +175,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	}
 
 	return &gitPackageRevision{
-		parent:   d.parent,
+		repo:     d.parent,
 		path:     d.path,
 		revision: d.revision,
 		updated:  d.updated,

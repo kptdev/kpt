@@ -56,3 +56,7 @@ func (f *PackageRevision) GetResources(context.Context) (*v1alpha1.PackageRevisi
 func (f *PackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	return kptfile.Upstream{}, kptfile.UpstreamLock{}, nil
 }
+
+func (f *PackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	return kptfile.Upstream{}, kptfile.UpstreamLock{}, nil
+}

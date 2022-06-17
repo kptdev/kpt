@@ -33,7 +33,7 @@ import (
 )
 
 type gitPackageRevision struct {
-	parent   *gitRepository
+	repo     *gitRepository // repo is repo containing the package
 	path     string
 	revision string
 	updated  time.Time
@@ -54,13 +54,13 @@ var _ repository.PackageRevision = &gitPackageRevision{}
 // layer, the prefix will be removed (this may happen without notice) so it should not
 // be relied upon by clients.
 func (p *gitPackageRevision) KubeObjectName() string {
-	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.path, p.revision)))
-	return p.parent.name + "-" + hex.EncodeToString(hash[:])
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.repo.name, p.path, p.revision)))
+	return p.repo.name + "-" + hex.EncodeToString(hash[:])
 }
 
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
-		Repository: p.parent.name,
+		Repository: p.repo.name,
 		Package:    p.path,
 		Revision:   p.revision,
 	}
@@ -75,17 +75,20 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 
 	_, lock, _ := p.GetUpstreamLock()
 
+	lockCopy := &v1alpha1.UpstreamLock{}
 	// TODO: Use kpt definition of UpstreamLock in the package revision status
 	// when https://github.com/GoogleContainerTools/kpt/issues/3297 is complete.
 	// Until then, we have to translate from one type to another.
-	lockCopy := &v1alpha1.UpstreamLock{
-		Type: v1alpha1.OriginType(lock.Type),
-		Git: &v1alpha1.GitLock{
-			Repo:      lock.Git.Repo,
-			Directory: lock.Git.Directory,
-			Commit:    lock.Git.Commit,
-			Ref:       lock.Git.Ref,
-		},
+	if lock.Git != nil {
+		lockCopy = &v1alpha1.UpstreamLock{
+			Type: v1alpha1.OriginType(lock.Type),
+			Git: &v1alpha1.GitLock{
+				Repo:      lock.Git.Repo,
+				Directory: lock.Git.Directory,
+				Commit:    lock.Git.Commit,
+				Ref:       lock.Git.Ref,
+			},
+		}
 	}
 
 	return &v1alpha1.PackageRevision{
@@ -95,7 +98,7 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            p.KubeObjectName(),
-			Namespace:       p.parent.namespace,
+			Namespace:       p.repo.namespace,
 			UID:             p.uid(),
 			ResourceVersion: p.commit.String(),
 			CreationTimestamp: metav1.Time{
@@ -119,7 +122,7 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {
 	resources := map[string]string{}
 
-	tree, err := p.parent.repo.TreeObject(p.tree)
+	tree, err := p.repo.repo.TreeObject(p.tree)
 	if err == nil {
 		// Files() iterator iterates recursively over all files in the tree.
 		fit := tree.Files()
@@ -152,7 +155,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            p.KubeObjectName(),
-			Namespace:       p.parent.namespace,
+			Namespace:       p.repo.namespace,
 			UID:             p.uid(),
 			ResourceVersion: p.commit.String(),
 			CreationTimestamp: metav1.Time{
@@ -170,16 +173,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 	}, nil
 }
 
-// GetUpstreamLock returns the upstream for a package revision. The logic here is a little convoluted because
-// the upstream can come from different places depending on the task.
-// When cloning, the upstream is not available yet in the Kptfile, and is instead stored in the `parent` pointer.
-// When editing, the upstream is available in the Kptfile, and the `parent` pointer doesn't point
-// to the upstream (it points to the previous package revision that we have edited/copied from).
-// What we do here for now is to treat the Kptfile as the source of truth, and only look at `parent` if we
-// cannot get the upstream information from the Kptfile. When we do a clone task, we clear the Kptfile's upstream
-// field so that when we call GetUpstreamLock we end up looking at `parent`.
-// We may want to revisit this implementation in the future to make it easier to understand what is happening.
-// See discussion here https://github.com/GoogleContainerTools/kpt/pull/3301/files#r896190293.
+// GetUpstreamLock returns the upstreamLock info present in the Kptfile of the package.
 func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	resources, err := p.GetResources(context.Background())
 	if err != nil {
@@ -196,15 +190,17 @@ func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.Upstre
 	}
 
 	if kf.Upstream == nil || kf.UpstreamLock == nil || kf.Upstream.Git == nil {
-		// upstream information is not in Kptfile yet (this can happen when we clone from the upstream for the first time),
-		// so we get it from the parent repo instead.
-		return p.findParent()
+		// the package doesn't have any upstream package.
+		return kptfile.Upstream{}, kptfile.UpstreamLock{}, nil
 	}
 	return *kf.Upstream, *kf.UpstreamLock, nil
 }
 
-func (p *gitPackageRevision) findParent() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	repo, err := p.parent.getRepo()
+// GetLock returns the self version of the package. Think of it as the Git commit information
+// that represent the package revision of this package. Please note that it uses Upstream types
+// to represent this information but it has no connection with the associated upstream package (if any).
+func (p *gitPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	repo, err := p.repo.getRepo()
 	if err != nil {
 		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock: %w", err)
 	}

@@ -46,7 +46,6 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the upstream package to update to.")
-
 	return r
 }
 

@@ -1,0 +1,27 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: backend
+  annotations:
+    config.kubernetes.io/local-config: "true"
+upstream:
+  type: git
+  git:
+    repo: https://github.com/droot/pkg-catalog.git
+    directory: basens
+    ref: basens/v0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/droot/pkg-catalog.git
+    directory: basens
+    ref: basens/v0
+    commit: b3e1d439516a5e8d49adc0c82d3e95578570dbfa
+info:
+  description: kpt package for provisioning namespace
+pipeline:
+  mutators:
+  - image: gcr.io/kpt-fn/set-namespace:v0.3.4
+    configPath: package-context.yaml
+  - image: gcr.io/kpt-fn/apply-replacements:v0.1.0
+    configPath: update-rolebinding.yaml
