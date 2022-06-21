@@ -93,7 +93,7 @@ func TestCmd(t *testing.T) {
 
 			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
 			runner.Command.SetArgs(tc.args)
-			runner.destroyRunner = func(_ *Runner, inv inventory.Info, _ common.DryRunStrategy) error {
+			runner.destroyRunner = func(_ *Runner, inv inventory.Info, kptInv kptfilev1.Inventory, _ common.DryRunStrategy) error {
 				tc.destroyCallbackFunc(t, inv)
 				return nil
 			}

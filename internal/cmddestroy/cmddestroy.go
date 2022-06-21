@@ -22,6 +22,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -90,7 +91,7 @@ type Runner struct {
 
 	// TODO(mortent): This is needed for now since we don't have a good way to
 	// stub out the Destroyer with an interface for testing purposes.
-	destroyRunner func(r *Runner, inv inventory.Info, strategy common.DryRunStrategy) error
+	destroyRunner func(r *Runner, inv inventory.Info, kptInv kptfilev1.Inventory, dryRunStrategy common.DryRunStrategy) error
 }
 
 // preRunE validates the inventoryPolicy and the output type.
@@ -152,13 +153,13 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		}
 	}
 
-	return r.destroyRunner(r, invInfo, dryRunStrategy)
+	return r.destroyRunner(r, invInfo, inv, dryRunStrategy)
 }
 
-func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrategy) error {
+func runDestroy(r *Runner, inv inventory.Info, kptInv kptfilev1.Inventory, dryRunStrategy common.DryRunStrategy) error {
 	// Run the destroyer. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj(0), live.InvToUnstructuredFunc, inventory.StatusPolicyAll)
 	if err != nil {
 		return err
 	}
@@ -186,5 +187,17 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 	// The printer will print updates from the channel. It will block
 	// until the channel is closed.
 	printer := printers.GetPrinter(r.output, r.ioStreams)
-	return printer.Print(ch, dryRunStrategy, r.printStatusEvents)
+	err = printer.Print(ch, dryRunStrategy, r.printStatusEvents)
+	if err != nil {
+		return err
+	}
+
+	// Delete all remaining sharded ResourceGroups by creating a wrapped inventory using label strategy
+	// so we can use the underlying cli-utils client implementation to delete inventories by label.
+	wrappedInv, err := live.ToInventoryInfoLabelStrategy(kptInv)
+	if err != nil {
+		return err
+	}
+
+	return invClient.DeleteInventoryObj(wrappedInv, dryRunStrategy)
 }
