@@ -154,13 +154,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	w := printers.GetNewTabWriter(cmd.OutOrStdout())
-
 	for _, obj := range objs {
 		if err := printer.PrintObj(obj, w); err != nil {
 			return errors.E(op, err)
 		}
 	}
-
 	if err := w.Flush(); err != nil {
 		return errors.E(op, err)
 	}
