@@ -57,7 +57,7 @@ commands:
           name: deploy-package
       - apiVersion: v1
         data:
-          name: deploy-package
+          name: example
         kind: ConfigMap
         metadata:
           annotations:
