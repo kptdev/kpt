@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/debug"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -125,16 +124,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 	for i := range tasks {
 		task := &tasks[i]
-		mutation, err := cad.mapTaskToMutation(ctx, obj, task)
-		if err != nil {
-			return nil, err
-		}
-		mutations = append(mutations, mutation)
-	}
-
-	// If creating a package in a deployment repository, generate context
-	if repositoryObj.Spec.Deployment {
-		mutation, err := newBuiltinFunctionMutation(fnruntime.FuncGenPkgContext)
+		mutation, err := cad.mapTaskToMutation(ctx, obj, task, repositoryObj.Spec.Deployment)
 		if err != nil {
 			return nil, err
 		}
@@ -157,7 +147,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	return draft.Close(ctx)
 }
 
-func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task) (mutation, error) {
+func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task, isDeployment bool) (mutation, error) {
 	switch task.Type {
 	case api.TaskTypeInit:
 		if task.Init == nil {
@@ -175,6 +165,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			task:               task,
 			namespace:          obj.Namespace,
 			name:               obj.Spec.PackageName,
+			isDeployment:       isDeployment,
 			cad:                cad,
 			credentialResolver: cad.credentialResolver,
 			referenceResolver:  cad.referenceResolver,

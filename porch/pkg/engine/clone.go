@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -36,6 +37,7 @@ type clonePackageMutation struct {
 	task               *api.Task
 	namespace          string
 	name               string // package target name
+	isDeployment       bool   // is the package deployable instance
 	cad                CaDEngine
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
@@ -66,6 +68,19 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	for k, v := range resources.Contents {
 		if _, exists := cloned.Contents[k]; !exists {
 			cloned.Contents[k] = v
+		}
+	}
+
+	if m.isDeployment {
+		// TODO(droot): executing this as mutation is not really needed, but can be
+		// refactored once we finalize the task/mutation/commit model.
+		genPkgContextMutation, err := newBuiltinFunctionMutation(fnruntime.FuncGenPkgContext)
+		if err != nil {
+			return repository.PackageResources{}, nil, err
+		}
+		cloned, _, err = genPkgContextMutation.Apply(ctx, cloned)
+		if err != nil {
+			return repository.PackageResources{}, nil, fmt.Errorf("failed to generate deployment context %w", err)
 		}
 	}
 

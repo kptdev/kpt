@@ -81,11 +81,5 @@ func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.Pa
 		result.Contents[k] = v
 	}
 
-	return result, &api.Task{
-		Type: api.TaskTypeEval,
-		Eval: &api.FunctionEvalTaskSpec{
-			Image:                m.function,
-			IncludeMetaResources: true,
-		},
-	}, nil
+	return result, nil, nil
 }
