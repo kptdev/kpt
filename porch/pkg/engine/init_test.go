@@ -28,10 +28,12 @@ import (
 func TestInit(t *testing.T) {
 	init := &initPackageMutation{
 		name: "testpkg",
-		spec: api.PackageInitTaskSpec{
-			Description: "test package",
-			Keywords:    []string{"test", "kpt", "pkg"},
-			Site:        "http://kpt.dev/testpkg",
+		task: &api.Task{
+			Init: &api.PackageInitTaskSpec{
+				Description: "test package",
+				Keywords:    []string{"test", "kpt", "pkg"},
+				Site:        "http://kpt.dev/testpkg",
+			},
 		},
 	}
 

@@ -116,9 +116,11 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
 		mutations = append(mutations, &initPackageMutation{
 			name: obj.Spec.PackageName,
-			spec: api.PackageInitTaskSpec{
-				Subpackage:  "",
-				Description: fmt.Sprintf("%s description", obj.Spec.PackageName),
+			task: &api.Task{
+				Init: &api.PackageInitTaskSpec{
+					Subpackage:  "",
+					Description: fmt.Sprintf("%s description", obj.Spec.PackageName),
+				},
 			},
 		})
 	}
@@ -165,7 +167,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}
 		return &initPackageMutation{
 			name: obj.Spec.PackageName,
-			spec: *task.Init,
+			task: task,
 		}, nil
 	case api.TaskTypeClone:
 		if task.Clone == nil {
