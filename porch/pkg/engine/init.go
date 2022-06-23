@@ -30,7 +30,7 @@ import (
 type initPackageMutation struct {
 	kptpkg.DefaultInitializer
 	name string
-	spec api.PackageInitTaskSpec
+	task *api.Task
 }
 
 var _ mutation = &initPackageMutation{}
@@ -42,8 +42,9 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	fs := filesys.MakeFsInMemory()
 	// virtual fs expected a rooted filesystem
 	pkgPath := "/"
-	if m.spec.Subpackage != "" {
-		pkgPath = "/" + m.spec.Subpackage
+
+	if m.task.Init.Subpackage != "" {
+		pkgPath = "/" + m.task.Init.Subpackage
 	}
 	if err := fs.Mkdir(pkgPath); err != nil {
 		return repository.PackageResources{}, nil, err
@@ -51,9 +52,9 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	err := m.Initialize(printer.WithContext(ctx, &fake.Printer{}), fs, kptpkg.InitOptions{
 		PkgPath:  pkgPath,
 		PkgName:  m.name,
-		Desc:     m.spec.Description,
-		Keywords: m.spec.Keywords,
-		Site:     m.spec.Site,
+		Desc:     m.task.Init.Description,
+		Keywords: m.task.Init.Keywords,
+		Site:     m.task.Init.Site,
 	})
 	if err != nil {
 		return repository.PackageResources{}, nil, fmt.Errorf("failed to initialize pkg %q: %w", m.name, err)
@@ -64,5 +65,5 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 		return repository.PackageResources{}, nil, err
 	}
 
-	return result, &api.Task{}, nil
+	return result, m.task, nil
 }
