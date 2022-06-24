@@ -27,36 +27,37 @@ import (
 )
 
 func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
-	var errs []string
-	var updates [][]string
-
 	var prs []porchapi.PackageRevision
+	var errs []string
 	if len(args) == 0 {
 		prs = r.prs
 	} else {
 		for i := range args {
 			pr := r.findPackageRevision(args[i])
 			if pr == nil {
-				return fmt.Errorf("could not find package revision %s", args[i])
+				errs = append(errs, fmt.Sprintf("could not find package revision %s", args[i]))
+				continue
 			}
 			prs = append(prs, *pr)
 		}
 	}
+	if len(errs) > 0 {
+		return fmt.Errorf("errors:\n  %s", strings.Join(errs, "\n  "))
+	}
 
+	repositories, err := r.getRepositories()
+	if err != nil {
+		return err
+	}
+
+	var updates [][]string
 	for _, pr := range prs {
-		availableUpdates, upstreamName, err := r.availableUpdates(pr.Status.UpstreamLock)
-		if err != nil {
-			return err
-		}
+		availableUpdates, upstreamName := r.availableUpdates(pr.Status.UpstreamLock, repositories)
 		if len(availableUpdates) == 0 {
 			updates = append(updates, []string{pr.Name, upstreamName, "No update available"})
 		} else {
 			updates = append(updates, []string{pr.Name, upstreamName, strings.Join(availableUpdates, ", ")})
 		}
-	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf("errors:\n  %s", strings.Join(errs, "\n  "))
 	}
 
 	w := printers.GetNewTabWriter(cmd.OutOrStdout())
@@ -68,24 +69,21 @@ func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	}
-	if err := w.Flush(); err != nil {
-		return err
-	}
 
-	return nil
+	return w.Flush()
 }
 
-func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock) ([]string, string, error) {
+func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]string, string) {
 	var availableUpdates []string
 	var upstream string
 
 	if upstreamLock == nil || upstreamLock.Git == nil {
-		return nil, "", nil
+		return nil, ""
 	}
 	// separate the revision number from the package name
 	lastIndex := strings.LastIndex(upstreamLock.Git.Ref, "v")
 	if lastIndex < 0 {
-		return nil, "", nil
+		return nil, ""
 	}
 	currentUpstreamRevision := upstreamLock.Git.Ref[lastIndex:]
 
@@ -95,11 +93,6 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock) ([]string
 
 	if !strings.HasSuffix(upstreamLock.Git.Repo, ".git") {
 		upstreamLock.Git.Repo += ".git"
-	}
-
-	repositories, err := r.getRepositories()
-	if err != nil {
-		return nil, "", err
 	}
 
 	// find a repo that matches the upstreamLock
@@ -126,7 +119,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock) ([]string
 		}
 	}
 
-	return availableUpdates, upstream, nil
+	return availableUpdates, upstream
 }
 
 // fetches all registered repositories

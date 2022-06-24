@@ -46,7 +46,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the upstream package to update to.")
-	r.Command.Flags().BoolVar(&r.discover, "discover", false, "If set, search for available updates instead of performing an update.")
+	r.Command.Flags().BoolVar(&r.discover, "discover", false,
+		"If set, search for available updates instead of performing an update. If no arguments given, look at all package revisions.")
 	return r
 }
 
@@ -59,7 +60,7 @@ type runner struct {
 	revision string // Target package revision
 	discover bool   // If set, discover updates rather than do updates
 
-	// for --discover, there are multiple places where we need access to all package revisions, so
+	// there are multiple places where we need access to all package revisions, so
 	// we store it in the runner
 	prs []porchapi.PackageRevision
 }
@@ -97,40 +98,49 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
+	var err error
 	if r.discover {
-		return r.discoverUpdates(cmd, args)
+		err = r.discoverUpdates(cmd, args)
+	} else {
+		err = r.doUpdate(r.findPackageRevision(args[0]))
 	}
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
 
-	pr := r.findPackageRevision(args[0])
-
+func (r *runner) doUpdate(pr *porchapi.PackageRevision) error {
 	cloneTask, found := r.findCloneTask(pr)
 	if !found {
-		err := fmt.Errorf("upstream source not found. Only cloned packages can be updated")
-		return errors.E(op, err)
+		return fmt.Errorf("upstream source not found. Only cloned packages can be updated")
 	}
 
 	switch cloneTask.Clone.Upstream.Type {
 	case porchapi.RepositoryTypeGit:
 		cloneTask.Clone.Upstream.Git.Ref = r.revision
 	case porchapi.RepositoryTypeOCI:
-		err := fmt.Errorf("update not implemented for oci packages")
-		return errors.E(op, err)
+		return fmt.Errorf("update not implemented for oci packages")
 	default:
 		upstreamPr := r.findPackageRevision(cloneTask.Clone.Upstream.UpstreamRef.Name)
 		if upstreamPr == nil {
-			err := fmt.Errorf("upstream package revision %s no longer exists", cloneTask.Clone.Upstream.UpstreamRef.Name)
-			return errors.E(op, err)
+			return fmt.Errorf("upstream package revision %s no longer exists", cloneTask.Clone.Upstream.UpstreamRef.Name)
 		}
 		newUpstreamPr := r.findPackageRevisionForRef(upstreamPr.Spec.PackageName)
 		if newUpstreamPr == nil {
-			err := fmt.Errorf("revision %s does not exist for package %s", r.revision, pr.Spec.PackageName)
-			return errors.E(op, err)
+			return fmt.Errorf("revision %s does not exist for package %s", r.revision, pr.Spec.PackageName)
 		}
 		cloneTask.Clone.Upstream.UpstreamRef.Name = newUpstreamPr.Name
 	}
+	return r.client.Update(r.ctx, pr)
+}
 
-	if err := r.client.Update(r.ctx, pr); err != nil {
-		return errors.E(op, err)
+func (r *runner) findPackageRevision(prName string) *porchapi.PackageRevision {
+	for i := range r.prs {
+		pr := r.prs[i]
+		if pr.Name == prName {
+			return &pr
+		}
 	}
 	return nil
 }
@@ -143,16 +153,6 @@ func (r *runner) findCloneTask(pr *porchapi.PackageRevision) (*porchapi.Task, bo
 		}
 	}
 	return nil, false
-}
-
-func (r *runner) findPackageRevision(prName string) *porchapi.PackageRevision {
-	for i := range r.prs {
-		pr := r.prs[i]
-		if pr.Name == prName {
-			return &pr
-		}
-	}
-	return nil
 }
 
 func (r *runner) findPackageRevisionForRef(name string) *porchapi.PackageRevision {

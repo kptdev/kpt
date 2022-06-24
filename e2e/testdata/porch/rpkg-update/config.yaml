@@ -57,10 +57,10 @@ commands:
       - rpkg
       - get
     stdout: |
-      NAME                                           PACKAGE              REVISION   LATEST   LIFECYCLE   REPOSITORY
-      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48   basens-edit          v0         false    Draft       git
-      git-894137a40c0792e88a9b844491a95a466b085ca1   basens-edit          v2         true     Published   git
-      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   basens-edit-clone    v0         false    Draft       git
+      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48   basens-edit         v0         false    Draft       git
+      git-894137a40c0792e88a9b844491a95a466b085ca1   basens-edit         v2         true     Published   git
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   basens-edit-clone   v0         false    Draft       git
   - args:
       - alpha
       - rpkg
