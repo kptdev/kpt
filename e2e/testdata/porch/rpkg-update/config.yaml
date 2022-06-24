@@ -1,0 +1,84 @@
+commands:
+  - args:
+      - alpha
+      - repo
+      - register
+      - --namespace=rpkg-update
+      - --name=git
+      - http://git-server.test-git-namespace.svc.cluster.local:8080
+  - args:
+      - alpha
+      - rpkg
+      - clone
+      - --namespace=rpkg-update
+      - https://github.com/platkrm/test-blueprints.git
+      - --directory=basens
+      - --ref=basens/v1
+      - --repository=git
+      - --revision=v0
+      - basens-edit
+    stdout: git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 created
+  - args:
+      - alpha
+      - rpkg
+      - clone
+      - --namespace=rpkg-update
+      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
+      - --directory=basens
+      - --ref=basens/v1
+      - --repository=git
+      - --revision=v0
+      - basens-edit-clone
+    stdout: git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0 created
+  - args:
+      - alpha
+      - rpkg
+      - copy
+      - --namespace=rpkg-update
+      - --revision=v2
+      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
+    stdout: git-894137a40c0792e88a9b844491a95a466b085ca1 created
+  - args:
+      - alpha
+      - rpkg
+      - propose
+      - --namespace=rpkg-update
+      - git-894137a40c0792e88a9b844491a95a466b085ca1
+    stderr: "git-894137a40c0792e88a9b844491a95a466b085ca1 proposed\n"
+  - args:
+      - alpha
+      - rpkg
+      - approve
+      - --namespace=rpkg-update
+      - git-894137a40c0792e88a9b844491a95a466b085ca1
+    stderr: "git-894137a40c0792e88a9b844491a95a466b085ca1 approved\n"
+  - args:
+      - alpha
+      - rpkg
+      - get
+    stdout: |
+      NAME                                           PACKAGE              REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48   basens-edit          v0         false    Draft       git
+      git-894137a40c0792e88a9b844491a95a466b085ca1   basens-edit          v2         true     Published   git
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   basens-edit-clone    v0         false    Draft       git
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover
+      - git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0
+    stdout: |
+      PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   v2
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover
+    stdout: |
+      PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
+      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48                         No update available
+      git-894137a40c0792e88a9b844491a95a466b085ca1                         No update available
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   v2

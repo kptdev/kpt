@@ -23,7 +23,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgclone"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgcopy"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgdel"
-	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgfindupdates"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgget"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkginit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpropose"
@@ -81,7 +80,6 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 		cmdrpkgdel.NewCommand(ctx, kubeflags),
 		cmdrpkgcopy.NewCommand(ctx, kubeflags),
 		cmdrpkgupdate.NewCommand(ctx, kubeflags),
-		cmdrpkgfindupdates.NewCommand(ctx, kubeflags),
 	)
 
 	return repo
