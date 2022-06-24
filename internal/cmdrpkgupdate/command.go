@@ -102,7 +102,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	if r.discover {
 		err = r.discoverUpdates(cmd, args)
 	} else {
-		err = r.doUpdate(r.findPackageRevision(args[0]))
+		pr := r.findPackageRevision(args[0])
+		if pr == nil {
+			return errors.E(op, fmt.Errorf("could not find package revision %s", args[0]))
+		}
+		err = r.doUpdate(pr)
 	}
 	if err != nil {
 		return errors.E(op, err)
