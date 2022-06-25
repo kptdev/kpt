@@ -17,14 +17,15 @@ package cmdrpkgcopy
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -146,8 +147,7 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 }
 
 // defaultPackageRevision attempts to return a default package revision number
-// of "latest + 1" given a package name, repository, and namespace. It only
-// understands revisions following `v[0-9]+` formats.
+// of "latest + 1" given a package name, repository, and namespace.
 func (r *runner) defaultPackageRevision(packageName, repository string) (string, error) {
 	// get all package revisions
 	packageRevisionList := porchapi.PackageRevisionList{}
@@ -187,18 +187,18 @@ func (r *runner) defaultPackageRevision(packageName, repository string) (string,
 }
 
 func nextRevisionNumber(latestRevision string) (string, error) {
-	match, err := regexp.MatchString("^v[0-9]+$", latestRevision)
-	if err != nil {
-		return "", err
+	if !semver.IsValid(latestRevision) {
+		return "", fmt.Errorf("invalid revision format %s; explicit --revision flag is required", latestRevision)
 	}
-	if !match {
-		return "", fmt.Errorf("could not understand format of latest revision %q; explicit --revision flag is required", latestRevision)
-	}
-	i, err := strconv.Atoi(latestRevision[1:])
+
+	parts := strings.Split(latestRevision[1:], ".")
+	lastIndex := len(parts) - 1
+	i, err := strconv.Atoi(parts[lastIndex])
 	if err != nil {
 		return "", err
 	}
 	i++
-	next := "v" + strconv.Itoa(i)
+	parts[lastIndex] = strconv.Itoa(i)
+	next := "v" + strings.Join(parts, ".")
 	return next, nil
 }
