@@ -1,7 +1,7 @@
 # Package Orchestration Server
 
 Package Orchestration Server (a.k.a. Porch) is a k8s extension apiserver
-which manages lifecycle of KRM configuration packages.
+which manages the lifecycle of KRM configuration packages.
 
 You can run Porch:
 
