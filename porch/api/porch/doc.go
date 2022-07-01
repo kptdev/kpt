@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen --input-dirs ./... -O zz_generated.deepcopy --go-header-file ../../scripts/boilerplate.go.txt
-//go:generate go run k8s.io/code-generator/cmd/openapi-gen --input-dirs github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1 --input-dirs k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/version --output-package github.com/GoogleContainerTools/kpt/porch/api/generated/openapi -O zz_generated.openapi --go-header-file ../../scripts/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen --input-dirs ../porch -O zz_generated.deepcopy --go-header-file ../../scripts/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/openapi-gen --input-dirs github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1 --input-dirs k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/runtime,k8s.io/apimachinery/pkg/version --output-base=../../../../../../ --output-package github.com/GoogleContainerTools/kpt/porch/api/generated/openapi -O zz_generated.openapi --go-header-file ../../scripts/boilerplate.go.txt
 
 // +k8s:deepcopy-gen=package,register
 // +groupName=porch.kpt.dev
