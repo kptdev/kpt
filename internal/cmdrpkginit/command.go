@@ -126,6 +126,6 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	fmt.Fprintf(cmd.OutOrStdout(), "%s created", pr.Name)
+	fmt.Fprintf(cmd.OutOrStdout(), "%s created\n", pr.Name)
 	return nil
 }
