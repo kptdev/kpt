@@ -86,26 +86,28 @@ type ParentReference struct {
 
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
-	UpstreamLock *UpstreamLock
+	UpstreamLock *UpstreamLock `json:"upstreamLock,omitempty"`
 }
 
 type TaskType string
 
 const (
-	TaskTypeInit  TaskType = "init"
-	TaskTypeClone TaskType = "clone"
-	TaskTypePatch TaskType = "patch"
-	TaskTypeEdit  TaskType = "edit"
-	TaskTypeEval  TaskType = "eval"
+	TaskTypeInit   TaskType = "init"
+	TaskTypeClone  TaskType = "clone"
+	TaskTypePatch  TaskType = "patch"
+	TaskTypeEdit   TaskType = "edit"
+	TaskTypeEval   TaskType = "eval"
+	TaskTypeUpdate TaskType = "update"
 )
 
 type Task struct {
-	Type  TaskType              `json:"type"`
-	Init  *PackageInitTaskSpec  `json:"init,omitempty"`
-	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
-	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
-	Edit  *PackageEditTaskSpec  `json:"edit,omitempty"`
-	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
+	Type   TaskType               `json:"type"`
+	Init   *PackageInitTaskSpec   `json:"init,omitempty"`
+	Clone  *PackageCloneTaskSpec  `json:"clone,omitempty"`
+	Patch  *PackagePatchTaskSpec  `json:"patch,omitempty"`
+	Edit   *PackageEditTaskSpec   `json:"edit,omitempty"`
+	Eval   *FunctionEvalTaskSpec  `json:"eval,omitempty"`
+	Update *PackageUpdateTaskSpec `json:"update,omitempty"`
 }
 
 // PackageInitTaskSpec defines the package initialization task.
@@ -138,6 +140,11 @@ type PackageCloneTaskSpec struct {
 }
 
 type PackageMergeStrategy string
+
+type PackageUpdateTaskSpec struct {
+	// `Upstream` is the reference to the upstream package.
+	Upstream UpstreamPackage `json:"upstreamRef,omitempty"`
+}
 
 const (
 	ResourceMerge      PackageMergeStrategy = "resource-merge"
