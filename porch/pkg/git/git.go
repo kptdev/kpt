@@ -784,6 +784,8 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 		RefSpecs:          specs,
 		Auth:              auth,
 		RequireRemoteRefs: require,
+		// TODO(justinsb): Need to ensure this is a compare-and-swap
+		Force: true,
 	}); err != nil {
 		return err
 	}
