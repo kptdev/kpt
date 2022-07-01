@@ -44,7 +44,9 @@ import (
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	aggregatorv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -80,7 +82,11 @@ type TestSuite struct {
 	*testing.T
 	kubeconfig *rest.Config
 	client     client.Client
-	clientset  porchclient.Interface
+
+	// Strongly-typed client handy for reading e.g. pod logs
+	kubeClient kubernetes.Interface
+
+	clientset porchclient.Interface
 
 	namespace string // K8s namespace for this test run
 	local     bool   // Tests running against local dev porch
@@ -110,6 +116,12 @@ func (t *TestSuite) Initialize(ctx context.Context) {
 	} else {
 		t.client = c
 		t.kubeconfig = cfg
+	}
+
+	if kubeClient, err := kubernetes.NewForConfig(cfg); err != nil {
+		t.Fatalf("failed to initialize kubernetes clientset: %v", err)
+	} else {
+		t.kubeClient = kubeClient
 	}
 
 	if cs, err := porchclient.NewForConfig(cfg); err != nil {
@@ -160,9 +172,11 @@ func (t *TestSuite) IsUsingDevPorch() bool {
 func (t *TestSuite) CreateGitRepo() GitConfig {
 	if t.IsUsingDevPorch() {
 		// Create Git server on the local machine.
+		t.Logf("using dev porch; creating local git server")
 		return createLocalGitServer(t.T)
 	} else {
 		// Deploy Git server via k8s client.
+		t.Logf("not using dev porch; creating git server in cluster")
 		return t.createInClusterGitServer()
 	}
 }
@@ -463,6 +477,13 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 				Name:      "git-server",
 				Namespace: t.namespace,
 			},
+		})
+	})
+
+	t.Cleanup(func() {
+		t.DumpLogsForDeployment(ctx, types.NamespacedName{
+			Name:      "git-server",
+			Namespace: t.namespace,
 		})
 	})
 
