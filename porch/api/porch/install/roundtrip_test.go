@@ -22,6 +22,5 @@ import (
 )
 
 func TestRoundTripTypes(t *testing.T) {
-	t.SkipNow()
 	roundtrip.RoundTripTestForAPIGroup(t, Install, fuzzer.Funcs)
 }
