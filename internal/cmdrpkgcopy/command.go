@@ -112,7 +112,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	if err := r.client.Create(r.ctx, pr); err != nil {
 		return errors.E(op, err)
 	}
-	fmt.Fprintf(cmd.OutOrStdout(), "%s created", pr.Name)
+	fmt.Fprintf(cmd.OutOrStdout(), "%s created\n", pr.Name)
 	return nil
 }
 
