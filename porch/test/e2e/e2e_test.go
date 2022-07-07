@@ -843,7 +843,14 @@ func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
 		Name:      pr.Name,
 	}, pr)
 
-	pr.Spec.Tasks[0].Clone.Upstream.UpstreamRef.Name = basensV2.Name
+	upstream := pr.Spec.Tasks[0].Clone.Upstream.DeepCopy()
+	upstream.UpstreamRef.Name = basensV2.Name
+	pr.Spec.Tasks = append(pr.Spec.Tasks, porchapi.Task{
+		Type: porchapi.TaskTypeUpdate,
+		Update: &porchapi.PackageUpdateTaskSpec{
+			Upstream: *upstream,
+		},
+	})
 
 	t.UpdateE(ctx, pr, &client.UpdateOptions{})
 

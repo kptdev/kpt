@@ -14,7 +14,7 @@ commands:
       - --repository=git
       - --revision=v1
       - lifecycle-package
-    stdout: git-635026ba389a2dd5417b6e7577430c7ccff30f36 created
+    stdout: "git-635026ba389a2dd5417b6e7577430c7ccff30f36 created\n"
   - args:
       - alpha
       - rpkg

@@ -21,9 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 
-	"github.com/GoogleContainerTools/kpt/pkg/debug"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -173,6 +171,23 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			referenceResolver:  cad.referenceResolver,
 		}, nil
 
+	case api.TaskTypeUpdate:
+		if task.Update == nil {
+			return nil, fmt.Errorf("update not set for task of type %q", task.Type)
+		}
+		cloneTask := findCloneTask(obj)
+		if cloneTask == nil {
+			return nil, fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", obj.Spec.PackageName)
+		}
+		return &updatePackageMutation{
+			cloneTask:         cloneTask,
+			updateTask:        task,
+			namespace:         obj.Namespace,
+			cad:               cad,
+			referenceResolver: cad.referenceResolver,
+			pkgName:           obj.Spec.PackageName,
+		}, nil
+
 	case api.TaskTypePatch:
 		return buildPatchMutation(ctx, task)
 
@@ -237,52 +252,43 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	var mutations []mutation
-	if len(oldObj.Spec.Tasks) != len(newObj.Spec.Tasks) {
-		return nil, fmt.Errorf("adding/removing tasks is not yet supported")
+	if len(oldObj.Spec.Tasks) > len(newObj.Spec.Tasks) {
+		return nil, fmt.Errorf("removing tasks is not yet supported")
 	}
-
 	for i := range oldObj.Spec.Tasks {
 		oldTask := &oldObj.Spec.Tasks[i]
 		newTask := &newObj.Spec.Tasks[i]
-
 		if oldTask.Type != newTask.Type {
 			return nil, fmt.Errorf("changing task types is not yet supported")
 		}
-
-		unchanged := reflect.DeepEqual(oldTask, newTask)
-		if unchanged {
-			continue
+	}
+	if len(newObj.Spec.Tasks) > len(oldObj.Spec.Tasks) {
+		if len(newObj.Spec.Tasks) > len(oldObj.Spec.Tasks)+1 {
+			return nil, fmt.Errorf("can only append one task at a time")
 		}
 
-		switch newTask.Type {
-		case api.TaskTypeClone:
-			if newTask.Clone == nil {
-				return nil, fmt.Errorf("clone not set for task of type %q", newTask.Type)
-			}
-
-			var isLastCloneTask = true
-			for j := i + 1; j < len(oldObj.Spec.Tasks); j++ {
-				if oldObj.Spec.Tasks[j].Type == api.TaskTypeClone {
-					isLastCloneTask = false
-				}
-			}
-
-			if !isLastCloneTask {
-				return nil, fmt.Errorf("only the last clone task for the revision can be changed")
-			}
-			mutation := &updatePackageMutation{
-				task:              newTask,
-				oldTask:           oldTask,
-				cad:               cad,
-				referenceResolver: cad.referenceResolver,
-				namespace:         repositoryObj.Namespace,
-				pkgName:           oldObj.GetName(),
-			}
-			mutations = append(mutations, mutation)
-
-		default:
-			return nil, fmt.Errorf("updating task of type %q not supported (oldTask=%s, newTask=%s)", newTask.Type, debug.JSON(oldTask), debug.JSON(newTask))
+		newTask := newObj.Spec.Tasks[len(newObj.Spec.Tasks)-1]
+		if newTask.Type != api.TaskTypeUpdate {
+			return nil, fmt.Errorf("appended task is type %q, must be type %q", newTask.Type, api.TaskTypeUpdate)
 		}
+		if newTask.Update == nil {
+			return nil, fmt.Errorf("update not set for updateTask of type %q", newTask.Type)
+		}
+
+		cloneTask := findCloneTask(oldObj)
+		if cloneTask == nil {
+			return nil, fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", oldObj.Spec.PackageName)
+		}
+
+		mutation := &updatePackageMutation{
+			cloneTask:         cloneTask,
+			updateTask:        &newTask,
+			cad:               cad,
+			referenceResolver: cad.referenceResolver,
+			namespace:         repositoryObj.Namespace,
+			pkgName:           oldObj.GetName(),
+		}
+		mutations = append(mutations, mutation)
 	}
 
 	// Re-render if we are making changes.
@@ -443,8 +449,8 @@ func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configap
 }
 
 type updatePackageMutation struct {
-	oldTask           *api.Task
-	task              *api.Task
+	cloneTask         *api.Task
+	updateTask        *api.Task
 	cad               CaDEngine
 	referenceResolver ReferenceResolver
 	namespace         string
@@ -460,7 +466,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		return repository.PackageResources{}, nil, err
 	}
 
-	targetUpstream := m.task.Clone.Upstream
+	targetUpstream := m.updateTask.Update.Upstream
 	if targetUpstream.Type == api.RepositoryTypeGit || targetUpstream.Type == api.RepositoryTypeOCI {
 		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
 	}
@@ -515,21 +521,32 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	if err != nil {
 		klog.Infof("failed to add merge key comments: %v", err)
 	}
-	return result, m.task, nil
+	return result, m.updateTask, nil
 }
 
 // Currently assumption is that downstream packages will be forked from a porch package.
-// As per current implementation, upstream package ref is stored in an old clone task, but this may
+// As per current implementation, upstream package ref is stored in a new update task but this may
 // change so the logic of figuring out current upstream will live in this function.
 func (m *updatePackageMutation) currUpstream() (*api.PackageRevisionRef, error) {
-	if m.oldTask == nil || m.oldTask.Clone == nil {
-		return nil, fmt.Errorf("package %s does not have upstream info", m.pkgName)
+	if m.cloneTask == nil || m.cloneTask.Clone == nil {
+		return nil, fmt.Errorf("package %s does not have original upstream info", m.pkgName)
 	}
-	upstream := m.oldTask.Clone.Upstream
+	upstream := m.cloneTask.Clone.Upstream
 	if upstream.Type == api.RepositoryTypeGit || upstream.Type == api.RepositoryTypeOCI {
 		return nil, fmt.Errorf("upstream package must be porch native package. Found it to be %s", upstream.Type)
 	}
 	return upstream.UpstreamRef, nil
+}
+
+func findCloneTask(pr *api.PackageRevision) *api.Task {
+	if len(pr.Spec.Tasks) == 0 {
+		return nil
+	}
+	firstTask := pr.Spec.Tasks[0]
+	if firstTask.Type == api.TaskTypeClone {
+		return &firstTask
+	}
+	return nil
 }
 
 func writeResourcesToDirectory(dir string, resources repository.PackageResources) error {
