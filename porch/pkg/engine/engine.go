@@ -279,6 +279,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		if cloneTask == nil {
 			return nil, fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", oldObj.Spec.PackageName)
 		}
+
 		mutation := &updatePackageMutation{
 			cloneTask:         cloneTask,
 			updateTask:        &newTask,
