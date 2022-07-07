@@ -107,6 +107,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			return errors.E(op, fmt.Errorf("could not find package revision %s", args[0]))
 		}
 		err = r.doUpdate(pr)
+		fmt.Fprintf(cmd.OutOrStdout(), "%s updated\n", pr.Name)
 	}
 	if err != nil {
 		return errors.E(op, err)
@@ -115,9 +116,9 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 }
 
 func (r *runner) doUpdate(pr *porchapi.PackageRevision) error {
-	cloneTask, found := r.findCloneTask(pr)
-	if !found {
-		return fmt.Errorf("upstream source not found. Only cloned packages can be updated")
+	cloneTask := r.findCloneTask(pr)
+	if cloneTask == nil {
+		return fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", pr.Spec.PackageName)
 	}
 
 	switch cloneTask.Clone.Upstream.Type {
@@ -134,8 +135,16 @@ func (r *runner) doUpdate(pr *porchapi.PackageRevision) error {
 		if newUpstreamPr == nil {
 			return fmt.Errorf("revision %s does not exist for package %s", r.revision, pr.Spec.PackageName)
 		}
-		cloneTask.Clone.Upstream.UpstreamRef.Name = newUpstreamPr.Name
+		newTask := porchapi.Task{
+			Type: porchapi.TaskTypeUpdate,
+			Update: &porchapi.PackageUpdateTaskSpec{
+				Upstream: cloneTask.Clone.Upstream,
+			},
+		}
+		newTask.Update.Upstream.UpstreamRef.Name = newUpstreamPr.Name
+		pr.Spec.Tasks = append(pr.Spec.Tasks, newTask)
 	}
+
 	return r.client.Update(r.ctx, pr)
 }
 
@@ -149,14 +158,15 @@ func (r *runner) findPackageRevision(prName string) *porchapi.PackageRevision {
 	return nil
 }
 
-func (r *runner) findCloneTask(pr *porchapi.PackageRevision) (*porchapi.Task, bool) {
-	for i := len(pr.Spec.Tasks) - 1; i >= 0; i-- {
-		t := pr.Spec.Tasks[i]
-		if t.Type == porchapi.TaskTypeClone {
-			return &t, true
-		}
+func (r *runner) findCloneTask(pr *porchapi.PackageRevision) *porchapi.Task {
+	if len(pr.Spec.Tasks) == 0 {
+		return nil
 	}
-	return nil, false
+	firstTask := pr.Spec.Tasks[0]
+	if firstTask.Type == porchapi.TaskTypeClone {
+		return &firstTask
+	}
+	return nil
 }
 
 func (r *runner) findPackageRevisionForRef(name string) *porchapi.PackageRevision {

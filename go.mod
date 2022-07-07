@@ -2,6 +2,8 @@ module github.com/GoogleContainerTools/kpt
 
 go 1.17
 
+replace github.com/GoogleContainerTools/kpt/porch/api => ./porch/api
+
 require (
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220617221430-3c3288af0c4c
 	github.com/cpuguy83/go-md2man/v2 v2.0.1

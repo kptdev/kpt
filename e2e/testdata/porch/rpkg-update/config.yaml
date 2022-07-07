@@ -61,3 +61,43 @@ commands:
       git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48   basens-edit         v0         false    Draft       git
       git-894137a40c0792e88a9b844491a95a466b085ca1   basens-edit         v2         true     Published   git
       git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   basens-edit-clone   v0         false    Draft       git
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover
+      - git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0
+    stdout: |
+      PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   v2
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover
+    stdout: |
+      PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
+      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48                         No update available
+      git-894137a40c0792e88a9b844491a95a466b085ca1                         No update available
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   v2
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --revision=v2
+      - git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0
+    stdout: "git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0 updated\n"
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover
+    stdout: |
+      PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
+      git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48                         No update available
+      git-894137a40c0792e88a9b844491a95a466b085ca1                         No update available
+      git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   No update available
