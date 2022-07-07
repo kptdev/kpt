@@ -29,7 +29,7 @@ commands:
       - --repository=git
       - --revision=v0
       - deploy-package
-    stdout: git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae created
+    stdout: "git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae created\n"
   - args:
       - alpha
       - rpkg

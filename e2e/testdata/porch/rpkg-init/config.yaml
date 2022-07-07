@@ -28,7 +28,7 @@ commands:
       - --repository=git
       - --revision=v0
       - init-package
-    stdout: git-e5041a7290c88ac4ac34182c8b3d658ab97d353d created
+    stdout: "git-e5041a7290c88ac4ac34182c8b3d658ab97d353d created\n"
   - args:
       - alpha
       - rpkg

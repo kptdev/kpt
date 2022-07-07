@@ -108,7 +108,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 	var mutations []mutation
 
-	// Unless first updateTask is Init or Clone, insert Init to create an empty package.
+	// Unless first task is Init or Clone, insert Init to create an empty package.
 	tasks := obj.Spec.Tasks
 	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
 		mutations = append(mutations, &initPackageMutation{
@@ -151,7 +151,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	switch task.Type {
 	case api.TaskTypeInit:
 		if task.Init == nil {
-			return nil, fmt.Errorf("init not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("init not set for task of type %q", task.Type)
 		}
 		return &initPackageMutation{
 			name: obj.Spec.PackageName,
@@ -159,7 +159,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}, nil
 	case api.TaskTypeClone:
 		if task.Clone == nil {
-			return nil, fmt.Errorf("clone not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
 		}
 		return &clonePackageMutation{
 			task:               task,
@@ -171,12 +171,29 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			referenceResolver:  cad.referenceResolver,
 		}, nil
 
+	case api.TaskTypeUpdate:
+		if task.Update == nil {
+			return nil, fmt.Errorf("update not set for task of type %q", task.Type)
+		}
+		cloneTask := findCloneTask(obj)
+		if cloneTask == nil {
+			return nil, fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", obj.Spec.PackageName)
+		}
+		return &updatePackageMutation{
+			cloneTask:         cloneTask,
+			updateTask:        task,
+			namespace:         obj.Namespace,
+			cad:               cad,
+			referenceResolver: cad.referenceResolver,
+			pkgName:           obj.Spec.PackageName,
+		}, nil
+
 	case api.TaskTypePatch:
 		return buildPatchMutation(ctx, task)
 
 	case api.TaskTypeEdit:
 		if task.Edit == nil {
-			return nil, fmt.Errorf("edit not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("edit not set for task of type %q", task.Type)
 		}
 		return &editPackageMutation{
 			task:              task,
@@ -187,10 +204,10 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 
 	case api.TaskTypeEval:
 		if task.Eval == nil {
-			return nil, fmt.Errorf("eval not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
 		}
 		// TODO: We should find a different way to do this. Probably a separate
-		// updateTask for render.
+		// task for render.
 		if task.Eval.Image == "render" {
 			return &renderPackageMutation{
 				renderer: cad.renderer,
@@ -204,7 +221,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}
 
 	default:
-		return nil, fmt.Errorf("updateTask of type %q not supported", task.Type)
+		return nil, fmt.Errorf("task of type %q not supported", task.Type)
 	}
 }
 
@@ -235,14 +252,24 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	var mutations []mutation
+	if len(oldObj.Spec.Tasks) > len(newObj.Spec.Tasks) {
+		return nil, fmt.Errorf("removing tasks is not yet supported")
+	}
+	for i := range oldObj.Spec.Tasks {
+		oldTask := &oldObj.Spec.Tasks[i]
+		newTask := &newObj.Spec.Tasks[i]
+		if oldTask.Type != newTask.Type {
+			return nil, fmt.Errorf("changing task types is not yet supported")
+		}
+	}
 	if len(newObj.Spec.Tasks) > len(oldObj.Spec.Tasks) {
 		if len(newObj.Spec.Tasks) > len(oldObj.Spec.Tasks)+1 {
-			return nil, fmt.Errorf("can only append one updateTask at a time")
+			return nil, fmt.Errorf("can only append one task at a time")
 		}
 
 		newTask := newObj.Spec.Tasks[len(newObj.Spec.Tasks)-1]
 		if newTask.Type != api.TaskTypeUpdate {
-			return nil, fmt.Errorf("appended updateTask is type %q, must be type %q", newTask.Type, api.TaskTypeUpdate)
+			return nil, fmt.Errorf("appended task is type %q, must be type %q", newTask.Type, api.TaskTypeUpdate)
 		}
 		if newTask.Update == nil {
 			return nil, fmt.Errorf("update not set for updateTask of type %q", newTask.Type)
@@ -250,7 +277,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 
 		cloneTask := findCloneTask(oldObj)
 		if cloneTask == nil {
-			return nil, fmt.Errorf("could not find clone updateTask for package ref")
+			return nil, fmt.Errorf("upstream source not found for package rev %q; only cloned packages can be updated", oldObj.Spec.PackageName)
 		}
 
 		mutation := &updatePackageMutation{
@@ -501,8 +528,8 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 // As per current implementation, upstream package ref is stored in a new update task but this may
 // change so the logic of figuring out current upstream will live in this function.
 func (m *updatePackageMutation) currUpstream() (*api.PackageRevisionRef, error) {
-	if m.updateTask == nil || m.updateTask.Update == nil {
-		return nil, fmt.Errorf("package %s does not have upstream info", m.pkgName)
+	if m.cloneTask == nil || m.cloneTask.Clone == nil {
+		return nil, fmt.Errorf("package %s does not have original upstream info", m.pkgName)
 	}
 	upstream := m.cloneTask.Clone.Upstream
 	if upstream.Type == api.RepositoryTypeGit || upstream.Type == api.RepositoryTypeOCI {
@@ -512,11 +539,12 @@ func (m *updatePackageMutation) currUpstream() (*api.PackageRevisionRef, error) 
 }
 
 func findCloneTask(pr *api.PackageRevision) *api.Task {
-	for i := len(pr.Spec.Tasks) - 1; i >= 0; i-- {
-		t := pr.Spec.Tasks[i]
-		if t.Type == api.TaskTypeClone {
-			return &t
-		}
+	if len(pr.Spec.Tasks) == 0 {
+		return nil
+	}
+	firstTask := pr.Spec.Tasks[0]
+	if firstTask.Type == api.TaskTypeClone {
+		return &firstTask
 	}
 	return nil
 }
