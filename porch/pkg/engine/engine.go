@@ -108,7 +108,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 	var mutations []mutation
 
-	// Unless first updateTask is Init or Clone, insert Init to create an empty package.
+	// Unless first task is Init or Clone, insert Init to create an empty package.
 	tasks := obj.Spec.Tasks
 	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
 		mutations = append(mutations, &initPackageMutation{
@@ -151,7 +151,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	switch task.Type {
 	case api.TaskTypeInit:
 		if task.Init == nil {
-			return nil, fmt.Errorf("init not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("init not set for task of type %q", task.Type)
 		}
 		return &initPackageMutation{
 			name: obj.Spec.PackageName,
@@ -159,7 +159,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}, nil
 	case api.TaskTypeClone:
 		if task.Clone == nil {
-			return nil, fmt.Errorf("clone not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("clone not set for task of type %q", task.Type)
 		}
 		return &clonePackageMutation{
 			task:               task,
@@ -193,7 +193,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 
 	case api.TaskTypeEdit:
 		if task.Edit == nil {
-			return nil, fmt.Errorf("edit not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("edit not set for task of type %q", task.Type)
 		}
 		return &editPackageMutation{
 			task:              task,
@@ -204,10 +204,10 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 
 	case api.TaskTypeEval:
 		if task.Eval == nil {
-			return nil, fmt.Errorf("eval not set for updateTask of type %q", task.Type)
+			return nil, fmt.Errorf("eval not set for task of type %q", task.Type)
 		}
 		// TODO: We should find a different way to do this. Probably a separate
-		// updateTask for render.
+		// task for render.
 		if task.Eval.Image == "render" {
 			return &renderPackageMutation{
 				renderer: cad.renderer,
@@ -221,7 +221,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		}
 
 	default:
-		return nil, fmt.Errorf("updateTask of type %q not supported", task.Type)
+		return nil, fmt.Errorf("task of type %q not supported", task.Type)
 	}
 }
 
