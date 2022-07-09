@@ -6,6 +6,11 @@ building Porch from sources.
 
 ## Prerequisites
 
+Note: Porch should run on any kubernetes cluster and should work on any cloud.
+We have just started by documenting one known-good configuration: GCP and GKE.
+We would welcome comparable installation instructions or feedback from people
+that try it out on other clouds / configurations.
+
 To run one of the [released versions](https://github.com/GoogleContainerTools/kpt/releases)
 of Porch on GKE, you will need:
 
