@@ -827,15 +827,29 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 
 		for _, gitAnnotation := range gitAnnotations {
 			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+				// We are iterating through the commits in reverse order.
+				// Tasks that are read from separate commits will be recorded in
+				// reverse order.
+				// The entire `tasks` slice will get reversed later, which will give us the
+				// tasks in chronological order.
 				if gitAnnotation.Task != nil {
 					tasks = append(tasks, *gitAnnotation.Task)
 				}
-				// Iterate in reverse order here. The reason is that tasks in
-				// separate commits end up in reverse order while we include
-				// multiple tasks in a single commit in the actual order.
+
+				// This case handles multiple tasks that appear in a single commit, which
+				// appear in chronological order within the gitAnnotation.
+				// The entire `tasks` slice will get reversed later, so in order for the tasks
+				// to stay in chronological order, we iterate through them in reverse order.
 				for i := len(gitAnnotation.Tasks) - 1; i >= 0; i-- {
 					t := gitAnnotation.Tasks[i]
 					tasks = append(tasks, *t)
+				}
+
+				lastTask := tasks[len(tasks)-1]
+				if lastTask.Type == v1alpha1.TaskTypeClone || lastTask.Type == v1alpha1.TaskTypeInit {
+					// we have reached the beginning of this package revision and don't need to
+					// continue further
+					break
 				}
 			}
 		}
