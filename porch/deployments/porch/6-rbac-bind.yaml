@@ -28,6 +28,20 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
+  name: sample-apiserver-rolebinding
+  namespace: porch-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: aggregated-apiserver-role
+subjects:
+  - kind: ServiceAccount
+    name: porch-server
+    namespace: porch-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
   name: porch-function-executor
   namespace: porch-fn-system
 roleRef:
