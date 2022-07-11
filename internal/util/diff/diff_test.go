@@ -72,11 +72,11 @@ func TestCommand_Diff(t *testing.T) {
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-39c39
+41c41
 <             - containerPort: 80
 ---
 >             - containerPort: 8081
-25,27c25,27
+27,29c27,29
 <     - name: "80"
 <       port: 80
 <       targetPort: 80
@@ -112,11 +112,11 @@ func TestCommand_Diff(t *testing.T) {
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-39c39
+41c41
 <             - containerPort: 80
 ---
 >             - containerPort: 8081
-25,27c25,27
+27,29c27,29
 <     - name: "80"
 <       port: 80
 <       targetPort: 80
@@ -153,11 +153,11 @@ func TestCommand_Diff(t *testing.T) {
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-39c39
+41c41
 <             - containerPort: 8081
 ---
 >             - containerPort: 80
-25,27c25,27
+27,29c27,29
 <     - name: "8081"
 <       port: 8081
 <       targetPort: 8081
@@ -199,7 +199,7 @@ func TestCommand_Diff(t *testing.T) {
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-7c7
+9c9
 <   replicas: 5
 ---
 >   replicas: 3
@@ -250,7 +250,7 @@ locally changed: foo
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-7c7
+9c9
 <   replicas: 5
 ---
 >   replicas: 3
@@ -305,7 +305,7 @@ locally changed: foo
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
-7c7
+9c9
 <   replicas: 3
 ---
 >   replicas: 5

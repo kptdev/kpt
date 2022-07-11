@@ -60,6 +60,7 @@ commands:
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
+            internal.kpt.dev/upstream-identifier: kpt.dev|Kptfile|default|basens-clone
           name: basens-clone
         upstream:
           git:
@@ -82,6 +83,7 @@ commands:
             config.kubernetes.io/path: namespace.yaml
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: namespace.yaml
+            internal.kpt.dev/upstream-identifier: '|Namespace|default|example'
           name: example
       kind: ResourceList
     yaml: true
@@ -103,6 +105,7 @@ commands:
             config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
+            internal.kpt.dev/upstream-identifier: kpt.dev|Kptfile|default|empty-clone
           name: empty-clone
         upstream:
           git:
