@@ -148,6 +148,53 @@ available.
 
 ### Workload Identity
 
+[Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity)
+is a simple way to access Google Cloud services from porch.
+
+#### Google Cloud Source Repositories
+
+[Cloud Source Repositories](https://cloud.google.com/source-repositories) can be access using
+workload identity, removing the need to store credentials in the cluster.
+
+To set it up, create the necessary service accounts and give it the required roles:
+
+```sh
+GCP_PROJECT_ID=$(gcloud config get-value project)
+
+# Create GCP service account for Porch server.
+gcloud iam service-accounts create porch-server
+
+# We want to create and delete images. Assign IAM roles to allow repository
+# administration.
+gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
+  --member "serviceAccount:porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+  --role "roles/source.admin"
+
+gcloud iam service-accounts add-iam-policy-binding porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[porch-system/porch-server]"
+```
+
+Build Porch, push images, and deploy porch server and controllers using the
+`make` target that adds workload identity service account annotations:
+
+```sh
+IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy
+```
+
+As above, you can verify that Porch is running by querying the `api-resources`:
+
+```sh
+kubectl api-resources | grep porch
+```
+
+To register a repository, use the following command:
+```sh
+kpt alpha repo register --repo-workload-identity --namespace=default https://source.developers.google.com/p/<project>/r/<repo>
+```
+
+#### OCI
+
 To integrate with OCI repositories such as
 [Artifact Registry](https://console.cloud.google.com/artifacts) or
 [Container Registry](https://console.cloud.google.com/gcr), Porch relies on
