@@ -34,8 +34,12 @@ import (
 )
 
 type clonePackageMutation struct {
-	task               *api.Task
-	namespace          string
+	task *api.Task
+
+	// namespace is the namespace against which we resolve references.
+	// TODO: merge namespace into referenceResolver?
+	namespace string
+
 	name               string // package target name
 	isDeployment       bool   // is the package deployable instance
 	cad                CaDEngine

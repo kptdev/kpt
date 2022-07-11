@@ -106,6 +106,19 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
+	if err := cad.applyTasks(ctx, draft, repositoryObj, obj); err != nil {
+		return nil, err
+	}
+
+	if err := draft.UpdateLifecycle(ctx, obj.Spec.Lifecycle); err != nil {
+		return nil, err
+	}
+
+	// Updates are done.
+	return draft.Close(ctx)
+}
+
+func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision) error {
 	var mutations []mutation
 
 	// Unless first task is Init or Clone, insert Init to create an empty package.
@@ -126,7 +139,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		task := &tasks[i]
 		mutation, err := cad.mapTaskToMutation(ctx, obj, task, repositoryObj.Spec.Deployment)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		mutations = append(mutations, mutation)
 	}
@@ -136,15 +149,10 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 
 	baseResources := repository.PackageResources{}
 	if err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
-		return nil, err
+		return err
 	}
 
-	if err := draft.UpdateLifecycle(ctx, obj.Spec.Lifecycle); err != nil {
-		return nil, err
-	}
-
-	// Updates are done.
-	return draft.Close(ctx)
+	return nil
 }
 
 func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task, isDeployment bool) (mutation, error) {
@@ -249,6 +257,10 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
+	}
+
+	if isRecloneAndReplay(oldObj, newObj) {
+		return cad.recloneAndReplay(ctx, repo, repositoryObj, newObj)
 	}
 
 	var mutations []mutation
@@ -698,4 +710,48 @@ func healConfig(old, new map[string]string) (map[string]string, error) {
 	}
 
 	return healed, nil
+}
+
+// isRecloneAndReplay determines if an update should be handled using reclone-and-replay semantics.
+// We detect this by checking if both old and new versions start by cloning a package, but the version has changed.
+// We may expand this scope in future.
+func isRecloneAndReplay(oldObj, newObj *api.PackageRevision) bool {
+	oldTasks := oldObj.Spec.Tasks
+	newTasks := newObj.Spec.Tasks
+	if len(oldTasks) == 0 || len(newTasks) == 0 {
+		return false
+	}
+
+	if oldTasks[0].Type != api.TaskTypeClone || newTasks[0].Type != api.TaskTypeClone {
+		return false
+	}
+
+	if reflect.DeepEqual(oldTasks[0], newTasks[0]) {
+		return false
+	}
+	return true
+}
+
+// recloneAndReplay performs an update by recloning the upstream package and replaying all tasks.
+// This is more like a git rebase operation than the "classic" kpt update algorithm, which is more like a git merge.
+func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repository, repositoryObj *configapi.Repository, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::recloneAndReplay", trace.WithAttributes())
+	defer span.End()
+
+	// For reclone and replay, we create a new package every time
+	// the version should be in newObj so we will overwrite.
+	draft, err := repo.CreatePackageRevision(ctx, newObj)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cad.applyTasks(ctx, draft, repositoryObj, newObj); err != nil {
+		return nil, err
+	}
+
+	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+		return nil, err
+	}
+
+	return draft.Close(ctx)
 }
