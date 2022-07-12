@@ -33,13 +33,31 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        runtime: [docker, podman]
+        runtime: [docker, podman, nerdctl]
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v1
         with:
           go-version: 1.17
         id: go
+      - name: Set up containerd
+        if: ${{ matrix.runtime == 'nerdctl' }}
+        uses: crazy-max/ghaction-setup-containerd@v2
+      - name: install nerdctl
+        if: ${{ matrix.runtime == 'nerdctl' }}
+        run: |
+          ps -aux | grep containerd
+          sudo apt-get update
+          sudo apt-get -y install rootlesskit
+          mkdir nerdctl
+          cd nerdctl
+          wget -c https://github.com/containerd/nerdctl/releases/download/v0.21.0/nerdctl-0.21.0-linux-amd64.tar.gz -O - | tar -xz
+          export PATH=$PATH:$(pwd)
+          chmod 0777 nerdctl
+          sudo mv nerdctl /usr/bin
+          containerd-rootless-setuptool.sh install
+          nerdctl version
+          nerdctl run -d --name=nginx nginx
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
       - name: Build, Test, Lint
