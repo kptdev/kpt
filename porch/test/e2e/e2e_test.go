@@ -731,6 +731,61 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	t.mustNotExist(ctx, &pkg)
 }
 
+func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
+	const (
+		repository  = "delete-and-recreate"
+		packageName = "test-delete-and-recreate"
+		revision    = "v1"
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	created := t.createPackageDraftF(ctx, repository, packageName, revision)
+
+	// Check the package exists
+	var pkg porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Delete the package
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+
+	t.mustNotExist(ctx, &pkg)
+
+	// Recreate the package with the same name and revision
+	created = t.createPackageDraftF(ctx, repository, packageName, revision)
+
+	// Check the package exists
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Ensure that there is only one init task in the package revision history
+	foundInitTask := false
+	for _, task := range pkg.Spec.Tasks {
+		if task.Type == porchapi.TaskTypeInit {
+			if foundInitTask {
+				t.Fatalf("found two init tasks in recreated package revision")
+			}
+			foundInitTask = true
+		}
+	}
+	t.Logf("successfully recreated package revision %q", packageName)
+}
+
 func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 	const (
 		repository  = "clone-ls"
