@@ -3,7 +3,7 @@
 This document is focused on using Porch via the `kpt` CLI.
 
 Installation of Porch, including prerequisites, is covered in a
-[dedicated document](./porch-installation.md).
+[dedicated document](guides/porch-installation.md).
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ To use Porch, you will need:
 
 Make sure that your `kubectl` context is set up for `kubectl` to interact with the
 correct Kubernetes instance (see
-[installation instructions](./porch-installation.md) or
+[installation instructions](guides/porch-installation.md) or
 the [running-locally](https://github.com/GoogleContainerTools/kpt/blob/main/porch/docs/running-locally.md) guide for details).
 
 To check whether `kubectl` is configured with your Porch cluster (or local instance), run:
@@ -69,7 +69,7 @@ To use Porch with an OCI repository
 ([Artifact Registry](https://console.cloud.google.com/artifacts) or
 [Google Container Registry](https://cloud.google.com/container-registry)), first
 make sure to:
-* Enable [workload identity](./porch-installation.md#workload-identity) for Porch
+* Enable [workload identity](guides/porch-installation.md#workload-identity) for Porch
 * Assign appropriate roles to the Porch workload identity service account
   (`iam.gke.io/gcp-service-account=porch-server@$(GCP_PROJECT_ID).iam.gserviceaccount.com`)
   to have appropriate level of access to your OCI repository.

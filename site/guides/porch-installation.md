@@ -96,7 +96,7 @@ packagerevisionresources                       porch.kpt.dev/v1alpha1           
 packagerevisions                               porch.kpt.dev/v1alpha1                 true         PackageRevision
 ```
 
-You can start [using Porch](./porch-user-guide.md).
+You can start [using Porch](guides/porch-user-guide.md).
 
 ## Run Custom Build of Porch
 
@@ -143,7 +143,7 @@ As above, you can verify that Porch is running by querying the `api-resources`:
 kubectl api-resources | grep porch
 ```
 
-And start [using Porch](./porch-user-guide.md) if the Porch resources are
+And start [using Porch](guides/porch-user-guide.md) if the Porch resources are
 available.
 
 ### Workload Identity
@@ -242,5 +242,5 @@ As above, you can verify that Porch is running by querying the `api-resources`:
 kubectl api-resources | grep porch
 ```
 
-And start [using Porch](./porch-user-guide.md) if the Porch resources are
+And start [using Porch](guides/porch-user-guide.md) if the Porch resources are
 available.
