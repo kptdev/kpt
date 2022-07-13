@@ -75,7 +75,7 @@ PKG_PATH:
 
 ```
 KPT_FN_RUNTIME:
-  The runtime to run kpt functions. It must be one of "docker" or "podman".
+  The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
 <!--mdtogo-->
@@ -120,7 +120,7 @@ $ kpt fn render -o stdout \
 
 ```shell
 # Render my-package-dir with podman as runtime for functions
-$ KPT_FN_RUNTIME=podman kpt fn render my-package-dir --runtime podman
+$ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
 ```
 
 <!--mdtogo-->

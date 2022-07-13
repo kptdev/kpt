@@ -21,6 +21,11 @@ Flags:
     Container image of the function e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
     For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
     e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
+
+Environment Variables:
+
+  KPT_FN_RUNTIME:
+    The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var DocExamples = `
   # display the documentation for image set-namespace:v0.1.1
@@ -144,7 +149,7 @@ Flags:
 Environment Variables:
 
   KPT_FN_RUNTIME:
-    The runtime to run kpt functions. It must be one of "docker" or "podman".
+    The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var EvalExamples = `
   # execute container my-fn on the resources in DIR directory and
@@ -292,7 +297,7 @@ Flags:
 Environment Variables:
 
   KPT_FN_RUNTIME:
-    The runtime to run kpt functions. It must be one of "docker" or "podman".
+    The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var RenderExamples = `
   # Render the package in current directory
@@ -318,7 +323,7 @@ var RenderExamples = `
   | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
 
   # Render my-package-dir with podman as runtime for functions
-  $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir --runtime podman
+  $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
 `
 
 var SinkShort = `Write resources to a local directory`
