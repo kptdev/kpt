@@ -18,6 +18,8 @@ You can develop a KRM function in Go using [the kpt function SDK].
 In this quickstart, we will write a function that adds an annotation 
 `config.kubernetes.io/managed-by=kpt` to all `Deployment` resources.
 
+This quickstart takes 15 minutes to finish.
+
 ### Initialize your project
 
 We start from a "get-started" package which contains a `main.go` file with some scaffolding code.
@@ -126,7 +128,8 @@ kpt fn eval ./data --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 
 ## Next Steps
 
-- See other [go doc examples] to use KubeObject.
+- Read [effective go KRM function]
+- See the [go doc examples] to use KubeObject.
 - To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
 
 [the kpt function SDK]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
@@ -134,3 +137,4 @@ kpt fn eval ./data --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 [`fn`]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
 [`ResourceList`]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [`unstructured.Unstrucutred`]: https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
+[effective go KRM function]: guides/effective-go-krm-function.md
