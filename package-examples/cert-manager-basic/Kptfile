@@ -5,4 +5,4 @@ metadata:
   annotations:
     config.kubernetes.io/local-config: "true"
 info:
-  description: sample description
+  description: CertManager Package (https://cert-manager.io)

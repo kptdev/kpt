@@ -10,8 +10,6 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/component: "controller"
     app.kubernetes.io/version: "v1.8.2"
-    app.kubernetes.io/managed-by: Helm
-    helm.sh/chart: cert-manager-v1.8.2
 spec:
   type: ClusterIP
   ports:
