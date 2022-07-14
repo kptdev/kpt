@@ -28,8 +28,10 @@ Repository flow:
   repository. Branch and directory can be left blank. Branch will default to
   `main` and directory will default to `/`.
 - In `Repository Authentication`, you`ll need to use the GitHub Personal Access
-  Token (unless your repository allows for unauthenticated writes). Create a new
-  secret for the Personal Access Token as directed by the flow.
+  Token (unless your repository allows for unauthenticated writes). Github
+  Personal Access Tokens can be created at https://github.com/settings/tokens,
+  and must include the 'repo' scope.  Create a new secret for the
+  Personal Access Token as directed by the flow.
 - In `Repository Content`, be sure to select Blueprints.
 
 Once the repository is registered, use the breadcrumbs (upper left) to navigate
@@ -100,15 +102,15 @@ blueprint using the UI.
   - In Target, select `RoleBinding: app-admin` as the target resource and set
     `subjects.0.name` as the target path. Select `Partial Value` as the replace
     value option, with `period` as the delimiter selecting `example` to replace.
-- Using the `Add Resource` button, add a new Resource Quota resource
-  - Name the resource `base`
-  - Set Max CPU Requests to 40 and Max Memory Requests to 40G
 - Click the Kptfile resource and add a new mutator
   - Search for `replacements` and select `apply-replacements` with the latest
     version available for selection
   - Select the `ApplyReplacements: update-rolebinding` for the function config
   - After adding the mutator, the Kptifle should have two mutators
     ![kptfile-mutators](/static/images/porch-ui/blueprint/edit-kptfile-mutators.png)
+- Using the `Add Resource` button, add a new Resource Quota resource
+  - Name the resource `base`
+  - Set Max CPU Requests to 40 and Max Memory Requests to 40G
 - After you are done with the above, you should have the following resources
   ![new-blueprint-resources](/static/images/porch-ui/blueprint/edit-new-blueprint-resources.png)
 - Clicking `Save` will save the resources, apply the mutator, and take you back

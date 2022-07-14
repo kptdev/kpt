@@ -45,6 +45,7 @@ gcloud config set project YOUR_GCP_PROJECT
 Select a GKE cluster or create a new one:
 
 ```sh
+gcloud services enable container.googleapis.com
 gcloud container clusters create-auto --region us-central1 porch-dev
 ```
 
@@ -54,13 +55,11 @@ Standard GKE cluster is currently preferable. Select a
  that works best for your needs:
 
  ```sh
+gcloud services enable container.googleapis.com
 gcloud container clusters create --region us-central1 porch-dev
 ```
 
 And ensure `kubectl` is targeting your GKE cluster:
-
-Ensure you are targeting the GKE cluster. Make sure to substitute your
-specific region and cluster name:
 
 ```sh
 gcloud container clusters get-credentials --region us-central1 porch-dev
@@ -69,17 +68,20 @@ gcloud container clusters get-credentials --region us-central1 porch-dev
 ## Run Released Version of Porch
 
 To run a released version of Porch, download the release config bundle from
-[Porch release page](https://github.com/GoogleContainerTools/kpt/releases).
+[Porch release page](https://github.com/GoogleContainerTools/kpt/releases);
+please note you'll need to scroll past recent kpt releases to the most
+recent `porch/...` release.
 
-Untar and applly the config bundle. This will install:
+Untar and apply the `deployment-blueprint.tar.gz` config bundle. This will install:
 
 * Porch server
 * [Config Sync](https://kpt.dev/gitops/configsync/)
 
 ```sh
 mkdir porch-install
-tar xzf path-to-deployment-blueprint.tar.gz -C porch-install
+tar xzf ~/Downloads/deployment-blueprint.tar.gz -C porch-install
 kubectl apply -f porch-install
+kubectl wait deployment --for=condition=Available porch-server -n porch-system
 ```
 
 You can verify that Porch is running by querying the `api-resources`:
@@ -94,6 +96,19 @@ repositories                                   config.porch.kpt.dev/v1alpha1    
 functions                                      porch.kpt.dev/v1alpha1                 true         Function
 packagerevisionresources                       porch.kpt.dev/v1alpha1                 true         PackageRevisionResources
 packagerevisions                               porch.kpt.dev/v1alpha1                 true         PackageRevision
+```
+
+To install ConfigSync:
+
+```sh
+echo "
+apiVersion: configmanagement.gke.io/v1
+kind: ConfigManagement
+metadata:
+  name: config-management
+spec:
+  enableMultiRepo: true
+" | kubectl apply -f -
 ```
 
 You can start [using Porch](guides/porch-user-guide.md).
