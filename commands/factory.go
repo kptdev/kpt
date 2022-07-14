@@ -33,7 +33,9 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).
 		WithDeprecatedPasswordFlag().
-		WithWrapConfigFn(UpdateQPS)
+		WithWrapConfigFn(UpdateQPS).
+		WithDiscoveryBurst(-1).
+		WithDiscoveryQPS(-1)
 	kubeConfigFlags.AddFlags(flags)
 	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
 		Delegate:  kubeConfigFlags,
