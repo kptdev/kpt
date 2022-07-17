@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ghost
+  namespace: example
+spec:
+  rules:
+    - host: ghost.local
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: example-ghost
+                port:
+                  name: http

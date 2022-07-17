@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### Ghost Application
 
 "Ghost is a powerful app for new-media creators to publish, share, and grow a business around their content. It comes with modern tools to build a website, publish content, send newsletters & offer paid subscriptions to members."
@@ -29,4 +30,15 @@ kpt fn render ${NAMESPACE}
 kpt live init ${NAMESPACE}
 
 kpt live apply ${NAMESPACE}
+=======
+```bash
+# Fetch ghost helm charts
+helm fetch --untar bitnami/ghost
+# By default networking, metrics are disabled. 
+helm template example ghost > rendered.yaml
+rm -rf ghost
+# Restructure the KRM resources by app. This should give two directories: ./mariadb /ghost 
+kubectl-slice -f rendered.yaml --template '{{ index "app.kubernetes.io/name" .metadata.labels }}/{{.kind | lower}}-{{.metadata.name|dottodash}}.yaml' -o ghost
+rm rendered.yaml
+>>>>>>> 136f7779 (Add ghost basic package)
 ```
