@@ -1,0 +1,10 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: SetLabels
+metadata:
+  name: mariadb
+  annotations:
+    config.kubernetes.io/local-config: "true"
+labels:
+  app.kubernetes.io/name: mariadb
+  app.kubernetes.io/instance: example
+  app.kubernetes.io/component: primary
