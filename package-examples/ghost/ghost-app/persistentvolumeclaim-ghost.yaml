@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: example-ghost
+  name: ghost-app
   namespace: example
 spec:
   accessModes:

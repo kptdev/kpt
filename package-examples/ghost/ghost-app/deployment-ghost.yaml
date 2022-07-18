@@ -1,16 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example-ghost
+  name: ghost-app
   namespace: example
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   template:
-    metadata:
-      annotations:
-        checksum/secrets: 711677f8a87ff3df1d09863858613b5dbecb3f6b8ea51a8c37b40762aff66a20
     spec:
       affinity:
         podAffinity:
@@ -25,7 +22,7 @@ spec:
       securityContext:
         fsGroup: 1001
       containers:
-        - name: example-ghost
+        - name: ghost-app
           image: docker.io/bitnami/ghost:4.45.0-debian-10-r0
           imagePullPolicy: "IfNotPresent"
           securityContext:
@@ -44,22 +41,12 @@ spec:
               value: "bitnami_ghost"
             - name: GHOST_DATABASE_USER
               value: "bn_ghost"
-            - name: GHOST_DATABASE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: example-mariadb
-                  key: mariadb-password
             - name: GHOST_HOST
               value: "aa/"
             - name: GHOST_PORT_NUMBER
               value: "2368"
             - name: GHOST_USERNAME
               value: "user"
-            - name: GHOST_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: example-ghost
-                  key: ghost-password
             - name: GHOST_EMAIL
               value: "user@example.com"
             - name: GHOST_BLOG_TITLE
@@ -105,4 +92,4 @@ spec:
       volumes:
         - name: ghost-data
           persistentVolumeClaim:
-            claimName: example-ghost
+            claimName: ghost-app

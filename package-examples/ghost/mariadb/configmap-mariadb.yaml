@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: example-mariadb
+  name: mariadb
   namespace: example
 data:
-  my.cnf: |-
+  my.ini: |-
     [mysqld]
     skip-name-resolve
     explicit_defaults_for_timestamp

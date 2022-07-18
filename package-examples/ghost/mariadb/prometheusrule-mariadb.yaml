@@ -2,9 +2,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: example-mariadb
+  name: mariadb
   namespace: example
 spec:
   groups:
-  - name: example-mariadb
+  - name: mariadb
     rules: []

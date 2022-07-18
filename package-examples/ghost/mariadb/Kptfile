@@ -5,7 +5,7 @@ metadata:
   annotations:
     config.kubernetes.io/local-config: "true"
 info:
-  description: sample description
+  description: The MariaDB which provides the storage for Ghost.
 pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-labels:v0.1.5

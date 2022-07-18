@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: example-ghost
+  name: ghost-app
   namespace: example
 spec:
   rules:
@@ -12,6 +12,6 @@ spec:
             pathType: ImplementationSpecific
             backend:
               service:
-                name: example-ghost
+                name: ghost-app
                 port:
                   name: http
