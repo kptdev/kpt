@@ -5,6 +5,4 @@ metadata:
   annotations:
     config.kubernetes.io/local-config: "true"
 labels:
-  app.kubernetes.io/name: ghost
-  app.kubernetes.io/instance: example
-  app.kubernetes.io/component: ghost
+  app.kubernetes.io/name: ghost-app

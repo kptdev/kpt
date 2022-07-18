@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ### Ghost Application
 
 "Ghost is a powerful app for new-media creators to publish, share, and grow a business around their content. It comes with modern tools to build a website, publish content, send newsletters & offer paid subscriptions to members."
@@ -7,6 +6,7 @@ https://ghost.org/
 ### Quick start
 
 #### Get KPT Pacakge
+<<<<<<< HEAD
 ```bash
 export NAMESPACE=<YOUR NAMESPACE>
 # make sure the namespace is correct and exists. Otherwise, create the namespace
@@ -30,15 +30,28 @@ kpt fn render ${NAMESPACE}
 kpt live init ${NAMESPACE}
 
 kpt live apply ${NAMESPACE}
-=======
+
 ```bash
-# Fetch ghost helm charts
-helm fetch --untar bitnami/ghost
-# By default networking, metrics are disabled. 
-helm template example ghost > rendered.yaml
-rm -rf ghost
-# Restructure the KRM resources by app. This should give two directories: ./mariadb /ghost 
-kubectl-slice -f rendered.yaml --template '{{ index "app.kubernetes.io/name" .metadata.labels }}/{{.kind | lower}}-{{.metadata.name|dottodash}}.yaml' -o ghost
-rm rendered.yaml
->>>>>>> 136f7779 (Add ghost basic package)
+export NAMESPACE=<YOUR NAMESPACE>
+# make sure the namespace is correct and exists. Otherwise, create the namespace
+kubectl create namespace ${NAMESPACE}
+
+# You get this Ghost package by running
+kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/ghost@main ${NAMESPACE} --for-deployment
+```
+
+#### Update the KRM resources to your own data
+
+Updating the KRM resources are easy with variant constructor
+```bash
+kpt fn render ${NAMESPACE}
+```
+
+#### Deploy the KRM resources to your cluster
+
+```bash
+# Initialize inventory info. You only need to run this if do not have resourcesgroup.yaml
+kpt live init ${NAMESPACE}
+
+kpt live apply ${NAMESPACE}
 ```
