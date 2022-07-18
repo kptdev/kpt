@@ -55,7 +55,7 @@ source: |
     for resource in resources:
       curr_labels = resource.get("metadata").get("labels")
       if "app.kubernetes.io/component" not in curr_labels:
-        resource["metadata"]["labels"]["app.kubernetes.io/component"] = ""
+        resource["metadata"]["labels"]["app.kubernetes.io/component"] = "controller"
   setlabel(ctx.resource_list["items"])
 ```
 
