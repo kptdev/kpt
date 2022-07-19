@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: ghost-app
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: The Ghost App package contains the KRM resources for a Ghost Application.

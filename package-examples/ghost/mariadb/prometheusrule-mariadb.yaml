@@ -1,0 +1,10 @@
+# Source: ghost/charts/mariadb/templates/prometheusrules.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mariadb
+  namespace: example
+spec:
+  groups:
+  - name: mariadb
+    rules: []
