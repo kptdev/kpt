@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: ingress-nginx
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: sample description
