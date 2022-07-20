@@ -8,3 +8,4 @@
 - [Namespace Provisioning UI](guides/namespace-provisioning-ui.md)
 - [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
 - [Value Propagation Pattern](guides/value-propagation.md)
+- [Effective Go KRM functions](guides/effective-go-krm-function.md)
