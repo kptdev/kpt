@@ -5,7 +5,7 @@ metadata:
   name: mariadb
   namespace: example
 data:
-  my.ini: |-
+  my.cnf: |-
     [mysqld]
     skip-name-resolve
     explicit_defaults_for_timestamp

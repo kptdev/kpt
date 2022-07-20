@@ -8,5 +8,7 @@ info:
   description: sample description
 pipeline:
   mutators:
+    - image: gcr.io/kpt-fn/set-labels:v0.1.5
+      configPath: setlabels.yaml
     - image: gcr.io/kpt-fn/set-namespace:v0.3.4
       configPath: package-context.yaml

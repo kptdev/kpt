@@ -40,8 +40,8 @@ spec:
             - name: data
               mountPath: /bitnami/mariadb
             - name: config
-              mountPath: /opt/bitnami/mariadb/conf/my.ini
-              subPath: my.ini
+              mountPath: /opt/bitnami/mariadb/conf/my.cnf
+              subPath: my.cnf
       volumes:
         - name: config
           configMap:
