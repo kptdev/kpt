@@ -12,17 +12,6 @@ spec:
     type: RollingUpdate
   template:
     spec:
-      serviceAccountName: mariadb
-      affinity:
-        podAffinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                namespaces:
-                  - "default"
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
       securityContext:
         fsGroup: 1001
       containers:
@@ -34,26 +23,16 @@ spec:
             runAsUser: 1001
           env:
             - name: BITNAMI_DEBUG
-              value: "false"
+              value: "true"
             - name: MARIADB_USER
               value: "bn_ghost"
             - name: MARIADB_DATABASE
               value: "bitnami_ghost"
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "true"
           ports:
             - name: mysql
               containerPort: 3306
-          livenessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 120
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
           resources:
             limits: {}
             requests: {}

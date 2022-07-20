@@ -30,3 +30,15 @@ kpt live init ${NAMESPACE}
 
 kpt live apply ${NAMESPACE}
 ```
+
+You need to manually update the Ghost Host IP after deployment.
+```bash
+# Get external IP from Service
+kubectl get -n ${NAMESPACE} service/ghost-app -ojsonpath='{.status.loadBalancer.ingress[].ip}'
+```
+Use this IP to replace the "EXTERNAL_IP_FROM_SERVICE" value in `ghost/deployment-ghost.yaml`
+
+Re-apply the new deployment.
+```bash
+kpt live apply
+``` 
