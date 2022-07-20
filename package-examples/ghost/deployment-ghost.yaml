@@ -18,37 +18,9 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 1001
-          env:
-            - name: BITNAMI_DEBUG
-              value: "true"
-            - name: ALLOW_EMPTY_PASSWORD
-              value: "yes"
-            - name: GHOST_DATABASE_HOST
-              value: "mariadb"
-            - name: GHOST_DATABASE_PORT_NUMBER
-              value: "3306"
-            - name: GHOST_DATABASE_NAME
-              value: "bitnami_ghost"
-            - name: GHOST_DATABASE_USER
-              value: "bn_ghost"
-            - name: GHOST_HOST
-              value: EXTERNAL_IP_FROM_SERVICE
-            - name: GHOST_PORT_NUMBER
-              value: "2368"
-            - name: GHOST_USERNAME
-              value: "user"
-            - name: GHOST_EMAIL
-              value: "user@example.com"
-            - name: GHOST_BLOG_TITLE
-              value: "User's Blog"
-            - name: GHOST_ENABLE_HTTPS
-              value: "no"
-            - name: GHOST_EXTERNAL_HTTP_PORT_NUMBER
-              value: "80"
-            - name: GHOST_EXTERNAL_HTTPS_PORT_NUMBER
-              value: "443"
-            - name: GHOST_SKIP_BOOTSTRAP
-              value: "no"
+          envFrom:
+            - configMapRef:
+                name: ghost-env
           ports:
             - name: http
               containerPort: 2368

@@ -1,0 +1,22 @@
+# Source: ghost/charts/mariadb/templates/primary/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghost-env
+  namespace: example
+data:
+  BITNAMI_DEBUG: "true"
+  ALLOW_EMPTY_PASSWORD: "yes"
+  GHOST_DATABASE_HOST: "mariadb"
+  GHOST_DATABASE_PORT_NUMBER: "3306"
+  GHOST_DATABASE_NAME: "bitnami_ghost"
+  GHOST_DATABASE_USER: "bn_ghost"
+  GHOST_HOST: EXTERNAL_IP_FROM_SERVICE
+  GHOST_PORT_NUMBER: "2368"
+  GHOST_USERNAME: "user"
+  GHOST_EMAIL: "user@example.com"
+  GHOST_BLOG_TITLE: "User's Blog"
+  GHOST_ENABLE_HTTPS: "no"
+  GHOST_EXTERNAL_HTTP_PORT_NUMBER: "80"
+  GHOST_EXTERNAL_HTTPS_PORT_NUMBER: "443"
+  GHOST_SKIP_BOOTSTRAP: "no"
