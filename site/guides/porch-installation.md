@@ -176,7 +176,7 @@ To set it up, create the necessary service accounts and give it the required rol
 ```sh
 GCP_PROJECT_ID=$(gcloud config get-value project)
 
-# Create GCP service account for Porch server.
+# Create GCP service account (GSA) for Porch server.
 gcloud iam service-accounts create porch-server
 
 # We want to create and delete images. Assign IAM roles to allow repository
@@ -188,6 +188,11 @@ gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
 gcloud iam service-accounts add-iam-policy-binding porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
   --role roles/iam.workloadIdentityUser \
   --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[porch-system/porch-server]"
+
+# We need to associate the Kubernetes Service Account (KSA)
+# with the GSA by annotating the KSA.
+kubectl annotate serviceaccount porch-server -n porch-system \
+  iam.gke.io/gcp-service-account=porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com
 ```
 
 Build Porch, push images, and deploy porch server and controllers using the
