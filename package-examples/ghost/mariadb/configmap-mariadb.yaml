@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   name: mariadb
   namespace: example
+  labels:
+    app.kubernetes.io/name: mariadb
 data:
   my.ini: |-
     [mysqld]

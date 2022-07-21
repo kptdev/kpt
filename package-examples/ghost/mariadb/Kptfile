@@ -4,6 +4,8 @@ metadata:
   name: mariadb
   annotations:
     config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: mariadb
 info:
   description: The MariaDB which provides the storage for Ghost.
 pipeline:

@@ -10,3 +10,8 @@ pipeline:
   mutators:
     - image: gcr.io/kpt-fn/set-namespace:v0.3.4
       configPath: package-context.yaml
+    - image: starlark:v0.4.3
+      configPath: fn/update-blog-host.yaml
+  validators:
+    - image: starlark:v0.4.3
+      configPath: fn/validate-blog-host.yaml

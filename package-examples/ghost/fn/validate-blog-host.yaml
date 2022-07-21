@@ -1,0 +1,22 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: validate-blog-host
+source: |-
+  def validate_host(resources):
+    errMsg = "Blog's hostname must be specified in fn/update-blog-host.yaml"
+    placeHolderHostname = "example.com"
+    for resource in resources:
+      # this is an abstract package, so ignore host name validation
+      if resource["kind"] == "ConfigMap" and resource["metadata"]["name"] == "kptfile.kpt.dev" and resource["data"]["name"] == "example":
+        return
+    for resource in ctx.resource_list["items"]:
+      if resource["kind"] == "Ingress" and resource["spec"]["rules"][0]["host"] == placeHolderHostname:
+        fail(errMsg)
+      if resource["kind"] == "Deployment":
+        container = resource["spec"]["template"]["spec"]["containers"][0]
+        for env in container["env"]:
+          if env["name"] == "GHOST_HOST" and env["value"] == placeHolderHostname:
+            fail(errMsg)
+
+  validate_host(ctx.resource_list["items"])
