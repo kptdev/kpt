@@ -436,7 +436,7 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 	cmd.Stdout = cmdOut
 	err := cmd.Run()
 	if err != nil || cmdOut.String() == "" {
-		return fmt.Errorf("%s", suggestedText)
+		return fmt.Errorf("%v\n%s", err, suggestedText)
 	}
 	return isSupportedDockerVersion(strings.TrimSuffix(cmdOut.String(), "\n"))
 }
@@ -467,7 +467,7 @@ To install podman, follow the instructions at https://podman.io/getting-started/
 	cmd := exec.CommandContext(ctx, podmanBin, "version")
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("%s", suggestedText)
+		return fmt.Errorf("%v\n%s", err, suggestedText)
 	}
 	return nil
 }
