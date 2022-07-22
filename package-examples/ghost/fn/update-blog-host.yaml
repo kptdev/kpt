@@ -3,7 +3,7 @@ kind: StarlarkRun
 metadata:
   name: update-blog-host
 params:
-  host: myblog.com
+  host: example.com
 source: |
   host = ctx.resource_list["functionConfig"]["params"]["host"]
 

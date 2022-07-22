@@ -34,7 +34,7 @@ spec:
             - name: GHOST_DATABASE_USER
               value: bn_ghost
             - name: GHOST_HOST
-              value: myblog.com
+              value: example.com
             - name: GHOST_PORT_NUMBER
               value: "2368"
             - name: GHOST_USERNAME
