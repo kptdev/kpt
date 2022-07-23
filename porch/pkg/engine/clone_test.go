@@ -35,6 +35,8 @@ import (
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage/memory"
 )
 
@@ -151,8 +153,26 @@ func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerO
 	return fmt.Sprintf("http://%s", address)
 }
 
+// TODO(mortent): See if we can restruture the packages to
+// avoid having to create separate implementations of the auth
+// interfaces here.
 type credentialResolver struct {
 	username, password string
+}
+
+type credential struct {
+	username, password string
+}
+
+func (c *credential) Valid() bool {
+	return true
+}
+
+func (c *credential) ToAuthMethod() transport.AuthMethod {
+	return &githttp.BasicAuth{
+		Username: c.username,
+		Password: c.password,
+	}
 }
 
 func randomString(n int) string {
@@ -172,11 +192,9 @@ func randomCredentials() *credentialResolver {
 }
 
 func (r *credentialResolver) ResolveCredential(ctx context.Context, namespace, name string) (repository.Credential, error) {
-	return repository.Credential{
-		Data: map[string][]byte{
-			"username": []byte(r.username),
-			"password": []byte(r.password),
-		},
+	return &credential{
+		username: r.username,
+		password: r.password,
 	}, nil
 }
 

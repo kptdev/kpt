@@ -63,11 +63,9 @@ func TestCredentialResolver(t *testing.T) {
 					"password": []byte("password"),
 				},
 			},
-			expectedCredential: repository.Credential{
-				Data: map[string][]byte{
-					"username": []byte("username"),
-					"password": []byte("password"),
-				},
+			expectedCredential: &BasicAuthCredential{
+				Username: "username",
+				Password: "password",
 			},
 		},
 		"no resolver for secret type": {
