@@ -1,0 +1,19 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: ApplyReplacements
+metadata:
+  name: update-host
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: ghost-app
+replacements:
+- source:
+    kind: Ingress
+    name: ghost-app
+    fieldPath: spec.rules.0.host
+  targets:
+  - select:
+      name: ghost-app
+      kind: Deployment
+    fieldPaths:
+    - spec.template.spec.containers.[name=ghost-app].env.[name=GHOST_HOST].value
