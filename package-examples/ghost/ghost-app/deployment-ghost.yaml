@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: ghost-app
   namespace: example
+  labels:
+    app.kubernetes.io/name: ghost-app
 spec:
   replicas: 1
   strategy:
@@ -14,7 +16,7 @@ spec:
       containers:
         - name: ghost-app
           image: docker.io/bitnami/ghost:4.45.0-debian-10-r0
-          imagePullPolicy: "IfNotPresent"
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
             runAsUser: 1001
@@ -24,23 +26,23 @@ spec:
             - name: ALLOW_EMPTY_PASSWORD
               value: "yes"
             - name: GHOST_DATABASE_HOST
-              value: "mariadb"
+              value: mariadb
             - name: GHOST_DATABASE_PORT_NUMBER
               value: "3306"
             - name: GHOST_DATABASE_NAME
-              value: "bitnami_ghost"
+              value: bitnami_ghost
             - name: GHOST_DATABASE_USER
-              value: "bn_ghost"
+              value: bn_ghost
             - name: GHOST_HOST
-              value: EXTERNAL_IP_FROM_SERVICE
+              value: example.com
             - name: GHOST_PORT_NUMBER
               value: "2368"
             - name: GHOST_USERNAME
-              value: "user"
+              value: user
             - name: GHOST_EMAIL
-              value: "user@example.com"
+              value: user@example.com
             - name: GHOST_BLOG_TITLE
-              value: "User's Blog"
+              value: User's Blog
             - name: GHOST_ENABLE_HTTPS
               value: "no"
             - name: GHOST_EXTERNAL_HTTP_PORT_NUMBER
@@ -56,7 +58,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: "http"
+              port: http
               scheme: HTTP
             initialDelaySeconds: 120
             periodSeconds: 10
@@ -66,7 +68,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /
-              port: "http"
+              port: http
               scheme: HTTP
             initialDelaySeconds: 30
             periodSeconds: 5
@@ -83,3 +85,9 @@ spec:
         - name: ghost-data
           persistentVolumeClaim:
             claimName: ghost-app
+    metadata:
+      labels:
+        app.kubernetes.io/name: ghost-app
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ghost-app

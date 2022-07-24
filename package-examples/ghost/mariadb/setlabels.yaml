@@ -5,5 +5,7 @@ metadata:
   namespace: example
   annotations:
     config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: mariadb
 labels:
   app.kubernetes.io/name: mariadb

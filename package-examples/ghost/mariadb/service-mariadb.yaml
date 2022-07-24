@@ -4,6 +4,8 @@ kind: Service
 metadata:
   name: mariadb
   namespace: example
+  labels:
+    app.kubernetes.io/name: mariadb
 spec:
   type: ClusterIP
   sessionAffinity: None
@@ -13,3 +15,5 @@ spec:
       protocol: TCP
       targetPort: mysql
       nodePort: null
+  selector:
+    app.kubernetes.io/name: mariadb

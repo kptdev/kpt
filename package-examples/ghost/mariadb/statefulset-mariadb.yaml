@@ -4,6 +4,8 @@ kind: StatefulSet
 metadata:
   name: mariadb
   namespace: example
+  labels:
+    app.kubernetes.io/name: mariadb
 spec:
   replicas: 1
   revisionHistoryLimit: 10
@@ -17,7 +19,7 @@ spec:
       containers:
         - name: mariadb
           image: docker.io/bitnami/mariadb:10.6.7-debian-10-r62
-          imagePullPolicy: "IfNotPresent"
+          imagePullPolicy: IfNotPresent
           securityContext:
             runAsNonRoot: true
             runAsUser: 1001
@@ -25,9 +27,9 @@ spec:
             - name: BITNAMI_DEBUG
               value: "true"
             - name: MARIADB_USER
-              value: "bn_ghost"
+              value: bn_ghost
             - name: MARIADB_DATABASE
-              value: "bitnami_ghost"
+              value: bitnami_ghost
             - name: ALLOW_EMPTY_PASSWORD
               value: "true"
           ports:
@@ -46,12 +48,20 @@ spec:
         - name: config
           configMap:
             name: mariadb
+    metadata:
+      labels:
+        app.kubernetes.io/name: mariadb
   volumeClaimTemplates:
     - metadata:
         name: data
+        labels:
+          app.kubernetes.io/name: mariadb
       spec:
         accessModes:
-          - "ReadWriteOnce"
+          - ReadWriteOnce
         resources:
           requests:
-            storage: "8Gi"
+            storage: 8Gi
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mariadb

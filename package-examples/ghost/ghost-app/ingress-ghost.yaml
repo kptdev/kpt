@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ghost-app
+  namespace: example
+  labels:
+    app.kubernetes.io/name: ghost-app
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: example.com
+    http:
+      paths:
+      - backend:
+          serviceName: ghost-app
+          servicePort: 80
