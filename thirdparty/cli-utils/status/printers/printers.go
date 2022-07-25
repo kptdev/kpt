@@ -23,11 +23,13 @@ func CreatePrinter(printerType string, ioStreams genericclioptions.IOStreams, pr
 	case printers.JSONPrinter:
 		return &list.BaseListPrinter{
 			Formatter: json.NewFormatter(ioStreams, common.DryRunNone),
+			Format:    printers.JSONPrinter,
 			Data:      printData,
 		}, nil
 	default:
 		return &list.BaseListPrinter{
 			Formatter: events.NewFormatter(ioStreams, common.DryRunNone),
+			Format:    printers.EventsPrinter,
 			Data:      printData,
 		}, nil
 	}
