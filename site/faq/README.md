@@ -6,12 +6,30 @@ Please visit the [roadmap document] and the [kpt milestones].
 
 ### How is kpt different from other solutions?
 
-Rather than expressing configuration as code that generates configuration,
-kpt represents [Configuration as Data], in particular as YAML or JSON objects
-adhering to [The Kubernetes Resource Model], and uses a transformation-based
-approach to customization. This enables interoperability of a variety of generators,
+Think of configuration as an API or data in a database. kpt can operate on configuration
+in storage, git or OCI.
+
+Rather than expressing configuration AS code or templates that generate configuration,
+kpt represents [Configuration as Data]. In particular, it represents configuration
+as YAML or JSON objects adhering to [The Kubernetes Resource Model], the same as the
+live state in Kubernetes, which enables novel remedies to configuration drift.
+
+kpt uses an in-place transformation approach to customization: 
+read configuration in, modify it, and write it back.
+
+This enables interoperability of a variety of generators,
 transformers, and validators. One doesn’t have to make all changes through a monolithic
 generator implementation.
+
+By storing the result of config generators and transformers, automated mutations can be separated in time
+from use and other modifications. This enables generation via a UI, for example.
+It also is one enabler of in-place edits rather than patches or other programmatic overrides.
+
+Another ingredient in the secret sauce is the ability to upgrade from an upstream package
+despite downstream modifications. Conceptually it's like deriving and applying patches automatically.
+
+Combine these capabilities with the ability to operate on packages in bulk via APIs,
+and new operational capabilities are enabled. 
 
 ### What's the difference between kpt and kustomize?
 
