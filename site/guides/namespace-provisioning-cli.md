@@ -402,7 +402,7 @@ Package "backend"
 ```
 
 So with that we now have a backend service ready to be onboarded and applied to
-the cluster. So the first step would be to commit the backend package to
+the cluster. So the first step would be to commit and tag the backend package in
 deployment repo.
 
 ```shell
@@ -410,6 +410,9 @@ deployment repo.
 
 $ git add backend && git commit -am "initial pkg for deployment"
 $ git push origin main
+
+# tag the package
+$ git tag backend/v0 main && git push origin backend/v0
 
 ```
 
