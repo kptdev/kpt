@@ -4,6 +4,8 @@
 package table
 
 import (
+	"strings"
+
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/collector"
 	pe "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/object"
@@ -19,6 +21,7 @@ type CollectorAdapter struct {
 
 type ResourceInfo struct {
 	resourceStatus *pe.ResourceStatus
+	invName        string
 }
 
 func (r *ResourceInfo) Identifier() object.ObjMetadata {
@@ -34,6 +37,7 @@ func (r *ResourceInfo) SubResources() []table.Resource {
 	for _, rs := range r.resourceStatus.GeneratedResources {
 		subResources = append(subResources, &ResourceInfo{
 			resourceStatus: rs,
+			invName:        r.invName,
 		})
 	}
 	return subResources
@@ -52,13 +56,16 @@ func (rss *ResourceState) Error() error {
 	return rss.err
 }
 
-func (ca *CollectorAdapter) LatestStatus() *ResourceState {
+func (ca *CollectorAdapter) LatestStatus(invNameMap map[object.ObjMetadata]string, statusSet map[string]bool) *ResourceState {
 	observation := ca.collector.LatestObservation()
 	var resources []table.Resource
 	for _, resourceStatus := range observation.ResourceStatuses {
-		resources = append(resources, &ResourceInfo{
-			resourceStatus: resourceStatus,
-		})
+		if _, ok := statusSet[strings.ToLower(resourceStatus.Status.String())]; len(statusSet) == 0 || ok {
+			resources = append(resources, &ResourceInfo{
+				resourceStatus: resourceStatus,
+				invName:        invNameMap[resourceStatus.Identifier],
+			})
+		}
 	}
 	return &ResourceState{
 		resources: resources,

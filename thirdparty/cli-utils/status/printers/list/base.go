@@ -26,6 +26,23 @@ import (
 // status information as a list of events as they happen.
 type BaseListPrinter struct {
 	Formatter list.Formatter
+	Data      *PrintData
+}
+
+// PrintData records data required for printing
+type PrintData struct {
+	Identifiers object.ObjMetadataSet
+	InvNameMap  map[object.ObjMetadata]string
+	StatusSet   map[string]bool
+}
+
+// PrintError print out errors when received error events
+func (ep *BaseListPrinter) PrintError(e error) error {
+	err := ep.Formatter.FormatErrorEvent(event.ErrorEvent{Err: e})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Print takes an event channel and outputs the status events on the channel

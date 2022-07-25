@@ -16,17 +16,19 @@ import (
 
 // CreatePrinter return an implementation of the Printer interface. The
 // actual implementation is based on the printerType requested.
-func CreatePrinter(printerType string, ioStreams genericclioptions.IOStreams) (printer.Printer, error) {
+func CreatePrinter(printerType string, ioStreams genericclioptions.IOStreams, printData *list.PrintData) (printer.Printer, error) {
 	switch printerType {
 	case printers.TablePrinter:
-		return table.NewTablePrinter(ioStreams), nil
+		return table.NewTablePrinter(ioStreams, printData), nil
 	case printers.JSONPrinter:
 		return &list.BaseListPrinter{
 			Formatter: json.NewFormatter(ioStreams, common.DryRunNone),
+			Data:      printData,
 		}, nil
 	default:
 		return &list.BaseListPrinter{
 			Formatter: events.NewFormatter(ioStreams, common.DryRunNone),
+			Data:      printData,
 		}, nil
 	}
 }
