@@ -403,7 +403,7 @@ Package "backend"
 
 So with that we now have a backend service ready to be onboarded and applied to
 the cluster. So the first step would be to commit and tag the backend package in
-deployment repo.
+the deployment repo.
 
 ```shell
 # assuming you are in deployment repo
