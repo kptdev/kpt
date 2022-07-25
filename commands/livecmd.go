@@ -49,7 +49,7 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
-	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams)
+	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams, false)
 	destroyCmd := cmddestroy.NewCommand(ctx, f, ioStreams)
 	statusCmd := status.NewCommand(ctx, f)
 	installRGCmd := cmdinstallrg.NewCommand(ctx, f, ioStreams)
