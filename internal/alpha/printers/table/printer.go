@@ -6,11 +6,14 @@ package table
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
+	pollingevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	printcommon "sigs.k8s.io/cli-utils/pkg/print/common"
 	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
@@ -72,87 +75,23 @@ func (t *Printer) Print(ch <-chan event.Event, _ common.DryRunStrategy, _ bool) 
 }
 
 // columns defines the columns we want to print
-//TODO: We should have the number of columns and their widths be
+// TODO: We should have the number of columns and their widths be
 // dependent on the space available.
 var (
-	actionColumnDef = table.ColumnDef{
-		// Column containing the resource type and name. Currently it does not
-		// print group or version since those are rarely needed to uniquely
-		// distinguish two resources from each other. Just name and kind should
-		// be enough in almost all cases and saves space in the output.
-		ColumnName:   "action",
-		ColumnHeader: "ACTION",
-		ColumnWidth:  12,
-		PrintResourceFunc: func(w io.Writer, width int, r table.Resource) (int,
-			error) {
-			var resInfo *resourceInfo
-			switch res := r.(type) {
-			case *resourceInfo:
-				resInfo = res
-			default:
-				return 0, nil
-			}
-
-			var text string
-			switch resInfo.ResourceAction {
-			case event.ApplyAction:
-				if resInfo.ApplyStatus != event.ApplyFailed {
-					text = resInfo.ApplyStatus.String()
-				}
-			case event.PruneAction:
-				if resInfo.PruneStatus != event.PruneFailed {
-					text = resInfo.PruneStatus.String()
-				}
-			}
-
-			if len(text) > width {
-				text = text[:width]
-			}
-			_, err := fmt.Fprint(w, text)
-			return len(text), err
-		},
+	unifiedStatusColumnDef = table.ColumnDef{
+		// Column containing the overall progress.
+		ColumnName:        "progress",
+		ColumnHeader:      "PROGRESS",
+		ColumnWidth:       80,
+		PrintResourceFunc: printProgress,
 	}
 
-	reconciledColumnDef = table.ColumnDef{
-		// Column containing the reconciliation status.
-		ColumnName:   "reconciled",
-		ColumnHeader: "RECONCILED",
-		ColumnWidth:  10,
-		PrintResourceFunc: func(w io.Writer, width int, r table.Resource) (
-			int,
-			error,
-		) {
-			var resInfo *resourceInfo
-			switch res := r.(type) {
-			case *resourceInfo:
-				resInfo = res
-			default:
-				return 0, nil
-			}
-
-			var text string
-			switch resInfo.ResourceAction {
-			case event.WaitAction:
-				text = resInfo.WaitStatus.String()
-			}
-
-			if len(text) > width {
-				text = text[:width]
-			}
-			_, err := fmt.Fprint(w, text)
-			return len(text), err
-		},
-	}
-
-	columns = []table.ColumnDefinition{
+	alphaColumns = []table.ColumnDefinition{
 		table.MustColumn("namespace"),
 		table.MustColumn("resource"),
-		actionColumnDef,
-		table.MustColumn("status"),
-		reconciledColumnDef,
-		table.MustColumn("conditions"),
-		table.MustColumn("age"),
-		table.MustColumn("message"),
+
+		// We are trying out a "single column" model here
+		unifiedStatusColumnDef,
 	}
 )
 
@@ -163,7 +102,7 @@ func (t *Printer) runPrintLoop(coll *resourceStateCollector, stop chan struct{})
 
 	baseTablePrinter := table.BaseTablePrinter{
 		IOStreams: t.IOStreams,
-		Columns:   columns,
+		Columns:   alphaColumns,
 	}
 
 	linesPrinted := baseTablePrinter.PrintTable(coll.LatestState(), 0)
@@ -186,4 +125,148 @@ func (t *Printer) runPrintLoop(coll *resourceStateCollector, stop chan struct{})
 		}
 	}()
 	return finished
+}
+
+func printProgress(w io.Writer, width int, r table.Resource) (int, error) {
+	var resInfo *resourceInfo
+	switch res := r.(type) {
+	case *resourceInfo:
+		resInfo = res
+	default:
+		return 0, fmt.Errorf("unexpected type %T", r)
+	}
+
+	text, details, err := getProgress(resInfo)
+	if err != nil {
+		return 0, err
+	}
+
+	if details != "" {
+		text += " " + details
+	}
+
+	if len(text) > width {
+		text = text[:width]
+	}
+	n, err := fmt.Fprint(w, text)
+	if err != nil {
+		return n, err
+	}
+	return len(text), err
+}
+
+func getProgress(resInfo *resourceInfo) (string, string, error) {
+	printStatus := false
+	var text string
+	var details string
+	switch resInfo.ResourceAction {
+	case event.ApplyAction:
+		switch resInfo.ApplyStatus {
+		case event.ApplyPending:
+			text = "PendingApply"
+		case event.ApplySuccessful:
+			text = "Applied"
+			printStatus = true
+		case event.ApplySkipped:
+			text = "SkippedApply"
+		case event.ApplyFailed:
+			text = "ApplyFailed"
+
+		default:
+			return "", "", fmt.Errorf("unknown ApplyStatus: %v", resInfo.ApplyStatus)
+		}
+
+	case event.PruneAction:
+		switch resInfo.PruneStatus {
+		case event.PrunePending:
+			text = "PendingDeletion"
+		case event.PruneSuccessful:
+			text = "Deleted"
+		case event.PruneSkipped:
+			text = "DeletionSkipped"
+		case event.PruneFailed:
+			text = "DeletionFailed"
+
+		default:
+			return "", "", fmt.Errorf("unknown PruneStatus: %v", resInfo.PruneStatus)
+		}
+
+	default:
+		return "", "", fmt.Errorf("unknown ResourceAction %v", resInfo.ResourceAction)
+	}
+
+	rs := resInfo.ResourceStatus()
+	if printStatus && rs != nil {
+		s := rs.Status.String()
+
+		color, setColor := printcommon.ColorForStatus(rs.Status)
+		if setColor {
+			s = printcommon.SprintfWithColor(color, s)
+		}
+
+		text = s
+
+		if resInfo.ResourceAction == event.WaitAction {
+			text += " WaitStatus:" + resInfo.WaitStatus.String()
+		}
+
+		conditionStrings := getConditions(rs)
+		text += " Conditions:" + strings.Join(conditionStrings, ",")
+
+		var message string
+		if rs.Error != nil {
+			message = rs.Error.Error()
+		} else {
+			message = rs.Message
+		}
+		// TODO: Map from status?
+		if message == "Resource is Ready" || message == "Resource is current" {
+			message = ""
+		}
+		if message != "" {
+			details += "Message:" + message
+		}
+	}
+
+	return text, details, nil
+}
+
+func getConditions(rs *pollingevent.ResourceStatus) []string {
+	u := rs.Resource
+	if u == nil {
+		return nil
+	}
+
+	// TODO: Should we be using kstatus here?
+
+	conditions, found, err := unstructured.NestedSlice(u.Object,
+		"status", "conditions")
+	if !found || err != nil || len(conditions) == 0 {
+		return nil
+	}
+
+	var conditionStrings []string
+	for _, cond := range conditions {
+		condition := cond.(map[string]interface{})
+		conditionType := condition["type"].(string)
+		conditionStatus := condition["status"].(string)
+		conditionReason := condition["reason"].(string)
+		var color printcommon.Color
+		switch conditionStatus {
+		case "True":
+			color = printcommon.GREEN
+		case "False":
+			color = printcommon.RED
+		default:
+			color = printcommon.YELLOW
+		}
+
+		text := conditionReason
+		if text == "" {
+			text = conditionType
+		}
+		s := printcommon.SprintfWithColor(color, text)
+		conditionStrings = append(conditionStrings, s)
+	}
+	return conditionStrings
 }
