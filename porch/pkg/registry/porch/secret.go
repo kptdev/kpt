@@ -206,10 +206,7 @@ var _ repository.Credential = &GcloudWICredential{}
 
 func (b *GcloudWICredential) Valid() bool {
 	timeLeft := time.Until(b.token.Expiry)
-	if timeLeft > time.Minute {
-		return true
-	}
-	return false
+	return timeLeft > 5*time.Minute
 }
 
 func (b *GcloudWICredential) ToAuthMethod() transport.AuthMethod {
