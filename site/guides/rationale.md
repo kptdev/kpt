@@ -20,7 +20,7 @@ kpt supports management of [Configuration as Data](https://github.com/GoogleCont
 * separates code that acts on the configuration (functions) from the configuration data
 * abstracts the storage layer (using the [function I/O spec](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md)) so that clients manipulating configuration data don’t need to directly interact with it
 
-kpt builds on our learnings from [Kustomize](https://kubernetes-sigs.github.io/kustomize/). Like kustomize, kpt uses a transformation-based approach, but optimizes for in-place configuration transformation rather than out-of-place transformation. As with typical API clients, this enables interoperability of a variety of generators, transformers, and validators. One doesn't need to make all changes through a monolithic generator implementation. 
+kpt builds on our learnings from [Kustomize](https://kustomize.io). Like kustomize, kpt uses a transformation-based approach, but optimizes for in-place configuration transformation rather than out-of-place transformation. As with typical API clients, this enables interoperability of a variety of generators, transformers, and validators. One doesn't need to make all changes through a monolithic generator implementation. 
 
 kpt also extends its capabilities in areas that are [out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope), notably packaging, and provides a [package orchestration service](https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md) in addition to a client-side CLI.
 
