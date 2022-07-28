@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/stretchr/testify/assert"
@@ -137,4 +138,34 @@ type fakeResolver struct {
 
 func (fr *fakeResolver) Resolve(ctx context.Context, secret core.Secret) (repository.Credential, bool, error) {
 	return fr.credential, fr.resolved, fr.err
+}
+
+func TestCircuitBreaker(t *testing.T) {
+	cb := &circuitBreaker{
+		duration:    2 * time.Second,
+		factor:      4,
+		maxDuration: 10 * time.Second,
+	}
+
+	ticker := time.NewTicker(500 * time.Millisecond)
+	timer := time.NewTimer(5 * time.Second)
+
+	actionCounter := 0
+loop:
+	for {
+		select {
+		case <-ticker.C:
+			_ = cb.do(func() error {
+				actionCounter++
+				return fmt.Errorf("error")
+			})
+		case <-timer.C:
+			ticker.Stop()
+			timer.Stop()
+			break loop
+		}
+	}
+	if got, want := actionCounter, 2; got != want {
+		t.Errorf("expected function to be called %d times, but got %d", want, got)
+	}
 }

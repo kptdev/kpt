@@ -624,7 +624,7 @@ func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	// If not secret is provided, we try without any auth.
+	// If no secret is provided, we try without any auth.
 	if r.secret == "" {
 		return nil, nil
 	}

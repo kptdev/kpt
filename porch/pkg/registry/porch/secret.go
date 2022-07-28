@@ -140,14 +140,20 @@ func NewGcloudWIResolver(corev1Client *corev1client.CoreV1Client, stsClient *sts
 	return &GcloudWIResolver{
 		coreV1Client: corev1Client,
 		exchanger:    wi.NewWITokenExchanger(corev1Client, stsClient),
+		circuitBreaker: &circuitBreaker{
+			duration:    5 * time.Second, // We always wait at least 5 seconds before trying again.
+			factor:      2,               // We double the wait time for every consecutive failure.
+			maxDuration: 5 * time.Minute, // Max wait time is 5 minutes.
+		},
 	}
 }
 
 var _ Resolver = &GcloudWIResolver{}
 
 type GcloudWIResolver struct {
-	coreV1Client *corev1client.CoreV1Client
-	exchanger    *wi.WITokenExchanger
+	coreV1Client   *corev1client.CoreV1Client
+	exchanger      *wi.WITokenExchanger
+	circuitBreaker *circuitBreaker
 }
 
 var porchKSA = types.NamespacedName{
@@ -160,7 +166,12 @@ func (g *GcloudWIResolver) Resolve(ctx context.Context, secret core.Secret) (rep
 		return nil, false, nil
 	}
 
-	token, err := g.getToken(ctx)
+	var token *oauth2.Token
+	err := g.circuitBreaker.do(func() error {
+		var tokenErr error
+		token, tokenErr = g.getToken(ctx)
+		return tokenErr
+	})
 	if err != nil {
 		return nil, true, err
 	}
@@ -214,4 +225,69 @@ func (b *GcloudWICredential) ToAuthMethod() transport.AuthMethod {
 		Username: "token", // username doesn't matter here.
 		Password: string(b.token.AccessToken),
 	}
+}
+
+// circuitBreaker makes sure that failing operations are retried
+// using exponential backoff.
+type circuitBreaker struct {
+	// duration defines how long to wait after the first failure.
+	duration time.Duration
+	// factor is multiplied with the previous wait time after a failure.
+	factor float64
+	// maxDuration is the maximum wait time we require.
+	maxDuration time.Duration
+
+	open       bool
+	delay      time.Duration
+	expiration time.Time
+	lastErr    error
+}
+
+func (cb *circuitBreaker) do(action func() error) error {
+	if cb.open {
+		// If the circuit breaker is open and the required amount of
+		// time hasn't passed yet, we don't retry but instead return
+		// and error wrapping the error from the last attempt.
+		if time.Now().Before(cb.expiration) {
+			return &CircuitBreakerError{
+				Err: cb.lastErr,
+			}
+		}
+	}
+
+	err := action()
+	if err != nil {
+		// After an error, we determine delay before we allow
+		// another attempt.
+		if !cb.open {
+			cb.delay = cb.duration
+		} else {
+			cb.delay = cb.delay * time.Duration(cb.factor)
+		}
+		if cb.delay > cb.maxDuration {
+			cb.delay = cb.maxDuration
+		}
+		// Set the new expiration in the future.
+		cb.expiration = time.Now().Add(cb.delay)
+		cb.open = true
+		cb.lastErr = err
+		return err
+	}
+	// If the opration succeeded, reset the circuit breaker.
+	cb.open = false
+	cb.delay = 0
+	cb.lastErr = nil
+	return nil
+}
+
+type CircuitBreakerError struct {
+	Err error
+}
+
+func (cbe *CircuitBreakerError) Error() string {
+	return fmt.Sprintf("circuit breaker is open. Last error: %s", cbe.Err.Error())
+}
+
+func (cbe *CircuitBreakerError) Unwrap() error {
+	return cbe.Err
 }
