@@ -195,7 +195,7 @@ type Pkg struct {
 // Use ReadKptfile or ReadPipeline on the return value to read meta resources from filesystem.
 func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 	if !filepath.IsAbs(path) {
-		return nil, fmt.Errorf("need absolute path")
+		return nil, fmt.Errorf("provided path %s must be absolute", path)
 	}
 	absPath := filepath.Clean(path)
 	pkg := &Pkg{
