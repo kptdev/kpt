@@ -92,7 +92,7 @@ func writeResources(fs filesys.FileSystem, resources repository.PackageResources
 		if base == "Kptfile" {
 			// Found Kptfile. Check if the current directory is ancestor of the current
 			// topmost package directory. If so, use it instead.
-			if packageDir == "" || strings.HasPrefix(packageDir, dir+"/") {
+			if packageDir == "" || dir == "/" || strings.HasPrefix(packageDir, dir+"/") {
 				packageDir = dir
 			}
 		}
