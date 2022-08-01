@@ -620,7 +620,7 @@ func (r *gitRepository) dumpAllRefs() {
 
 // getAuthMethod fetches the credentials for authenticating to git. It caches the
 // credentials between calls and refresh credentials when the tokens have expired.
-func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod, error) {
+func (r *gitRepository) getAuthMethod(ctx context.Context, forceRefresh bool) (transport.AuthMethod, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -629,7 +629,7 @@ func (r *gitRepository) getAuthMethod(ctx context.Context) (transport.AuthMethod
 		return nil, nil
 	}
 
-	if r.credential == nil || !r.credential.Valid() {
+	if r.credential == nil || !r.credential.Valid() || forceRefresh {
 		if cred, err := r.credentialResolver.ResolveCredential(ctx, r.namespace, r.secret); err != nil {
 			return nil, fmt.Errorf("failed to obtain credential from secret %s/%s: %w", r.namespace, r.secret, err)
 		} else {
