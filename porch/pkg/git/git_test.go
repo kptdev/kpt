@@ -587,8 +587,9 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 		{Repository: "drafts", Package: "istions", Revision: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
 		{Repository: "drafts", Package: "istions", Revision: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
 
-		{Repository: "drafts", Package: "bucket", Revision: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
-		{Repository: "drafts", Package: "none", Revision: "v1"}:   v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "bucket", Revision: "v1"}:           v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "none", Revision: "v1"}:             v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "pkg-with-history", Revision: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
 		{Repository: "drafts", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
@@ -662,6 +663,67 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	rev := new.GetPackageRevision()
 	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
 		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
+	}
+
+	// After Update: Final must exist, draft must not exist
+	refMustNotExist(t, repo, draft.RefInRemote())
+	refMustExist(t, repo, finalReferenceName)
+}
+
+func (g GitSuite) TestApproveDraft2(t *testing.T) {
+	tempdir := t.TempDir()
+	tarfile := filepath.Join("testdata", "drafts-repository.tar")
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
+
+	const (
+		repositoryName                            = "approve"
+		namespace                                 = "default"
+		draft              BranchName             = "drafts/pkg-with-history/v1"
+		finalReferenceName plumbing.ReferenceName = "refs/tags/pkg-with-history/v1"
+	)
+	ctx := context.Background()
+	git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+		Repo:      address,
+		Branch:    g.branch,
+		Directory: "/",
+	}, tempdir, GitRepositoryOptions{})
+	if err != nil {
+		t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+	}
+
+	revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
+	if err != nil {
+		t.Fatalf("ListPackageRevisions failed: %v", err)
+	}
+
+	bucket := findPackage(t, revisions, repository.PackageRevisionKey{
+		Repository: repositoryName,
+		Package:    "pkg-with-history",
+		Revision:   "v1",
+	})
+
+	// Before Update; Check server references. Draft must exist, final not.
+	refMustExist(t, repo, draft.RefInRemote())
+	refMustNotExist(t, repo, finalReferenceName)
+
+	update, err := git.UpdatePackage(ctx, bucket)
+	if err != nil {
+		t.Fatalf("UpdatePackage failed: %v", err)
+	}
+
+	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
+
+	new, err := update.Close(ctx)
+	if err != nil {
+		t.Fatalf("Close failed: %v", err)
+	}
+
+	rev := new.GetPackageRevision()
+	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
+		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
+	}
+	if got, want := len(rev.Spec.Tasks), 4; got != want {
+		t.Errorf("Approved package task count: got %d, want %d", got, want)
 	}
 
 	// After Update: Final must exist, draft must not exist

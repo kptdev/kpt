@@ -39,9 +39,6 @@ type gitAnnotation struct {
 
 	// Task holds the task we performed, if a task caused the commit.
 	Task *v1alpha1.Task `json:"task,omitempty"`
-
-	// Tasks holds the tasks performed if there are more than one.
-	Tasks []*v1alpha1.Task `json:"tasks,omitempty"`
 }
 
 // ExtractGitAnnotations reads the gitAnnotations from the given commit.

@@ -40,7 +40,7 @@ checkout: expand
 tars:
 	@for f in $(REPOSITORIES); do \
 	  dir=$${f%.*}; \
-	  ../../../../scripts/tar-test-repo.sh $${dir}/ $${f}; \
+	  ../../../scripts/tar-test-repo.sh $${dir}/ $${f}; \
 	  rm -rf $${dir}; \
 	  echo "$${dir}/ --> $${f}"; \
 	done
