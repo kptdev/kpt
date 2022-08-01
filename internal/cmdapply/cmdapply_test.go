@@ -136,7 +136,7 @@ func TestCmd(t *testing.T) {
 			revert := testutil.Chdir(t, w.WorkspaceDirectory)
 			defer revert()
 
-			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+			runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams, false)
 			runner.Command.SetArgs(tc.args)
 			runner.applyRunner = func(_ *Runner, inv inventory.Info,
 				_ []*unstructured.Unstructured, _ common.DryRunStrategy) error {

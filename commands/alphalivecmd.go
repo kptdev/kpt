@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/cmdapply"
 	"github.com/GoogleContainerTools/kpt/internal/cmdplan"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
 	"github.com/spf13/cobra"
@@ -38,6 +39,9 @@ func GetAlphaLiveCommand(ctx context.Context, _, version string) *cobra.Command 
 	}
 
 	f := newFactory(liveCmd, version)
+
+	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams, true)
+	liveCmd.AddCommand(applyCmd)
 
 	planCmd := cmdplan.NewCommand(ctx, f, ioStreams)
 	liveCmd.AddCommand(planCmd)
