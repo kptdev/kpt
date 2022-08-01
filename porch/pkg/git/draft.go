@@ -26,6 +26,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -186,24 +187,31 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	}, nil
 }
 
+// doGitWithAuth fetches auth information for git and provides it
+// to the provided function which performs the operation against a git repo.
+func (r *gitRepository) doGitWithAuth(ctx context.Context, op func(transport.AuthMethod) error) error {
+	auth, err := r.getAuthMethod(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+	return op(auth)
+}
+
 func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDraft) (commitHash, newPackageTreeHash plumbing.Hash, base *plumbing.Reference, err error) {
 	branch := r.branch
 	localRef := branch.RefInLocal()
 
 	var zero plumbing.Hash
-	auth, err := r.getAuthMethod(ctx)
-
-	if err != nil {
-		return zero, zero, nil, fmt.Errorf("failed to obtain git credentials: %w", err)
-	}
 
 	repo := r.repo
 
 	// Fetch main
-	switch err := repo.Fetch(&git.FetchOptions{
-		RemoteName: OriginName,
-		RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
-		Auth:       auth,
+	switch err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
+		return repo.Fetch(&git.FetchOptions{
+			RemoteName: OriginName,
+			RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
+			Auth:       auth,
+		})
 	}); err {
 	case nil, git.NoErrAlreadyUpToDate:
 		// ok

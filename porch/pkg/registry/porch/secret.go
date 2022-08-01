@@ -17,11 +17,12 @@ package porch
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch/wi"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"golang.org/x/oauth2"
 	stsv1 "google.golang.org/api/sts/v1"
 	core "k8s.io/api/core/v1"
@@ -65,19 +66,19 @@ func (r *secretResolver) ResolveCredential(ctx context.Context, namespace, name 
 		Namespace: namespace,
 		Name:      name,
 	}, &secret); err != nil {
-		return repository.Credential{}, fmt.Errorf("cannot resolve credentials in a secret %s/%s: %w", namespace, name, err)
+		return nil, fmt.Errorf("cannot resolve credentials in a secret %s/%s: %w", namespace, name, err)
 	}
 
 	for _, resolver := range r.resolverChain {
 		cred, found, err := resolver.Resolve(ctx, secret)
 		if err != nil {
-			return repository.Credential{}, fmt.Errorf("error resolving credential: %w", err)
+			return nil, fmt.Errorf("error resolving credential: %w", err)
 		}
 		if found {
 			return cred, nil
 		}
 	}
-	return repository.Credential{}, &NoMatchingResolverError{
+	return nil, &NoMatchingResolverError{
 		Type: string(secret.Type),
 	}
 }
@@ -108,35 +109,51 @@ type BasicAuthResolver struct{}
 
 func (b *BasicAuthResolver) Resolve(_ context.Context, secret core.Secret) (repository.Credential, bool, error) {
 	if secret.Type != BasicAuthType {
-		return repository.Credential{}, false, nil
+		return nil, false, nil
 	}
 
-	return repository.Credential{
-		Data: secret.Data,
+	return &BasicAuthCredential{
+		Username: string(secret.Data["username"]),
+		Password: string(secret.Data["password"]),
 	}, true, nil
+}
+
+type BasicAuthCredential struct {
+	Username string
+	Password string
+}
+
+var _ repository.Credential = &BasicAuthCredential{}
+
+func (b *BasicAuthCredential) Valid() bool {
+	return true
+}
+
+func (b *BasicAuthCredential) ToAuthMethod() transport.AuthMethod {
+	return &http.BasicAuth{
+		Username: string(b.Username),
+		Password: string(b.Password),
+	}
 }
 
 func NewGcloudWIResolver(corev1Client *corev1client.CoreV1Client, stsClient *stsv1.Service) Resolver {
 	return &GcloudWIResolver{
 		coreV1Client: corev1Client,
 		exchanger:    wi.NewWITokenExchanger(corev1Client, stsClient),
-		tokenCache:   make(map[tokenCacheKey]*oauth2.Token),
+		circuitBreaker: &circuitBreaker{
+			duration:    5 * time.Second, // We always wait at least 5 seconds before trying again.
+			factor:      2,               // We double the wait time for every consecutive failure.
+			maxDuration: 5 * time.Minute, // Max wait time is 5 minutes.
+		},
 	}
 }
 
 var _ Resolver = &GcloudWIResolver{}
 
 type GcloudWIResolver struct {
-	coreV1Client *corev1client.CoreV1Client
-	exchanger    *wi.WITokenExchanger
-
-	mutex      sync.Mutex
-	tokenCache map[tokenCacheKey]*oauth2.Token
-}
-
-type tokenCacheKey struct {
-	ksa types.NamespacedName
-	gsa string
+	coreV1Client   *corev1client.CoreV1Client
+	exchanger      *wi.WITokenExchanger
+	circuitBreaker *circuitBreaker
 }
 
 var porchKSA = types.NamespacedName{
@@ -146,18 +163,20 @@ var porchKSA = types.NamespacedName{
 
 func (g *GcloudWIResolver) Resolve(ctx context.Context, secret core.Secret) (repository.Credential, bool, error) {
 	if secret.Type != WorkloadIdentityAuthType {
-		return repository.Credential{}, false, nil
+		return nil, false, nil
 	}
 
-	token, err := g.getToken(ctx)
+	var token *oauth2.Token
+	err := g.circuitBreaker.do(func() error {
+		var tokenErr error
+		token, tokenErr = g.getToken(ctx)
+		return tokenErr
+	})
 	if err != nil {
-		return repository.Credential{}, true, err
+		return nil, true, err
 	}
-	return repository.Credential{
-		Data: map[string][]byte{
-			"username": []byte("token"), // username doesn't matter here.
-			"password": []byte(token.AccessToken),
-		},
+	return &GcloudWICredential{
+		token: token,
 	}, true, nil
 }
 
@@ -167,30 +186,10 @@ func (g *GcloudWIResolver) getToken(ctx context.Context) (*oauth2.Token, error) 
 		return nil, err
 	}
 
-	tokenKey := tokenCacheKey{
-		ksa: porchKSA,
-		gsa: gsa,
-	}
-
-	g.mutex.Lock()
-	token, found := g.tokenCache[tokenKey]
-	g.mutex.Unlock()
-
-	if found {
-		timeLeft := time.Until(token.Expiry)
-		if timeLeft > 5*time.Minute {
-			return token, nil
-		}
-	}
-
-	token, err = g.exchanger.Exchange(ctx, porchKSA, gsa)
+	token, err := g.exchanger.Exchange(ctx, porchKSA, gsa)
 	if err != nil {
 		return nil, err
 	}
-
-	g.mutex.Lock()
-	g.tokenCache[tokenKey] = token
-	g.mutex.Unlock()
 
 	return token, nil
 }
@@ -208,4 +207,87 @@ func (g *GcloudWIResolver) lookupGSAEmail(ctx context.Context, name, namespace s
 		return "", fmt.Errorf("%s annotation not found on porch sa", WIGCPSAAnnotation)
 	}
 	return gsa, nil
+}
+
+type GcloudWICredential struct {
+	token *oauth2.Token
+}
+
+var _ repository.Credential = &GcloudWICredential{}
+
+func (b *GcloudWICredential) Valid() bool {
+	timeLeft := time.Until(b.token.Expiry)
+	return timeLeft > 5*time.Minute
+}
+
+func (b *GcloudWICredential) ToAuthMethod() transport.AuthMethod {
+	return &http.BasicAuth{
+		Username: "token", // username doesn't matter here.
+		Password: string(b.token.AccessToken),
+	}
+}
+
+// circuitBreaker makes sure that failing operations are retried
+// using exponential backoff.
+type circuitBreaker struct {
+	// duration defines how long to wait after the first failure.
+	duration time.Duration
+	// factor is multiplied with the previous wait time after a failure.
+	factor float64
+	// maxDuration is the maximum wait time we require.
+	maxDuration time.Duration
+
+	open       bool
+	delay      time.Duration
+	expiration time.Time
+	lastErr    error
+}
+
+func (cb *circuitBreaker) do(action func() error) error {
+	if cb.open {
+		// If the circuit breaker is open and the required amount of
+		// time hasn't passed yet, we don't retry but instead return
+		// and error wrapping the error from the last attempt.
+		if time.Now().Before(cb.expiration) {
+			return &CircuitBreakerError{
+				Err: cb.lastErr,
+			}
+		}
+	}
+
+	err := action()
+	if err != nil {
+		// After an error, we determine delay before we allow
+		// another attempt.
+		if !cb.open {
+			cb.delay = cb.duration
+		} else {
+			cb.delay = cb.delay * time.Duration(cb.factor)
+		}
+		if cb.delay > cb.maxDuration {
+			cb.delay = cb.maxDuration
+		}
+		// Set the new expiration in the future.
+		cb.expiration = time.Now().Add(cb.delay)
+		cb.open = true
+		cb.lastErr = err
+		return err
+	}
+	// If the opration succeeded, reset the circuit breaker.
+	cb.open = false
+	cb.delay = 0
+	cb.lastErr = nil
+	return nil
+}
+
+type CircuitBreakerError struct {
+	Err error
+}
+
+func (cbe *CircuitBreakerError) Error() string {
+	return fmt.Sprintf("circuit breaker is open. Last error: %s", cbe.Err.Error())
+}
+
+func (cbe *CircuitBreakerError) Unwrap() error {
+	return cbe.Err
 }
