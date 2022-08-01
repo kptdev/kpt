@@ -21,6 +21,10 @@ functions:
     images:
       - gcr.io/kpt-fn/set-namespace@sha256:7adc23986f97572d75af9aec6a7f74d60f7b9976227f43a75486633e7c539e6f
       - gcr.io/kpt-fn/set-namespace:v0.2.0
+  - function: set-namespace-v3
+    images:
+      - gcr.io/kpt-fn/set-namespace@sha256:0ec0fb2380be42142a87a7c9815f0d30415e2da07468591dd9345c7c81d6c93e
+      - gcr.io/kpt-fn/set-namespace:v0.3.4
   - function: upsert-resource
     images:
       - gcr.io/kpt-fn/upsert-resource@sha256:77196bdb9e33e4259d530ee1996a05c40bbefe39b80d52dcb66c32f7b85a62f1
