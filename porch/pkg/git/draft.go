@@ -16,6 +16,7 @@ package git
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -28,6 +29,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 )
 
 type gitPackageDraft struct {
@@ -190,11 +192,24 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 // doGitWithAuth fetches auth information for git and provides it
 // to the provided function which performs the operation against a git repo.
 func (r *gitRepository) doGitWithAuth(ctx context.Context, op func(transport.AuthMethod) error) error {
-	auth, err := r.getAuthMethod(ctx)
+	auth, err := r.getAuthMethod(ctx, false)
 	if err != nil {
 		return fmt.Errorf("failed to obtain git credentials: %w", err)
 	}
-	return op(auth)
+	err = op(auth)
+	if err != nil {
+		if !errors.Is(err, transport.ErrAuthenticationRequired) {
+			return err
+		}
+		klog.Infof("Authentication failed. Trying to refresh credentials")
+		// TODO: Consider having some kind of backoff here.
+		auth, err := r.getAuthMethod(ctx, true)
+		if err != nil {
+			return fmt.Errorf("failed to obtain git credentials: %w", err)
+		}
+		return op(auth)
+	}
+	return nil
 }
 
 func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDraft) (commitHash, newPackageTreeHash plumbing.Hash, base *plumbing.Reference, err error) {
