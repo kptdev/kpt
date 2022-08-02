@@ -28,7 +28,7 @@ func (t *PorchSuite) TestPackageUpdateRecloneAndReplay(ctx context.Context) {
 		gitRepository = "package-update"
 	)
 
-	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints", "")
 
 	var list porchapi.PackageRevisionList
 	t.ListE(ctx, &list, client.InNamespace(t.namespace))

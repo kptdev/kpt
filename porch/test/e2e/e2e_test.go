@@ -40,6 +40,7 @@ import (
 
 const (
 	testBlueprintsRepo = "https://github.com/platkrm/test-blueprints.git"
+	kptRepo            = "https://github.com/GoogleContainerTools/kpt.git"
 )
 
 func TestE2E(t *testing.T) {
@@ -144,9 +145,16 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	}
 }
 
+func (t *PorchSuite) TestGitRepositoryWithReleaseTags(ctx context.Context) {
+	t.registerGitRepositoryF(ctx, kptRepo, "kpt-repo", "package-examples")
+
+	var list porchapi.PackageRevisionList
+	t.ListF(ctx, &list, client.InNamespace(t.namespace))
+}
+
 func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 	// Register Upstream Repository
-	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints", "")
 
 	var list porchapi.PackageRevisionList
 	t.ListE(ctx, &list, client.InNamespace(t.namespace))
@@ -353,7 +361,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	t.registerMainGitRepositoryF(ctx, downstreamRepository, withDeployment())
 
 	// Register the upstream repository
-	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints", "")
 
 	var upstreamPackages porchapi.PackageRevisionList
 	t.ListE(ctx, &upstreamPackages, client.InNamespace(t.namespace))
@@ -557,7 +565,7 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 }
 
 func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
-	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "demo-blueprints")
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "demo-blueprints", "")
 
 	var list porchapi.PackageRevisionList
 	t.ListE(ctx, &list, client.InNamespace(t.namespace))
@@ -838,7 +846,7 @@ func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
 		gitRepository = "package-update"
 	)
 
-	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints")
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints", "")
 
 	var list porchapi.PackageRevisionList
 	t.ListE(ctx, &list, client.InNamespace(t.namespace))
@@ -1455,7 +1463,7 @@ func (t *PorchSuite) TestRepositoryError(ctx context.Context) {
 	}
 }
 
-func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name string) {
+func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, directory string) {
 	t.CreateF(ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Repository",
@@ -1469,8 +1477,9 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name stri
 			Type:    configapi.RepositoryTypeGit,
 			Content: configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
-				Repo:   repo,
-				Branch: "main",
+				Repo:      repo,
+				Branch:    "main",
+				Directory: directory,
 			},
 		},
 	})
