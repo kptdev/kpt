@@ -32,11 +32,9 @@ import (
 func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	flags := cmd.PersistentFlags()
 	kubeConfigFlags := genericclioptions.NewConfigFlags(true).
-		WithDeprecatedPasswordFlag().
-		WithWrapConfigFn(UpdateQPS).
-		WithDiscoveryBurst(-1).
-		WithDiscoveryQPS(-1)
+		WithDeprecatedPasswordFlag()
 	kubeConfigFlags.AddFlags(flags)
+	UpdateQPS(kubeConfigFlags)
 	userAgentKubeConfigFlags := &cfgflags.UserAgentKubeConfigFlags{
 		Delegate:  kubeConfigFlags,
 		UserAgent: fmt.Sprintf("kpt/%s", version),
@@ -45,8 +43,8 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 	return cluster.NewFactory(userAgentKubeConfigFlags)
 }
 
-// UpdateQPS modifies a rest.Config to update the client-side throttling QPS and
-// Burst QPS.
+// UpdateQPS modifies a genericclioptions.ConfigFlags to update the client-side
+// throttling QPS and Burst QPS (including for discovery).
 //
 // If Flow Control is enabled on the apiserver, client-side throttling is
 // disabled!
@@ -56,7 +54,14 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 //
 // Flow Control is enabled by default on Kubernetes v1.20+.
 // https://kubernetes.io/docs/concepts/cluster-administration/flow-control/
-func UpdateQPS(config *rest.Config) *rest.Config {
+func UpdateQPS(flags *genericclioptions.ConfigFlags) {
+	config, err := flags.ToRESTConfig()
+
+	if err != nil {
+		klog.Warning("Failed to load REST client config: %v", err)
+		return
+	}
+
 	// Timeout if the query takes too long, defaulting to the lower QPS limits.
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -66,16 +71,25 @@ func UpdateQPS(config *rest.Config) *rest.Config {
 		klog.Warning("Failed to query apiserver to check for flow control enablement: %v", err)
 		// Default to the lower QPS limits.
 	}
+
+	qps := float32(-1)
+	burst := -1
 	if enabled {
-		config.QPS = -1
-		config.Burst = -1
-		klog.V(1).Infof("Flow control enabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", config.QPS, config.Burst)
+		klog.V(1).Infof("Flow control enabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
 	} else {
-		config.QPS = maxIfNotNegative(config.QPS, 30)
-		config.Burst = int(maxIfNotNegative(float32(config.Burst), 60))
-		klog.V(1).Infof("Flow control disabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", config.QPS, config.Burst)
+		qps = maxIfNotNegative(config.QPS, 30)
+		burst = int(maxIfNotNegative(float32(config.Burst), 60))
+		klog.V(1).Infof("Flow control disabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
 	}
-	return config
+
+	flags.
+		WithDiscoveryQPS(qps).
+		WithDiscoveryBurst(burst).
+		WithWrapConfigFn(func(c *rest.Config) *rest.Config {
+			c.QPS = qps
+			c.Burst = burst
+			return c
+		})
 }
 
 func maxIfNotNegative(a, b float32) float32 {
