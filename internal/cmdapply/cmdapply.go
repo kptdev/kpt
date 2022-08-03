@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/strings"
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/pkg/status"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -227,9 +228,15 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 		return err
 	}
 
+	statusWatcher, err := status.NewStatusWatcher(r.factory)
+	if err != nil {
+		return err
+	}
+
 	applier, err := apply.NewApplierBuilder().
 		WithFactory(r.factory).
 		WithInventoryClient(invClient).
+		WithStatusWatcher(statusWatcher).
 		Build()
 	if err != nil {
 		return err

@@ -20,6 +20,7 @@ import (
 	"reflect"
 
 	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/GoogleContainerTools/kpt/pkg/status"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -57,9 +58,15 @@ func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
 		return nil, err
 	}
 
+	statusWatcher, err := status.NewStatusWatcher(f)
+	if err != nil {
+		return nil, err
+	}
+
 	applier, err := apply.NewApplierBuilder().
 		WithFactory(f).
 		WithInventoryClient(invClient).
+		WithStatusWatcher(statusWatcher).
 		Build()
 	if err != nil {
 		return nil, err
