@@ -257,7 +257,6 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	if err := CheckKptfileVersion(c); err != nil {
 		return kf, err
 	}
-
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
 	if err := d.Decode(kf); err != nil {

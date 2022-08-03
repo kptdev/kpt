@@ -56,7 +56,18 @@ type KptFile struct {
 	Pipeline *Pipeline `yaml:"pipeline,omitempty" json:"pipeline,omitempty"`
 
 	// Inventory contains parameters for the inventory object used in apply.
-	Inventory *Inventory `yaml:"inventory,omitempty" json:"inventory,omitempty"`
+	Inventory  *Inventory  `yaml:"inventory,omitempty" json:"inventory,omitempty"`
+	PkgAutoRun *PkgAutoRun `yaml:"pkgAutoRun,omitempty" json:"pkgAutoRun,omitempty"`
+}
+
+type PkgAutoRun struct {
+	InclNonKrmFiles  []LocalFile `yaml:"inclNonKrmFiles,omitempty" json:"inclNonKrmFiles,omitempty"`
+	BuiltInFunctions []Function  `yaml:"pipeline,omitempty" json:"pipeline,omitempty"`
+}
+
+type LocalFile struct {
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+	Path string `yaml:"path,omitempty" json:"path,omitempty"`
 }
 
 // OriginType defines the type of origin for a package.
