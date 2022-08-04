@@ -181,7 +181,14 @@ func printdownstreamUpdates(downstreamUpdatesMap map[string][]porchapi.PackageRe
 		upstreamPkgRevName := split[0]
 		upstreamPkgRevNum := split[1]
 		for _, downstreamPkgRev := range downstreamPkgRevs {
-			downstreamUpdates = append(downstreamUpdates, []string{upstreamPkgRevName, upstreamPkgRevNum, downstreamPkgRev.Name, downstreamPkgRev.Spec.Revision})
+			// figure out which upstream revision the downstream revision is based on
+			lastIndex := strings.LastIndex(downstreamPkgRev.Status.UpstreamLock.Git.Ref, "v")
+			if lastIndex < 0 {
+				// this ref isn't formatted the way that porch expects
+				continue
+			}
+			downstreamRev := downstreamPkgRev.Status.UpstreamLock.Git.Ref[lastIndex:]
+			downstreamUpdates = append(downstreamUpdates, []string{upstreamPkgRevName, upstreamPkgRevNum, downstreamPkgRev.Name, downstreamRev})
 		}
 	}
 
@@ -206,7 +213,7 @@ func printdownstreamUpdates(downstreamUpdatesMap map[string][]porchapi.PackageRe
 			return err
 		}
 	} else {
-		if _, err := fmt.Fprintln(w, "UPSTREAM PACKAGE\tUPSTREAM REVISION\tdownstream PACKAGE\tdownstream REVISION"); err != nil {
+		if _, err := fmt.Fprintln(w, "UPSTREAM PACKAGE\tUPSTREAM REVISION\tDOWNSTREAM PACKAGE\tDOWNSTREAM REVISION"); err != nil {
 			return err
 		}
 		for _, pkgRev := range pkgRevsToPrint {
