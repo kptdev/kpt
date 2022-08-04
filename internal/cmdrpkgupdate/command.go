@@ -89,10 +89,8 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		if r.revision == "" {
 			return errors.E(op, fmt.Errorf("revision is required"))
 		}
-	} else {
-		if r.discover != upstream && r.discover != downstream {
-			return errors.E(op, fmt.Errorf("argument for 'discover' must be one of 'upstream' or 'downstream'"))
-		}
+	} else if r.discover != upstream && r.discover != downstream {
+		return errors.E(op, fmt.Errorf("argument for 'discover' must be one of 'upstream' or 'downstream'"))
 	}
 
 	packageRevisionList := porchapi.PackageRevisionList{}
