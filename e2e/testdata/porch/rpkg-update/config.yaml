@@ -89,8 +89,8 @@ commands:
       - --namespace=rpkg-update
       - --discover=downstream
     stdout: |
-      PACKAGE REVISION                              DOWNSTREAM PACKAGE                            DOWNSTREAM UPDATE
-      git-894137a40c0792e88a9b844491a95a466b085ca1  git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0  v0->v2
+      PACKAGE REVISION                               DOWNSTREAM PACKAGE                             DOWNSTREAM UPDATE
+      git-894137a40c0792e88a9b844491a95a466b085ca1   git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   v0->v2
   - args:
       - alpha
       - rpkg
