@@ -28,8 +28,8 @@ require (
 	k8s.io/kubectl v0.24.0
 	sigs.k8s.io/cli-utils v0.32.0
 	sigs.k8s.io/controller-runtime v0.11.0
-	sigs.k8s.io/kustomize/api v0.11.5
-	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/kustomize/api v0.12.1
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 )
 
 require (
