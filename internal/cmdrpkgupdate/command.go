@@ -105,22 +105,18 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
-	var err error
 	if r.discover == "" {
 		pr := r.findPackageRevision(args[0])
 		if pr == nil {
 			return errors.E(op, fmt.Errorf("could not find package revision %s", args[0]))
 		}
 		if err := r.doUpdate(pr); err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		if _, err := fmt.Fprintf(cmd.OutOrStdout(), "%s updated\n", pr.Name); err != nil {
-			return err
+			return errors.E(op, err)
 		}
-	} else {
-		err = r.discoverUpdates(cmd, args)
-	}
-	if err != nil {
+	} else if err := r.discoverUpdates(cmd, args); err != nil {
 		return errors.E(op, err)
 	}
 	return nil
