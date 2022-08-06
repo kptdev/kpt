@@ -55,39 +55,34 @@ func newFactory(cmd *cobra.Command, version string) cluster.Factory {
 // Flow Control is enabled by default on Kubernetes v1.20+.
 // https://kubernetes.io/docs/concepts/cluster-administration/flow-control/
 func UpdateQPS(flags *genericclioptions.ConfigFlags) {
-	config, err := flags.ToRESTConfig()
-
-	if err != nil {
-		klog.Warning("Failed to load REST client config: %v", err)
-		return
-	}
-
-	// Timeout if the query takes too long, defaulting to the lower QPS limits.
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	enabled, err := flowcontrol.IsEnabled(ctx, config)
-	if err != nil {
-		klog.Warning("Failed to query apiserver to check for flow control enablement: %v", err)
-		// Default to the lower QPS limits.
-	}
-
-	qps := float32(-1)
-	burst := -1
-	if enabled {
-		klog.V(1).Infof("Flow control enabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
-	} else {
-		qps = maxIfNotNegative(config.QPS, 30)
-		burst = int(maxIfNotNegative(float32(config.Burst), 60))
-		klog.V(1).Infof("Flow control disabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
-	}
-
 	flags.
-		WithDiscoveryQPS(qps).
-		WithDiscoveryBurst(burst).
 		WithWrapConfigFn(func(c *rest.Config) *rest.Config {
+			// Timeout if the query takes too long, defaulting to the lower QPS limits.
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			enabled, err := flowcontrol.IsEnabled(ctx, c)
+			if err != nil {
+				klog.Warning("Failed to query apiserver to check for flow control enablement: %v", err)
+				// Default to the lower QPS limits.
+			}
+
+			qps := float32(-1)
+			burst := -1
+			if enabled {
+				klog.V(1).Infof("Flow control enabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
+			} else {
+				qps = maxIfNotNegative(c.QPS, 30)
+				burst = int(maxIfNotNegative(float32(c.Burst), 60))
+				klog.V(1).Infof("Flow control disabled on apiserver: client-side throttling QPS set to %.0f (burst: %d)", qps, burst)
+			}
+
 			c.QPS = qps
 			c.Burst = burst
+			flags.
+				WithDiscoveryQPS(qps).
+				WithDiscoveryBurst(burst)
+
 			return c
 		})
 }
