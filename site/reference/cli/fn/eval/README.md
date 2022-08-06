@@ -146,7 +146,7 @@ fn-args:
 
 ```
 KPT_FN_RUNTIME:
-  The runtime to run kpt functions. It must be one of "docker" or "podman".
+  The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
 <!--mdtogo-->

@@ -6,8 +6,10 @@ Users can get kpt CLI in a variety of ways:
 
 Download pre-compiled binaries:
 
-- [Linux (x64)][linux]
-- [MacOS(x64)][darwin]
+- [Linux (amd64)][linux-amd64]
+- [Linux (arm64)][linux-arm64]
+- [MacOS (amd64)][darwin-amd64]
+- [MacOS (arm64)][darwin-arm64]
 
 On Linux and MacOS, make it executable:
 
@@ -93,7 +95,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.16 version
+$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.19 version
 ```
 
 ### `kpt-gcloud`
@@ -101,7 +103,7 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.16 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.16 version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.19 version
 ```
 
 ## Source
@@ -123,9 +125,13 @@ $ kpt version
 [gcr.io/kpt-dev/kpt-gcloud]:
   https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
-[linux]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.16/kpt_linux_amd64
-[darwin]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.16/kpt_darwin_amd64
+[linux-amd64]:
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.19/kpt_linux_amd64
+[linux-arm64]:
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.19/kpt_linux_arm64
+[darwin-amd64]:
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.19/kpt_darwin_amd64
+[darwin-arm64]:
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.19/kpt_darwin_arm64
 [migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation

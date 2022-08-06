@@ -34,7 +34,9 @@ func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upst
 	// populate the cloneFrom values so we know where the package came from
 	kptfile.UpstreamLock = &lock
 	kptfile.Upstream = &upstream
-	kptfile.Name = name
+	if name != "" {
+		kptfile.Name = name
+	}
 
 	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {

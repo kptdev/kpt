@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/resource"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/klog/v2"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util"
@@ -246,6 +247,80 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 		}
 	}
 	return invCopy, nil
+}
+
+// Apply is a Storage interface function implemented to apply the inventory
+// object.
+func (icm *InventoryResourceGroup) Apply(dc dynamic.Interface, mapper meta.RESTMapper, statusPolicy inventory.StatusPolicy) error {
+	invInfo, namespacedClient, err := icm.getNamespacedClient(dc, mapper)
+	if err != nil {
+		return err
+	}
+
+	// Get cluster object, if exsists.
+	clusterObj, err := namespacedClient.Get(context.TODO(), invInfo.GetName(), metav1.GetOptions{})
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	var appliedObj *unstructured.Unstructured
+
+	if clusterObj == nil {
+		// Create cluster inventory object, if it does not exist on cluster.
+		appliedObj, err = namespacedClient.Create(context.TODO(), invInfo, metav1.CreateOptions{})
+	} else {
+		// Update the cluster inventory object instead.
+		appliedObj, err = namespacedClient.Update(context.TODO(), invInfo, metav1.UpdateOptions{})
+	}
+	if err != nil {
+		return err
+	}
+
+	// Update status.
+	if statusPolicy == inventory.StatusPolicyAll {
+		invInfo.SetResourceVersion(appliedObj.GetResourceVersion())
+		_, err = namespacedClient.UpdateStatus(context.TODO(), invInfo, metav1.UpdateOptions{})
+	}
+
+	return err
+}
+
+func (icm *InventoryResourceGroup) ApplyWithPrune(dc dynamic.Interface, mapper meta.RESTMapper, statusPolicy inventory.StatusPolicy, _ object.ObjMetadataSet) error {
+	invInfo, namespacedClient, err := icm.getNamespacedClient(dc, mapper)
+	if err != nil {
+		return err
+	}
+
+	// Update the cluster inventory object.
+	appliedObj, err := namespacedClient.Update(context.TODO(), invInfo, metav1.UpdateOptions{})
+
+	// Update status.
+	if statusPolicy == inventory.StatusPolicyAll {
+		invInfo.SetResourceVersion(appliedObj.GetResourceVersion())
+		_, err = namespacedClient.UpdateStatus(context.TODO(), invInfo, metav1.UpdateOptions{})
+	}
+
+	return err
+}
+
+func (icm *InventoryResourceGroup) getNamespacedClient(dc dynamic.Interface, mapper meta.RESTMapper) (*unstructured.Unstructured, dynamic.ResourceInterface, error) {
+	invInfo, err := icm.GetObject()
+	if err != nil {
+		return nil, nil, err
+	}
+	if invInfo == nil {
+		return nil, nil, fmt.Errorf("attempting to create a nil inventory object")
+	}
+
+	mapping, err := mapper.RESTMapping(invInfo.GroupVersionKind().GroupKind(), invInfo.GroupVersionKind().Version)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Create client to interact with cluster.
+	namespacedClient := dc.Resource(mapping.Resource).Namespace(invInfo.GetNamespace())
+
+	return invInfo, namespacedClient, nil
 }
 
 // IsResourceGroupInventory returns true if the passed object is

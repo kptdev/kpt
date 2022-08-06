@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -29,12 +30,18 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 )
 
 type clonePackageMutation struct {
-	task               *api.Task
-	namespace          string
+	task *api.Task
+
+	// namespace is the namespace against which we resolve references.
+	// TODO: merge namespace into referenceResolver?
+	namespace string
+
 	name               string // package target name
+	isDeployment       bool   // is the package deployable instance
 	cad                CaDEngine
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
@@ -68,7 +75,29 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		}
 	}
 
-	return cloned, m.task, nil
+	if m.isDeployment {
+		// TODO(droot): executing this as mutation is not really needed, but can be
+		// refactored once we finalize the task/mutation/commit model.
+		genPkgContextMutation, err := newBuiltinFunctionMutation(fnruntime.FuncGenPkgContext)
+		if err != nil {
+			return repository.PackageResources{}, nil, err
+		}
+		cloned, _, err = genPkgContextMutation.Apply(ctx, cloned)
+		if err != nil {
+			return repository.PackageResources{}, nil, fmt.Errorf("failed to generate deployment context %w", err)
+		}
+	}
+
+	// ensure merge-key comment is added to newly added resources.
+	// this operation is done on best effort basis because if upstream contains
+	// valid YAML but invalid KRM resources, merge-key operation will fail
+	// but shouldn't result in overall clone operation.
+	result, err := ensureMergeKey(ctx, cloned)
+	if err != nil {
+		klog.Infof("failed to add merge-key to resources %v", err)
+	}
+
+	return result, m.task, nil
 }
 
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {
@@ -76,7 +105,7 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("upstreamRef.name is required")
 	}
 
-	revision, err := (&PackageFetcher{
+	upstreamRevision, err := (&PackageFetcher{
 		cad:               m.cad,
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, ref, m.namespace)
@@ -84,19 +113,19 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 		return repository.PackageResources{}, fmt.Errorf("failed to fetch package revision %q: %w", ref.Name, err)
 	}
 
-	resources, err := revision.GetResources(ctx)
+	resources, err := upstreamRevision.GetResources(ctx)
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot read contents of package %q: %w", ref.Name, err)
 	}
 
-	upstream, lock, err := revision.GetUpstreamLock()
+	upstream, lock, err := upstreamRevision.GetLock()
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot determine upstream lock for package %q: %w", ref.Name, err)
 	}
 
 	// Update Kptfile
 	if err := kpt.UpdateKptfileUpstream(m.name, resources.Spec.Resources, upstream, lock); err != nil {
-		return repository.PackageResources{}, fmt.Errorf("failed to apply upstream lock to pakcage %q: %w", ref.Name, err)
+		return repository.PackageResources{}, fmt.Errorf("failed to apply upstream lock to package %q: %w", ref.Name, err)
 	}
 
 	return repository.PackageResources{

@@ -15,7 +15,7 @@ commands:
       - --repository=git
       - --revision=v0
       - basens-clone
-    stdout: git-317a42f437be4e9695da4f043ff2c727f6001156 created
+    stdout: "git-317a42f437be4e9695da4f043ff2c727f6001156 created\n"
   - args:
       - alpha
       - repo
@@ -40,7 +40,7 @@ commands:
       - --repository=git
       - --revision=v0
       - empty-clone
-    stdout: git-94533e00ee86a2edd5e8d91cbb76cf8ef295b58c created
+    stdout: "git-94533e00ee86a2edd5e8d91cbb76cf8ef295b58c created\n"
   - args:
       - alpha
       - rpkg
@@ -60,6 +60,7 @@ commands:
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
+            internal.kpt.dev/upstream-identifier: kpt.dev|Kptfile|default|basens-clone
           name: basens-clone
         upstream:
           git:
@@ -82,6 +83,7 @@ commands:
             config.kubernetes.io/path: namespace.yaml
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: namespace.yaml
+            internal.kpt.dev/upstream-identifier: '|Namespace|default|example'
           name: example
       kind: ResourceList
     yaml: true
@@ -103,6 +105,7 @@ commands:
             config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
+            internal.kpt.dev/upstream-identifier: kpt.dev|Kptfile|default|empty-clone
           name: empty-clone
         upstream:
           git:

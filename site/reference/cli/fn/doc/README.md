@@ -31,6 +31,13 @@ kpt fn doc --image=IMAGE
   e.g. instead of passing `gcr.io/kpt-fn/set-namespace:v0.1` you can pass `set-namespace:v0.1`.
 ```
 
+#### Environment Variables
+
+```
+KPT_FN_RUNTIME:
+  The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
+```
+
 <!--mdtogo-->
 
 ### Examples

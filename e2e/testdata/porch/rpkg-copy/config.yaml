@@ -17,7 +17,7 @@ commands:
       - --repository=git
       - --revision=v0
       - basens-edit
-    stdout: git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 created
+    stdout: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 created\n"
   - args:
       - alpha
       - rpkg
@@ -38,7 +38,7 @@ commands:
       - copy
       - --namespace=rpkg-copy
       - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
-    stdout: git-66579ccd78cf67f80a3cafaf63dc121db4d92b83 created
+    stdout: "git-66579ccd78cf67f80a3cafaf63dc121db4d92b83 created\n"
   - args:
       - alpha
       - rpkg
@@ -58,6 +58,7 @@ commands:
             config.kubernetes.io/path: Kptfile
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
+            internal.kpt.dev/upstream-identifier: kpt.dev|Kptfile|default|basens-edit
           name: basens-edit
         upstream:
           git:
@@ -80,6 +81,7 @@ commands:
             config.kubernetes.io/path: namespace.yaml
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: namespace.yaml
+            internal.kpt.dev/upstream-identifier: '|Namespace|default|example'
           name: example
       kind: ResourceList
     yaml: true

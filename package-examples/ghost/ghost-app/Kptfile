@@ -1,0 +1,19 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: ghost-app
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: ghost-app
+info:
+  description: The Ghost App package contains the KRM resources for a Ghost Application.
+pipeline:
+  mutators:
+    - image: set-labels:v0.1.5
+      configPath: setlabels.yaml
+    - image: apply-replacements:v0.1.1
+      configPath: fn-config-update-host.yaml
+  validators:
+    - image: starlark:v0.4.3
+      configPath: fn-config-validate-host.yaml

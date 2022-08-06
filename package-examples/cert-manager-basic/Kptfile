@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: cert-manager-basic
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: CertManager Package (https://cert-manager.io)

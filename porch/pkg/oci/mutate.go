@@ -20,13 +20,13 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"path"
 	"strconv"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/gcrane"
@@ -43,19 +43,29 @@ import (
 
 func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.PackageRevision) (repository.PackageDraft, error) {
 	base := empty.Image
-	return r.createDraft(
-		obj.Spec.PackageName,
-		obj.Spec.Revision,
-		base,
-		ImageDigestName{},
-	)
+
+	packageName := obj.Spec.PackageName
+	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
+	if err != nil {
+		return nil, err
+	}
+
+	// digestName := ImageDigestName{}
+	return &ociPackageDraft{
+		packageName: packageName,
+		parent:      r,
+		tasks:       []api.Task{},
+		base:        base,
+		tag:         ociRepo.Tag(obj.Spec.Revision),
+		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
+	}, nil
 }
 
 func (r *ociRepository) UpdatePackage(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
 	oldPackage := old.(*ociPackageRevision)
 	packageName := oldPackage.packageName
 	revision := oldPackage.revision
-	digestName := oldPackage.digestName
+	// digestName := oldPackage.digestName
 
 	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
 	if err != nil {
@@ -78,26 +88,13 @@ func (r *ociRepository) UpdatePackage(ctx context.Context, old repository.Packag
 		return nil, fmt.Errorf("error fetching image %q: %w", ref, err)
 	}
 
-	return r.createDraft(
-		packageName,
-		revision,
-		base,
-		digestName,
-	)
-}
-
-func (r *ociRepository) createDraft(packageName, revision string, base v1.Image, digestName ImageDigestName) (*ociPackageDraft, error) {
-	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
-	if err != nil {
-		return nil, err
-	}
-
 	return &ociPackageDraft{
 		packageName: packageName,
 		parent:      r,
 		tasks:       []api.Task{},
 		base:        base,
 		tag:         ociRepo.Tag(revision),
+		lifecycle:   oldPackage.Lifecycle(),
 	}, nil
 }
 
@@ -113,6 +110,8 @@ type ociPackageDraft struct {
 	base      v1.Image
 	tag       name.Tag
 	addendums []mutate.Addendum
+
+	lifecycle v1alpha1.PackageRevisionLifecycle // New value of the package revision lifecycle
 }
 
 var _ repository.PackageDraft = (*ociPackageDraft)(nil)
@@ -188,7 +187,8 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 }
 
 func (p *ociPackageDraft) UpdateLifecycle(ctx context.Context, new api.PackageRevisionLifecycle) error {
-	return errors.New("OCI package lifecycle not implemented")
+	p.lifecycle = new
+	return nil
 }
 
 // Finish round of updates.
@@ -201,7 +201,31 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 
 	klog.Infof("pushing %s", ref)
 
-	img, err := mutate.Append(p.base, p.addendums...)
+	addendums := append([]mutate.Addendum{}, p.addendums...)
+	if p.lifecycle != "" {
+		if len(addendums) == 0 {
+			return nil, fmt.Errorf("cannot create empty layer")
+			// TODO: How do we create an empty layer ... failed to append image layers: unable to add a nil layer to the image
+			// Maybe https://github.com/google/go-containerregistry/blob/fc6ff852e45e4bfd4fe41e03d992118687d3ec21/pkg/v1/static/static_test.go#L28-L29
+			// addendums = append(addendums, mutate.Addendum{
+			// 	Annotations: map[string]string{
+			// 		annotationKeyLifecycle: string(p.lifecycle),
+			// 	},
+			// })
+		} else {
+			addendum := &addendums[len(addendums)-1]
+			if addendum.Annotations == nil {
+				addendum.Annotations = make(map[string]string)
+			}
+			addendum.Annotations[annotationKeyLifecycle] = string(p.lifecycle)
+		}
+	}
+
+	base := p.base
+	if base == nil {
+		base = empty.Image
+	}
+	img, err := mutate.Append(base, addendums...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to append image layers: %w", err)
 	}

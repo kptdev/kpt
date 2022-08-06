@@ -20,6 +20,7 @@ import (
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 )
 
 // TODO: 	"sigs.k8s.io/kustomize/kyaml/filesys" FileSystem?
@@ -59,6 +60,10 @@ type PackageRevision interface {
 
 	// GetUpstreamLock returns the kpt lock information.
 	GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
+
+	// GetLock returns the current revision's lock information.
+	// This will be the upstream info for downstream revisions.
+	GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
 type PackageDraft interface {
@@ -126,9 +131,9 @@ type FunctionRepository interface {
 // They are located in repository package because repository is one such package though thematically
 // they rather belong to a package of their own.
 
-type Credential struct {
-	// TODO: support different credential types
-	Data map[string][]byte
+type Credential interface {
+	Valid() bool
+	ToAuthMethod() transport.AuthMethod
 }
 
 type CredentialResolver interface {

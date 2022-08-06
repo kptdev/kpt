@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpull"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgpush"
 	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgreject"
+	"github.com/GoogleContainerTools/kpt/internal/cmdrpkgupdate"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
@@ -78,6 +79,7 @@ func NewRpkgCommand(ctx context.Context, version string) *cobra.Command {
 		cmdrpkgreject.NewCommand(ctx, kubeflags),
 		cmdrpkgdel.NewCommand(ctx, kubeflags),
 		cmdrpkgcopy.NewCommand(ctx, kubeflags),
+		cmdrpkgupdate.NewCommand(ctx, kubeflags),
 	)
 
 	return repo

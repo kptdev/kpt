@@ -1,0 +1,31 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: validate-blog-host
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: ghost-app
+source: |-
+  def validate_host(resources):
+    placeHolderHostname = "example.com"
+    for resource in resources:
+      # this is an abstract package, so ignore host name validation
+      if resource["kind"] == "ConfigMap" and resource["metadata"]["name"] == "kptfile.kpt.dev" and resource["data"]["name"] == "example":
+        return
+    host_in_ingress = ""
+    host_in_deployment = ""
+    for resource in ctx.resource_list["items"]:
+      if resource["kind"] == "Ingress":
+        host_in_ingress = resource["spec"]["rules"][0]["host"]
+      if resource["kind"] == "Deployment":
+        container = resource["spec"]["template"]["spec"]["containers"][0]
+        for env in container["env"]:
+          if env["name"] == "GHOST_HOST":
+            host_in_deployment = env["value"]
+    if host_in_ingress == placeHolderHostname:
+      fail("Blog's hostname must be specified in ingress-ghost.yaml")
+    if host_in_ingress != host_in_deployment:
+      fail("Blog host name in deployment object does not match with the one in ingress object")
+
+  validate_host(ctx.resource_list["items"])

@@ -1,0 +1,14 @@
+# Source: ghost/templates/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ghost-app
+  namespace: example
+  labels:
+    app.kubernetes.io/name: ghost-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi

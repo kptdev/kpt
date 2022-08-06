@@ -3,7 +3,7 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220426215627-4db5feb3a360
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220707151439-cb4c4e496c92
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
 	github.com/go-errors/errors v1.4.2
 	github.com/google/go-cmp v0.5.7
@@ -26,10 +26,10 @@ require (
 	k8s.io/component-base v0.24.0
 	k8s.io/klog/v2 v2.60.1
 	k8s.io/kubectl v0.24.0
-	sigs.k8s.io/cli-utils v0.31.1
+	sigs.k8s.io/cli-utils v0.32.0
 	sigs.k8s.io/controller-runtime v0.11.0
-	sigs.k8s.io/kustomize/api v0.11.5
-	sigs.k8s.io/kustomize/kyaml v0.13.7
+	sigs.k8s.io/kustomize/api v0.12.1
+	sigs.k8s.io/kustomize/kyaml v0.13.9
 )
 
 require (
@@ -91,12 +91,12 @@ require (
 	github.com/spyzhov/ajson v0.4.2 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

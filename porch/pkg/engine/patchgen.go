@@ -34,7 +34,7 @@ import (
 // GeneratePatch returns patch operations for transforming from oldV to newV.
 func GeneratePatch(fileName string, oldV, newV string) (api.PatchSpec, error) {
 	edits := myers.ComputeEdits(span.URIFromPath(fileName), oldV, newV)
-	diff := fmt.Sprint(gotextdiff.ToUnified(fileName+"@old", fileName+"@new", oldV, edits))
+	diff := fmt.Sprint(gotextdiff.ToUnified(fileName, fileName, oldV, edits))
 
 	patchSpec := api.PatchSpec{
 		File:      fileName,

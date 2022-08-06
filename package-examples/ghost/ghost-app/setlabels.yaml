@@ -1,0 +1,11 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: SetLabels
+metadata:
+  name: ghost
+  namespace: example
+  annotations:
+    config.kubernetes.io/local-config: "true"
+  labels:
+    app.kubernetes.io/name: ghost-app
+labels:
+  app.kubernetes.io/name: ghost-app

@@ -46,6 +46,8 @@ kind: Deployment
 metadata: # kpt-merge: my-space/nginx-deployment
   name: nginx-deployment
   namespace: my-space
+  annotations:
+    internal.kpt.dev/upstream-identifier: 'apps|Deployment|my-space|nginx-deployment'
 spec:
   replicas: 3
  `,
@@ -67,6 +69,8 @@ kind: Deployment
 metadata: # kpt-merge: default/nginx-deployment
   name: nginx-deployment
   namespace: default
+  annotations:
+    internal.kpt.dev/upstream-identifier: 'apps|Deployment|default|nginx-deployment'
 spec:
   replicas: 3
  `,
@@ -86,6 +90,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: /nginx-deployment
   name: nginx-deployment
+  annotations:
+    internal.kpt.dev/upstream-identifier: 'apps|Deployment|default|nginx-deployment'
 spec:
   replicas: 3
  `,
@@ -105,12 +111,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata: # kpt-merge: my-space/nginx-deployment
   name: nginx-deployment-new
+  annotations:
+    internal.kpt.dev/upstream-identifier: 'apps|Deployment|my-space|nginx-deployment'
 spec:
   replicas: 3
  `,
 		},
 		{
-			name: "Skip adding kpt merge comment if already present",
+			name: "Skip adding kpt merge comment if skip meta",
 			input: `
 apiVersion: apps/v1
 kind: MyKind
@@ -135,6 +143,35 @@ spec:
   path: /spec
   value:
     group: kubeflow.org
+ `,
+		},
+		{
+			name: "Preserve label comments and orders during upstream-id label editing",
+			input: `
+apiVersion: v1
+kind: Namespace
+metadata: # kpt-merge: /some-app
+  name: some-app # kpt-set: ${some-app}
+  annotations:
+    a-custom: value1
+    b-custom: value2
+    ncp/static_snat_ip: 122.122.122.122 # kpt-set: ${gateway-snat-ip}
+
+spec:
+  replicas: 3 # kpt-set: ${other}
+ `,
+			expected: `
+apiVersion: v1
+kind: Namespace
+metadata: # kpt-merge: /some-app
+  name: some-app # kpt-set: ${some-app}
+  annotations:
+    a-custom: value1
+    b-custom: value2
+    ncp/static_snat_ip: 122.122.122.122 # kpt-set: ${gateway-snat-ip}
+    internal.kpt.dev/upstream-identifier: '|Namespace|default|some-app'
+spec:
+  replicas: 3 # kpt-set: ${other}
  `,
 		},
 	}

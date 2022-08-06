@@ -6,6 +6,11 @@ building Porch from sources.
 
 ## Prerequisites
 
+Note: Porch should run on any kubernetes cluster and should work on any cloud.
+We have just started by documenting one known-good configuration: GCP and GKE.
+We would welcome comparable installation instructions or feedback from people
+that try it out on other clouds / configurations.
+
 To run one of the [released versions](https://github.com/GoogleContainerTools/kpt/releases)
 of Porch on GKE, you will need:
 
@@ -40,6 +45,7 @@ gcloud config set project YOUR_GCP_PROJECT
 Select a GKE cluster or create a new one:
 
 ```sh
+gcloud services enable container.googleapis.com
 gcloud container clusters create-auto --region us-central1 porch-dev
 ```
 
@@ -49,13 +55,11 @@ Standard GKE cluster is currently preferable. Select a
  that works best for your needs:
 
  ```sh
+gcloud services enable container.googleapis.com
 gcloud container clusters create --region us-central1 porch-dev
 ```
 
 And ensure `kubectl` is targeting your GKE cluster:
-
-Ensure you are targeting the GKE cluster. Make sure to substitute your
-specific region and cluster name:
 
 ```sh
 gcloud container clusters get-credentials --region us-central1 porch-dev
@@ -64,17 +68,20 @@ gcloud container clusters get-credentials --region us-central1 porch-dev
 ## Run Released Version of Porch
 
 To run a released version of Porch, download the release config bundle from
-[Porch release page](https://github.com/GoogleContainerTools/kpt/releases).
+[Porch release page](https://github.com/GoogleContainerTools/kpt/releases);
+please note you'll need to scroll past recent kpt releases to the most
+recent `porch/...` release.
 
-Untar and applly the config bundle. This will install:
+Untar and apply the `deployment-blueprint.tar.gz` config bundle. This will install:
 
 * Porch server
 * [Config Sync](https://kpt.dev/gitops/configsync/)
 
 ```sh
 mkdir porch-install
-tar xzf path-to-deployment-blueprint.tar.gz -C porch-install
+tar xzf ~/Downloads/deployment-blueprint.tar.gz -C porch-install
 kubectl apply -f porch-install
+kubectl wait deployment --for=condition=Available porch-server -n porch-system
 ```
 
 You can verify that Porch is running by querying the `api-resources`:
@@ -91,7 +98,20 @@ packagerevisionresources                       porch.kpt.dev/v1alpha1           
 packagerevisions                               porch.kpt.dev/v1alpha1                 true         PackageRevision
 ```
 
-You can start [using Porch](./porch-user-guide.md).
+To install ConfigSync:
+
+```sh
+echo "
+apiVersion: configmanagement.gke.io/v1
+kind: ConfigManagement
+metadata:
+  name: config-management
+spec:
+  enableMultiRepo: true
+" | kubectl apply -f -
+```
+
+You can start [using Porch](guides/porch-user-guide.md).
 
 ## Run Custom Build of Porch
 
@@ -138,10 +158,62 @@ As above, you can verify that Porch is running by querying the `api-resources`:
 kubectl api-resources | grep porch
 ```
 
-And start [using Porch](./porch-user-guide.md) if the Porch resources are
+And start [using Porch](guides/porch-user-guide.md) if the Porch resources are
 available.
 
 ### Workload Identity
+
+[Workload Identity](https://cloud.google.com/kubernetes-engine/docs/concepts/workload-identity)
+is a simple way to access Google Cloud services from porch.
+
+#### Google Cloud Source Repositories
+
+[Cloud Source Repositories](https://cloud.google.com/source-repositories) can be access using
+workload identity, removing the need to store credentials in the cluster.
+
+To set it up, create the necessary service accounts and give it the required roles:
+
+```sh
+GCP_PROJECT_ID=$(gcloud config get-value project)
+
+# Create GCP service account (GSA) for Porch server.
+gcloud iam service-accounts create porch-server
+
+# We want to create and delete images. Assign IAM roles to allow repository
+# administration.
+gcloud projects add-iam-policy-binding ${GCP_PROJECT_ID} \
+  --member "serviceAccount:porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com" \
+  --role "roles/source.admin"
+
+gcloud iam service-accounts add-iam-policy-binding porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:${GCP_PROJECT_ID}.svc.id.goog[porch-system/porch-server]"
+
+# We need to associate the Kubernetes Service Account (KSA)
+# with the GSA by annotating the KSA.
+kubectl annotate serviceaccount porch-server -n porch-system \
+  iam.gke.io/gcp-service-account=porch-server@${GCP_PROJECT_ID}.iam.gserviceaccount.com
+```
+
+Build Porch, push images, and deploy porch server and controllers using the
+`make` target that adds workload identity service account annotations:
+
+```sh
+IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy
+```
+
+As above, you can verify that Porch is running by querying the `api-resources`:
+
+```sh
+kubectl api-resources | grep porch
+```
+
+To register a repository, use the following command:
+```sh
+kpt alpha repo register --repo-workload-identity --namespace=default https://source.developers.google.com/p/<project>/r/<repo>
+```
+
+#### OCI
 
 To integrate with OCI repositories such as
 [Artifact Registry](https://console.cloud.google.com/artifacts) or
@@ -190,5 +262,5 @@ As above, you can verify that Porch is running by querying the `api-resources`:
 kubectl api-resources | grep porch
 ```
 
-And start [using Porch](./porch-user-guide.md) if the Porch resources are
+And start [using Porch](guides/porch-user-guide.md) if the Porch resources are
 available.

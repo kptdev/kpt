@@ -133,4 +133,4 @@ kpt fn eval ./data --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 [go doc examples]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn/examples
 [`fn`]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
 [`ResourceList`]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
-[`unstructured.Unstrucutred`]: https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
+[`unstructured.Unstructured`]: https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured

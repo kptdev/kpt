@@ -14,7 +14,7 @@ commands:
       - --repository=git
       - --revision=v0
       - test-package
-    stdout: git-951628068ed2aee1a62fc568131134c6ec95d0be created
+    stdout: "git-951628068ed2aee1a62fc568131134c6ec95d0be created\n"
   - args:
       - alpha
       - rpkg

@@ -69,8 +69,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
-		"--rm",                         // delete the container afterward
-		"-a", "STDOUT", "-a", "STDERR", // attach stdin, stdout, stderr
+		"--rm", // delete the container afterward
 		r.Image,
 		"--help",
 	}

@@ -1,0 +1,12 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: ghost
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: Package for Ghost application.
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.3.4
+      configPath: package-context.yaml

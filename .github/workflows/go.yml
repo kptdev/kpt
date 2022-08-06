@@ -35,6 +35,12 @@ jobs:
       matrix:
         runtime: [docker, podman]
     steps:
+      # The CI complains about the podman not installed, adding some debugging info here.
+      - name: check podman
+        if: ${{ matrix.runtime }} == 'podman'
+        run: |
+          which podman
+          podman version
       - name: Set up Go 1.17
         uses: actions/setup-go@v1
         with:

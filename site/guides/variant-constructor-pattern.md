@@ -46,7 +46,7 @@ corresponding to that variant.
 In a kubernetes cluster, resources are identified by their group, version, kind,
 namespace and name (also referred to as GVKNN). If resource is cluster scoped,
 then the `metadata.name` uniquely identifies the resource in a cluster. If the resource
-is namespace scoped, then (`metadata.namespace`, `name`) together identifies the
+is namespace scoped, then (`metadata.namespace`, `metadata.name`) together identifies the
 resource uniquely.
 
 [kpt-function-catalog](https://catalog.kpt.dev) provides two function that helps

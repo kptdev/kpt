@@ -16,6 +16,7 @@ package git
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -26,7 +27,10 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/klog/v2"
 )
 
 type gitPackageDraft struct {
@@ -69,6 +73,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 
 	annotation := &gitAnnotation{
 		PackagePath: d.path,
+		Revision:    d.revision,
 		Task:        change,
 	}
 	message := "Intermediate commit"
@@ -174,7 +179,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	}
 
 	return &gitPackageRevision{
-		parent:   d.parent,
+		repo:     d.parent,
 		path:     d.path,
 		revision: d.revision,
 		updated:  d.updated,
@@ -185,24 +190,44 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	}, nil
 }
 
+// doGitWithAuth fetches auth information for git and provides it
+// to the provided function which performs the operation against a git repo.
+func (r *gitRepository) doGitWithAuth(ctx context.Context, op func(transport.AuthMethod) error) error {
+	auth, err := r.getAuthMethod(ctx, false)
+	if err != nil {
+		return fmt.Errorf("failed to obtain git credentials: %w", err)
+	}
+	err = op(auth)
+	if err != nil {
+		if !errors.Is(err, transport.ErrAuthenticationRequired) {
+			return err
+		}
+		klog.Infof("Authentication failed. Trying to refresh credentials")
+		// TODO: Consider having some kind of backoff here.
+		auth, err := r.getAuthMethod(ctx, true)
+		if err != nil {
+			return fmt.Errorf("failed to obtain git credentials: %w", err)
+		}
+		return op(auth)
+	}
+	return nil
+}
+
 func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDraft) (commitHash, newPackageTreeHash plumbing.Hash, base *plumbing.Reference, err error) {
 	branch := r.branch
 	localRef := branch.RefInLocal()
 
 	var zero plumbing.Hash
-	auth, err := r.getAuthMethod(ctx)
-
-	if err != nil {
-		return zero, zero, nil, fmt.Errorf("failed to obtain git credentials: %w", err)
-	}
 
 	repo := r.repo
 
 	// Fetch main
-	switch err := repo.Fetch(&git.FetchOptions{
-		RemoteName: OriginName,
-		RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
-		Auth:       auth,
+	switch err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
+		return repo.Fetch(&git.FetchOptions{
+			RemoteName: OriginName,
+			RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
+			Auth:       auth,
+		})
 	}); err {
 	case nil, git.NoErrAlreadyUpToDate:
 		// ok
@@ -221,22 +246,110 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 		return zero, zero, nil, fmt.Errorf("failed to resolve main branch to commit: %w", err)
 	}
 	packagePath := d.path
-	packageTree := d.tree
+	packageRevision := d.revision
+
+	// Fetch the commits belonging to this package revision.
+	commits, err := r.loadPackageCommits(d.commit, packagePath, packageRevision)
+	if err != nil {
+		return zero, zero, nil, fmt.Errorf("failed to load commits for package %s: %w", packagePath, err)
+	}
+	reverseCommitSlice(commits)
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
-	ch, err := newCommitHelper(repo, r.userInfoProvider, headCommit.Hash, packagePath, packageTree)
-	if err != nil {
-		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
+	var ch *commitHelper
+	if len(commits) == 0 {
+		// If we can't find any commits, the draft might have been created outside of porch. We
+		// just add the changes to the main branch in a single commit.
+		ch, err = newCommitHelper(repo, r.userInfoProvider, headCommit.Hash, packagePath, d.tree)
+		if err != nil {
+			return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
+		}
+	} else {
+		// If we have commits, we reproduce the same commits on the main branch to keep
+		// the history from the draft.
+		ch, err = newCommitHelper(repo, r.userInfoProvider, headCommit.Hash, packagePath, plumbing.ZeroHash)
+		if err != nil {
+			return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
+		}
+
+		for _, commit := range commits {
+			// Look up the tree for the package in the commit.
+			t, err := commit.Tree()
+			if err != nil {
+				return zero, zero, nil, fmt.Errorf("cannot resolve commit's (%s) tree (%s) to tree object: %w", t.Hash, commit.TreeHash, err)
+			}
+			te, err := t.FindEntry(packagePath)
+			if err != nil {
+				return zero, zero, nil, err
+			}
+
+			err = ch.storeTree(packagePath, te.Hash)
+			if err != nil {
+				return zero, zero, nil, err
+			}
+
+			_, _, err = ch.commit(ctx, commit.Message, packagePath)
+			if err != nil {
+				return zero, zero, nil, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
+			}
+		}
 	}
-	message := fmt.Sprintf("Approve %s", packagePath)
 
-	// TODO: Should we annotate this in some way?  Should we include the tasks?
-
+	// Add a commit without changes to mark that the package revision is approved.
+	message := fmt.Sprintf("Approve %s/%s", packagePath, d.revision)
 	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)
 	}
 
 	return commitHash, newPackageTreeHash, localTarget, nil
+}
+
+// TODO: This is an almost direct copy of
+// https://github.com/GoogleContainerTools/kpt/blob/3c3288af0c4c4a7e07ffeb6fe473d32afd81137b/porch/pkg/git/git.go#L860.
+// Fix it when we can use generics.
+func reverseCommitSlice(s []*object.Commit) {
+	first := 0
+	last := len(s) - 1
+	for first < last {
+		s[first], s[last] = s[last], s[first]
+		first++
+		last--
+	}
+}
+
+// loadPackageCommits looks through the commit log starting at the provided
+// commitHash and fetches all commits with a matching packagePath and revision.
+func (r *gitRepository) loadPackageCommits(commitHash plumbing.Hash, packagePath, revision string) ([]*object.Commit, error) {
+	var logOptions = git.LogOptions{
+		From:  commitHash,
+		Order: git.LogOrderCommitterTime,
+	}
+
+	commits, err := r.repo.Log(&logOptions)
+	if err != nil {
+		return nil, fmt.Errorf("error walking commits: %w", err)
+	}
+
+	var packageRevCommits []*object.Commit
+
+	visitCommit := func(commit *object.Commit) error {
+		gitAnnotations, err := ExtractGitAnnotations(commit)
+		if err != nil {
+			return err
+		}
+
+		for _, gitAnnotation := range gitAnnotations {
+			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+				packageRevCommits = append(packageRevCommits, commit)
+			}
+		}
+		return nil
+	}
+
+	if err := commits.ForEach(visitCommit); err != nil {
+		return nil, fmt.Errorf("error visiting commits: %w", err)
+	}
+	return packageRevCommits, nil
 }

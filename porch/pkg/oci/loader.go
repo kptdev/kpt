@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -35,7 +36,40 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	annotationKeyLifecycle = "kpt.dev/lifecycle"
+)
+
 var tracer = otel.Tracer("oci")
+
+func (r *ociRepository) getLifecycle(ctx context.Context, imageRef ImageDigestName) (v1alpha1.PackageRevisionLifecycle, error) {
+	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(
+		attribute.Stringer("image", imageRef),
+	))
+	defer span.End()
+
+	ociImage, err := r.storage.toRemoteImage(ctx, imageRef)
+	if err != nil {
+		return "", err
+	}
+
+	manifest, err := r.storage.cachedManifest(ctx, ociImage)
+	if err != nil {
+		return "", fmt.Errorf("error fetching manifest for image: %w", err)
+	}
+
+	lifecycleValue := manifest.Annotations[annotationKeyLifecycle]
+	switch lifecycleValue {
+	case "", string(v1alpha1.PackageRevisionLifecycleDraft):
+		return v1alpha1.PackageRevisionLifecycleDraft, nil
+	case string(v1alpha1.PackageRevisionLifecycleProposed):
+		return v1alpha1.PackageRevisionLifecycleProposed, nil
+	case string(v1alpha1.PackageRevisionLifecyclePublished):
+		return v1alpha1.PackageRevisionLifecyclePublished, nil
+	default:
+		return "", fmt.Errorf("unknown package revision lifecycle %q", lifecycleValue)
+	}
+}
 
 func (r *ociRepository) loadTasks(ctx context.Context, imageRef ImageDigestName) ([]api.Task, error) {
 	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(

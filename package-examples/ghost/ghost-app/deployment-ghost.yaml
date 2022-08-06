@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghost-app
+  namespace: example
+  labels:
+    app.kubernetes.io/name: ghost-app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: ghost-app
+          image: docker.io/bitnami/ghost:4.45.0-debian-10-r0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "true"
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+            - name: GHOST_DATABASE_HOST
+              value: mariadb
+            - name: GHOST_DATABASE_PORT_NUMBER
+              value: "3306"
+            - name: GHOST_DATABASE_NAME
+              value: bitnami_ghost
+            - name: GHOST_DATABASE_USER
+              value: bn_ghost
+            - name: GHOST_HOST
+              value: example.com
+            - name: GHOST_PORT_NUMBER
+              value: "2368"
+            - name: GHOST_USERNAME
+              value: user
+            - name: GHOST_EMAIL
+              value: user@example.com
+            - name: GHOST_BLOG_TITLE
+              value: User's Blog
+            - name: GHOST_ENABLE_HTTPS
+              value: "no"
+            - name: GHOST_EXTERNAL_HTTP_PORT_NUMBER
+              value: "80"
+            - name: GHOST_EXTERNAL_HTTPS_PORT_NUMBER
+              value: "443"
+            - name: GHOST_SKIP_BOOTSTRAP
+              value: "no"
+          ports:
+            - name: http
+              containerPort: 2368
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+            successThreshold: 1
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            - name: ghost-data
+              mountPath: /bitnami/ghost
+      volumes:
+        - name: ghost-data
+          persistentVolumeClaim:
+            claimName: ghost-app
+    metadata:
+      labels:
+        app.kubernetes.io/name: ghost-app
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ghost-app

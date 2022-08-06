@@ -217,6 +217,23 @@ func (h *commitHelper) storeFile(path, contents string) error {
 	return nil
 }
 
+// storeTree sets the tree of the provided path to the tree
+// referenced by the provided hash.
+func (h *commitHelper) storeTree(path string, hash plumbing.Hash) error {
+	parentPath, pkg := split(path)
+	tree := h.ensureTree(parentPath)
+	setOrAddTreeEntry(tree, object.TreeEntry{
+		Name: pkg,
+		Mode: filemode.Dir,
+	})
+	pTree, err := object.GetTree(h.storer, hash)
+	if err != nil {
+		return err
+	}
+	h.trees[path] = pTree
+	return nil
+}
+
 // readFile returns the contents of the blob at path.
 // If the file is not found it returns an error satisfying os.IsNotExist
 func (h *commitHelper) readFile(path string) ([]byte, error) {
@@ -265,6 +282,9 @@ func (h *commitHelper) commit(ctx context.Context, message string, pkgPath strin
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
+	// Update the parentCommitHash so the correct parent will be used for the
+	// next commit.
+	h.parentCommitHash = commit
 
 	if pkg, ok := h.trees[pkgPath]; ok {
 		pkgTree = pkg.Hash

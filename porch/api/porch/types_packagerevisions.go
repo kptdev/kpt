@@ -78,25 +78,28 @@ type ParentReference struct {
 
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
+	UpstreamLock *UpstreamLock `json:"upstreamLock,omitempty"`
 }
 
 type TaskType string
 
 const (
-	TaskTypeInit  TaskType = "init"
-	TaskTypeClone TaskType = "clone"
-	TaskTypePatch TaskType = "patch"
-	TaskTypeEdit  TaskType = "edit"
-	TaskTypeEval  TaskType = "eval"
+	TaskTypeInit   TaskType = "init"
+	TaskTypeClone  TaskType = "clone"
+	TaskTypePatch  TaskType = "patch"
+	TaskTypeEdit   TaskType = "edit"
+	TaskTypeEval   TaskType = "eval"
+	TaskTypeUpdate TaskType = "update"
 )
 
 type Task struct {
-	Type  TaskType              `json:"type"`
-	Init  *PackageInitTaskSpec  `json:"init,omitempty"`
-	Clone *PackageCloneTaskSpec `json:"clone,omitempty"`
-	Patch *PackagePatchTaskSpec `json:"patch,omitempty"`
-	Edit  *PackageEditTaskSpec  `json:"edit,omitempty"`
-	Eval  *FunctionEvalTaskSpec `json:"eval,omitempty"`
+	Type   TaskType               `json:"type"`
+	Init   *PackageInitTaskSpec   `json:"init,omitempty"`
+	Clone  *PackageCloneTaskSpec  `json:"clone,omitempty"`
+	Patch  *PackagePatchTaskSpec  `json:"patch,omitempty"`
+	Edit   *PackageEditTaskSpec   `json:"edit,omitempty"`
+	Eval   *FunctionEvalTaskSpec  `json:"eval,omitempty"`
+	Update *PackageUpdateTaskSpec `json:"update,omitempty"`
 }
 
 // PackageInitTaskSpec defines the package initialization task.
@@ -129,6 +132,11 @@ type PackageCloneTaskSpec struct {
 }
 
 type PackageMergeStrategy string
+
+type PackageUpdateTaskSpec struct {
+	// `Upstream` is the reference to the upstream package.
+	Upstream UpstreamPackage `json:"upstreamRef,omitempty"`
+}
 
 const (
 	ResourceMerge      PackageMergeStrategy = "resource-merge"
@@ -250,4 +258,38 @@ type Selector struct {
 	Name string `json:"name,omitempty"`
 	// Namespace of the target resources
 	Namespace string `json:"namespace,omitempty"`
+}
+
+// The following types (UpstreamLock, OriginType, and GitLock) are duplicates from the kpt library.
+// We are repeating them here to avoid cyclic dependencies, but these duplicate type should be removed when
+// https://github.com/GoogleContainerTools/kpt/issues/3297 is resolved.
+
+type OriginType string
+
+// UpstreamLock is a resolved locator for the last fetch of the package.
+type UpstreamLock struct {
+	// Type is the type of origin.
+	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
+
+	// Git is the resolved locator for a package on Git.
+	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+}
+
+// GitLock is the resolved locator for a package on Git.
+type GitLock struct {
+	// Repo is the git repository that was fetched.
+	// e.g. 'https://github.com/kubernetes/examples.git'
+	Repo string `yaml:"repo,omitempty" json:"repo,omitempty"`
+
+	// Directory is the sub directory of the git repository that was fetched.
+	// e.g. 'staging/cockroachdb'
+	Directory string `yaml:"directory,omitempty" json:"directory,omitempty"`
+
+	// Ref can be a Git branch, tag, or a commit SHA-1 that was fetched.
+	// e.g. 'master'
+	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
+
+	// Commit is the SHA-1 for the last fetch of the package.
+	// This is set by kpt for bookkeeping purposes.
+	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
 }

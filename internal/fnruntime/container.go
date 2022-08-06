@@ -46,12 +46,13 @@ type containerNetworkName string
 const (
 	networkNameNone           containerNetworkName = "none"
 	networkNameHost           containerNetworkName = "host"
-	defaultLongTimeout        time.Duration        = 5 * time.Minute
-	dockerVersionTimeout      time.Duration        = 5 * time.Second
+	defaultLongTimeout                             = 5 * time.Minute
+	versionCommandTimeout                          = 5 * time.Second
 	minSupportedDockerVersion string               = "v20.10.0"
 
-	dockerBin string = "docker"
-	podmanBin string = "podman"
+	dockerBin  string = "docker"
+	podmanBin  string = "podman"
+	nerdctlBin string = "nerdctl"
 
 	AlwaysPull       ImagePullPolicy = "Always"
 	IfNotPresentPull ImagePullPolicy = "IfNotPresent"
@@ -59,8 +60,9 @@ const (
 
 	ContainerRuntimeEnv = "KPT_FN_RUNTIME"
 
-	Docker ContainerRuntime = "docker"
-	Podman ContainerRuntime = "podman"
+	Docker  ContainerRuntime = "docker"
+	Podman  ContainerRuntime = "podman"
+	Nerdctl ContainerRuntime = "nerdctl"
 )
 
 type ImagePullPolicy string
@@ -105,6 +107,8 @@ func (r ContainerRuntime) GetBin() string {
 	switch r {
 	case Podman:
 		return podmanBin
+	case Nerdctl:
+		return nerdctlBin
 	default:
 		return dockerBin
 	}
@@ -130,6 +134,8 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	switch runtime {
 	case Podman:
 		return f.runCLI(reader, writer, podmanBin, filterPodmanCLIOutput)
+	case Nerdctl:
+		return f.runCLI(reader, writer, nerdctlBin, filterNerdctlCLIOutput)
 	default:
 		return f.runCLI(reader, writer, dockerBin, filterDockerCLIOutput)
 	}
@@ -162,8 +168,8 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 	return nil
 }
 
-// getCmd assembles a command for docker or podman. The input binName is expected
-// to be either "docker" or "podman".
+// getCmd assembles a command for docker, podman or nerdctl. The input binName
+// is expected to be one of "docker", "podman" and "nerdctl".
 func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 	network := networkNameNone
 	if f.Perm.AllowNetwork {
@@ -176,7 +182,6 @@ func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 
 	args := []string{
 		"run", "--rm", "-i",
-		"-a", "STDIN", "-a", "STDOUT", "-a", "STDERR",
 		"--network", string(network),
 		"--user", uidgid,
 		"--security-opt=no-new-privileges",
@@ -348,12 +353,54 @@ func isPodmanCLIoutput(s string) bool {
 	return false
 }
 
+// filterNerdctlCLIOutput filters out nerdctl CLI messages
+// from the given buffer.
+func filterNerdctlCLIOutput(in io.Reader) string {
+	s := bufio.NewScanner(in)
+	var lines []string
+
+	for s.Scan() {
+		txt := s.Text()
+		if !isNerdctlCLIoutput(txt) {
+			lines = append(lines, txt)
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
+// isNerdctlCLIoutput is helper method to determine if
+// the given string is a nerdctl CLI output message.
+// Example nerdctl output:
+// docker.io/library/hello-world:latest:                                             resolving      |--------------------------------------|
+// docker.io/library/hello-world:latest:                                             resolved       |++++++++++++++++++++++++++++++++++++++|
+// index-sha256:13e367d31ae85359f42d637adf6da428f76d75dc9afeb3c21faea0d976f5c651:    done           |++++++++++++++++++++++++++++++++++++++|
+// manifest-sha256:f54a58bc1aac5ea1a25d796ae155dc228b3f0e11d046ae276b39c4bf2f13d8c4: done           |++++++++++++++++++++++++++++++++++++++|
+// config-sha256:feb5d9fea6a5e9606aa995e879d862b825965ba48de054caab5ef356dc6b3412:   done           |++++++++++++++++++++++++++++++++++++++|
+// layer-sha256:2db29710123e3e53a794f2694094b9b4338aa9ee5c40b930cb8063a1be392c54:    done           |++++++++++++++++++++++++++++++++++++++|
+// elapsed: 2.4 s                                                                    total:  4.4 Ki (1.9 KiB/s)
+func isNerdctlCLIoutput(s string) bool {
+	if strings.Contains(s, "index-sha256:") ||
+		strings.Contains(s, "Copying blob sha256:") ||
+		strings.Contains(s, "manifest-sha256:") ||
+		strings.Contains(s, "config-sha256:") ||
+		strings.Contains(s, "layer-sha256:") ||
+		strings.Contains(s, "elapsed:") ||
+		strings.Contains(s, "++++++++++++++++++++++++++++++++++++++") ||
+		strings.Contains(s, "--------------------------------------") ||
+		sha256Matcher.MatchString(s) {
+		return true
+	}
+	return false
+}
+
 func StringToContainerRuntime(v string) (ContainerRuntime, error) {
 	switch strings.ToLower(v) {
 	case string(Docker):
 		return Docker, nil
 	case string(Podman):
 		return Podman, nil
+	case string(Nerdctl):
+		return Nerdctl, nil
 	case "":
 		return Docker, nil
 	default:
@@ -367,6 +414,8 @@ func ContainerRuntimeAvailable(runtime ContainerRuntime) error {
 		return dockerCmdAvailable()
 	case Podman:
 		return podmanCmdAvailable()
+	case Nerdctl:
+		return nerdctlCmdAvailable()
 	default:
 		return dockerCmdAvailable()
 	}
@@ -381,13 +430,13 @@ To install docker, follow the instructions at https://docs.docker.com/get-docker
 `
 	cmdOut := &bytes.Buffer{}
 
-	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), versionCommandTimeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "docker", "version", "--format", "{{.Client.Version}}")
+	cmd := exec.CommandContext(ctx, dockerBin, "version", "--format", "{{.Client.Version}}")
 	cmd.Stdout = cmdOut
 	err := cmd.Run()
 	if err != nil || cmdOut.String() == "" {
-		return fmt.Errorf("%s", suggestedText)
+		return fmt.Errorf("%v\n%s", err, suggestedText)
 	}
 	return isSupportedDockerVersion(strings.TrimSuffix(cmdOut.String(), "\n"))
 }
@@ -413,12 +462,27 @@ func podmanCmdAvailable() error {
 To install podman, follow the instructions at https://podman.io/getting-started/installation.
 `
 
-	ctx, cancel := context.WithTimeout(context.Background(), dockerVersionTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), versionCommandTimeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "podman", "version")
+	cmd := exec.CommandContext(ctx, podmanBin, "version")
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("%s", suggestedText)
+		return fmt.Errorf("%v\n%s", err, suggestedText)
+	}
+	return nil
+}
+
+func nerdctlCmdAvailable() error {
+	suggestedText := `nerdctl must be installed.
+To install nerdctl, follow the instructions at https://github.com/containerd/nerdctl#install.
+`
+
+	ctx, cancel := context.WithTimeout(context.Background(), versionCommandTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, nerdctlBin, "version")
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("%v\n%s", err, suggestedText)
 	}
 	return nil
 }

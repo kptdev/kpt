@@ -1,0 +1,19 @@
+# Source: ghost/charts/mariadb/templates/primary/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: example
+  labels:
+    app.kubernetes.io/name: mariadb
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+      targetPort: mysql
+      nodePort: null
+  selector:
+    app.kubernetes.io/name: mariadb

@@ -1,0 +1,67 @@
+# Source: ghost/charts/mariadb/templates/primary/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: example
+  labels:
+    app.kubernetes.io/name: mariadb
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  serviceName: mariadb
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    spec:
+      securityContext:
+        fsGroup: 1001
+      containers:
+        - name: mariadb
+          image: docker.io/bitnami/mariadb:10.6.7-debian-10-r62
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          env:
+            - name: BITNAMI_DEBUG
+              value: "true"
+            - name: MARIADB_USER
+              value: bn_ghost
+            - name: MARIADB_DATABASE
+              value: bitnami_ghost
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "true"
+          ports:
+            - name: mysql
+              containerPort: 3306
+          resources:
+            limits: {}
+            requests: {}
+          volumeMounts:
+            - name: data
+              mountPath: /bitnami/mariadb
+            - name: config
+              mountPath: /opt/bitnami/mariadb/conf/my.ini
+              subPath: my.ini
+      volumes:
+        - name: config
+          configMap:
+            name: mariadb
+    metadata:
+      labels:
+        app.kubernetes.io/name: mariadb
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: mariadb
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 8Gi
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mariadb

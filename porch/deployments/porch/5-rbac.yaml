@@ -35,6 +35,20 @@ rules:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
+  name: aggregated-apiserver-role
+  namespace: porch-system
+rules:
+  # Needed for workload identity
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    verbs: ["create"]
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
   name: porch-function-executor
   namespace: porch-fn-system
 rules:

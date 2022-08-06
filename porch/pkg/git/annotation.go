@@ -33,7 +33,11 @@ type gitAnnotation struct {
 	// without having to check file paths.
 	PackagePath string `json:"package,omitempty"`
 
-	// Tasks holds the task we performed, if a task caused the commit.
+	// Revision hold the revision of the package revision the commit
+	// belongs to.
+	Revision string `json:"revision,omitempty"`
+
+	// Task holds the task we performed, if a task caused the commit.
 	Task *v1alpha1.Task `json:"task,omitempty"`
 }
 

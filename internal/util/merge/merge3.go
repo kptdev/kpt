@@ -247,7 +247,7 @@ func resolveGroup(meta yaml.ResourceMeta) string {
 // resolveNamespace resolves the namespace which should be used for merging resources
 // uses namespace from comment on metadata field if present, falls back to resource namespace
 func resolveNamespace(meta yaml.ResourceMeta, metadataComment string) string {
-	nsName := nsAndNameForMerge(metadataComment)
+	nsName := NsAndNameForMerge(metadataComment)
 	if nsName == nil {
 		return meta.Namespace
 	}
@@ -257,17 +257,17 @@ func resolveNamespace(meta yaml.ResourceMeta, metadataComment string) string {
 // resolveName resolves the name which should be used for merging resources
 // uses name from comment on metadata field if present, falls back to resource name
 func resolveName(meta yaml.ResourceMeta, metadataComment string) string {
-	nsName := nsAndNameForMerge(metadataComment)
+	nsName := NsAndNameForMerge(metadataComment)
 	if nsName == nil {
 		return meta.Name
 	}
 	return nsName[1]
 }
 
-// nsAndNameForMerge returns the namespace and name for merge
+// NsAndNameForMerge returns the namespace and name for merge
 // from the line comment on the metadata field
 // e.g. metadata: # kpt-merge: default/foo returns [default, foo]
-func nsAndNameForMerge(metadataComment string) []string {
+func NsAndNameForMerge(metadataComment string) []string {
 	comment := strings.TrimPrefix(metadataComment, "#")
 	comment = strings.TrimSpace(comment)
 	if !strings.HasPrefix(comment, MergeCommentPrefix) {
