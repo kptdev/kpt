@@ -125,9 +125,9 @@ don't have to alias it. It is pronounced "kept".
 [package orchestration]:
   https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md
 [the kubernetes resource model]:
-  https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/resource-management.md
+  https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md
 [declarative application management in kubernetes]:
-  https://github.com/kubernetes/community/blob/master/contributors/design-proposals/architecture/declarative-application-management.md
+  https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/declarative-application-management.md
 [rationale]: https://kpt.dev/guides/rationale
 [functions]: /reference/cli/fn/eval/
 [using functions]: /book/04-using-functions/
