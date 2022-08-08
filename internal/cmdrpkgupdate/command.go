@@ -28,6 +28,9 @@ import (
 
 const (
 	command = "cmdrpkgupdate"
+
+	upstream   = "upstream"
+	downstream = "downstream"
 )
 
 func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.Command {
@@ -46,8 +49,10 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the upstream package to update to.")
-	r.Command.Flags().BoolVar(&r.discover, "discover", false,
-		"If set, search for available updates instead of performing an update. If no arguments given, look at all package revisions.")
+	r.Command.Flags().StringVar(&r.discover, "discover", "",
+		`If set, search for available updates instead of performing an update. 
+Setting this to 'upstream' will discover upstream updates of downstream packages.
+Setting this to 'downstream' will discover downstream package revisions of upstream packages that need to be updated.`)
 	return r
 }
 
@@ -58,7 +63,7 @@ type runner struct {
 	Command *cobra.Command
 
 	revision string // Target package revision
-	discover bool   // If set, discover updates rather than do updates
+	discover string // If set, discover updates rather than do updates
 
 	// there are multiple places where we need access to all package revisions, so
 	// we store it in the runner
@@ -73,7 +78,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 	r.client = c
 
-	if !r.discover {
+	if r.discover == "" {
 		if len(args) < 1 {
 			return errors.E(op, fmt.Errorf("SOURCE_PACKAGE is a required positional argument"))
 		}
@@ -84,6 +89,8 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		if r.revision == "" {
 			return errors.E(op, fmt.Errorf("revision is required"))
 		}
+	} else if r.discover != upstream && r.discover != downstream {
+		return errors.E(op, fmt.Errorf("argument for 'discover' must be one of 'upstream' or 'downstream'"))
 	}
 
 	packageRevisionList := porchapi.PackageRevisionList{}
@@ -98,18 +105,18 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
-	var err error
-	if r.discover {
-		err = r.discoverUpdates(cmd, args)
-	} else {
+	if r.discover == "" {
 		pr := r.findPackageRevision(args[0])
 		if pr == nil {
 			return errors.E(op, fmt.Errorf("could not find package revision %s", args[0]))
 		}
-		err = r.doUpdate(pr)
-		fmt.Fprintf(cmd.OutOrStdout(), "%s updated\n", pr.Name)
-	}
-	if err != nil {
+		if err := r.doUpdate(pr); err != nil {
+			return errors.E(op, err)
+		}
+		if _, err := fmt.Fprintf(cmd.OutOrStdout(), "%s updated\n", pr.Name); err != nil {
+			return errors.E(op, err)
+		}
+	} else if err := r.discoverUpdates(cmd, args); err != nil {
 		return errors.E(op, err)
 	}
 	return nil

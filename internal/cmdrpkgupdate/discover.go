@@ -16,6 +16,7 @@ package cmdrpkgupdate
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -29,7 +30,7 @@ import (
 func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
 	var prs []porchapi.PackageRevision
 	var errs []string
-	if len(args) == 0 {
+	if len(args) == 0 || r.discover == downstream {
 		prs = r.prs
 	} else {
 		for i := range args {
@@ -50,31 +51,50 @@ func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var updates [][]string
+	switch r.discover {
+	case upstream:
+		return r.findUpstreamUpdates(prs, repositories, cmd.OutOrStdout())
+	case downstream:
+		return r.findDownstreamUpdates(prs, repositories, args, cmd.OutOrStdout())
+	default: // this should never happen, because we validate in preRunE
+		return fmt.Errorf("invalid argument %q for --discover", r.discover)
+	}
+}
+
+func (r *runner) findUpstreamUpdates(prs []porchapi.PackageRevision, repositories *configapi.RepositoryList, w io.Writer) error {
+	var upstreamUpdates [][]string
 	for _, pr := range prs {
 		availableUpdates, upstreamName := r.availableUpdates(pr.Status.UpstreamLock, repositories)
 		if len(availableUpdates) == 0 {
-			updates = append(updates, []string{pr.Name, upstreamName, "No update available"})
+			upstreamUpdates = append(upstreamUpdates, []string{pr.Name, upstreamName, "No update available"})
 		} else {
-			updates = append(updates, []string{pr.Name, upstreamName, strings.Join(availableUpdates, ", ")})
+			var revisions []string
+			for i := range availableUpdates {
+				revisions = append(revisions, availableUpdates[i].Spec.Revision)
+			}
+			upstreamUpdates = append(upstreamUpdates, []string{pr.Name, upstreamName, strings.Join(revisions, ", ")})
 		}
 	}
-
-	w := printers.GetNewTabWriter(cmd.OutOrStdout())
-	if _, err := fmt.Fprintln(w, "PACKAGE REVISION\tUPSTREAM REPOSITORY\tUPSTREAM UPDATES"); err != nil {
-		return err
-	}
-	for _, pkgRev := range updates {
-		if _, err := fmt.Fprintln(w, strings.Join(pkgRev, "\t")); err != nil {
-			return err
-		}
-	}
-
-	return w.Flush()
+	return printUpstreamUpdates(upstreamUpdates, w)
 }
 
-func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]string, string) {
-	var availableUpdates []string
+func (r *runner) findDownstreamUpdates(prs []porchapi.PackageRevision, repositories *configapi.RepositoryList,
+	args []string, w io.Writer) error {
+	// map from the upstream package revision to a list of its downstream package revisions
+	downstreamUpdatesMap := make(map[string][]porchapi.PackageRevision)
+
+	for _, pr := range prs {
+		availableUpdates, _ := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		for _, update := range availableUpdates {
+			key := fmt.Sprintf("%s:%s", update.Name, update.Spec.Revision)
+			downstreamUpdatesMap[key] = append(downstreamUpdatesMap[key], pr)
+		}
+	}
+	return printDownstreamUpdates(downstreamUpdatesMap, args, w)
+}
+
+func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]porchapi.PackageRevision, string) {
+	var availableUpdates []porchapi.PackageRevision
 	var upstream string
 
 	if upstreamLock == nil || upstreamLock.Git == nil {
@@ -96,7 +116,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositor
 	}
 
 	// find a repo that matches the upstreamLock
-	var revisions []string
+	var revisions []porchapi.PackageRevision
 	for _, repo := range repositories.Items {
 		if repo.Spec.Type != configapi.RepositoryTypeGit {
 			// we are not currently supporting non-git repos for updates
@@ -112,7 +132,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositor
 	}
 
 	for _, upstreamRevision := range revisions {
-		switch cmp := semver.Compare(upstreamRevision, currentUpstreamRevision); {
+		switch cmp := semver.Compare(upstreamRevision.Spec.Revision, currentUpstreamRevision); {
 		case cmp > 0: // upstreamRevision > currentUpstreamRevision
 			availableUpdates = append(availableUpdates, upstreamRevision)
 		case cmp == 0, cmp < 0: // upstreamRevision <= currentUpstreamRevision, do nothing
@@ -130,18 +150,80 @@ func (r *runner) getRepositories() (*configapi.RepositoryList, error) {
 }
 
 // fetches all package revision numbers for packages with the name upstreamPackageName from the repo
-func (r *runner) getUpstreamRevisions(repo configapi.Repository, upstreamPackageName string) []string {
-	var result []string
+func (r *runner) getUpstreamRevisions(repo configapi.Repository, upstreamPackageName string) []porchapi.PackageRevision {
+	var result []porchapi.PackageRevision
 	for _, pkgRev := range r.prs {
 		if pkgRev.Spec.Lifecycle != porchapi.PackageRevisionLifecyclePublished {
 			// only consider published packages
 			continue
 		}
-		if pkgRev.Spec.RepositoryName != repo.Name ||
-			pkgRev.Spec.PackageName != upstreamPackageName {
-			continue
+		if pkgRev.Spec.RepositoryName == repo.Name && pkgRev.Spec.PackageName == upstreamPackageName {
+			result = append(result, pkgRev)
 		}
-		result = append(result, pkgRev.Spec.Revision)
 	}
 	return result
+}
+
+func printUpstreamUpdates(upstreamUpdates [][]string, w io.Writer) error {
+	printer := printers.GetNewTabWriter(w)
+	if _, err := fmt.Fprintln(printer, "PACKAGE REVISION\tUPSTREAM REPOSITORY\tUPSTREAM UPDATES"); err != nil {
+		return err
+	}
+	for _, pkgRev := range upstreamUpdates {
+		if _, err := fmt.Fprintln(printer, strings.Join(pkgRev, "\t")); err != nil {
+			return err
+		}
+	}
+	return printer.Flush()
+}
+
+func printDownstreamUpdates(downstreamUpdatesMap map[string][]porchapi.PackageRevision, args []string, w io.Writer) error {
+	var downstreamUpdates [][]string
+	for upstreamPkgRev, downstreamPkgRevs := range downstreamUpdatesMap {
+		split := strings.Split(upstreamPkgRev, ":")
+		upstreamPkgRevName := split[0]
+		upstreamPkgRevNum := split[1]
+		for _, downstreamPkgRev := range downstreamPkgRevs {
+			// figure out which upstream revision the downstream revision is based on
+			lastIndex := strings.LastIndex(downstreamPkgRev.Status.UpstreamLock.Git.Ref, "v")
+			if lastIndex < 0 {
+				// this ref isn't formatted the way that porch expects
+				continue
+			}
+			downstreamRev := downstreamPkgRev.Status.UpstreamLock.Git.Ref[lastIndex:]
+			downstreamUpdates = append(downstreamUpdates,
+				[]string{upstreamPkgRevName, downstreamPkgRev.Name, fmt.Sprintf("%s->%s", downstreamRev, upstreamPkgRevNum)})
+		}
+	}
+
+	var pkgRevsToPrint [][]string
+	if len(args) != 0 {
+		for _, arg := range args {
+			for _, pkgRev := range downstreamUpdates {
+				// filter out irrelevant packages based on provided args
+				if arg == pkgRev[0] {
+					pkgRevsToPrint = append(pkgRevsToPrint, pkgRev)
+				}
+			}
+		}
+	} else {
+		pkgRevsToPrint = downstreamUpdates
+	}
+
+	printer := printers.GetNewTabWriter(w)
+	if len(pkgRevsToPrint) == 0 {
+		if _, err := fmt.Fprintln(printer, "All downstream packages are up to date."); err != nil {
+			return err
+		}
+	} else {
+		if _, err := fmt.Fprintln(printer, "PACKAGE REVISION\tDOWNSTREAM PACKAGE\tDOWNSTREAM UPDATE"); err != nil {
+			return err
+		}
+		for _, pkgRev := range pkgRevsToPrint {
+			if _, err := fmt.Fprintln(printer, strings.Join(pkgRev, "\t")); err != nil {
+				return err
+			}
+		}
+	}
+	return printer.Flush()
 }

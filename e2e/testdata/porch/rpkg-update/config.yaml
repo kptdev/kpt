@@ -66,7 +66,7 @@ commands:
       - rpkg
       - update
       - --namespace=rpkg-update
-      - --discover
+      - --discover=upstream
       - git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0
     stdout: |
       PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
@@ -76,12 +76,21 @@ commands:
       - rpkg
       - update
       - --namespace=rpkg-update
-      - --discover
+      - --discover=upstream
     stdout: |
       PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
       git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48                         No update available
       git-894137a40c0792e88a9b844491a95a466b085ca1                         No update available
       git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   git                   v2
+  - args:
+      - alpha
+      - rpkg
+      - update
+      - --namespace=rpkg-update
+      - --discover=downstream
+    stdout: |
+      PACKAGE REVISION                               DOWNSTREAM PACKAGE                             DOWNSTREAM UPDATE
+      git-894137a40c0792e88a9b844491a95a466b085ca1   git-542e4d9fd8ca2ee94edf43aadb3ec31dc2fbd3a0   v0->v2
   - args:
       - alpha
       - rpkg
@@ -95,7 +104,7 @@ commands:
       - rpkg
       - update
       - --namespace=rpkg-update
-      - --discover
+      - --discover=upstream
     stdout: |
       PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
       git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48                         No update available
