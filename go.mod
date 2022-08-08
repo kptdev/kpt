@@ -1,6 +1,6 @@
 module github.com/GoogleContainerTools/kpt
 
-go 1.17
+go 1.18
 
 require (
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220707151439-cb4c4e496c92

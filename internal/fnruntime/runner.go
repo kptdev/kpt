@@ -18,7 +18,7 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"path"
 	"path/filepath"
 	"strings"
@@ -513,7 +513,7 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 				fmt.Errorf("missing function config %q", f.ConfigPath))
 		}
 		defer file.Close()
-		b, err := ioutil.ReadAll(file)
+		b, err := io.ReadAll(file)
 		if err != nil {
 			return nil, errors.E(op, fn, err)
 		}

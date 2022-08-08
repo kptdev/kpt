@@ -18,7 +18,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -31,7 +30,7 @@ import (
 func ParseCmdDocs(files []string) []doc {
 	var docs []doc
 	for _, path := range files {
-		b, err := ioutil.ReadFile(path)
+		b, err := os.ReadFile(path)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)
@@ -176,5 +175,5 @@ package ` + filepath.Base(dest) + "\n"}
 	}
 
 	o := strings.Join(out, "\n")
-	return ioutil.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
+	return os.WriteFile(filepath.Join(dest, "docs.go"), []byte(o), 0600)
 }

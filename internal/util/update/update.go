@@ -18,7 +18,6 @@ package update
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -222,7 +221,7 @@ type repoClone interface {
 // interface
 func newNilRepoClone() (*nilRepoClone, error) {
 	const op errors.Op = "update.newNilRepoClone"
-	dir, err := ioutil.TempDir("", "kpt-empty-")
+	dir, err := os.MkdirTemp("", "kpt-empty-")
 	if err != nil {
 		return nil, errors.E(op, errors.IO, fmt.Errorf("errors creating a temporary directory: %w", err))
 	}
@@ -323,6 +322,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 // package relative to the root.
 // The last parameter tells if this package is the root, i.e. the package
 // from which we got the information about upstream and origin.
+//
 //nolint:gocyclo
 func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updatedPath, originPath string, isRootPkg bool) error {
 	const op errors.Op = "update.updatePackage"

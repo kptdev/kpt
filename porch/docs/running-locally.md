@@ -7,7 +7,7 @@ To run Porch locally, you will need:
 * Linux machine (technically it is possible to run Porch locally on a Mac but
   due to differences in Docker between Linux and Mac, the Porch scripts are
   confirmed to work on Linux)
-* [go 1.17](https://go.dev/dl/) or newer
+* [go 1.18](https://go.dev/dl/) or newer
 * [docker](https://docs.docker.com/get-docker/)
 * [git](https://git-scm.com/)
 * `make`

@@ -17,7 +17,7 @@ package cmdreporeg
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -119,7 +119,7 @@ func TestRepoReg(t *testing.T) {
 				var requestBody []byte
 				switch r.Header.Get("Content-Encoding") {
 				case "":
-					b, err := ioutil.ReadAll(r.Body)
+					b, err := io.ReadAll(r.Body)
 					if err != nil {
 						t.Fatalf("Failed to read request body: %v", err)
 					}
@@ -150,13 +150,13 @@ func TestRepoReg(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Failed to marshal request body as YAML: %v", err)
 					}
-					if err := ioutil.WriteFile(wantFile, data, 0644); err != nil {
+					if err := os.WriteFile(wantFile, data, 0644); err != nil {
 						t.Fatalf("Failed to update golden file %q: %v", wantFile, err)
 					}
 				}
 
 				var want interface{}
-				wantBytes, err := ioutil.ReadFile(wantFile)
+				wantBytes, err := os.ReadFile(wantFile)
 				if err != nil {
 					t.Fatalf("Failed to reead golden file %q: %v", wantFile, err)
 				}
@@ -168,7 +168,7 @@ func TestRepoReg(t *testing.T) {
 					t.Errorf("Unexpected request body for %q (-want, +got) %s", r.RequestURI, cmp.Diff(want, body))
 				}
 
-				respData, err := ioutil.ReadFile(filepath.Join(testdata, action.sendResponse))
+				respData, err := os.ReadFile(filepath.Join(testdata, action.sendResponse))
 				if err != nil {
 					t.Fatalf("Failed to read response file %q: %v", action.sendResponse, err)
 				}

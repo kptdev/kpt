@@ -16,7 +16,7 @@ package kpt
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -27,7 +27,7 @@ import (
 )
 
 func readFile(t *testing.T, path string) []byte {
-	if data, err := ioutil.ReadFile(path); err != nil {
+	if data, err := os.ReadFile(path); err != nil {
 		t.Fatalf("Cannot read file %q", err)
 		return nil
 	} else {

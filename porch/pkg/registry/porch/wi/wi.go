@@ -17,7 +17,6 @@ package wi
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -71,7 +70,7 @@ func (w *WITokenExchanger) findWorkloadIdentityPool(ctx context.Context, kubeSer
 	{
 		const tokenFilePath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
-		tokenBytes, err := ioutil.ReadFile(tokenFilePath)
+		tokenBytes, err := os.ReadFile(tokenFilePath)
 		if err != nil {
 			if os.IsNotExist(err) {
 				klog.V(2).Infof("token file not found at %q", tokenFilePath)

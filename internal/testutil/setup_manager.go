@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -88,7 +87,7 @@ func (g *TestSetupManager) Init() bool {
 	}
 
 	// Configure the cache location for cloning repos
-	cacheDir, err := ioutil.TempDir("", "kpt-test-cache-repos-")
+	cacheDir, err := os.MkdirTemp("", "kpt-test-cache-repos-")
 	if !assert.NoError(g.T, err) {
 		return false
 	}

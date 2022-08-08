@@ -17,7 +17,6 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -57,7 +56,7 @@ func getBookOutline() string {
 
 func collectChapters(source string) []chapter {
 	chapters := make([]chapter, 0)
-	chapterDirs, err := ioutil.ReadDir(source)
+	chapterDirs, err := os.ReadDir(source)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -80,7 +79,7 @@ func getChapter(chapterDirName string, chapterDirPath string) chapter {
 	chapterBuilder.Number = splitDirName[0]
 	chapterBuilder.Name = titlecase.Title(strings.ReplaceAll(splitDirName[1], "-", " "))
 
-	pageFiles, err := ioutil.ReadDir(chapterDirPath)
+	pageFiles, err := os.ReadDir(chapterDirPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)

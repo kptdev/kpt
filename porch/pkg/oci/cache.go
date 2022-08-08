@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
@@ -46,7 +45,7 @@ func (r *Storage) cachedConfigFile(ctx context.Context, imageName imageName) (*v
 			return nil, err
 		}
 		r := bytes.NewReader(b)
-		return ioutil.NopCloser(r), nil
+		return io.NopCloser(r), nil
 	}
 
 	f, err := withCacheFile(filepath.Join(r.cacheDir, "config", digest.String()), fetcher)
@@ -76,7 +75,7 @@ func (r *Storage) cachedManifest(ctx context.Context, image v1.Image) (*v1.Manif
 			return nil, err
 		}
 		r := bytes.NewReader(b)
-		return ioutil.NopCloser(r), nil
+		return io.NopCloser(r), nil
 	}
 
 	f, err := withCacheFile(filepath.Join(r.cacheDir, "manifest", digest.String()), fetcher)

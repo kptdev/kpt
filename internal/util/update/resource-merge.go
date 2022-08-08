@@ -17,7 +17,6 @@ package update
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -300,11 +299,11 @@ func isKrmFile(path string) (bool, error) {
 // compareFiles returns true if src file content is equal to dst file content
 func compareFiles(src, dst string) (bool, error) {
 	const op errors.Op = "update.compareFiles"
-	b1, err := ioutil.ReadFile(src)
+	b1, err := os.ReadFile(src)
 	if err != nil {
 		return false, errors.E(op, errors.IO, err)
 	}
-	b2, err := ioutil.ReadFile(dst)
+	b2, err := os.ReadFile(dst)
 	if err != nil {
 		return false, errors.E(op, errors.IO, err)
 	}

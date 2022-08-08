@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +24,7 @@ import (
 // TestRunFnCommand_preRunE verifies that preRunE correctly parses the commandline
 // flags and arguments into the RunFns structure to be executed.
 func TestRunFnCommand_preRunE(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "")
+	tempDir, err := os.MkdirTemp("", "")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -440,7 +439,7 @@ apiVersion: v1
 }
 
 func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
-	dir, err := ioutil.TempDir("", "")
+	dir, err := os.MkdirTemp("", "")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

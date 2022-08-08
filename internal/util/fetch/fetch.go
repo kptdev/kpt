@@ -17,7 +17,6 @@ package fetch
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -226,7 +225,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	// We need to create a temp directory where we can copy the content of the repo.
 	// During update, we need to checkout multiple versions of the same repo, so
 	// we can't do merges directly from the cache.
-	c.repoSpec.Dir, err = ioutil.TempDir("", "kpt-get-")
+	c.repoSpec.Dir, err = os.MkdirTemp("", "kpt-get-")
 	if err != nil {
 		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
 	}

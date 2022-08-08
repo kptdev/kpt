@@ -19,7 +19,6 @@ package fnruntime
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -84,7 +83,7 @@ data: {foo: bar}
 		c := c
 		t.Run(c.name, func(t *testing.T) {
 			if c.configFileContent != "" {
-				tmp, err := ioutil.TempFile("", "kpt-pipeline-*")
+				tmp, err := os.CreateTemp("", "kpt-pipeline-*")
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")

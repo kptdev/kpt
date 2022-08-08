@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -51,7 +51,7 @@ func NewExecutableEvaluator(functions string, config string) (Evaluator, error) 
 	cache := map[string]string{}
 
 	if config != "" {
-		bytes, err := ioutil.ReadFile(config)
+		bytes, err := os.ReadFile(config)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read configuration file %q: %w", config, err)
 		}

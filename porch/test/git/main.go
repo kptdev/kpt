@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -52,7 +51,7 @@ func run(dirs []string) error {
 	switch len(dirs) {
 	case 0:
 		var err error
-		dir, err = ioutil.TempDir("", "repo-*")
+		dir, err = os.MkdirTemp("", "repo-*")
 		if err != nil {
 			return fmt.Errorf("failed to create temporary directory for git repository: %w", err)
 		}

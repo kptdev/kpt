@@ -18,7 +18,6 @@ package man
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -92,16 +91,16 @@ func (m Command) Run() error {
 	}
 
 	// write the formatted manual to a tmp file so it can be displayed
-	f, err := ioutil.TempFile("", "kpt-man")
+	f, err := os.CreateTemp("", "kpt-man")
 	if err != nil {
 		return err
 	}
 	defer os.Remove(f.Name())
-	b, err := ioutil.ReadFile(apMan)
+	b, err := os.ReadFile(apMan)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(f.Name(), md2man.Render(b), 0600)
+	err = os.WriteFile(f.Name(), md2man.Render(b), 0600)
 	if err != nil {
 		return err
 	}

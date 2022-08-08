@@ -15,7 +15,6 @@
 package common
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -41,7 +40,7 @@ func ReadFiles(source string, recursive bool) ([]string, error) {
 		if filepath.Ext(source) == markdownExtension {
 			filePaths = append(filePaths, source)
 		} else {
-			files, err := ioutil.ReadDir(source)
+			files, err := os.ReadDir(source)
 			if err != nil {
 				return filePaths, err
 			}

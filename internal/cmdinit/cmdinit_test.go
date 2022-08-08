@@ -15,7 +15,6 @@
 package cmdinit_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -44,7 +43,7 @@ func TestCmd(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the contents
-	b, err := ioutil.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
+	b, err := os.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -56,7 +55,7 @@ info:
   description: my description
 `, string(b))
 
-	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", man.ManFilename))
+	b, err = os.ReadFile(filepath.Join(d, "my-pkg", man.ManFilename))
 	assert.NoError(t, err)
 	assert.Equal(t, strings.ReplaceAll(`# my-pkg
 
@@ -81,7 +80,7 @@ kpt live apply my-pkg --reconcile-timeout=2m --output=table
 Details: https://kpt.dev/reference/cli/live/
 `, "'", "`"), string(b))
 
-	b, err = ioutil.ReadFile(filepath.Join(d, "my-pkg", builtins.PkgContextFile))
+	b, err = os.ReadFile(filepath.Join(d, "my-pkg", builtins.PkgContextFile))
 	assert.NoError(t, err)
 	assert.Equal(t, b, []byte(builtins.AbstractPkgContext()))
 }
@@ -111,7 +110,7 @@ func TestCmd_currentDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the contents
-	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
+	b, err := os.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -149,7 +148,7 @@ func TestCmd_DefaultToCurrentDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// verify the contents
-	b, err := ioutil.ReadFile(filepath.Join(packageDir, "Kptfile"))
+	b, err := os.ReadFile(filepath.Join(packageDir, "Kptfile"))
 	assert.NoError(t, err)
 	assert.Equal(t, `apiVersion: kpt.dev/v1
 kind: Kptfile

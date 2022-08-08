@@ -17,7 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -505,7 +505,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 
 	// Add a new resource
 	filename := filepath.Join("testdata", "update-resources", "add-config-map.yaml")
-	cm, err := ioutil.ReadFile(filename)
+	cm, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("Failed to read ConfigMap from %q: %v", filename, err)
 	}
@@ -886,7 +886,7 @@ func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
 	}, &revisionResources)
 
 	filename := filepath.Join("testdata", "update-resources", "add-config-map.yaml")
-	cm, err := ioutil.ReadFile(filename)
+	cm, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("Failed to read ConfigMap from %q: %v", filename, err)
 	}

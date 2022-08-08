@@ -17,7 +17,6 @@ package runner
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -92,17 +91,17 @@ func getCommitHash(d string) (string, error) {
 }
 
 func diffStrings(actual, expected string) (string, error) {
-	tmpDir, err := ioutil.TempDir("", "kpt-e2e-diff-*")
+	tmpDir, err := os.MkdirTemp("", "kpt-e2e-diff-*")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temporary dir: %w", err)
 	}
 	defer os.RemoveAll(tmpDir)
 	actualPath := filepath.Join(tmpDir, "actual")
 	expectedPath := filepath.Join(tmpDir, "expected")
-	if err := ioutil.WriteFile(actualPath, []byte(actual), 0644); err != nil {
+	if err := os.WriteFile(actualPath, []byte(actual), 0644); err != nil {
 		return "", fmt.Errorf("failed to write file %s", actualPath)
 	}
-	if err := ioutil.WriteFile(expectedPath, []byte(expected), 0644); err != nil {
+	if err := os.WriteFile(expectedPath, []byte(expected), 0644); err != nil {
 		return "", fmt.Errorf("failed to write file %s", expectedPath)
 	}
 	// diff is expected to exit with 1 so we ignore the error here

@@ -15,7 +15,6 @@
 package merge_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -589,17 +588,17 @@ spec:
 				t.FailNow()
 			}
 
-			err = ioutil.WriteFile(filepath.Join(dir, "originalDir", "f1.yaml"), []byte(strings.TrimSpace(tc.origin)), 0700)
+			err = os.WriteFile(filepath.Join(dir, "originalDir", "f1.yaml"), []byte(strings.TrimSpace(tc.origin)), 0700)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			err = ioutil.WriteFile(filepath.Join(dir, "updatedDir", "f1.yaml"), []byte(strings.TrimSpace(tc.update)), 0700)
+			err = os.WriteFile(filepath.Join(dir, "updatedDir", "f1.yaml"), []byte(strings.TrimSpace(tc.update)), 0700)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
 
-			err = ioutil.WriteFile(filepath.Join(dir, "localDir", "f1.yaml"), []byte(strings.TrimSpace(tc.local)), 0700)
+			err = os.WriteFile(filepath.Join(dir, "localDir", "f1.yaml"), []byte(strings.TrimSpace(tc.local)), 0700)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -624,7 +623,7 @@ spec:
 				return
 			}
 
-			b, err := ioutil.ReadFile(filepath.Join(dir, "localDir", "f1.yaml"))
+			b, err := os.ReadFile(filepath.Join(dir, "localDir", "f1.yaml"))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

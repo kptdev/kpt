@@ -16,7 +16,6 @@ package diff
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -63,11 +62,11 @@ func PkgDiff(pkg1, pkg2 string) (sets.String, error) {
 				diff.Insert(f)
 			}
 		} else {
-			b1, err := ioutil.ReadFile(filepath.Join(pkg1, f))
+			b1, err := os.ReadFile(filepath.Join(pkg1, f))
 			if err != nil {
 				return diff, err
 			}
-			b2, err := ioutil.ReadFile(filepath.Join(pkg2, f))
+			b2, err := os.ReadFile(filepath.Join(pkg2, f))
 			if err != nil {
 				return diff, err
 			}

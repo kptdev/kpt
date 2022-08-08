@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -125,7 +124,7 @@ func (c *Command) Run(ctx context.Context) error {
 	}
 
 	// Create a staging directory to store all compared packages
-	stagingDirectory, err := ioutil.TempDir("", "kpt-")
+	stagingDirectory, err := os.MkdirTemp("", "kpt-")
 	if err != nil {
 		return errors.Errorf("failed to create stage dir: %v", err)
 	}

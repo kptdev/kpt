@@ -5,7 +5,6 @@ package runfn
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -146,7 +145,7 @@ func TestCmd_Execute(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -169,7 +168,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	}
 
 	// write a Kptfile to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
@@ -185,7 +184,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -198,13 +197,13 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	// write a test filter to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
 
 	// write a Kptfile to the directory of configuration
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, v1.KptFileName), []byte(KptfileData), 0600)) {
 		return
 	}
@@ -218,7 +217,7 @@ func TestCmd_Execute_notIncludeMetaResources(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		t.FailNow()
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, v1.KptFileName))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -273,12 +272,12 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	// write a test filter to a separate directory
-	tmpF, err := ioutil.TempFile("", "filter*.yaml")
+	tmpF, err := os.CreateTemp("", "filter*.yaml")
 	if !assert.NoError(t, err) {
 		return
 	}
 	os.RemoveAll(tmpF.Name())
-	if !assert.NoError(t, ioutil.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
+	if !assert.NoError(t, os.WriteFile(tmpF.Name(), []byte(ValueReplacerFnConfigYAMLData), 0600)) {
 		return
 	}
 
@@ -309,7 +308,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		return
@@ -348,7 +347,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(dir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		return
@@ -380,12 +379,12 @@ func TestCmd_Execute_setInput(t *testing.T) {
 		t.FailNow()
 	}
 
-	outDir, err := ioutil.TempDir("", "kustomize-test")
+	outDir, err := os.MkdirTemp("", "kustomize-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
 
-	if !assert.NoError(t, ioutil.WriteFile(
+	if !assert.NoError(t, os.WriteFile(
 		filepath.Join(dir, "filter.yaml"), []byte(ValueReplacerYAMLData), 0600)) {
 		return
 	}
@@ -405,7 +404,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	if !assert.NoError(t, instance.Execute()) {
 		return
 	}
-	b, err := ioutil.ReadFile(
+	b, err := os.ReadFile(
 		filepath.Join(outDir, "java", "java-deployment.resource.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -415,7 +414,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 
 // setupTest initializes a temp test directory containing test data
 func setupTest(t *testing.T) string {
-	dir, err := ioutil.TempDir("", "kustomize-kyaml-test")
+	dir, err := os.MkdirTemp("", "kustomize-kyaml-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

@@ -15,7 +15,6 @@
 package attribution
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -206,11 +205,11 @@ metadata:
 		t.Run(test.name, func(t *testing.T) {
 			baseDir := t.TempDir()
 
-			r, err := ioutil.TempFile(baseDir, "k8s-cli-*.yaml")
+			r, err := os.CreateTemp(baseDir, "k8s-cli-*.yaml")
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
-			err = ioutil.WriteFile(r.Name(), []byte(test.input), 0600)
+			err = os.WriteFile(r.Name(), []byte(test.input), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -225,7 +224,7 @@ metadata:
 
 			a := Attributor{PackagePaths: []string{baseDir}, CmdGroup: test.group}
 			a.Process()
-			actualResources, err := ioutil.ReadFile(r.Name())
+			actualResources, err := os.ReadFile(r.Name())
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -6,7 +6,7 @@
 //
 // The command will create a docs.go file under DEST_GO_DIR/ containing string variables to be
 // used by cobra commands for documentation. The variable names are generated from the name of
-// the directory in which the files resides, replacing '-' with '', title casing the name.
+// the directory in which the files resides, replacing '-' with ”, title casing the name.
 // All *.md files will be read from DEST_GO_DIR/, including subdirectories if --recursive=true,
 // and a single DEST_GO_DIR/docs.go file is generated.
 //
@@ -14,7 +14,9 @@
 // by looking for a HTML comment on one of two forms:
 //
 // <!--mdtogo:<VARIABLE_NAME>-->
-//   ..some content..
+//
+//	..some content..
+//
 // <!--mdtogo-->
 //
 // or
@@ -30,17 +32,17 @@
 // a prefix will have an assumed prefix of the parent directory of the markdown file.
 //
 // Flags:
-//   --recursive=true
-//     Scan the directory structure recursively for .md files
-//   --license
-//     Controls the license header added to the files.  Specify a path to a license file,
-//     or "none" to skip adding a license.
+//
+//	--recursive=true
+//	  Scan the directory structure recursively for .md files
+//	--license
+//	  Controls the license header added to the files.  Specify a path to a license file,
+//	  or "none" to skip adding a license.
 package main
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -115,7 +117,7 @@ func getLicense() string {
 	case "none":
 		// no license -- maybe added by another tool
 	default:
-		b, err := ioutil.ReadFile(licenseFile)
+		b, err := os.ReadFile(licenseFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(1)

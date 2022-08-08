@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -593,7 +592,7 @@ func loadResourcesFromDirectory(dir string) (repository.PackageResources, error)
 			return fmt.Errorf("cannot compute relative path %q, %q, %w", dir, path, err)
 		}
 
-		contents, err := ioutil.ReadFile(path)
+		contents, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("cannot read file %q: %w", dir, err)
 		}

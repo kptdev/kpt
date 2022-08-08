@@ -16,7 +16,6 @@ package addmergecomment
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -138,7 +137,7 @@ func (amc *AddMergeComment) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 // new temp directory and adds merge comment to the resources in directory
 // it also returns the cleanup function to clean the created temp directory
 func ProcessWithCleanup(path string) (string, func(), error) {
-	expected, err := ioutil.TempDir("", "")
+	expected, err := os.MkdirTemp("", "")
 	if err != nil {
 		return "", nil, err
 	}

@@ -22,7 +22,7 @@
 // any new changes (in one or more commits) are pushed to the remote
 // repository.
 //
-// Branching Strategy
+// # Branching Strategy
 //
 // Porch doesn't create tracking branches for remotes. This indirection
 // would add a layer of complexity where branches can become out of sync

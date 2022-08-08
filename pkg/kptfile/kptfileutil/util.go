@@ -18,7 +18,6 @@ import (
 	"bytes"
 	goerrors "errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,7 +44,7 @@ func WriteFile(dir string, k interface{}) error {
 	}
 
 	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
+	err = os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}

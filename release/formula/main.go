@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -53,7 +52,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = ioutil.WriteFile(filepath.Join("Formula", "kpt.rb"), b.Bytes(), 0644)
+	err = os.WriteFile(filepath.Join("Formula", "kpt.rb"), b.Bytes(), 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
@@ -62,7 +61,7 @@ func main() {
 
 func getSha(version string) (string, error) {
 	// create the dir for the data
-	d, err := ioutil.TempDir("", "kpt-bin")
+	d, err := os.MkdirTemp("", "kpt-bin")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		return "", err

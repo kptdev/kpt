@@ -16,7 +16,7 @@ package engine
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -66,7 +66,7 @@ func TestRender(t *testing.T) {
 		t.Errorf("Cannot find output config (bucket.yaml) in %v", rendered.Contents)
 	}
 
-	want, err := ioutil.ReadFile(filepath.Join(testdata, "expected.txt"))
+	want, err := os.ReadFile(filepath.Join(testdata, "expected.txt"))
 	if err != nil {
 		t.Fatalf("Cannot read expected.txt: %v", err)
 	}

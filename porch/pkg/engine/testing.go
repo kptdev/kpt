@@ -17,7 +17,6 @@ package engine
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -41,7 +40,7 @@ func readPackage(t *testing.T, packageDir string) repository.PackageResources {
 		if err != nil {
 			return fmt.Errorf("failed to get relative path from %q to %q: %w", packageDir, p, err)
 		}
-		contents, err := ioutil.ReadFile(p)
+		contents, err := os.ReadFile(p)
 		if err != nil {
 			return fmt.Errorf("failed to open the source file %q: %w", p, err)
 		}
@@ -62,7 +61,7 @@ func writePackage(t *testing.T, packageDir string, contents repository.PackageRe
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			t.Fatalf("Failed to crete directory %q: %v", dir, err)
 		}
-		if err := ioutil.WriteFile(abs, []byte(v), 0644); err != nil {
+		if err := os.WriteFile(abs, []byte(v), 0644); err != nil {
 			t.Errorf("Failed to write package file %q: %v", abs, err)
 		}
 	}

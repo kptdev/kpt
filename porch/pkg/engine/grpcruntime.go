@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
@@ -83,7 +82,7 @@ type grpcRunner struct {
 var _ fn.FunctionRunner = &grpcRunner{}
 
 func (gr *grpcRunner) Run(r io.Reader, w io.Writer) error {
-	in, err := ioutil.ReadAll(r)
+	in, err := io.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("failed to read function runner input: %w", err)
 	}

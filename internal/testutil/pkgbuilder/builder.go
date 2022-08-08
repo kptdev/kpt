@@ -17,7 +17,6 @@ package pkgbuilder
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -494,7 +493,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 	if pkg.Kptfile != nil {
 		content := buildKptfile(pkg, pkgName, reposInfo)
 
-		err := ioutil.WriteFile(filepath.Join(pkgPath, kptfilev1.KptFileName),
+		err := os.WriteFile(filepath.Join(pkgPath, kptfilev1.KptFileName),
 			[]byte(content), 0600)
 		if err != nil {
 			return err
@@ -504,7 +503,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 	if pkg.RGFile != nil {
 		content := buildRGFile(pkg)
 
-		err := ioutil.WriteFile(filepath.Join(pkgPath, rgfilev1alpha1.RGFileName),
+		err := os.WriteFile(filepath.Join(pkgPath, rgfilev1alpha1.RGFileName),
 			[]byte(content), 0600)
 		if err != nil {
 			return err
@@ -522,7 +521,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 		}
 
 		filePath := filepath.Join(pkgPath, ri.resourceInfo.filename)
-		err := ioutil.WriteFile(filePath, []byte(r.MustString()), 0600)
+		err := os.WriteFile(filePath, []byte(r.MustString()), 0600)
 		if err != nil {
 			return err
 		}
@@ -537,7 +536,7 @@ func buildPkg(pkgPath string, pkg *pkg, pkgName string, reposInfo ReposInfo) err
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("file %s already exists", name)
 		}
-		err = ioutil.WriteFile(filePath, []byte(content), 0600)
+		err = os.WriteFile(filePath, []byte(content), 0600)
 		if err != nil {
 			return err
 		}
@@ -701,7 +700,7 @@ func (rp *RootPkg) ExpandPkg(t *testing.T, reposInfo ReposInfo) string {
 // rootName to set the value of the package directory and the metadata.name
 // field of the root package.
 func (rp *RootPkg) ExpandPkgWithName(t *testing.T, rootName string, reposInfo ReposInfo) string {
-	dir, err := ioutil.TempDir("", "test-kpt-builder-")
+	dir, err := os.MkdirTemp("", "test-kpt-builder-")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

@@ -8,7 +8,6 @@ import (
 	"crypto/sha1"
 	goerrors "errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -285,7 +284,7 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 	}
 
 	// fyi: perm is ignored if the file already exists
-	err = ioutil.WriteFile(filepath.Join(dir, filename), b, 0600)
+	err = os.WriteFile(filepath.Join(dir, filename), b, 0600)
 	if err != nil {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
