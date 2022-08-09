@@ -40,6 +40,12 @@ type ConfigConnectorStatusReader struct {
 	Mapper meta.RESTMapper
 }
 
+func NewConfigConnectorStatusReader(mapper meta.RESTMapper) engine.StatusReader {
+	return &ConfigConnectorStatusReader{
+		Mapper: mapper,
+	}
+}
+
 var _ engine.StatusReader = &ConfigConnectorStatusReader{}
 
 // Supports returns true for all Config Connector resources.
