@@ -383,6 +383,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
+		// if the error is a multiline string, prepend a newline for
+		// cleaner output
+		if len(strings.Split(err.Error(), "\n")) > 1 {
+			err = fmt.Errorf("\n%s", err.Error())
+		}
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 	// print a new line after a pipeline running

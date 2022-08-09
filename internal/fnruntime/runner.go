@@ -54,7 +54,7 @@ func NewRunner(
 	pkgPath types.UniquePath,
 	fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy,
-	setPkgPathAnnotation, displayResourceCount, allowWasm bool,
+	setPkgPathAnnotation, displayResourceCount bool, allowWasm bool,
 	runtime fn.FunctionRuntime,
 ) (*FunctionRunner, error) {
 	config, err := newFnConfig(fsys, f, pkgPath)
@@ -201,36 +201,39 @@ type FunctionRunner struct {
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
+	var fnOutput strings.Builder
 	if !fr.disableCLIOutput {
 		if fr.wasm {
-			pr.Printf("[RUNNING] WASM %q", fr.name)
+			fnOutput.WriteString(fmt.Sprintf("[RUNNING] WASM %q", fr.name))
 		} else {
-			pr.Printf("[RUNNING] %q", fr.name)
+			fnOutput.WriteString(fmt.Sprintf("[RUNNING] %q", fr.name))
 		}
 		if fr.displayResourceCount {
-			pr.Printf(" on %d resource(s)", len(input))
+			fnOutput.WriteString(fmt.Sprintf(" on %d resource(s)", len(input)))
 		}
-		pr.Printf("\n")
+		fnOutput.WriteString("\n")
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
 	if err != nil {
-		printOpt := printer.NewOpt()
-		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printOpt)
+		fnOutput.WriteString(fmt.Sprintf("[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100)))
+		fnOutput.WriteString(printFnResult(fr.fnResult))
 		var fnErr *ExecError
 		if goerrors.As(err, &fnErr) {
-			printFnExecErr(fr.ctx, fnErr)
+			fnOutput.WriteString(printFnExecErr(fnErr))
+			pr.Printf(fnOutput.String())
 			return nil, errors.ErrAlreadyHandled
 		}
-		return nil, err
+		fnOutput.WriteString(printFnStderr(err.Error()))
+		return nil, fmt.Errorf(fnOutput.String())
 	}
 	if !fr.disableCLIOutput {
-		pr.Printf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
-		printFnResult(fr.ctx, fr.fnResult, printer.NewOpt())
-		printFnStderr(fr.ctx, fr.fnResult.Stderr)
+		fnOutput.WriteString(fmt.Sprintf("[PASS] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100)))
+		fnOutput.WriteString(printFnResult(fr.fnResult))
+		fnOutput.WriteString(printFnStderr(fr.fnResult.Stderr))
 	}
-	return output, err
+	pr.Printf(fnOutput.String())
+	return output, nil
 }
 
 // SetFnConfig updates the functionConfig for the FunctionRunner instance.
@@ -393,8 +396,7 @@ func populateResourceRef(item *yaml.RNode, resultItem *framework.Result) error {
 
 // printFnResult prints given function result in a user friendly
 // format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.Options) {
-	pr := printer.FromContextOrDie(ctx)
+func printFnResult(fnResult *fnresult.Result) string {
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
 		var lines []string
@@ -406,21 +408,20 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(opt, "%s", ri.String())
+		return ri.String()
 	}
+	return ""
 }
 
 // printFnExecErr prints given ExecError in a user friendly format
 // on kpt CLI.
-func printFnExecErr(ctx context.Context, fnErr *ExecError) {
-	pr := printer.FromContextOrDie(ctx)
-	printFnStderr(ctx, fnErr.Stderr)
-	pr.Printf("  Exit code: %d\n\n", fnErr.ExitCode)
+func printFnExecErr(fnErr *ExecError) string {
+	output := printFnStderr(fnErr.Stderr)
+	return output + fmt.Sprintf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.
-func printFnStderr(ctx context.Context, stdErr string) {
-	pr := printer.FromContextOrDie(ctx)
+func printFnStderr(stdErr string) string {
 	if len(stdErr) > 0 {
 		errLines := &multiLineFormatter{
 			Title:          "Stderr",
@@ -428,8 +429,9 @@ func printFnStderr(ctx context.Context, stdErr string) {
 			UseQuote:       true,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.Printf("%s", errLines.String())
+		return errLines.String()
 	}
+	return ""
 }
 
 // path (location) of a KRM resources is tracked in a special key in

@@ -18,7 +18,6 @@ package fnruntime
 
 import (
 	"bytes"
-	"context"
 	"os"
 	"path"
 	"strings"
@@ -635,14 +634,7 @@ func TestPrintFnStderr(t *testing.T) {
 	for testName, tc := range tests {
 		t.Run(testName, func(t *testing.T) {
 			printer.TruncateOutput = tc.truncateOutput
-			out := &bytes.Buffer{}
-			err := &bytes.Buffer{}
-			ctx := printer.WithContext(context.Background(), printer.New(out, err))
-
-			printFnStderr(ctx, tc.input)
-
-			assert.Equal(t, tc.expected, err.String())
-			assert.Equal(t, "", out.String())
+			assert.Equal(t, tc.expected, printFnStderr(tc.input))
 		})
 	}
 }
