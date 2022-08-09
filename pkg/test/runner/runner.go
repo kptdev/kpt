@@ -363,6 +363,10 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--allow-exec")
 			}
 
+			if r.testCase.Config.AllowWasm {
+				kptArgs = append(kptArgs, "--allow-alpha-wasm")
+			}
+
 			if r.testCase.Config.DisableOutputTruncate {
 				kptArgs = append(kptArgs, "--truncate-output=false")
 			}

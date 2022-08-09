@@ -1,0 +1,1 @@
+unset KPT_FN_WASM_RUNTIME

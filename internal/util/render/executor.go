@@ -65,6 +65,9 @@ type Renderer struct {
 	// AllowExec allow binary executable to be run during pipeline execution
 	AllowExec bool
 
+	// AllowWasm allow wasm to be run during pipeline execution
+	AllowWasm bool
+
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
 }
@@ -87,6 +90,7 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		fnResults:       fnresult.NewResultList(),
 		imagePullPolicy: e.ImagePullPolicy,
 		allowExec:       e.AllowExec,
+		allowWasm:       e.AllowWasm,
 		fileSystem:      e.FileSystem,
 		runtime:         e.Runtime,
 	}
@@ -198,15 +202,18 @@ type hydrationContext struct {
 	// privileged operation, so explicit permission is required.
 	allowExec bool
 
+	// allowWasm determines if function wasm are allowed to be run during pipeline
+	// execution. Running wasm function is an alpha feature, so it needs to be
+	// enabled explicitly.
+	allowWasm bool
+
 	fileSystem filesys.FileSystem
 
 	// function runtime
 	runtime fn.FunctionRuntime
 }
 
-//
 // pkgNode represents a package being hydrated. Think of it as a node in the hydration DAG.
-//
 type pkgNode struct {
 	pkg *pkg.Pkg
 
@@ -498,7 +505,8 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if function.Exec != "" && !hctx.allowExec {
 			return errAllowedExecNotSpecified
 		}
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy, true, displayResourceCount, hctx.runtime)
+		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy,
+			true, displayResourceCount, hctx.allowWasm, hctx.runtime)
 		if err != nil {
 			return err
 		}
@@ -605,7 +613,8 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		if function.Exec != "" && !hctx.allowExec {
 			return nil, errAllowedExecNotSpecified
 		}
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy, true, displayResourceCount, hctx.runtime)
+		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy,
+			true, displayResourceCount, hctx.allowWasm, hctx.runtime)
 		if err != nil {
 			return nil, err
 		}

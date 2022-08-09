@@ -1,0 +1,14 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+  labels:
+    tier: backend
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn-demo/set-namespace:v0.5.0 # TODO: switch to use the kpt-fn GCR when it is built there.
+      configMap:
+        namespace: staging
+    - image: gcr.io/kpt-fn-demo/set-labels:v0.2.0 # TODO: switch to use the kpt-fn GCR when it is built there.
+      configMap:
+        tier: backend

@@ -121,12 +121,13 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 // According to Docker implementation
 // https://github.com/docker/distribution/blob/master/reference/reference.go. A valid
 // name definition is:
+//
 //	name                            := [domain '/'] path-component ['/' path-component]*
 //	domain                          := domain-component ['.' domain-component]* [':' port-number]
 //	domain-component                := /([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])/
 //	port-number                     := /[0-9]+/
 //	path-component                  := alpha-numeric [separator alpha-numeric]*
-// 	alpha-numeric                   := /[a-z0-9]+/
+//	alpha-numeric                   := /[a-z0-9]+/
 //	separator                       := /[_.]|__|[-]*/
 func ValidateFunctionImageURL(name string) error {
 	pathComponentRegexp := `(?:[a-z0-9](?:(?:[_.]|__|[-]*)[a-z0-9]+)*)`
