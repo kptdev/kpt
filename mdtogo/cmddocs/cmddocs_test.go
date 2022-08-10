@@ -15,7 +15,6 @@
 package cmddocs_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"sort"
@@ -29,7 +28,7 @@ func TestParsingDocWithNameFromFolder(t *testing.T) {
 	testDir := path.Join(t.TempDir(), "example")
 	dirErr := os.Mkdir(testDir, os.ModePerm)
 	assert.NoError(t, dirErr)
-	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
+	exampleMd, err := os.CreateTemp(testDir, "_index.md")
 	assert.NoError(t, err)
 
 	testdata := []byte(`
@@ -58,7 +57,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
+	err = os.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -73,7 +72,7 @@ func TestParsingDocWithBackticks(t *testing.T) {
 	testDir := path.Join(t.TempDir(), "example")
 	dirErr := os.Mkdir(testDir, os.ModePerm)
 	assert.NoError(t, dirErr)
-	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
+	exampleMd, err := os.CreateTemp(testDir, "_index.md")
 	assert.NoError(t, err)
 
 	testdata := []byte(`
@@ -90,7 +89,7 @@ Test document.
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
+	err = os.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -104,7 +103,7 @@ func TestParsingDocWithNameFromComment(t *testing.T) {
 	testDir := path.Join(t.TempDir(), "example")
 	dirErr := os.Mkdir(testDir, os.ModePerm)
 	assert.NoError(t, dirErr)
-	exampleMd, err := ioutil.TempFile(testDir, "_index.md")
+	exampleMd, err := os.CreateTemp(testDir, "_index.md")
 	assert.NoError(t, err)
 
 	testdata := []byte(`
@@ -136,7 +135,7 @@ example_bin arg1
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
+	err = os.WriteFile(exampleMd.Name(), testdata, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{exampleMd.Name()})
@@ -156,9 +155,9 @@ func TestParsingMultipleDocsFromSameFolder(t *testing.T) {
 	testDir := path.Join(t.TempDir(), "example")
 	dirErr := os.Mkdir(testDir, os.ModePerm)
 	assert.NoError(t, dirErr)
-	firstExampleMd, err := ioutil.TempFile(testDir, "first_index.md")
+	firstExampleMd, err := os.CreateTemp(testDir, "first_index.md")
 	assert.NoError(t, err)
-	secondExampleMd, err := ioutil.TempFile(testDir, "second_index.md")
+	secondExampleMd, err := os.CreateTemp(testDir, "second_index.md")
 	assert.NoError(t, err)
 
 	firstTestData := []byte(`
@@ -194,9 +193,9 @@ documentation.
 <!--mdtogo-->
 	`)
 
-	err = ioutil.WriteFile(firstExampleMd.Name(), firstTestData, os.ModePerm)
+	err = os.WriteFile(firstExampleMd.Name(), firstTestData, os.ModePerm)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(secondExampleMd.Name(), secondTestData, os.ModePerm)
+	err = os.WriteFile(secondExampleMd.Name(), secondTestData, os.ModePerm)
 	assert.NoError(t, err)
 
 	docs := cmddocs.ParseCmdDocs([]string{firstExampleMd.Name(), secondExampleMd.Name()})

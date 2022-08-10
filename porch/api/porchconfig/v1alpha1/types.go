@@ -53,7 +53,7 @@ const (
 // RepositorySpec defines the desired state of Repository
 //
 // Notes:
-//  * deployment repository - in KRM API ConfigSync would be configured directly? (or via this API)
+//   - deployment repository - in KRM API ConfigSync would be configured directly? (or via this API)
 type RepositorySpec struct {
 	// User-friendly description of the repository
 	Description string `json:"description,omitempty"`

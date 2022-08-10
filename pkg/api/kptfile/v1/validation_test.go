@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//	http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
 package v1
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -504,7 +504,7 @@ metadata:
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			d := t.TempDir()
-			err := ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
+			err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)
 			assert.NoError(t, err)
 			got, err := GetValidatedFnConfigFromPath(filesys.FileSystemOrOnDisk{}, types.UniquePath(d), "f1.yaml")
 			if tc.errMsg != "" {

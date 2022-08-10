@@ -4,7 +4,7 @@
 package live
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"testing"
@@ -194,7 +194,7 @@ func TestPathManifestReader_Read(t *testing.T) {
 			dir := t.TempDir()
 			for filename, content := range tc.manifests {
 				p := filepath.Join(dir, filename)
-				err := ioutil.WriteFile(p, []byte(content), 0600)
+				err := os.WriteFile(p, []byte(content), 0600)
 				assert.NoError(t, err)
 			}
 

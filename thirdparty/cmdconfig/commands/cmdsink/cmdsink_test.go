@@ -6,7 +6,6 @@ package cmdsink
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestSinkCommand(t *testing.T) {
-	d, err := ioutil.TempDir("", "sink-test")
+	d, err := os.MkdirTemp("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -82,7 +81,7 @@ items:
 	}
 	defer os.RemoveAll(d)
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.yaml"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -109,7 +108,7 @@ spec:
 		t.FailNow()
 	}
 
-	actual, err = ioutil.ReadFile(filepath.Join(d, "f2.yaml"))
+	actual, err = os.ReadFile(filepath.Join(d, "f2.yaml"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -142,7 +141,7 @@ spec:
 }
 
 func TestSinkCommand_Error(t *testing.T) {
-	d, err := ioutil.TempDir("", "sink-test")
+	d, err := os.MkdirTemp("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -177,7 +176,7 @@ items:
 }
 
 func TestSinkCommandJSON(t *testing.T) {
-	d, err := ioutil.TempDir("", "sink-test")
+	d, err := os.MkdirTemp("", "sink-test")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -199,7 +198,7 @@ items:
 	}
 	defer os.RemoveAll(d)
 
-	actual, err := ioutil.ReadFile(filepath.Join(d, "f1.json"))
+	actual, err := os.ReadFile(filepath.Join(d, "f1.json"))
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}

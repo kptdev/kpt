@@ -14,7 +14,6 @@
 
 // These tests depend on `diff` which is not available on Windows
 //go:build !windows
-// +build !windows
 
 // Package diff_test tests the diff package
 package diff_test

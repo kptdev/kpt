@@ -15,7 +15,7 @@
 package httputil
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -30,7 +30,7 @@ func FetchContent(url string) (string, error) {
 		return "", err
 	}
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}

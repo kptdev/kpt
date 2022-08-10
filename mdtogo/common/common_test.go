@@ -15,7 +15,6 @@
 package common_test
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -26,7 +25,7 @@ import (
 
 func TestReadingMarkdownDirectoryRecursively(t *testing.T) {
 	parentTestDir := t.TempDir()
-	childTestDir, dirErr := ioutil.TempDir(parentTestDir, "test")
+	childTestDir, dirErr := os.MkdirTemp(parentTestDir, "test")
 	assert.NoError(t, dirErr)
 
 	firstTestFile, _ := os.Create(path.Join(parentTestDir, "example1.md"))

@@ -144,7 +144,8 @@ func (r *ApplyResults) reportHealth(gvk schema.GroupVersionKind, nn types.Namesp
 // It does not wait for the objects to become healthy, but will report their health.
 //
 // TODO: Limit the amount of time this takes, particularly if we have thousands of objects.
-//       We don't _have_ to try to apply all objects if it is taking too long.
+//
+//	We don't _have_ to try to apply all objects if it is taking too long.
 //
 // TODO: We re-apply every object every iteration; we should be able to do better.
 func (a *ApplySet) ApplyOnce(ctx context.Context) (*ApplyResults, error) {

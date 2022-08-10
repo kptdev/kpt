@@ -16,7 +16,7 @@ package engine
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -55,7 +55,7 @@ func TestInit(t *testing.T) {
 			t.Errorf("Cannot find Kptfile in %v", initializedPkg.Contents)
 		}
 
-		want, err := ioutil.ReadFile(filepath.Join(testdata, fi))
+		want, err := os.ReadFile(filepath.Join(testdata, fi))
 		if err != nil {
 			t.Fatalf("Cannot read expected Kptfile: %v", err)
 		}

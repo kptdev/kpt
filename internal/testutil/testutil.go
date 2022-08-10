@@ -17,7 +17,6 @@ package testutil
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -232,11 +231,11 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 		}
 
 		// compare upstreamFiles
-		b1, err := ioutil.ReadFile(filepath.Join(destDir, f))
+		b1, err := os.ReadFile(filepath.Join(destDir, f))
 		if err != nil {
 			return diff, err
 		}
-		b2, err := ioutil.ReadFile(filepath.Join(sourceDir, f))
+		b2, err := os.ReadFile(filepath.Join(sourceDir, f))
 		if err != nil {
 			return diff, err
 		}
@@ -269,7 +268,7 @@ const trimPrefix = `# Copyright 2019 Google LLC
 // AssertKptfile verifies the contents of the KptFile matches the provided value.
 func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1.KptFile) bool {
 	// read the actual generated KptFile
-	b, err := ioutil.ReadFile(filepath.Join(cloned, kptfilev1.KptFileName))
+	b, err := os.ReadFile(filepath.Join(cloned, kptfilev1.KptFileName))
 	if !assert.NoError(t, err) {
 		return false
 	}
@@ -359,7 +358,7 @@ func (g *TestGitRepo) SetupTestGitRepo(name string, data []Content, repos map[st
 }
 
 func (g *TestGitRepo) createEmptyGitRepo(defaultBranch string) error {
-	dir, err := ioutil.TempDir("", fmt.Sprintf("%s-upstream-", TmpDirPrefix))
+	dir, err := os.MkdirTemp("", fmt.Sprintf("%s-upstream-", TmpDirPrefix))
 	if err != nil {
 		return err
 	}
@@ -774,7 +773,7 @@ func (w *TestWorkspace) FullPackagePath() string {
 
 func (w *TestWorkspace) SetupTestWorkspace() error {
 	var err error
-	w.WorkspaceDirectory, err = ioutil.TempDir("", "test-kpt-local-")
+	w.WorkspaceDirectory, err = os.MkdirTemp("", "test-kpt-local-")
 	return err
 }
 
@@ -824,7 +823,7 @@ func PrintPackage(paths ...string) error {
 
 func PrintFile(paths ...string) error {
 	path := filepath.Join(paths...)
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -854,7 +853,7 @@ func Chdir(t *testing.T, path string) func() {
 // cache, sets the env variable so it will be used for tests, and cleans
 // up the directory afterwards.
 func ConfigureTestKptCache(m *testing.M) int {
-	cacheDir, err := ioutil.TempDir("", "kpt-test-cache-repos-")
+	cacheDir, err := os.MkdirTemp("", "kpt-test-cache-repos-")
 	if err != nil {
 		panic(fmt.Errorf("error creating temp dir for cache: %w", err))
 	}

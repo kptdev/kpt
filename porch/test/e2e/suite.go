@@ -19,7 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -637,11 +636,11 @@ func (t *TestSuite) CompareGoldenFileYAML(goldenPath string, gotContents string)
 	gotContents = normalizeYamlOrdering(t.T, gotContents)
 
 	if os.Getenv(updateGoldenFiles) != "" {
-		if err := ioutil.WriteFile(goldenPath, []byte(gotContents), 0644); err != nil {
+		if err := os.WriteFile(goldenPath, []byte(gotContents), 0644); err != nil {
 			t.Fatalf("Failed to update golden file %q: %v", goldenPath, err)
 		}
 	}
-	golden, err := ioutil.ReadFile(goldenPath)
+	golden, err := os.ReadFile(goldenPath)
 	if err != nil {
 		t.Fatalf("Failed to read golden file %q: %v", goldenPath, err)
 	}

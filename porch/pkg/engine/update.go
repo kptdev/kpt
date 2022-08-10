@@ -16,7 +16,6 @@ package engine
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -39,19 +38,19 @@ func (m *defaultPackageUpdater) Update(
 	originalResources,
 	upstreamResources repository.PackageResources) (updatedResources repository.PackageResources, err error) {
 
-	localDir, err := ioutil.TempDir("", "kpt-pkg-update-*")
+	localDir, err := os.MkdirTemp("", "kpt-pkg-update-*")
 	if err != nil {
 		return repository.PackageResources{}, err
 	}
 	defer os.RemoveAll(localDir)
 
-	originalDir, err := ioutil.TempDir("", "kpt-pkg-update-*")
+	originalDir, err := os.MkdirTemp("", "kpt-pkg-update-*")
 	if err != nil {
 		return repository.PackageResources{}, err
 	}
 	defer os.RemoveAll(originalDir)
 
-	upstreamDir, err := ioutil.TempDir("", "kpt-pkg-update-*")
+	upstreamDir, err := os.MkdirTemp("", "kpt-pkg-update-*")
 	if err != nil {
 		return repository.PackageResources{}, err
 	}

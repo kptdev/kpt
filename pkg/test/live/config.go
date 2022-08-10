@@ -15,7 +15,7 @@
 package live
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -65,7 +65,7 @@ type InventoryEntry struct {
 
 func ReadTestCaseConfig(t *testing.T, path string) TestCaseConfig {
 	configPath := filepath.Join(path, "config.yaml")
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatalf("unable to read test config at %s", configPath)
 	}

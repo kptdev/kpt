@@ -17,7 +17,6 @@ package man_test
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -33,7 +32,7 @@ func TestMan_Execute(t *testing.T) {
 	d := t.TempDir()
 
 	// write the KptFile
-	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := os.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -46,7 +45,7 @@ info:
 	// write the man md file
 	err = os.Mkdir(filepath.Join(d, "man"), 0700)
 	assert.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join(d, "man", ManFilename), []byte(`
+	err = os.WriteFile(filepath.Join(d, "man", ManFilename), []byte(`
 java 1   "June 2019"  "Application"
 ==================================================
 
@@ -192,7 +191,7 @@ func TestMan_Execute_failNoManPage(t *testing.T) {
 	d := t.TempDir()
 
 	// write the KptFile
-	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := os.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -224,7 +223,7 @@ func TestMan_Execute_failBadPath(t *testing.T) {
 	d := t.TempDir()
 
 	// write the KptFile
-	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := os.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -252,7 +251,7 @@ func TestMan_Execute_failLocation(t *testing.T) {
 	d := t.TempDir()
 
 	// write the KptFile
-	err := ioutil.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
+	err := os.WriteFile(filepath.Join(d, kptfilev1.KptFileName), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:

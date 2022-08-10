@@ -4,7 +4,7 @@
 package cmdliveinit
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
@@ -231,7 +231,7 @@ func TestCmd_Run(t *testing.T) {
 
 			w, clean := testutil.SetupWorkspace(t)
 			defer clean()
-			err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName),
+			err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, kptfilev1.KptFileName),
 				[]byte(tc.kptfile), 0600)
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -239,7 +239,7 @@ func TestCmd_Run(t *testing.T) {
 
 			// Create ResourceGroup file if testing the STDIN feature.
 			if tc.resourcegroup != "" && tc.rgfilename != "" {
-				err := ioutil.WriteFile(filepath.Join(w.WorkspaceDirectory, tc.rgfilename),
+				err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, tc.rgfilename),
 					[]byte(tc.resourcegroup), 0600)
 				if !assert.NoError(t, err) {
 					t.FailNow()

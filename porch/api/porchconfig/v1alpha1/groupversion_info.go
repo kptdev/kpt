@@ -13,8 +13,8 @@
 // limitations under the License.
 
 // Package v1alpha1 contains API Schema definitions for the v1alpha1 API group
-//+kubebuilder:object:generate=true
-//+groupName=config.porch.kpt.dev
+// +kubebuilder:object:generate=true
+// +groupName=config.porch.kpt.dev
 package v1alpha1
 
 import (

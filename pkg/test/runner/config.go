@@ -16,7 +16,6 @@ package runner
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -108,7 +107,7 @@ func (c *TestCaseConfig) RunCount() int {
 
 func newTestCaseConfig(path string) (TestCaseConfig, error) {
 	configPath := filepath.Join(path, expectedDir, expectedConfigFile)
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if os.IsNotExist(err) {
 		// return default config
 		return TestCaseConfig{

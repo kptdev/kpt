@@ -16,7 +16,6 @@ package pkgutil
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -104,11 +103,11 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 		}
 
 		// copy file by reading and writing it
-		b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+		b, err := os.ReadFile(filepath.Join(src, copyTo))
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+		err = os.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
 		if err != nil {
 			return err
 		}
@@ -151,11 +150,11 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 			}
 
 			// copy file by reading and writing it
-			b, err := ioutil.ReadFile(filepath.Join(src, copyTo))
+			b, err := os.ReadFile(filepath.Join(src, copyTo))
 			if err != nil {
 				return err
 			}
-			err = ioutil.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
+			err = os.WriteFile(filepath.Join(dst, copyTo), b, info.Mode())
 			if err != nil {
 				return err
 			}

@@ -9,7 +9,6 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -125,7 +124,7 @@ func (mr *MigrateRunner) Run(reader io.Reader, args []string) error {
 	var stdinBytes []byte
 	var err error
 	if len(args) == 0 {
-		stdinBytes, err = ioutil.ReadAll(reader)
+		stdinBytes, err = io.ReadAll(reader)
 		if err != nil {
 			return err
 		}

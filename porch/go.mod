@@ -1,6 +1,6 @@
 module github.com/GoogleContainerTools/kpt/porch
 
-go 1.17
+go 1.18
 
 replace (
 	github.com/GoogleContainerTools/kpt => ../

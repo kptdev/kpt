@@ -15,7 +15,7 @@
 package kptfileutil
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -64,7 +64,7 @@ func TestValidateInventory(t *testing.T) {
 func TestUpdateKptfile(t *testing.T) {
 	writeKptfileToTemp := func(tt *testing.T, content string) string {
 		dir := tt.TempDir()
-		err := ioutil.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -343,7 +343,7 @@ pipeline: {}
 				t.FailNow()
 			}
 
-			c, err := ioutil.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
+			c, err := os.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

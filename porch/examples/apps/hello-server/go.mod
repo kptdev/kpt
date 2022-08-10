@@ -1,3 +1,3 @@
 module github.com/GoogleContainerTools/kpt/porch/config/samples/apps/hello
 
-go 1.17
+go 1.18

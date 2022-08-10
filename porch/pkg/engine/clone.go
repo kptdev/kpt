@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -145,7 +144,7 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 		},
 	}
 
-	dir, err := ioutil.TempDir("", "clone-git-package-*")
+	dir, err := os.MkdirTemp("", "clone-git-package-*")
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot create temporary directory to clone Git repository: %w", err)
 	}

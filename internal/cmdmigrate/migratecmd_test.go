@@ -4,7 +4,7 @@
 package cmdmigrate
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -142,12 +142,12 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			// Set up temp directory with Ktpfile
 			dir := t.TempDir()
 			p := filepath.Join(dir, "Kptfile")
-			err := ioutil.WriteFile(p, []byte(tc.kptfile), 0600)
+			err := os.WriteFile(p, []byte(tc.kptfile), 0600)
 			assert.NoError(t, err)
 
 			if tc.resourcegroup != "" {
 				p := filepath.Join(dir, tc.rgFilename)
-				err = ioutil.WriteFile(p, []byte(tc.resourcegroup), 0600)
+				err = os.WriteFile(p, []byte(tc.resourcegroup), 0600)
 				assert.NoError(t, err)
 			}
 

@@ -16,7 +16,7 @@ package builtins
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -52,10 +52,10 @@ func TestPkgContextGenerator(t *testing.T) {
 			pkgCtxGenerator := &PackageContextGenerator{}
 			out := &bytes.Buffer{}
 
-			in, err := ioutil.ReadFile(filepath.Join("testdata", test.dir, "in.yaml"))
+			in, err := os.ReadFile(filepath.Join("testdata", test.dir, "in.yaml"))
 			assert.NoError(t, err)
 
-			exp, err := ioutil.ReadFile(filepath.Join("testdata", test.dir, "out.yaml"))
+			exp, err := os.ReadFile(filepath.Join("testdata", test.dir, "out.yaml"))
 			assert.NoError(t, err)
 
 			err = pkgCtxGenerator.Run(bytes.NewReader(in), out)

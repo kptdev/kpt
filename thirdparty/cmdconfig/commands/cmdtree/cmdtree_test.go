@@ -6,7 +6,6 @@ package cmdtree
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestTreeCommandDefaultCurDir_files(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	defer os.RemoveAll(d)
 	if !assert.NoError(t, err) {
 		return
@@ -25,7 +24,7 @@ func TestTreeCommandDefaultCurDir_files(t *testing.T) {
 	revert := testutil.Chdir(t, d)
 	defer revert()
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -60,7 +59,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -94,13 +93,13 @@ spec:
 }
 
 func TestTreeCommand_files(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	defer os.RemoveAll(d)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -135,7 +134,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -169,13 +168,13 @@ spec:
 }
 
 func TestTreeCommand_Kustomization(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	defer os.RemoveAll(d)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -189,7 +188,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
+	err = os.WriteFile(filepath.Join(d, "Kustomization"), []byte(`apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - f2.yaml
@@ -215,7 +214,7 @@ resources:
 }
 
 func TestTreeCommand_subpkgs(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	defer os.RemoveAll(d)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -226,7 +225,7 @@ func TestTreeCommand_subpkgs(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -261,7 +260,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "subpkg", "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -275,7 +274,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = os.WriteFile(filepath.Join(d, "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: mainpkg
@@ -285,7 +284,7 @@ openAPI:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = os.WriteFile(filepath.Join(d, "subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: subpkg
@@ -319,7 +318,7 @@ openAPI:
 }
 
 func TestTreeCommand_CurDirInput(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	defer os.RemoveAll(d)
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -333,7 +332,7 @@ func TestTreeCommand_CurDirInput(t *testing.T) {
 	revert := testutil.Chdir(t, filepath.Join(d, "Mainpkg"))
 	defer revert()
 
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "Mainpkg", "f1.yaml"), []byte(`
 kind: Deployment
 metadata:
   labels:
@@ -347,7 +346,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx
@@ -361,7 +360,7 @@ spec:
 		return
 	}
 
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = os.WriteFile(filepath.Join(d, "Mainpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: Mainpkg
@@ -369,7 +368,7 @@ metadata:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
+	err = os.WriteFile(filepath.Join(d, "Mainpkg", "Subpkg", "Kptfile"), []byte(`apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: Subpkg
@@ -399,7 +398,7 @@ metadata:
 }
 
 func TestTreeCommand_symlink(t *testing.T) {
-	d, err := ioutil.TempDir("", "tree-test")
+	d, err := os.MkdirTemp("", "tree-test")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -412,7 +411,7 @@ func TestTreeCommand_symlink(t *testing.T) {
 		return
 	}
 	defer os.RemoveAll(d)
-	err = ioutil.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`
+	err = os.WriteFile(filepath.Join(d, "foo", "f1.yaml"), []byte(`
 apiVersion: v1
 kind: Abstraction
 metadata:
@@ -447,7 +446,7 @@ spec:
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = ioutil.WriteFile(filepath.Join(d, "foo", "f2.yaml"), []byte(`kind: Deployment
+	err = os.WriteFile(filepath.Join(d, "foo", "f2.yaml"), []byte(`kind: Deployment
 metadata:
   labels:
     app: nginx

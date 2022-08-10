@@ -17,7 +17,6 @@ package kpt
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -107,7 +106,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 			}
 			originDir = originRepoSpec.AbsPath()
 		} else {
-			dir, err := ioutil.TempDir("", "kpt-empty-")
+			dir, err := os.MkdirTemp("", "kpt-empty-")
 			if err != nil {
 				return fmt.Errorf("failed to create tempdir: %w", err)
 			}

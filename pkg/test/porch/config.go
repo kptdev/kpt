@@ -16,7 +16,7 @@ package porch
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -54,7 +54,7 @@ type TestCaseConfig struct {
 
 func ReadTestCaseConfig(t *testing.T, name, path string) TestCaseConfig {
 	configPath := filepath.Join(path, "config.yaml")
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 	if err != nil {
 		t.Fatalf("Failed to read test config file %q: %v", configPath, err)
 	}
@@ -76,7 +76,7 @@ func WriteTestCaseConfig(t *testing.T, tc *TestCaseConfig) {
 	if err := e.Encode(tc); err != nil {
 		t.Fatalf("Failed to marshal test case config for %s: %v", tc.TestCase, err)
 	}
-	if err := ioutil.WriteFile(tc.ConfigFile, out.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(tc.ConfigFile, out.Bytes(), 0644); err != nil {
 		t.Errorf("Failed to save test case config for %s into %q: %v", tc.TestCase, tc.ConfigFile, err)
 	}
 }
