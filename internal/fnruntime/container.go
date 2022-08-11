@@ -28,7 +28,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
@@ -156,7 +155,7 @@ func (f *ContainerFn) runCLI(reader io.Reader, writer io.Writer, bin string, fil
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         filterCLIOutputFn(&errSink),
-				TruncateOutput: printer.TruncateOutput,
+				TruncateOutput: true,
 			}
 		}
 		return fmt.Errorf("unexpected function error: %w", err)

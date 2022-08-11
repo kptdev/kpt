@@ -3,7 +3,6 @@ module github.com/GoogleContainerTools/kpt
 go 1.17
 
 require (
-	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/native-config-adaptor v0.0.0-00010101000000-000000000000
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220802210946-984d8349f565
 	// github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220707151439-cb4c4e496c92
 	github.com/cpuguy83/go-md2man/v2 v2.0.1
@@ -104,7 +103,6 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	honnef.co/go/augeas v0.0.0-20161110001225-ca62e35ed6b8 // indirect
 	k8s.io/kube-openapi v0.0.0-20220627174259-011e075b9cb8 // indirect
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
@@ -113,5 +111,3 @@ require (
 )
 
 replace github.com/GoogleContainerTools/kpt-functions-sdk/go/fn => ../kpt-functions-sdk/go/fn
-
-replace github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/native-config-adaptor => ../kpt-functions-catalog/functions/go/native-config-adaptor

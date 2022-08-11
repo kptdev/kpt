@@ -212,13 +212,13 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 // Kptfile returns the Kptfile meta resource by lazy loading it from the filesytem.
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
-	if p.kptfile == nil {
-		kf, err := ReadKptfile(p.fsys, p.UniquePath.String())
-		if err != nil {
-			return nil, err
-		}
-		p.kptfile = kf
+	// if p.kptfile == nil {
+	kf, err := ReadKptfile(p.fsys, p.UniquePath.String())
+	if err != nil {
+		return nil, err
 	}
+	p.kptfile = kf
+	//}
 	return p.kptfile, nil
 }
 

@@ -25,6 +25,7 @@ import (
 	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/pkgautorun"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -55,6 +56,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"the update strategy that will be used when updating the package. This will change "+
 			"the default strategy for the package -- must be one of: "+
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
+	c.Flags().BoolVar(&r.ReserveBuiltin, "debug", false, "")
 	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
@@ -70,10 +72,12 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 // Runner contains the run function.
 // TODO, support listing versions
 type Runner struct {
-	ctx      context.Context
-	strategy string
-	Update   update.Command
-	Command  *cobra.Command
+	ctx            context.Context
+	strategy       string
+	Update         update.Command
+	Command        *cobra.Command
+	autoRunner     *pkgautorun.AutoRunner
+	ReserveBuiltin bool
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
@@ -120,7 +124,16 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if len(parts) > 1 {
 		r.Update.Ref = parts[1]
 	}
-	return nil
+	r.autoRunner = &pkgautorun.AutoRunner{
+		Ctx:            r.ctx,
+		Destination:    string(p.UniquePath),
+		ReserveBuiltin: true,
+	}
+	if err := r.autoRunner.RunPkgAutoPipeline(); err != nil {
+		return err
+	}
+	return r.autoRunner.DeleteNativeConfig()
+
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
@@ -128,8 +141,8 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if err := r.Update.Run(r.ctx); err != nil {
 		return errors.E(op, r.Update.Pkg.UniquePath, err)
 	}
-
-	return nil
+	r.autoRunner.ReserveBuiltin = r.ReserveBuiltin
+	return r.autoRunner.RunPkgAutoPipelineWithMerge()
 }
 
 func resolveRelPath(path types.UniquePath) (string, error) {

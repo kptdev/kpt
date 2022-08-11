@@ -378,7 +378,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 		ri := &multiLineFormatter{
 			Title:          "Results",
 			Lines:          lines,
-			TruncateOutput: printer.TruncateOutput,
+			TruncateOutput: true,
 		}
 		pr.OptPrintf(opt, "%s", ri.String())
 	}
@@ -400,7 +400,7 @@ func printFnStderr(ctx context.Context, stdErr string) {
 			Title:          "Stderr",
 			Lines:          strings.Split(stdErr, "\n"),
 			UseQuote:       true,
-			TruncateOutput: printer.TruncateOutput,
+			TruncateOutput: true,
 		}
 		pr.Printf("%s", errLines.String())
 	}
@@ -473,15 +473,17 @@ func (ri *multiLineFormatter) String() string {
 
 	b.WriteString(fmt.Sprintf("  %s:\n", ri.Title))
 	lineIndent := strings.Repeat(" ", FnExecErrorIndentation+2)
-	if !ri.TruncateOutput {
-		// stderr string should have indentations
-		for _, s := range ri.Lines {
-			// suppress newlines to avoid poor formatting
-			s = strings.ReplaceAll(s, "\n", " ")
-			b.WriteString(fmt.Sprintf(lineIndent+strInterpolator+"\n", s))
+	/*
+		if !ri.TruncateOutput {
+			// stderr string should have indentations
+			for _, s := range ri.Lines {
+				// suppress newlines to avoid poor formatting
+				s = strings.ReplaceAll(s, "\n", " ")
+				b.WriteString(fmt.Sprintf(lineIndent+strInterpolator+"\n", s))
+			}
+			return b.String()
 		}
-		return b.String()
-	}
+	*/
 	printedLines := 0
 	for i, s := range ri.Lines {
 		if i >= ri.MaxLines {

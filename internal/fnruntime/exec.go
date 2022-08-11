@@ -23,7 +23,6 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 )
 
@@ -66,7 +65,7 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),
 				Stderr:         errSink.String(),
-				TruncateOutput: printer.TruncateOutput,
+				TruncateOutput: true,
 			}
 		}
 		return fmt.Errorf("unexpected function error: %w", err)

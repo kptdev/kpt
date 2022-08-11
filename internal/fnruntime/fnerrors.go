@@ -49,7 +49,7 @@ func (fe *ExecError) String() string {
 		Title:          "Stderr",
 		Lines:          strings.Split(fe.Stderr, "\n"),
 		UseQuote:       true,
-		TruncateOutput: fe.TruncateOutput,
+		TruncateOutput: true,
 	}
 	b.WriteString(errLines.String())
 	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
