@@ -19,7 +19,7 @@ COPY go.mod go.sum ./
 COPY porch/go.mod porch/go.sum porch/
 COPY porch/api/go.mod porch/api/go.sum porch/api/
 
-WORKDIR /workspace/porch/controllers/remoterootsync/
+WORKDIR /workspace/porch/controllers/
 RUN go mod download
 # Prebuild some libraries to warm the cache
 RUN CGO_ENABLED=0 go build -v \
@@ -44,7 +44,7 @@ COPY porch/api/ porch/api/
 COPY porch/controllers/ porch/controllers/
 COPY porch/pkg/ porch/pkg/
 
-WORKDIR /workspace/porch/controllers/remoterootsync/
+WORKDIR /workspace/porch/controllers/
 RUN CGO_ENABLED=0 go build -o /porch-controllers -v .
 
 FROM gcr.io/distroless/static
