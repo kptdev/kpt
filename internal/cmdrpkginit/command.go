@@ -43,9 +43,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	}
 	c := &cobra.Command{
 		Use:     "init PACKAGE_NAME",
-		Short:   rpkgdocs.CloneShort,
-		Long:    rpkgdocs.CloneShort + "\n" + rpkgdocs.CloneLong,
-		Example: rpkgdocs.CloneExamples,
+		Short:   rpkgdocs.InitShort,
+		Long:    rpkgdocs.InitShort + "\n" + rpkgdocs.InitLong,
+		Example: rpkgdocs.InitExamples,
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
