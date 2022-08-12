@@ -22,6 +22,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: kpt-release
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
     steps:
       - name: Set up Go
         uses: actions/setup-go@v2
@@ -48,8 +50,29 @@ jobs:
           ./scripts/create-licenses.sh
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
+        id: run-goreleaser
         with:
           version: latest
           args: release --skip-validate -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate SLSA subjects for provenance
+        id: hash
+        env:
+          ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
+        run: |
+          set -euo pipefail
+
+          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
+  
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      upload-assets: true # upload to a new release
