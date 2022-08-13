@@ -44,6 +44,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		RunE:    r.runE,
 		PreRunE: r.preRunE,
 	}
+	c.Flags().BoolVar(&r.enablePkgAutorun, "enable-pkg-autorun", false,
+		"run pkg-auto-run pipeline before render")
 	c.Flags().StringVar(&r.resultsDirPath, "results-dir", "",
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
@@ -63,13 +65,14 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
-	pkgPath         string
-	resultsDirPath  string
-	imagePullPolicy string
-	allowExec       bool
-	dest            string
-	Command         *cobra.Command
-	ctx             context.Context
+	pkgPath          string
+	resultsDirPath   string
+	imagePullPolicy  string
+	enablePkgAutorun bool
+	allowExec        bool
+	dest             string
+	Command          *cobra.Command
+	ctx              context.Context
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -116,12 +119,13 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 	executor := render.Renderer{
-		PkgPath:         absPkgPath,
-		ResultsDirPath:  r.resultsDirPath,
-		Output:          output,
-		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
-		AllowExec:       r.allowExec,
-		FileSystem:      filesys.FileSystemOrOnDisk{},
+		PkgPath:          absPkgPath,
+		ResultsDirPath:   r.resultsDirPath,
+		Output:           output,
+		ImagePullPolicy:  cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
+		AllowExec:        r.allowExec,
+		FileSystem:       filesys.FileSystemOrOnDisk{},
+		EnablePkgAutorun: r.enablePkgAutorun,
 	}
 	if err := executor.Execute(r.ctx); err != nil {
 		return err

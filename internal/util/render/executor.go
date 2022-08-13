@@ -22,9 +22,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	krmfn "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/GoogleContainerTools/kpt/internal/pkgautorun"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
@@ -67,6 +69,8 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
+
+	EnablePkgAutorun bool
 }
 
 // Execute runs a pipeline.
@@ -91,14 +95,13 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		runtime:         e.Runtime,
 	}
 
-	if _, err = hydrate(ctx, root, hctx); err != nil {
+	if _, err = hydrate(ctx, root, hctx, e.EnablePkgAutorun); err != nil {
 		// Note(droot): ignore the error in function result saving
 		// to avoid masking the hydration error.
 		// don't disable the CLI output in case of error
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return errors.E(op, root.pkg.UniquePath, err)
 	}
-
 	// adjust the relative paths of the resources.
 	err = adjustRelPath(hctx)
 	if err != nil {
@@ -265,7 +268,7 @@ func (s hydrationState) String() string {
 }
 
 // hydrate hydrates given pkg and returns wet resources.
-func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output []*yaml.RNode, err error) {
+func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext, enablePkgAutorun bool) (output []*yaml.RNode, err error) {
 	const op errors.Op = "pkg.render"
 
 	curr, found := hctx.pkgs[pn.pkg.UniquePath]
@@ -310,7 +313,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
 
-		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
+		transitiveResources, err = hydrate(ctx, subPkgNode, hctx, enablePkgAutorun)
 		if err != nil {
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
@@ -331,17 +334,191 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 	// include current package's resources in the input resource list
 	input = append(input, currPkgResources...)
-
+	// Initialize a AutoRunner
+	autoRunner := &pkgautorun.AutoRunner{
+		Ctx:            ctx,
+		ReserveBuiltin: true,
+		Destination:    string(pn.pkg.UniquePath),
+	}
+	if enablePkgAutorun {
+		input, err = curr.RunPkgPipeline(ctx, autoRunner, hctx, input)
+		if err != nil {
+			return output, errors.E(op, curr.pkg.UniquePath, err)
+		}
+	}
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
-
+	if enablePkgAutorun {
+		output, err = curr.ClosePkgAutopipeline(ctx, autoRunner, output)
+		if err != nil {
+			return output, errors.E(op, curr.pkg.UniquePath, err)
+		}
+	}
 	// pkg is hydrated, mark the pkg as wet and update the resources
 	curr.state = Wet
 	curr.resources = output
 
 	return output, err
+}
+
+func (pn *pkgNode) recreateResourceList(autoRunner *pkgautorun.AutoRunner, input []*yaml.RNode) (*krmfn.ResourceList, error) {
+	kf, _ := pn.pkg.Kptfile()
+	kptFunction := kf.PkgAutoRun.BuiltInFunctions[0]
+	configs, _ := kio.LocalPackageReader{PackagePath: filepath.Join(pn.pkg.UniquePath.String(), kptFunction.ConfigPath), PreserveSeqIndent: true, WrapBareSeqNode: true}.Read()
+	if len(configs) != 1 {
+		return nil, fmt.Errorf("expected exactly 1 functionConfig, found %d", len(configs))
+	}
+	functionConfig := configs[0]
+	rawResourceList, err := autoRunner.ReadResourceListFromFnSource(pn.pkg.UniquePath.String(), functionConfig)
+	if err != nil {
+		return nil, err
+	}
+	rl, err := krmfn.ParseResourceList(rawResourceList)
+	if err != nil {
+		return nil, err
+	}
+	var kubeObjects krmfn.KubeObjects
+	for _, node := range input {
+		ko := krmfn.RnodeToKubeObject(node)
+		kubeObjects = append(kubeObjects, ko)
+	}
+	rl.Items = kubeObjects
+	return rl, nil
+}
+
+func (pn *pkgNode) ClosePkgAutopipeline(ctx context.Context, autoRunner *pkgautorun.AutoRunner, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	pkgPipeline, err := pn.pkg.PkgAutoRunPipeline()
+	if err != nil {
+		return nil, err
+	}
+	if pkgPipeline.IsEmpty() {
+		if err := kptfilev1.AreKRM(input); err != nil {
+			return nil, fmt.Errorf("input resource list must contain only KRM resources: %s", err.Error())
+		}
+		return input, nil
+	}
+	// Simplify the code to a single function.
+	rl, err := pn.recreateResourceList(autoRunner, input)
+	inputBytes, err := rl.ToYAML()
+	if err != nil {
+		return nil, err
+	}
+	output, err := autoRunner.UpdateNonKrmAfterMerge(string(inputBytes))
+	output, err = autoRunner.CleanupBuiltInObjects(string(output))
+
+	if err != nil {
+		return nil, err
+	}
+	rl, err = krmfn.ParseResourceList(output)
+	var newRnodeList []*yaml.RNode
+	for _, ko := range rl.Items {
+		if ko.GetAnnotation(krmfn.GeneratorBuiltinIdentifier) != "" {
+			continue
+		}
+		rnode := ko.ToRNode()
+		err := pkg.SetPkgPathAnnotation(rnode, pn.pkg.UniquePath)
+		if err != nil {
+			return nil, err
+		}
+		newRnodeList = append(newRnodeList, rnode)
+	}
+	return newRnodeList, nil
+}
+
+func (pn *pkgNode) RunPkgPipeline(ctx context.Context, autorunner *pkgautorun.AutoRunner, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	const op errors.Op = "pipeline.pkgPipelineRun"
+	pr := printer.FromContextOrDie(ctx)
+	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
+
+	// Validate PkgAutoRun
+	pkgPipeline, err := pn.pkg.PkgAutoRunPipeline()
+	if err != nil {
+		return nil, err
+	}
+	if pkgPipeline.IsEmpty() {
+		if err := kptfilev1.AreKRM(input); err != nil {
+			return nil, fmt.Errorf("input resource list must contain only KRM resources: %s", err.Error())
+		}
+		return input, nil
+	}
+	// Filter out generated resources
+	var tmpInput []*yaml.RNode
+	for _, node := range input {
+		if v, ok := node.GetAnnotations()[krmfn.GeneratorBuiltinIdentifier]; ok && v != "" {
+			continue
+		}
+		if v, ok := node.GetAnnotations()[krmfn.GeneratorIdentifier]; ok && v != "" {
+			continue
+		}
+		if node.GetKind() == krmfn.NonKrmKind {
+			continue
+		}
+		tmpInput = append(tmpInput, node)
+	}
+	input = tmpInput
+	// Read native files as a BuiltinNonKRM KRM objects
+	nonKrmKubeObjects, err := autorunner.GenerateNonKrmResources(pkgPipeline.InclNonKrmFiles)
+	if err != nil {
+		return nil, err
+	}
+	var nonKrmRNodes []*yaml.RNode
+	for _, ko := range nonKrmKubeObjects {
+		nonKrmRNodes = append(nonKrmRNodes, ko.ToRNode())
+	}
+	input = append(input, nonKrmRNodes...)
+	// Run PkgAutoRun pipeline.
+	resources, err := pn.pkgRun(pkgPipeline.BuiltInFunctions, ctx, hctx, input)
+	if err != nil {
+		return nil, errors.E(op, pn.pkg.UniquePath, err)
+	}
+	return resources, nil
+}
+
+// Only run a single function here.
+func (pn *pkgNode) pkgRun(functions []kptfilev1.Function, ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
+	pkgGenerators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, functions)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, generator := range pkgGenerators {
+		if functions[i].ConfigPath != "" {
+			for _, r := range input {
+				pkgPath, err := pkg.GetPkgPathAnnotation(r)
+				if err != nil {
+					return nil, err
+				}
+				currPath, _, err := kioutil.GetFileAnnotations(r)
+				if err != nil {
+					return nil, err
+				}
+				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
+					currPath == functions[i].ConfigPath { // configPath matches
+					generator.SetFnConfig(r)
+					continue
+				}
+			}
+		}
+		output := &kio.PackageBuffer{}
+		// create a kio pipeline from kyaml library to execute the function chains
+		singleGenerator := kio.Pipeline{
+			Inputs: []kio.Reader{
+				&kio.PackageBuffer{Nodes: input},
+			},
+			Filters: []kio.Filter{generator},
+			Outputs: []kio.Writer{output},
+		}
+		err = singleGenerator.Execute()
+		if err != nil {
+			return nil, err
+		}
+		hctx.executedFunctionCnt++
+
+		input = output.Nodes
+	}
+	return input, nil
 }
 
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
@@ -379,7 +556,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
 	// print a new line after a pipeline running
-	pr.Printf("\n")
 	return mutatedResources, nil
 }
 

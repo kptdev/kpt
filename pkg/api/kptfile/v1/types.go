@@ -264,6 +264,13 @@ func (p *Pipeline) IsEmpty() bool {
 	return false
 }
 
+func (p *PkgAutoRun) IsEmpty() bool {
+	if p == nil {
+		return true
+	}
+	return len(p.BuiltInFunctions) == 0
+}
+
 // Function specifies a KRM function.
 type Function struct {
 	// `Image` specifies the function container image.

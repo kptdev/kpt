@@ -41,12 +41,21 @@ func (r *AutoRunner) NewConfigMapGenerator(generator *fn.KubeObject, kf *kptfile
 			source.SetNestedString(inclNonKrmFile.Path, "localFile")
 		}
 	}
-	fnConfigfile, err := os.Create(ConfigMapTmpFnPath)
-	if err != nil {
-		return nil, err
+	var fileErr error
+	var f *os.File
+	defer f.Close()
+	os.Mkdir(GeneratedDir, os.ModePerm)
+	if _, err := os.Stat(ConfigMapTmpFnPath); os.IsNotExist(err) {
+		f, fileErr = os.Create(ConfigMapTmpFnPath)
+	} else {
+		f, fileErr = os.OpenFile(ConfigMapTmpFnPath, os.O_CREATE|os.O_WRONLY, 0660)
 	}
-	defer fnConfigfile.Close()
-	fnConfigfile.WriteString(generator.String())
+	if fileErr != nil {
+		return nil, fileErr
+	}
+	if _, writeErr := f.WriteString(generator.String()); writeErr != nil {
+		return nil, writeErr
+	}
 	return &kptfilev1.Function{
 		Image:      NativeConfigAdaptorImage,
 		ConfigPath: ConfigMapTmpFnPath,
@@ -150,7 +159,7 @@ func (r *AutoRunner) runPkgAutoPipeline(enableMerge bool) error {
 			if err != nil {
 				return err
 			}
-			if err = r.cacheOriginFromGeneratedDir(p.UniquePath.String()); err != nil {
+			if err = r.CacheOriginFromGeneratedDir(p.UniquePath.String()); err != nil {
 				return err
 			}
 			return writeResourceListToLocalPackage(output, string(p.UniquePath))
@@ -159,7 +168,7 @@ func (r *AutoRunner) runPkgAutoPipeline(enableMerge bool) error {
 	return nil
 }
 
-func (r *AutoRunner) cacheOriginFromGeneratedDir(resolvedPath string) error {
+func (r *AutoRunner) CacheOriginFromGeneratedDir(resolvedPath string) error {
 	var buf bytes.Buffer
 	p := kio.Pipeline{
 		ContinueOnEmptyResult: true,
@@ -314,7 +323,11 @@ func (r *AutoRunner) RunFunction(writer kio.Writer, functionConfig *yaml.RNode, 
 			o.SetAnnotation(kioutil.LegacyIndexAnnotation, o.GetAnnotation(fn.IndexAnnotation))
 		}
 	}
-	newOutput, _ := rl.ToYAML()
+
+	newOutput, err := rl.ToYAML()
+	if err != nil {
+		return err
+	}
 	return kio.Pipeline{
 		Inputs: []kio.Reader{&kio.ByteReader{
 			Reader:             bytes.NewBuffer(newOutput),
@@ -327,7 +340,23 @@ func (r *AutoRunner) RunFunction(writer kio.Writer, functionConfig *yaml.RNode, 
 	}.Execute()
 }
 
+func IsInternalGenerator(o *fn.KubeObject) bool {
+	if o.GetKind() != "ConfigMapGenerator" {
+		return false
+	}
+	sources := o.GetMap("spec").GetSlice("source")
+	for _, source := range sources {
+
+		val, _, _ := source.NestedString("operation")
+		if val == NativeConfigOpBackToNative {
+			return true
+		}
+	}
+	return false
+}
 func (r *AutoRunner) CleanupBuiltInObjects(data string) ([]byte, error) {
+	p, _ := pkg.New(filesys.FileSystemOrOnDisk{}, r.Destination)
+	os.Remove(filepath.Join(p.UniquePath.String(), ConfigMapTmpFnPath))
 	rl, err := fn.ParseResourceList([]byte(data))
 	if err != nil {
 		return nil, err
@@ -340,6 +369,7 @@ func (r *AutoRunner) CleanupBuiltInObjects(data string) ([]byte, error) {
 		if !r.ReserveBuiltin && item.GetAnnotation(fn.GeneratorBuiltinIdentifier) != "" {
 			continue
 		}
+
 		if item.GetAnnotation(fn.GeneratorBuiltinIdentifier) != "" || item.GetAnnotation(fn.GeneratorIdentifier) != "" {
 			curFilePath := item.GetAnnotation(fn.PathAnnotation)
 			newFilePath := filepath.Join(GeneratedDir, filepath.Base(curFilePath))
@@ -362,14 +392,24 @@ func (r *AutoRunner) UpdateNonKrmAfterMerge(data string) ([]byte, error) {
 	sourceOfTruthCanonicalFn := func(o *fn.KubeObject) bool {
 		return o.GetAnnotation(builtinMergedAnnotation) != ""
 	}
-	sotCanonicalObject := rl.Items.Where(sourceOfTruthCanonicalFn)
-	for _, obj := range sotCanonicalObject {
+	sotCanonicalObjects := rl.Items.Where(sourceOfTruthCanonicalFn)
+	if len(sotCanonicalObjects) == 0 {
+		sotCanonicalObjects = rl.Items.Where(func(o *fn.KubeObject) bool {
+			return o.GetAnnotation(fn.GeneratorBuiltinIdentifier) != ""
+		})
+	}
+	if len(sotCanonicalObjects) > 1 {
+		sotCanonicalObjects = []*fn.KubeObject{sotCanonicalObjects[len(sotCanonicalObjects)-1]}
+	}
+	for _, obj := range sotCanonicalObjects {
 		// Get the matching Generator from annotation
 		generatorFnConfigResourceID := obj.GetAnnotation(fn.GeneratorBuiltinIdentifier)
 		if generatorFnConfigResourceID == "" {
 			return nil, fmt.Errorf("missing generator builtin annotation %v", obj.String())
 		}
-		generatorFnConfigs := rl.Items.Where(fn.MatchResourceID(generatorFnConfigResourceID))
+		generatorFnConfigs := rl.Items.Where(func(o *fn.KubeObject) bool {
+			return o.GetKind() == "ConfigMapGenerator"
+		})
 		if len(generatorFnConfigs) == 0 {
 			return nil, fmt.Errorf("missing generator function config")
 		}
@@ -378,7 +418,7 @@ func (r *AutoRunner) UpdateNonKrmAfterMerge(data string) ([]byte, error) {
 			return nil, err
 		}
 		if err = r.WriteNonKrmToNativeFile(rl); err != nil {
-			return nil, err
+			return nil, err // should have single builtin merge
 		}
 	}
 	return rl.ToYAML()
@@ -412,7 +452,7 @@ func (r *AutoRunner) WriteNonKrmToNativeFile(rl *fn.ResourceList) error {
 			return writeErr
 		}
 		pr := printer.FromContextOrDie(r.Ctx)
-		pr.Printf("Successfully update " + file)
+		pr.Printf("Successfully update " + file + "\n")
 	}
 	return nil
 }
@@ -435,17 +475,20 @@ func (r *AutoRunner) WriteToNonKrmFromCanonical(fnConfig *fn.KubeObject, rl *fn.
 	if err != nil {
 		return err
 	}
+	pr := printer.FromContextOrDie(r.Ctx)
 	// fnConfig should be ConfigMapGenerator
 	function, err := r.NewConfigMapGenerator(fnConfig, kf)
 	if err != nil {
 		return err
 	}
+
 	rl.Items = rl.Items.WhereNot(fn.IsNonKrmObject)
 	configs, _ := kio.LocalPackageReader{PackagePath: filepath.Join(p.UniquePath.String(), ConfigMapTmpFnPath), PreserveSeqIndent: true, WrapBareSeqNode: true}.Read()
 	if len(configs) == 0 {
 		return fmt.Errorf("unable to write configMapGenerator fn-config to " + ConfigMapTmpFnPath)
 	}
 	if err := r.RunFunction(writer, configs[0], rl, *function); err != nil {
+		pr.Printf("fail run function " + rl.Items.String() + "\n\n")
 
 		return err
 	}

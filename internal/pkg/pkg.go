@@ -331,6 +331,18 @@ func (p *Pkg) Pipeline() (*kptfilev1.Pipeline, error) {
 	return pl, nil
 }
 
+func (p *Pkg) PkgAutoRunPipeline() (*kptfilev1.PkgAutoRun, error) {
+	kf, err := p.Kptfile()
+	if err != nil {
+		return nil, err
+	}
+	autoRunPipeline := kf.PkgAutoRun
+	if autoRunPipeline == nil {
+		return &kptfilev1.PkgAutoRun{}, nil
+	}
+	return autoRunPipeline, nil
+}
+
 // String returns the slash-separated relative path to the package.
 func (p *Pkg) String() string {
 	return string(p.DisplayPath)
