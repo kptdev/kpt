@@ -1,6 +1,6 @@
 # How to Contribute
 
-We'd love to accept your patches and contributions to this project. There are
+We'd love to accept your patches and contributions to this project. To learn more about the project structure and organization, please refer to Project [Governance](governance.md) information. There are
 just a few small guidelines you need to follow.
 
 ## Contributor License Agreement
@@ -43,7 +43,8 @@ Conduct].
 
 Join following groups/channels to discuss ideas with other kpt contributors.
 
-1. Join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
+1. For developers join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
+1. If you'd like to be invited to all public meetings join [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Pleae note, our meetings are open to anyone and you do not need an agenda to come. You will likely be asked at most for an introduction. For your first meeting, we would suggest you either start with Office Hours or a SIG meeting.
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt)
 
 ## Style Guides
@@ -59,6 +60,24 @@ The kpt toolchain has several components such as `kpt CLI`, `package orchestrato
 `function catalog`, `function SDKs`, `Backstage UI plugin` and `config sync`. Each
 component has their own development process.
 Refer to the pointers below to learn more:
+
+## Attend Meetings
+* All [SIGs](governance.md) have a regular scheduled meeting for feature/roadmap management and planning. For example if you are interested in discussing the roadmap for Config Sync you should attend the **Kpt SIG Config Sync** meeting
+* Sub-projects are focused on more tactical items and other sub-project lifecycle items. Sub-projects generally have standups associated with them.
+* Working Groups are nimble. Focused a lot on experimentation. Attend if you'd like to see demos and discuss future looking user experiences.
+* We regularly have an office hours where we invite the entire community to attend.
+* Meeting notes will be kept for all meetings. Recordings are optional.
+* Demos will be recorded and linked in meeting notes.
+
+### Meeting Notes
+Links to meeting notes. Some may require access to mailing lists above. If in doubt join [kpt-contribx](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx)
+
+* [Kpt Office Hours](https://docs.google.com/document/d/1I5CJDk9xkDj1vvvwvZNgvaNusE2TanX0Iiy9G1oitz0/view)
+* [App Wow Working Group](https://docs.google.com/document/d/1pHsmYjHr9XMwJ_fdJtPiodd8WSg5ilCLIrP_8KE-yKE/view)
+
+Coming soon
+* SIG Config as Data
+* SIG Config Sync
 
 ### kpt CLI
 
