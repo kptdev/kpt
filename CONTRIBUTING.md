@@ -44,7 +44,7 @@ Conduct].
 Join following groups/channels to discuss ideas with other kpt contributors.
 
 1. For developers join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
-1. If you'd like to be invited to all public meetings join [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Pleae note, our meetings are open to anyone and you do not need an agenda to come. You will likely be asked at most for an introduction. For your first meeting, we would suggest you either start with Office Hours or a SIG meeting.
+1. If you'd like to be invited to all public meetings join this [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Pleae note, our meetings are open to anyone and you do not need an agenda to come. You will likely be asked at most for an introduction. For your first meeting, we would suggest you either start with Office Hours or a SIG meeting.
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt)
 
 ## Style Guides
@@ -66,8 +66,8 @@ Refer to the pointers below to learn more:
 * Sub-projects are focused on more tactical items and other sub-project lifecycle items. Sub-projects generally have standups associated with them.
 * Working Groups are nimble. Focused a lot on experimentation. Attend if you'd like to see demos and discuss future looking user experiences.
 * We regularly have an office hours where we invite the entire community to attend.
-* Meeting notes will be kept for all meetings. Recordings are optional.
-* Demos will be recorded and linked in meeting notes.
+* Meeting notes will be kept for all meetings.
+* We will not record meetings unless someone explictly asks for one and there are no objections by attendees. If a meeting is recorded a link to it will be left in the notes.
 
 ### Meeting Notes
 Links to meeting notes. Some may require access to mailing lists above. If in doubt join [kpt-contribx](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx)
