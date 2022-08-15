@@ -192,7 +192,8 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 		case isTagInLocalRepo(ref.Name()):
 			tagged, err := r.loadTaggedPackages(ctx, ref)
 			if err != nil {
-				return nil, fmt.Errorf("failed to load packages from tag %q: %w", name, err)
+				// this tag is not associated with any package (e.g. could be a release tag)
+				continue
 			}
 			for _, p := range tagged {
 				if filter.Matches(p) {
@@ -547,7 +548,9 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 
 	if slash < 0 {
 		// tag=<version>
-		return r.discoverFinalizedPackages(ctx, tag)
+		// could be a release tag or something else, we ignore these types of tags
+		return nil, nil
+
 	}
 
 	// tag=<package path>/version
