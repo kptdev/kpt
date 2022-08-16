@@ -44,7 +44,7 @@ Conduct].
 Join following groups/channels to discuss ideas with other kpt contributors.
 
 1. For developers join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
-1. If you'd like to be invited to all public meetings join this [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Pleae note, our meetings are open to anyone and you do not need an agenda to come. You will likely be asked at most for an introduction. For your first meeting, we would suggest you either start with Office Hours or a SIG meeting.
+1. You can add this Google [calendar](https://calendar.google.com/calendar/u/0?cid=Y183cWI2ZTY5MW4zMmhxdmxncTdyMWhmOTFta0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t) to get access to all our meetings. If you'd like to be automatically added to all meetings please join this [list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Note, our meetings are open to anyone and you do not need an agenda to come. You may be asked for an introduction. For your first meeting, we would suggest you either start with Office Hours or the SIG meeting.
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt)
 
 ## Style Guides
