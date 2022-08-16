@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -30,6 +30,10 @@ import (
 	"sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
 	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	"sigs.k8s.io/cli-utils/pkg/object"
+)
+
+const (
+	ConditionReady = "Ready"
 )
 
 // ConfigConnectorStatusReader can compute reconcile status for Config Connector
@@ -50,7 +54,7 @@ var _ engine.StatusReader = &ConfigConnectorStatusReader{}
 
 // Supports returns true for all Config Connector resources.
 func (c *ConfigConnectorStatusReader) Supports(gk schema.GroupKind) bool {
-	return strings.HasSuffix(gk.Group, "cnrm.cloud.google.com")
+	return Supports(gk)
 }
 
 func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, id object.ObjMetadata) (*event.ResourceStatus, error) {
@@ -92,84 +96,172 @@ func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ e
 		return newResourceStatus(id, status.TerminatingStatus, u, "Resource scheduled for deletion"), nil
 	}
 
-	if id.GroupKind.Kind == "ConfigConnectorContext" {
-		return c.readStatusForConfigConnectorContext(u, id)
-	}
+	res, err := Compute(u)
 
-	return c.readStatusForObject(u, id)
+	if err != nil {
+		return newUnknownResourceStatus(id, u, err), nil
+	}
+	return newResourceStatus(id, res.Status, u, res.Message), nil
 }
 
-func (c *ConfigConnectorStatusReader) readStatusForConfigConnectorContext(u *unstructured.Unstructured, id object.ObjMetadata) (*event.ResourceStatus, error) {
+func Supports(gk schema.GroupKind) bool {
+	return strings.HasSuffix(gk.Group, "cnrm.cloud.google.com")
+}
+
+func Compute(u *unstructured.Unstructured) (*status.Result, error) {
+	if u.GroupVersionKind().Kind == "ConfigConnectorContext" {
+		return computeStatusForConfigConnectorContext(u)
+	}
+
+	return computeStatusForConfigConnector(u)
+}
+
+func computeStatusForConfigConnectorContext(u *unstructured.Unstructured) (*status.Result, error) {
 	healthy, found, err := unstructured.NestedBool(u.Object, "status", "healthy")
 	if err != nil {
 		e := fmt.Errorf("looking up status.healthy from resource: %w", err)
-		return newUnknownResourceStatus(id, u, e), nil
+		return nil, e
 	}
 	if !found {
-		return newResourceStatus(id, status.InProgressStatus, u, "status.healthy property not set"), nil
+		msg := "status.healthy property not set"
+		return &status.Result{
+			Status:  status.InProgressStatus,
+			Message: msg,
+			Conditions: []status.Condition{
+				{
+					Type:    status.ConditionReconciling,
+					Status:  corev1.ConditionTrue,
+					Reason:  "NotReady",
+					Message: msg,
+				},
+			},
+		}, nil
 	}
 	if !healthy {
-		return newResourceStatus(id, status.InProgressStatus, u, "status.healthy is false"), nil
+		msg := "status.healthy is false"
+		return &status.Result{
+			Status:  status.InProgressStatus,
+			Message: msg,
+			Conditions: []status.Condition{
+				{
+					Type:    status.ConditionReconciling,
+					Status:  corev1.ConditionTrue,
+					Reason:  "NotReady",
+					Message: msg,
+				},
+			},
+		}, nil
 	}
-	return newResourceStatus(id, status.CurrentStatus, u, "status.healthy is true"), nil
+	return &status.Result{
+		Status:  status.CurrentStatus,
+		Message: "status.healthy is true",
+	}, nil
 }
 
-func (c *ConfigConnectorStatusReader) readStatusForObject(u *unstructured.Unstructured, id object.ObjMetadata) (*event.ResourceStatus, error) {
+func computeStatusForConfigConnector(u *unstructured.Unstructured) (*status.Result, error) {
 	// ensure that the meta generation is observed
 	generation, found, err := unstructured.NestedInt64(u.Object, "metadata", "generation")
 	if err != nil {
 		e := fmt.Errorf("looking up metadata.generation from resource: %w", err)
-		return newUnknownResourceStatus(id, u, e), nil
+		return nil, e
 	}
 	if !found {
 		e := fmt.Errorf("metadata.generation not found")
-		return newUnknownResourceStatus(id, u, e), nil
+		return nil, e
 	}
 
 	observedGeneration, found, err := unstructured.NestedInt64(u.Object, "status", "observedGeneration")
 	if err != nil {
 		e := fmt.Errorf("looking up status.observedGeneration from resource: %w", err)
-		return newUnknownResourceStatus(id, u, e), nil
+		return nil, e
 	}
 	if !found {
 		// We know that Config Connector resources uses the ObservedGeneration pattern, so consider it
 		// an error if it is not found.
 		e := fmt.Errorf("status.ObservedGeneration not found")
-		return newUnknownResourceStatus(id, u, e), nil
+		return nil, e
 	}
 	if generation != observedGeneration {
 		msg := fmt.Sprintf("%s generation is %d, but latest observed generation is %d", u.GetKind(), generation, observedGeneration)
-		return newResourceStatus(id, status.InProgressStatus, u, msg), nil
+		return &status.Result{
+			Status:  status.InProgressStatus,
+			Message: msg,
+			Conditions: []status.Condition{
+				{
+					Type:    status.ConditionReconciling,
+					Status:  corev1.ConditionTrue,
+					Reason:  "LatestGenerationNotObserved",
+					Message: msg,
+				},
+			},
+		}, nil
 	}
 
 	obj, err := status.GetObjectWithConditions(u.Object)
 	if err != nil {
-		return newUnknownResourceStatus(id, u, err), nil
+		return nil, err
 	}
 
 	var readyCond status.BasicCondition
 	foundCond := false
 	for i := range obj.Status.Conditions {
-		if obj.Status.Conditions[i].Type == "Ready" {
+		if obj.Status.Conditions[i].Type == ConditionReady {
 			readyCond = obj.Status.Conditions[i]
 			foundCond = true
 		}
 	}
 
 	if !foundCond {
-		return newResourceStatus(id, status.InProgressStatus, u, "Ready condition not set"), nil
+		msg := "Ready condition not set"
+		return &status.Result{
+			Status:  status.InProgressStatus,
+			Message: msg,
+			Conditions: []status.Condition{
+				{
+					Type:    status.ConditionReconciling,
+					Status:  corev1.ConditionTrue,
+					Reason:  "NoReadyCondition",
+					Message: msg,
+				},
+			},
+		}, nil
 	}
 
-	if readyCond.Status == v1.ConditionTrue {
-		return newResourceStatus(id, status.CurrentStatus, u, "Resource is Current"), nil
+	if readyCond.Status == corev1.ConditionTrue {
+		return &status.Result{
+			Status:  status.CurrentStatus,
+			Message: "Resource is Current",
+		}, nil
 	}
 
 	switch readyCond.Reason {
 	case "ManagementConflict", "UpdateFailed", "DeleteFailed", "DependencyInvalid":
-		return newResourceStatus(id, status.FailedStatus, u, readyCond.Message), nil
+		return &status.Result{
+			Status:  status.FailedStatus,
+			Message: readyCond.Message,
+			Conditions: []status.Condition{
+				{
+					Type:    status.ConditionStalled,
+					Status:  corev1.ConditionTrue,
+					Reason:  readyCond.Reason,
+					Message: readyCond.Message,
+				},
+			},
+		}, nil
 	}
 
-	return newResourceStatus(id, status.InProgressStatus, u, readyCond.Message), nil
+	return &status.Result{
+		Status:  status.InProgressStatus,
+		Message: readyCond.Message,
+		Conditions: []status.Condition{
+			{
+				Type:    status.ConditionReconciling,
+				Status:  corev1.ConditionTrue,
+				Reason:  readyCond.Reason,
+				Message: readyCond.Message,
+			},
+		},
+	}, nil
 }
 
 func toGVK(gk schema.GroupKind, mapper meta.RESTMapper) (schema.GroupVersionKind, error) {
