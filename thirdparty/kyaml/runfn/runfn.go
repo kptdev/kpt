@@ -345,13 +345,18 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
-	var fltr *runtimeutil.FunctionFilter
+	fltr := &runtimeutil.FunctionFilter{
+		FunctionConfig: fnConfig,
+		DeferFailure:   spec.DeferFailure,
+	}
 	fnResult := &fnresult.Result{
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(r.uniquePath),
 	}
 	if spec.Container.Image != "" {
+		fnResult.Image = spec.Container.Image
+
 		// If AllowWasm is true, we try to use the image field as a wasm image.
 		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
 		// it should fallback to run it as container fn.
@@ -382,16 +387,13 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 					AllowMount: true,
 				},
 			}
-			fltr = &runtimeutil.FunctionFilter{
-				Run:            c.Run,
-				FunctionConfig: fnConfig,
-				DeferFailure:   spec.DeferFailure,
-			}
-			fnResult.Image = spec.Container.Image
+			fltr.Run = c.Run
 		}
 	}
 
 	if spec.Exec.Path != "" {
+		fnResult.ExecPath = r.OriginalExec
+
 		if r.AllowWasm && strings.HasSuffix(spec.Exec.Path, ".wasm") {
 			wFn, err := fnruntime.NewWasmFn(&fnruntime.FsLoader{Filename: spec.Exec.Path})
 			if err != nil {
@@ -404,12 +406,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 				Args:     r.ExecArgs,
 				FnResult: fnResult,
 			}
-			fltr = &runtimeutil.FunctionFilter{
-				Run:            e.Run,
-				FunctionConfig: fnConfig,
-				DeferFailure:   spec.DeferFailure,
-			}
-			fnResult.ExecPath = r.OriginalExec
+			fltr.Run = e.Run
 		}
 	}
 

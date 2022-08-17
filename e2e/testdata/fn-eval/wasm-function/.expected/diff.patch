@@ -1,0 +1,11 @@
+diff --git a/resources.yaml b/resources.yaml
+index e8efba7..2ac7759 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,5 +15,6 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3

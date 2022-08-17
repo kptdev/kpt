@@ -543,6 +543,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,
+		AllowWasm:             r.AllowWasm,
 		Selector:              r.Selector,
 		Exclusion:             r.Exclusion,
 	}
