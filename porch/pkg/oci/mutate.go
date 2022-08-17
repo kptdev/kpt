@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -242,12 +243,12 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 	}
 	klog.Infof("desc %s", string(desc.Manifest))
 
-	digestName := ImageDigestName{
+	digestName := oci.ImageDigestName{
 		Image:  ref.Name(),
 		Digest: desc.Digest.String(),
 	}
 
-	configFile, err := p.parent.storage.cachedConfigFile(ctx, digestName)
+	configFile, err := p.parent.storage.CachedConfigFile(ctx, digestName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting config file: %w", err)
 	}

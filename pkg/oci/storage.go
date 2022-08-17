@@ -16,7 +16,10 @@ package oci
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,6 +30,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/cache"
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
+	"k8s.io/klog/v2"
 )
 
 // Storage provides helper functions specifically for OCI storage.
@@ -44,10 +48,10 @@ func NewStorage(cacheDir string) (*Storage, error) {
 		return nil, fmt.Errorf("failed to create cache dir %q: %w", cacheDir, err)
 	}
 
-	cache := cache.NewFilesystemCache(filepath.Join(cacheDir, "layers"))
+	c := cache.NewFilesystemCache(filepath.Join(cacheDir, "layers"))
 
 	return &Storage{
-		imageCache: cache,
+		imageCache: c,
 		cacheDir:   cacheDir,
 		transport:  http.DefaultTransport,
 	}, nil
@@ -100,7 +104,7 @@ func (i ImageDigestName) ociReference() (name.Reference, error) {
 	return imageRef, nil
 }
 
-func (r *Storage) createOptions(ctx context.Context) []google.Option {
+func (r *Storage) CreateOptions(ctx context.Context) []google.Option {
 	// TODO: Authentication must be set up correctly. Do we use:
 	// * Provided Service account?
 	// * Workload identity?
@@ -115,8 +119,8 @@ type imageName interface {
 	ociReference() (name.Reference, error)
 }
 
-// toRemoteImage builds a remote image reference for the given name, including caching and authentication.
-func (r *Storage) toRemoteImage(ctx context.Context, imageName imageName) (v1.Image, error) {
+// ToRemoteImage builds a remote image reference for the given name, including caching and authentication.
+func (r *Storage) ToRemoteImage(ctx context.Context, imageName imageName) (v1.Image, error) {
 	// TODO: Authentication must be set up correctly. Do we use:
 	// * Provided Service account?
 	// * Workload identity?
@@ -132,7 +136,7 @@ func (r *Storage) toRemoteImage(ctx context.Context, imageName imageName) (v1.Im
 		return nil, err
 	}
 	// TODO: Can we use a digest to save a lookup?
-	//imageRef = imageRef.Context().Digest(digest)
+	// imageRef = imageRef.Context().Digest(digest)
 
 	ociImage, err := remote.Image(imageRef, options...)
 	if err != nil {
@@ -142,4 +146,72 @@ func (r *Storage) toRemoteImage(ctx context.Context, imageName imageName) (v1.Im
 	ociImage = cache.Image(ociImage, r.imageCache)
 
 	return ociImage, nil
+}
+
+func (r *Storage) GetCacheDir() string {
+	return r.cacheDir
+}
+
+// WithCacheFile runs with a filesystem-backed cache.
+// If cacheFilePath does not exist, it will be fetched with the function fetcher.
+// The file contents are then processed with the function reader.
+// TODO: We likely need some form of GC/LRU on the cache file paths.
+// We can probably use FS access time (or we might need to touch the files when we access them)!
+func WithCacheFile(cacheFilePath string, fetcher func() (io.ReadCloser, error)) (io.ReadCloser, error) {
+	dir := filepath.Dir(cacheFilePath)
+
+	f, err := os.Open(cacheFilePath)
+	if err != nil {
+		if !errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("error opening cache file %q: %w", cacheFilePath, err)
+		}
+	} else {
+		// TODO: Delete file if corrupt?
+		return f, nil
+	}
+
+	r, err := fetcher()
+	if err != nil {
+		return nil, err
+	}
+	defer r.Close()
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create cache directory %q: %w", dir, err)
+	}
+
+	tempFile, err := os.CreateTemp(dir, "")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tempfile in directory %q: %w", dir, err)
+	}
+	defer func() {
+		if tempFile != nil {
+			if err := tempFile.Close(); err != nil {
+				klog.Warningf("error closing temp file: %v", err)
+			}
+
+			if err := os.Remove(tempFile.Name()); err != nil {
+				klog.Warningf("failed to write tempfile: %v", err)
+			}
+		}
+	}()
+	if _, err := io.Copy(tempFile, r); err != nil {
+		return nil, fmt.Errorf("error caching data: %w", err)
+	}
+
+	if err := tempFile.Close(); err != nil {
+		return nil, fmt.Errorf("error closing temp file: %w", err)
+	}
+
+	if err := os.Rename(tempFile.Name(), cacheFilePath); err != nil {
+		return nil, fmt.Errorf("error renaming temp file %q -> %q: %w", tempFile.Name(), cacheFilePath, err)
+	}
+
+	tempFile = nil
+
+	f, err = os.Open(cacheFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("error opening cache file %q (after fetch): %w", cacheFilePath, err)
+	}
+	return f, nil
 }
