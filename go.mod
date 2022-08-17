@@ -4,17 +4,18 @@ go 1.18
 
 require (
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20220707151439-cb4c4e496c92
-	github.com/cpuguy83/go-md2man/v2 v2.0.1
+	github.com/cpuguy83/go-md2man/v2 v2.0.2
 	github.com/go-errors/errors v1.4.2
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
+	github.com/google/go-containerregistry v0.11.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/otiai10/copy v1.7.0
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.7.1
 	github.com/xlab/treeprint v1.1.0
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
+	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
@@ -33,7 +34,7 @@ require (
 )
 
 require (
-	cloud.google.com/go/compute v1.3.0 // indirect
+	cloud.google.com/go/compute v1.7.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Azure/go-autorest v14.2.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest v0.11.18 // indirect
@@ -46,7 +47,12 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.12.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/cli v20.10.17+incompatible // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/docker v20.10.17+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.6.4 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
@@ -63,15 +69,17 @@ require (
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/klauspost/compress v1.15.8 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
@@ -81,22 +89,26 @@ require (
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/onsi/gomega v1.17.0 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.0.3-0.20220114050600-8b9d41f48198 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/russross/blackfriday v1.5.2 // indirect
+	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spyzhov/ajson v0.4.2 // indirect
+	github.com/vbatts/tar-split v0.11.2 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
-	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
-	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
-	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
+	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92 // indirect
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
-	golang.org/x/xerrors v0.0.0-20220411194840-2f41105eb62f // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

@@ -24,15 +24,15 @@ import (
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 )
 
-// cachedConfigFile fetches ConfigFile making use of the cache
+// CachedConfigFile fetches ConfigFile making use of the cache
 // TODO: This should be incorporated into the go-containerregistry, along with replacing a fetcher
-func (r *Storage) cachedConfigFile(ctx context.Context, imageName imageName) (*v1.ConfigFile, error) {
-	ociImage, err := r.toRemoteImage(ctx, imageName)
+func (r *Storage) CachedConfigFile(ctx context.Context, imageName imageName) (*v1.ConfigFile, error) {
+	ociImage, err := r.ToRemoteImage(ctx, imageName)
 	if err != nil {
 		return nil, err
 	}
 
-	manifest, err := r.cachedManifest(ctx, ociImage)
+	manifest, err := r.CachedManifest(ctx, ociImage)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching manifest for image: %w", err)
 	}
@@ -48,7 +48,7 @@ func (r *Storage) cachedConfigFile(ctx context.Context, imageName imageName) (*v
 		return io.NopCloser(r), nil
 	}
 
-	f, err := withCacheFile(filepath.Join(r.cacheDir, "config", digest.String()), fetcher)
+	f, err := WithCacheFile(filepath.Join(r.cacheDir, "config", digest.String()), fetcher)
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +61,9 @@ func (r *Storage) cachedConfigFile(ctx context.Context, imageName imageName) (*v
 	return config, nil
 }
 
-// cachedManifest fetches Manifest making use of the cache
+// CachedManifest fetches Manifest making use of the cache
 // TODO: This should be incorporated into the go-containerregistry, along with replacing a fetcher
-func (r *Storage) cachedManifest(ctx context.Context, image v1.Image) (*v1.Manifest, error) {
+func (r *Storage) CachedManifest(ctx context.Context, image v1.Image) (*v1.Manifest, error) {
 	digest, err := image.Digest()
 	if err != nil {
 		return nil, fmt.Errorf("cannot get image manifest: %w", err)
@@ -78,7 +78,7 @@ func (r *Storage) cachedManifest(ctx context.Context, image v1.Image) (*v1.Manif
 		return io.NopCloser(r), nil
 	}
 
-	f, err := withCacheFile(filepath.Join(r.cacheDir, "manifest", digest.String()), fetcher)
+	f, err := WithCacheFile(filepath.Join(r.cacheDir, "manifest", digest.String()), fetcher)
 	if err != nil {
 		return nil, err
 	}

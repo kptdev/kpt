@@ -22,6 +22,7 @@ import (
 	"time"
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -36,7 +37,7 @@ import (
 )
 
 func OpenRepository(name string, namespace string, content configapi.RepositoryContent, spec *configapi.OciRepository, cacheDir string) (repository.Repository, error) {
-	storage, err := NewStorage(cacheDir)
+	storage, err := oci.NewStorage(cacheDir)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +58,7 @@ type ociRepository struct {
 	content   configapi.RepositoryContent
 	spec      configapi.OciRepository
 
-	storage *Storage
+	storage *oci.Storage
 }
 
 var _ repository.Repository = &ociRepository{}
@@ -76,7 +77,7 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 		return nil, err
 	}
 
-	options := r.storage.createOptions(ctx)
+	options := r.storage.CreateOptions(ctx)
 
 	tags, err := google.List(ociRepo, options...)
 	if err != nil {
@@ -117,7 +118,7 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 					// 	Image: child.Name(),
 					// 	Tag:   tag,
 					// },
-					digestName: ImageDigestName{
+					digestName: oci.ImageDigestName{
 						Image:  child.Name(),
 						Digest: digest,
 					},
@@ -151,7 +152,7 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 	return result, nil
 }
 
-func (r *ociRepository) buildPackageRevision(ctx context.Context, name ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
+func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)
 	}
@@ -252,7 +253,7 @@ func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Functio
 		return nil, err
 	}
 
-	options := r.storage.createOptions(ctx)
+	options := r.storage.CreateOptions(ctx)
 
 	result := []repository.Function{}
 
@@ -311,7 +312,7 @@ func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Functio
 }
 
 type ociPackageRevision struct {
-	digestName      ImageDigestName
+	digestName      oci.ImageDigestName
 	packageName     string
 	revision        string
 	created         time.Time
@@ -328,7 +329,7 @@ type ociPackageRevision struct {
 var _ repository.PackageRevision = &ociPackageRevision{}
 
 func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {
-	resources, err := p.parent.storage.LoadResources(ctx, &p.digestName)
+	resources, err := LoadResources(ctx, p.parent.storage, &p.digestName)
 	if err != nil {
 		return nil, err
 	}
