@@ -26,6 +26,7 @@ import (
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -96,7 +97,7 @@ func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOpt
 	}
 
 	if fn, err := parseFunctionName(name); err != nil {
-		return nil, apierrors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
+		return nil, apierrors.NewNotFound(schema.GroupResource(v1alpha1.FunctionGVR.GroupResource()), name)
 	} else {
 		repositoryKey.Name = fn.repository
 	}
@@ -104,7 +105,7 @@ func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOpt
 	var repository configapi.Repository
 	if err := f.coreClient.Get(ctx, repositoryKey, &repository); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
+			return nil, apierrors.NewNotFound(schema.GroupResource(v1alpha1.FunctionGVR.GroupResource()), name)
 		}
 		return nil, fmt.Errorf("error getting repository %s: %w", repositoryKey, err)
 	}
@@ -121,7 +122,7 @@ func (f *functions) Get(ctx context.Context, name string, options *metav1.GetOpt
 		}
 	}
 
-	return nil, apierrors.NewNotFound(v1alpha1.FunctionGVR.GroupResource(), name)
+	return nil, apierrors.NewNotFound(schema.GroupResource(v1alpha1.FunctionGVR.GroupResource()), name)
 }
 
 type functionName struct {

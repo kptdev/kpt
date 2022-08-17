@@ -50,7 +50,7 @@ const (
 
 type GitRepository interface {
 	repository.Repository
-	GetPackage(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
+	GetPackageRevision(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
 //go:generate stringer -type=MainBranchStrategy -linecomment
@@ -160,6 +160,32 @@ type gitRepository struct {
 	mutex      sync.Mutex
 }
 
+var _ GitRepository = &gitRepository{}
+
+func (r *gitRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::ListPackages", trace.WithAttributes())
+	defer span.End()
+
+	// TODO
+	return nil, fmt.Errorf("ListPackages not yet supported for git repos")
+}
+
+func (r *gitRepository) CreatePackage(ctx context.Context, obj *v1alpha1.Package) (repository.Package, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::CreatePackage", trace.WithAttributes())
+	defer span.End()
+
+	// TODO: Create a 'Package' resource and an initial, empty 'PackageRevision'
+	return nil, fmt.Errorf("CreatePackage not yet supported for git repos")
+}
+
+func (r *gitRepository) DeletePackage(ctx context.Context, obj repository.Package) error {
+	ctx, span := tracer.Start(ctx, "gitRepository::DeletePackage", trace.WithAttributes())
+	defer span.End()
+
+	// TODO: Support package deletion using subresources (similar to the package revision approval flow)
+	return fmt.Errorf("DeletePackage not yet supported for git repos")
+}
+
 func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "gitRepository::ListPackageRevisions", trace.WithAttributes())
 	defer span.End()
@@ -257,6 +283,8 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 
 	draft := createDraftName(obj.Spec.PackageName, obj.Spec.Revision)
 
+	// TODO: This should also create a new 'Package' resource if one does not already exist
+
 	return &gitPackageDraft{
 		parent:    r,
 		path:      obj.Spec.PackageName,
@@ -270,8 +298,8 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 	}, nil
 }
 
-func (r *gitRepository) UpdatePackage(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
-	ctx, span := tracer.Start(ctx, "gitRepository::UpdatePackage", trace.WithAttributes())
+func (r *gitRepository) UpdatePackageRevision(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::UpdatePackageRevision", trace.WithAttributes())
 	defer span.End()
 
 	oldGitPackage, ok := old.(*gitPackageRevision)
@@ -321,7 +349,7 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 
 	ref := oldGit.ref
 	if ref == nil {
-		// This is an internal error. In some rare cases (see GetPackage below) we create
+		// This is an internal error. In some rare cases (see GetPackageRevision below) we create
 		// package revisions without refs. They should never be returned via the API though.
 		return fmt.Errorf("cannot delete package with no ref: %s", oldGit.path)
 	}
@@ -367,18 +395,18 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	return nil
 }
 
-func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
-	ctx, span := tracer.Start(ctx, "gitRepository::GetPackage", trace.WithAttributes())
+func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path string) (repository.PackageRevision, kptfilev1.GitLock, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::GetPackageRevision", trace.WithAttributes())
 	defer span.End()
 
-	git := r.repo
+	gitRepo := r.repo
 
 	var hash plumbing.Hash
 
 	// Trim leading and trailing slashes
 	path = strings.Trim(path, "/")
 
-	// Versions map to git tags in one of two ways:
+	// Versions map to gitRepo tags in one of two ways:
 	//
 	// * directly (tag=version)- but then this means that all packages in the repo must be versioned together.
 	// * prefixed (tag=<packageDir/<version>) - solving the co-versioning problem.
@@ -395,11 +423,11 @@ func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (r
 	refNames = append(refNames, "refs/remotes/origin/"+version)
 
 	for _, ref := range refNames {
-		if resolved, err := git.ResolveRevision(plumbing.Revision(ref)); err != nil {
+		if resolved, err := gitRepo.ResolveRevision(plumbing.Revision(ref)); err != nil {
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
 				continue
 			}
-			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving git reference %q: %w", ref, err)
+			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving gitRepo reference %q: %w", ref, err)
 		} else {
 			hash = *resolved
 			break
@@ -409,7 +437,7 @@ func (r *gitRepository) GetPackage(ctx context.Context, version, path string) (r
 	if hash.IsZero() {
 		r.dumpAllRefs()
 
-		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find git reference (tried %v)", refNames)
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find gitRepo reference (tried %v)", refNames)
 	}
 
 	return r.loadPackageRevision(ctx, version, path, hash)

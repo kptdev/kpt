@@ -152,6 +152,10 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 	return result, nil
 }
 
+func (r *ociRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
+	return nil, fmt.Errorf("ListPackages not supported for OCI packages")
+}
+
 func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)

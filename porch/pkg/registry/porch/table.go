@@ -84,6 +84,28 @@ func (c tableConvertor) ConvertToTable(ctx context.Context, object runtime.Objec
 }
 
 var (
+	packageTableConvertor = tableConvertor{
+		resource: porch.Resource("packages"),
+		cells: func(obj runtime.Object) []interface{} {
+			pr, ok := obj.(*api.Package)
+			if !ok {
+				return nil
+			}
+			return []interface{}{
+				pr.Name,
+				pr.Spec.PackageName,
+				pr.Spec.RepositoryName,
+				pr.Status.LatestRevision,
+			}
+		},
+		columns: []metav1.TableColumnDefinition{
+			{Name: "Name", Type: "string"},
+			{Name: "Package", Type: "string"},
+			{Name: "Repository", Type: "string"},
+			{Name: "Latest Revision", Type: "string"},
+		},
+	}
+
 	packageRevisionTableConvertor = tableConvertor{
 		resource: porch.Resource("packagerevisions"),
 		cells: func(obj runtime.Object) []interface{} {

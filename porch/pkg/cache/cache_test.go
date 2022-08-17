@@ -94,7 +94,7 @@ func TestPublishedLatest(t *testing.T) {
 		t.Fatalf("Bucket package lifecycle: got %s, want %s", got, want)
 	}
 
-	update, err := cached.UpdatePackage(ctx, bucket)
+	update, err := cached.UpdatePackageRevision(ctx, bucket)
 	if err != nil {
 		t.Fatalf("UpdatePackaeg(%s) failed: %v", bucket.Key(), err)
 	}

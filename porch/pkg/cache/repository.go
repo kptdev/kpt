@@ -36,14 +36,18 @@ type cachedRepository struct {
 	repo   repository.Repository
 	cancel context.CancelFunc
 
-	mutex          sync.Mutex
-	cachedPackages []*cachedPackageRevision
+	mutex                  sync.Mutex
+	cachedPackageRevisions []*cachedPackageRevision
+	cachedPackages         []*cachedPackage
+
 	// TODO: Currently we support repositories with homogenous content (only packages xor functions). Model this more optimally?
 	cachedFunctions []repository.Function
 	// Error encountered on repository refresh by the refresh goroutine.
 	// This is returned back by the cache to the background goroutine when it calls periodicall to resync repositories.
 	refreshError error
 }
+
+var _ repository.Repository = &cachedRepository{}
 
 // We take advantage of the cache having a global view of all the packages
 // in a repository and compute the latest package revision in the cache
@@ -68,6 +72,20 @@ func (c *cachedPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 
 var _ repository.PackageRevision = &cachedPackageRevision{}
 
+type cachedPackage struct {
+	repository.Package
+	latestPackageRevision string
+}
+
+var _ repository.Package = &cachedPackage{}
+
+func (c *cachedPackage) GetLatestRevision() string {
+	if c.latestPackageRevision != "" {
+		return c.latestPackageRevision
+	}
+	return c.Package.GetLatestRevision()
+}
+
 func newRepository(id string, repo repository.Repository) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &cachedRepository{
@@ -85,7 +103,7 @@ var _ repository.Repository = &cachedRepository{}
 var _ repository.FunctionRepository = &cachedRepository{}
 
 func (r *cachedRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
-	packages, err := r.getPackages(ctx, filter, false)
+	packages, err := r.getPackageRevisions(ctx, filter, false)
 	if err != nil {
 		return nil, err
 	}
@@ -107,9 +125,9 @@ func (r *cachedRepository) getRefreshError() error {
 	return r.refreshError
 }
 
-func (r *cachedRepository) getPackages(ctx context.Context, filter repository.ListPackageRevisionFilter, forceRefresh bool) ([]repository.PackageRevision, error) {
+func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, forceRefresh bool) ([]repository.PackageRevision, error) {
 	r.mutex.Lock()
-	packages := r.cachedPackages
+	packages := r.cachedPackageRevisions
 	err := r.refreshError
 	r.mutex.Unlock()
 
@@ -126,7 +144,7 @@ func (r *cachedRepository) getPackages(ctx context.Context, filter repository.Li
 		}
 
 		r.mutex.Lock()
-		r.cachedPackages = packages
+		r.cachedPackageRevisions = packages
 		r.refreshError = err
 		r.mutex.Unlock()
 	}
@@ -136,6 +154,37 @@ func (r *cachedRepository) getPackages(ctx context.Context, filter repository.Li
 	}
 
 	return toPackageRevisionSlice(packages, filter), nil
+}
+
+func (r *cachedRepository) getPackages(ctx context.Context, filter repository.ListPackageFilter, forceRefresh bool) ([]repository.Package, error) {
+	r.mutex.Lock()
+	packages := r.cachedPackages
+	err := r.refreshError
+	r.mutex.Unlock()
+
+	if forceRefresh {
+		packages = nil
+	}
+
+	if packages == nil {
+		// TODO: Avoid simultaneous fetches?
+		// TODO: Push-down partial refresh?
+		p, err := r.repo.ListPackages(ctx, repository.ListPackageFilter{})
+		if err == nil {
+			packages = toCachedPackageSlice(p)
+		}
+
+		r.mutex.Lock()
+		r.cachedPackages = packages
+		r.refreshError = err
+		r.mutex.Unlock()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return toPackageSlice(packages, filter), nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -179,10 +228,10 @@ func (r *cachedRepository) CreatePackageRevision(ctx context.Context, obj *v1alp
 	}, nil
 }
 
-func (r *cachedRepository) UpdatePackage(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
+func (r *cachedRepository) UpdatePackageRevision(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
 	// Unwrap
 	unwrapped := old.(*cachedPackageRevision).PackageRevision
-	created, err := r.repo.UpdatePackage(ctx, unwrapped)
+	created, err := r.repo.UpdatePackageRevision(ctx, unwrapped)
 	if err != nil {
 		return nil, err
 	}
@@ -198,9 +247,9 @@ func (r *cachedRepository) update(closed repository.PackageRevision) *cachedPack
 	defer r.mutex.Unlock()
 
 	cached := &cachedPackageRevision{PackageRevision: closed}
-	r.cachedPackages = updateOrAppend(r.cachedPackages, cached)
+	r.cachedPackageRevisions = updateOrAppend(r.cachedPackageRevisions, cached)
 	// Recompute latest package revisions.
-	identifyLatestRevisions(r.cachedPackages)
+	identifyLatestRevisions(r.cachedPackageRevisions)
 	return cached
 }
 
@@ -219,6 +268,34 @@ func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old reposi
 	// Unwrap
 	unwrapped := old.(*cachedPackageRevision).PackageRevision
 	if err := r.repo.DeletePackageRevision(ctx, unwrapped); err != nil {
+		return err
+	}
+
+	r.mutex.Lock()
+	// TODO: Do something more efficient than a full cache flush
+	r.cachedPackageRevisions = nil
+	r.mutex.Unlock()
+
+	return nil
+}
+
+func (r *cachedRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
+	packages, err := r.getPackages(ctx, filter, false)
+	if err != nil {
+		return nil, err
+	}
+
+	return packages, nil
+}
+
+func (r *cachedRepository) CreatePackage(ctx context.Context, obj *v1alpha1.Package) (repository.Package, error) {
+	return r.repo.CreatePackage(ctx, obj)
+}
+
+func (r *cachedRepository) DeletePackage(ctx context.Context, old repository.Package) error {
+	// Unwrap
+	unwrapped := old.(*cachedPackage).Package
+	if err := r.repo.DeletePackage(ctx, unwrapped); err != nil {
 		return err
 	}
 
@@ -256,7 +333,7 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
-	if _, err := r.getPackages(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
+	if _, err := r.getPackageRevisions(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
 		klog.Warningf("error polling repo packages %s: %v", r.id, err)
 	}
 	if _, err := r.getFunctions(ctx, true); err != nil {
@@ -274,6 +351,18 @@ func toCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cac
 		result[i] = current
 	}
 	identifyLatestRevisions(result)
+	return result
+}
+
+func toCachedPackageSlice(packages []repository.Package) []*cachedPackage {
+	result := make([]*cachedPackage, len(packages))
+	for i := range packages {
+		current := &cachedPackage{
+			Package:               packages[i],
+			latestPackageRevision: packages[i].GetLatestRevision(),
+		}
+		result[i] = current
+	}
 	return result
 }
 
@@ -350,5 +439,15 @@ func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.L
 
 		return strings.Compare(result[i].KubeObjectName(), result[j].KubeObjectName()) < 0
 	})
+	return result
+}
+
+func toPackageSlice(cached []*cachedPackage, filter repository.ListPackageFilter) []repository.Package {
+	result := make([]repository.Package, 0, len(cached))
+	for _, p := range cached {
+		if filter.Matches(p) {
+			result = append(result, p)
+		}
+	}
 	return result
 }

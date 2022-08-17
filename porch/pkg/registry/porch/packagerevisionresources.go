@@ -73,7 +73,7 @@ func (r *packageRevisionResources) List(ctx context.Context, options *metaintern
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.PackageRevision) error {
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
 		item, err := p.GetResources(ctx)
 		if err != nil {
 			return err
@@ -92,7 +92,7 @@ func (r *packageRevisionResources) Get(ctx context.Context, name string, options
 	ctx, span := tracer.Start(ctx, "packageRevisionResources::Get", trace.WithAttributes())
 	defer span.End()
 
-	pkg, err := r.packageCommon.getPackage(ctx, name)
+	pkg, err := r.packageCommon.getPackageRevision(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackage(ctx, name)
+	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}

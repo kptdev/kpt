@@ -79,7 +79,7 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.PackageRevision) error {
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
 		item := p.GetPackageRevision()
 		result.Items = append(result.Items, *item)
 		return nil
@@ -95,7 +95,13 @@ func (r *packageRevisions) Get(ctx context.Context, name string, options *metav1
 	ctx, span := tracer.Start(ctx, "packageRevisions::Get", trace.WithAttributes())
 	defer span.End()
 
-	return r.packageCommon.getPackageRevision(ctx, name, options)
+	pkg, err := r.getPackageRevision(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	obj := pkg.GetPackageRevision()
+	return obj, nil
 }
 
 // Create implements the Creater interface.
@@ -180,7 +186,7 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackage(ctx, name)
+	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
@@ -295,4 +301,30 @@ func (s packageRevisionStrategy) Validate(ctx context.Context, runtimeObj runtim
 	}
 
 	return allErrs
+}
+
+// Package Update Strategy
+
+type packageStrategy struct{}
+
+var _ SimpleRESTUpdateStrategy = packageStrategy{}
+
+func (s packageStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+}
+
+func (s packageStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	return nil
+}
+
+func (s packageStrategy) Canonicalize(obj runtime.Object) {
+}
+
+var _ SimpleRESTCreateStrategy = packageStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	return nil
 }

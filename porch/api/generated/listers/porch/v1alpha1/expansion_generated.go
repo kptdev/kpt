@@ -24,6 +24,14 @@ type FunctionListerExpansion interface{}
 // FunctionNamespaceLister.
 type FunctionNamespaceListerExpansion interface{}
 
+// PackageListerExpansion allows custom methods to be added to
+// PackageLister.
+type PackageListerExpansion interface{}
+
+// PackageNamespaceListerExpansion allows custom methods to be added to
+// PackageNamespaceLister.
+type PackageNamespaceListerExpansion interface{}
+
 // PackageRevisionListerExpansion allows custom methods to be added to
 // PackageRevisionLister.
 type PackageRevisionListerExpansion interface{}

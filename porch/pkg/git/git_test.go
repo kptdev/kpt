@@ -198,9 +198,9 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 			Revision:   revision,
 		})
 
-		update, err := repo.UpdatePackage(ctx, original)
+		update, err := repo.UpdatePackageRevision(ctx, original)
 		if err != nil {
-			t.Fatalf("UpdatePackage(%#v failed: %v", original, err)
+			t.Fatalf("UpdatePackageRevision(%#v failed: %v", original, err)
 		}
 		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished); err != nil {
 			t.Fatalf("UpdateLifecycle failed: %v", err)
@@ -218,9 +218,9 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		version := "v123"
 
 		path := "test-package"
-		packageRevision, gitLock, err := repo.GetPackage(ctx, version, path)
+		packageRevision, gitLock, err := repo.GetPackageRevision(ctx, version, path)
 		if err != nil {
-			t.Fatalf("GetPackage(%q, %q) failed: %v", version, path, err)
+			t.Fatalf("GetPackageRevision(%q, %q) failed: %v", version, path, err)
 		}
 
 		t.Logf("packageRevision is %s", packageRevision.KubeObjectName())
@@ -656,9 +656,9 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	refMustExist(t, repo, draft.RefInRemote())
 	refMustNotExist(t, repo, finalReferenceName)
 
-	update, err := git.UpdatePackage(ctx, bucket)
+	update, err := git.UpdatePackageRevision(ctx, bucket)
 	if err != nil {
-		t.Fatalf("UpdatePackage failed: %v", err)
+		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
 	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
@@ -714,9 +714,9 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 	refMustExist(t, repo, draft.RefInRemote())
 	refMustNotExist(t, repo, finalReferenceName)
 
-	update, err := git.UpdatePackage(ctx, bucket)
+	update, err := git.UpdatePackageRevision(ctx, bucket)
 	if err != nil {
-		t.Fatalf("UpdatePackage failed: %v", err)
+		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
 	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
