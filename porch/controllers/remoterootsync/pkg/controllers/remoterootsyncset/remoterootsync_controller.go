@@ -22,6 +22,7 @@ import (
 	"strings"
 	"unicode"
 
+	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/applyset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
@@ -54,7 +55,7 @@ type RemoteRootSyncSetReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	ociStorage *oci.Storage
+	ociStorage *kptoci.Storage
 
 	// localRESTConfig stores the local RESTConfig from the manager
 	// This is currently (only) used in "development" mode, for loopback configuration
@@ -296,18 +297,18 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 	if repository == "" {
 		return nil, fmt.Errorf("spec.template.oci.repository is not set")
 	}
-	imageName, err := oci.ParseImageTagName(repository)
+	imageName, err := kptoci.ParseImageTagName(repository)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse image %q: %w", repository, err)
 	}
 	klog.Infof("image name %s -> %#v", repository, *imageName)
 
-	digest, err := r.ociStorage.LookupImageTag(ctx, *imageName)
+	digest, err := oci.LookupImageTag(ctx, r.ociStorage, *imageName)
 	if err != nil {
 		return nil, err
 	}
 
-	resources, err := r.ociStorage.LoadResources(ctx, digest)
+	resources, err := oci.LoadResources(ctx, r.ociStorage, digest)
 	if err != nil {
 		return nil, err
 	}
@@ -368,7 +369,7 @@ func (r *RemoteRootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	cacheDir := "./.cache"
 
-	ociStorage, err := oci.NewStorage(cacheDir)
+	ociStorage, err := kptoci.NewStorage(cacheDir)
 	if err != nil {
 		return err
 	}
