@@ -94,6 +94,7 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 			e.ImagePullPolicy,
 			false, /* do not set pkg annotations */
 			false, /* do not display resource */
+			true,  /* allow wasm functions to run */
 			e.Runtime)
 		if err != nil {
 			return nil, err

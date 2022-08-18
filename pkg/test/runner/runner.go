@@ -61,6 +61,8 @@ const (
 	execScript          string = "exec.sh"
 	CommandFnEval       string = "eval"
 	CommandFnRender     string = "render"
+
+	allowWasmFlag string = "--allow-alpha-wasm"
 )
 
 // NewRunner returns a new runner for pkg
@@ -194,6 +196,9 @@ func (r *Runner) runFnEval() error {
 			}
 			if destDir != "" {
 				kptArgs = append(kptArgs, "-o", destDir)
+			}
+			if r.testCase.Config.AllowWasm {
+				kptArgs = append(kptArgs, allowWasmFlag)
 			}
 			if r.testCase.Config.ImagePullPolicy != "" {
 				kptArgs = append(kptArgs, "--image-pull-policy", r.testCase.Config.ImagePullPolicy)
@@ -361,6 +366,10 @@ func (r *Runner) runFnRender() error {
 
 			if r.testCase.Config.AllowExec {
 				kptArgs = append(kptArgs, "--allow-exec")
+			}
+
+			if r.testCase.Config.AllowWasm {
+				kptArgs = append(kptArgs, allowWasmFlag)
 			}
 
 			if r.testCase.Config.DisableOutputTruncate {

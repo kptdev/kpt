@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
@@ -83,6 +84,9 @@ type RunFns struct {
 	// If it is true, the empty result will be provided as input to the next
 	// function in the list.
 	ContinueOnEmptyResult bool
+
+	// AllowWasm controls if wasm functions are allowed to be run.
+	AllowWasm bool
 
 	// ExecArgs are the arguments for exec commands
 	ExecArgs []string
@@ -341,58 +345,74 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 			return nil, err
 		}
 	}
-	var fltr *runtimeutil.FunctionFilter
+	fltr := &runtimeutil.FunctionFilter{
+		FunctionConfig: fnConfig,
+		DeferFailure:   spec.DeferFailure,
+	}
 	fnResult := &fnresult.Result{
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
 		// Pkg: string(r.uniquePath),
 	}
 	if spec.Container.Image != "" {
-		// TODO: Add a test for this behavior
-		uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
-		if err != nil {
-			return nil, err
-		}
-		c := &fnruntime.ContainerFn{
-			Path:            r.uniquePath,
-			Image:           spec.Container.Image,
-			ImagePullPolicy: r.ImagePullPolicy,
-			UIDGID:          uidgid,
-			StorageMounts:   r.StorageMounts,
-			Env:             spec.Container.Env,
-			FnResult:        fnResult,
-			Perm: fnruntime.ContainerFnPermission{
-				AllowNetwork: r.Network,
-				// mounts are always from CLI flags so we allow
-				// them by default for eval
-				AllowMount: true,
-			},
-		}
-		fltr = &runtimeutil.FunctionFilter{
-			Run:            c.Run,
-			FunctionConfig: fnConfig,
-			DeferFailure:   spec.DeferFailure,
-		}
 		fnResult.Image = spec.Container.Image
+
+		// If AllowWasm is true, we try to use the image field as a wasm image.
+		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
+		// it should fallback to run it as container fn.
+		if r.AllowWasm {
+			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), spec.Container.Image))
+			if err != nil {
+				return nil, err
+			}
+			fltr.Run = wFn.Run
+		} else {
+			// TODO: Add a test for this behavior
+			uidgid, err := getUIDGID(r.AsCurrentUser, currentUser)
+			if err != nil {
+				return nil, err
+			}
+			c := &fnruntime.ContainerFn{
+				Path:            r.uniquePath,
+				Image:           spec.Container.Image,
+				ImagePullPolicy: r.ImagePullPolicy,
+				UIDGID:          uidgid,
+				StorageMounts:   r.StorageMounts,
+				Env:             spec.Container.Env,
+				FnResult:        fnResult,
+				Perm: fnruntime.ContainerFnPermission{
+					AllowNetwork: r.Network,
+					// mounts are always from CLI flags so we allow
+					// them by default for eval
+					AllowMount: true,
+				},
+			}
+			fltr.Run = c.Run
+		}
 	}
 
 	if spec.Exec.Path != "" {
-		e := &fnruntime.ExecFn{
-			Path:     spec.Exec.Path,
-			Args:     r.ExecArgs,
-			FnResult: fnResult,
-		}
-		fltr = &runtimeutil.FunctionFilter{
-			Run:            e.Run,
-			FunctionConfig: fnConfig,
-			DeferFailure:   spec.DeferFailure,
-		}
 		fnResult.ExecPath = r.OriginalExec
+
+		if r.AllowWasm && strings.HasSuffix(spec.Exec.Path, ".wasm") {
+			wFn, err := fnruntime.NewWasmFn(&fnruntime.FsLoader{Filename: spec.Exec.Path})
+			if err != nil {
+				return nil, err
+			}
+			fltr.Run = wFn.Run
+		} else {
+			e := &fnruntime.ExecFn{
+				Path:     spec.Exec.Path,
+				Args:     r.ExecArgs,
+				FnResult: fnResult,
+			}
+			fltr.Run = e.Run
+		}
 	}
 
 	displayResourceCount := false
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
 		displayResourceCount = true
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false, displayResourceCount)
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false, displayResourceCount, r.AllowWasm)
 }

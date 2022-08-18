@@ -85,6 +85,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
 	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", string(fnruntime.IfNotPresentPull),
 		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+	r.Command.Flags().BoolVar(
+		&r.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
 
 	// selector flags
 	r.Command.Flags().StringVar(
@@ -145,6 +147,7 @@ type EvalFnRunner struct {
 	Env                  []string
 	AsCurrentUser        bool
 	IncludeMetaResources bool
+	AllowWasm            bool
 	Ctx                  context.Context
 	Selector             kptfile.Selector
 	Exclusion            kptfile.Selector
@@ -540,6 +543,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,
+		AllowWasm:             r.AllowWasm,
 		Selector:              r.Selector,
 		Exclusion:             r.Exclusion,
 	}

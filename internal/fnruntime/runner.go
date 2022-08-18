@@ -19,6 +19,7 @@ import (
 	goerrors "errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -53,7 +54,7 @@ func NewRunner(
 	pkgPath types.UniquePath,
 	fnResults *fnresult.ResultList,
 	imagePullPolicy ImagePullPolicy,
-	setPkgPathAnnotation, displayResourceCount bool,
+	setPkgPathAnnotation, displayResourceCount, allowWasm bool,
 	runtime fn.FunctionRuntime,
 ) (*FunctionRunner, error) {
 	config, err := newFnConfig(fsys, f, pkgPath)
@@ -95,40 +96,58 @@ func NewRunner(
 		} else {
 			switch {
 			case f.Image != "":
-				cfn := &ContainerFn{
-					Path:            pkgPath,
-					Image:           f.Image,
-					ImagePullPolicy: imagePullPolicy,
-					Ctx:             ctx,
-					FnResult:        fnResult,
+				// If allowWasm is true, we will use wasm runtime for image field.
+				if allowWasm {
+					wFn, err := NewWasmFn(NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), f.Image))
+					if err != nil {
+						return nil, err
+					}
+					fltr.Run = wFn.Run
+				} else {
+					cfn := &ContainerFn{
+						Path:            pkgPath,
+						Image:           f.Image,
+						ImagePullPolicy: imagePullPolicy,
+						Ctx:             ctx,
+						FnResult:        fnResult,
+					}
+					fltr.Run = cfn.Run
 				}
-				fltr.Run = cfn.Run
 			case f.Exec != "":
-				var execArgs []string
-				// assuming exec here
-				s, err := shlex.Split(f.Exec)
-				if err != nil {
-					return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+				// If allowWasm is true, we will use wasm runtime for exec field.
+				if allowWasm {
+					wFn, err := NewWasmFn(&FsLoader{Filename: f.Exec})
+					if err != nil {
+						return nil, err
+					}
+					fltr.Run = wFn.Run
+				} else {
+					var execArgs []string
+					// assuming exec here
+					s, err := shlex.Split(f.Exec)
+					if err != nil {
+						return nil, fmt.Errorf("exec command %q must be valid: %w", f.Exec, err)
+					}
+					execPath := f.Exec
+					if len(s) > 0 {
+						execPath = s[0]
+					}
+					if len(s) > 1 {
+						execArgs = s[1:]
+					}
+					eFn := &ExecFn{
+						Path:     execPath,
+						Args:     execArgs,
+						FnResult: fnResult,
+					}
+					fltr.Run = eFn.Run
 				}
-				execPath := f.Exec
-				if len(s) > 0 {
-					execPath = s[0]
-				}
-				if len(s) > 1 {
-					execArgs = s[1:]
-				}
-				eFn := &ExecFn{
-					Path:     execPath,
-					Args:     execArgs,
-					FnResult: fnResult,
-				}
-				fltr.Run = eFn.Run
 			default:
 				return nil, fmt.Errorf("must specify `exec` or `image` to execute a function")
 			}
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, setPkgPathAnnotation, displayResourceCount)
+	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, setPkgPathAnnotation, displayResourceCount, allowWasm)
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
@@ -139,7 +158,8 @@ func NewFunctionRunner(ctx context.Context,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	setPkgPathAnnotation bool,
-	displayResourceCount bool) (*FunctionRunner, error) {
+	displayResourceCount bool,
+	wasm bool) (*FunctionRunner, error) {
 	name := fnResult.Image
 	if name == "" {
 		name = fnResult.ExecPath
@@ -158,6 +178,7 @@ func NewFunctionRunner(ctx context.Context,
 		fnResults:            fnResults,
 		setPkgPathAnnotation: setPkgPathAnnotation,
 		displayResourceCount: displayResourceCount,
+		wasm:                 wasm,
 	}, nil
 }
 
@@ -175,12 +196,17 @@ type FunctionRunner struct {
 	// functions do not have this annotation set.
 	setPkgPathAnnotation bool
 	displayResourceCount bool
+	wasm                 bool
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
 	if !fr.disableCLIOutput {
-		pr.Printf("[RUNNING] %q", fr.name)
+		if fr.wasm {
+			pr.Printf("[RUNNING] WASM %q", fr.name)
+		} else {
+			pr.Printf("[RUNNING] %q", fr.name)
+		}
 		if fr.displayResourceCount {
 			pr.Printf(" on %d resource(s)", len(input))
 		}

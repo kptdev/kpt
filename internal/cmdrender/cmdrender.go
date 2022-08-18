@@ -52,6 +52,8 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
 	c.Flags().BoolVar(&r.allowExec, "allow-exec", false,
 		"allow binary executable to be run during pipeline execution.")
+	c.Flags().BoolVar(&r.allowWasm, "allow-alpha-wasm", false,
+		"allow wasm to be used during pipeline execution.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
 	return r
@@ -67,6 +69,7 @@ type Runner struct {
 	resultsDirPath  string
 	imagePullPolicy string
 	allowExec       bool
+	allowWasm       bool
 	dest            string
 	Command         *cobra.Command
 	ctx             context.Context
@@ -121,6 +124,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		Output:          output,
 		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
 		AllowExec:       r.allowExec,
+		AllowWasm:       r.allowWasm,
 		FileSystem:      filesys.FileSystemOrOnDisk{},
 	}
 	if err := executor.Execute(r.ctx); err != nil {

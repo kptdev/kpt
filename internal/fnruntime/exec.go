@@ -33,6 +33,8 @@ type ExecFn struct {
 	Path string
 	// Args are the arguments to the executable
 	Args []string
+
+	Env map[string]string
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
@@ -58,6 +60,10 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	cmd.Stdin = r
 	cmd.Stdout = w
 	cmd.Stderr = &errSink
+
+	for k, v := range f.Env {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%v=%v", k, v))
+	}
 
 	if err := cmd.Run(); err != nil {
 		var exitErr *exec.ExitError

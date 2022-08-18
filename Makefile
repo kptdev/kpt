@@ -25,15 +25,10 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: generate license fix vet fmt lint license-check test build buildall tidy
+all: generate license fix vet fmt lint license-check test build tidy
 
 build:
 	go build -ldflags "-X github.com/GoogleContainerTools/kpt/run.version=${GIT_COMMIT}" -o $(GOBIN)/kpt -v .
-
-buildall:
-	GOOS=windows go build -o /dev/null
-	GOOS=linux go build -o /dev/null
-	GOOS=darwin go build -o /dev/null
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master

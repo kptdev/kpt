@@ -81,6 +81,9 @@ type TestCaseConfig struct {
 	// AllowExec determines if `fn render` needs to be invoked with `--allow-exec` flag
 	AllowExec bool `json:"allowExec,omitempty" yaml:"allowExec,omitempty"`
 
+	// AllowWasm determines if `fn render` needs to be invoked with `--allow-alpha-wasm` flag
+	AllowWasm bool `json:"allowWasm,omitempty" yaml:"allowWasm,omitempty"`
+
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 
@@ -99,6 +102,9 @@ type TestCaseConfig struct {
 
 	// EvalConfig is the configs for eval tests
 	EvalConfig *EvalTestCaseConfig `json:",inline" yaml:",inline"`
+
+	// Environment variables to be set for the test case.
+	Env map[string]string `json:"env,omitempty" yaml:"env,omitempty"`
 }
 
 func (c *TestCaseConfig) RunCount() int {
