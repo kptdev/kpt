@@ -754,7 +754,7 @@ func Convert_porch_PackageInitTaskSpec_To_v1alpha1_PackageInitTaskSpec(in *porch
 }
 
 func autoConvert_v1alpha1_PackageList_To_porch_PackageList(in *PackageList, out *porch.PackageList, s conversion.Scope) error {
-	// WARNING: in.ObjectMeta requires manual conversion: does not exist in peer-type
+	out.ListMeta = in.ListMeta
 	out.Items = *(*[]porch.Package)(unsafe.Pointer(&in.Items))
 	return nil
 }
@@ -765,7 +765,7 @@ func Convert_v1alpha1_PackageList_To_porch_PackageList(in *PackageList, out *por
 }
 
 func autoConvert_porch_PackageList_To_v1alpha1_PackageList(in *porch.PackageList, out *PackageList, s conversion.Scope) error {
-	// WARNING: in.ListMeta requires manual conversion: does not exist in peer-type
+	out.ListMeta = in.ListMeta
 	out.Items = *(*[]Package)(unsafe.Pointer(&in.Items))
 	return nil
 }
