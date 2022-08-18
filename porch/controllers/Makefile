@@ -25,3 +25,8 @@ push-image:
 .PHONY: build-image
 build-image:
 	cd ../..; docker buildx build --load --tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) -f porch/controllers/Dockerfile .
+
+
+.PHONY: run-local
+run-local:
+	GCP_PROJECT_ID=${GCP_PROJECT_ID} HACK_ENABLE_LOOPBACK=1 go run .

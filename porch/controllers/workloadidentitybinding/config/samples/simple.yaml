@@ -12,9 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# GCP project to use for development
-GCP_PROJECT_ID ?= $(shell gcloud config get-value project)
-
-.PHONY: run-local
-run-local:
-	GCP_PROJECT_ID=${GCP_PROJECT_ID} HACK_ENABLE_LOOPBACK=1 go run .
+apiVersion: porch.kpt.dev/v1alpha1
+kind: WorkloadIdentityBinding
+metadata:
+  name: cnrm-controller-manager-example-project-id
+  namespace: config-control
+spec:
+  resourceRef:
+    apiVersion: iam.cnrm.cloud.google.com/v1beta1
+    kind: IAMServiceAccount
+    name: cc-robot-example-project
+  serviceAccountRef:
+    name: cnrm-controller-manager-example-project-id
+    namespace: cnrm-system

@@ -14,7 +14,9 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd rbac:roleName=configmanagement-operator webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=configmanagement-operator webhook paths="./..."
+
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd paths="./..." output:crd:artifacts:config=config/crd/bases
 
 import (
 	"context"
@@ -35,8 +37,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
+	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/controllers/remoterootsyncset"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybinding/pkg/controllers/workloadidentitybinding"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -52,6 +56,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	utilruntime.Must(porchapi.AddToScheme(scheme))
 	utilruntime.Must(api.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
@@ -67,19 +72,15 @@ func main() {
 func run(ctx context.Context) error {
 	// var metricsAddr string
 	// var enableLeaderElection bool
-	// var useAutopushEnv bool
 	// var probeAddr string
-	// var reconcilers string
 
 	klog.InitFlags(nil)
 
-	// flag.BoolVar(&useAutopushEnv, "autopush-env", false, "Use autopush environment endpoint.")
 	// flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	// flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	// flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 	// 	"Enable leader election for controller manager. "+
 	// 		"Enabling this will ensure there is only one active controller manager.")
-	// flag.StringVar(&reconcilers, "reconcilers", "hub", "Reconcilers to enable")
 
 	managerOptions := ctrl.Options{
 		Scheme:                     scheme,
@@ -87,7 +88,7 @@ func run(ctx context.Context) error {
 		Port:                       9443,
 		HealthProbeBindAddress:     ":8081",
 		LeaderElection:             false,
-		LeaderElectionID:           "configmanagement-operator.config.cloud.google.com",
+		LeaderElectionID:           "porch-operators.config.cloud.google.com",
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 	}
 
@@ -106,6 +107,11 @@ func run(ctx context.Context) error {
 	}).SetupWithManager(mgr); err != nil {
 		return fmt.Errorf("error creating RemoteRootSyncSetReconciler controller: %w", err)
 	}
+
+	if err = (&workloadidentitybinding.WorkloadIdentityBindingReconciler{}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("error creating WorkloadIdentityBindingReconciler controller: %w", err)
+	}
+
 	//+kubebuilder:scaffold:builder
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		return fmt.Errorf("error adding health check: %w", err)
