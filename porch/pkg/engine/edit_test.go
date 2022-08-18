@@ -107,6 +107,8 @@ type fakeCaD struct {
 	repository repository.Repository
 }
 
+var _ CaDEngine = &fakeCaD{}
+
 func (f *fakeCaD) OpenRepository(context.Context, *configapi.Repository) (repository.Repository, error) {
 	return f.repository, nil
 }
@@ -129,4 +131,16 @@ func (f *fakeCaD) DeletePackageRevision(context.Context, *configapi.Repository, 
 
 func (f *fakeCaD) ListFunctions(context.Context, *configapi.Repository) ([]repository.Function, error) {
 	return []repository.Function{}, nil
+}
+
+func (f *fakeCaD) CreatePackage(context.Context, *configapi.Repository, *v1alpha1.Package) (repository.Package, error) {
+	return nil, nil
+}
+
+func (f *fakeCaD) UpdatePackage(_ context.Context, _ *configapi.Repository, _ repository.Package, _, _ *v1alpha1.Package) (repository.Package, error) {
+	return nil, nil
+}
+
+func (f *fakeCaD) DeletePackage(context.Context, *configapi.Repository, repository.Package) error {
+	return nil
 }
