@@ -20,9 +20,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch/wi/gcptokensource"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch/wi/ksaimpersonationtokensource"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch/wi/ksatokensource"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/tokenexchange/gcptokensource"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/tokenexchange/ksaimpersonationtokensource"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/tokenexchange/ksatokensource"
 	"golang.org/x/oauth2"
 	stsv1 "google.golang.org/api/sts/v1"
 	"k8s.io/apimachinery/pkg/types"

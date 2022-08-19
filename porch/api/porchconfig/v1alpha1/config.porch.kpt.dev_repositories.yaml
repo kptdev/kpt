@@ -64,7 +64,7 @@ spec:
             type: object
           spec:
             description: "RepositorySpec defines the desired state of Repository \n
-              Notes: * deployment repository - in KRM API ConfigSync would be configured
+              Notes: - deployment repository - in KRM API ConfigSync would be configured
               directly? (or via this API)"
             properties:
               content:
