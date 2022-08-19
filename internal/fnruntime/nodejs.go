@@ -34,6 +34,10 @@ type WasmNodejsFn struct {
 
 func NewNodejsFn(loader WasmLoader) (*WasmNodejsFn, error) {
 	cacheDir := filepath.Join(os.TempDir(), "kpt-wasm-fn")
+	err := os.MkdirAll(cacheDir, 0755)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create cache dir: %w", err)
+	}
 	tempDir, err := os.MkdirTemp(cacheDir, "nodejs-")
 	if err != nil {
 		return nil, fmt.Errorf("unable to create temp dir: %w", err)
