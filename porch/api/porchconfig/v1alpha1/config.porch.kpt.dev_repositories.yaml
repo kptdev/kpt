@@ -88,9 +88,9 @@ spec:
                       packages will be committed to this branch (if the repository
                       allows write access). If unspecified, defaults to "main".
                     type: string
-                  createBranchIfMissing:
-                    description: CreateBranchIfMissing specifies if Porch should create
-                      the package branch if it doesn't exist.
+                  createBranch:
+                    description: CreateBranch specifies if Porch should create the
+                      package branch if it doesn't exist.
                     type: boolean
                   directory:
                     description: Directory within the Git repository where the packages
@@ -185,9 +185,9 @@ spec:
                           packages will be committed to this branch (if the repository
                           allows write access). If unspecified, defaults to "main".
                         type: string
-                      createBranchIfMissing:
-                        description: CreateBranchIfMissing specifies if Porch should
-                          create the package branch if it doesn't exist.
+                      createBranch:
+                        description: CreateBranch specifies if Porch should create
+                          the package branch if it doesn't exist.
                         type: boolean
                       directory:
                         description: Directory within the Git repository where the

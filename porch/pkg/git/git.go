@@ -52,12 +52,13 @@ type GitRepository interface {
 	GetPackage(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
+//go:generate stringer -type=MainBranchStrategy -linecomment
 type MainBranchStrategy int
 
 const (
-	ErrorIfMissing = iota
-	CreateIfMissing
-	SkipVerification
+	ErrorIfMissing   MainBranchStrategy = iota // ErrorIsMissing
+	CreateIfMissing                            // CreateIfMissing
+	SkipVerification                           // SkipVerification
 )
 
 type GitRepositoryOptions struct {
@@ -130,7 +131,6 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	}
 
 	if err := repository.fetchRemoteRepository(ctx); err != nil {
-		klog.Infof("Error fetching remote repository: %v", err)
 		return nil, err
 	}
 
@@ -703,6 +703,8 @@ func (r *gitRepository) verifyRepository(ctx context.Context, opts *GitRepositor
 			if err := r.createBranch(ctx, r.branch); err != nil {
 				return fmt.Errorf("error creating main branch %q: %v", r.branch, err)
 			}
+		default:
+			return fmt.Errorf("unknown main branch strategy %q", opts.MainBranchStrategy.String())
 		}
 	}
 	return nil

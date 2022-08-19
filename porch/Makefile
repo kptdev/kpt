@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+MYGOBIN := $(shell go env GOPATH)/bin
 KUBECONFIG=$(CURDIR)/deployments/local/kubeconfig
 BUILDDIR=$(CURDIR)/.build
 CACHEDIR=$(CURDIR)/.cache
@@ -44,6 +45,9 @@ PORCH_FUNCTION_RUNNER_IMAGE ?= porch-function-runner
 PORCH_CONTROLLERS_IMAGE ?= porch-controllers
 PORCH_WRAPPER_SERVER_IMAGE ?= porch-wrapper-server
 TEST_GIT_SERVER_IMAGE ?= test-git-server
+
+"$(MYGOBIN)/stringer":
+	go install golang.org/x/tools/cmd/stringer@v0.1.12
 
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver start-function-runner run-local
@@ -109,7 +113,7 @@ start-function-runner:
 	  -disable-runtimes pod
 
 .PHONY: generate
-generate:
+generate: "$(MYGOBIN)/stringer"
 	@for f in $(MODULES); do (cd $$f; echo "Generating $$f"; go generate -v ./...) || exit 1; done
 
 .PHONY: tidy
