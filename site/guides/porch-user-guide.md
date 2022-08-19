@@ -3,7 +3,7 @@
 This document is focused on using Porch via the `kpt` CLI.
 
 Installation of Porch, including prerequisites, is covered in a
-[dedicated document](guides/porch-installation.md).
+[dedicated document](porch-installation.md).
 
 ## Prerequisites
 
