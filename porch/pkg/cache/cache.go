@@ -104,9 +104,16 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 
 		cr := c.repositories[key]
 		if cr == nil {
+			var mbs git.MainBranchStrategy
+			if gitSpec.CreateBranch {
+				mbs = git.CreateIfMissing
+			} else {
+				mbs = git.ErrorIfMissing
+			}
 			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, filepath.Join(c.cacheDir, "git"), git.GitRepositoryOptions{
 				CredentialResolver: c.credentialResolver,
 				UserInfoProvider:   c.userInfoProvider,
+				MainBranchStrategy: mbs,
 			}); err != nil {
 				return nil, err
 			} else {

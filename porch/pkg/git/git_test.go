@@ -96,7 +96,7 @@ func (g GitSuite) TestOpenEmptyRepository(t *testing.T) {
 		t.Errorf("Unexpectedly succeeded opening empty repository with main branch validation enabled.")
 	}
 
-	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{SkipMainBranchVerification: true}); err != nil {
+	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{MainBranchStrategy: SkipVerification}); err != nil {
 		t.Errorf("Failed to open empty git repository with main branch validation disabled: %v", err)
 	}
 }

@@ -151,8 +151,8 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	defer os.RemoveAll(dir)
 
 	r, err := git.OpenRepository(ctx, "", "", &spec, dir, git.GitRepositoryOptions{
-		CredentialResolver:         m.credentialResolver,
-		SkipMainBranchVerification: true, // We are only reading so we don't need the main branch to exist.
+		CredentialResolver: m.credentialResolver,
+		MainBranchStrategy: git.SkipVerification, // We are only reading so we don't need the main branch to exist.
 	})
 	if err != nil {
 		return repository.PackageResources{}, fmt.Errorf("cannot clone Git repository: %w", err)
