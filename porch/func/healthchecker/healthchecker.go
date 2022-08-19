@@ -21,6 +21,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+// HealthChecker implements the GRPC Health Checking Protocol:
+// https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 type HealthChecker struct{}
 
 func NewHealthChecker() *HealthChecker {
