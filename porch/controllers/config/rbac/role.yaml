@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -47,6 +48,32 @@ rules:
   - config.cloud.google.com
   resources:
   - remoterootsyncs/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - config.cloud.google.com
+  resources:
+  - rootsyncsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.cloud.google.com
+  resources:
+  - rootsyncsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.cloud.google.com
+  resources:
+  - rootsyncsets/status
   verbs:
   - get
   - patch
