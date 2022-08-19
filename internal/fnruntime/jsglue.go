@@ -14,6 +14,9 @@
 
 package fnruntime
 
+// The glue code below has been tested with node.js v18.6.0.
+// It may need some small changes to work with v14 and v16.
+
 var glueCode = `// The code below run the wasm function.
 const go = new Go();
 // The path to the wasm artifact is provided by env var to enable the reusibility of this script.

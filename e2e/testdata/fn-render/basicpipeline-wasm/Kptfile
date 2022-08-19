@@ -6,6 +6,7 @@ metadata:
     tier: backend
 pipeline:
   mutators:
+    # The following 2 images are built from https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/898.
     - image: gcr.io/kpt-fn-demo/set-namespace:v0.5.0 # TODO: switch to use the kpt-fn GCR when it is built there.
       configMap:
         namespace: staging
