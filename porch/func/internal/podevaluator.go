@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -124,7 +124,7 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *evaluator.Eva
 		grpcClientCh: ccChan,
 	}
 
-	// Waiting for the client from the channel.
+	// Waiting for the client from the channel. This step is blocking.
 	cc := <-ccChan
 	if cc.err != nil {
 		return nil, fmt.Errorf("unable to get the grpc client to the pod for %v: %w", req.Image, cc.err)
@@ -141,6 +141,13 @@ func (pe *podEvaluator) EvaluateFunction(ctx context.Context, req *evaluator.Eva
 	return resp, nil
 }
 
+// podCacheManager manages the cache of the pods and the corresponding GRPC clients.
+// It also does the garbage collection after pods' TTL.
+// It has 2 receive-only channels: requestCh and podReadyCh.
+// It listens to the requestCh channel and receives clientConnRequest from the
+// GRPC request handlers and add them in the waitlists.
+// It also listens to the podReadyCh channel. If a pod is ready, it notifies the
+// goroutines by sending back the GRPC client by lookup the waitlists mapping.
 type podCacheManager struct {
 	gcScanInternal time.Duration
 	podTTL         time.Duration
@@ -150,7 +157,10 @@ type podCacheManager struct {
 	// podReadyCh is a channel to receive the information when a pod is ready.
 	podReadyCh <-chan *imagePodAndGRPCClient
 
-	cache     map[string]*podAndGRPCClient
+	// cache is a mapping from image name to <pod + grpc client>.
+	cache map[string]*podAndGRPCClient
+	// waitlists is a mapping from image name to a list of channels that are
+	// waiting for the GPRC client connections.
 	waitlists map[string][]chan<- *clientConnAndError
 
 	podManager *podManager
@@ -158,9 +168,6 @@ type podCacheManager struct {
 
 type clientConnRequest struct {
 	image string
-
-	unavavilable     bool
-	currClientTarget string
 
 	// grpcConn is a channel that a grpc client should be sent back.
 	grpcClientCh chan<- *clientConnAndError
@@ -182,6 +189,7 @@ type imagePodAndGRPCClient struct {
 	err error
 }
 
+// warmupCache creates the pods and warms up the cache.
 func (pcm *podCacheManager) warmupCache(podTTLConfig string) error {
 	start := time.Now()
 	defer func() {
@@ -197,6 +205,7 @@ func (pcm *podCacheManager) warmupCache(podTTLConfig string) error {
 		return err
 	}
 
+	// We create the pods concurrently to speed it up.
 	var wg sync.WaitGroup
 	for fnImage, ttlStr := range podsTTL {
 		wg.Add(1)
@@ -216,11 +225,15 @@ func (pcm *podCacheManager) warmupCache(podTTLConfig string) error {
 			klog.Infof("preloaded pod cache for function %v", img)
 		}(fnImage, ttlStr)
 	}
-	// Wait for the cache warming to finish before returning.
+	// Wait for the cache warming up to finish before returning.
 	wg.Wait()
 	return nil
 }
 
+// podCacheManager responds to the requestCh and the podReadyCh and does the
+// garbage collection synchronously.
+// We must run this method in one single goroutine. Doing it this way simplify
+// design around concurrency.
 func (pcm *podCacheManager) podCacheManager() {
 	tick := time.Tick(pcm.gcScanInternal)
 	for {
@@ -267,6 +280,7 @@ func (pcm *podCacheManager) podCacheManager() {
 			} else {
 				pcm.cache[resp.image] = resp.podAndGRPCClient
 			}
+			// notify all the goroutines that are waiting for the GRPC client.
 			channels := pcm.waitlists[resp.image]
 			delete(pcm.waitlists, resp.image)
 			for i := range channels {
@@ -343,6 +357,11 @@ func (pcm *podCacheManager) garbageCollector() {
 	}
 }
 
+// podManager is responsible for:
+// - creating a pod
+// - retrieving an existing pod
+// - waiting for the pod to be running and ready
+// - caching the metadata (e.g. entrypoint) for the image.
 type podManager struct {
 	// kubeClient is the kubernetes client
 	kubeClient client.Client
@@ -367,6 +386,11 @@ type digestAndEntrypoint struct {
 	entrypoint []string
 }
 
+// getFuncEvalPodClient ensures there is a pod running and ready for the image.
+// It will send it to the podReadyCh channel when the pod is ready. ttl is the
+// time-to-live period for the pod. If useGenerateName is false, it will try to
+// create a pod with a fixed name. Otherwise, it will create a pod and let the
+// apiserver to generate the name from a template.
 func (pm *podManager) getFuncEvalPodClient(ctx context.Context, image string, ttl time.Duration, useGenerateName bool) {
 	c, err := func() (*podAndGRPCClient, error) {
 		podKey, err := pm.retrieveOrCreatePod(ctx, image, ttl, useGenerateName)
@@ -436,6 +460,7 @@ func (pm *podManager) imageDigestAndEntrypoint(image string) (*digestAndEntrypoi
 	return de, nil
 }
 
+// retrieveOrCreatePod retrieves or creates a pod for an image.
 func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl time.Duration, useGenerateName bool) (client.ObjectKey, error) {
 	var de *digestAndEntrypoint
 	var err error
@@ -474,7 +499,7 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 	}
 
 	cmd := append([]string{
-		path.Join(volumeMountPath, wrapperServerBin),
+		filepath.Join(volumeMountPath, wrapperServerBin),
 		"--port", defaultWrapperServerPort, "--",
 	}, de.entrypoint...)
 
@@ -500,6 +525,7 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 			},
 		},
 		Spec: corev1.PodSpec{
+			// We use initContainer to copy the wrapper server binary into the KRM function image.
 			InitContainers: []corev1.Container{
 				{
 					Name:  "copy-wrapper-server",
@@ -525,9 +551,11 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 					Command: cmd,
 					ReadinessProbe: &corev1.Probe{
 						ProbeHandler: corev1.ProbeHandler{
+							// TODO: use the k8s native GRPC prober when it has been rolled out in GKE.
+							// https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-grpc-liveness-probe
 							Exec: &corev1.ExecAction{
 								Command: []string{
-									path.Join(volumeMountPath, gRPCProbeBin),
+									filepath.Join(volumeMountPath, gRPCProbeBin),
 									"-addr", net.JoinHostPort("localhost", defaultWrapperServerPort),
 								},
 							},
@@ -551,6 +579,8 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 			},
 		},
 	}
+	// Server-side apply doesn't support name generation. We have to use Create
+	// if we need to use name generation.
 	if useGenerateName {
 		pod.GenerateName = podId + "-"
 		err = pm.kubeClient.Create(ctx, pod, client.FieldOwner(fieldManagerName))
@@ -593,6 +623,7 @@ func (pm *podManager) podIpIfRunningAndReady(ctx context.Context, podKey client.
 	return pod.Status.PodIP, nil
 }
 
+// patchPodWithUnixTimeAnnotation patches the pod with the new updated TTL annotation.
 func patchPodWithUnixTimeAnnotation(cl client.Client, podKey client.ObjectKey, ttl time.Duration) {
 	patch := []byte(fmt.Sprintf(`{"metadata":{"annotations":{"%v": "%v"}}}`, reclaimAfterAnnotation, time.Now().Add(ttl).Unix()))
 	pod := &corev1.Pod{}
