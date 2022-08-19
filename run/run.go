@@ -17,6 +17,7 @@ package run
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -54,6 +55,8 @@ func GetMain(ctx context.Context) *cobra.Command {
 			return cmd.Usage()
 		},
 	}
+
+	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
 
 	cmd.PersistentFlags().BoolVar(&printer.TruncateOutput, "truncate-output", true,
 		"Enable the truncation for output")
@@ -171,8 +174,12 @@ func hideFlags(cmd *cobra.Command) {
 		"log_dir",
 		"log_file",
 		"log_file_max_size",
+		"logtostderr",
+		"one_output",
 		"skip_headers",
 		"skip_log_headers",
+		"stack-trace",
+		"stderrthreshold",
 		"vmodule",
 
 		// Flags related to apiserver
