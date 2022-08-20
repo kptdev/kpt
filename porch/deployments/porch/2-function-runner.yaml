@@ -63,10 +63,16 @@ spec:
           volumeMounts:
             - mountPath: /pod-cache-config
               name: pod-cache-config-volume
+            - name:
+              mountPath:
       volumes:
         - name: pod-cache-config-volume
           configMap:
             name: pod-cache-config
+        - name: wasm-cache
+          # we need to configure a cache dir for wasm so that the cache can still
+          # survive if the pod restarts.
+          hostDir: {}
 
 ---
 apiVersion: v1
