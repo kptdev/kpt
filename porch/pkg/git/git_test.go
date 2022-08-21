@@ -78,7 +78,7 @@ type GitSuite struct {
 func (g GitSuite) TestOpenEmptyRepository(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "empty-repository.tar")
-	_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
+	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
 
 	ctx := context.Background()
 	const (
@@ -96,8 +96,16 @@ func (g GitSuite) TestOpenEmptyRepository(t *testing.T) {
 		t.Errorf("Unexpectedly succeeded opening empty repository with main branch validation enabled.")
 	}
 
-	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{SkipMainBranchVerification: true}); err != nil {
+	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{MainBranchStrategy: SkipVerification}); err != nil {
 		t.Errorf("Failed to open empty git repository with main branch validation disabled: %v", err)
+	}
+
+	if _, err := OpenRepository(ctx, name, namespace, repository, tempdir, GitRepositoryOptions{MainBranchStrategy: CreateIfMissing}); err != nil {
+		t.Errorf("Failed to create new main branch: %v", err)
+	}
+	_, err := repo.Reference(BranchName(g.branch).RefInRemote(), false)
+	if err != nil {
+		t.Errorf("Couldn't find branch %q after opening repository with CreateIfMissing strategy: %v", g.branch, err)
 	}
 }
 

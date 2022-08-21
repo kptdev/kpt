@@ -32,6 +32,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel"
@@ -51,10 +52,19 @@ type GitRepository interface {
 	GetPackage(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
+//go:generate stringer -type=MainBranchStrategy -linecomment
+type MainBranchStrategy int
+
+const (
+	ErrorIfMissing   MainBranchStrategy = iota // ErrorIsMissing
+	CreateIfMissing                            // CreateIfMissing
+	SkipVerification                           // SkipVerification
+)
+
 type GitRepositoryOptions struct {
-	CredentialResolver         repository.CredentialResolver
-	UserInfoProvider           repository.UserInfoProvider
-	SkipMainBranchVerification bool
+	CredentialResolver repository.CredentialResolver
+	UserInfoProvider   repository.UserInfoProvider
+	MainBranchStrategy MainBranchStrategy
 }
 
 func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, root string, opts GitRepositoryOptions) (GitRepository, error) {
@@ -124,7 +134,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		return nil, err
 	}
 
-	if err := repository.verifyRepository(&opts); err != nil {
+	if err := repository.verifyRepository(ctx, &opts); err != nil {
 		return nil, err
 	}
 
@@ -676,19 +686,84 @@ func (r *gitRepository) fetchRemoteRepository(ctx context.Context) error {
 }
 
 // Verifies repository. Repository must be fetched already.
-func (r *gitRepository) verifyRepository(opts *GitRepositoryOptions) error {
+func (r *gitRepository) verifyRepository(ctx context.Context, opts *GitRepositoryOptions) error {
 	// When opening a temporary repository, such as for cloning a package
 	// from unregistered upstream, we won't be pushing into the remote so
 	// we don't need to verify presence of the main branch.
-	if !opts.SkipMainBranchVerification {
-		// Check existence of main branch. If it doesn't exist, fail.
-		// If the main branch doesn't exist, we could create draft or proposal branch
-		// which could become the default branch and those are hard to delete.
-		if _, err := r.repo.Reference(r.branch.RefInLocal(), false); err != nil {
+	if opts.MainBranchStrategy == SkipVerification {
+		return nil
+	}
+
+	if _, err := r.repo.Reference(r.branch.RefInLocal(), false); err != nil {
+		switch opts.MainBranchStrategy {
+		case ErrorIfMissing:
 			return fmt.Errorf("branch %q doesn't exist: %v", r.branch, err)
+		case CreateIfMissing:
+			klog.Info("Creating branch %s in repository %s", r.branch, r.name)
+			if err := r.createBranch(ctx, r.branch); err != nil {
+				return fmt.Errorf("error creating main branch %q: %v", r.branch, err)
+			}
+		default:
+			return fmt.Errorf("unknown main branch strategy %q", opts.MainBranchStrategy.String())
 		}
 	}
 	return nil
+}
+
+const (
+	fileContent   = "Created by porch"
+	fileName      = "README.md"
+	commitMessage = "Initial commit for main branch by porch"
+)
+
+// createBranch creates the provided branch by creating a commit containing
+// a README.md file on the root of the repo and then pushing it to the branch.
+func (r *gitRepository) createBranch(ctx context.Context, branch BranchName) error {
+	fileHash, err := storeBlob(r.repo.Storer, fileContent)
+	if err != nil {
+		return err
+	}
+
+	tree := &object.Tree{}
+	tree.Entries = append(tree.Entries, object.TreeEntry{
+		Name: fileName,
+		Mode: filemode.Regular,
+		Hash: fileHash,
+	})
+
+	treeEo := r.repo.Storer.NewEncodedObject()
+	if err := tree.Encode(treeEo); err != nil {
+		return err
+	}
+
+	treeHash, err := r.repo.Storer.SetEncodedObject(treeEo)
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+	commit := &object.Commit{
+		Author: object.Signature{
+			Name:  porchSignatureName,
+			Email: porchSignatureEmail,
+			When:  now,
+		},
+		Committer: object.Signature{
+			Name:  porchSignatureName,
+			Email: porchSignatureEmail,
+			When:  now,
+		},
+		Message:  commitMessage,
+		TreeHash: treeHash,
+	}
+	commitHash, err := storeCommit(r.repo.Storer, plumbing.ZeroHash, commit)
+	if err != nil {
+		return err
+	}
+
+	refSpecs := newPushRefSpecBuilder()
+	refSpecs.AddRefToPush(commitHash, branch.RefInLocal())
+	return r.pushAndCleanup(ctx, refSpecs)
 }
 
 // Creates a commit which deletes the package from the branch, and returns its commit hash.

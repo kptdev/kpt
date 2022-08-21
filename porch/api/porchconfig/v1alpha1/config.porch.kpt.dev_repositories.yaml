@@ -84,10 +84,14 @@ spec:
                   Ignored if `type` is not `git`.
                 properties:
                   branch:
-                    description: Name of the branch containig the packages. Finalized
+                    description: Name of the branch containing the packages. Finalized
                       packages will be committed to this branch (if the repository
                       allows write access). If unspecified, defaults to "main".
                     type: string
+                  createBranch:
+                    description: CreateBranch specifies if Porch should create the
+                      package branch if it doesn't exist.
+                    type: boolean
                   directory:
                     description: Directory within the Git repository where the packages
                       are stored. A subdirectory of this directory containing a Kptfile
@@ -177,10 +181,14 @@ spec:
                       Must be unspecified if `type` is not `git`.
                     properties:
                       branch:
-                        description: Name of the branch containig the packages. Finalized
+                        description: Name of the branch containing the packages. Finalized
                           packages will be committed to this branch (if the repository
                           allows write access). If unspecified, defaults to "main".
                         type: string
+                      createBranch:
+                        description: CreateBranch specifies if Porch should create
+                          the package branch if it doesn't exist.
+                        type: boolean
                       directory:
                         description: Directory within the Git repository where the
                           packages are stored. A subdirectory of this directory containing

@@ -92,8 +92,10 @@ type GitRepository struct {
 	// Address of the Git repository, for example:
 	//   `https://github.com/GoogleCloudPlatform/blueprints.git`
 	Repo string `json:"repo"`
-	// Name of the branch containig the packages. Finalized packages will be committed to this branch (if the repository allows write access). If unspecified, defaults to "main".
+	// Name of the branch containing the packages. Finalized packages will be committed to this branch (if the repository allows write access). If unspecified, defaults to "main".
 	Branch string `json:"branch,omitempty"`
+	// CreateBranch specifies if Porch should create the package branch if it doesn't exist.
+	CreateBranch bool `json:"createBranch,omitempty"`
 	// Directory within the Git repository where the packages are stored. A subdirectory of this directory containing a Kptfile is considered a package. If unspecified, defaults to root directory.
 	Directory string `json:"directory,omitempty"`
 	// Reference to secret containing authentication credentials.
