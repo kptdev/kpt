@@ -296,8 +296,15 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 		}
 	}
 
-	// Add a commit without changes to mark that the package revision is approved.
-	message := fmt.Sprintf("Approve %s/%s", packagePath, d.revision)
+	// Add a commit without changes to mark that the package revision is approved. The gitAnnotation is
+	// included so that we can later associate the commit with the correct packagerevision.
+	message, err := AnnotateCommitMessage(fmt.Sprintf("Approve %s/%s", packagePath, d.revision), &gitAnnotation{
+		PackagePath: packagePath,
+		Revision:    d.revision,
+	})
+	if err != nil {
+		return zero, zero, nil, fmt.Errorf("failed annotation commit message for package %s: %v", packagePath, err)
+	}
 	commitHash, newPackageTreeHash, err = ch.commit(ctx, message, packagePath)
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to commit package %s to %s", packagePath, localRef)

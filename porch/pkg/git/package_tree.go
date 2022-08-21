@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"time"
 
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
@@ -58,15 +59,45 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 		return nil, err
 	}
 
+	var updated time.Time
+	var updatedBy string
+
+	// For the published packages on a tag or draft and proposed branches we know that the latest commit
+	// if specific to the package in question. Thus, we can just take the last commit on the tag/branch.
+	// If the ref is nil, we consider the package as being final and on the package branch.
+	if ref != nil && (isTagInLocalRepo(ref.Name()) || isDraftBranchNameInLocal(ref.Name()) || isProposedBranchNameInLocal(ref.Name())) {
+		updated = p.parent.commit.Author.When
+		updatedBy = p.parent.commit.Author.Email
+	} else {
+		// If we are on the package branch, we can not assume that the last commit
+		// pertains to the package in question. So we scan the git history to find
+		// the last commit for the package based on the porch commit tags. We don't
+		// use the revision here, since we are looking at the package branch while
+		// the revisions only helps identify the tags.
+		commit, err := repo.findLatestPackageCommit(ctx, p.parent.commit, p.path)
+		if err != nil {
+			return nil, err
+		}
+		if commit != nil {
+			updated = commit.Author.When
+			updatedBy = commit.Author.Email
+		}
+		// If not commit was found with the porch commit tags, we don't really
+		// know who approved the package or when it happend. We could find this
+		// by scanning the tree for every commit, but that is a pretty expensive
+		// operation.
+	}
+
 	return &gitPackageRevision{
-		repo:     repo,
-		path:     p.path,
-		revision: revision,
-		updated:  p.parent.commit.Author.When,
-		ref:      ref,
-		tree:     p.treeHash,
-		commit:   p.parent.commit.Hash,
-		tasks:    tasks,
+		repo:      repo,
+		path:      p.path,
+		revision:  revision,
+		updated:   updated,
+		updatedBy: updatedBy,
+		ref:       ref,
+		tree:      p.treeHash,
+		commit:    p.parent.commit.Hash,
+		tasks:     tasks,
 	}, nil
 }
 

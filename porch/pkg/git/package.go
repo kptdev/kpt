@@ -33,14 +33,15 @@ import (
 )
 
 type gitPackageRevision struct {
-	repo     *gitRepository // repo is repo containing the package
-	path     string
-	revision string
-	updated  time.Time
-	ref      *plumbing.Reference // ref is the Git reference at which the package exists
-	tree     plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
-	commit   plumbing.Hash       // Current version of the package (commit sha)
-	tasks    []v1alpha1.Task
+	repo      *gitRepository // repo is repo containing the package
+	path      string
+	revision  string
+	updated   time.Time
+	updatedBy string
+	ref       *plumbing.Reference // ref is the Git reference at which the package exists
+	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
+	commit    plumbing.Hash       // Current version of the package (commit sha)
+	tasks     []v1alpha1.Task
 }
 
 var _ repository.PackageRevision = &gitPackageRevision{}
@@ -91,6 +92,18 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		}
 	}
 
+	status := v1alpha1.PackageRevisionStatus{
+		UpstreamLock: lockCopy,
+	}
+	if p.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+		if !p.updated.IsZero() {
+			status.PublishedAt = metav1.Time{Time: p.updated}
+		}
+		if p.updatedBy != "" {
+			status.PublishedBy = p.updatedBy
+		}
+	}
+
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -113,9 +126,7 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			Lifecycle: p.Lifecycle(),
 			Tasks:     p.tasks,
 		},
-		Status: v1alpha1.PackageRevisionStatus{
-			UpstreamLock: lockCopy,
-		},
+		Status: status,
 	}
 }
 

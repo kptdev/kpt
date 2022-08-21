@@ -881,6 +881,8 @@ func Convert_porch_PackageRevisionSpec_To_v1alpha1_PackageRevisionSpec(in *porch
 
 func autoConvert_v1alpha1_PackageRevisionStatus_To_porch_PackageRevisionStatus(in *PackageRevisionStatus, out *porch.PackageRevisionStatus, s conversion.Scope) error {
 	out.UpstreamLock = (*porch.UpstreamLock)(unsafe.Pointer(in.UpstreamLock))
+	out.PublishedBy = in.PublishedBy
+	out.PublishedAt = in.PublishedAt
 	return nil
 }
 
@@ -891,6 +893,8 @@ func Convert_v1alpha1_PackageRevisionStatus_To_porch_PackageRevisionStatus(in *P
 
 func autoConvert_porch_PackageRevisionStatus_To_v1alpha1_PackageRevisionStatus(in *porch.PackageRevisionStatus, out *PackageRevisionStatus, s conversion.Scope) error {
 	out.UpstreamLock = (*UpstreamLock)(unsafe.Pointer(in.UpstreamLock))
+	out.PublishedBy = in.PublishedBy
+	out.PublishedAt = in.PublishedAt
 	return nil
 }
 

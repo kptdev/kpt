@@ -34,6 +34,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -903,8 +904,7 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 					tasks = append(tasks, *gitAnnotation.Task)
 				}
 
-				lastTask := tasks[len(tasks)-1]
-				if lastTask.Type == v1alpha1.TaskTypeClone || lastTask.Type == v1alpha1.TaskTypeInit {
+				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
 					// we have reached the beginning of this package revision and don't need to
 					// continue further
 					break
@@ -927,6 +927,88 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 	reverseSlice(tasks)
 
 	return tasks, nil
+}
+
+// findLatestPackageCommit returns the latest commit from the history that pertains
+// to the package given by the packagePath. If no commit is found, it will return nil.
+func (r *gitRepository) findLatestPackageCommit(ctx context.Context, startCommit *object.Commit, packagePath string) (*object.Commit, error) {
+	var commit *object.Commit
+	err := r.packageHistoryIterator(startCommit, packagePath, func(c *object.Commit) error {
+		commit = c
+		return storer.ErrStop
+	})
+	return commit, err
+}
+
+// commitCallback is the function type that needs to be provided to the history iterator functions.
+type commitCallback func(*object.Commit) error
+
+// packageRevisionHistoryIterator traverses the git history from the provided commit, and invokes
+// the callback function for every commit pertaining to the provided packagerevision.
+func (r *gitRepository) packageRevisionHistoryIterator(startCommit *object.Commit, packagePath, revision string, cb commitCallback) error {
+	return r.traverseHistory(startCommit, func(commit *object.Commit) error {
+		gitAnnotations, err := ExtractGitAnnotations(commit)
+		if err != nil {
+			return err
+		}
+
+		for _, gitAnnotation := range gitAnnotations {
+			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+
+				if err := cb(commit); err != nil {
+					return err
+				}
+
+				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
+					break
+				}
+			}
+		}
+		return nil
+	})
+}
+
+// packageHistoryIterator traverses the git history from the provided commit and invokes
+// the callback function for every commit pertaining to the provided package.
+func (r *gitRepository) packageHistoryIterator(startCommit *object.Commit, packagePath string, cb commitCallback) error {
+	return r.traverseHistory(startCommit, func(commit *object.Commit) error {
+		gitAnnotations, err := ExtractGitAnnotations(commit)
+		if err != nil {
+			return err
+		}
+
+		for _, gitAnnotation := range gitAnnotations {
+			if gitAnnotation.PackagePath == packagePath {
+
+				if err := cb(commit); err != nil {
+					return err
+				}
+
+				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
+					break
+				}
+			}
+		}
+		return nil
+	})
+}
+
+func (r *gitRepository) traverseHistory(startCommit *object.Commit, cb commitCallback) error {
+	var logOptions = git.LogOptions{
+		From:  startCommit.Hash,
+		Order: git.LogOrderCommitterTime,
+	}
+
+	commits, err := r.repo.Log(&logOptions)
+	if err != nil {
+		return fmt.Errorf("error walking commits: %w", err)
+	}
+
+	if err := commits.ForEach(cb); err != nil {
+		return fmt.Errorf("error visiting commits: %w", err)
+	}
+
+	return nil
 }
 
 // See https://eli.thegreenplace.net/2021/generic-functions-on-slices-with-go-type-parameters/
