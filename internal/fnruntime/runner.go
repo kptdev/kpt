@@ -220,11 +220,10 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		fnOutput.WriteString(printFnResult(fr.fnResult))
 		var fnErr *ExecError
 		if goerrors.As(err, &fnErr) {
-			fnOutput.WriteString(printFnExecErr(fnErr))
-			pr.Printf(fnOutput.String())
-			return nil, errors.ErrAlreadyHandled
+			fnOutput.WriteString(fnErr.Error())
+		} else {
+			fnOutput.WriteString(printFnStderr(err.Error()))
 		}
-		fnOutput.WriteString(printFnStderr(err.Error()))
 		return nil, fmt.Errorf(fnOutput.String())
 	}
 	if !fr.disableCLIOutput {
@@ -411,13 +410,6 @@ func printFnResult(fnResult *fnresult.Result) string {
 		return ri.String()
 	}
 	return ""
-}
-
-// printFnExecErr prints given ExecError in a user friendly format
-// on kpt CLI.
-func printFnExecErr(fnErr *ExecError) string {
-	output := printFnStderr(fnErr.Stderr)
-	return output + fmt.Sprintf("  Exit code: %d\n\n", fnErr.ExitCode)
 }
 
 // printFnStderr prints given stdErr in a user friendly format on kpt CLI.
