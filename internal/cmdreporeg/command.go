@@ -53,6 +53,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 
 	c.Flags().StringVar(&r.directory, "directory", "/", "Directory within the repository where to look for packages.")
 	c.Flags().StringVar(&r.branch, "branch", "main", "Branch in the repository where finalized packages are committed.")
+	c.Flags().BoolVar(&r.createBranch, "create-branch", false, "Create the package branch if it doesn't already exist.")
 	c.Flags().StringVar(&r.name, "name", "", "Name of the package repository. If unspecified, will use the name portion (last segment) of the repository URL.")
 	c.Flags().StringVar(&r.description, "description", "", "Brief description of the package repository.")
 	c.Flags().BoolVar(&r.deployment, "deployment", false, "Repository is a deployment repository; packages in a deployment repository are considered deployment-ready.")
@@ -76,6 +77,7 @@ type runner struct {
 	// Flags
 	directory        string
 	branch           string
+	createBranch     bool
 	name             string
 	description      string
 	deployment       bool
@@ -123,9 +125,10 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		// 	return errors.E(op, err)
 		// }
 		git = &configapi.GitRepository{
-			Repo:      repository,
-			Branch:    r.branch,
-			Directory: r.directory,
+			Repo:         repository,
+			Branch:       r.branch,
+			CreateBranch: r.createBranch,
+			Directory:    r.directory,
 		}
 
 		if r.name == "" {

@@ -100,6 +100,7 @@ func TestRepoReg(t *testing.T) {
 				"--deployment",
 				"--directory=/catalog",
 				"--branch=main-branch",
+				"--create-branch",
 				"--namespace=repository-namespace",
 			},
 			actions: []httpAction{
