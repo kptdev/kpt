@@ -46,6 +46,8 @@ PORCH_CONTROLLERS_IMAGE ?= porch-controllers
 PORCH_WRAPPER_SERVER_IMAGE ?= porch-wrapper-server
 TEST_GIT_SERVER_IMAGE ?= test-git-server
 
+.DEFAULT_GOAL := all
+
 "$(MYGOBIN)/stringer":
 	go install golang.org/x/tools/cmd/stringer@v0.1.12
 
