@@ -36,6 +36,9 @@ func NewStatusPoller(f util.Factory) (*polling.StatusPoller, error) {
 			&ConfigConnectorStatusReader{
 				Mapper: mapper,
 			},
+			&RolloutStatusReader{
+				Mapper: mapper,
+			},
 		},
 	})
 }
@@ -55,7 +58,10 @@ func NewStatusWatcher(f util.Factory) (watcher.StatusWatcher, error) {
 		DynamicClient: dynamicClient,
 		Mapper:        mapper,
 		ResyncPeriod:  1 * time.Hour,
-		StatusReader:  statusreaders.NewStatusReader(mapper, NewConfigConnectorStatusReader(mapper)),
+		StatusReader: statusreaders.NewStatusReader(
+			mapper,
+			NewConfigConnectorStatusReader(mapper),
+			NewRolloutStatusReader(mapper)),
 		ClusterReader: &clusterreader.DynamicClusterReader{
 			DynamicClient: dynamicClient,
 			Mapper:        mapper,
