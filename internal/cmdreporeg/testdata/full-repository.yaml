@@ -10,6 +10,7 @@ spec:
     description: '"Test Repository Description"'
     git:
         branch: main-branch
+        createBranch: true
         directory: /catalog
         repo: https://github.com/platkrm/test-blueprints.git
         secretRef:
