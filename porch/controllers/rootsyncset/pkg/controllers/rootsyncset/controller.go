@@ -55,9 +55,9 @@ type RootSyncSetReconciler struct {
 	WorkloadIdentityHelper
 }
 
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=rootsyncsets/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=rootsyncsets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -74,7 +74,7 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err := r.Get(ctx, req.NamespacedName, &rootsyncset); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	myFinalizerName := "config.cloud.google.com/finalizer"
+	myFinalizerName := "config.porch.kpt.dev/finalizer"
 	if rootsyncset.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
