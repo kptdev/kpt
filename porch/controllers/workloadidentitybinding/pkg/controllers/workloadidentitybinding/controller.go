@@ -105,10 +105,14 @@ func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req c
 
 func updateStatus(subject *api.WorkloadIdentityBinding, results *applyset.ApplyResults, err error) bool {
 	conditions := &subject.Status.Conditions
-	if err == nil {
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "Ready"})
-	} else {
+	if err != nil {
 		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "Error"})
+	} else if !results.AllApplied() {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "ApplyInProgress"})
+	} else if !results.AllHealthy() {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionFalse, Reason: "NotHealthy"})
+	} else {
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "Ready"})
 	}
 
 	// TODO: Check apply results and think about status conditions
