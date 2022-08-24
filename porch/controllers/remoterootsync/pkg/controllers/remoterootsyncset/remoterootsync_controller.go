@@ -62,9 +62,9 @@ type RemoteRootSyncSetReconciler struct {
 	localRESTConfig *rest.Config
 }
 
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=remoterootsyncs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=remoterootsyncs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=config.cloud.google.com,resources=remoterootsyncs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets/finalizers,verbs=update
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -72,7 +72,7 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	if err := r.Get(ctx, req.NamespacedName, &subject); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	myFinalizerName := "config.cloud.google.com/finalizer"
+	myFinalizerName := "config.porch.kpt.dev/finalizer"
 	if subject.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent

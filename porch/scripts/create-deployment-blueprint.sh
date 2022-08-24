@@ -168,10 +168,15 @@ function customize-sa {
 
 function main() {
   # RemoteRootSync controller
-  cp "${PORCH_DIR}/controllers/config/crd/bases/config.cloud.google.com_remoterootsyncsets.yaml" \
+  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_remoterootsyncsets.yaml" \
      "${DESTINATION}/0-remoterootsyncsets.yaml"
-  cp "${PORCH_DIR}/controllers/config/rbac/role.yaml" \
-     "${DESTINATION}/0-remoterootsync-role.yaml"
+  # WorkloadIdentityBinding controller
+  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_workloadidentitybindings.yaml" \
+     "${DESTINATION}/0-workloadidentitybindings.yaml"
+  # RootSyncSet controller
+  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_rootsyncsets.yaml" \
+     "${DESTINATION}/0-rootsyncsets.yaml"
+
   # Repository CRD
   cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"

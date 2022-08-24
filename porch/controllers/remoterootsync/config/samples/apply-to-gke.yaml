@@ -26,7 +26,7 @@ spec:
 
 ---
 
-apiVersion: config.cloud.google.com/v1alpha1
+apiVersion: config.porch.kpt.dev/v1alpha1
 kind: RemoteRootSyncSet
 metadata:
   name: example-1

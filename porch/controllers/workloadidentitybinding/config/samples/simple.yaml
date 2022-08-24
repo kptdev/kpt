@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: porch.kpt.dev/v1alpha1
+apiVersion: config.porch.kpt.dev/v1alpha1
 kind: WorkloadIdentityBinding
 metadata:
   name: cnrm-controller-manager-example-project-id

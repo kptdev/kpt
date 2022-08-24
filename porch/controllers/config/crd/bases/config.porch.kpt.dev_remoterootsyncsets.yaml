@@ -19,9 +19,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: remoterootsyncsets.config.cloud.google.com
+  name: remoterootsyncsets.config.porch.kpt.dev
 spec:
-  group: config.cloud.google.com
+  group: config.porch.kpt.dev
   names:
     kind: RemoteRootSyncSet
     listKind: RemoteRootSyncSetList

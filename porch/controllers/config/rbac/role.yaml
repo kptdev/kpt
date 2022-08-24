@@ -17,7 +17,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: configmanagement-operator
+  name: porch-controllers
 rules:
 - apiGroups:
   - ""
@@ -27,9 +27,9 @@ rules:
   - create
   - patch
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
-  - remoterootsyncs
+  - remoterootsyncsets
   verbs:
   - create
   - delete
@@ -39,21 +39,21 @@ rules:
   - update
   - watch
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
-  - remoterootsyncs/finalizers
+  - remoterootsyncsets/finalizers
   verbs:
   - update
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
-  - remoterootsyncs/status
+  - remoterootsyncsets/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
   - rootsyncsets
   verbs:
@@ -65,15 +65,41 @@ rules:
   - update
   - watch
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
   - rootsyncsets/finalizers
   verbs:
   - update
 - apiGroups:
-  - config.cloud.google.com
+  - config.porch.kpt.dev
   resources:
   - rootsyncsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - workloadidentitybindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - workloadidentitybindings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - workloadidentitybindings/status
   verbs:
   - get
   - patch
@@ -90,29 +116,3 @@ rules:
   - patch
   - update
   - watch
-- apiGroups:
-  - porch.kpt.dev
-  resources:
-  - workloadidentitybindings
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - porch.kpt.dev
-  resources:
-  - workloadidentitybindings/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - porch.kpt.dev
-  resources:
-  - workloadidentitybindings/status
-  verbs:
-  - get
-  - patch
-  - update

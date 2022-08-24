@@ -14,7 +14,7 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=configmanagement-operator webhook paths="./..."
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers webhook paths="./..."
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd paths="./..." output:crd:artifacts:config=config/crd/bases
 
@@ -88,7 +88,7 @@ func run(ctx context.Context) error {
 		Port:                       9443,
 		HealthProbeBindAddress:     ":8081",
 		LeaderElection:             false,
-		LeaderElectionID:           "porch-operators.config.cloud.google.com",
+		LeaderElectionID:           "porch-operators.config.porch.kpt.dev",
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 	}
 
