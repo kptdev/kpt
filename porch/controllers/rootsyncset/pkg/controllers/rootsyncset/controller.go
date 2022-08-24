@@ -137,7 +137,7 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	return ctrl.Result{}, nil
 }
 
-//BuildObjectsToApply config root sync
+// BuildObjectsToApply config root sync
 func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (schema.GroupVersionResource, *unstructured.Unstructured, error) {
 	gv, err := schema.ParseGroupVersion(rootSyncApiVersion)
 	if err != nil {
