@@ -780,9 +780,11 @@ assertContains "Error: Inventory information has already been added to the packa
 printResult
 
 echo "Testing init force Kptfile/ResourceGroup"
-echo "kpt live init --force e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --force e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --force --name inventory-18030002 e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --force --name inventory-18030002 e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...success"
+cat e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
+assertContains "name: inventory-18030002"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
@@ -905,10 +907,10 @@ ${BIN_DIR}/kpt live status link-to-rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "installing inventory ResourceGroup CRD"
 assertKptLiveApplyEquals << EOF
 [WARN] resolved symlink "link-to-rg-test-case-1a" to "e2e/live/testdata/rg-test-case-1a", please note that the symlinks within the package are ignored
-namespace/rg-test-namespace is Current: Resource is current
-pod/pod-a is Current: Pod is Ready
-pod/pod-b is Current: Pod is Ready
-pod/pod-c is Current: Pod is Ready
+inventory-18030002/namespace//rg-test-namespace is Current: Resource is current
+inventory-18030002/pod/rg-test-namespace/pod-a is Current: Pod is Ready
+inventory-18030002/pod/rg-test-namespace/pod-b is Current: Pod is Ready
+inventory-18030002/pod/rg-test-namespace/pod-c is Current: Pod is Ready
 EOF
 printResult
 
@@ -1099,10 +1101,10 @@ printResult
 
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live status -"
 cat e2e/live/testdata/stdin-test/pods.yaml | ${BIN_DIR}/kpt live status - 2>&1 | tee $OUTPUT_DIR/status
-assertContains "namespace/stdin-test-namespace is Current: Resource is current"
-assertContains "pod/pod-a is Current: Pod is Ready"
-assertContains "pod/pod-b is Current: Pod is Ready"
-assertContains "pod/pod-c is Current: Pod is Ready"
+assertContains "inventory-18030002/namespace//stdin-test-namespace is Current: Resource is current"
+assertContains "inventory-18030002/pod/stdin-test-namespace/pod-a is Current: Pod is Ready"
+assertContains "inventory-18030002/pod/stdin-test-namespace/pod-b is Current: Pod is Ready"
+assertContains "inventory-18030002/pod/stdin-test-namespace/pod-c is Current: Pod is Ready"
 printResult
 
 echo "cat e2e/live/testdata/stdin-test/pods.yaml | kpt live destroy -"

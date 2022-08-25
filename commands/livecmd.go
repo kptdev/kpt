@@ -23,8 +23,9 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/cmdinstallrg"
 	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
 	"github.com/GoogleContainerTools/kpt/internal/cmdmigrate"
+	"github.com/GoogleContainerTools/kpt/internal/cmdstatus"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cli-utils/status"
+	"github.com/GoogleContainerTools/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/klog/v2"
@@ -45,13 +46,15 @@ func GetLiveCommand(ctx context.Context, _, version string) *cobra.Command {
 	}
 
 	f := newFactory(liveCmd, version)
+	invFactory := live.NewClusterClientFactory()
+	loader := cmdstatus.NewRGInventoryLoader(ctx, f)
 
 	// Init command which updates a Kptfile for the ResourceGroup inventory object.
 	klog.V(2).Infoln("init command updates Kptfile for ResourceGroup inventory")
 	initCmd := cmdliveinit.NewCommand(ctx, f, ioStreams)
 	applyCmd := cmdapply.NewCommand(ctx, f, ioStreams, false)
 	destroyCmd := cmddestroy.NewCommand(ctx, f, ioStreams)
-	statusCmd := status.NewCommand(ctx, f)
+	statusCmd := cmdstatus.NewCommand(ctx, f, invFactory, loader)
 	installRGCmd := cmdinstallrg.NewCommand(ctx, f, ioStreams)
 	liveCmd.AddCommand(initCmd, applyCmd, destroyCmd, statusCmd, installRGCmd)
 

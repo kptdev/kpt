@@ -223,7 +223,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}

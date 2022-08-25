@@ -338,11 +338,11 @@ func validateParams(reader io.Reader, args []string) error {
 }
 
 func rgInvClient(factory util.Factory) (inventory.Client, error) {
-	return inventory.NewClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll)
+	return inventory.NewClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
 func cmInvClient(factory util.Factory) (inventory.Client, error) {
-	return inventory.NewClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap, inventory.StatusPolicyAll)
+	return inventory.NewClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
 // migrateKptfileToRG extracts inventory information from a package's Kptfile

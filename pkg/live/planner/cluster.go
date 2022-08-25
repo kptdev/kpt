@@ -53,7 +53,7 @@ func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
 		return nil, err
 	}
 
-	invClient, err := inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyNone)
+	invClient, err := inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
 	if err != nil {
 		return nil, err
 	}

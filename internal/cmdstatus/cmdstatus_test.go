@@ -1,7 +1,7 @@
 // Copyright 2020 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
-package status
+package cmdstatus
 
 import (
 	"bytes"
@@ -64,7 +64,7 @@ func TestStatusCommand(t *testing.T) {
 		},
 		"invalid value for pollUntil": {
 			pollUntil:      "doesNotExist",
-			expectedErrMsg: "pollUntil must be one of \"known\", \"current\", \"deleted\", \"forever\"",
+			expectedErrMsg: "pollUntil must be one of known,current,deleted,forever",
 		},
 		"no inventory in live state": {
 			kptfileInv: &kptfilev1.Inventory{
@@ -105,8 +105,8 @@ func TestStatusCommand(t *testing.T) {
 				},
 			},
 			expectedOutput: `
-deployment.apps/foo is InProgress: inProgress
-statefulset.apps/bar is Current: current
+foo/deployment.apps/default/foo is InProgress: inProgress
+foo/statefulset.apps/default/bar is Current: current
 `,
 		},
 		"wait for all current": {
@@ -156,10 +156,10 @@ statefulset.apps/bar is Current: current
 				},
 			},
 			expectedOutput: `
-deployment.apps/foo is InProgress: inProgress
-statefulset.apps/bar is InProgress: inProgress
-statefulset.apps/bar is Current: current
-deployment.apps/foo is Current: current
+foo/deployment.apps/default/foo is InProgress: inProgress
+foo/statefulset.apps/default/bar is InProgress: inProgress
+foo/statefulset.apps/default/bar is Current: current
+foo/deployment.apps/default/foo is Current: current
 `,
 		},
 		"wait for all deleted": {
@@ -193,8 +193,8 @@ deployment.apps/foo is Current: current
 				},
 			},
 			expectedOutput: `
-statefulset.apps/bar is NotFound: notFound
-deployment.apps/foo is NotFound: notFound
+foo/statefulset.apps/default/bar is NotFound: notFound
+foo/deployment.apps/default/foo is NotFound: notFound
 `,
 		},
 		"forever with timeout": {
@@ -229,8 +229,8 @@ deployment.apps/foo is NotFound: notFound
 				},
 			},
 			expectedOutput: `
-statefulset.apps/bar is InProgress: inProgress
-deployment.apps/foo is InProgress: inProgress
+foo/statefulset.apps/default/bar is InProgress: inProgress
+foo/deployment.apps/default/foo is InProgress: inProgress
 `,
 		},
 	}
@@ -250,11 +250,11 @@ deployment.apps/foo is InProgress: inProgress
 			defer revert()
 
 			var outBuf bytes.Buffer
-			runner := NewRunner(fake.CtxWithPrinter(&outBuf, &outBuf), tf)
-			runner.invClientFunc = func(f cmdutil.Factory) (inventory.Client, error) {
-				return inventory.NewFakeClient(tc.inventory), nil
-			}
-			runner.pollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
+			ctx := fake.CtxWithPrinter(&outBuf, &outBuf)
+			invFactory := inventory.FakeClientFactory(tc.inventory)
+			loader := NewFakeLoader(ctx, tf, tc.inventory)
+			runner := NewRunner(ctx, tf, invFactory, loader)
+			runner.PollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}
 
@@ -270,6 +270,7 @@ deployment.apps/foo is InProgress: inProgress
 				}...)
 			}
 			runner.Command.SetArgs(args)
+			runner.Command.SetOut(&outBuf)
 			err := runner.Command.Execute()
 
 			if tc.expectedErrMsg != "" {
