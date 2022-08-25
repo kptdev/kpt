@@ -54,7 +54,7 @@ var _ engine.StatusReader = &ConfigConnectorStatusReader{}
 
 // Supports returns true for all Config Connector resources.
 func (c *ConfigConnectorStatusReader) Supports(gk schema.GroupKind) bool {
-	return Supports(gk)
+	return strings.HasSuffix(gk.Group, "cnrm.cloud.google.com")
 }
 
 func (c *ConfigConnectorStatusReader) ReadStatus(ctx context.Context, reader engine.ClusterReader, id object.ObjMetadata) (*event.ResourceStatus, error) {
@@ -96,7 +96,7 @@ func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ e
 		return newResourceStatus(id, status.TerminatingStatus, u, "Resource scheduled for deletion"), nil
 	}
 
-	res, err := Compute(u)
+	res, err := c.Compute(u)
 
 	if err != nil {
 		return newUnknownResourceStatus(id, u, err), nil
@@ -104,11 +104,7 @@ func (c *ConfigConnectorStatusReader) ReadStatusForObject(_ context.Context, _ e
 	return newResourceStatus(id, res.Status, u, res.Message), nil
 }
 
-func Supports(gk schema.GroupKind) bool {
-	return strings.HasSuffix(gk.Group, "cnrm.cloud.google.com")
-}
-
-func Compute(u *unstructured.Unstructured) (*status.Result, error) {
+func (c *ConfigConnectorStatusReader) Compute(u *unstructured.Unstructured) (*status.Result, error) {
 	if u.GroupVersionKind().Kind == "ConfigConnectorContext" {
 		return computeStatusForConfigConnectorContext(u)
 	}
