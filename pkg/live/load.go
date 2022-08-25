@@ -258,12 +258,24 @@ func toReaderOptions(f util.Factory) (manifestreader.ReaderOptions, error) {
 
 // ToInventoryInfo takes the information in the provided inventory object and
 // return an InventoryResourceGroup implementation of the InventoryInfo interface.
-func ToInventoryInfo(inventory kptfilev1.Inventory) (inventory.Info, error) {
-	if err := validateInventory(inventory); err != nil {
+func ToInventoryInfo(inv kptfilev1.Inventory) (inventory.Info, error) {
+	return toInventoryInfo(inv, inventory.NameStrategy)
+}
+
+// ToInventoryInfoLabelStrategy takes the information in the provided inventory object and
+// return an InventoryResourceGroup implementation of the InventoryInfo interface. The inventory
+// strategy is set to be of LabelStrategy, and this function is intended to only be used when deleting
+// all sharded ResourceGroups.
+func ToInventoryInfoLabelStrategy(inv kptfilev1.Inventory) (inventory.Info, error) {
+	return toInventoryInfo(inv, inventory.LabelStrategy)
+}
+
+func toInventoryInfo(inv kptfilev1.Inventory, strategy inventory.Strategy) (inventory.Info, error) {
+	if err := validateInventory(inv); err != nil {
 		return nil, err
 	}
-	invObj := generateInventoryObj(inventory)
-	return WrapInventoryInfoObj(invObj), nil
+	invObj := generateInventoryObj(inv)
+	return WrapInventoryInfoObj(invObj, strategy), nil
 }
 
 func validateInventory(inventory kptfilev1.Inventory) error {
