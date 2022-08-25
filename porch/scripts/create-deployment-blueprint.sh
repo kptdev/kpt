@@ -108,7 +108,7 @@ echo ${CONTROLLERS_SA}
 echo ${SERVER_SA}
 
 function validate() {
-  [ -n "${DESTINATION}"       ] || error "--desctination is required"
+  [ -n "${DESTINATION}"       ] || error "--destination is required"
   [ -n "${SERVER_IMAGE}"      ] || error "--server-image is required"
   [ -n "${CONTROLLERS_IMAGE}" ] || error "--controllers-image is required"
   [ -n "${FUNCTION_IMAGE}"    ] || error "--function-image is required"
