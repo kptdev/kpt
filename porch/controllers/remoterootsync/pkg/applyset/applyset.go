@@ -90,8 +90,11 @@ type ApplyResults struct {
 	total             int
 	applySuccessCount int
 	applyFailCount    int
-	healthyCount      int
-	unhealthyCount    int
+
+	healthyCount   int
+	unhealthyCount int
+	// When apply fails, we don't know the health of the object
+	healthUnknownCount int
 }
 
 // AllApplied is true if the desired state has been successfully applied for all objects.
@@ -114,7 +117,7 @@ func (r *ApplyResults) AllHealthy() bool {
 func (r *ApplyResults) checkInvariants() {
 	if r.total != (r.applySuccessCount + r.applyFailCount) {
 		klog.Warningf("consistency error (apply counts): %#v", r)
-	} else if r.total != (r.healthyCount + r.unhealthyCount) {
+	} else if r.total != (r.healthyCount + r.unhealthyCount + r.healthUnknownCount) {
 		// This "invariant" only holds when all objects could be applied
 		klog.Warningf("consistency error (healthy counts): %#v", r)
 	}
@@ -123,6 +126,7 @@ func (r *ApplyResults) checkInvariants() {
 // applyError records that the apply of an object failed with an error.
 func (r *ApplyResults) applyError(gvk schema.GroupVersionKind, nn types.NamespacedName, err error) {
 	r.applyFailCount++
+	r.healthUnknownCount++
 	klog.Warningf("error from apply on %s %s: %v", gvk, nn, err)
 }
 
