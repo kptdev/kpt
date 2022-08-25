@@ -38,8 +38,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
+	remoterootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/controllers/remoterootsyncset"
+	rootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncset/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncset/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybinding/pkg/controllers/workloadidentitybinding"
 	//+kubebuilder:scaffold:imports
 )
@@ -57,7 +59,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(porchapi.AddToScheme(scheme))
-	utilruntime.Must(api.AddToScheme(scheme))
+	utilruntime.Must(rootsyncapi.AddToScheme(scheme))
+	utilruntime.Must(remoterootsyncapi.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -101,6 +104,12 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("error creating manager: %w", err)
 	}
 
+	if err = (&rootsyncset.RootSyncSetReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		return fmt.Errorf("error creating RootSyncSetReconciler controller: %w", err)
+	}
 	if err = (&remoterootsyncset.RemoteRootSyncSetReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
