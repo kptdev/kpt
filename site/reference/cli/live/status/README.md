@@ -64,6 +64,29 @@ PKG_PATH | -:
   Determines how long the command should run before exiting. This deadline will
   be enforced regardless of the value of the --poll-until flag. The default is
   to wait forever.
+  
+--inv-type:
+  Ways to get the inventory information. Must be one of the following:
+  
+  * local: Get the inventory information from the local file.
+    This will only get the inventory information of the package at the given/default path.
+  * remote: Get the inventory information by calling List API to the cluster.
+    This will retrieve a list of inventory information from the cluster.
+  
+  The default value is ‘local’.
+  
+--inv-names:
+  Filter for printing statuses of packages with specified inventory names.
+  For multiple inventory names, use comma to them.
+  This must be used with --inv-type=remote.
+  
+--namespaces:
+  Filter for printing statuses of packages under specified namespaces.
+  For multiple namespaces, use comma to separate them.
+  
+--statuses:
+  Filter for printing packages with specified statuses.
+  For multiple statuses, use comma to separate them.
 ```
 
 <!--mdtogo-->
@@ -82,6 +105,17 @@ $ kpt live status
 # Monitor status for the resources belonging to the package in the my-app
 # directory. Output in table format:
 $ kpt live status my-app --poll-until=forever --output=table
+```
+
+```shell
+# Monitor status for the all resources on the cluster
+# with certain inventory names and under certain namespaces.
+$ kpt live status --inv-type remote --inv-names inv1,inv2 --namespaces ns1,ns2
+```
+
+```shell
+# Monitor resources on the cluster that has Current or InProgress status
+$ kpt live status --inv-type remote --statuses Current,InProgress
 ```
 
 <!--mdtogo-->
