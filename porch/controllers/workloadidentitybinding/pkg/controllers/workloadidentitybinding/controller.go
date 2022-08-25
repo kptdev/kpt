@@ -47,6 +47,9 @@ type WorkloadIdentityBindingReconciler struct {
 // Needs to read namespace to get project-id annotation
 //+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 
+// Creates iampolicymembers (using server-side-apply)
+//+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
+
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var subject api.WorkloadIdentityBinding

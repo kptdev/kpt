@@ -124,3 +124,15 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - iam.cnrm.cloud.google.com
+  resources:
+  - iampolicymembers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
