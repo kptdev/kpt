@@ -29,10 +29,11 @@ require (
 	k8s.io/component-base v0.24.0
 	k8s.io/klog/v2 v2.60.1
 	k8s.io/kubectl v0.24.0
-	sigs.k8s.io/cli-utils v0.32.1-0.20220822160143-c10935a7e36b
+	sigs.k8s.io/cli-utils v0.33.0
 	sigs.k8s.io/controller-runtime v0.11.1
 	sigs.k8s.io/kustomize/api v0.12.1
 	sigs.k8s.io/kustomize/kyaml v0.13.9
+	sigs.k8s.io/yaml v1.3.0
 )
 
 require (
@@ -117,5 +118,4 @@ require (
 	k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )
