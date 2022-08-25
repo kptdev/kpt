@@ -198,4 +198,9 @@ func hideFlags(cmd *cobra.Command) {
 	for _, f := range flags {
 		_ = cmd.PersistentFlags().MarkHidden(f)
 	}
+
+	// We need to recurse into subcommands otherwise flags aren't hidden on leaf commands
+	for _, child := range cmd.Commands() {
+		hideFlags(child)
+	}
 }
