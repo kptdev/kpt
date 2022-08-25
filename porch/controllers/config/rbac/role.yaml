@@ -27,6 +27,14 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - config.porch.kpt.dev
   resources:
   - remoterootsyncsets
