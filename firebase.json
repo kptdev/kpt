@@ -14,6 +14,10 @@
         "function": "configsync"
       },
       {
+        "source": "/resourcegroup{,/**}",
+        "function": "resourcegroup"
+      },
+      {
         "regex": "^[/\\w\\.-]+[^\\.]..$",
         "destination": "/index.html"
       }
