@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+GOLANG_VERSION         := 1.18.3
+GORELEASER_CONFIG      = release/tag/goreleaser.yaml
+GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
+
 .PHONY: docs license fix vet fmt lint test build tidy
 
 GOBIN := $(shell go env GOPATH)/bin
@@ -146,3 +150,30 @@ site-check:
 
 site-verify-examples: install-mdrip install-kind
 	./scripts/verifyExamples.sh
+
+release-dry-run:
+	@docker run \
+		--rm \
+		--privileged \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/GoogleContainerTools/kpt \
+		-w /go/src/github.com/GoogleContainerTools/kpt \
+		$(GORELEASER_IMAGE) \
+		-f "$(GORELEASER_CONFIG)" \
+		--skip-validate --skip-publish
+
+release:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	docker run \
+		--rm \
+		--privileged \
+		--env-file .release-env \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/github.com/GoogleContainerTools/kpt \
+		-w /go/src/github.com/GoogleContainerTools/kpt \
+		$(GORELEASER_IMAGE) \
+		-f "$(GORELEASER_CONFIG)" release \
+		--skip-validate

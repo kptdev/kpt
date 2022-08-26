@@ -15,44 +15,93 @@
 # This defines the build for goreleaser (https://goreleaser.com/). It is
 # executed through a Github Action that is triggered by new tags being created
 # in the kpt repo.
+# As kpt needs to be compiled with CGO, we cannot simply just provide a simple
+# matrix of GOOS and GOARCH combinations, but instead, we'd need to define separate
+# steps for each targetted OS and ARCH. This is because we need to specify the
+# platform specific C std library (libc) and cross-compiler to be used.
+env:
+  - CGO_ENABLED=1
+  - GO111MODULE=on
 builds:
-  - env:
-      - CGO_ENABLED=0
-      - GO111MODULE=on
+  - id: darwin-amd64
     goos:
       - darwin
+    goarch:
+      - amd64
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+
+  - id: darwin-arm64
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+
+  - id: linux-amd64
+    goos:
       - linux
     goarch:
       - amd64
-      - arm64
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+
+  - id: linux-arm64
+    goos:
+      - linux
+    goarch:
+      - arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
 dockers:
-  - image_templates:
+  - ids:
+      - linux-amd64
+    image_templates:
       - "gcr.io/kpt-dev/kpt:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile"
-  - image_templates:
+  - ids:
+      - linux-amd64
+    image_templates:
       - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile-gcloud"
 archives:
   - id: archived
+    builds:
+      - darwin-amd64
+      - darwin-arm64
+      - linux-amd64
+      - linux-arm64
     files:
       - LICENSES*
       - lib.zip*
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
   - id: bin-only
     format: binary
+    builds:
+      - darwin-amd64
+      - darwin-arm64
+      - linux-amd64
+      - linux-arm64
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 snapshot:
   name_template: "master"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '(?i)^docs:'
-      - '(?i)^test:'
-      - '(?i)^regenerate docs'
+      - "(?i)^docs:"
+      - "(?i)^test:"
+      - "(?i)^regenerate docs"
       - Merge pull request
       - Merge branch
 release:
