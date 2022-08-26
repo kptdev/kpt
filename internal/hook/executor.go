@@ -35,11 +35,11 @@ var ErrAllowedExecNotSpecified = fmt.Errorf("must run with `--allow-exec` option
 
 // Executor executes a hook.
 type Executor struct {
-	PkgPath         string
-	ResultsDirPath  string
-	Output          io.Writer
-	ImagePullPolicy fnruntime.ImagePullPolicy
-	AllowExec       bool
+	PkgPath        string
+	ResultsDirPath string
+	Output         io.Writer
+
+	RunnerOptions fnruntime.RunnerOptions
 
 	FileSystem filesys.FileSystem
 
@@ -83,18 +83,16 @@ func (e *Executor) fnChain(ctx context.Context, fns []kptfilev1.Function) ([]kio
 		var err error
 		var runner kio.Filter
 		fn := fns[i]
-		if fn.Exec != "" && !e.AllowExec {
+		if fn.Exec != "" && !e.RunnerOptions.AllowExec {
 			return nil, ErrAllowedExecNotSpecified
 		}
+		opts := e.RunnerOptions
 		runner, err = fnruntime.NewRunner(ctx,
 			e.FileSystem,
 			&fn,
 			types.UniquePath(e.PkgPath),
 			e.fnResults,
-			e.ImagePullPolicy,
-			false, /* do not set pkg annotations */
-			false, /* do not display resource */
-			true,  /* allow wasm functions to run */
+			opts,
 			e.Runtime)
 		if err != nil {
 			return nil, err

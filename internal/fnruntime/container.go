@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -225,25 +224,13 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	return ce
 }
 
-// AddDefaultImagePathPrefix converts the function short path to the full image url.
+// ResolveToImageForCLI converts the function short path to the full image url.
 // If the function is Catalog function, it adds "gcr.io/kpt-fn/".e.g. set-namespace:v0.1 --> gcr.io/kpt-fn/set-namespace:v0.1
-// If the function is porch function, it queries porch to get the function image by name and namespace.
-// e.g. default:set-namespace:v0.1 --> us-west1-docker.pkg.dev/cpa-kit-dev/packages/set-namespace:v0.1
-func AddDefaultImagePathPrefix(ctx context.Context, image string) string {
-	segments := strings.Split(image, ":")
-	if len(segments) == 4 {
-		// Porch function
-		functionName := strings.Join(segments[1:], ":")
-		function, err := porch.FunctionGetter{}.Get(ctx, functionName, segments[0])
-		if err != nil {
-			return image
-		}
-		return function.Spec.Image
-	}
+func ResolveToImageForCLI(ctx context.Context, image string) (string, error) {
 	if !strings.Contains(image, "/") {
-		return fmt.Sprintf("gcr.io/kpt-fn/%s", image)
+		return fmt.Sprintf("gcr.io/kpt-fn/%s", image), nil
 	}
-	return image
+	return image, nil
 }
 
 // ContainerImageError is an error type which will be returned when

@@ -51,15 +51,15 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 
-	c.Flags().Var(&r.imagePullPolicy, "image-pull-policy",
-		"pull image before running the container "+r.imagePullPolicy.HelpAllowedValues())
+	c.Flags().Var(&r.RunnerOptions.ImagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+r.RunnerOptions.ImagePullPolicy.HelpAllowedValues())
 	_ = c.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return r.imagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+		return r.RunnerOptions.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
 	})
 
-	c.Flags().BoolVar(&r.allowExec, "allow-exec", false,
+	c.Flags().BoolVar(&r.RunnerOptions.AllowExec, "allow-exec", r.RunnerOptions.AllowExec,
 		"allow binary executable to be run during pipeline execution.")
-	c.Flags().BoolVar(&r.allowWasm, "allow-alpha-wasm", false,
+	c.Flags().BoolVar(&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", r.RunnerOptions.AllowWasm,
 		"allow wasm to be used during pipeline execution.")
 	cmdutil.FixDocs("kpt", parent, c)
 	r.Command = c
@@ -72,18 +72,17 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 
 // Runner contains the run function pipeline run command
 type Runner struct {
-	pkgPath         string
-	resultsDirPath  string
-	imagePullPolicy fnruntime.ImagePullPolicy
-	allowExec       bool
-	allowWasm       bool
-	dest            string
-	Command         *cobra.Command
-	ctx             context.Context
+	pkgPath        string
+	resultsDirPath string
+	dest           string
+	Command        *cobra.Command
+	ctx            context.Context
+
+	RunnerOptions fnruntime.RunnerOptions
 }
 
 func (r *Runner) InitDefaults() {
-	r.imagePullPolicy = fnruntime.IfNotPresentPull
+	r.RunnerOptions.InitDefaults()
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -130,13 +129,11 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return err
 	}
 	executor := render.Renderer{
-		PkgPath:         absPkgPath,
-		ResultsDirPath:  r.resultsDirPath,
-		Output:          output,
-		ImagePullPolicy: r.imagePullPolicy,
-		AllowExec:       r.allowExec,
-		AllowWasm:       r.allowWasm,
-		FileSystem:      filesys.FileSystemOrOnDisk{},
+		PkgPath:        absPkgPath,
+		ResultsDirPath: r.resultsDirPath,
+		Output:         output,
+		RunnerOptions:  r.RunnerOptions,
+		FileSystem:     filesys.FileSystemOrOnDisk{},
 	}
 	if err := executor.Execute(r.ctx); err != nil {
 		return err

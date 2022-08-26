@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
@@ -28,22 +29,23 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func NewRenderer() fn.Renderer {
-	return &renderer{}
+func NewRenderer(runnerOptions fnruntime.RunnerOptions) fn.Renderer {
+	return &renderer{runnerOptions: runnerOptions}
 }
 
 type renderer struct {
+	runnerOptions fnruntime.RunnerOptions
 }
 
 var _ fn.Renderer = &renderer{}
 
 func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) error {
 	rr := render.Renderer{
-		PkgPath:    opts.PkgPath,
-		Runtime:    opts.Runtime,
-		FileSystem: pkg,
+		PkgPath:       opts.PkgPath,
+		Runtime:       opts.Runtime,
+		FileSystem:    pkg,
+		RunnerOptions: r.runnerOptions,
 	}
-
 	return rr.Execute(printer.WithContext(ctx, &packagePrinter{}))
 }
 

@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
@@ -202,7 +203,12 @@ func (c completedConfig) New() (*PorchServer, error) {
 	referenceResolver := porch.NewReferenceResolver(coreClient)
 	userInfoProvider := &porch.ApiserverUserInfoProvider{}
 
-	renderer := kpt.NewRenderer()
+	runnerOptions := fnruntime.RunnerOptions{}
+	runnerOptions.ResolveToImage = resolveToImagePorch
+
+	runnerOptions.InitDefaults()
+
+	renderer := kpt.NewRenderer(runnerOptions)
 
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
 		CredentialResolver: credentialResolver,

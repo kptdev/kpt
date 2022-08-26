@@ -126,9 +126,10 @@ func (c Command) Run(ctx context.Context) error {
 	if c.IsDeploymentInstance {
 		pr := printer.FromContextOrDie(ctx)
 		pr.Printf("\nCustomizing package for deployment.\n")
-		hookCmd := hook.Executor{
-			PkgPath: c.Destination,
-		}
+		hookCmd := hook.Executor{}
+		hookCmd.RunnerOptions.InitDefaults()
+		hookCmd.PkgPath = c.Destination
+
 		builtinHooks := []kptfilev1.Function{
 			{
 				Image: fnruntime.FuncGenPkgContext,

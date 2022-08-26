@@ -58,15 +58,8 @@ type Renderer struct {
 	// Output is the writer to which the output resources are written
 	Output io.Writer
 
-	// ImagePullPolicy pull image before running the container.
-	// It must be one of fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull
-	ImagePullPolicy fnruntime.ImagePullPolicy
-
-	// AllowExec allow binary executable to be run during pipeline execution
-	AllowExec bool
-
-	// AllowWasm allow wasm to be run during pipeline execution
-	AllowWasm bool
+	// RunnerOptions contains options controlling function execution.
+	RunnerOptions fnruntime.RunnerOptions
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
@@ -85,14 +78,12 @@ func (e *Renderer) Execute(ctx context.Context) error {
 
 	// initialize hydration context
 	hctx := &hydrationContext{
-		root:            root,
-		pkgs:            map[types.UniquePath]*pkgNode{},
-		fnResults:       fnresult.NewResultList(),
-		imagePullPolicy: e.ImagePullPolicy,
-		allowExec:       e.AllowExec,
-		allowWasm:       e.AllowWasm,
-		fileSystem:      e.FileSystem,
-		runtime:         e.Runtime,
+		root:          root,
+		pkgs:          map[types.UniquePath]*pkgNode{},
+		fnResults:     fnresult.NewResultList(),
+		runnerOptions: e.RunnerOptions,
+		fileSystem:    e.FileSystem,
+		runtime:       e.Runtime,
 	}
 
 	if _, err = hydrate(ctx, root, hctx); err != nil {
@@ -194,18 +185,7 @@ type hydrationContext struct {
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
 
-	// imagePullPolicy controls the image pulling behavior.
-	imagePullPolicy fnruntime.ImagePullPolicy
-
-	// allowExec determines if function binary executable are allowed
-	// to be run during pipeline execution. Running function binaries is a
-	// privileged operation, so explicit permission is required.
-	allowExec bool
-
-	// allowWasm determines if function wasm are allowed to be run during pipeline
-	// execution. Running wasm function is an alpha feature, so it needs to be
-	// enabled explicitly.
-	allowWasm bool
+	runnerOptions fnruntime.RunnerOptions
 
 	fileSystem filesys.FileSystem
 
@@ -502,11 +482,13 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
 		}
-		if function.Exec != "" && !hctx.allowExec {
+		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
 			return errAllowedExecNotSpecified
 		}
-		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, hctx.imagePullPolicy,
-			true, displayResourceCount, hctx.allowWasm, hctx.runtime)
+		opts := hctx.runnerOptions
+		opts.SetPkgPathAnnotation = true
+		opts.DisplayResourceCount = displayResourceCount
+		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			return err
 		}
@@ -610,11 +592,13 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
 			displayResourceCount = true
 		}
-		if function.Exec != "" && !hctx.allowExec {
+		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
 			return nil, errAllowedExecNotSpecified
 		}
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, hctx.imagePullPolicy,
-			true, displayResourceCount, hctx.allowWasm, hctx.runtime)
+		opts := hctx.runnerOptions
+		opts.SetPkgPathAnnotation = true
+		opts.DisplayResourceCount = displayResourceCount
+		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			return nil, err
 		}

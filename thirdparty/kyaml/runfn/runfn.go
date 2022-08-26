@@ -85,16 +85,13 @@ type RunFns struct {
 	// function in the list.
 	ContinueOnEmptyResult bool
 
-	// AllowWasm controls if wasm functions are allowed to be run.
-	AllowWasm bool
+	RunnerOptions fnruntime.RunnerOptions
 
 	// ExecArgs are the arguments for exec commands
 	ExecArgs []string
 
 	// OriginalExec is the original exec commands
 	OriginalExec string
-
-	ImagePullPolicy fnruntime.ImagePullPolicy
 
 	Selector kptfile.Selector
 
@@ -357,11 +354,15 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	if spec.Container.Image != "" {
 		fnResult.Image = spec.Container.Image
 
+		resolvedImage, err := r.RunnerOptions.ResolveToImage(context.TODO(), spec.Container.Image)
+		if err != nil {
+			return nil, err
+		}
 		// If AllowWasm is true, we try to use the image field as a wasm image.
 		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
 		// it should fallback to run it as container fn.
-		if r.AllowWasm {
-			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), spec.Container.Image))
+		if r.RunnerOptions.AllowWasm {
+			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), resolvedImage))
 			if err != nil {
 				return nil, err
 			}
@@ -373,8 +374,8 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 				return nil, err
 			}
 			c := &fnruntime.ContainerFn{
-				Image:           spec.Container.Image,
-				ImagePullPolicy: r.ImagePullPolicy,
+				Image:           resolvedImage,
+				ImagePullPolicy: r.RunnerOptions.ImagePullPolicy,
 				UIDGID:          uidgid,
 				StorageMounts:   r.StorageMounts,
 				Env:             spec.Container.Env,
@@ -393,7 +394,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	if spec.Exec.Path != "" {
 		fnResult.ExecPath = r.OriginalExec
 
-		if r.AllowWasm && strings.HasSuffix(spec.Exec.Path, ".wasm") {
+		if r.RunnerOptions.AllowWasm && strings.HasSuffix(spec.Exec.Path, ".wasm") {
 			wFn, err := fnruntime.NewWasmFn(&fnruntime.FsLoader{Filename: spec.Exec.Path})
 			if err != nil {
 				return nil, err
@@ -409,9 +410,10 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		}
 	}
 
-	displayResourceCount := false
+	opts := r.RunnerOptions
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
-		displayResourceCount = true
+		opts.DisplayResourceCount = true
 	}
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, false, displayResourceCount, r.AllowWasm)
+
+	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
 }

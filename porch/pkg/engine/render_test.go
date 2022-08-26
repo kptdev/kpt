@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -29,8 +30,11 @@ import (
 )
 
 func TestRender(t *testing.T) {
+	runnerOptions := fnruntime.RunnerOptions{}
+	runnerOptions.InitDefaults()
+
 	render := &renderPackageMutation{
-		renderer: kpt.NewRenderer(),
+		renderer: kpt.NewRenderer(runnerOptions),
 		runtime:  kpt.NewSimpleFunctionRuntime(),
 	}
 

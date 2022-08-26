@@ -65,6 +65,7 @@ func TestRender(t *testing.T) {
 				FileSystem: filesys.FileSystemOrOnDisk{},
 				Output:     &output,
 			}
+			r.RunnerOptions.InitDefaults()
 
 			if err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
 				t.Errorf("Render failed: %v", err)
