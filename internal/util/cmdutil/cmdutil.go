@@ -21,7 +21,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/util/function"
 	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -58,27 +57,6 @@ func PrintErrorStacktrace() bool {
 
 // StackOnError if true, will print a stack trace on failure.
 var StackOnError bool
-
-func ValidateImagePullPolicyValue(v string) error {
-	v = strings.ToLower(v)
-	if v != strings.ToLower(string(fnruntime.AlwaysPull)) &&
-		v != strings.ToLower(string(fnruntime.IfNotPresentPull)) &&
-		v != strings.ToLower(string(fnruntime.NeverPull)) {
-		return fmt.Errorf("image pull policy must be one of %s, %s and %s", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull)
-	}
-	return nil
-}
-
-func StringToImagePullPolicy(v string) fnruntime.ImagePullPolicy {
-	switch strings.ToLower(v) {
-	case strings.ToLower(string(fnruntime.NeverPull)):
-		return fnruntime.NeverPull
-	case strings.ToLower(string(fnruntime.IfNotPresentPull)):
-		return fnruntime.IfNotPresentPull
-	default:
-		return fnruntime.AlwaysPull
-	}
-}
 
 // WriteFnOutput writes the output resources of function commands to provided destination
 func WriteFnOutput(dest, content string, fromStdin bool, w io.Writer) error {
