@@ -16,7 +16,7 @@ GOLANG_VERSION         := 1.18.3
 GORELEASER_CONFIG      = release/tag/goreleaser.yaml
 GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
-.PHONY: docs license fix vet fmt lint test build tidy
+.PHONY: docs license fix vet fmt lint test build tidy release
 
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
