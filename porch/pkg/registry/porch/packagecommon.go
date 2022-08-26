@@ -128,12 +128,11 @@ func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, 
 	return nil
 }
 
-func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (repository.PackageRevision, error) {
+func (r *packageCommon) openRepository(ctx context.Context, name string) (repository.Repository, error) {
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
 	if !namespaced {
 		return nil, fmt.Errorf("namespace must be specified")
 	}
-
 	repositoryName, err := ParseRepositoryName(name)
 	if err != nil {
 		return nil, apierrors.NewNotFound(r.gr, name)
@@ -147,12 +146,26 @@ func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (re
 		}
 		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
 	}
+	return r.cad.OpenRepository(ctx, &repositoryObj)
+}
 
-	repo, err := r.cad.OpenRepository(ctx, &repositoryObj)
+func (r *packageCommon) getRepositoryObj(ctx context.Context, ns string, repositoryName string) (*configapi.Repository, error) {
+	var repositoryObj configapi.Repository
+	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
+	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
+		}
+		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
+	}
+	return &repositoryObj, nil
+}
+
+func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (repository.PackageRevision, error) {
+	repo, err := r.openRepository(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-
 	revisions, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: name})
 	if err != nil {
 		return nil, err
@@ -167,26 +180,7 @@ func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (re
 }
 
 func (r *packageCommon) getPackage(ctx context.Context, name string) (repository.Package, error) {
-	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
-	if !namespaced {
-		return nil, fmt.Errorf("namespace must be specified")
-	}
-
-	repositoryName, err := ParseRepositoryName(name)
-	if err != nil {
-		return nil, apierrors.NewNotFound(r.gr, name)
-	}
-
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(r.gr, name)
-		}
-		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
-	}
-
-	repo, err := r.cad.OpenRepository(ctx, &repositoryObj)
+	repo, err := r.openRepository(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -248,39 +242,10 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		newRuntimeObj = typed
 	}
 
-	r.updateStrategy.PrepareForUpdate(ctx, newRuntimeObj, oldRuntimeObj)
-
-	if !isCreate {
-		if updateValidation != nil {
-			err := updateValidation(ctx, newRuntimeObj, oldRuntimeObj)
-			if err != nil {
-				klog.Infof("update failed validation: %v", err)
-				return nil, false, err
-			}
-		}
-
-		fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldRuntimeObj)
-		if len(fieldErrors) > 0 {
-			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
-		}
+	if err := r.validateUpdate(ctx, newRuntimeObj, oldRuntimeObj, isCreate, createValidation,
+		updateValidation, "PackageRevision", name); err != nil {
+		return nil, false, err
 	}
-
-	if isCreate {
-		if createValidation != nil {
-			err := createValidation(ctx, newRuntimeObj)
-			if err != nil {
-				klog.Infof("update failed create validation: %v", err)
-				return nil, false, err
-			}
-		}
-
-		fieldErrors := r.createStrategy.Validate(ctx, newRuntimeObj)
-		if len(fieldErrors) > 0 {
-			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), name, fieldErrors)
-		}
-	}
-
-	r.updateStrategy.Canonicalize(newRuntimeObj)
 
 	newObj, ok := newRuntimeObj.(*api.PackageRevision)
 	if !ok {
@@ -372,39 +337,10 @@ func (r *packageCommon) updatePackage(ctx context.Context, name string, objInfo 
 		newRuntimeObj = typed
 	}
 
-	r.updateStrategy.PrepareForUpdate(ctx, newRuntimeObj, oldRuntimeObj)
-
-	if !isCreate {
-		if updateValidation != nil {
-			err := updateValidation(ctx, newRuntimeObj, oldRuntimeObj)
-			if err != nil {
-				klog.Infof("update failed validation: %v", err)
-				return nil, false, err
-			}
-		}
-
-		fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldRuntimeObj)
-		if len(fieldErrors) > 0 {
-			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("Package").GroupKind(), name, fieldErrors)
-		}
+	if err := r.validateUpdate(ctx, newRuntimeObj, oldRuntimeObj, isCreate, createValidation,
+		updateValidation, "Package", name); err != nil {
+		return nil, false, err
 	}
-
-	if isCreate {
-		if createValidation != nil {
-			err := createValidation(ctx, newRuntimeObj)
-			if err != nil {
-				klog.Infof("update failed create validation: %v", err)
-				return nil, false, err
-			}
-		}
-
-		fieldErrors := r.createStrategy.Validate(ctx, newRuntimeObj)
-		if len(fieldErrors) > 0 {
-			return nil, false, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("Package").GroupKind(), name, fieldErrors)
-		}
-	}
-
-	r.updateStrategy.Canonicalize(newRuntimeObj)
 
 	newObj, ok := newRuntimeObj.(*api.Package)
 	if !ok {
@@ -450,4 +386,62 @@ func (r *packageCommon) updatePackage(ctx context.Context, name string, objInfo 
 		created := rev.GetPackage()
 		return created, true, nil
 	}
+}
+
+func (r *packageCommon) validateDelete(ctx context.Context, deleteValidation rest.ValidateObjectFunc, obj runtime.Object,
+	repoName string, ns string) (*configapi.Repository, error) {
+	if deleteValidation != nil {
+		err := deleteValidation(ctx, obj)
+		if err != nil {
+			klog.Infof("delete failed validation: %v", err)
+			return nil, err
+		}
+	}
+	repositoryName, err := ParseRepositoryName(repoName)
+	if err != nil {
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", repoName))
+	}
+	repositoryObj, err := r.getRepositoryObj(ctx, ns, repositoryName)
+	if err != nil {
+		return nil, err
+	}
+	return repositoryObj, nil
+}
+
+func (r *packageCommon) validateUpdate(ctx context.Context, newRuntimeObj runtime.Object, oldRuntimeObj runtime.Object, create bool,
+	createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, kind string, name string) error {
+	r.updateStrategy.PrepareForUpdate(ctx, newRuntimeObj, oldRuntimeObj)
+
+	if create {
+		if createValidation != nil {
+			err := createValidation(ctx, newRuntimeObj)
+			if err != nil {
+				klog.Infof("update failed create validation: %v", err)
+				return err
+			}
+		}
+
+		fieldErrors := r.createStrategy.Validate(ctx, newRuntimeObj)
+		if len(fieldErrors) > 0 {
+			return apierrors.NewInvalid(api.SchemeGroupVersion.WithKind(kind).GroupKind(), name, fieldErrors)
+		}
+	}
+
+	if !create {
+		if updateValidation != nil {
+			err := updateValidation(ctx, newRuntimeObj, oldRuntimeObj)
+			if err != nil {
+				klog.Infof("update failed validation: %v", err)
+				return err
+			}
+		}
+
+		fieldErrors := r.updateStrategy.ValidateUpdate(ctx, newRuntimeObj, oldRuntimeObj)
+		if len(fieldErrors) > 0 {
+			return apierrors.NewInvalid(api.SchemeGroupVersion.WithKind(kind).GroupKind(), name, fieldErrors)
+		}
+	}
+
+	r.updateStrategy.Canonicalize(newRuntimeObj)
+	return nil
 }

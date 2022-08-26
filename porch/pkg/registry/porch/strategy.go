@@ -1,0 +1,129 @@
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package porch
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+)
+
+// PackageRevisions Update Strategy
+
+type packageRevisionStrategy struct{}
+
+var _ SimpleRESTUpdateStrategy = packageRevisionStrategy{}
+
+func (s packageRevisionStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+}
+
+func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+	oldRevision := old.(*api.PackageRevision)
+	newRevision := obj.(*api.PackageRevision)
+
+	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+				string(api.PackageRevisionLifecycleProposed),
+			}, ",")),
+		))
+
+	}
+
+	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+				string(api.PackageRevisionLifecycleProposed),
+			}, ",")),
+		))
+	}
+
+	return allErrs
+}
+
+func (s packageRevisionStrategy) Canonicalize(obj runtime.Object) {
+	pr := obj.(*api.PackageRevision)
+	if pr.Spec.Lifecycle == "" {
+		// Set default
+		pr.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
+	}
+}
+
+var _ SimpleRESTCreateStrategy = packageRevisionStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageRevisionStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	obj := runtimeObj.(*api.PackageRevision)
+
+	switch lifecycle := obj.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft:
+		// valid
+
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only created as %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+			}, ",")),
+		))
+	}
+
+	return allErrs
+}
+
+// Package Update Strategy
+
+type packageStrategy struct{}
+
+var _ SimpleRESTUpdateStrategy = packageStrategy{}
+
+func (s packageStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+}
+
+func (s packageStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	return nil
+}
+
+func (s packageStrategy) Canonicalize(obj runtime.Object) {
+}
+
+var _ SimpleRESTCreateStrategy = packageStrategy{}
+
+// Validate returns an ErrorList with validation errors or nil.  Validate
+// is invoked after default fields in the object have been filled in
+// before the object is persisted.  This method should not mutate the
+// object.
+func (s packageStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
+	return nil
+}

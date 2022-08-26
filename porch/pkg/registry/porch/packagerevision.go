@@ -17,10 +17,8 @@ package porch
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -28,8 +26,6 @@ import (
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/validation/field"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/klog/v2"
@@ -131,13 +127,9 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest("spec.repositoryName is required")
 	}
 
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
-		}
-		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
+	repositoryObj, err := r.packageCommon.getRepositoryObj(ctx, ns, repositoryName)
+	if err != nil {
+		return nil, err
 	}
 
 	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
@@ -145,7 +137,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), obj.Name, fieldErrors)
 	}
 
-	rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, obj)
+	rev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, obj)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
@@ -192,139 +184,15 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 	}
 
 	oldObj := oldPackage.GetPackageRevision()
-
-	if deleteValidation != nil {
-		err := deleteValidation(ctx, oldObj)
-		if err != nil {
-			klog.Infof("delete failed validation: %v", err)
-			return nil, false, err
-		}
-	}
-
-	// TODO: Verify options are empty?
-
-	repositoryName, err := ParseRepositoryName(name)
+	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, oldObj, name, ns)
 	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
+		return nil, false, err
 	}
 
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
-		}
-		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
-	}
-
-	if err := r.cad.DeletePackageRevision(ctx, &repositoryObj, oldPackage); err != nil {
+	if err := r.cad.DeletePackageRevision(ctx, repositoryObj, oldPackage); err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
 
 	// TODO: Should we do an async delete?
 	return oldObj, true, nil
-}
-
-// PackageRevisions Update Strategy
-
-type packageRevisionStrategy struct{}
-
-var _ SimpleRESTUpdateStrategy = packageRevisionStrategy{}
-
-func (s packageRevisionStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
-}
-
-func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
-	allErrs := field.ErrorList{}
-	oldRevision := old.(*api.PackageRevision)
-	newRevision := obj.(*api.PackageRevision)
-
-	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
-		// valid
-
-	default:
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
-			strings.Join([]string{
-				string(api.PackageRevisionLifecycleDraft),
-				string(api.PackageRevisionLifecycleProposed),
-			}, ",")),
-		))
-
-	}
-
-	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
-		// valid
-
-	default:
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
-			strings.Join([]string{
-				string(api.PackageRevisionLifecycleDraft),
-				string(api.PackageRevisionLifecycleProposed),
-			}, ",")),
-		))
-	}
-
-	return allErrs
-}
-
-func (s packageRevisionStrategy) Canonicalize(obj runtime.Object) {
-	pr := obj.(*api.PackageRevision)
-	if pr.Spec.Lifecycle == "" {
-		// Set default
-		pr.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
-	}
-}
-
-var _ SimpleRESTCreateStrategy = packageRevisionStrategy{}
-
-// Validate returns an ErrorList with validation errors or nil.  Validate
-// is invoked after default fields in the object have been filled in
-// before the object is persisted.  This method should not mutate the
-// object.
-func (s packageRevisionStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
-	allErrs := field.ErrorList{}
-
-	obj := runtimeObj.(*api.PackageRevision)
-
-	switch lifecycle := obj.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft:
-		// valid
-
-	default:
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only created as %s",
-			strings.Join([]string{
-				string(api.PackageRevisionLifecycleDraft),
-			}, ",")),
-		))
-	}
-
-	return allErrs
-}
-
-// Package Update Strategy
-
-type packageStrategy struct{}
-
-var _ SimpleRESTUpdateStrategy = packageStrategy{}
-
-func (s packageStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
-}
-
-func (s packageStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
-	return nil
-}
-
-func (s packageStrategy) Canonicalize(obj runtime.Object) {
-}
-
-var _ SimpleRESTCreateStrategy = packageStrategy{}
-
-// Validate returns an ErrorList with validation errors or nil.  Validate
-// is invoked after default fields in the object have been filled in
-// before the object is persisted.  This method should not mutate the
-// object.
-func (s packageStrategy) Validate(ctx context.Context, runtimeObj runtime.Object) field.ErrorList {
-	return nil
 }

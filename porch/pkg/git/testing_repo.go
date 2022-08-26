@@ -253,7 +253,7 @@ func findFile(t *testing.T, tree *object.Tree, path string) *object.File {
 	return file
 }
 
-func findPackage(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) repository.PackageRevision {
+func findPackageRevision(t *testing.T, revisions []repository.PackageRevision, key repository.PackageRevisionKey) repository.PackageRevision {
 	t.Helper()
 
 	for _, r := range revisions {
@@ -282,7 +282,7 @@ func repositoryMustHavePackageRevision(t *testing.T, git GitRepository, name rep
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
-	findPackage(t, list, name)
+	findPackageRevision(t, list, name)
 }
 
 func repositoryMustNotHavePackageRevision(t *testing.T, git GitRepository, name repository.PackageRevisionKey) {

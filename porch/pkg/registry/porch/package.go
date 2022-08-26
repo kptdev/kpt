@@ -19,14 +19,12 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/apiserver/pkg/registry/rest"
 	"k8s.io/klog/v2"
@@ -126,13 +124,9 @@ func (r *packages) Create(ctx context.Context, runtimeObject runtime.Object, cre
 		return nil, apierrors.NewBadRequest("spec.repository is required")
 	}
 
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
-		}
-		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
+	repositoryObj, err := r.packageCommon.getRepositoryObj(ctx, ns, repositoryName)
+	if err != nil {
+		return nil, err
 	}
 
 	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
@@ -140,7 +134,7 @@ func (r *packages) Create(ctx context.Context, runtimeObject runtime.Object, cre
 		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("Package").GroupKind(), obj.Name, fieldErrors)
 	}
 
-	rev, err := r.cad.CreatePackage(ctx, &repositoryObj, obj)
+	rev, err := r.cad.CreatePackage(ctx, repositoryObj, obj)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
@@ -176,6 +170,8 @@ func (r *packages) Delete(ctx context.Context, name string, deleteValidation res
 	ctx, span := tracer.Start(ctx, "packages::Delete", trace.WithAttributes())
 	defer span.End()
 
+	// TODO: Verify options are empty?
+
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
 	if !namespaced {
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
@@ -187,32 +183,12 @@ func (r *packages) Delete(ctx context.Context, name string, deleteValidation res
 	}
 
 	oldObj := oldPackage.GetPackage()
-
-	if deleteValidation != nil {
-		err := deleteValidation(ctx, oldObj)
-		if err != nil {
-			klog.Infof("delete failed validation: %v", err)
-			return nil, false, err
-		}
-	}
-
-	// TODO: Verify options are empty?
-
-	repositoryName, err := ParseRepositoryName(name)
+	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, oldObj, name, ns)
 	if err != nil {
-		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
+		return nil, false, err
 	}
 
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
-		}
-		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
-	}
-
-	if err := r.cad.DeletePackage(ctx, &repositoryObj, oldPackage); err != nil {
+	if err := r.cad.DeletePackage(ctx, repositoryObj, oldPackage); err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
 

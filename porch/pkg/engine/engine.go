@@ -41,6 +41,7 @@ var tracer = otel.Tracer("engine")
 type CaDEngine interface {
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
+	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
 
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
@@ -49,8 +50,6 @@ type CaDEngine interface {
 	CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error)
 	UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, old, new *api.Package) (repository.Package, error)
 	DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, obj repository.Package) error
-
-	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
 }
 
 func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {

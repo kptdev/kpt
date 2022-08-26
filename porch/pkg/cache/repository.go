@@ -16,8 +16,6 @@ package cache
 
 import (
 	"context"
-	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -25,11 +23,19 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/mod/semver"
 	"k8s.io/klog/v2"
 )
 
 var tracer = otel.Tracer("cache")
+
+// We take advantage of the cache having a global view of all the packages
+// in a repository and compute the latest package revision in the cache
+// rather than add another level of caching in the repositories themselves.
+// This also reuses the revision comparison code and ensures same behavior
+// between Git and OCI.
+
+var _ repository.Repository = &cachedRepository{}
+var _ repository.FunctionRepository = &cachedRepository{}
 
 type cachedRepository struct {
 	id     string
@@ -44,46 +50,8 @@ type cachedRepository struct {
 	cachedFunctions []repository.Function
 	// Error encountered on repository refresh by the refresh goroutine.
 	// This is returned back by the cache to the background goroutine when it calls periodicall to resync repositories.
-	refreshError error
-}
-
-var _ repository.Repository = &cachedRepository{}
-
-// We take advantage of the cache having a global view of all the packages
-// in a repository and compute the latest package revision in the cache
-// rather than add another level of caching in the repositories themselves.
-// This also reuses the revision comparison code and ensures same behavior
-// between Git and OCI.
-type cachedPackageRevision struct {
-	repository.PackageRevision
-	isLatestRevision bool
-}
-
-func (c *cachedPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
-	rev := c.PackageRevision.GetPackageRevision()
-	if c.isLatestRevision {
-		if rev.Labels == nil {
-			rev.Labels = map[string]string{}
-		}
-		rev.Labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
-	}
-	return rev
-}
-
-var _ repository.PackageRevision = &cachedPackageRevision{}
-
-type cachedPackage struct {
-	repository.Package
-	latestPackageRevision string
-}
-
-var _ repository.Package = &cachedPackage{}
-
-func (c *cachedPackage) GetLatestRevision() string {
-	if c.latestPackageRevision != "" {
-		return c.latestPackageRevision
-	}
-	return c.Package.GetLatestRevision()
+	refreshRevisionsError error
+	refreshPkgsError      error
 }
 
 func newRepository(id string, repo repository.Repository) *cachedRepository {
@@ -98,9 +66,6 @@ func newRepository(id string, repo repository.Repository) *cachedRepository {
 
 	return r
 }
-
-var _ repository.Repository = &cachedRepository{}
-var _ repository.FunctionRepository = &cachedRepository{}
 
 func (r *cachedRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	packages, err := r.getPackageRevisions(ctx, filter, false)
@@ -122,14 +87,21 @@ func (r *cachedRepository) ListFunctions(ctx context.Context) ([]repository.Func
 func (r *cachedRepository) getRefreshError() error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	return r.refreshError
+
+	// TODO: This should also check r.refreshPkgsError when
+	//   the package resource is fully supported.
+
+	return r.refreshRevisionsError
 }
 
 func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, forceRefresh bool) ([]repository.PackageRevision, error) {
-	r.mutex.Lock()
-	packages := r.cachedPackageRevisions
-	err := r.refreshError
-	r.mutex.Unlock()
+	var packages []*cachedPackageRevision
+	var err error
+
+	r.lock(func() {
+		packages = r.cachedPackageRevisions
+		err = r.refreshRevisionsError
+	})
 
 	if forceRefresh {
 		packages = nil
@@ -143,10 +115,10 @@ func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repos
 			packages = toCachedPackageRevisionSlice(p)
 		}
 
-		r.mutex.Lock()
-		r.cachedPackageRevisions = packages
-		r.refreshError = err
-		r.mutex.Unlock()
+		r.lock(func() {
+			r.cachedPackageRevisions = packages
+			r.refreshRevisionsError = err
+		})
 	}
 
 	if err != nil {
@@ -157,10 +129,13 @@ func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repos
 }
 
 func (r *cachedRepository) getPackages(ctx context.Context, filter repository.ListPackageFilter, forceRefresh bool) ([]repository.Package, error) {
-	r.mutex.Lock()
-	packages := r.cachedPackages
-	err := r.refreshError
-	r.mutex.Unlock()
+	var packages []*cachedPackage
+	var err error
+
+	r.lock(func() {
+		packages = r.cachedPackages
+		err = r.refreshPkgsError
+	})
 
 	if forceRefresh {
 		packages = nil
@@ -174,10 +149,10 @@ func (r *cachedRepository) getPackages(ctx context.Context, filter repository.Li
 			packages = toCachedPackageSlice(p)
 		}
 
-		r.mutex.Lock()
-		r.cachedPackages = packages
-		r.refreshError = err
-		r.mutex.Unlock()
+		r.lock(func() {
+			r.cachedPackages = packages
+			r.refreshPkgsError = err
+		})
 	}
 
 	if err != nil {
@@ -250,6 +225,8 @@ func (r *cachedRepository) update(closed repository.PackageRevision) *cachedPack
 	r.cachedPackageRevisions = updateOrAppend(r.cachedPackageRevisions, cached)
 	// Recompute latest package revisions.
 	identifyLatestRevisions(r.cachedPackageRevisions)
+
+	// TODO: Update the latest revisions for the r.cachedPackages
 	return cached
 }
 
@@ -271,10 +248,8 @@ func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old reposi
 		return err
 	}
 
-	r.mutex.Lock()
 	// TODO: Do something more efficient than a full cache flush
-	r.cachedPackageRevisions = nil
-	r.mutex.Unlock()
+	r.flush()
 
 	return nil
 }
@@ -289,6 +264,7 @@ func (r *cachedRepository) ListPackages(ctx context.Context, filter repository.L
 }
 
 func (r *cachedRepository) CreatePackage(ctx context.Context, obj *v1alpha1.Package) (repository.Package, error) {
+	klog.Infoln("cachedRepository::CreatePackage")
 	return r.repo.CreatePackage(ctx, obj)
 }
 
@@ -299,11 +275,8 @@ func (r *cachedRepository) DeletePackage(ctx context.Context, old repository.Pac
 		return err
 	}
 
-	r.mutex.Lock()
 	// TODO: Do something more efficient than a full cache flush
-	r.cachedPackages = nil
-	r.mutex.Unlock()
-
+	r.flush()
 	return nil
 }
 
@@ -336,118 +309,24 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	if _, err := r.getPackageRevisions(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
 		klog.Warningf("error polling repo packages %s: %v", r.id, err)
 	}
+	// TODO: Uncomment when package resources are fully supported
+	//if _, err := r.getPackages(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
+	//	klog.Warningf("error polling repo packages %s: %v", r.id, err)
+	//}
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
 }
 
-func toCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cachedPackageRevision {
-	result := make([]*cachedPackageRevision, len(revisions))
-	for i := range revisions {
-		current := &cachedPackageRevision{
-			PackageRevision:  revisions[i],
-			isLatestRevision: false,
-		}
-		result[i] = current
-	}
-	identifyLatestRevisions(result)
-	return result
+func (r *cachedRepository) lock(f func()) {
+	r.mutex.Lock()
+	f()
+	r.mutex.Unlock()
 }
 
-func toCachedPackageSlice(packages []repository.Package) []*cachedPackage {
-	result := make([]*cachedPackage, len(packages))
-	for i := range packages {
-		current := &cachedPackage{
-			Package:               packages[i],
-			latestPackageRevision: packages[i].GetLatestRevision(),
-		}
-		result[i] = current
-	}
-	return result
-}
-
-func identifyLatestRevisions(result []*cachedPackageRevision) {
-	// Compute the latest among the different revisions of the same package.
-	// The map is keyed by the package name; Values are the latest revision found so far.
-	latest := map[string]*cachedPackageRevision{}
-	for _, current := range result {
-		current.isLatestRevision = false // Clear all values
-
-		// Check if the current package revision is more recent than the one seen so far.
-		// Only consider Published packages
-		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
-			continue
-		}
-
-		currentKey := current.Key()
-		if previous, ok := latest[currentKey.Package]; ok {
-			previousKey := previous.Key()
-			switch cmp := semver.Compare(currentKey.Revision, previousKey.Revision); {
-			case cmp == 0:
-				// Same revision.
-				klog.Warningf("Encountered package revisions whose versions compare equal: %q, %q", currentKey, previousKey)
-			case cmp < 0:
-				// currentKey.Revision < previousKey.Revision; no change
-			case cmp > 0:
-				// currentKey.Revision > previousKey.Revision; update latest
-				latest[currentKey.Package] = current
-			}
-		} else if semver.IsValid(currentKey.Revision) {
-			// First revision of the specific package; candidate for the latest.
-			latest[currentKey.Package] = current
-		}
-	}
-	// Mark the winners as latest
-	for _, v := range latest {
-		v.isLatestRevision = true
-	}
-}
-
-func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.ListPackageRevisionFilter) []repository.PackageRevision {
-	result := make([]repository.PackageRevision, 0, len(cached))
-	for _, p := range cached {
-		if filter.Matches(p) {
-			result = append(result, p)
-		}
-	}
-	sort.Slice(result, func(i, j int) bool {
-		ki, kl := result[i].Key(), result[j].Key()
-		switch res := strings.Compare(ki.Package, kl.Package); {
-		case res < 0:
-			return true
-		case res > 0:
-			return false
-		default:
-			// Equal. Compare next element
-		}
-		switch res := strings.Compare(ki.Revision, kl.Revision); {
-		case res < 0:
-			return true
-		case res > 0:
-			return false
-		default:
-			// Equal. Compare next element
-		}
-		switch res := strings.Compare(string(result[i].Lifecycle()), string(result[j].Lifecycle())); {
-		case res < 0:
-			return true
-		case res > 0:
-			return false
-		default:
-			// Equal. Compare next element
-		}
-
-		return strings.Compare(result[i].KubeObjectName(), result[j].KubeObjectName()) < 0
+func (r *cachedRepository) flush() {
+	r.lock(func() {
+		r.cachedPackageRevisions = nil
+		r.cachedPackages = nil
 	})
-	return result
-}
-
-func toPackageSlice(cached []*cachedPackage, filter repository.ListPackageFilter) []repository.Package {
-	result := make([]repository.Package, 0, len(cached))
-	for _, p := range cached {
-		if filter.Matches(p) {
-			result = append(result, p)
-		}
-	}
-	return result
 }

@@ -427,7 +427,7 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
 				continue
 			}
-			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving gitRepo reference %q: %w", ref, err)
+			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving git reference %q: %w", ref, err)
 		} else {
 			hash = *resolved
 			break
@@ -437,7 +437,7 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 	if hash.IsZero() {
 		r.dumpAllRefs()
 
-		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find gitRepo reference (tried %v)", refNames)
+		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find git reference (tried %v)", refNames)
 	}
 
 	return r.loadPackageRevision(ctx, version, path, hash)

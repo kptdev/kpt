@@ -17,6 +17,7 @@ package porch
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -154,7 +155,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)
+			return nil, false, apierrors.NewNotFound(schema.GroupResource(api.PackageRevisionResourcesGVR.GroupResource()), repositoryID.Name)
 		}
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}

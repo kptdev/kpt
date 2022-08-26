@@ -74,7 +74,7 @@ type PackageRevision interface {
 	GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
-// PackageRevision is an abstract package.
+// Package is an abstract package.
 type Package interface {
 	// KubeObjectName returns an encoded name for the object that should be unique.
 	// More "readable" values are returned by Key()
