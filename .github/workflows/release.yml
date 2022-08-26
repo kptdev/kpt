@@ -65,7 +65,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          # Workaround for https://github.com/goreleaser/goreleaser-action/issues/368
+          # checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
+          checksum_file=$(cat dist/artifacts.json | jq -r '.[] | select (.type=="Checksum") | .path')
+
           echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
   
   provenance:
