@@ -48,14 +48,16 @@ jobs:
       - name: Check Licenses
         run: |
           ./scripts/create-licenses.sh
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        id: run-goreleaser
-        with:
-          version: latest
-          args: release --skip-validate -f release/tag/goreleaser.yaml
+      - name: Setup release environment
+        id: setup-release-env
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |-
+          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+      - name: Run GoReleaser within Docker
+        id: run-goreleaser
+        run: |
+          make release
       - name: Generate SLSA subjects for provenance
         id: hash
         env:
