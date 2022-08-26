@@ -27,6 +27,7 @@ import (
 	"unicode"
 
 	"github.com/GoogleContainerTools/kpt/internal/builtins"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -44,6 +45,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -137,8 +139,11 @@ func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
 }
 
 type cadEngine struct {
-	cache              *cache.Cache
-	renderer           fn.Renderer
+	cache *cache.Cache
+
+	// runnerOptionsResolver returns the RunnerOptions for function execution in the specified namespace.
+	runnerOptionsResolver func(namespace string) fnruntime.RunnerOptions
+
 	runtime            fn.FunctionRuntime
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
@@ -411,7 +416,7 @@ func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDr
 	}
 
 	// Render package after creation.
-	mutations = cad.conditionalAddRender(mutations)
+	mutations = cad.conditionalAddRender(obj, mutations)
 
 	baseResources := repository.PackageResources{}
 	if _, _, err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
@@ -488,14 +493,17 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		// TODO: We should find a different way to do this. Probably a separate
 		// task for render.
 		if task.Eval.Image == "render" {
+			runnerOptions := cad.runnerOptionsResolver(obj.Namespace)
 			return &renderPackageMutation{
-				renderer: cad.renderer,
-				runtime:  cad.runtime,
+				runnerOptions: runnerOptions,
+				runtime:       cad.runtime,
 			}, nil
 		} else {
+			runnerOptions := cad.runnerOptionsResolver(obj.Namespace)
 			return &evalFunctionMutation{
-				runtime: cad.runtime,
-				task:    task,
+				runnerOptions: runnerOptions,
+				runtime:       cad.runtime,
+				task:          task,
 			}, nil
 		}
 
@@ -598,7 +606,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Re-render if we are making changes.
-	mutations = cad.conditionalAddRender(mutations)
+	mutations = cad.conditionalAddRender(newObj, mutations)
 
 	draft, err := repo.UpdatePackageRevision(ctx, oldPackage.repoPackageRevision)
 	if err != nil {
@@ -620,7 +628,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Re-render if we are making changes.
-	mutations = cad.conditionalAddRender(mutations)
+	mutations = cad.conditionalAddRender(newObj, mutations)
 
 	// TODO: Handle the case if alongside lifecycle change, tasks are changed too.
 	// Update package contents only if the package is in draft state
@@ -752,7 +760,7 @@ func convertStatusToKptfile(s api.ConditionStatus) kptfile.ConditionStatus {
 
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
 // entry is not already a render mutation.
-func (cad *cadEngine) conditionalAddRender(mutations []mutation) []mutation {
+func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mutation) []mutation {
 	if len(mutations) == 0 {
 		return mutations
 	}
@@ -763,9 +771,11 @@ func (cad *cadEngine) conditionalAddRender(mutations []mutation) []mutation {
 		return mutations
 	}
 
+	runnerOptions := cad.runnerOptionsResolver(subject.GetNamespace())
+
 	return append(mutations, &renderPackageMutation{
-		renderer: cad.renderer,
-		runtime:  cad.runtime,
+		runnerOptions: runnerOptions,
+		runtime:       cad.runtime,
 	})
 }
 
@@ -888,6 +898,8 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		return nil, nil, err
 	}
 
+	runnerOptions := cad.runnerOptionsResolver(old.GetNamespace())
+
 	mutations := []mutation{
 		&mutationReplaceResources{
 			newResources: new,
@@ -916,8 +928,8 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		draft,
 		appliedResources,
 		[]mutation{&renderPackageMutation{
-			renderer: cad.renderer,
-			runtime:  cad.runtime,
+			runnerOptions: runnerOptions,
+			runtime:       cad.runtime,
 		}})
 
 	// No lifecycle change when updating package resources; updates are done.

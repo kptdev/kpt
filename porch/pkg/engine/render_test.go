@@ -34,8 +34,8 @@ func TestRender(t *testing.T) {
 	runnerOptions.InitDefaults()
 
 	render := &renderPackageMutation{
-		renderer: kpt.NewRenderer(runnerOptions),
-		runtime:  kpt.NewSimpleFunctionRuntime(),
+		runnerOptions: runnerOptions,
+		runtime:       kpt.NewSimpleFunctionRuntime(),
 	}
 
 	testdata, err := filepath.Abs(filepath.Join(".", "testdata", "simple-render"))

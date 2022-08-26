@@ -21,9 +21,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/klog/v2"
@@ -31,8 +33,8 @@ import (
 )
 
 type renderPackageMutation struct {
-	renderer fn.Renderer
-	runtime  fn.FunctionRuntime
+	runtime       fn.FunctionRuntime
+	runnerOptions fnruntime.RunnerOptions
 }
 
 var _ mutation = &renderPackageMutation{}
@@ -62,7 +64,8 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		// TODO: we should handle this better
 		klog.Warningf("skipping render as no package was found")
 	} else {
-		result, err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+		renderer := kpt.NewRenderer(m.runnerOptions)
+		result, err := renderer.Render(ctx, fs, fn.RenderOptions{
 			PkgPath: pkgPath,
 			Runtime: m.runtime,
 		})
