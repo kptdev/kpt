@@ -50,24 +50,18 @@ jobs:
           ./scripts/create-licenses.sh
       - name: Setup release environment
         id: setup-release-env
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
+          echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
       - name: Run GoReleaser within Docker
         id: run-goreleaser
         run: |
           make release
       - name: Generate SLSA subjects for provenance
         id: hash
-        env:
-          ARTIFACTS: "${{ steps.run-goreleaser.outputs.artifacts }}"
         run: |
           set -euo pipefail
 
-          # Workaround for https://github.com/goreleaser/goreleaser-action/issues/368
-          # checksum_file=$(echo "$ARTIFACTS" | jq -r '.[] | select (.type=="Checksum") | .path')
-          checksum_file=$(cat _output/artifacts.json | jq -r '.[] | select (.type=="Checksum") | .path')
+          checksum_file=$(cat dist/artifacts.json | jq -r '.[] | select (.type=="Checksum") | .path')
 
           echo "::set-output name=hashes::$(cat $checksum_file | base64 -w0)"
   
