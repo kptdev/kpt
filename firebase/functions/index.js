@@ -39,3 +39,9 @@ exports.configsync = vanityGoEndpoint({
   vcs: 'git',
   repoRoot: 'https://github.com/GoogleContainerTools/kpt-config-sync.git'
 });
+
+exports.resourcegroup = vanityGoEndpoint({
+  importPrefix: "kpt.dev/resourcegroup",
+  vcs: "git",
+  repoRoot: "https://github.com/GoogleContainerTools/kpt-resource-group.git",
+});
