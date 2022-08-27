@@ -1017,11 +1017,23 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"),
 						},
 					},
+					"publishedBy": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"publishTimestamp": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

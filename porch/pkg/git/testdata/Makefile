@@ -17,7 +17,8 @@ REPOSITORIES = \
   trivial-repository.tar \
   simple-repository.tar \
   drafts-repository.tar \
-  nested-repository.tar
+  nested-repository.tar \
+  publishinfo-repository.tar
 
 
 .PHONY: expand

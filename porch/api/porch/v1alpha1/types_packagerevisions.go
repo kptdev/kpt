@@ -87,6 +87,12 @@ type ParentReference struct {
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
 	UpstreamLock *UpstreamLock `json:"upstreamLock,omitempty"`
+
+	// PublishedBy is the identity of the user who approved the packagerevision.
+	PublishedBy string `json:"publishedBy,omitempty"`
+
+	// PublishedAt is the time when the packagerevision were approved.
+	PublishedAt metav1.Time `json:"publishTimestamp,omitempty"`
 }
 
 type TaskType string

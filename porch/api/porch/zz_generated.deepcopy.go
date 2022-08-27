@@ -527,6 +527,7 @@ func (in *PackageRevisionStatus) DeepCopyInto(out *PackageRevisionStatus) {
 		*out = new(UpstreamLock)
 		(*in).DeepCopyInto(*out)
 	}
+	in.PublishedAt.DeepCopyInto(&out.PublishedAt)
 	return
 }
 

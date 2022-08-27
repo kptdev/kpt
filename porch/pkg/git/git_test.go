@@ -678,7 +678,7 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	refMustExist(t, repo, finalReferenceName)
 }
 
-func (g GitSuite) TestApproveDraft2(t *testing.T) {
+func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 	tempdir := t.TempDir()
 	tarfile := filepath.Join("testdata", "drafts-repository.tar")
 	repo, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
@@ -1125,6 +1125,85 @@ func (g GitSuite) TestNestedDirectories(t *testing.T) {
 			if !cmp.Equal(want, got) {
 				t.Errorf("Packages rooted in %q; Unexpected result (-want,+got): %s", tc.directory, cmp.Diff(want, got))
 			}
+		})
+	}
+}
+
+func (g GitSuite) TestAuthor(t *testing.T) {
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		pkg       string
+		revision  string
+		author    string
+		timestamp time.Time
+	}{
+		"draft packagerevision does not have publishing info in status": {
+			pkg:       "draft-pkg",
+			revision:  "v1",
+			author:    "",
+			timestamp: time.Time{},
+		},
+		"published packagerevision on tag": {
+			pkg:       "pkg-with-anno",
+			revision:  "v1",
+			author:    "pkg-with-anno-author@example.com",
+			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
+		},
+		"published packagerevision on main without commit annotations": {
+			pkg:       "pkg-without-anno",
+			revision:  g.branch,
+			author:    "",
+			timestamp: time.Time{},
+		},
+		"published packagerevision on main with commit annotations": {
+			pkg:       "pkg-with-anno",
+			revision:  g.branch,
+			author:    "pkg-with-anno-author@example.com",
+			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
+		},
+	}
+
+	for tn := range testCases {
+		tc := testCases[tn]
+		t.Run(tn, func(t *testing.T) {
+			tempdir := t.TempDir()
+			tarfile := filepath.Join("testdata", "publishinfo-repository.tar")
+			_, address := ServeGitRepositoryWithBranch(t, tarfile, tempdir, g.branch)
+
+			const (
+				repositoryName = "directory"
+				namespace      = "default"
+			)
+
+			git, err := OpenRepository(ctx, repositoryName, namespace, &configapi.GitRepository{
+				Repo:   address,
+				Branch: g.branch,
+			}, tempdir, GitRepositoryOptions{})
+			if err != nil {
+				t.Fatalf("Failed to open Git repository loaded from %q: %v", tarfile, err)
+			}
+
+			revisions, err := git.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
+			if err != nil {
+				t.Fatalf("ListPackageRevisions failed: %v", err)
+			}
+
+			_ = revisions
+			draftPkg := findPackage(t, revisions, repository.PackageRevisionKey{
+				Repository: repositoryName,
+				Package:    tc.pkg,
+				Revision:   tc.revision,
+			})
+			rev := draftPkg.GetPackageRevision()
+			if got, want := rev.Status.PublishedBy, tc.author; got != want {
+				t.Errorf("expected %q, but got %q", want, got)
+			}
+
+			if got, want := rev.Status.PublishedAt.Time, tc.timestamp; !want.Equal(got) {
+				t.Errorf("expected %v, but got %v", want, got)
+			}
+
 		})
 	}
 }
