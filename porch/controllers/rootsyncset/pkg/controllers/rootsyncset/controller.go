@@ -43,7 +43,6 @@ import (
 var (
 	rootSyncNamespace  = "config-management-system"
 	rootSyncApiVersion = "configsync.gke.io/v1beta1"
-	rootSyncName       = "root-sync"
 	rootSyncKind       = "RootSync"
 )
 
@@ -58,6 +57,11 @@ type RootSyncSetReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=configcontroller.cnrm.cloud.google.com,resources=configcontrollerinstances,verbs=get;list
+//+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
+//+kubebuilder:rbac:groups=core.cnrm.cloud.google.com,resources=configconnectorcontexts,verbs=get;list;watch
+//+kubebuilder:rbac:groups=hub.gke.io,resources=memberships,verbs=get;list;watch
+//+kubebuilder:rbac:groups=,resources=serviceaccounts/token,verbs=create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -121,11 +125,11 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			patchErrs = append(patchErrs, fmt.Errorf("failed to encode root sync to JSON: %w", err))
 			continue
 		}
-		rs, err := client.Resource(rootSyncRes).Namespace(rootSyncNamespace).Patch(ctx, rootSyncName, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: req.Name})
+		rs, err := client.Resource(rootSyncRes).Namespace(rootSyncNamespace).Patch(ctx, req.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: req.Name})
 		if err != nil {
-			patchErrs = append(patchErrs, fmt.Errorf("failed to patch RootSync %s in cluster %s: %w", rootSyncNamespace+"/"+rootSyncName, clusterRefName, err))
+			patchErrs = append(patchErrs, fmt.Errorf("failed to patch RootSync %s in cluster %s: %w", rootSyncNamespace+"/"+req.Name, clusterRefName, err))
 		} else {
-			klog.Infof("Create/Update resource %s as %v", rootSyncName, rs)
+			klog.Infof("Create/Update resource %s as %v", req.Name, rs)
 		}
 	}
 	if len(patchErrs) != 0 {
@@ -147,7 +151,7 @@ func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (schema.GroupVersion
 	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(rootsyncset.Spec.Template)
 	newRootSync["apiVersion"] = rootSyncApiVersion
 	newRootSync["kind"] = rootSyncKind
-	newRootSync["metadata"] = map[string]string{"name": rootSyncName,
+	newRootSync["metadata"] = map[string]string{"name": rootsyncset.Name,
 		"namespace": rootSyncNamespace}
 	fmt.Printf("rootsync looks like %v", newRootSync)
 	if err != nil {
@@ -176,14 +180,14 @@ func (r *RootSyncSetReconciler) deleteExternalResources(ctx context.Context, roo
 			deleteErrs = append(deleteErrs, fmt.Errorf("failed to get client when delete resource: %w", err))
 			continue
 		}
-		klog.Infof("deleting external resource %s ...", rootSyncName)
+		klog.Infof("deleting external resource %s ...", rootsyncset.Name)
 		gv, err := schema.ParseGroupVersion(rootSyncApiVersion)
 		if err != nil {
 			deleteErrs = append(deleteErrs, fmt.Errorf("failed to parse group version when deleting external resrouces: %w", err))
 			continue
 		}
 		rootSyncRes := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: "rootsyncs"}
-		err = myClient.Resource(rootSyncRes).Namespace("config-management-system").Delete(ctx, rootSyncName, metav1.DeleteOptions{})
+		err = myClient.Resource(rootSyncRes).Namespace("config-management-system").Delete(ctx, rootsyncset.Name, metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete external resource : %w", err))
 		}
@@ -194,7 +198,7 @@ func (r *RootSyncSetReconciler) deleteExternalResources(ctx context.Context, roo
 		}
 		return deleteErrs[0]
 	}
-	klog.Infof("external resource %s delete Done!", rootSyncName)
+	klog.Infof("external resource %s delete Done!", rootsyncset.Name)
 	return nil
 }
 
