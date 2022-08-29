@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"golang.org/x/mod/semver"
@@ -73,8 +72,8 @@ type ContainerFnPermission struct {
 // ContainerFn implements a KRMFn which run a containerized
 // KRM function
 type ContainerFn struct {
-	Ctx  context.Context
-	Path types.UniquePath
+	Ctx context.Context
+
 	// Image is the container image to run
 	Image string
 	// ImagePullPolicy controls the image pulling behavior.

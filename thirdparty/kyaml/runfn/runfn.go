@@ -373,7 +373,6 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 				return nil, err
 			}
 			c := &fnruntime.ContainerFn{
-				Path:            r.uniquePath,
 				Image:           spec.Container.Image,
 				ImagePullPolicy: r.ImagePullPolicy,
 				UIDGID:          uidgid,
