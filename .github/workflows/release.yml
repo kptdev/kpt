@@ -55,7 +55,7 @@ jobs:
       - name: Run GoReleaser within Docker
         id: run-goreleaser
         run: |
-          make release
+          make release-ci
       - name: Generate SLSA subjects for provenance
         id: hash
         run: |
