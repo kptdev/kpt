@@ -92,6 +92,21 @@ rules:
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["workloadidentitybindings/finalizers"]
   verbs: ["update"]
+- apiGroups: ["configcontroller.cnrm.cloud.google.com"]
+  resources: ["configcontrollerinstances"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["container.cnrm.cloud.google.com"]
+  resources: ["containerclusters"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["core.cnrm.cloud.google.com"]
+  resources: ["configconnectorcontexts"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["hub.gke.io"]
+  resources: ["memberships"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  verbs: ["create"]
 
 ---
 
