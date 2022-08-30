@@ -18,6 +18,7 @@ package fake
 
 import (
 	"context"
+
 	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
@@ -33,14 +34,14 @@ type FakePackages struct {
 	ns   string
 }
 
-var pkgsResource = schema.GroupVersionResource{Group: "porch.kpt.dev", Version: "v1alpha1", Resource: "pkgs"}
+var packagesResource = schema.GroupVersionResource{Group: "porch.kpt.dev", Version: "v1alpha1", Resource: "packages"}
 
-var pkgsKind = schema.GroupVersionKind{Group: "porch.kpt.dev", Version: "v1alpha1", Kind: "Package"}
+var packagesKind = schema.GroupVersionKind{Group: "porch.kpt.dev", Version: "v1alpha1", Kind: "Package"}
 
 // Get takes name of the pkg, and returns the corresponding pkg object, and an error if there is any.
 func (c *FakePackages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Package, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(pkgsResource, c.ns, name), &v1alpha1.Package{})
+		Invokes(testing.NewGetAction(packagesResource, c.ns, name), &v1alpha1.Package{})
 
 	if obj == nil {
 		return nil, err
@@ -51,7 +52,7 @@ func (c *FakePackages) Get(ctx context.Context, name string, options v1.GetOptio
 // List takes label and field selectors, and returns the list of Packages that match those selectors.
 func (c *FakePackages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PackageList, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(pkgsResource, pkgsKind, c.ns, opts), &v1alpha1.PackageList{})
+		Invokes(testing.NewListAction(packagesResource, packagesKind, c.ns, opts), &v1alpha1.PackageList{})
 
 	if obj == nil {
 		return nil, err
@@ -70,17 +71,17 @@ func (c *FakePackages) List(ctx context.Context, opts v1.ListOptions) (result *v
 	return list, err
 }
 
-// Watch returns a watch.Interface that watches the requested pkgs.
+// Watch returns a watch.Interface that watches the requested packages.
 func (c *FakePackages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(pkgsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchAction(packagesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a pkg and creates it.  Returns the server's representation of the pkg, and an error, if there is any.
 func (c *FakePackages) Create(ctx context.Context, pkg *v1alpha1.Package, opts v1.CreateOptions) (result *v1alpha1.Package, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(pkgsResource, c.ns, pkg), &v1alpha1.Package{})
+		Invokes(testing.NewCreateAction(packagesResource, c.ns, pkg), &v1alpha1.Package{})
 
 	if obj == nil {
 		return nil, err
@@ -91,7 +92,7 @@ func (c *FakePackages) Create(ctx context.Context, pkg *v1alpha1.Package, opts v
 // Update takes the representation of a pkg and updates it. Returns the server's representation of the pkg, and an error, if there is any.
 func (c *FakePackages) Update(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (result *v1alpha1.Package, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(pkgsResource, c.ns, pkg), &v1alpha1.Package{})
+		Invokes(testing.NewUpdateAction(packagesResource, c.ns, pkg), &v1alpha1.Package{})
 
 	if obj == nil {
 		return nil, err
@@ -103,7 +104,7 @@ func (c *FakePackages) Update(ctx context.Context, pkg *v1alpha1.Package, opts v
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 func (c *FakePackages) UpdateStatus(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (*v1alpha1.Package, error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(pkgsResource, "status", c.ns, pkg), &v1alpha1.Package{})
+		Invokes(testing.NewUpdateSubresourceAction(packagesResource, "status", c.ns, pkg), &v1alpha1.Package{})
 
 	if obj == nil {
 		return nil, err
@@ -114,14 +115,14 @@ func (c *FakePackages) UpdateStatus(ctx context.Context, pkg *v1alpha1.Package, 
 // Delete takes name of the pkg and deletes it. Returns an error if one occurs.
 func (c *FakePackages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(pkgsResource, c.ns, name, opts), &v1alpha1.Package{})
+		Invokes(testing.NewDeleteActionWithOptions(packagesResource, c.ns, name, opts), &v1alpha1.Package{})
 
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakePackages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(pkgsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionAction(packagesResource, c.ns, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.PackageList{})
 	return err
@@ -130,7 +131,7 @@ func (c *FakePackages) DeleteCollection(ctx context.Context, opts v1.DeleteOptio
 // Patch applies the patch and returns the patched pkg.
 func (c *FakePackages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Package, err error) {
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(pkgsResource, c.ns, name, pt, data, subresources...), &v1alpha1.Package{})
+		Invokes(testing.NewPatchSubresourceAction(packagesResource, c.ns, name, pt, data, subresources...), &v1alpha1.Package{})
 
 	if obj == nil {
 		return nil, err

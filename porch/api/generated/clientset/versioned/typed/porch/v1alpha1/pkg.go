@@ -48,26 +48,26 @@ type PackageInterface interface {
 	PackageExpansion
 }
 
-// pkgs implements PackageInterface
-type pkgs struct {
+// packages implements PackageInterface
+type packages struct {
 	client rest.Interface
 	ns     string
 }
 
 // newPackages returns a Packages
-func newPackages(c *PorchV1alpha1Client, namespace string) *pkgs {
-	return &pkgs{
+func newPackages(c *PorchV1alpha1Client, namespace string) *packages {
+	return &packages{
 		client: c.RESTClient(),
 		ns:     namespace,
 	}
 }
 
 // Get takes name of the pkg, and returns the corresponding pkg object, and an error if there is any.
-func (c *pkgs) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Package, err error) {
+func (c *packages) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.Package, err error) {
 	result = &v1alpha1.Package{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
 		Do(ctx).
@@ -76,7 +76,7 @@ func (c *pkgs) Get(ctx context.Context, name string, options v1.GetOptions) (res
 }
 
 // List takes label and field selectors, and returns the list of Packages that match those selectors.
-func (c *pkgs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PackageList, err error) {
+func (c *packages) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.PackageList, err error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -84,7 +84,7 @@ func (c *pkgs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.
 	result = &v1alpha1.PackageList{}
 	err = c.client.Get().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Do(ctx).
@@ -92,8 +92,8 @@ func (c *pkgs) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.
 	return
 }
 
-// Watch returns a watch.Interface that watches the requested pkgs.
-func (c *pkgs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+// Watch returns a watch.Interface that watches the requested packages.
+func (c *packages) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	var timeout time.Duration
 	if opts.TimeoutSeconds != nil {
 		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
@@ -101,18 +101,18 @@ func (c *pkgs) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface,
 	opts.Watch = true
 	return c.client.Get().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Watch(ctx)
 }
 
 // Create takes the representation of a pkg and creates it.  Returns the server's representation of the pkg, and an error, if there is any.
-func (c *pkgs) Create(ctx context.Context, pkg *v1alpha1.Package, opts v1.CreateOptions) (result *v1alpha1.Package, err error) {
+func (c *packages) Create(ctx context.Context, pkg *v1alpha1.Package, opts v1.CreateOptions) (result *v1alpha1.Package, err error) {
 	result = &v1alpha1.Package{}
 	err = c.client.Post().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pkg).
 		Do(ctx).
@@ -121,11 +121,11 @@ func (c *pkgs) Create(ctx context.Context, pkg *v1alpha1.Package, opts v1.Create
 }
 
 // Update takes the representation of a pkg and updates it. Returns the server's representation of the pkg, and an error, if there is any.
-func (c *pkgs) Update(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (result *v1alpha1.Package, err error) {
+func (c *packages) Update(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (result *v1alpha1.Package, err error) {
 	result = &v1alpha1.Package{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		Name(pkg.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(pkg).
@@ -136,11 +136,11 @@ func (c *pkgs) Update(ctx context.Context, pkg *v1alpha1.Package, opts v1.Update
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *pkgs) UpdateStatus(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (result *v1alpha1.Package, err error) {
+func (c *packages) UpdateStatus(ctx context.Context, pkg *v1alpha1.Package, opts v1.UpdateOptions) (result *v1alpha1.Package, err error) {
 	result = &v1alpha1.Package{}
 	err = c.client.Put().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		Name(pkg.Name).
 		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -151,10 +151,10 @@ func (c *pkgs) UpdateStatus(ctx context.Context, pkg *v1alpha1.Package, opts v1.
 }
 
 // Delete takes name of the pkg and deletes it. Returns an error if one occurs.
-func (c *pkgs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *packages) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		Name(name).
 		Body(&opts).
 		Do(ctx).
@@ -162,14 +162,14 @@ func (c *pkgs) Delete(ctx context.Context, name string, opts v1.DeleteOptions) e
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *pkgs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
+func (c *packages) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
 	var timeout time.Duration
 	if listOpts.TimeoutSeconds != nil {
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
 		Body(&opts).
@@ -178,11 +178,11 @@ func (c *pkgs) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, list
 }
 
 // Patch applies the patch and returns the patched pkg.
-func (c *pkgs) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Package, err error) {
+func (c *packages) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.Package, err error) {
 	result = &v1alpha1.Package{}
 	err = c.client.Patch(pt).
 		Namespace(c.ns).
-		Resource("pkgs").
+		Resource("packages").
 		Name(name).
 		SubResource(subresources...).
 		VersionedParams(&opts, scheme.ParameterCodec).
