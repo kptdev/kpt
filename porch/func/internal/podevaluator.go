@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/func/evaluator"
-	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"google.golang.org/grpc"
@@ -421,8 +421,8 @@ func (pm *podManager) getFuncEvalPodClient(ctx context.Context, image string, tt
 	}
 }
 
-// imageEntrypoint get the entrypoint of a container image by looking at its metadata.
-func (pm *podManager) imageDigestAndEntrypoint(image string) (*digestAndEntrypoint, error) {
+// imageDigestAndEntrypoint gets the entrypoint of a container image by looking at its metadata.
+func (pm *podManager) imageDigestAndEntrypoint(ctx context.Context, image string) (*digestAndEntrypoint, error) {
 	start := time.Now()
 	defer func() {
 		klog.Infof("getting image metadata for %v took %v", image, time.Now().Sub(start))
@@ -432,7 +432,7 @@ func (pm *podManager) imageDigestAndEntrypoint(image string) (*digestAndEntrypoi
 	if err != nil {
 		return nil, err
 	}
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	img, err := remote.Image(ref, remote.WithAuthFromKeychain(gcrane.Keychain), remote.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -466,7 +466,7 @@ func (pm *podManager) retrieveOrCreatePod(ctx context.Context, image string, ttl
 	var err error
 	val, found := pm.imageMetadataCache.Load(image)
 	if !found {
-		de, err = pm.imageDigestAndEntrypoint(image)
+		de, err = pm.imageDigestAndEntrypoint(ctx, image)
 		if err != nil {
 			return client.ObjectKey{}, fmt.Errorf("unable to get the entrypoint for %v: %w", image, err)
 		}

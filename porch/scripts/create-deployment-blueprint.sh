@@ -46,6 +46,7 @@ FUNCTION_IMAGE=""
 WRAPPER_SERVER_IMAGE=""
 SERVER_SA=""
 CONTROLLERS_SA=""
+FUNCTION_RUNNER_SA=""
 PROJECT=""
 
 while [[ $# -gt 0 ]]; do
@@ -100,6 +101,7 @@ done
 # Defaults
 
 if [ -n "${PROJECT}" ]; then
+  FUNCTION_RUNNER_SA="${FUNCTION_RUNNER_SA:-iam.gke.io/gcp-service-account=porch-function-runner@${PROJECT}.iam.gserviceaccount.com}"
   CONTROLLERS_SA="${CONTROLLERS_SA:-iam.gke.io/gcp-service-account=porch-sync@${PROJECT}.iam.gserviceaccount.com}"
   SERVER_SA="${SERVER_SA:-iam.gke.io/gcp-service-account=porch-server@${PROJECT}.iam.gserviceaccount.com}"
 fi
@@ -203,6 +205,11 @@ function main() {
 
   if [ -n "${SERVER_SA}" ]; then
     customize-sa "porch-server" "${SERVER_SA}"
+  fi
+
+  if [ -n "${FUNCTION_RUNNER_SA}" ]; then
+    # TODO: Rename serviceaccount for consistency (avoid abbreviations?)
+    customize-sa "porch-fn-runner" "${FUNCTION_RUNNER_SA}"
   fi
 }
 
