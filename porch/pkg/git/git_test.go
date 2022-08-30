@@ -1190,7 +1190,7 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 			}
 
 			_ = revisions
-			draftPkg := findPackage(t, revisions, repository.PackageRevisionKey{
+			draftPkg := findPackageRevision(t, revisions, repository.PackageRevisionKey{
 				Repository: repositoryName,
 				Package:    tc.pkg,
 				Revision:   tc.revision,
