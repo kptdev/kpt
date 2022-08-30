@@ -202,7 +202,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		if err != nil {
 			t.Fatalf("UpdatePackageRevision(%#v failed: %v", original, err)
 		}
-		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished); err != nil {
+		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished, nil, nil); err != nil {
 			t.Fatalf("UpdateLifecycle failed: %v", err)
 		}
 		approved, err := update.Close(ctx)
@@ -661,7 +661,7 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
-	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
+	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished, nil, nil)
 
 	new, err := update.Close(ctx)
 	if err != nil {
@@ -719,7 +719,7 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
-	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
+	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished, nil, nil)
 
 	new, err := update.Close(ctx)
 	if err != nil {

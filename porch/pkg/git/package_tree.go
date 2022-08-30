@@ -54,7 +54,7 @@ type packageListEntry struct {
 // TODO: Can packageListEntry just _be_ a gitPackageRevision?
 func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision string, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	repo := p.parent.parent
-	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, revision)
+	meta, err := repo.loadMeta(ctx, p.parent.commit, p.path, revision)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 		ref:       ref,
 		tree:      p.treeHash,
 		commit:    p.parent.commit.Hash,
-		tasks:     tasks,
+		meta:      meta,
 	}, nil
 }
 

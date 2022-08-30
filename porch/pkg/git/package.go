@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/go-git/go-git/v5/plumbing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,7 +42,9 @@ type gitPackageRevision struct {
 	ref       *plumbing.Reference // ref is the Git reference at which the package exists
 	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
 	commit    plumbing.Hash       // Current version of the package (commit sha)
-	tasks     []v1alpha1.Task
+
+	// meta holds additional metadata beyond the content - tasks, labels, annotations etc
+	meta *meta.PackageMeta
 }
 
 var _ repository.PackageRevision = &gitPackageRevision{}
@@ -117,6 +120,8 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			CreationTimestamp: metav1.Time{
 				Time: p.updated,
 			},
+			Labels:      p.meta.Labels,
+			Annotations: p.meta.Annotations,
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    key.Package,
@@ -124,7 +129,7 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			RepositoryName: key.Repository,
 
 			Lifecycle: p.Lifecycle(),
-			Tasks:     p.tasks,
+			Tasks:     p.meta.Tasks,
 		},
 		Status: status,
 	}

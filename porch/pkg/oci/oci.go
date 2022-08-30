@@ -25,6 +25,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -136,11 +137,11 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 				}
 				p.lifecycle = lifecycle
 
-				tasks, err := r.loadTasks(ctx, p.digestName)
+				meta, err := r.loadMeta(ctx, p.digestName)
 				if err != nil {
 					return nil, err
 				}
-				p.tasks = tasks
+				p.meta = meta
 
 				if filter.Matches(p) {
 					result = append(result, p)
@@ -180,11 +181,11 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.Image
 	}
 	p.lifecycle = lifecycle
 
-	tasks, err := r.loadTasks(ctx, p.digestName)
+	meta, err := r.loadMeta(ctx, p.digestName)
 	if err != nil {
 		return nil, err
 	}
-	p.tasks = tasks
+	p.meta = meta
 
 	return p, nil
 }
@@ -325,9 +326,8 @@ type ociPackageRevision struct {
 
 	parent *ociRepository
 
-	tasks []v1alpha1.Task
-
 	lifecycle v1alpha1.PackageRevisionLifecycle
+	meta      *meta.PackageMeta
 }
 
 var _ repository.PackageRevision = &ociPackageRevision{}
@@ -393,6 +393,8 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			},
 			ResourceVersion: p.resourceVersion,
 			UID:             p.uid,
+			Labels:          p.meta.Labels,
+			Annotations:     p.meta.Annotations,
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    key.Package,
@@ -400,7 +402,7 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			RepositoryName: key.Repository,
 
 			Lifecycle: p.Lifecycle(),
-			Tasks:     p.tasks,
+			Tasks:     p.meta.Tasks,
 		},
 	}
 }

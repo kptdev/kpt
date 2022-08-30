@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -42,7 +43,9 @@ type gitPackageDraft struct {
 	branch    BranchName          // name of the branch where the changes will be pushed
 	commit    plumbing.Hash       // Current HEAD of the package changes (commit sha)
 	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
-	tasks     []v1alpha1.Task
+
+	// meta holds additional metadata beyond the content - tasks, labels, annotations etc
+	meta *meta.PackageMeta
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
@@ -70,15 +73,19 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 		}
 	}
 
-	annotation := &gitAnnotation{
+	annotation := &meta.Annotation{
 		PackagePath: d.path,
 		Revision:    d.revision,
 		Task:        change,
 	}
+	// TODO: Only set labels / annotations if changed
+	annotation.Labels = &d.meta.Labels
+	annotation.Annotations = &d.meta.Annotations
+
 	message := "Intermediate commit"
 	if change != nil {
 		message += fmt.Sprintf(": %s", change.Type)
-		d.tasks = append(d.tasks, *change)
+		d.meta.Tasks = append(d.meta.Tasks, *change)
 	}
 	message += "\n"
 
@@ -97,8 +104,10 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 	return nil
 }
 
-func (d *gitPackageDraft) UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error {
-	d.lifecycle = new
+func (d *gitPackageDraft) UpdateLifecycle(ctx context.Context, newLifecycle v1alpha1.PackageRevisionLifecycle, labels map[string]string, annotations map[string]string) error {
+	d.lifecycle = newLifecycle
+	d.meta.Labels = labels
+	d.meta.Annotations = annotations
 	return nil
 }
 
@@ -185,7 +194,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 		ref:      newRef,
 		tree:     d.tree,
 		commit:   newRef.Hash(),
-		tasks:    d.tasks,
+		meta:     d.meta,
 	}, nil
 }
 
@@ -255,7 +264,7 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 
 	// Add a commit without changes to mark that the package revision is approved. The gitAnnotation is
 	// included so that we can later associate the commit with the correct packagerevision.
-	message, err := AnnotateCommitMessage(fmt.Sprintf("Approve %s/%s", packagePath, d.revision), &gitAnnotation{
+	message, err := AnnotateCommitMessage(fmt.Sprintf("Approve %s/%s", packagePath, d.revision), &meta.Annotation{
 		PackagePath: packagePath,
 		Revision:    d.revision,
 	})

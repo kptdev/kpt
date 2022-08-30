@@ -17,7 +17,6 @@ package oci
 import (
 	"archive/tar"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/fs"
@@ -26,7 +25,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"go.opentelemetry.io/otel"
@@ -42,7 +41,7 @@ const (
 var tracer = otel.Tracer("oci")
 
 func (r *ociRepository) getLifecycle(ctx context.Context, imageRef oci.ImageDigestName) (v1alpha1.PackageRevisionLifecycle, error) {
-	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "ociRepository::getLifecycle", trace.WithAttributes(
 		attribute.Stringer("image", imageRef),
 	))
 	defer span.End()
@@ -70,8 +69,8 @@ func (r *ociRepository) getLifecycle(ctx context.Context, imageRef oci.ImageDige
 	}
 }
 
-func (r *ociRepository) loadTasks(ctx context.Context, imageRef oci.ImageDigestName) ([]api.Task, error) {
-	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(
+func (r *ociRepository) loadMeta(ctx context.Context, imageRef oci.ImageDigestName) (*meta.PackageMeta, error) {
+	ctx, span := tracer.Start(ctx, "ociRepository::loadMeta", trace.WithAttributes(
 		attribute.Stringer("image", imageRef),
 	))
 	defer span.End()
@@ -81,24 +80,32 @@ func (r *ociRepository) loadTasks(ctx context.Context, imageRef oci.ImageDigestN
 		return nil, fmt.Errorf("error fetching config for image: %w", err)
 	}
 
-	var tasks []api.Task
+	packageMeta := &meta.PackageMeta{}
 	for i := range configFile.History {
 		history := &configFile.History[i]
 		command := history.CreatedBy
 		if strings.HasPrefix(command, "kpt:") {
-			task := api.Task{}
 			b := []byte(strings.TrimPrefix(command, "kpt:"))
-			if err := json.Unmarshal(b, &task); err != nil {
-				klog.Warningf("failed to unmarshal task command %q: %w", command, err)
+			annotation, err := meta.ParseAnnotation(b)
+			if err != nil {
+				klog.Warningf("failed to unmarshal annotation %q: %w", command, err)
 				continue
 			}
-			tasks = append(tasks, task)
+			if annotation.Task != nil {
+				packageMeta.Tasks = append(packageMeta.Tasks, *annotation.Task)
+			}
+			if annotation.Labels != nil {
+				packageMeta.Labels = *annotation.Labels
+			}
+			if annotation.Annotations != nil {
+				packageMeta.Annotations = *annotation.Annotations
+			}
 		} else {
 			klog.Warningf("unknown task command in history %q", command)
 		}
 	}
 
-	return tasks, nil
+	return packageMeta, nil
 }
 
 func LookupImageTag(ctx context.Context, s *oci.Storage, imageName oci.ImageTagName) (*oci.ImageDigestName, error) {

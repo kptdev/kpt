@@ -29,6 +29,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/gcrane"
 	"github.com/google/go-containerregistry/pkg/name"
@@ -51,13 +52,17 @@ func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.Pack
 		return nil, err
 	}
 
+	meta := &meta.PackageMeta{
+		Tasks: []api.Task{},
+	}
+
 	// digestName := ImageDigestName{}
 	return &ociPackageDraft{
 		packageName: packageName,
 		parent:      r,
-		tasks:       []api.Task{},
 		base:        base,
 		tag:         ociRepo.Tag(obj.Spec.Revision),
+		meta:        meta,
 		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
 	}, nil
 }
@@ -89,13 +94,13 @@ func (r *ociRepository) UpdatePackageRevision(ctx context.Context, old repositor
 		return nil, fmt.Errorf("error fetching image %q: %w", ref, err)
 	}
 
+	newMeta := oldPackage.meta.DeepCopy()
 	return &ociPackageDraft{
 		packageName: packageName,
 		parent:      r,
-		tasks:       []api.Task{},
 		base:        base,
 		tag:         ociRepo.Tag(revision),
-		lifecycle:   oldPackage.Lifecycle(),
+		meta:        newMeta,
 	}, nil
 }
 
@@ -106,13 +111,17 @@ type ociPackageDraft struct {
 
 	parent *ociRepository
 
-	tasks []api.Task
+	base    v1.Image
+	tag     name.Tag
+	changes []mutation
 
-	base      v1.Image
-	tag       name.Tag
-	addendums []mutate.Addendum
+	lifecycle v1alpha1.PackageRevisionLifecycle
+	meta      *meta.PackageMeta
+}
 
-	lifecycle v1alpha1.PackageRevisionLifecycle // New value of the package revision lifecycle
+type mutation struct {
+	Layer v1.Layer
+	Task  *api.Task
 }
 
 var _ repository.PackageDraft = (*ociPackageDraft)(nil)
@@ -156,11 +165,6 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 		return fmt.Errorf("failed to write remote layer: %w", err)
 	}
 
-	taskJSON, err := json.Marshal(*task)
-	if err != nil {
-		return fmt.Errorf("failed to marshal task %T to json: %w", task, err)
-	}
-
 	digest, err := layer.Digest()
 	if err != nil {
 		return fmt.Errorf("failed to get layer digets: %w", err)
@@ -173,23 +177,51 @@ func (p *ociPackageDraft) UpdateResources(ctx context.Context, new *api.PackageR
 		return fmt.Errorf("failed to create remote layer from digest: %w", err)
 	}
 
-	p.addendums = append(p.addendums, mutate.Addendum{
+	p.changes = append(p.changes, mutation{
 		Layer: remoteLayer,
-		History: v1.History{
-			Author:    "kool kat",
-			Created:   v1.Time{Time: p.created},
-			CreatedBy: "kpt:" + string(taskJSON),
-		},
+		Task:  task,
 	})
-
-	p.tasks = append(p.tasks, *task)
+	p.meta.Tasks = append(p.meta.Tasks, *task)
 
 	return nil
 }
 
-func (p *ociPackageDraft) UpdateLifecycle(ctx context.Context, new api.PackageRevisionLifecycle) error {
-	p.lifecycle = new
+func (p *ociPackageDraft) UpdateLifecycle(ctx context.Context, newLifecycle api.PackageRevisionLifecycle, labels map[string]string, annotations map[string]string) error {
+	p.lifecycle = newLifecycle
+	p.meta.Labels = labels
+	p.meta.Annotations = annotations
 	return nil
+}
+
+func (p *ociPackageDraft) addEmptyLayer(ctx context.Context) (v1.Layer, error) {
+	ctx, span := tracer.Start(ctx, "ociPackageDraft::addEmptyLayer", trace.WithAttributes())
+	defer span.End()
+
+	buf := bytes.NewBuffer(nil)
+	writer := tar.NewWriter(buf)
+
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize oci package tar content: %w", err)
+	}
+
+	layer := stream.NewLayer(io.NopCloser(buf), stream.WithCompressionLevel(gzip.BestCompression))
+	if err := remote.WriteLayer(p.tag.Repository, layer, remote.WithAuthFromKeychain(gcrane.Keychain), remote.WithContext(ctx)); err != nil {
+		return nil, fmt.Errorf("failed to write remote layer: %w", err)
+	}
+
+	digest, err := layer.Digest()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get layer digets: %w", err)
+	}
+
+	remoteLayer, err := remote.Layer(
+		p.tag.Context().Digest(digest.String()),
+		remote.WithAuthFromKeychain(gcrane.Keychain), remote.WithContext(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create remote layer from digest: %w", err)
+	}
+
+	return remoteLayer, nil
 }
 
 // Finish round of updates.
@@ -202,24 +234,58 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 
 	klog.Infof("pushing %s", ref)
 
-	addendums := append([]mutate.Addendum{}, p.addendums...)
-	if p.lifecycle != "" {
-		if len(addendums) == 0 {
-			return nil, fmt.Errorf("cannot create empty layer")
-			// TODO: How do we create an empty layer ... failed to append image layers: unable to add a nil layer to the image
-			// Maybe https://github.com/google/go-containerregistry/blob/fc6ff852e45e4bfd4fe41e03d992118687d3ec21/pkg/v1/static/static_test.go#L28-L29
-			// addendums = append(addendums, mutate.Addendum{
-			// 	Annotations: map[string]string{
-			// 		annotationKeyLifecycle: string(p.lifecycle),
-			// 	},
-			// })
-		} else {
-			addendum := &addendums[len(addendums)-1]
-			if addendum.Annotations == nil {
-				addendum.Annotations = make(map[string]string)
-			}
-			addendum.Annotations[annotationKeyLifecycle] = string(p.lifecycle)
+	if len(p.changes) == 0 {
+		p.changes = append(p.changes, mutation{})
+	}
+
+	var addendums []mutate.Addendum
+	for i, change := range p.changes {
+		isLast := len(p.changes) == (i + 1)
+
+		annotation := &meta.Annotation{
+			Task: change.Task,
 		}
+
+		layer := change.Layer
+		if layer == nil {
+			l, err := p.addEmptyLayer(ctx)
+			if err != nil {
+				return nil, err
+			}
+			layer = l
+		}
+
+		addendum := mutate.Addendum{
+			Layer: layer,
+			History: v1.History{
+				Author:  "kpt",
+				Created: v1.Time{Time: p.created},
+			},
+		}
+
+		if isLast {
+			if p.lifecycle != "" {
+				if addendum.Annotations == nil {
+					addendum.Annotations = make(map[string]string)
+				}
+				addendum.Annotations[annotationKeyLifecycle] = string(p.lifecycle)
+			}
+			if true {
+				// TODO: Lazy?
+				annotation.Labels = &p.meta.Labels
+				annotation.Annotations = &p.meta.Annotations
+			}
+
+		}
+
+		annotationJSON, err := json.Marshal(*annotation)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal annotation: %w", err)
+		}
+		// TODO: Use an annotation?
+		addendum.History.CreatedBy = "kpt:" + string(annotationJSON)
+
+		addendums = append(addendums, addendum)
 	}
 
 	base := p.base

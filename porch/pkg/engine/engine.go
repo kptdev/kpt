@@ -115,7 +115,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	if err := draft.UpdateLifecycle(ctx, obj.Spec.Lifecycle); err != nil {
+	if err := draft.UpdateLifecycle(ctx, obj.Spec.Lifecycle, obj.Labels, obj.Annotations); err != nil {
 		return nil, err
 	}
 
@@ -332,7 +332,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		}
 	}
 
-	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle, newObj.Labels, newObj.Annotations); err != nil {
 		return nil, err
 	}
 
@@ -795,7 +795,7 @@ func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repo
 		return nil, err
 	}
 
-	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+	if err := draft.UpdateLifecycle(ctx, newObj.Spec.Lifecycle, newObj.Labels, newObj.Annotations); err != nil {
 		return nil, err
 	}
 

@@ -98,7 +98,7 @@ func TestPublishedLatest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("UpdatePackaeg(%s) failed: %v", bucket.Key(), err)
 	}
-	if err := update.UpdateLifecycle(ctx, api.PackageRevisionLifecyclePublished); err != nil {
+	if err := update.UpdateLifecycle(ctx, api.PackageRevisionLifecyclePublished, nil, nil); err != nil {
 		t.Fatalf("UpdateLifecycle failed; %v", err)
 	}
 	closed, err := update.Close(ctx)
