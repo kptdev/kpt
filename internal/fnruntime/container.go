@@ -285,17 +285,17 @@ func filterDockerCLIOutput(in io.Reader) string {
 // isdockerCLIoutput is helper method to determine if
 // the given string is a docker CLI output message.
 // Example docker output:
-//	"Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally"
-//  "v0.3: Pulling from kpt-fn/starlark"
-//  "4e9f2cdf4387: Already exists"
-//  "aafbf7df3ddf: Pulling fs layer"
-//  "aafbf7df3ddf: Verifying Checksum"
-//  "aafbf7df3ddf: Download complete"
-//  "6b759ab96cb2: Waiting"
-//  "aafbf7df3ddf: Pull complete"
-//  "Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a"
-//  "Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
 //
+//	"Unable to find image 'gcr.io/kpt-fn/starlark:v0.3' locally"
+//	"v0.3: Pulling from kpt-fn/starlark"
+//	"4e9f2cdf4387: Already exists"
+//	"aafbf7df3ddf: Pulling fs layer"
+//	"aafbf7df3ddf: Verifying Checksum"
+//	"aafbf7df3ddf: Download complete"
+//	"6b759ab96cb2: Waiting"
+//	"aafbf7df3ddf: Pull complete"
+//	"Digest: sha256:c347e28606fa1a608e8e02e03541a5a46e4a0152005df4a11e44f6c4ab1edd9a"
+//	"Status: Downloaded newer image for gcr.io/kpt-fn/starlark:v0.3"
 func isdockerCLIoutput(s string) bool {
 	if strings.Contains(s, ": Already exists") ||
 		strings.Contains(s, ": Pulling fs layer") ||
@@ -332,14 +332,14 @@ var sha256Matcher = regexp.MustCompile(`^[A-Fa-f0-9]{64}$`)
 // isPodmanCLIoutput is helper method to determine if
 // the given string is a podman CLI output message.
 // Example podman output:
-//  "Trying to pull gcr.io/kpt-fn/starlark:v0.3..."
-//  "Getting image source signatures"
-//  "Copying blob sha256:aafbf7df3ddf625f4ababc8e55b4a09131651f9aac340b852b5f40b1a53deb65"
-//  "Copying config sha256:17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
-//  "Writing manifest to image destination"
-//  "Storing signatures"
-//  "17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
 //
+//	"Trying to pull gcr.io/kpt-fn/starlark:v0.3..."
+//	"Getting image source signatures"
+//	"Copying blob sha256:aafbf7df3ddf625f4ababc8e55b4a09131651f9aac340b852b5f40b1a53deb65"
+//	"Copying config sha256:17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
+//	"Writing manifest to image destination"
+//	"Storing signatures"
+//	"17ce4f65660717ba0afbd143578dfd1c5b9822bd3ad3945c10d6878e057265f1"
 func isPodmanCLIoutput(s string) bool {
 	if strings.Contains(s, "Trying to pull") ||
 		strings.Contains(s, "Getting image source signatures") ||
