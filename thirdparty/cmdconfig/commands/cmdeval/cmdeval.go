@@ -36,6 +36,8 @@ import (
 // GetEvalFnRunner returns a EvalFnRunner.
 func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r := &EvalFnRunner{Ctx: ctx}
+	r.InitDefaults()
+
 	c := &cobra.Command{
 		Use:     "eval [DIR | -] [flags] [--fn-args]",
 		Short:   docs.EvalShort,
@@ -83,8 +85,13 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		"a list of environment variables to be used by functions")
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
-	r.Command.Flags().StringVar(&r.ImagePullPolicy, "image-pull-policy", string(fnruntime.IfNotPresentPull),
-		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+
+	r.Command.Flags().Var(&r.ImagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+r.ImagePullPolicy.HelpAllowedValues())
+	r.Command.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return r.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+	})
+
 	r.Command.Flags().BoolVar(
 		&r.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
 
@@ -141,7 +148,7 @@ type EvalFnRunner struct {
 	FnConfigPath         string
 	RunFns               runfn.RunFns
 	ResultsDir           string
-	ImagePullPolicy      string
+	ImagePullPolicy      fnruntime.ImagePullPolicy
 	Network              bool
 	Mounts               []string
 	Env                  []string
@@ -158,6 +165,10 @@ type EvalFnRunner struct {
 	selectorAnnotations []string
 	excludeLabels       []string
 	excludeAnnotations  []string
+}
+
+func (r *EvalFnRunner) InitDefaults() {
+	r.ImagePullPolicy = fnruntime.IfNotPresentPull
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
@@ -430,9 +441,6 @@ func (r *EvalFnRunner) validateOptionalFlags() error {
 		}
 	}
 
-	if err := cmdutil.ValidateImagePullPolicyValue(r.ImagePullPolicy); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -539,7 +547,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		AsCurrentUser:   r.AsCurrentUser,
 		FnConfig:        fnConfig,
 		FnConfigPath:    r.FnConfigPath,
-		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.ImagePullPolicy),
+		ImagePullPolicy: r.ImagePullPolicy,
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,

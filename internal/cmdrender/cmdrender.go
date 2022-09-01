@@ -36,6 +36,8 @@ import (
 // NewRunner returns a command runner
 func NewRunner(ctx context.Context, parent string) *Runner {
 	r := &Runner{ctx: ctx}
+	r.InitDefaults()
+
 	c := &cobra.Command{
 		Use:     "render [PKG_PATH] [flags]",
 		Short:   docs.RenderShort,
@@ -48,8 +50,13 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 		"path to a directory to save function results")
 	c.Flags().StringVarP(&r.dest, "output", "o", "",
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
-	c.Flags().StringVar(&r.imagePullPolicy, "image-pull-policy", string(fnruntime.IfNotPresentPull),
-		fmt.Sprintf("pull image before running the container. It must be one of %s, %s and %s.", fnruntime.AlwaysPull, fnruntime.IfNotPresentPull, fnruntime.NeverPull))
+
+	c.Flags().Var(&r.imagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+r.imagePullPolicy.HelpAllowedValues())
+	_ = c.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return r.imagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+	})
+
 	c.Flags().BoolVar(&r.allowExec, "allow-exec", false,
 		"allow binary executable to be run during pipeline execution.")
 	c.Flags().BoolVar(&r.allowWasm, "allow-alpha-wasm", false,
@@ -67,12 +74,16 @@ func NewCommand(ctx context.Context, parent string) *cobra.Command {
 type Runner struct {
 	pkgPath         string
 	resultsDirPath  string
-	imagePullPolicy string
+	imagePullPolicy fnruntime.ImagePullPolicy
 	allowExec       bool
 	allowWasm       bool
 	dest            string
 	Command         *cobra.Command
 	ctx             context.Context
+}
+
+func (r *Runner) InitDefaults() {
+	r.imagePullPolicy = fnruntime.IfNotPresentPull
 }
 
 func (r *Runner) preRunE(c *cobra.Command, args []string) error {
@@ -103,7 +114,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 			return fmt.Errorf("cannot read or create results dir %q: %w", r.resultsDirPath, err)
 		}
 	}
-	return cmdutil.ValidateImagePullPolicyValue(r.imagePullPolicy)
+	return nil
 }
 
 func (r *Runner) runE(c *cobra.Command, _ []string) error {
@@ -122,7 +133,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		PkgPath:         absPkgPath,
 		ResultsDirPath:  r.resultsDirPath,
 		Output:          output,
-		ImagePullPolicy: cmdutil.StringToImagePullPolicy(r.imagePullPolicy),
+		ImagePullPolicy: r.imagePullPolicy,
 		AllowExec:       r.allowExec,
 		AllowWasm:       r.allowWasm,
 		FileSystem:      filesys.FileSystemOrOnDisk{},

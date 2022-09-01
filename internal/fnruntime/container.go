@@ -54,18 +54,12 @@ const (
 	podmanBin  string = "podman"
 	nerdctlBin string = "nerdctl"
 
-	AlwaysPull       ImagePullPolicy = "Always"
-	IfNotPresentPull ImagePullPolicy = "IfNotPresent"
-	NeverPull        ImagePullPolicy = "Never"
-
 	ContainerRuntimeEnv = "KPT_FN_RUNTIME"
 
 	Docker  ContainerRuntime = "docker"
 	Podman  ContainerRuntime = "podman"
 	Nerdctl ContainerRuntime = "nerdctl"
 )
-
-type ImagePullPolicy string
 
 type ContainerRuntime string
 
