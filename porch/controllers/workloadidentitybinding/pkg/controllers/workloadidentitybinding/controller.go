@@ -43,6 +43,8 @@ type WorkloadIdentityBindingReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/finalizers,verbs=update
+//+kubebuilder:rbac:groups=,resources=namespaces,verbs=get;list;watch
+//+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

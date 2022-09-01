@@ -56,15 +56,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: porch-controllers
 rules:
+# Common
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["create", "patch"]
 - apiGroups: ["coordination.k8s.io"]
   resources: ["leases"]
   verbs: ["create", "delete", "get", "list", "patch", "update", "watch"]
+# Repository
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["repositories"]
   verbs: ["get", "list", "watch", "create", "update", "patch"]
+# RemoteRootSyncSet
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["remoterootsyncsets"]
   verbs: ["get", "list", "watch", "create", "update", "patch"]
@@ -74,6 +77,7 @@ rules:
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["remoterootsyncsets/finalizers"]
   verbs: ["update"]
+# RootSyncSet
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["rootsyncsets"]
   verbs: ["get", "list", "watch", "create", "update", "patch"]
@@ -82,15 +86,6 @@ rules:
   verbs: ["get", "list", "watch", "create", "update", "patch"]
 - apiGroups: ["config.porch.kpt.dev"]
   resources: ["rootsyncsets/finalizers"]
-  verbs: ["update"]
-- apiGroups: ["config.porch.kpt.dev"]
-  resources: ["workloadidentitybindings"]
-  verbs: ["get", "list", "watch", "create", "update", "patch"]
-- apiGroups: ["config.porch.kpt.dev"]
-  resources: ["workloadidentitybindings/status"]
-  verbs: ["get", "list", "watch", "create", "update", "patch"]
-- apiGroups: ["config.porch.kpt.dev"]
-  resources: ["workloadidentitybindings/finalizers"]
   verbs: ["update"]
 - apiGroups: ["configcontroller.cnrm.cloud.google.com"]
   resources: ["configcontrollerinstances"]
@@ -107,7 +102,22 @@ rules:
 - apiGroups: [""]
   resources: ["serviceaccounts/token"]
   verbs: ["create"]
-
+# WorkloadIdentityBinding
+- apiGroups: ["config.porch.kpt.dev"]
+  resources: ["workloadidentitybindings"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["config.porch.kpt.dev"]
+  resources: ["workloadidentitybindings/status"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["config.porch.kpt.dev"]
+  resources: ["workloadidentitybindings/finalizers"]
+  verbs: ["update"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["iam.cnrm.cloud.google.com"]
+  resources: ["iampolicymembers"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1
