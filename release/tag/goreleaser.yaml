@@ -31,7 +31,7 @@ builds:
     env:
       - CC=o64-clang
       - CXX=o64-clang++
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
 
   - id: darwin-arm64
     goos:
@@ -41,7 +41,7 @@ builds:
     env:
       - CC=oa64-clang
       - CXX=oa64-clang++
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
 
   - id: linux-amd64
     goos:
@@ -51,7 +51,7 @@ builds:
     env:
       - CC=x86_64-linux-gnu-gcc
       - CXX=x86_64-linux-gnu-g++
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
 
   - id: linux-arm64
     goos:
@@ -61,6 +61,8 @@ builds:
     env:
       - CC=aarch64-linux-gnu-gcc
       - CXX=aarch64-linux-gnu-g++
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
+
 dockers:
   - ids:
       - linux-amd64
