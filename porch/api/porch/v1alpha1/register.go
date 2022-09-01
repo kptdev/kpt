@@ -28,6 +28,7 @@ var (
 	localSchemeBuilder = &SchemeBuilder
 	AddToScheme        = localSchemeBuilder.AddToScheme
 
+	PackageGVR                  = SchemeGroupVersion.WithResource("packages")
 	PackageRevisionGVR          = SchemeGroupVersion.WithResource("packagerevisions")
 	PackageRevisionResourcesGVR = SchemeGroupVersion.WithResource("packagerevisionresources")
 	FunctionGVR                 = SchemeGroupVersion.WithResource("functions")
@@ -42,6 +43,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	// +kubebuilder:scaffold:install
 
 	scheme.AddKnownTypes(SchemeGroupVersion,
+		&Package{},
+		&PackageList{},
 		&PackageRevision{},
 		&PackageRevisionList{},
 		&PackageRevisionResources{},

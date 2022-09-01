@@ -17,6 +17,7 @@ package porch
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -73,7 +74,7 @@ func (r *packageRevisionResources) List(ctx context.Context, options *metaintern
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.PackageRevision) error {
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
 		item, err := p.GetResources(ctx)
 		if err != nil {
 			return err
@@ -92,7 +93,7 @@ func (r *packageRevisionResources) Get(ctx context.Context, name string, options
 	ctx, span := tracer.Start(ctx, "packageRevisionResources::Get", trace.WithAttributes())
 	defer span.End()
 
-	pkg, err := r.packageCommon.getPackage(ctx, name)
+	pkg, err := r.packageCommon.getPackageRevision(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackage(ctx, name)
+	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
@@ -154,7 +155,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(api.PackageRevisionResourcesGVR.GroupResource(), repositoryID.Name)
+			return nil, false, apierrors.NewNotFound(schema.GroupResource(api.PackageRevisionResourcesGVR.GroupResource()), repositoryID.Name)
 		}
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}

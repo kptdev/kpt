@@ -47,7 +47,12 @@ func (a *packageRevisionsApproval) NamespaceScoped() bool {
 }
 
 func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	return a.common.getPackageRevision(ctx, name, options)
+	pkg, err := a.common.getPackageRevision(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	obj := pkg.GetPackageRevision()
+	return obj, nil
 }
 
 // Update finds a resource in the storage and updates it. Some implementations

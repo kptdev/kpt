@@ -30,6 +30,10 @@ func (c *FakePorchV1alpha1) Functions(namespace string) v1alpha1.FunctionInterfa
 	return &FakeFunctions{c, namespace}
 }
 
+func (c *FakePorchV1alpha1) Packages(namespace string) v1alpha1.PackageInterface {
+	return &FakePackages{c, namespace}
+}
+
 func (c *FakePorchV1alpha1) PackageRevisions(namespace string) v1alpha1.PackageRevisionInterface {
 	return &FakePackageRevisions{c, namespace}
 }

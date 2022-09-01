@@ -36,6 +36,14 @@ func (n PackageRevisionKey) String() string {
 	return fmt.Sprintf("Repository: %q, Package: %q, Revision: %q", n.Repository, n.Package, n.Revision)
 }
 
+type PackageKey struct {
+	Repository, Package string
+}
+
+func (n PackageKey) String() string {
+	return fmt.Sprintf("Repository: %q, Package: %q", n.Repository, n.Package)
+}
+
 // PackageRevision is an abstract package version.
 // We have a single object for both Revision and Resources, because conceptually they are one object.
 // The best way we've found (so far) to represent them in k8s is as two resources, but they map to the same object.
@@ -66,6 +74,23 @@ type PackageRevision interface {
 	GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
 }
 
+// Package is an abstract package.
+type Package interface {
+	// KubeObjectName returns an encoded name for the object that should be unique.
+	// More "readable" values are returned by Key()
+	KubeObjectName() string
+
+	// Key returns the "primary key" of the package.
+	Key() PackageKey
+
+	// GetPackage returns the object representing this package
+	GetPackage() *v1alpha1.Package
+
+	// GetLatestRevision returns the name of the package revision that is the "latest" package
+	// revision belonging to this package
+	GetLatestRevision() string
+}
+
 type PackageDraft interface {
 	UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, task *v1alpha1.Task) error
 	// Updates desired lifecycle of the package. The lifecycle is applied on Close.
@@ -93,7 +118,7 @@ type ListPackageRevisionFilter struct {
 	Revision string
 }
 
-// Matches returns true if the provided PackageRevision satisifies the conditions in the filter.
+// Matches returns true if the provided PackageRevision satisfies the conditions in the filter.
 func (f *ListPackageRevisionFilter) Matches(p PackageRevision) bool {
 	if f.Package != "" && f.Package != p.Key().Package {
 		return false
@@ -107,9 +132,31 @@ func (f *ListPackageRevisionFilter) Matches(p PackageRevision) bool {
 	return true
 }
 
+// ListPackageFilter is a predicate for filtering Package objects;
+// only matching Package objects will be returned.
+type ListPackageFilter struct {
+	// KubeObjectName matches the generated kubernetes object name.
+	KubeObjectName string
+
+	// Package matches the name of the package (spec.package)
+	Package string
+}
+
+// Matches returns true if the provided Package satisfies the conditions in the filter.
+func (f *ListPackageFilter) Matches(p Package) bool {
+	if f.Package != "" && f.Package != p.Key().Package {
+		return false
+	}
+	if f.KubeObjectName != "" && f.KubeObjectName != p.KubeObjectName() {
+		return false
+	}
+	return true
+}
+
 // Repository is the interface for interacting with packages in repositories
 // TODO: we may need interface to manage repositories too. Stay tuned.
 type Repository interface {
+	// ListPackageRevisions lists the existing package revisions in the repository
 	ListPackageRevisions(ctx context.Context, filter ListPackageRevisionFilter) ([]PackageRevision, error)
 
 	// CreatePackageRevision creates a new package revision
@@ -118,8 +165,17 @@ type Repository interface {
 	// DeletePackageRevision deletes a package revision
 	DeletePackageRevision(ctx context.Context, old PackageRevision) error
 
-	// UpdatePackage updates a package
-	UpdatePackage(ctx context.Context, old PackageRevision) (PackageDraft, error)
+	// UpdatePackageRevision updates a package
+	UpdatePackageRevision(ctx context.Context, old PackageRevision) (PackageDraft, error)
+
+	// ListPackages lists all packages in the repository
+	ListPackages(ctx context.Context, filter ListPackageFilter) ([]Package, error)
+
+	// CreatePackage creates a new package
+	CreatePackage(ctx context.Context, obj *v1alpha1.Package) (Package, error)
+
+	// DeletePackage deletes a package
+	DeletePackage(ctx context.Context, old Package) error
 }
 
 type FunctionRepository interface {

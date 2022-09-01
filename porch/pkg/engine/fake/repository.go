@@ -25,7 +25,10 @@ import (
 // TODO(mortent): Implement stub functionality for all functions from the interface.
 type Repository struct {
 	PackageRevisions []repository.PackageRevision
+	Packages         []repository.Package
 }
+
+var _ repository.Repository = &Repository{}
 
 func (r *Repository) ListPackageRevisions(context.Context, repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	return r.PackageRevisions, nil
@@ -39,6 +42,18 @@ func (r *Repository) DeletePackageRevision(context.Context, repository.PackageRe
 	return nil
 }
 
-func (r *Repository) UpdatePackage(context.Context, repository.PackageRevision) (repository.PackageDraft, error) {
+func (r *Repository) UpdatePackageRevision(context.Context, repository.PackageRevision) (repository.PackageDraft, error) {
 	return nil, nil
+}
+
+func (r *Repository) ListPackages(context.Context, repository.ListPackageFilter) ([]repository.Package, error) {
+	return r.Packages, nil
+}
+
+func (r *Repository) CreatePackage(_ context.Context, pr *v1alpha1.Package) (repository.Package, error) {
+	return nil, nil
+}
+
+func (r *Repository) DeletePackage(_ context.Context, pr repository.Package) error {
+	return nil
 }

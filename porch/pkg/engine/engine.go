@@ -40,11 +40,16 @@ var tracer = otel.Tracer("engine")
 
 type CaDEngine interface {
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
+	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
+	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
+
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
-	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
 	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj repository.PackageRevision) error
-	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
+
+	CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error)
+	UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, old, new *api.Package) (repository.Package, error)
+	DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, obj repository.Package) error
 }
 
 func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
@@ -306,7 +311,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	// Re-render if we are making changes.
 	mutations = cad.conditionalAddRender(mutations)
 
-	draft, err := repo.UpdatePackage(ctx, oldPackage)
+	draft, err := repo.UpdatePackageRevision(ctx, oldPackage)
 	if err != nil {
 		return nil, err
 	}
@@ -370,6 +375,47 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 	return nil
 }
 
+func (cad *cadEngine) CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::CreatePackage", trace.WithAttributes())
+	defer span.End()
+
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
+	if err != nil {
+		return nil, err
+	}
+	pkg, err := repo.CreatePackage(ctx, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return pkg, nil
+}
+
+func (cad *cadEngine) UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, oldObj, newObj *api.Package) (repository.Package, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackage", trace.WithAttributes())
+	defer span.End()
+
+	// TODO
+	var pkg repository.Package
+	return pkg, fmt.Errorf("Updating packages is not yet supported")
+}
+
+func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package) error {
+	ctx, span := tracer.Start(ctx, "cadEngine::DeletePackage", trace.WithAttributes())
+	defer span.End()
+
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
+	if err != nil {
+		return err
+	}
+
+	if err := repo.DeletePackage(ctx, oldPackage); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
@@ -392,7 +438,7 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		return nil, err
 	}
 
-	draft, err := repo.UpdatePackage(ctx, oldPackage)
+	draft, err := repo.UpdatePackageRevision(ctx, oldPackage)
 	if err != nil {
 		return nil, err
 	}

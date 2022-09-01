@@ -24,6 +24,8 @@ import (
 type Interface interface {
 	// Functions returns a FunctionInformer.
 	Functions() FunctionInformer
+	// Packages returns a PackageInformer.
+	Packages() PackageInformer
 	// PackageRevisions returns a PackageRevisionInformer.
 	PackageRevisions() PackageRevisionInformer
 	// PackageRevisionResources returns a PackageRevisionResourcesInformer.
@@ -44,6 +46,11 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // Functions returns a FunctionInformer.
 func (v *version) Functions() FunctionInformer {
 	return &functionInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// Packages returns a PackageInformer.
+func (v *version) Packages() PackageInformer {
+	return &packageInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // PackageRevisions returns a PackageRevisionInformer.

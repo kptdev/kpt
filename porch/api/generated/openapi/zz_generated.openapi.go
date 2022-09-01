@@ -39,9 +39,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitLock":                      schema_porch_api_porch_v1alpha1_GitLock(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitPackage":                   schema_porch_api_porch_v1alpha1_GitPackage(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.OciPackage":                   schema_porch_api_porch_v1alpha1_OciPackage(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Package":                      schema_porch_api_porch_v1alpha1_Package(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec":         schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec":          schema_porch_api_porch_v1alpha1_PackageEditTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec":          schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageList":                  schema_porch_api_porch_v1alpha1_PackageList(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec":         schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevision":              schema_porch_api_porch_v1alpha1_PackageRevision(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionList":          schema_porch_api_porch_v1alpha1_PackageRevisionList(ref),
@@ -51,6 +53,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec": schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":          schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":        schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageSpec":                  schema_porch_api_porch_v1alpha1_PackageSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageStatus":                schema_porch_api_porch_v1alpha1_PackageStatus(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageUpdateTaskSpec":        schema_porch_api_porch_v1alpha1_PackageUpdateTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":              schema_porch_api_porch_v1alpha1_ParentReference(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec":                    schema_porch_api_porch_v1alpha1_PatchSpec(ref),
@@ -562,6 +566,53 @@ func schema_porch_api_porch_v1alpha1_OciPackage(ref common.ReferenceCallback) co
 	}
 }
 
+func schema_porch_api_porch_v1alpha1_Package(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Package",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
 func schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -655,6 +706,55 @@ func schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref common.ReferenceCal
 				},
 			},
 		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PackageList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PackageList",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
+						},
+					},
+					"items": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Package"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Package", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
 	}
 }
 
@@ -1034,6 +1134,53 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 		},
 		Dependencies: []string{
 			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PackageSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PackageSpec defines the desired state of Package",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"packageName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PackageName identifies the package in the repository.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"repository": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RepositoryName is the name of the Repository object containing this package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PackageStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PackageStatus defines the observed state of Package",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"latestRevision": {
+						SchemaProps: spec.SchemaProps{
+							Description: "LatestRevision identifies the package revision that is the latest published package revision belonging to this package",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

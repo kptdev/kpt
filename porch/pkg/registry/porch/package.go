@@ -20,7 +20,6 @@ import (
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
@@ -31,52 +30,50 @@ import (
 	"k8s.io/klog/v2"
 )
 
-var tracer = otel.Tracer("apiserver")
-
-type packageRevisions struct {
+type packages struct {
 	packageCommon
 	rest.TableConvertor
 }
 
-var _ rest.Storage = &packageRevisions{}
-var _ rest.Lister = &packageRevisions{}
-var _ rest.Getter = &packageRevisions{}
-var _ rest.Scoper = &packageRevisions{}
-var _ rest.Creater = &packageRevisions{}
-var _ rest.Updater = &packageRevisions{}
-var _ rest.GracefulDeleter = &packageRevisions{}
+var _ rest.Storage = &packages{}
+var _ rest.Lister = &packages{}
+var _ rest.Getter = &packages{}
+var _ rest.Scoper = &packages{}
+var _ rest.Creater = &packages{}
+var _ rest.Updater = &packages{}
+var _ rest.GracefulDeleter = &packages{}
 
-func (r *packageRevisions) New() runtime.Object {
-	return &api.PackageRevision{}
+func (r *packages) New() runtime.Object {
+	return &api.Package{}
 }
 
-func (r *packageRevisions) NewList() runtime.Object {
-	return &api.PackageRevisionList{}
+func (r *packages) NewList() runtime.Object {
+	return &api.PackageList{}
 }
 
-func (r *packageRevisions) NamespaceScoped() bool {
+func (r *packages) NamespaceScoped() bool {
 	return true
 }
 
 // List selects resources in the storage which match to the selector. 'options' can be nil.
-func (r *packageRevisions) List(ctx context.Context, options *metainternalversion.ListOptions) (runtime.Object, error) {
-	ctx, span := tracer.Start(ctx, "packageRevisions::List", trace.WithAttributes())
+func (r *packages) List(ctx context.Context, options *metainternalversion.ListOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packages::List", trace.WithAttributes())
 	defer span.End()
 
-	result := &api.PackageRevisionList{
+	result := &api.PackageList{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "PackageRevisionList",
+			Kind:       "PackageList",
 			APIVersion: api.SchemeGroupVersion.Identifier(),
 		},
 	}
 
-	filter, err := parsePackageRevisionFieldSelector(options.FieldSelector)
+	filter, err := parsePackageFieldSelector(options.FieldSelector)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
-		item := p.GetPackageRevision()
+	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.Package) error {
+		item := p.GetPackage()
 		result.Items = append(result.Items, *item)
 		return nil
 	}); err != nil {
@@ -87,22 +84,22 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 }
 
 // Get implements the Getter interface
-func (r *packageRevisions) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	ctx, span := tracer.Start(ctx, "packageRevisions::Get", trace.WithAttributes())
+func (r *packages) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packages::Get", trace.WithAttributes())
 	defer span.End()
 
-	pkg, err := r.getPackageRevision(ctx, name)
+	pkg, err := r.getPackage(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	obj := pkg.GetPackageRevision()
+	obj := pkg.GetPackage()
 	return obj, nil
 }
 
 // Create implements the Creater interface.
-func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
-	ctx, span := tracer.Start(ctx, "packageRevisions::Create", trace.WithAttributes())
+func (r *packages) Create(ctx context.Context, runtimeObject runtime.Object, createValidation rest.ValidateObjectFunc, options *metav1.CreateOptions) (runtime.Object, error) {
+	ctx, span := tracer.Start(ctx, "packages::Create", trace.WithAttributes())
 	defer span.End()
 
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
@@ -110,9 +107,9 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	obj, ok := runtimeObject.(*api.PackageRevision)
+	obj, ok := runtimeObject.(*api.Package)
 	if !ok {
-		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", runtimeObject))
+		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected Package object, got %T", runtimeObject))
 	}
 
 	// TODO: Accpept some form of client-provided name, for example using GenerateName
@@ -124,7 +121,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 
 	repositoryName := obj.Spec.RepositoryName
 	if repositoryName == "" {
-		return nil, apierrors.NewBadRequest("spec.repositoryName is required")
+		return nil, apierrors.NewBadRequest("spec.repository is required")
 	}
 
 	repositoryObj, err := r.packageCommon.getRepositoryObj(ctx, ns, repositoryName)
@@ -134,15 +131,15 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 
 	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
 	if len(fieldErrors) > 0 {
-		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), obj.Name, fieldErrors)
+		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("Package").GroupKind(), obj.Name, fieldErrors)
 	}
 
-	rev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, obj)
+	rev, err := r.cad.CreatePackage(ctx, repositoryObj, obj)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
 
-	created := rev.GetPackageRevision()
+	created := rev.GetPackage()
 	return created, nil
 }
 
@@ -151,11 +148,11 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 // Update finds a resource in the storage and updates it. Some implementations
 // may allow updates creates the object - they should set the created boolean
 // to true.
-func (r *packageRevisions) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
-	ctx, span := tracer.Start(ctx, "packageRevisions::Update", trace.WithAttributes())
+func (r *packages) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
+	ctx, span := tracer.Start(ctx, "packages::Update", trace.WithAttributes())
 	defer span.End()
 
-	return r.packageCommon.updatePackageRevision(ctx, name, objInfo, createValidation, updateValidation, forceAllowCreate, options)
+	return r.packageCommon.updatePackage(ctx, name, objInfo, createValidation, updateValidation, forceAllowCreate, options)
 }
 
 // Delete implements the GracefulDeleter interface.
@@ -169,27 +166,29 @@ func (r *packageRevisions) Update(ctx context.Context, name string, objInfo rest
 // information about deletion.
 // It also returns a boolean which is set to true if the resource was instantly
 // deleted or false if it will be deleted asynchronously.
-func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
-	ctx, span := tracer.Start(ctx, "packageRevisions::Delete", trace.WithAttributes())
+func (r *packages) Delete(ctx context.Context, name string, deleteValidation rest.ValidateObjectFunc, options *metav1.DeleteOptions) (runtime.Object, bool, error) {
+	ctx, span := tracer.Start(ctx, "packages::Delete", trace.WithAttributes())
 	defer span.End()
+
+	// TODO: Verify options are empty?
 
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
 	if !namespaced {
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
+	oldPackage, err := r.packageCommon.getPackage(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
 
-	oldObj := oldPackage.GetPackageRevision()
+	oldObj := oldPackage.GetPackage()
 	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, oldObj, name, ns)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if err := r.cad.DeletePackageRevision(ctx, repositoryObj, oldPackage); err != nil {
+	if err := r.cad.DeletePackage(ctx, repositoryObj, oldPackage); err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
 

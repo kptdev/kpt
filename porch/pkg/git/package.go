@@ -255,3 +255,5 @@ func (p *gitPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 		return v1alpha1.PackageRevisionLifecyclePublished
 	}
 }
+
+// TODO: Define a type `gitPackage` to implement the Repository.Package interface

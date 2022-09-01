@@ -28,6 +28,18 @@ import (
 )
 
 func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad engine.CaDEngine, coreClient client.WithWatch) (genericapiserver.APIGroupInfo, error) {
+	packages := &packages{
+		TableConvertor: packageTableConvertor,
+		packageCommon: packageCommon{
+			scheme:         scheme,
+			cad:            cad,
+			gr:             porch.Resource("packages"),
+			coreClient:     coreClient,
+			updateStrategy: packageStrategy{},
+			createStrategy: packageStrategy{},
+		},
+	}
+
 	packageRevisions := &packageRevisions{
 		TableConvertor: packageRevisionTableConvertor,
 		packageCommon: packageCommon{
@@ -71,6 +83,7 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 
 	group.VersionedResourcesStorageMap = map[string]map[string]rest.Storage{
 		apiv1alpha1.SchemeGroupVersion.Version: {
+			"packages":                  packages,
 			"packagerevisions":          packageRevisions,
 			"packagerevisions/approval": packageRevisionsApproval,
 			"packagerevisionresources":  packageRevisionResources,
@@ -78,6 +91,15 @@ func NewRESTStorage(scheme *runtime.Scheme, codecs serializer.CodecFactory, cad 
 		},
 	}
 
+	{
+		gvk := schema.GroupVersionKind{
+			Group:   apiv1alpha1.GroupName,
+			Version: apiv1alpha1.SchemeGroupVersion.Version,
+			Kind:    "Package",
+		}
+
+		scheme.AddFieldLabelConversionFunc(gvk, convertPackageFieldSelector)
+	}
 	{
 		gvk := schema.GroupVersionKind{
 			Group:   apiv1alpha1.GroupName,

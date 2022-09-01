@@ -192,15 +192,15 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 			t.Fatalf("ListPackageRevisons failed: %v", err)
 		}
 
-		original := findPackage(t, revisions, repository.PackageRevisionKey{
+		original := findPackageRevision(t, revisions, repository.PackageRevisionKey{
 			Repository: repositoryName,
 			Package:    packageName,
 			Revision:   revision,
 		})
 
-		update, err := repo.UpdatePackage(ctx, original)
+		update, err := repo.UpdatePackageRevision(ctx, original)
 		if err != nil {
-			t.Fatalf("UpdatePackage(%#v failed: %v", original, err)
+			t.Fatalf("UpdatePackageRevision(%#v failed: %v", original, err)
 		}
 		if err := update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished); err != nil {
 			t.Fatalf("UpdateLifecycle failed: %v", err)
@@ -218,9 +218,9 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		version := "v123"
 
 		path := "test-package"
-		packageRevision, gitLock, err := repo.GetPackage(ctx, version, path)
+		packageRevision, gitLock, err := repo.GetPackageRevision(ctx, version, path)
 		if err != nil {
-			t.Fatalf("GetPackage(%q, %q) failed: %v", version, path, err)
+			t.Fatalf("GetPackageRevision(%q, %q) failed: %v", version, path, err)
 		}
 
 		t.Logf("packageRevision is %s", packageRevision.KubeObjectName())
@@ -646,7 +646,7 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
 
-	bucket := findPackage(t, revisions, repository.PackageRevisionKey{
+	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
 		Repository: repositoryName,
 		Package:    "bucket",
 		Revision:   "v1",
@@ -656,9 +656,9 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	refMustExist(t, repo, draft.RefInRemote())
 	refMustNotExist(t, repo, finalReferenceName)
 
-	update, err := git.UpdatePackage(ctx, bucket)
+	update, err := git.UpdatePackageRevision(ctx, bucket)
 	if err != nil {
-		t.Fatalf("UpdatePackage failed: %v", err)
+		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
 	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
@@ -704,7 +704,7 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
 	}
 
-	bucket := findPackage(t, revisions, repository.PackageRevisionKey{
+	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
 		Repository: repositoryName,
 		Package:    "pkg-with-history",
 		Revision:   "v1",
@@ -714,9 +714,9 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 	refMustExist(t, repo, draft.RefInRemote())
 	refMustNotExist(t, repo, finalReferenceName)
 
-	update, err := git.UpdatePackage(ctx, bucket)
+	update, err := git.UpdatePackageRevision(ctx, bucket)
 	if err != nil {
-		t.Fatalf("UpdatePackage failed: %v", err)
+		t.Fatalf("UpdatePackageRevision failed: %v", err)
 	}
 
 	update.UpdateLifecycle(ctx, v1alpha1.PackageRevisionLifecyclePublished)
@@ -870,7 +870,7 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	}
 
 	// Confirm we listed some package(s)
-	findPackage(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens", Revision: "v2"})
+	findPackageRevision(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens", Revision: "v2"})
 	packageMustNotExist(t, all, newPackageName)
 
 	// Create package in the upstream repository
@@ -921,7 +921,7 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ListPackageRevisions(Refresh) failed; %v", err)
 	}
-	findPackage(t, all, newPackageName)
+	findPackageRevision(t, all, newPackageName)
 }
 
 // The test deletes packages on the upstream one by one and validates they were
@@ -1190,7 +1190,7 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 			}
 
 			_ = revisions
-			draftPkg := findPackage(t, revisions, repository.PackageRevisionKey{
+			draftPkg := findPackageRevision(t, revisions, repository.PackageRevisionKey{
 				Repository: repositoryName,
 				Package:    tc.pkg,
 				Revision:   tc.revision,
