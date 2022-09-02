@@ -105,7 +105,6 @@ func NewRunner(
 					fltr.Run = wFn.Run
 				} else {
 					cfn := &ContainerFn{
-						Path:            pkgPath,
 						Image:           f.Image,
 						ImagePullPolicy: imagePullPolicy,
 						Ctx:             ctx,
