@@ -6,7 +6,7 @@ commands:
       - --namespace=rpkg-init-deploy
       - --name=git
       - --deployment
-      - http://git-server.test-git-namespace.svc.cluster.local:8080
+      - http://git-server.test-git-namespace.svc.cluster.local:8080/rpkg-init-deploy
   - args:
       - alpha
       - repo
@@ -76,4 +76,4 @@ commands:
       - --namespace=rpkg-init-deploy
     stdout: |
       NAME   TYPE   CONTENT   DEPLOYMENT   READY   ADDRESS
-      git    git    Package   true         True    http://git-server.test-git-namespace.svc.cluster.local:8080
+      git    git    Package   true         True    http://git-server.test-git-namespace.svc.cluster.local:8080/rpkg-init-deploy

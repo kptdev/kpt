@@ -5,7 +5,7 @@ commands:
       - register
       - --namespace=rpkg-clone
       - --name=git
-      - http://git-server.test-git-namespace.svc.cluster.local:8080
+      - http://git-server.test-git-namespace.svc.cluster.local:8080/rpkg-clone
   - args:
       - alpha
       - rpkg
