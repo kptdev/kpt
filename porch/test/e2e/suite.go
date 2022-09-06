@@ -176,7 +176,7 @@ func (t *TestSuite) CreateGitRepo() GitConfig {
 	} else {
 		// Deploy Git server via k8s client.
 		t.Logf("not using dev porch; creating git server in cluster")
-		return t.createInClusterGitServer()
+		return t.createInClusterGitServer(context.TODO())
 	}
 }
 
@@ -317,16 +317,10 @@ func createLocalGitServer(t *testing.T) GitConfig {
 		}
 	})
 
-	isBare := true
-	repo, err := gogit.PlainInit(tmp, isBare)
-	if err != nil {
-		t.Fatalf("Failed to initialize Git repository in %q: %v", tmp, err)
-		return GitConfig{}
-	}
+	var gitRepoOptions []git.GitRepoOption
+	repos := git.NewDynamicRepos(tmp, gitRepoOptions)
 
-	createInitialCommit(t, repo)
-
-	server, err := git.NewGitServer(repo)
+	server, err := git.NewGitServer(repos)
 	if err != nil {
 		t.Fatalf("Failed to start git server: %v", err)
 		return GitConfig{}
@@ -412,9 +406,7 @@ func createInitialCommit(t *testing.T, repo *gogit.Repository) {
 	}
 }
 
-func (t *TestSuite) createInClusterGitServer() GitConfig {
-	ctx := context.TODO()
-
+func (t *TestSuite) createInClusterGitServer(ctx context.Context) GitConfig {
 	// Determine git-server image name. Use the same container registry and tag as the Porch server,
 	// replacing base image name with `git-server`. TODO: Make configurable?
 
@@ -528,21 +520,50 @@ func (t *TestSuite) createInClusterGitServer() GitConfig {
 	for {
 		time.Sleep(5 * time.Second)
 
-		var server appsv1.Deployment
+		var deployment appsv1.Deployment
 		t.GetF(ctx, client.ObjectKey{
 			Namespace: t.namespace,
 			Name:      "git-server",
-		}, &server)
-		if server.Status.AvailableReplicas > 0 {
-			t.Logf("git server is up")
+		}, &deployment)
+
+		ready := true
+		if ready && deployment.Generation != deployment.Status.ObservedGeneration {
+			t.Logf("waiting for ObservedGeneration %v to match Generation %v", deployment.Status.ObservedGeneration, deployment.Generation)
+			ready = false
+		}
+		if ready && deployment.Status.UpdatedReplicas < deployment.Status.Replicas {
+			t.Logf("waiting for UpdatedReplicas %d to match Replicas %d", deployment.Status.UpdatedReplicas, deployment.Status.Replicas)
+			ready = false
+		}
+		if ready && deployment.Status.AvailableReplicas < deployment.Status.Replicas {
+			t.Logf("waiting for AvailableReplicas %d to match Replicas %d", deployment.Status.AvailableReplicas, deployment.Status.Replicas)
+			ready = false
+		}
+
+		if ready {
+			ready = false // Until we've seen Available condition
+			for _, condition := range deployment.Status.Conditions {
+				if condition.Type == "Available" {
+					ready = true
+					if condition.Status != "True" {
+						t.Logf("waiting for status.condition %v", condition)
+						ready = false
+					}
+				}
+			}
+		}
+
+		if ready {
 			break
 		}
 
 		if time.Now().After(giveUp) {
-			t.Fatalf("git server failed to start: %s", &server)
+			t.Fatalf("git server failed to start: %s", &deployment)
 			return GitConfig{}
 		}
 	}
+
+	t.Logf("git server is up")
 
 	t.Logf("Waiting for git-server-service to be ready ...")
 

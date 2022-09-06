@@ -74,14 +74,21 @@ func Run(suite interface{}, t *testing.T) {
 
 type PorchSuite struct {
 	TestSuite
-	config GitConfig
+
+	gitConfig GitConfig
 }
 
 var _ Initializer = &PorchSuite{}
 
 func (p *PorchSuite) Initialize(ctx context.Context) {
 	p.TestSuite.Initialize(ctx)
-	p.config = p.CreateGitRepo()
+	p.gitConfig = p.CreateGitRepo()
+}
+
+func (p *PorchSuite) GitConfig(repoID string) GitConfig {
+	config := p.gitConfig
+	config.Repo = config.Repo + "/" + repoID
+	return config
 }
 
 func (t *PorchSuite) TestGitRepository(ctx context.Context) {
@@ -1497,7 +1504,8 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, dir
 type repositoryOption func(*configapi.Repository)
 
 func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string, opts ...repositoryOption) {
-	config := t.config
+	repoID := t.namespace + "-" + name
+	config := t.GitConfig(repoID)
 
 	var secret string
 	// Create auth secret if necessary

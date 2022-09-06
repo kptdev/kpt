@@ -124,7 +124,19 @@ func ServeGitRepository(t *testing.T, tarfile, tempdir string) (*gogit.Repositor
 func ServeExistingRepository(t *testing.T, git *gogit.Repository) string {
 	t.Helper()
 
-	server, err := NewGitServer(git)
+	repo, err := NewRepo(git)
+	if err != nil {
+		t.Fatalf("NewRepo failed: %v", err)
+	}
+
+	key := "default"
+
+	repos := NewStaticRepos()
+	if err := repos.Add(key, repo); err != nil {
+		t.Fatalf("repos.Add failed: %v", err)
+	}
+
+	server, err := NewGitServer(repos)
 	if err != nil {
 		t.Fatalf("NewGitServer() failed: %v", err)
 	}
@@ -152,7 +164,7 @@ func ServeExistingRepository(t *testing.T, git *gogit.Repository) string {
 	if !ok {
 		t.Fatalf("Git Server failed to start")
 	}
-	return "http://" + address.String()
+	return "http://" + address.String() + "/" + key
 }
 
 func extractTar(t *testing.T, tarfile string, dir string) {

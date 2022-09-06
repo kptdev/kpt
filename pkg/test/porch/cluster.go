@@ -115,13 +115,17 @@ func KubectlWaitForService(t *testing.T, namespace, name string) {
 
 // Kubernetes DNS needs time to propagate the updated address
 // Wait until we can register the repository and list its contents.
-func KubectlWaitForGitDNS(t *testing.T, address string) {
+func KubectlWaitForGitDNS(t *testing.T, gitServerURL string) {
 	const name = "test-git-dns-resolve"
 
 	KubectlCreateNamespace(t, name)
 	defer KubectlDeleteNamespace(t, name)
 
-	cmd := exec.Command("kpt", "alpha", "repo", "register", "--namespace", name, "--name", name, address)
+	// We expect repos to automatically be created (albeit empty)
+	repoURL := gitServerURL + "/" + name
+
+	cmd := exec.Command("kpt", "alpha", "repo", "register", "--namespace", name, "--name", name, repoURL)
+	t.Logf("running command %v", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to register probe repository: %v\n%s", err, string(out))
@@ -134,8 +138,9 @@ func KubectlWaitForGitDNS(t *testing.T, address string) {
 	giveUp := time.Now().Add(1 * time.Minute)
 	for {
 		cmd := exec.Command("kpt", "alpha", "rpkg", "get", "--namespace", name)
+		t.Logf("running command %v", strings.Join(cmd.Args, " "))
 		out, err := cmd.CombinedOutput()
-		t.Log(string(out))
+		t.Logf("output: %v", string(out))
 
 		if err == nil {
 			break
@@ -151,27 +156,30 @@ func KubectlWaitForGitDNS(t *testing.T, address string) {
 
 func KubectlCreateNamespace(t *testing.T, name string) {
 	cmd := exec.Command("kubectl", "create", "namespace", name)
+	t.Logf("running command %v", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("Failed to create namespace %q: %v\n%s", name, err, string(out))
 	}
-	t.Log(string(out))
+	t.Logf("output: %v", string(out))
 }
 
 func KubectlDeleteNamespace(t *testing.T, name string) {
 	cmd := exec.Command("kubectl", "delete", "namespace", name)
+	t.Logf("running command %v", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Logf("Failed to delete namespace %q: %v\n%s", name, err, string(out))
 	}
-	t.Log(string(out))
+	t.Logf("output: %v", string(out))
 }
 
-func RegisterRepository(t *testing.T, address, namespace, name string) {
-	cmd := exec.Command("kpt", "alpha", "repo", "register", "--namespace", namespace, "--name", name, address)
+func RegisterRepository(t *testing.T, repoURL, namespace, name string) {
+	cmd := exec.Command("kpt", "alpha", "repo", "register", "--namespace", namespace, "--name", name, repoURL)
+	t.Logf("running command %v", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Failed to register repository %q: %v\n%s", address, err, string(out))
+		t.Fatalf("Failed to register repository %q: %v\n%s", repoURL, err, string(out))
 	}
-	t.Log(string(out))
+	t.Logf("output: %v", string(out))
 }

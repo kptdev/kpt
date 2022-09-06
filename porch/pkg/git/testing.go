@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	gogit "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/format/packfile"
@@ -40,21 +39,19 @@ import (
 
 // GitServer is a mock git server implementing "just enough" of the git protocol
 type GitServer struct {
-	repo *gogit.Repository
-
-	// Basic auth
-	username string
-	password string
+	repos Repos
 }
 
 // NewGitServer constructs a GitServer backed by the specified repo.
-func NewGitServer(repo *gogit.Repository, opts ...GitServerOption) (*GitServer, error) {
+func NewGitServer(repos Repos, opts ...GitServerOption) (*GitServer, error) {
 	gs := &GitServer{
-		repo: repo,
+		repos: repos,
 	}
 
 	for _, opt := range opts {
-		opt.apply(gs)
+		if err := opt.apply(gs); err != nil {
+			return nil, err
+		}
 	}
 
 	return gs, nil
@@ -106,23 +103,40 @@ func (s *GitServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // serveRequest is the main dispatcher for http requests.
 func (s *GitServer) serveRequest(w http.ResponseWriter, r *http.Request) error {
-	if s.username != "" || s.password != "" {
-		username, password, ok := r.BasicAuth()
-		if !ok || username != s.username || password != s.password {
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+	pathTokens := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
+	if len(pathTokens) > 1 {
+		repoID := pathTokens[0]
+		repo, err := s.repos.FindRepo(r.Context(), repoID)
+		if err != nil {
+			klog.Warningf("500 for %s %s: %v", r.Method, r.URL, err)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return nil
+
+		}
+		if repo == nil {
+			// TODO: Should we send something consistent with auth failure?
+			klog.Warningf("404 for %s %s (repo not found)", r.Method, r.URL)
+			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			return nil
 		}
-	}
 
-	path := r.URL.Path
-	if path == "/info/refs" {
-		return s.serveGitInfoRefs(w, r)
-	}
-	if path == "/git-upload-pack" {
-		return s.serveGitUploadPack(w, r)
-	}
-	if path == "/git-receive-pack" {
-		return s.serveGitReceivePack(w, r)
+		if repo.username != "" || repo.password != "" {
+			username, password, ok := r.BasicAuth()
+			if !ok || username != repo.username || password != repo.password {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return nil
+			}
+		}
+		gitPath := strings.Join(pathTokens[1:], "/")
+		if gitPath == "info/refs" {
+			return s.serveGitInfoRefs(w, r, repo)
+		}
+		if gitPath == "git-upload-pack" {
+			return s.serveGitUploadPack(w, r, repo)
+		}
+		if gitPath == "git-receive-pack" {
+			return s.serveGitReceivePack(w, r, repo)
+		}
 	}
 
 	klog.Warningf("404 for %s %s", r.Method, r.URL)
@@ -131,7 +145,7 @@ func (s *GitServer) serveRequest(w http.ResponseWriter, r *http.Request) error {
 }
 
 // serveGitInfoRefs serves the info/refs (discovery) endpoint
-func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) error {
+func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request, repo *Repo) error {
 	query := r.URL.Query()
 	serviceName := query.Get("service")
 
@@ -150,7 +164,7 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 	}
 
 	// We send an advertisement for each of our references
-	it, err := s.repo.References()
+	it, err := repo.gogit.References()
 	if err != nil {
 		return fmt.Errorf("failed to get git references: %w", err)
 	}
@@ -163,7 +177,7 @@ func (s *GitServer) serveGitInfoRefs(w http.ResponseWriter, r *http.Request) err
 		// Resolve symbolic references.
 		switch ref.Type() {
 		case plumbing.SymbolicReference:
-			if r, err := s.repo.Reference(ref.Name(), true); err != nil {
+			if r, err := repo.gogit.Reference(ref.Name(), true); err != nil {
 				klog.Warningf("Skipping unresolvable symbolic reference %q: %v", ref.Name(), err)
 				return nil
 			} else {
@@ -255,7 +269,7 @@ func writeRefs(gw *PacketLineWriter, sorted []*plumbing.Reference, capabilities 
 }
 
 // serveGitUploadPack serves the git-upload-pack endpoint
-func (s *GitServer) serveGitUploadPack(w http.ResponseWriter, r *http.Request) error {
+func (s *GitServer) serveGitUploadPack(w http.ResponseWriter, r *http.Request, repo *Repo) error {
 	// See https://git-scm.com/docs/pack-protocol/2.2.3#_packfile_negotiation
 
 	// The client sends a line for each sha it wants and each sha it has
@@ -276,7 +290,7 @@ func (s *GitServer) serveGitUploadPack(w http.ResponseWriter, r *http.Request) e
 	// This works, and is correct on the "clean pull" scenario, but is not efficient in the real world.
 
 	// Gather all the objects
-	walker := newObjectWalker(s.repo.Storer)
+	walker := newObjectWalker(repo.gogit.Storer)
 	if err := walker.walkAllRefs(); err != nil {
 		return fmt.Errorf("error walking refs: %w", err)
 	}
@@ -298,7 +312,7 @@ func (s *GitServer) serveGitUploadPack(w http.ResponseWriter, r *http.Request) e
 	klog.Infof("sending %d objects in packfile", len(objects))
 
 	useRefDeltas := false
-	storer := s.repo.Storer
+	storer := repo.gogit.Storer
 
 	// TODO: Buffer on disk first?
 	packFileEncoder := packfile.NewEncoder(w, storer, useRefDeltas)
@@ -328,7 +342,7 @@ type RefUpdate struct {
 	Ref  string
 }
 
-func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request) error {
+func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request, repo *Repo) error {
 	var refUpdates []RefUpdate
 
 	body := r.Body
@@ -413,7 +427,7 @@ func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request) 
 
 	gitWriter := NewPacketLineWriter(w)
 
-	switch err := packfile.UpdateObjectStorage(s.repo.Storer, body); err {
+	switch err := packfile.UpdateObjectStorage(repo.gogit.Storer, body); err {
 	case nil, packfile.ErrEmptyPackfile:
 		// ok
 	default:
@@ -439,11 +453,11 @@ func (s *GitServer) serveGitReceivePack(w http.ResponseWriter, r *http.Request) 
 		switch {
 		case refUpdate.To.IsZero():
 			klog.Infof("Deleting reference %s", refUpdate.Ref)
-			s.repo.Storer.RemoveReference(plumbing.ReferenceName(refUpdate.Ref))
+			repo.gogit.Storer.RemoveReference(plumbing.ReferenceName(refUpdate.Ref))
 
 		default:
 			ref := plumbing.NewHashReference(plumbing.ReferenceName(refUpdate.Ref), refUpdate.To)
-			if err := s.repo.Storer.SetReference(ref); err != nil {
+			if err := repo.gogit.Storer.SetReference(ref); err != nil {
 				klog.Warningf("failed to update reference %v: %v", refUpdate, err)
 			} else {
 				klog.Warningf("updated reference %v -> %v", refUpdate.Ref, refUpdate.To)
@@ -630,20 +644,5 @@ func (w *PacketLineWriter) WriteZeroPacketLine() {
 // Options
 
 type GitServerOption interface {
-	apply(*GitServer)
-}
-
-type optionBasicAuth struct {
-	username, password string
-}
-
-func (o *optionBasicAuth) apply(s *GitServer) {
-	s.username, s.password = o.username, o.password
-}
-
-func WithBasicAuth(username, password string) GitServerOption {
-	return &optionBasicAuth{
-		username: username,
-		password: password,
-	}
+	apply(*GitServer) error
 }
