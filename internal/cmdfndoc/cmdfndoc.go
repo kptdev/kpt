@@ -65,12 +65,16 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	r.Image = fnruntime.AddDefaultImagePathPrefix(c.Context(), r.Image)
+	// TODO: We probably should be going through the runner
+	image, err := fnruntime.ResolveToImageForCLI(c.Context(), r.Image)
+	if err != nil {
+		return err
+	}
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
 		"--rm", // delete the container afterward
-		r.Image,
+		image,
 		"--help",
 	}
 	// If the env var is empty, stringToContainerRuntime defaults it to docker.

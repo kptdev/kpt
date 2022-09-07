@@ -216,9 +216,11 @@ apiVersion: v1
 			args: []string{"eval", dir, "--results-dir", "foo/", "--image", "foo:bar", "--", "a=b", "c=d", "e=f"},
 			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  dir,
-				ResultsDir:            "foo/",
-				ImagePullPolicy:       fnruntime.IfNotPresentPull,
+				Path:       dir,
+				ResultsDir: "foo/",
+				RunnerOptions: fnruntime.RunnerOptions{
+					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -256,8 +258,10 @@ apiVersion: v1
 			args: []string{"eval", dir, "--env", "FOO=BAR", "-e", "BAR", "--image", "foo:bar"},
 			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  dir,
-				ImagePullPolicy:       fnruntime.IfNotPresentPull,
+				Path: dir,
+				RunnerOptions: fnruntime.RunnerOptions{
+					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				},
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -280,9 +284,11 @@ apiVersion: v1
 			args: []string{"eval", dir, "--as-current-user", "--image", "foo:bar"},
 			path: dir,
 			expectedStruct: &runfn.RunFns{
-				Path:                  dir,
-				AsCurrentUser:         true,
-				ImagePullPolicy:       fnruntime.IfNotPresentPull,
+				Path:          dir,
+				AsCurrentUser: true,
+				RunnerOptions: fnruntime.RunnerOptions{
+					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
 				Ctx:                   context.TODO(),
@@ -364,46 +370,42 @@ apiVersion: v1
 			}
 
 			// check if Input was set
-			if !assert.Equal(t, tt.input, r.RunFns.Input) {
+			if !assert.Equal(t, tt.input, r.runFns.Input) {
 				t.FailNow()
 			}
 
 			// check if Output was set
-			if !assert.Equal(t, tt.output, r.RunFns.Output) {
+			if !assert.Equal(t, tt.output, r.runFns.Output) {
 				t.FailNow()
 			}
 
 			// check if Path was set
-			if !assert.Equal(t, tt.path, r.RunFns.Path) {
+			if !assert.Equal(t, tt.path, r.runFns.Path) {
 				t.FailNow()
 			}
 
 			// check if Network was set
 			if tt.network {
-				if !assert.Equal(t, tt.network, r.RunFns.Network) {
+				if !assert.Equal(t, tt.network, r.runFns.Network) {
 					t.FailNow()
 				}
 			} else {
-				if !assert.Equal(t, false, r.RunFns.Network) {
+				if !assert.Equal(t, false, r.runFns.Network) {
 					t.FailNow()
 				}
 			}
 
-			if !assert.Equal(t, tt.fnConfigPath, r.RunFns.FnConfigPath) {
+			if !assert.Equal(t, tt.fnConfigPath, r.runFns.FnConfigPath) {
 				t.FailNow()
 			}
 
-			if !assert.Equal(t, r.RunFns, r.RunFns) {
-				t.FailNow()
-			}
-
-			if !assert.Equal(t, toStorageMounts(tt.mount), r.RunFns.StorageMounts) {
+			if !assert.Equal(t, toStorageMounts(tt.mount), r.runFns.StorageMounts) {
 				t.FailNow()
 			}
 
 			// check if function config was set
 			if tt.expectedFnConfig != "" {
-				actual := strings.TrimSpace(r.RunFns.FnConfig.MustString())
+				actual := strings.TrimSpace(r.runFns.FnConfig.MustString())
 				if !assert.Equal(t, strings.TrimSpace(tt.expectedFnConfig), actual) {
 					t.FailNow()
 				}
@@ -411,26 +413,27 @@ apiVersion: v1
 
 			// check if function was set
 			if tt.expectedFn != nil {
-				if !assert.NotNil(t, r.RunFns.Function) {
+				if !assert.NotNil(t, r.runFns.Function) {
 					t.FailNow()
 				}
-				if !assert.EqualValues(t, tt.expectedFn, r.RunFns.Function) {
+				if !assert.EqualValues(t, tt.expectedFn, r.runFns.Function) {
 					t.FailNow()
 				}
 			}
 
 			// check if exec arguments were set
 			if len(tt.expectedExecArgs) != 0 {
-				if !assert.EqualValues(t, tt.expectedExecArgs, r.RunFns.ExecArgs) {
+				if !assert.EqualValues(t, tt.expectedExecArgs, r.runFns.ExecArgs) {
 					t.FailNow()
 				}
 			}
 
 			if tt.expectedStruct != nil {
-				r.RunFns.Function = nil
-				r.RunFns.FnConfig = nil
+				r.runFns.Function = nil
+				r.runFns.FnConfig = nil
+				r.runFns.RunnerOptions.ResolveToImage = nil
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
-				if !assert.Equal(t, *tt.expectedStruct, r.RunFns) {
+				if !assert.Equal(t, *tt.expectedStruct, r.runFns) {
 					t.FailNow()
 				}
 			}
@@ -457,7 +460,7 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	r.Command.SetArgs([]string{"foo", "-i", "bar:v0.1"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.RunFns.Path)
+	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.runFns.Path)
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.

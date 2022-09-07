@@ -86,14 +86,14 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().BoolVar(
 		&r.AsCurrentUser, "as-current-user", false, "use the uid and gid that kpt is running with to run the function in the container")
 
-	r.Command.Flags().Var(&r.ImagePullPolicy, "image-pull-policy",
-		"pull image before running the container "+r.ImagePullPolicy.HelpAllowedValues())
-	r.Command.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return r.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
+	r.Command.Flags().Var(&r.RunnerOptions.ImagePullPolicy, "image-pull-policy",
+		"pull image before running the container "+r.RunnerOptions.ImagePullPolicy.HelpAllowedValues())
+	_ = r.Command.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return r.RunnerOptions.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
 	})
 
 	r.Command.Flags().BoolVar(
-		&r.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
+		&r.RunnerOptions.AllowWasm, "allow-alpha-wasm", false, "allow alpha wasm functions to be run. If true, you can specify a wasm image with --image flag or a path to a wasm file (must have the .wasm file extension) with --exec flag.")
 
 	// selector flags
 	r.Command.Flags().StringVar(
@@ -146,33 +146,34 @@ type EvalFnRunner struct {
 	FnType               string
 	Exec                 string
 	FnConfigPath         string
-	RunFns               runfn.RunFns
 	ResultsDir           string
-	ImagePullPolicy      fnruntime.ImagePullPolicy
 	Network              bool
 	Mounts               []string
 	Env                  []string
 	AsCurrentUser        bool
 	IncludeMetaResources bool
-	AllowWasm            bool
 	Ctx                  context.Context
 	Selector             kptfile.Selector
 	Exclusion            kptfile.Selector
 	dataItems            []string
+
+	RunnerOptions fnruntime.RunnerOptions
 
 	// we will need to parse these values into Selector and Exclusion
 	selectorLabels      []string
 	selectorAnnotations []string
 	excludeLabels       []string
 	excludeAnnotations  []string
+
+	runFns runfn.RunFns
 }
 
 func (r *EvalFnRunner) InitDefaults() {
-	r.ImagePullPolicy = fnruntime.IfNotPresentPull
+	r.RunnerOptions.InitDefaults()
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
-	err := runner.HandleError(r.Ctx, r.RunFns.Execute())
+	err := runner.HandleError(r.Ctx, r.runFns.Execute())
 	if err != nil {
 		return err
 	}
@@ -203,7 +204,7 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 	}
 	if r.FnConfigPath != "" {
 		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
-		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.RunFns.Path)
+		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.runFns.Path)
 		newFn.ConfigPath, _ = filepath.Rel(pkgAbsPath, fnConfigAbsPath)
 	} else {
 		data := map[string]string{}
@@ -256,7 +257,7 @@ func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Functi
 // SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` or `pipeline.validators` .
 func (r *EvalFnRunner) SaveFnToKptfile() {
 	pr := printer.FromContextOrDie(r.Ctx)
-	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.RunFns.Path)
+	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.runFns.Path)
 	if err != nil {
 		pr.Printf("function not added: Kptfile not exists\n")
 		return
@@ -281,7 +282,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 	// When saving function to Kptfile, the functionConfig should be the relative path
 	// to the kpt package, not the relative path to the current working dir.
 	// error handling are ignored since they have been validated in preRunE.
-	if err := kptfileutil.WriteFile(r.RunFns.Path, mutatedKfAsYNode); err != nil {
+	if err := kptfileutil.WriteFile(r.runFns.Path, mutatedKfAsYNode); err != nil {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
@@ -291,7 +292,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 // preserveCommentsAndFieldOrder syncs the mutated Kptfile with the original to preserve
 // comments and field order, and returns the result as a yaml Node
 func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml.Node, error) {
-	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.RunFns.Path, kptfile.KptFileName))
+	kfAsRNode, err := yaml.ReadFile(filepath.Join(r.runFns.Path, kptfile.KptFileName))
 	if err != nil {
 		return nil, fmt.Errorf("could not read Kptfile: %v", err)
 	}
@@ -315,9 +316,18 @@ func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit
 // function config
-func (r *EvalFnRunner) getCLIFunctionConfig(dataItems []string) (*yaml.RNode, error) {
+func (r *EvalFnRunner) getCLIFunctionConfig(ctx context.Context, dataItems []string) (*yaml.RNode, error) {
 	if r.Image == "" && r.Exec == "" {
 		return nil, nil
+	}
+
+	// TODO: This probably doesn't belong here, but moving it changes the test output
+	if r.Image != "" {
+		img, err := r.RunnerOptions.ResolveToImage(ctx, r.Image)
+		if err != nil {
+			return nil, err
+		}
+		r.Image = img
 	}
 
 	var err error
@@ -457,9 +467,6 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if r.Image == "" && r.Exec == "" {
 		return errors.Errorf("must specify --image or --exec")
 	}
-	if r.Image != "" {
-		r.Image = fnruntime.AddDefaultImagePathPrefix(c.Context(), r.Image)
-	}
 	var dataItems []string
 	if c.ArgsLenAtDash() >= 0 {
 		dataItems = append(dataItems, args[c.ArgsLenAtDash():]...)
@@ -475,7 +482,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(dataItems) > 0 && r.FnConfigPath != "" {
 		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
-	fnConfig, err := r.getCLIFunctionConfig(dataItems)
+	fnConfig, err := r.getCLIFunctionConfig(c.Context(), dataItems)
 	if err != nil {
 		return err
 	}
@@ -532,28 +539,27 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 		}
 	}
 	r.parseSelectors()
-	r.RunFns = runfn.RunFns{
-		Ctx:             r.Ctx,
-		Function:        fnSpec,
-		ExecArgs:        execArgs,
-		OriginalExec:    r.Exec,
-		Output:          output,
-		Input:           input,
-		Path:            path,
-		Network:         r.Network,
-		StorageMounts:   storageMounts,
-		ResultsDir:      r.ResultsDir,
-		Env:             r.Env,
-		AsCurrentUser:   r.AsCurrentUser,
-		FnConfig:        fnConfig,
-		FnConfigPath:    r.FnConfigPath,
-		ImagePullPolicy: r.ImagePullPolicy,
+	r.runFns = runfn.RunFns{
+		Ctx:           r.Ctx,
+		Function:      fnSpec,
+		ExecArgs:      execArgs,
+		OriginalExec:  r.Exec,
+		Output:        output,
+		Input:         input,
+		Path:          path,
+		Network:       r.Network,
+		StorageMounts: storageMounts,
+		ResultsDir:    r.ResultsDir,
+		Env:           r.Env,
+		AsCurrentUser: r.AsCurrentUser,
+		FnConfig:      fnConfig,
+		FnConfigPath:  r.FnConfigPath,
 		// fn eval should remove all files when all resources
 		// are deleted.
 		ContinueOnEmptyResult: true,
-		AllowWasm:             r.AllowWasm,
 		Selector:              r.Selector,
 		Exclusion:             r.Exclusion,
+		RunnerOptions:         r.RunnerOptions,
 	}
 
 	return nil

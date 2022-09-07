@@ -102,11 +102,12 @@ spec:
 		t.Errorf("Failed to write file: %v", err)
 	}
 	r := render.Renderer{
-		PkgPath:         "/a/b/c",
-		ImagePullPolicy: fnruntime.IfNotPresentPull,
-		FileSystem:      fs,
-		Runtime:         &runtime{},
+		PkgPath:    "/a/b/c",
+		FileSystem: fs,
+		Runtime:    &runtime{},
 	}
+	r.RunnerOptions.InitDefaults()
+	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
@@ -215,11 +216,13 @@ spec:
 	}
 
 	r := render.Renderer{
-		PkgPath:         "/app",
-		ImagePullPolicy: fnruntime.IfNotPresentPull,
-		FileSystem:      fs,
-		Runtime:         &runtime{},
+		PkgPath:    "/app",
+		FileSystem: fs,
+		Runtime:    &runtime{},
 	}
+	r.RunnerOptions.InitDefaults()
+	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
+
 	err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
