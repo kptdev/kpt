@@ -15,7 +15,7 @@
 package resolver
 
 import (
-	"github.com/GoogleContainerTools/kpt/internal/cmdliveinit"
+	initialization "github.com/GoogleContainerTools/kpt/commands/live/init"
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
@@ -138,7 +138,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var invExistsError *cmdliveinit.InvExistsError
+	var invExistsError *initialization.InvExistsError
 	if errors.As(err, &invExistsError) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, map[string]interface{}{
@@ -147,7 +147,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var invInfoInRGAlreadyExistsError *cmdliveinit.InvInRGExistsError
+	var invInfoInRGAlreadyExistsError *initialization.InvInRGExistsError
 	if errors.As(err, &invInfoInRGAlreadyExistsError) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(invInfoInRGAlreadyExistsMsg, map[string]interface{}{
@@ -156,7 +156,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var invInKfExistsError *cmdliveinit.InvInKfExistsError
+	var invInKfExistsError *initialization.InvInKfExistsError
 	if errors.As(err, &invInKfExistsError) {
 		return ResolvedResult{
 			Message: ExecuteTemplate(invInfoInKfAlreadyExistsMsg, map[string]interface{}{

@@ -18,6 +18,10 @@ import (
 	"context"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha"
+	"github.com/GoogleContainerTools/kpt/commands/fn"
+	"github.com/GoogleContainerTools/kpt/commands/live"
+	"github.com/GoogleContainerTools/kpt/commands/pkg"
 	"github.com/spf13/cobra"
 )
 
@@ -32,10 +36,10 @@ func NormalizeCommand(c ...*cobra.Command) {
 // GetKptCommands returns the set of kpt commands to be registered
 func GetKptCommands(ctx context.Context, name, version string) []*cobra.Command {
 	var c []*cobra.Command
-	fnCmd := GetFnCommand(ctx, name)
-	pkgCmd := GetPkgCommand(ctx, name)
-	liveCmd := GetLiveCommand(ctx, name, version)
-	alphaCmd := GetAlphaCommand(ctx, name, version)
+	fnCmd := fn.GetCommand(ctx, name)
+	pkgCmd := pkg.GetCommand(ctx, name)
+	liveCmd := live.GetCommand(ctx, name, version)
+	alphaCmd := alpha.GetCommand(ctx, name, version)
 
 	c = append(c, pkgCmd, fnCmd, liveCmd, alphaCmd)
 
