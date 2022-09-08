@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/options"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +31,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
-	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/get"
@@ -43,7 +43,7 @@ const (
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx:        ctx,
-		cfg:        rcg,
+		getFlags:   options.Get{ConfigFlags: rcg},
 		printFlags: get.NewGetPrintFlags(),
 	}
 	cmd := &cobra.Command{
@@ -63,9 +63,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	cmd.Flags().StringVar(&r.packageName, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
 	cmd.Flags().StringVar(&r.revision, "revision", "", "Revision of the packages to get. Any package whose revision matches this value will be included in the results.")
 
-	cmd.Flags().BoolVarP(&r.AllNamespaces, "all-namespaces", "A", r.AllNamespaces,
-		"If present, list the requested object(s) across all namespaces. Namespace in current context is ignored even if specified with --namespace.")
-
+	r.getFlags.AddFlags(cmd)
 	r.printFlags.AddFlags(cmd)
 	return r
 }
@@ -75,31 +73,21 @@ func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.
 }
 
 type runner struct {
-	ctx     context.Context
-	cfg     *genericclioptions.ConfigFlags
-	Command *cobra.Command
+	ctx      context.Context
+	getFlags options.Get
+	Command  *cobra.Command
 
 	// Flags
-	packageName   string
-	revision      string
-	printFlags    *get.PrintFlags
-	AllNamespaces bool
+	packageName string
+	revision    string
+	printFlags  *get.PrintFlags
 
 	requestTable bool
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
-	if *r.cfg.Namespace == "" {
-		// Get the namespace from kubeconfig
-		namespace, _, err := r.cfg.ToRawKubeConfigLoader().Namespace()
-		if err != nil {
-			return fmt.Errorf("error getting namespace: %w", err)
-		}
-		r.cfg.Namespace = &namespace
-	}
-
 	// Print the namespace if we're spanning namespaces
-	if r.AllNamespaces {
+	if r.getFlags.AllNamespaces {
 		r.printFlags.HumanReadableFlags.WithNamespace = true
 	}
 
@@ -116,8 +104,10 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
 	var objs []runtime.Object
-	b := resource.NewBuilder(r.cfg).
-		NamespaceParam(*r.cfg.Namespace).AllNamespaces(r.AllNamespaces)
+	b, err := r.getFlags.ResourceBuilder()
+	if err != nil {
+		return err
+	}
 
 	if r.requestTable {
 		scheme := runtime.NewScheme()
