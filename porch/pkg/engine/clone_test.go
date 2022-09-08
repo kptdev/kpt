@@ -115,8 +115,14 @@ func createRepoWithContents(t *testing.T, contentDir string) *gogit.Repository {
 	return repo
 }
 
-func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerOption) string {
-	server, err := git.NewGitServer(repo, opts...)
+func startGitServer(t *testing.T, repo *git.Repo, opts ...git.GitServerOption) string {
+	key := "default"
+	repos := git.NewStaticRepos()
+	if err := repos.Add(key, repo); err != nil {
+		t.Fatalf("repos.Add failed: %v", err)
+	}
+
+	server, err := git.NewGitServer(repos)
 	if err != nil {
 		t.Fatalf("Failed to create git server: %v", err)
 	}
@@ -150,7 +156,7 @@ func startGitServer(t *testing.T, repo *gogit.Repository, opts ...git.GitServerO
 		return ""
 	}
 
-	return fmt.Sprintf("http://%s", address)
+	return fmt.Sprintf("http://%s/%s", address, key)
 }
 
 // TODO(mortent): See if we can restruture the packages to
@@ -205,8 +211,14 @@ func TestCloneGitBasicAuth(t *testing.T) {
 	}
 
 	auth := randomCredentials()
-	repo := createRepoWithContents(t, testdata)
-	addr := startGitServer(t, repo, git.WithBasicAuth(auth.username, auth.password))
+	gogitRepo := createRepoWithContents(t, testdata)
+
+	repo, err := git.NewRepo(gogitRepo, git.WithBasicAuth(auth.username, auth.password))
+	if err != nil {
+		t.Fatalf("NewRepo failed: %v", err)
+	}
+
+	addr := startGitServer(t, repo)
 
 	cpm := clonePackageMutation{
 		task: &v1alpha1.Task{

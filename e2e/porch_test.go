@@ -33,9 +33,8 @@ import (
 )
 
 const (
-	updateGoldenFiles    = "UPDATE_GOLDEN_FILES"
-	testGitNamespace     = "test-git-namespace"
-	gitRepositoryAddress = "http://git-server." + testGitNamespace + ".svc.cluster.local:8080"
+	updateGoldenFiles = "UPDATE_GOLDEN_FILES"
+	testGitNamespace  = "test-git-namespace"
 )
 
 func TestPorch(t *testing.T) {
@@ -47,7 +46,7 @@ func TestPorch(t *testing.T) {
 }
 
 func runTests(t *testing.T, path string) {
-	git := startGitServer(t, path)
+	gitServerURL := startGitServer(t, path)
 	testCases := scanTestCases(t, path)
 
 	for _, tc := range testCases {
@@ -55,19 +54,20 @@ func runTests(t *testing.T, path string) {
 			if tc.Skip != "" {
 				t.Skipf("Skipping test: %s", tc.Skip)
 			}
-			runTestCase(t, git, tc)
+			repoURL := gitServerURL + "/" + strings.ReplaceAll(tc.TestCase, "/", "-")
+			runTestCase(t, repoURL, tc)
 		})
 	}
 }
 
-func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
+func runTestCase(t *testing.T, repoURL string, tc porch.TestCaseConfig) {
 	porch.KubectlCreateNamespace(t, tc.TestCase)
 	t.Cleanup(func() {
 		porch.KubectlDeleteNamespace(t, tc.TestCase)
 	})
 
 	if tc.Repository != "" {
-		porch.RegisterRepository(t, git, tc.TestCase, tc.Repository)
+		porch.RegisterRepository(t, repoURL, tc.TestCase, tc.Repository)
 	}
 
 	for i := range tc.Commands {
@@ -82,6 +82,7 @@ func runTestCase(t *testing.T, git string, tc porch.TestCaseConfig) {
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 
+		t.Logf("running command %v", strings.Join(cmd.Args, " "))
 		err := cmd.Run()
 
 		if command.Yaml {
@@ -128,6 +129,8 @@ func reorderYamlStdout(t *testing.T, buf *bytes.Buffer) {
 }
 
 func startGitServer(t *testing.T, path string) string {
+	gitServerURL := "http://git-server." + testGitNamespace + ".svc.cluster.local:8080"
+
 	gitServerImage := porch.GetGitServerImageName(t)
 	t.Logf("Git Image: %s", gitServerImage)
 
@@ -146,9 +149,9 @@ func startGitServer(t *testing.T, path string) string {
 	porch.KubectlApply(t, config)
 	porch.KubectlWaitForDeployment(t, testGitNamespace, "git-server")
 	porch.KubectlWaitForService(t, testGitNamespace, "git-server")
-	porch.KubectlWaitForGitDNS(t, gitRepositoryAddress)
+	porch.KubectlWaitForGitDNS(t, gitServerURL)
 
-	return gitRepositoryAddress
+	return gitServerURL
 }
 
 func scanTestCases(t *testing.T, root string) []porch.TestCaseConfig {

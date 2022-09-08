@@ -5,7 +5,7 @@ commands:
       - register
       - --namespace=rpkg-init
       - --name=git
-      - http://git-server.test-git-namespace.svc.cluster.local:8080
+      - http://git-server.test-git-namespace.svc.cluster.local:8080/rpkg-init
   - args:
       - alpha
       - repo
@@ -13,8 +13,8 @@ commands:
       - --namespace=rpkg-init
       - --output=custom-columns=NAME:.metadata.name,ADDRESS:.spec.git.repo,BRANCH:.spec.git.branch,DIR:.spec.git.directory
     stdout: |
-      NAME   ADDRESS                                                       BRANCH   DIR
-      git    http://git-server.test-git-namespace.svc.cluster.local:8080   main     /
+      NAME   ADDRESS                                                                 BRANCH   DIR
+      git    http://git-server.test-git-namespace.svc.cluster.local:8080/rpkg-init   main     /
   - args:
       - alpha
       - rpkg
