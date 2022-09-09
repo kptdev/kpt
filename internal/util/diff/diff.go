@@ -125,7 +125,7 @@ func (c *Command) Run(ctx context.Context) error {
 
 	// Return early if upstream is not set
 	if kptFile.Upstream == nil || kptFile.Upstream.Git == nil {
-		return errors.Errorf("no upstream set")
+		return errors.Errorf("package missing upstream in Kptfile at '%s'", c.Path)
 	}
 
 	// Create a staging directory to store all compared packages
