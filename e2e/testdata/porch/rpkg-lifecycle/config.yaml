@@ -98,5 +98,5 @@ commands:
       - get
       - git-635026ba389a2dd5417b6e7577430c7ccff30f36
       - --namespace=rpkg-lifecycle
-    stderr: "Error: packagerevisions.porch.kpt.dev \"git-635026ba389a2dd5417b6e7577430c7ccff30f36\" not found \n"
+    stderr: "Error: the server could not find the requested resource (get packagerevisions.porch.kpt.dev git-635026ba389a2dd5417b6e7577430c7ccff30f36) \n"
     exitCode: 1

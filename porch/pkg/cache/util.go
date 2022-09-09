@@ -24,34 +24,11 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func toCachedPackageRevisionSlice(revisions []repository.PackageRevision) []*cachedPackageRevision {
-	result := make([]*cachedPackageRevision, len(revisions))
-	for i := range revisions {
-		current := &cachedPackageRevision{
-			PackageRevision:  revisions[i],
-			isLatestRevision: false,
-		}
-		result[i] = current
-	}
-	identifyLatestRevisions(result)
-	return result
-}
-
-func toCachedPackageSlice(packages []repository.Package) []*cachedPackage {
-	result := make([]*cachedPackage, len(packages))
-	for i := range packages {
-		current := &cachedPackage{
-			Package:               packages[i],
-			latestPackageRevision: packages[i].GetLatestRevision(),
-		}
-		result[i] = current
-	}
-	return result
-}
-
-func identifyLatestRevisions(result []*cachedPackageRevision) {
+func identifyLatestRevisions(result map[repository.PackageRevisionKey]*cachedPackageRevision) {
 	// Compute the latest among the different revisions of the same package.
 	// The map is keyed by the package name; Values are the latest revision found so far.
+
+	// TODO: Should map[string] be map[repository.PackageKey]?
 	latest := map[string]*cachedPackageRevision{}
 	for _, current := range result {
 		current.isLatestRevision = false // Clear all values
@@ -86,7 +63,7 @@ func identifyLatestRevisions(result []*cachedPackageRevision) {
 	}
 }
 
-func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.ListPackageRevisionFilter) []repository.PackageRevision {
+func toPackageRevisionSlice(cached map[repository.PackageRevisionKey]*cachedPackageRevision, filter repository.ListPackageRevisionFilter) []repository.PackageRevision {
 	result := make([]repository.PackageRevision, 0, len(cached))
 	for _, p := range cached {
 		if filter.Matches(p) {
@@ -125,12 +102,18 @@ func toPackageRevisionSlice(cached []*cachedPackageRevision, filter repository.L
 	return result
 }
 
-func toPackageSlice(cached []*cachedPackage, filter repository.ListPackageFilter) []repository.Package {
+func toPackageSlice(cached map[repository.PackageKey]*cachedPackage, filter repository.ListPackageFilter) []repository.Package {
 	result := make([]repository.Package, 0, len(cached))
 	for _, p := range cached {
 		if filter.Matches(p) {
 			result = append(result, p)
 		}
 	}
+	sort.Slice(result, func(i, j int) bool {
+		ki, kj := result[i].Key(), result[j].Key()
+		// We assume they all have the same repository
+		return ki.Package < kj.Package
+	})
+
 	return result
 }
