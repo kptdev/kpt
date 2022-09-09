@@ -123,6 +123,11 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("package missing Kptfile at '%s': %v", c.Path, err)
 	}
 
+	// Return early if upstream is not set
+	if kptFile.Upstream == nil || kptFile.Upstream.Git == nil {
+		return errors.Errorf("no upstream set")
+	}
+
 	// Create a staging directory to store all compared packages
 	stagingDirectory, err := os.MkdirTemp("", "kpt-")
 	if err != nil {
