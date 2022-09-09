@@ -1,0 +1,4 @@
+# https://pkg.go.dev/github.com/terraform-providers/terraform-provider-google-beta@(devel)
+license: MPL-2.0
+licenseURLs:
+- https://raw.githubusercontent.com/hashicorp/terraform-provider-google-beta/main/LICENSE

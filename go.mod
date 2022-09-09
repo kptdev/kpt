@@ -15,6 +15,7 @@ require (
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/prep/wasmexec v0.0.0-20220807105708-6554945c1dec
 	github.com/spf13/cobra v1.5.0
+	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.1
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
@@ -99,7 +100,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spyzhov/ajson v0.4.2 // indirect
 	github.com/vbatts/tar-split v0.11.2 // indirect
 	go.starlark.net v0.0.0-20210901212718-87f333178d59 // indirect

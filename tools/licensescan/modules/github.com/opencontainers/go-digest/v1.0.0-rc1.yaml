@@ -1,0 +1,6 @@
+# https://pkg.go.dev/github.com/opencontainers/go-digest@v1.0.0-rc1
+license: Apache-2.0
+# Note that "Code is released under the Apache 2.0 license." per README.md
+# CC-BY-SA-4.0 license applies to docs
+licenseURLs:
+- https://raw.githubusercontent.com/opencontainers/go-digest/v1.0.0-rc1/LICENSE.code
