@@ -267,7 +267,7 @@ func (h *commitHelper) readFile(path string) ([]byte, error) {
 }
 
 // commit stores all changes in git and creates a commit object.
-func (h *commitHelper) commit(ctx context.Context, message string, pkgPath string) (commit, pkgTree plumbing.Hash, err error) {
+func (h *commitHelper) commit(ctx context.Context, message string, pkgPath string, additionalParentCommits ...plumbing.Hash) (commit, pkgTree plumbing.Hash, err error) {
 	rootTreeHash, err := h.storeTrees("")
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
@@ -278,7 +278,13 @@ func (h *commitHelper) commit(ctx context.Context, message string, pkgPath strin
 		ui = h.userInfoProvider.GetUserInfo(ctx)
 	}
 
-	commit, err = h.storeCommit(h.parentCommitHash, rootTreeHash, ui, message)
+	var parentCommits []plumbing.Hash
+	if !h.parentCommitHash.IsZero() {
+		parentCommits = append(parentCommits, h.parentCommitHash)
+	}
+	parentCommits = append(parentCommits, additionalParentCommits...)
+
+	commit, err = h.storeCommit(parentCommits, rootTreeHash, ui, message)
 	if err != nil {
 		return plumbing.ZeroHash, plumbing.ZeroHash, err
 	}
@@ -429,7 +435,7 @@ func entrySortKey(e *object.TreeEntry) string {
 }
 
 // storeCommit creates and writes a commit object to git.
-func (h *commitHelper) storeCommit(parent plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
+func (h *commitHelper) storeCommit(parentCommits []plumbing.Hash, tree plumbing.Hash, userInfo *repository.UserInfo, message string) (plumbing.Hash, error) {
 	now := time.Now()
 	var authorName, authorEmail string
 	if userInfo != nil {
@@ -456,14 +462,14 @@ func (h *commitHelper) storeCommit(parent plumbing.Hash, tree plumbing.Hash, use
 		TreeHash: tree,
 	}
 
-	return storeCommit(h.storer, parent, commit)
-}
-
-func storeCommit(storer storage.Storer, parent plumbing.Hash, commit *object.Commit) (plumbing.Hash, error) {
-	if !parent.IsZero() {
-		commit.ParentHashes = []plumbing.Hash{parent}
+	if len(parentCommits) > 0 {
+		commit.ParentHashes = parentCommits
 	}
 
+	return storeCommit(h.storer, commit)
+}
+
+func storeCommit(storer storage.Storer, commit *object.Commit) (plumbing.Hash, error) {
 	eo := storer.NewEncodedObject()
 	if err := commit.Encode(eo); err != nil {
 		return plumbing.Hash{}, err
