@@ -29,6 +29,11 @@ import (
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+)
+
+const (
+	finalizerName = "config.porch.kpt.dev/finalizer"
 )
 
 // WorkloadIdentityBindingReconciler reconciles WorkloadIdentityBinding objects
@@ -47,6 +52,7 @@ type WorkloadIdentityBindingReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 //+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=,resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -54,39 +60,49 @@ func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req c
 	if err := r.Get(ctx, req.NamespacedName, &subject); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	// myFinalizerName := "config.porch.kpt.dev/finalizer"
-	// if subject.ObjectMeta.DeletionTimestamp.IsZero() {
-	// 	// The object is not being deleted, so if it does not have our finalizer,
-	// 	// then lets add the finalizer and update the object. This is equivalent
-	// 	// registering our finalizer.
-	// 	if !controllerutil.ContainsFinalizer(&subject, myFinalizerName) {
-	// 		controllerutil.AddFinalizer(&subject, myFinalizerName)
-	// 		if err := r.Update(ctx, &subject); err != nil {
-	// 			return ctrl.Result{}, err
-	// 		}
-	// 	}
-	// } else {
-	// 	// The object is being deleted
-	// 	if controllerutil.ContainsFinalizer(&subject, myFinalizerName) {
-	// 		// // our finalizer is present, so lets handle any external dependency
-	// 		// if err := r.deleteExternalResources(ctx, &subject); err != nil {
-	// 		// 	// if fail to delete the external dependency here, return with error
-	// 		// 	// so that it can be retried
-	// 		// 	return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
-	// 		// }
-	// 		// remove our finalizer from the list and update it.
-	// 		controllerutil.RemoveFinalizer(&subject, myFinalizerName)
-	// 		if err := r.Update(ctx, &subject); err != nil {
-	// 			return ctrl.Result{}, fmt.Errorf("failed to update %s after delete finalizer: %w", req.Name, err)
-	// 		}
-	// 	}
-	// 	// Stop reconciliation as the item is being deleted
-	// 	return ctrl.Result{}, nil
-	// }
+	if subject.ObjectMeta.DeletionTimestamp.IsZero() {
+		// The object is not being deleted, so if it does not have our finalizer,
+		// then lets add the finalizer and update the object. This is equivalent
+		// registering our finalizer.
+		if !controllerutil.ContainsFinalizer(&subject, finalizerName) {
+			controllerutil.AddFinalizer(&subject, finalizerName)
+			if err := r.Update(ctx, &subject); err != nil {
+				klog.Warningf("failed to update %s after adding finalizer: %v", req.Name, err)
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if controllerutil.ContainsFinalizer(&subject, finalizerName) {
+			// // our finalizer is present, so lets remove the annotation from the SA
+			if err := r.removeWiAnnotation(ctx, &subject); err != nil {
+				// failed to remove the annotation, so return the error so it can be retried.
+				klog.Warningf("failed to remove SA annotation from %s: %v", req.Name, err)
+				return ctrl.Result{}, err
+			}
+			// remove our finalizer from the list and update it.
+			controllerutil.RemoveFinalizer(&subject, finalizerName)
+			if err := r.Update(ctx, &subject); err != nil {
+				klog.Warningf("failed to update %s after removing finalizer: %v", req.Name, err)
+				return ctrl.Result{}, err
+			}
+		}
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
+	}
 
 	var result ctrl.Result
 
-	results, err := r.applyToClusterRef(ctx, &subject)
+	projectID, err := r.findProjectID(ctx, &subject)
+	if err != nil {
+		return result, err
+	}
+
+	results, err := r.applyToClusterRef(ctx, projectID, &subject)
+	if err == nil && results.AllApplied() && results.AllHealthy() {
+		// If the IAMPolicyMember has been installed and reconciled, we add the annotation.
+		err = r.addWiAnnotation(ctx, projectID, &subject)
+	}
 	if updateStatus(&subject, results, err) {
 		if updateErr := r.Status().Update(ctx, &subject); updateErr != nil {
 			if err == nil {
@@ -124,14 +140,21 @@ func updateStatus(subject *api.WorkloadIdentityBinding, results *applyset.ApplyR
 	return true
 }
 
-func (r *WorkloadIdentityBindingReconciler) applyToClusterRef(ctx context.Context, subject *api.WorkloadIdentityBinding) (*applyset.ApplyResults, error) {
-
+func (r *WorkloadIdentityBindingReconciler) findProjectID(ctx context.Context, subject *api.WorkloadIdentityBinding) (string, error) {
 	ns := &corev1.Namespace{}
 	if err := r.Get(ctx, types.NamespacedName{Name: subject.GetNamespace()}, ns); err != nil {
-		return nil, fmt.Errorf("error getting namespace %q: %w", subject.GetNamespace(), err)
+		return "", fmt.Errorf("error getting namespace %q: %w", subject.GetNamespace(), err)
 	}
 
-	objects, err := r.BuildObjectsToApply(ctx, ns, subject)
+	parentProjectID := ns.GetAnnotations()["cnrm.cloud.google.com/project-id"]
+	if parentProjectID == "" {
+		return "", fmt.Errorf("project-id not found for namespace %q", ns.GetName())
+	}
+	return parentProjectID, nil
+}
+
+func (r *WorkloadIdentityBindingReconciler) applyToClusterRef(ctx context.Context, projectID string, subject *api.WorkloadIdentityBinding) (*applyset.ApplyResults, error) {
+	objects, err := r.BuildObjectsToApply(ctx, projectID, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +190,7 @@ func (r *WorkloadIdentityBindingReconciler) applyToClusterRef(ctx context.Contex
 	return results, nil
 }
 
-func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Context, ns *corev1.Namespace, subject *api.WorkloadIdentityBinding) ([]applyset.ApplyableObject, error) {
+func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Context, projectID string, subject *api.WorkloadIdentityBinding) ([]applyset.ApplyableObject, error) {
 	var objects []applyset.ApplyableObject
 
 	{
@@ -185,11 +208,7 @@ func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Cont
 			saNamespace = subject.GetNamespace()
 		}
 
-		parentProjectID := ns.GetAnnotations()["cnrm.cloud.google.com/project-id"]
-		if parentProjectID == "" {
-			return nil, fmt.Errorf("project-id not found for namespace %q", ns.GetName())
-		}
-		member := "serviceAccount:" + parentProjectID + ".svc.id.goog[" + saNamespace + "/" + saName + "]"
+		member := "serviceAccount:" + projectID + ".svc.id.goog[" + saNamespace + "/" + saName + "]"
 
 		u.Object["spec"] = map[string]interface{}{
 			"member":      member,
@@ -213,7 +232,53 @@ func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Cont
 		})
 		obj.SetOwnerReferences(ownerRefs)
 	}
+
 	return objects, nil
+}
+
+func (r *WorkloadIdentityBindingReconciler) addWiAnnotation(ctx context.Context, projectID string, subject *api.WorkloadIdentityBinding) error {
+	sa, err := r.getServiceAccount(ctx, subject)
+	if err != nil {
+		return client.IgnoreNotFound(err)
+	}
+
+	gsaEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", subject.Spec.ResourceRef.Name, projectID)
+
+	patch := client.MergeFrom(sa.DeepCopy())
+	if sa.ObjectMeta.Annotations == nil {
+		sa.ObjectMeta.Annotations = make(map[string]string)
+	}
+	sa.ObjectMeta.Annotations["iam.gke.io/gcp-service-account"] = gsaEmail
+	err = r.Patch(ctx, sa, patch)
+	return client.IgnoreNotFound(err)
+}
+
+func (r *WorkloadIdentityBindingReconciler) removeWiAnnotation(ctx context.Context, subject *api.WorkloadIdentityBinding) error {
+	sa, err := r.getServiceAccount(ctx, subject)
+	if err != nil {
+		return client.IgnoreNotFound(err)
+	}
+
+	patch := client.MergeFrom(sa.DeepCopy())
+	delete(sa.ObjectMeta.Annotations, "iam.gke.io/gcp-service-account")
+	err = r.Patch(ctx, sa, patch)
+	return client.IgnoreNotFound(err)
+}
+
+func (r *WorkloadIdentityBindingReconciler) getServiceAccount(ctx context.Context, subject *api.WorkloadIdentityBinding) (*corev1.ServiceAccount, error) {
+	saRef := subject.Spec.ServiceAccountRef
+
+	saName := saRef.Name
+	saNamespace := saRef.Namespace
+	if saNamespace == "" {
+		saNamespace = subject.GetNamespace()
+	}
+
+	var sa corev1.ServiceAccount
+	if err := r.Get(ctx, types.NamespacedName{Name: saName, Namespace: saNamespace}, &sa); err != nil {
+		return nil, err
+	}
+	return &sa, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

@@ -31,7 +31,7 @@ type WorkloadIdentityBinding struct {
 	Status WorkloadIdentityBindingStatus `json:"status,omitempty"`
 }
 
-// WorkloadIdentityBindingSpec defines the desired state of RemoteRootSync
+// WorkloadIdentityBindingSpec defines the desired state of WorkloadIdentityBinding
 type WorkloadIdentityBindingSpec struct {
 	ServiceAccountRef ServiceAccountRef `json:"serviceAccountRef,omitempty"`
 	ResourceRef       ResourceRef       `json:"resourceRef,omitempty"`
