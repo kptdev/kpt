@@ -245,8 +245,7 @@ Several commands in the `kpt alpha rpkg` group support package authoring:
 
 * `init` - Initializes a new package revision in the target repository.
 * `clone` - Creates a clone of a source package in the target repository.
-* `edit` - Creates a copy of a source package in the target repository to start
-  creation of a new revision of the package.
+* `copy` - Creates a new package revision from an existing one.
 * `push` - Pushes package resources into a remote package.
 * `del` - Deletes one or more packages in registered repositories.
 
@@ -270,7 +269,7 @@ deployments-c32b851b591b860efda29ba0e006725c8c1f7764  new-package  v1        fal
 ```
 
 The new package is created in the `Draft` lifecycle stage. This is true also for
-all commands that create new package revision (`init`, `clone` and `edit`).
+all commands that create new package revision (`init`, `clone` and `copy`).
 
 Additional flags supported by the `kpt alpha rpkg init` command are:
 
