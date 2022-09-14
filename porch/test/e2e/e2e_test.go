@@ -33,6 +33,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -539,7 +541,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
-	t.CreateF(ctx, &configapi.Repository{
+	repo := &configapi.Repository{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "function-repository",
 			Namespace: t.namespace,
@@ -552,16 +554,21 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 				Registry: "gcr.io/kpt-fn",
 			},
 		},
-	})
+	}
+	t.CreateF(ctx, repo)
 
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "function-repository",
-				Namespace: t.namespace,
+				Name:      repo.Name,
+				Namespace: repo.Namespace,
 			},
 		})
 	})
+
+	// Make sure the repository is ready before we test to (hopefully)
+	// avoid flakiness.
+	t.waitUntilRepositoryReady(ctx, repo.Name, repo.Namespace)
 
 	list := &porchapi.FunctionList{}
 	t.ListE(ctx, list, client.InNamespace(t.namespace))
@@ -1637,5 +1644,31 @@ func (t *PorchSuite) mustNotExist(ctx context.Context, obj client.Object) {
 		t.Errorf("No error returned getting a deleted package; expected error")
 	case !apierrors.IsNotFound(err):
 		t.Errorf("Expected NotFound error. got %v", err)
+	}
+}
+
+// waitUntilRepositoryReady waits for up to 10 seconds for the repository with the
+// provided name and namespace is ready, i.e. the Ready condition is true.
+func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespace string) {
+	nn := types.NamespacedName{
+		Name:      name,
+		Namespace: namespace,
+	}
+	var innerErr error
+	err := wait.PollImmediateWithContext(ctx, time.Second, 10*time.Second, func(ctx context.Context) (bool, error) {
+		var repo configapi.Repository
+		if err := t.client.Get(ctx, nn, &repo); err != nil {
+			innerErr = err
+			return false, nil
+		}
+		for _, c := range repo.Status.Conditions {
+			if c.Type == configapi.RepositoryReady {
+				return c.Status == metav1.ConditionTrue, nil
+			}
+		}
+		return false, nil
+	})
+	if err != nil {
+		t.Errorf("Repository not ready after wait: %v", innerErr)
 	}
 }
