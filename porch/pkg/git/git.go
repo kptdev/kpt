@@ -785,7 +785,7 @@ func (r *gitRepository) createBranch(ctx context.Context, branch BranchName) err
 		Message:  commitMessage,
 		TreeHash: treeHash,
 	}
-	commitHash, err := storeCommit(r.repo.Storer, plumbing.ZeroHash, commit)
+	commitHash, err := storeCommit(r.repo.Storer, commit)
 	if err != nil {
 		return err
 	}
