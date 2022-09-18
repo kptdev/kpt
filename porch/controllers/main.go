@@ -14,7 +14,7 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers webhook paths="./..."
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers webhook paths="."
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd paths="./..." output:crd:artifacts:config=config/crd/bases
 
@@ -23,9 +23,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"golang.org/x/exp/slices"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	"k8s.io/klog/v2"
@@ -35,20 +37,47 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	remoterootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/controllers/remoterootsyncset"
-	rootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncset/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncset/pkg/controllers/rootsyncset"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybinding/pkg/controllers/workloadidentitybinding"
+	remoterootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
+	rootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
 	//+kubebuilder:scaffold:imports
 )
 
 var (
 	scheme = runtime.NewScheme()
+
+	reconcilers = map[string]newReconciler{
+		"rootsyncsets": func(c client.Client, s *runtime.Scheme) Reconciler {
+			return &rootsyncset.RootSyncSetReconciler{
+				Client: c,
+				Scheme: s,
+			}
+		},
+		"remoterootsyncsets": func(c client.Client, s *runtime.Scheme) Reconciler {
+			return &remoterootsyncset.RemoteRootSyncSetReconciler{
+				Client: c,
+				Scheme: s,
+			}
+		},
+		"workloadidentitybindings": func(c client.Client, s *runtime.Scheme) Reconciler {
+			return &workloadidentitybinding.WorkloadIdentityBindingReconciler{}
+		},
+	}
 )
+
+type Reconciler interface {
+	reconcile.Reconciler
+	SetupWithManager(ctrl.Manager) error
+}
+
+type newReconciler func(client.Client, *runtime.Scheme) Reconciler
 
 // We include our lease / events permissions in the main RBAC role
 
@@ -76,6 +105,7 @@ func run(ctx context.Context) error {
 	// var metricsAddr string
 	// var enableLeaderElection bool
 	// var probeAddr string
+	var enabledReconcilersString string
 
 	klog.InitFlags(nil)
 
@@ -84,6 +114,7 @@ func run(ctx context.Context) error {
 	// flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 	// 	"Enable leader election for controller manager. "+
 	// 		"Enabling this will ensure there is only one active controller manager.")
+	flag.StringVar(&enabledReconcilersString, "reconcilers", "", "reconcilers that should be enabled")
 
 	managerOptions := ctrl.Options{
 		Scheme:                     scheme,
@@ -104,21 +135,14 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("error creating manager: %w", err)
 	}
 
-	if err = (&rootsyncset.RootSyncSetReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		return fmt.Errorf("error creating RootSyncSetReconciler controller: %w", err)
-	}
-	if err = (&remoterootsyncset.RemoteRootSyncSetReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		return fmt.Errorf("error creating RemoteRootSyncSetReconciler controller: %w", err)
-	}
-
-	if err = (&workloadidentitybinding.WorkloadIdentityBindingReconciler{}).SetupWithManager(mgr); err != nil {
-		return fmt.Errorf("error creating WorkloadIdentityBindingReconciler controller: %w", err)
+	enabledReconcilers := parseReconcilers(enabledReconcilersString)
+	for r, f := range reconcilers {
+		if !enableReconciler(enabledReconcilers, r) {
+			continue
+		}
+		if err = f(mgr.GetClient(), mgr.GetScheme()).SetupWithManager(mgr); err != nil {
+			return fmt.Errorf("error creating %s reconciler: %w", r, err)
+		}
 	}
 
 	//+kubebuilder:scaffold:builder
@@ -134,4 +158,18 @@ func run(ctx context.Context) error {
 		return fmt.Errorf("error running manager: %w", err)
 	}
 	return nil
+}
+
+func parseReconcilers(reconcilers string) []string {
+	return strings.Split(reconcilers, ",")
+}
+
+func enableReconciler(reconcilers []string, reconciler string) bool {
+	if slices.Contains(reconcilers, reconciler) {
+		return true
+	}
+	if _, found := os.LookupEnv(fmt.Sprintf("ENABLE_%s", strings.ToUpper(reconciler))); found {
+		return true
+	}
+	return false
 }

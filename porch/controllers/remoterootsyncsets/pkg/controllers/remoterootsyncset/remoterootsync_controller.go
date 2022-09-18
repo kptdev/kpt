@@ -23,9 +23,9 @@ import (
 	"unicode"
 
 	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
-	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/applyset"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/remoteclient"
+	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/remoteclient"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,6 +61,8 @@ type RemoteRootSyncSetReconciler struct {
 	// This is currently (only) used in "development" mode, for loopback configuration
 	localRESTConfig *rest.Config
 }
+
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-remoterootsyncsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
 
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets/status,verbs=get;update;patch

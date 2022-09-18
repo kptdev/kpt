@@ -17,19 +17,18 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: porch-controllers
+  name: porch-controllers-rootsyncsets
 rules:
 - apiGroups:
   - ""
   resources:
-  - events
+  - serviceaccounts/token
   verbs:
   - create
-  - patch
 - apiGroups:
-  - coordination.k8s.io
+  - config.porch.kpt.dev
   resources:
-  - leases
+  - rootsyncsets
   verbs:
   - create
   - delete
@@ -37,4 +36,49 @@ rules:
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - rootsyncsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - rootsyncsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - configcontroller.cnrm.cloud.google.com
+  resources:
+  - configcontrollerinstances
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - container.cnrm.cloud.google.com
+  resources:
+  - containerclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - core.cnrm.cloud.google.com
+  resources:
+  - configconnectorcontexts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - hub.gke.io
+  resources:
+  - memberships
+  verbs:
+  - get
+  - list
   - watch

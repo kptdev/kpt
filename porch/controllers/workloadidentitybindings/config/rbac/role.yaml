@@ -17,19 +17,46 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: porch-controllers
+  name: porch-controllers-workloadidentitybinding
 rules:
 - apiGroups:
   - ""
   resources:
-  - events
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - workloadidentitybindings
   verbs:
   - create
+  - delete
+  - get
+  - list
   - patch
+  - update
+  - watch
 - apiGroups:
-  - coordination.k8s.io
+  - config.porch.kpt.dev
   resources:
-  - leases
+  - workloadidentitybindings/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - workloadidentitybindings/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - iam.cnrm.cloud.google.com
+  resources:
+  - iampolicymembers
   verbs:
   - create
   - delete
