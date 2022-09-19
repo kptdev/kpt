@@ -46,6 +46,12 @@ type WorkloadIdentityBindingReconciler struct {
 //+kubebuilder:rbac:groups=,resources=namespaces,verbs=get;list;watch
 //+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
 
+// Needs to read namespace to get project-id annotation
+//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
+
+// Creates iampolicymembers (using server-side-apply)
+//+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
+
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var subject api.WorkloadIdentityBinding
@@ -123,7 +129,6 @@ func updateStatus(subject *api.WorkloadIdentityBinding, results *applyset.ApplyR
 }
 
 func (r *WorkloadIdentityBindingReconciler) applyToClusterRef(ctx context.Context, subject *api.WorkloadIdentityBinding) (*applyset.ApplyResults, error) {
-
 	ns := &corev1.Namespace{}
 	if err := r.Get(ctx, types.NamespacedName{Name: subject.GetNamespace()}, ns); err != nil {
 		return nil, fmt.Errorf("error getting namespace %q: %w", subject.GetNamespace(), err)

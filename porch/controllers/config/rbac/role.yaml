@@ -27,6 +27,14 @@ rules:
   - create
   - patch
 - apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - config.porch.kpt.dev
   resources:
   - remoterootsyncsets
@@ -108,6 +116,18 @@ rules:
   - coordination.k8s.io
   resources:
   - leases
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - iam.cnrm.cloud.google.com
+  resources:
+  - iampolicymembers
   verbs:
   - create
   - delete
