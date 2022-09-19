@@ -13,7 +13,7 @@ Download pre-compiled binaries:
 
 Optionally verify the [SLSA3 signatures](slsa.dev) generated using the OpenSSF's [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release process. To verify a release binary:
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
-2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/GoogleContainerTools/jib/releases/latest).
+2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/GoogleContainerTools/kpt/releases).
 3. Run the verifier:
 ```shell
 slsa-verifier -artifact-path kpt-<os>-<arch> -provenance attestation.intoto.jsonl -source github.com/GoogleContainerTools/kpt -tag <the-tag>
