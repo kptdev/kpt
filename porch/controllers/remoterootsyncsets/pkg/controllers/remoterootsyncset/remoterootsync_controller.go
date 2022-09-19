@@ -16,6 +16,7 @@ package remoterootsyncset
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"path"
@@ -49,8 +50,19 @@ var (
 	RootSyncKind       = "RootSync"
 )
 
+type Options struct {
+}
+
+func (o *Options) InitDefaults() {
+}
+
+func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
+}
+
 // RemoteRootSyncSetReconciler reconciles RemoteRootSyncSet objects
 type RemoteRootSyncSetReconciler struct {
+	Options
+
 	client.Client
 
 	ociStorage *kptoci.Storage
