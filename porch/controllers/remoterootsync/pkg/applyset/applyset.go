@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -199,6 +200,13 @@ func (a *ApplySet) ApplyOnce(ctx context.Context) (*ApplyResults, error) {
 		if err != nil {
 			// TODO: Differentiate between server-fixable vs client-fixable errors?
 			results.applyError(gvk, nn, fmt.Errorf("failed to marshal object to JSON: %w", err))
+			continue
+		}
+
+		// Special case: errors are very cryptic with / in the name (we get a 404), and also avoid injection attacks
+		if strings.Contains(name, "/") {
+			err := fmt.Errorf("name %q is not valid", name)
+			results.applyError(gvk, nn, fmt.Errorf("error from apply: %w", err))
 			continue
 		}
 
