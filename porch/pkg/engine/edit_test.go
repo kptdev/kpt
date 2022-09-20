@@ -22,6 +22,7 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine/fake"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-cmp/cmp"
@@ -57,6 +58,7 @@ info:
 		},
 	}
 	cad := &fakeCaD{
+		cache:      cache.NewCache("", cache.CacheOptions{}),
 		repository: repo,
 	}
 
@@ -104,10 +106,15 @@ func (f *fakeReferenceResolver) ResolveReference(ctx context.Context, namespace,
 
 // Implementation of the engine.CaDEngine interface for testing.
 type fakeCaD struct {
+	cache      *cache.Cache
 	repository repository.Repository
 }
 
 var _ CaDEngine = &fakeCaD{}
+
+func (f *fakeCaD) ObjectCache() cache.ObjectCache {
+	return f.cache.ObjectCache()
+}
 
 func (f *fakeCaD) OpenRepository(context.Context, *configapi.Repository) (repository.Repository, error) {
 	return f.repository, nil

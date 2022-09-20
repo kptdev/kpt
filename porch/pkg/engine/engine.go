@@ -39,6 +39,9 @@ import (
 var tracer = otel.Tracer("engine")
 
 type CaDEngine interface {
+	// ObjectCache() is a cache of all our objects.
+	ObjectCache() cache.ObjectCache
+
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
@@ -75,6 +78,11 @@ var _ CaDEngine = &cadEngine{}
 
 type mutation interface {
 	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
+}
+
+// ObjectCache is a cache of all our objects.
+func (cad *cadEngine) ObjectCache() cache.ObjectCache {
+	return cad.cache.ObjectCache()
 }
 
 func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {

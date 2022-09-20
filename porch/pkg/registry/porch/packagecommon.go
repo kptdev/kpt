@@ -21,6 +21,7 @@ import (
 	unversionedapi "github.com/GoogleContainerTools/kpt/porch/api/porch"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -125,6 +126,14 @@ func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, 
 			}
 		}
 	}
+	return nil
+}
+
+func (r *packageCommon) watchPackages(ctx context.Context, filter packageRevisionFilter, callback cache.ObjectWatcher) error {
+	if err := r.cad.ObjectCache().WatchPackageRevisions(ctx, filter.ListPackageRevisionFilter, callback); err != nil {
+		return err
+	}
+
 	return nil
 }
 
