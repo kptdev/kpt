@@ -33,23 +33,19 @@ type WorkloadIdentityBinding struct {
 
 // WorkloadIdentityBindingSpec defines the desired state of WorkloadIdentityBinding
 type WorkloadIdentityBindingSpec struct {
-	ServiceAccountRef ServiceAccountRef `json:"serviceAccountRef,omitempty"`
-	ResourceRef       ResourceRef       `json:"resourceRef,omitempty"`
+	KubernetesServiceAccountRef KubernetesServiceAccountRef `json:"kubernetesServiceAccountRef,omitempty"`
+	GcpServiceAccountRef        GcpServiceAccountRef        `json:"gcpServiceAccountRef,omitempty"`
 }
 
-type ServiceAccountRef struct {
-	ApiVersion string `json:"apiVersion,omitempty"`
-	Kind       string `json:"kind,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
+type KubernetesServiceAccountRef struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
 
-type ResourceRef struct {
-	ApiVersion string `json:"apiVersion,omitempty"`
-	Kind       string `json:"kind,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
-	External   string `json:"external,omitempty"`
+type GcpServiceAccountRef struct {
+	Name      string `json:"name,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
+	External  string `json:"external,omitempty"`
 }
 
 // WorkloadIdentityBindingStatus defines the observed state of WorkloadIdentityBinding

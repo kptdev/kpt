@@ -16,6 +16,7 @@ package workloadidentitybinding
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
@@ -33,7 +34,7 @@ import (
 )
 
 const (
-	finalizerName = "config.porch.kpt.dev/finalizer"
+	finalizerName = "config.porch.kpt.dev/workloadidentitybindings"
 )
 
 // WorkloadIdentityBindingReconciler reconciles WorkloadIdentityBinding objects
@@ -52,7 +53,8 @@ type WorkloadIdentityBindingReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 //+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=,resources=serviceaccounts,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iamserviceaccounts,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=get;list;watch;patch
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *WorkloadIdentityBindingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -161,7 +163,7 @@ func (r *WorkloadIdentityBindingReconciler) applyToClusterRef(ctx context.Contex
 
 	// TODO: Cache applyset?
 	patchOptions := metav1.PatchOptions{
-		FieldManager: subject.GetObjectKind().GroupVersionKind().Kind + "-" + subject.GetNamespace() + "-" + subject.GetName(),
+		FieldManager: fieldManager(subject),
 	}
 
 	// We force to overcome errors like: Apply failed with 1 conflict: conflict with "kubectl-client-side-apply" using apps/v1: .spec.template.spec.containers[name="porch-server"].image
@@ -200,7 +202,7 @@ func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Cont
 		u.SetName("workloadidentitybinding-" + subject.GetName())
 		u.SetNamespace(subject.GetNamespace())
 
-		saRef := subject.Spec.ServiceAccountRef
+		saRef := subject.Spec.KubernetesServiceAccountRef
 
 		saNamespace := saRef.Namespace
 		saName := saRef.Name
@@ -210,10 +212,21 @@ func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Cont
 
 		member := "serviceAccount:" + projectID + ".svc.id.goog[" + saNamespace + "/" + saName + "]"
 
+		resourceRef := map[string]string{
+			"apiVersion": "iam.cnrm.cloud.google.com/v1beta1",
+			"kind":       "IAMServiceAccount",
+			"name":       subject.Spec.GcpServiceAccountRef.Name,
+		}
+		if ns := subject.Spec.GcpServiceAccountRef.Namespace; ns != "" {
+			resourceRef["namespace"] = ns
+		}
+		if ext := subject.Spec.GcpServiceAccountRef.External; ext != "" {
+			resourceRef["external"] = ext
+		}
 		u.Object["spec"] = map[string]interface{}{
 			"member":      member,
 			"role":        "roles/iam.workloadIdentityUser",
-			"resourceRef": subject.Spec.ResourceRef,
+			"resourceRef": resourceRef,
 		}
 
 		objects = append(objects, u)
@@ -237,36 +250,56 @@ func (r *WorkloadIdentityBindingReconciler) BuildObjectsToApply(ctx context.Cont
 }
 
 func (r *WorkloadIdentityBindingReconciler) addWiAnnotation(ctx context.Context, projectID string, subject *api.WorkloadIdentityBinding) error {
-	sa, err := r.getServiceAccount(ctx, subject)
+	// TODO: We should have a watch here so we can annotate the ServiceAccount even if it is
+	// applied later.
+	ksa, err := r.getKubernetesServiceAccount(ctx, subject)
 	if err != nil {
 		return client.IgnoreNotFound(err)
 	}
 
-	gsaEmail := fmt.Sprintf("%s@%s.iam.gserviceaccount.com", subject.Spec.ResourceRef.Name, projectID)
-
-	patch := client.MergeFrom(sa.DeepCopy())
-	if sa.ObjectMeta.Annotations == nil {
-		sa.ObjectMeta.Annotations = make(map[string]string)
+	// TODO: Same as above, we should have a watch here so we can annotate the ksa when
+	// the gsa is created and reconciled (i.e. have the status.email field set)
+	gsa, err := r.getGcpServiceAccount(ctx, subject)
+	if err != nil {
+		return client.IgnoreNotFound(err)
 	}
-	sa.ObjectMeta.Annotations["iam.gke.io/gcp-service-account"] = gsaEmail
-	err = r.Patch(ctx, sa, patch)
-	return client.IgnoreNotFound(err)
+
+	gsaEmail, found, err := unstructured.NestedString(gsa.Object, "status", "email")
+	if err != nil {
+		return err
+	}
+	if !found || gsaEmail == "" {
+		return nil
+	}
+
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
+	u.SetName(ksa.GetName())
+	u.SetNamespace(ksa.GetNamespace())
+	u.SetAnnotations(map[string]string{
+		"iam.gke.io/gcp-service-account": gsaEmail,
+	})
+
+	return r.updateServiceAccount(ctx, u, subject)
 }
 
 func (r *WorkloadIdentityBindingReconciler) removeWiAnnotation(ctx context.Context, subject *api.WorkloadIdentityBinding) error {
-	sa, err := r.getServiceAccount(ctx, subject)
+	sa, err := r.getKubernetesServiceAccount(ctx, subject)
 	if err != nil {
 		return client.IgnoreNotFound(err)
 	}
 
-	patch := client.MergeFrom(sa.DeepCopy())
-	delete(sa.ObjectMeta.Annotations, "iam.gke.io/gcp-service-account")
-	err = r.Patch(ctx, sa, patch)
-	return client.IgnoreNotFound(err)
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
+	u.SetName(sa.GetName())
+	u.SetNamespace(sa.GetNamespace())
+	u.SetAnnotations(make(map[string]string))
+
+	return r.updateServiceAccount(ctx, u, subject)
 }
 
-func (r *WorkloadIdentityBindingReconciler) getServiceAccount(ctx context.Context, subject *api.WorkloadIdentityBinding) (*corev1.ServiceAccount, error) {
-	saRef := subject.Spec.ServiceAccountRef
+func (r *WorkloadIdentityBindingReconciler) getKubernetesServiceAccount(ctx context.Context, subject *api.WorkloadIdentityBinding) (*unstructured.Unstructured, error) {
+	saRef := subject.Spec.KubernetesServiceAccountRef
 
 	saName := saRef.Name
 	saNamespace := saRef.Namespace
@@ -274,11 +307,51 @@ func (r *WorkloadIdentityBindingReconciler) getServiceAccount(ctx context.Contex
 		saNamespace = subject.GetNamespace()
 	}
 
-	var sa corev1.ServiceAccount
+	var sa unstructured.Unstructured
+	sa.SetGroupVersionKind(corev1.SchemeGroupVersion.WithKind("ServiceAccount"))
 	if err := r.Get(ctx, types.NamespacedName{Name: saName, Namespace: saNamespace}, &sa); err != nil {
 		return nil, err
 	}
+
 	return &sa, nil
+}
+
+func (r *WorkloadIdentityBindingReconciler) getGcpServiceAccount(ctx context.Context, subject *api.WorkloadIdentityBinding) (*unstructured.Unstructured, error) {
+	gsaRef := subject.Spec.GcpServiceAccountRef
+
+	gsaName := gsaRef.Name
+	gsaNamespace := gsaRef.Namespace
+	if gsaNamespace == "" {
+		gsaNamespace = subject.GetNamespace()
+	}
+
+	u := &unstructured.Unstructured{}
+	u.SetAPIVersion("iam.cnrm.cloud.google.com/v1beta1")
+	u.SetKind("IAMServiceAccount")
+
+	err := r.Get(ctx, types.NamespacedName{Name: gsaName, Namespace: gsaNamespace}, u)
+	return u, err
+}
+
+func (r *WorkloadIdentityBindingReconciler) updateServiceAccount(ctx context.Context, sa *unstructured.Unstructured, subject *api.WorkloadIdentityBinding) error {
+	data, err := json.Marshal(sa)
+	if err != nil {
+		return err
+	}
+
+	mapping, err := r.restMapper.RESTMapping(corev1.SchemeGroupVersion.WithKind("ServiceAccount").GroupKind())
+	if err != nil {
+		return err
+	}
+	dr := r.dynamicClient.Resource(mapping.Resource)
+	_, err = dr.Namespace(sa.GetNamespace()).Patch(ctx, sa.GetName(), types.ApplyPatchType, data, metav1.PatchOptions{
+		FieldManager: fieldManager(subject),
+	})
+	return client.IgnoreNotFound(err)
+}
+
+func fieldManager(subject *api.WorkloadIdentityBinding) string {
+	return subject.GetObjectKind().GroupVersionKind().Kind + "-" + subject.GetNamespace() + "-" + subject.GetName()
 }
 
 // SetupWithManager sets up the controller with the Manager.

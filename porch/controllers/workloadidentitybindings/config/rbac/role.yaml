@@ -28,6 +28,15 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
   - config.porch.kpt.dev
   resources:
   - workloadidentitybindings
@@ -64,4 +73,12 @@ rules:
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - iam.cnrm.cloud.google.com
+  resources:
+  - iamserviceaccounts
+  verbs:
+  - get
+  - list
   - watch
