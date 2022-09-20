@@ -46,6 +46,11 @@ const (
 )
 
 func TestE2E(t *testing.T) {
+	e2e := os.Getenv("E2E")
+	if e2e == "" {
+		t.Skip("set E2E to run this test")
+	}
+
 	Run(&PorchSuite{}, t)
 }
 
