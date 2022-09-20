@@ -17,19 +17,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: porch-controllers
+  name: porch-controllers-remoterootsyncsets
 rules:
 - apiGroups:
-  - ""
+  - config.porch.kpt.dev
   resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
+  - remoterootsyncsets
   verbs:
   - create
   - delete
@@ -38,3 +31,17 @@ rules:
   - patch
   - update
   - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - remoterootsyncsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - remoterootsyncsets/status
+  verbs:
+  - get
+  - patch
+  - update

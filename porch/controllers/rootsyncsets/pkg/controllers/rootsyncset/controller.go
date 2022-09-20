@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	container "cloud.google.com/go/container/apiv1"
-	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncset/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/googleurl"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
@@ -54,6 +54,8 @@ type RootSyncSetReconciler struct {
 	WorkloadIdentityHelper
 }
 
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-rootsyncsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
+
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/finalizers,verbs=update
@@ -61,7 +63,7 @@ type RootSyncSetReconciler struct {
 //+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
 //+kubebuilder:rbac:groups=core.cnrm.cloud.google.com,resources=configconnectorcontexts,verbs=get;list;watch
 //+kubebuilder:rbac:groups=hub.gke.io,resources=memberships,verbs=get;list;watch
-//+kubebuilder:rbac:groups=,resources=serviceaccounts/token,verbs=create
+//+kubebuilder:rbac:groups="",resources=serviceaccounts/token,verbs=create
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.

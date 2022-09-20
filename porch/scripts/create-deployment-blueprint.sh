@@ -25,15 +25,17 @@ function error() {
 Error: ${1}
 Usage: ${0} [flags]
 Supported Flags:
-  --destination DIRECTORY       ... directory in which to create the Porch deploymetn blueprint
-  --project GCP_PROJECT         ... ID of GCP project in which Porch will be deployed; if set, will
-                                    customize deploymetn service accounts
-  --server-image IMAGE          ... address of the Porch server image
-  --controllers-image IMAGE     ... address of the Porch controllers image
-  --function-image IMAGE        ... address of the Porch function runtime image
-  --wrapper-server-image IMAGE  ... address of the Porch function wrapper server image
-  --server-sa SVC_ACCOUNT       ... GCP service account to run the Porch server
-  --controllers-sa SVC_ACCOUNT  ... GCP service account to run the Porch Controllers workload
+  --destination DIRECTORY             ... directory in which to create the Porch deploymetn blueprint
+  --project GCP_PROJECT               ... ID of GCP project in which Porch will be deployed; if set, will
+                                          customize deploymetn service accounts
+  --server-image IMAGE                ... address of the Porch server image
+  --controllers-image IMAGE           ... address of the Porch controllers image
+  --function-image IMAGE              ... address of the Porch function runtime image
+  --wrapper-server-image IMAGE        ... address of the Porch function wrapper server image
+  --server-sa SVC_ACCOUNT             ... GCP service account to run the Porch server
+  --controllers-sa SVC_ACCOUNT        ... GCP service account to run the Porch Controllers workload
+  --enabled-reconcilers RECONCILDERS  ... comma-separated list of reconcilers that should be enabled in
+                                          porch controller
 EOF
   exit 1
 }
@@ -48,6 +50,7 @@ SERVER_SA=""
 CONTROLLERS_SA=""
 FUNCTION_RUNNER_SA=""
 PROJECT=""
+ENABLED_RECONCILERS=""
 
 while [[ $# -gt 0 ]]; do
   key="${1}"
@@ -89,6 +92,11 @@ while [[ $# -gt 0 ]]; do
 
     --controllers-sa)
       CONTROLLERS_SA="${2}"
+      shift 2
+      ;;
+
+    --enabled-reconcilers)
+      ENABLED_RECONCILERS="${2}"
       shift 2
       ;;
 
@@ -168,23 +176,40 @@ function customize-sa {
     "${SA}"
 }
 
-function main() {
-  # RemoteRootSync controller
-  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_remoterootsyncsets.yaml" \
-     "${DESTINATION}/0-remoterootsyncsets.yaml"
-  # WorkloadIdentityBinding controller
-  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_workloadidentitybindings.yaml" \
-     "${DESTINATION}/0-workloadidentitybindings.yaml"
-  # RootSyncSet controller
-  cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_rootsyncsets.yaml" \
-     "${DESTINATION}/0-rootsyncsets.yaml"
+function customize-container-env {
+  local ENV_KEY="${1}"
+  local ENV_VAL="${2}"
 
+  # TODO: This is terrible. Do we have a good way to handle this with kpt?
+  sed "/env:/a\        - name: ${ENV_KEY}\n          value: ${ENV_VAL}\n" -i "${DESTINATION}/9-controllers.yaml"
+}
+
+function main() {
   # Repository CRD
   cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"
 
   # Porch Deployment Config
   cp ${PORCH_DIR}/deployments/porch/*.yaml "${PORCH_DIR}/deployments/porch/Kptfile" "${DESTINATION}"
+  # Copy Porch controller manager rbac
+  cp ${PORCH_DIR}/controllers/config/rbac/role.yaml "${DESTINATION}/9-porch-controller-clusterrole.yaml"
+
+  IFS=',' read -ra RECONCILERS <<< "$ENABLED_RECONCILERS"
+  for i in "${RECONCILERS[@]}"; do
+    # Copy over the CRD
+    cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_${i}.yaml" \
+    "${DESTINATION}/0-${i}.yaml"
+    # Update the porch-controllers Deployment env variables to enable the reconciler.
+    customize-container-env \
+      "ENABLE_${i^^}" \
+      "\"true\""
+    # Copy over the rbac rules for the reconciler
+    cp "${PORCH_DIR}/controllers/${i}/config/rbac/role.yaml" \
+    "${DESTINATION}/9-porch-controller-${i}-clusterrole.yaml"
+    # Copy over the rbac rules for the reconciler
+    cp "${PORCH_DIR}/controllers/${i}/config/rbac/rolebinding.yaml" \
+    "${DESTINATION}/9-porch-controller-${i}-clusterrolebinding.yaml"
+  done
 
   customize-image \
     "gcr.io/example-google-project-id/porch-function-runner:latest" \

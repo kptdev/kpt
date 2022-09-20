@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/pkg/applyset"
-	api "github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybinding/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
+	api "github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -40,10 +40,12 @@ type WorkloadIdentityBindingReconciler struct {
 	restMapper    meta.RESTMapper
 }
 
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-workloadidentitybinding webhook paths="." output:rbac:artifacts:config=../../../config/rbac
+
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=workloadidentitybindings/finalizers,verbs=update
-//+kubebuilder:rbac:groups=,resources=namespaces,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 //+kubebuilder:rbac:groups=iam.cnrm.cloud.google.com,resources=iampolicymembers,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile implements the main kubernetes reconciliation loop.

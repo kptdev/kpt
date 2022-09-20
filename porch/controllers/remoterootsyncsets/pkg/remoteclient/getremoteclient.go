@@ -22,7 +22,7 @@ import (
 	"regexp"
 
 	container "cloud.google.com/go/container/apiv1"
-	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsync/api/v1alpha1"
+	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"

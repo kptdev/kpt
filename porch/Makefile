@@ -46,6 +46,20 @@ PORCH_CONTROLLERS_IMAGE ?= porch-controllers
 PORCH_WRAPPER_SERVER_IMAGE ?= porch-wrapper-server
 TEST_GIT_SERVER_IMAGE ?= test-git-server
 
+# Only enable a subset of reconcilers in porch controllers by default. Use the RECONCILERS
+# env variable to specify a specific list of reconcilers or use
+# RECONCILERS=all to enable all known reconcilers.
+ALL_RECONCILERS="rootsyncsets,remoterootsyncsets,workloadidentitybindings"
+ifndef RECONCILERS
+  ENABLED_RECONCILERS="rootsyncsets,remoterootsyncsets,workloadidentitybindings"
+else
+  ifeq ($(RECONCILERS),all)
+    ENABLED_RECONCILERS=${ALL_RECONCILERS}
+  else
+    ENABLED_RECONCILERS=$(RECONCILERS)
+  endif
+endif
+
 .DEFAULT_GOAL := all
 
 "$(MYGOBIN)/stringer":
@@ -208,6 +222,7 @@ deployment-config:
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
 	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
 	  --wrapper-server-image "$(IMAGE_REPO)/$(PORCH_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)" \
+	  --enabled-reconcilers "$(ENABLED_RECONCILERS)" \
 	  --project "$(GCP_PROJECT_ID)"
 
 .PHONY: deploy
@@ -232,7 +247,8 @@ deployment-config-no-sa:
 	  --server-image "$(IMAGE_REPO)/$(PORCH_SERVER_IMAGE):$(IMAGE_TAG)" \
 	  --controllers-image "$(IMAGE_REPO)/$(PORCH_CONTROLLERS_IMAGE):$(IMAGE_TAG)" \
 	  --function-image "$(IMAGE_REPO)/$(PORCH_FUNCTION_RUNNER_IMAGE):$(IMAGE_TAG)" \
-	  --wrapper-server-image "$(IMAGE_REPO)/$(PORCH_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)"
+	  --wrapper-server-image "$(IMAGE_REPO)/$(PORCH_WRAPPER_SERVER_IMAGE):$(IMAGE_TAG)" \
+	  --enabled-reconcilers "$(ENABLED_RECONCILERS)"
 
 .PHONY: deploy-no-sa
 deploy-no-sa: deployment-config-no-sa
