@@ -20,11 +20,11 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/repodocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/options"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/cli-runtime/pkg/printers"
-	"k8s.io/cli-runtime/pkg/resource"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubectl/pkg/cmd/get"
 )
@@ -40,7 +40,7 @@ func NewCommand(ctx context.Context, rcg *genericclioptions.ConfigFlags) *cobra.
 func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner {
 	r := &runner{
 		ctx:        ctx,
-		cfg:        rcg,
+		getFlags:   options.Get{ConfigFlags: rcg},
 		printFlags: get.NewGetPrintFlags(),
 	}
 	c := &cobra.Command{
@@ -56,16 +56,17 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	r.Command = c
 
 	// Create flags
+	r.getFlags.AddFlags(c)
 	r.printFlags.AddFlags(c)
 	return r
 }
 
 type runner struct {
 	ctx     context.Context
-	cfg     *genericclioptions.ConfigFlags
 	Command *cobra.Command
 
 	// Flags
+	getFlags   options.Get
 	printFlags *get.PrintFlags
 
 	requestTable bool
@@ -90,9 +91,14 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	// The error is: `no kind "RepositoryList" is registered for the internal
 	// version of group "config.porch.kpt.dev" in scheme`. Of course there _is_
 	// no such kind since CRDs seem to have only versioned resources.
-	b := resource.NewBuilder(r.cfg).
-		Unstructured().
-		NamespaceParam(*r.cfg.Namespace).DefaultNamespace()
+	b, err := r.getFlags.ResourceBuilder()
+	if err != nil {
+		return err
+	}
+
+	// TODO: Support table mode over proto
+	// TODO: Print namespace in multi-namespace mode
+	b = b.Unstructured()
 
 	if len(args) > 0 {
 		b.ResourceNames("repository", args...)
