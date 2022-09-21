@@ -49,7 +49,6 @@ var (
 // RootSyncSetReconciler reconciles a RootSyncSet object
 type RootSyncSetReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
 
 	WorkloadIdentityHelper
 }
@@ -166,6 +165,12 @@ func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (schema.GroupVersion
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := v1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+
+	r.Client = mgr.GetClient()
+
 	if err := r.WorkloadIdentityHelper.Init(mgr.GetConfig()); err != nil {
 		return err
 	}
