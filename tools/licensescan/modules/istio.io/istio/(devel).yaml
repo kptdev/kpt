@@ -1,0 +1,4 @@
+# https://pkg.go.dev/istio.io/istio@(devel)
+license: Apache-2.0
+licenseURLs:
+- https://raw.githubusercontent.com/istio/istio/master/LICENSE

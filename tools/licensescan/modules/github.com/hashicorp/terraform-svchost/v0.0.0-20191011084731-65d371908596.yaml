@@ -1,0 +1,4 @@
+# https://pkg.go.dev/github.com/hashicorp/terraform-svchost@v0.0.0-20191011084731-65d371908596
+license: MPL-2.0
+licenseURLs:
+- https://raw.githubusercontent.com/hashicorp/terraform-svchost/master/LICENSE

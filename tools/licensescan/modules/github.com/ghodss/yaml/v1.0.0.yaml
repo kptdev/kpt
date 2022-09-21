@@ -1,0 +1,4 @@
+# https://pkg.go.dev/github.com/ghodss/yaml@v1.0.0
+license: BSD-3-Clause, MIT
+licenseURLs:
+- https://raw.githubusercontent.com/ghodss/yaml/master/LICENSE
