@@ -37,14 +37,10 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	remoterootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
-	rootsyncapi "github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
 	//+kubebuilder:scaffold:imports
@@ -54,19 +50,13 @@ var (
 	scheme = runtime.NewScheme()
 
 	reconcilers = map[string]newReconciler{
-		"rootsyncsets": func(c client.Client, s *runtime.Scheme) Reconciler {
-			return &rootsyncset.RootSyncSetReconciler{
-				Client: c,
-				Scheme: s,
-			}
+		"rootsyncsets": func() Reconciler {
+			return &rootsyncset.RootSyncSetReconciler{}
 		},
-		"remoterootsyncsets": func(c client.Client, s *runtime.Scheme) Reconciler {
-			return &remoterootsyncset.RemoteRootSyncSetReconciler{
-				Client: c,
-				Scheme: s,
-			}
+		"remoterootsyncsets": func() Reconciler {
+			return &remoterootsyncset.RemoteRootSyncSetReconciler{}
 		},
-		"workloadidentitybindings": func(c client.Client, s *runtime.Scheme) Reconciler {
+		"workloadidentitybindings": func() Reconciler {
 			return &workloadidentitybinding.WorkloadIdentityBindingReconciler{}
 		},
 	}
@@ -77,7 +67,7 @@ type Reconciler interface {
 	SetupWithManager(ctrl.Manager) error
 }
 
-type newReconciler func(client.Client, *runtime.Scheme) Reconciler
+type newReconciler func() Reconciler
 
 // We include our lease / events permissions in the main RBAC role
 
@@ -86,10 +76,6 @@ type newReconciler func(client.Client, *runtime.Scheme) Reconciler
 
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-
-	utilruntime.Must(porchapi.AddToScheme(scheme))
-	utilruntime.Must(rootsyncapi.AddToScheme(scheme))
-	utilruntime.Must(remoterootsyncapi.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -116,6 +102,8 @@ func run(ctx context.Context) error {
 	// 		"Enabling this will ensure there is only one active controller manager.")
 	flag.StringVar(&enabledReconcilersString, "reconcilers", "", "reconcilers that should be enabled")
 
+	flag.Parse()
+
 	managerOptions := ctrl.Options{
 		Scheme:                     scheme,
 		MetricsBindAddress:         ":8080",
@@ -125,8 +113,6 @@ func run(ctx context.Context) error {
 		LeaderElectionID:           "porch-operators.config.porch.kpt.dev",
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
 	}
-
-	flag.Parse()
 
 	ctrl.SetLogger(klogr.New())
 
@@ -140,7 +126,7 @@ func run(ctx context.Context) error {
 		if !enableReconciler(enabledReconcilers, r) {
 			continue
 		}
-		if err = f(mgr.GetClient(), mgr.GetScheme()).SetupWithManager(mgr); err != nil {
+		if err = f().SetupWithManager(mgr); err != nil {
 			return fmt.Errorf("error creating %s reconciler: %w", r, err)
 		}
 	}

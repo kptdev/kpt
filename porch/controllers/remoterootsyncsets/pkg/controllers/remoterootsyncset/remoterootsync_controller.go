@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/discovery"
 	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
@@ -53,7 +52,6 @@ var (
 // RemoteRootSyncSetReconciler reconciles RemoteRootSyncSet objects
 type RemoteRootSyncSetReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
 
 	ociStorage *kptoci.Storage
 
@@ -363,6 +361,12 @@ func isWhitespace(s string) bool {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RemoteRootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+
+	r.Client = mgr.GetClient()
+
 	if err := ctrl.NewControllerManagedBy(mgr).
 		For(&api.RemoteRootSyncSet{}).
 		Complete(r); err != nil {
