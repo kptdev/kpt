@@ -29,4 +29,5 @@ go run github.com/justinsb/addlicense@v1.0.1 \
   --ignore "package-examples/cert-manager-basic/**" \
   --ignore "package-examples/ghost/**" \
   --ignore "package-examples/ingress-nginx/**" \
+  --ignore "tools/licensescan/modules/**" \
   . 2>&1 | ( grep -v "skipping: " || true )
