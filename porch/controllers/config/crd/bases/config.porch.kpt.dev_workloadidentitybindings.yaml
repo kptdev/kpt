@@ -52,27 +52,19 @@ spec:
             type: object
           spec:
             description: WorkloadIdentityBindingSpec defines the desired state of
-              RemoteRootSync
+              WorkloadIdentityBinding
             properties:
-              resourceRef:
+              gcpServiceAccountRef:
                 properties:
-                  apiVersion:
-                    type: string
                   external:
-                    type: string
-                  kind:
                     type: string
                   name:
                     type: string
                   namespace:
                     type: string
                 type: object
-              serviceAccountRef:
+              kubernetesServiceAccountRef:
                 properties:
-                  apiVersion:
-                    type: string
-                  kind:
-                    type: string
                   name:
                     type: string
                   namespace:
