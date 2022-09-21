@@ -728,7 +728,7 @@ func (r *gitRepository) verifyRepository(ctx context.Context, opts *GitRepositor
 		case ErrorIfMissing:
 			return fmt.Errorf("branch %q doesn't exist: %v", r.branch, err)
 		case CreateIfMissing:
-			klog.Info("Creating branch %s in repository %s", r.branch, r.name)
+			klog.Infof("Creating branch %s in repository %s", r.branch, r.name)
 			if err := r.createBranch(ctx, r.branch); err != nil {
 				return fmt.Errorf("error creating main branch %q: %v", r.branch, err)
 			}
