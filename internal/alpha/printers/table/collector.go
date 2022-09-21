@@ -5,6 +5,7 @@ package table
 
 import (
 	"fmt"
+	"io"
 	"sort"
 	"sync"
 
@@ -20,7 +21,7 @@ import (
 
 const InvalidStatus status.Status = "Invalid"
 
-func newResourceStateCollector(resourceGroups []event.ActionGroup) *resourceStateCollector {
+func newResourceStateCollector(resourceGroups []event.ActionGroup, out io.Writer) *resourceStateCollector {
 	resourceInfos := make(map[object.ObjMetadata]*resourceInfo)
 	for _, group := range resourceGroups {
 		action := group.Action
@@ -40,9 +41,29 @@ func newResourceStateCollector(resourceGroups []event.ActionGroup) *resourceStat
 			}
 		}
 	}
-	return &resourceStateCollector{
+	var ids []object.ObjMetadata
+	for id := range resourceInfos {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		if ids[i].Namespace != ids[j].Namespace {
+			return ids[i].Namespace < ids[j].Namespace
+		}
+		if ids[i].GroupKind.Group != ids[j].GroupKind.Group {
+			return ids[i].GroupKind.Group < ids[j].GroupKind.Group
+		}
+		if ids[i].GroupKind.Kind != ids[j].GroupKind.Kind {
+			return ids[i].GroupKind.Kind < ids[j].GroupKind.Kind
+		}
+		if ids[i].Name != ids[j].Name {
+			return ids[i].Name < ids[j].Name
+		}
+		return false
+	})
+	c := &resourceStateCollector{
 		resourceInfos: resourceInfos,
 	}
+	return c
 }
 
 // resourceStateCollector consumes the events from the applier
@@ -83,19 +104,19 @@ type resourceInfo struct {
 
 	// Error is set if an error occurred trying to perform
 	// the desired action on the resource.
-	Error error
+	// Error error
 
-	// ApplyStatus contains the result after
+	// lastApplyEvent contains the result after
 	// a resource has been applied to the cluster.
-	ApplyStatus event.ApplyEventStatus
+	lastApplyEvent event.ApplyEvent
 
-	// PruneStatus contains the result after
+	// lastPruneEvent contains the result after
 	// a prune operation on a resource
-	PruneStatus event.PruneEventStatus
+	lastPruneEvent event.PruneEvent
 
-	// DeleteStatus contains the result after
+	// lastDeleteEvent contains the result after
 	// a delete operation on a resource
-	DeleteStatus event.DeleteEventStatus
+	lastDeleteEvent event.DeleteEvent
 
 	// WaitStatus contains the result after
 	// a wait operation on a resource
@@ -255,10 +276,8 @@ func (r *resourceStateCollector) processApplyEvent(e event.ApplyEvent) {
 		klog.V(4).Infof("%s apply event not found in ResourceInfos; no processing", identifier)
 		return
 	}
-	if e.Error != nil {
-		previous.Error = e.Error
-	}
-	previous.ApplyStatus = e.Status
+	previous.lastApplyEvent = e
+
 	r.stats.ApplyStats.Inc(e.Status)
 }
 
@@ -271,10 +290,9 @@ func (r *resourceStateCollector) processPruneEvent(e event.PruneEvent) {
 		klog.V(4).Infof("%s prune event not found in ResourceInfos; no processing", identifier)
 		return
 	}
-	if e.Error != nil {
-		previous.Error = e.Error
-	}
-	previous.PruneStatus = e.Status
+
+	previous.lastPruneEvent = e
+
 	r.stats.PruneStats.Inc(e.Status)
 }
 
@@ -287,10 +305,8 @@ func (r *resourceStateCollector) processDeleteEvent(e event.DeleteEvent) {
 		klog.V(4).Infof("%s delete event not found in ResourceInfos; no processing", identifier)
 		return
 	}
-	if e.Error != nil {
-		previous.Error = e.Error
-	}
-	previous.DeleteStatus = e.Status
+	previous.lastDeleteEvent = e
+
 	r.stats.DeleteStats.Inc(e.Status)
 }
 
@@ -337,13 +353,13 @@ func (r *resourceStateCollector) LatestState() *ResourceState {
 	var resourceInfos ResourceInfos
 	for _, ri := range r.resourceInfos {
 		resourceInfos = append(resourceInfos, &resourceInfo{
-			identifier:     ri.identifier,
-			resourceStatus: ri.resourceStatus,
-			ResourceAction: ri.ResourceAction,
-			ApplyStatus:    ri.ApplyStatus,
-			PruneStatus:    ri.PruneStatus,
-			DeleteStatus:   ri.DeleteStatus,
-			WaitStatus:     ri.WaitStatus,
+			identifier:      ri.identifier,
+			resourceStatus:  ri.resourceStatus,
+			ResourceAction:  ri.ResourceAction,
+			lastApplyEvent:  ri.lastApplyEvent,
+			lastDeleteEvent: ri.lastDeleteEvent,
+			lastPruneEvent:  ri.lastPruneEvent,
+			WaitStatus:      ri.WaitStatus,
 		})
 	}
 	sort.Sort(resourceInfos)

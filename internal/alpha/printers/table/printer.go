@@ -11,9 +11,11 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	pollingevent "sigs.k8s.io/cli-utils/pkg/kstatus/polling/event"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 	printcommon "sigs.k8s.io/cli-utils/pkg/print/common"
 	"sigs.k8s.io/cli-utils/pkg/print/table"
 )
@@ -39,7 +41,7 @@ func (t *Printer) Print(ch <-chan event.Event, _ common.DryRunStrategy, _ bool) 
 	}
 	// Create a new collector and initialize it with the resources
 	// we are interested in.
-	coll := newResourceStateCollector(initEvent.ActionGroups)
+	coll := newResourceStateCollector(initEvent.ActionGroups, t.IOStreams.Out)
 
 	stop := make(chan struct{})
 
@@ -140,7 +142,6 @@ func printProgress(w io.Writer, width int, r table.Resource) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	if details != "" {
 		text += " " + details
 	}
@@ -161,7 +162,7 @@ func getProgress(resInfo *resourceInfo) (string, string, error) {
 	var details string
 	switch resInfo.ResourceAction {
 	case event.ApplyAction:
-		switch resInfo.ApplyStatus {
+		switch resInfo.lastApplyEvent.Status {
 		case event.ApplyPending:
 			text = "PendingApply"
 		case event.ApplySuccessful:
@@ -169,15 +170,20 @@ func getProgress(resInfo *resourceInfo) (string, string, error) {
 			printStatus = true
 		case event.ApplySkipped:
 			text = "SkippedApply"
+
 		case event.ApplyFailed:
 			text = "ApplyFailed"
 
 		default:
-			return "", "", fmt.Errorf("unknown ApplyStatus: %v", resInfo.ApplyStatus)
+			return "", "", fmt.Errorf("unknown ApplyStatus: %v", resInfo.lastApplyEvent.Status)
+		}
+
+		if resInfo.lastApplyEvent.Error != nil {
+			details = fmt.Sprintf("error:%+v", resInfo.lastApplyEvent.Error)
 		}
 
 	case event.PruneAction:
-		switch resInfo.PruneStatus {
+		switch resInfo.lastPruneEvent.Status {
 		case event.PrunePending:
 			text = "PendingDeletion"
 		case event.PruneSuccessful:
@@ -186,9 +192,14 @@ func getProgress(resInfo *resourceInfo) (string, string, error) {
 			text = "DeletionSkipped"
 		case event.PruneFailed:
 			text = "DeletionFailed"
+			text += fmt.Sprintf(" %+v", resInfo.lastPruneEvent.Error)
 
 		default:
-			return "", "", fmt.Errorf("unknown PruneStatus: %v", resInfo.PruneStatus)
+			return "", "", fmt.Errorf("unknown PruneStatus: %v", resInfo.lastPruneEvent.Status)
+		}
+
+		if resInfo.lastPruneEvent.Error != nil {
+			details = fmt.Sprintf("error:%+v", resInfo.lastPruneEvent.Error)
 		}
 
 	default:
@@ -211,21 +222,27 @@ func getProgress(resInfo *resourceInfo) (string, string, error) {
 		}
 
 		conditionStrings := getConditions(rs)
-		text += " Conditions:" + strings.Join(conditionStrings, ",")
+		if rs.Status != status.CurrentStatus {
+			text += " Conditions:" + strings.Join(conditionStrings, ",")
+		}
 
 		var message string
 		if rs.Error != nil {
 			message = rs.Error.Error()
 		} else {
-			message = rs.Message
+			switch rs.Status {
+			case status.CurrentStatus:
+				// Don't print the message when things are OK
+			default:
+				message = rs.Message
+			}
 		}
-		// TODO: Map from status?
-		if message == "Resource is Ready" || message == "Resource is current" {
-			message = ""
-		}
+
 		if message != "" {
-			details += "Message:" + message
+			details += " message:" + message
 		}
+
+		// TODO: Need to wait for observedGeneration I think, as it is exiting before conditions are observed
 	}
 
 	return text, details, nil
@@ -251,6 +268,9 @@ func getConditions(rs *pollingevent.ResourceStatus) []string {
 		conditionType := condition["type"].(string)
 		conditionStatus := condition["status"].(string)
 		conditionReason := condition["reason"].(string)
+		lastTransitionTime := condition["lastTransitionTime"].(string)
+
+		// TODO: Colors should be line based, pending should be light gray
 		var color printcommon.Color
 		switch conditionStatus {
 		case "True":
@@ -265,6 +285,16 @@ func getConditions(rs *pollingevent.ResourceStatus) []string {
 		if text == "" {
 			text = conditionType
 		}
+
+		if lastTransitionTime != "" && color != printcommon.GREEN {
+			t, err := time.Parse(time.RFC3339, lastTransitionTime)
+			if err != nil {
+				klog.Warningf("failed to parse time %v: %v", lastTransitionTime, err)
+			} else {
+				text += " " + time.Since(t).Truncate(time.Second).String()
+			}
+		}
+
 		s := printcommon.SprintfWithColor(color, text)
 		conditionStrings = append(conditionStrings, s)
 	}
