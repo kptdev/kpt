@@ -263,7 +263,7 @@ func (r *ociRepository) ListFunctions(ctx context.Context) ([]repository.Functio
 
 	err = google.Walk(ociRepo, func(repo name.Repository, tags *google.Tags, err error) error {
 		if err != nil {
-			klog.Warningf(" Walk %s encountered error: %w", repo, err)
+			klog.Warningf(" Walk %s encountered error: %v", repo, err)
 			return err
 		}
 
