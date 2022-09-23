@@ -18,5 +18,6 @@
 package tools
 
 import (
+	_ "golang.org/x/tools/cmd/stringer"
 	_ "k8s.io/code-generator"
 )

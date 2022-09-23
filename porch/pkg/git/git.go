@@ -53,7 +53,7 @@ type GitRepository interface {
 	GetPackageRevision(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
 }
 
-//go:generate stringer -type=MainBranchStrategy -linecomment
+//go:generate go run golang.org/x/tools/cmd/stringer -type=MainBranchStrategy -linecomment
 type MainBranchStrategy int
 
 const (
