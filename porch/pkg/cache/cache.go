@@ -87,7 +87,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 		cr := c.repositories[key]
 
 		if cr == nil {
-			r, err := oci.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, repositorySpec.Spec.Content, ociSpec, filepath.Join(c.cacheDir, "oci"))
+			r, err := oci.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, repositorySpec.Spec.Content, ociSpec, repositorySpec.Spec.Deployment, filepath.Join(c.cacheDir, "oci"))
 			if err != nil {
 				return nil, err
 			}
@@ -120,7 +120,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			} else {
 				mbs = git.ErrorIfMissing
 			}
-			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, filepath.Join(c.cacheDir, "git"), git.GitRepositoryOptions{
+			if r, err := git.OpenRepository(ctx, repositorySpec.Name, repositorySpec.Namespace, gitSpec, repositorySpec.Spec.Deployment, filepath.Join(c.cacheDir, "git"), git.GitRepositoryOptions{
 				CredentialResolver: c.credentialResolver,
 				UserInfoProvider:   c.userInfoProvider,
 				MainBranchStrategy: mbs,

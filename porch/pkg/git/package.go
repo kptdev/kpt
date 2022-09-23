@@ -95,6 +95,8 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 	status := v1alpha1.PackageRevisionStatus{
 		UpstreamLock: lockCopy,
 	}
+	status.Deployment = p.repo.deployment
+
 	if p.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
 		if !p.updated.IsZero() {
 			status.PublishedAt = metav1.Time{Time: p.updated}

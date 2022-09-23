@@ -93,6 +93,9 @@ type PackageRevisionStatus struct {
 
 	// PublishedAt is the time when the packagerevision were approved.
 	PublishedAt metav1.Time `json:"publishTimestamp,omitempty"`
+
+	// Deployment is true if this is a deployment package (in a deployment repository).
+	Deployment bool `json:"deployment,omitempty"`
 }
 
 type TaskType string

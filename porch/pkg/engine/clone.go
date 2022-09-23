@@ -150,7 +150,7 @@ func (m *clonePackageMutation) cloneFromGit(ctx context.Context, gitPackage *api
 	}
 	defer os.RemoveAll(dir)
 
-	r, err := git.OpenRepository(ctx, "", "", &spec, dir, git.GitRepositoryOptions{
+	r, err := git.OpenRepository(ctx, "", "", &spec, false, dir, git.GitRepositoryOptions{
 		CredentialResolver: m.credentialResolver,
 		MainBranchStrategy: git.SkipVerification, // We are only reading so we don't need the main branch to exist.
 	})
