@@ -62,9 +62,6 @@ endif
 
 .DEFAULT_GOAL := all
 
-"$(MYGOBIN)/stringer":
-	go install golang.org/x/tools/cmd/stringer@v0.1.12
-
 .PHONY: all
 all: stop network start-etcd start-kube-apiserver start-function-runner run-local
 
@@ -129,7 +126,7 @@ start-function-runner:
 	  -disable-runtimes pod
 
 .PHONY: generate
-generate: "$(MYGOBIN)/stringer"
+generate:
 	@for f in $(MODULES); do (cd $$f; echo "Generating $$f"; go generate -v ./...) || exit 1; done
 
 .PHONY: tidy
