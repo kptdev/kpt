@@ -17,6 +17,7 @@ package alpha
 import (
 	"context"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/license"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/live"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/repo"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg"
@@ -52,6 +53,7 @@ func GetCommand(ctx context.Context, name, version string) *cobra.Command {
 		sync.NewCommand(ctx, version),
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
+		license.NewCommand(ctx, version),
 	)
 
 	return alpha
