@@ -16,7 +16,6 @@ package info
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/licenses"
