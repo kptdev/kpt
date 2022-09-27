@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 
-const gitSuffixRegexp = ".git($|/)"
+const gitSuffixRegexp = "\\.git($|/)"
 
 type Target struct {
 	kptfilev1.Git
