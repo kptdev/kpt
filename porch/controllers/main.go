@@ -100,7 +100,7 @@ func run(ctx context.Context) error {
 	// flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 	// 	"Enable leader election for controller manager. "+
 	// 		"Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&enabledReconcilersString, "reconcilers", "", "reconcilers that should be enabled")
+	flag.StringVar(&enabledReconcilersString, "reconcilers", "*", "reconcilers that should be enabled; use * to mean 'enable all'")
 
 	flag.Parse()
 
@@ -123,7 +123,7 @@ func run(ctx context.Context) error {
 
 	enabledReconcilers := parseReconcilers(enabledReconcilersString)
 	for r, f := range reconcilers {
-		if !enableReconciler(enabledReconcilers, r) {
+		if !reconcilerIsEnabled(enabledReconcilers, r) {
 			continue
 		}
 		if err = f().SetupWithManager(mgr); err != nil {
@@ -150,7 +150,10 @@ func parseReconcilers(reconcilers string) []string {
 	return strings.Split(reconcilers, ",")
 }
 
-func enableReconciler(reconcilers []string, reconciler string) bool {
+func reconcilerIsEnabled(reconcilers []string, reconciler string) bool {
+	if slices.Contains(reconcilers, "*") {
+		return true
+	}
 	if slices.Contains(reconcilers, reconciler) {
 		return true
 	}
