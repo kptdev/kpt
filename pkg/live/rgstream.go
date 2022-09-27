@@ -31,14 +31,8 @@ import (
 
 var (
 	excludedGKs = []schema.GroupKind{
-		{
-			Group: kptfilev1.KptFileGroup,
-			Kind:  kptfilev1.KptFileKind,
-		},
-		{
-			Group: rgfilev1alpha1.RGFileGroup,
-			Kind:  rgfilev1alpha1.RGFileKind,
-		},
+		kptfilev1.KptFileGVK().GroupKind(),
+		rgfilev1alpha1.ResourceGroupGVK().GroupKind(),
 	}
 )
 

@@ -26,6 +26,8 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -195,8 +197,7 @@ type InventoryFilter struct {
 }
 
 func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if object.GetApiVersion() != kptfilev1.KptFileAPIVersion ||
-		object.GetKind() != kptfilev1.KptFileKind {
+	if GroupVersionKindForObject(object) != kptfilev1.KptFileGVK() {
 		return object, nil
 	}
 
@@ -220,9 +221,18 @@ type RGFilter struct {
 	Inventories []*rgfilev1alpha1.ResourceGroup
 }
 
+// GroupVersionKindForObject extracts the group/version/kind from an RNode holding a kubernetes object.
+func GroupVersionKindForObject(object *yaml.RNode) schema.GroupVersionKind {
+	apiVersion := object.GetApiVersion()
+	gv, err := schema.ParseGroupVersion(apiVersion)
+	if err != nil {
+		klog.Warningf("error parsing apiVersion=%q", apiVersion)
+	}
+	return gv.WithKind(object.GetKind())
+}
+
 func (r *RGFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
-	if object.GetApiVersion() != rgfilev1alpha1.RGFileAPIVersion ||
-		object.GetKind() != rgfilev1alpha1.RGFileKind {
+	if GroupVersionKindForObject(object) != rgfilev1alpha1.ResourceGroupGVK() {
 		return object, nil
 	}
 

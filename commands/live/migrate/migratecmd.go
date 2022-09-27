@@ -205,7 +205,7 @@ func (mr *Runner) retrieveConfigMapInv(reader io.Reader, args []string) (invento
 
 	// cli-utils treats any resource that contains the inventory-id label as an inventory object. We should
 	// ignore any inventories that are stored as ResourceGroup resources since they do not need migration.
-	if cmInvObj.GetKind() == rgfilev1alpha1.RGFileKind {
+	if cmInvObj.GetKind() == rgfilev1alpha1.ResourceGroupGVK().Kind {
 		// No ConfigMap inventory means the migration has already run before.
 		fmt.Fprintln(mr.ioStreams.Out, "no ConfigMap inventory...completed")
 		return nil, &inventory.NoInventoryObjError{}

@@ -35,7 +35,7 @@ const (
 
 var (
 	configMapGVK = resid.NewGvk("", "v1", "ConfigMap")
-	kptfileGVK   = resid.NewGvk(kptfilev1.KptFileGroup, kptfilev1.KptFileVersion, kptfilev1.KptFileKind)
+	kptfileGVK   = resid.NewGvk(kptfilev1.KptFileGVK().Group, kptfilev1.KptFileGVK().Version, kptfilev1.KptFileGVK().Kind)
 )
 
 // PackageContextGenerator is a built-in KRM function that generates

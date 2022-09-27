@@ -18,19 +18,34 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
-	RGFileName       = "resourcegroup.yaml"
-	RGFileKind       = "ResourceGroup"
-	RGFileGroup      = "kpt.dev"
-	RGFileVersion    = "v1alpha1"
-	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
+	RGFileName = "resourcegroup.yaml"
 	// RGInventoryIDLabel is the label name used for storing an inventory ID.
 	RGInventoryIDLabel = common.InventoryLabel
+
+	// Deprecated: prefer ResourceGroupGVK
+	RGFileKind = "ResourceGroup"
+	// Deprecated: prefer ResourceGroupGVK
+	RGFileGroup = "kpt.dev"
+	// Deprecated: prefer ResourceGroupGVK
+	RGFileVersion = "v1alpha1"
+	// Deprecated: prefer ResourceGroupGVK
+	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
 )
+
+// ResourceGroupGVK is the GroupVersionKind of ResourceGroup objects
+func ResourceGroupGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   "kpt.dev",
+		Version: "v1alpha1",
+		Kind:    "ResourceGroup",
+	}
+}
 
 // DefaultMeta is the ResourceMeta for ResourceGroup instances.
 var DefaultMeta = yaml.ResourceMeta{

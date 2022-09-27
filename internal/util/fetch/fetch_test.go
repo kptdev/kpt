@@ -196,8 +196,9 @@ func TestCommand_Run(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind,
+			},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: "git",
@@ -258,8 +259,8 @@ func TestCommand_Run_subdir(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
@@ -334,8 +335,9 @@ func TestCommand_Run_branch(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind,
+			},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
@@ -415,8 +417,9 @@ func TestCommand_Run_tag(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind,
+			},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: "git",

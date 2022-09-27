@@ -20,16 +20,34 @@ package v1
 import (
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 const (
-	KptFileName       = "Kptfile"
-	KptFileKind       = "Kptfile"
-	KptFileGroup      = "kpt.dev"
-	KptFileVersion    = "v1"
+	KptFileName = "Kptfile"
+
+	// Deprecated: prefer KptFileGVK
+	KptFileKind = "Kptfile"
+
+	// Deprecated: prefer KptFileGVK
+	KptFileGroup = "kpt.dev"
+
+	// Deprecated: prefer KptFileGVK
+	KptFileVersion = "v1"
+
+	// Deprecated: prefer KptFileGVK
 	KptFileAPIVersion = KptFileGroup + "/" + KptFileVersion
 )
+
+// KptFileGVK is the GroupVersionKind of Kptfile objects
+func KptFileGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   "kpt.dev",
+		Version: "v1",
+		Kind:    "Kptfile",
+	}
+}
 
 // TypeMeta is the TypeMeta for KptFile instances.
 var TypeMeta = yaml.ResourceMeta{

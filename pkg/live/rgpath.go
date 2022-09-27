@@ -66,7 +66,7 @@ func (r *ResourceGroupPathManifestReader) Read() ([]*unstructured.Unstructured, 
 		// Skip if current file is a ResourceGroup resource. We do not want to apply/delete any ResourceGroup CRs when we
 		// run any `kpt live` commands on a package. Instead, we have specific logic in place for handling ResourceGroups in
 		// the live cluster.
-		if u.GetKind() == rgfilev1alpha1.RGFileKind && u.GetAPIVersion() == rgfilev1alpha1.DefaultMeta.APIVersion {
+		if u.GroupVersionKind() == rgfilev1alpha1.ResourceGroupGVK() {
 			continue
 		}
 		objs = append(objs, u)
