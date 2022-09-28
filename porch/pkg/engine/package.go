@@ -38,12 +38,7 @@ func (p *PackageFetcher) FetchRevision(ctx context.Context, packageRef *api.Pack
 		return nil, fmt.Errorf("cannot find repository %s/%s: %w", namespace, repositoryName, err)
 	}
 
-	open, err := p.cad.OpenRepository(ctx, &resolved)
-	if err != nil {
-		return nil, err
-	}
-
-	revisions, err := open.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: packageRef.Name})
+	revisions, err := p.cad.ListPackageRevisions(ctx, &resolved, repository.ListPackageRevisionFilter{KubeObjectName: packageRef.Name})
 	if err != nil {
 		return nil, err
 	}

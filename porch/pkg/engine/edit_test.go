@@ -116,8 +116,8 @@ func (f *fakeCaD) ObjectCache() cache.ObjectCache {
 	return f.cache.ObjectCache()
 }
 
-func (f *fakeCaD) OpenRepository(context.Context, *configapi.Repository) (repository.Repository, error) {
-	return f.repository, nil
+func (f *fakeCaD) ListPackageRevisions(ctx context.Context, _ *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	return f.repository.ListPackageRevisions(ctx, filter)
 }
 
 func (f *fakeCaD) CreatePackageRevision(context.Context, *configapi.Repository, *v1alpha1.PackageRevision) (repository.PackageRevision, error) {
@@ -138,6 +138,10 @@ func (f *fakeCaD) DeletePackageRevision(context.Context, *configapi.Repository, 
 
 func (f *fakeCaD) ListFunctions(context.Context, *configapi.Repository) ([]repository.Function, error) {
 	return []repository.Function{}, nil
+}
+
+func (f *fakeCaD) ListPackages(ctx context.Context, _ *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error) {
+	return f.repository.ListPackages(ctx, filter)
 }
 
 func (f *fakeCaD) CreatePackage(context.Context, *configapi.Repository, *v1alpha1.Package) (repository.Package, error) {

@@ -42,14 +42,15 @@ type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
 	ObjectCache() cache.ObjectCache
 
-	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
 
+	ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error)
 	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
 	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
 	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj repository.PackageRevision) error
 
+	ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error)
 	CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error)
 	UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, old, new *api.Package) (repository.Package, error)
 	DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, obj repository.Package) error
@@ -90,6 +91,17 @@ func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *config
 	defer span.End()
 
 	return cad.cache.OpenRepository(ctx, repositorySpec)
+}
+
+func (cad *cadEngine) ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::ListPackageRevisions", trace.WithAttributes())
+	defer span.End()
+
+	repo, err := cad.cache.OpenRepository(ctx, repositorySpec)
+	if err != nil {
+		return nil, err
+	}
+	return repo.ListPackageRevisions(ctx, filter)
 }
 
 func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
@@ -381,6 +393,18 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	return nil
+}
+
+func (cad *cadEngine) ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error) {
+	ctx, span := tracer.Start(ctx, "cadEngine::ListPackages", trace.WithAttributes())
+	defer span.End()
+
+	repo, err := cad.cache.OpenRepository(ctx, repositorySpec)
+	if err != nil {
+		return nil, err
+	}
+
+	return repo.ListPackages(ctx, filter)
 }
 
 func (cad *cadEngine) CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error) {
