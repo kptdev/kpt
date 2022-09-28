@@ -15,13 +15,12 @@
 apiVersion: config.porch.kpt.dev/v1alpha1
 kind: WorkloadIdentityBinding
 metadata:
-  name: cnrm-controller-manager-example-project-id
+  name: sample-workloadidentitybinding
   namespace: config-control
 spec:
-  resourceRef:
-    apiVersion: iam.cnrm.cloud.google.com/v1beta1
-    kind: IAMServiceAccount
-    name: cc-robot-example-project
-  serviceAccountRef:
-    name: cnrm-controller-manager-example-project-id
-    namespace: cnrm-system
+  gcpServiceAccountRef:
+    name: my-example-gsa
+  kubernetesServiceAccountRef:
+    name: my-example-ksa
+    namespace: default
+
