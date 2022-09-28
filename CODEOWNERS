@@ -2,17 +2,17 @@
 # Some people have asked for only minimal permissions to avoid notification spam: @bgrant0607
 
 # Default, unless something takes precedence below
-* @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
+* @droot @justinsb @mortent @natasha41575 @yuwenma
 
 # Docs
-/site @bgrant0607 @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
+/site @bgrant0607 @droot @justinsb @mortent @natasha41575 @yuwenma
 # These packages are referenced in docs.
-/package-examples/nginx/ @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
-/package-examples/wordpress/ @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
+/package-examples/nginx/ @droot @justinsb @mortent @natasha41575 @yuwenma
+/package-examples/wordpress/ @droot @justinsb @mortent @natasha41575 @yuwenma
 
 # Schemas changes additional scrutiny.
-/pkg/api @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
+/pkg/api @droot @justinsb @mortent @natasha41575 @yuwenma
 
 # These tests enforce the behavior for fn
-kpt/e2e/testdata/fn-render @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
-kpt/e2e/testdata/fn-eval @droot @justinsb @mengqiy @mortent @natasha41575 @yuwenma
+kpt/e2e/testdata/fn-render @droot @justinsb @mortent @natasha41575 @yuwenma
+kpt/e2e/testdata/fn-eval @droot @justinsb @mortent @natasha41575 @yuwenma
