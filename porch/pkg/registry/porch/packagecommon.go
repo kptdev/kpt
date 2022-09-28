@@ -70,12 +70,7 @@ func (r *packageCommon) listPackageRevisions(ctx context.Context, filter package
 			continue
 		}
 
-		repository, err := r.cad.OpenRepository(ctx, repositoryObj)
-		if err != nil {
-			return err
-		}
-
-		revisions, err := repository.ListPackageRevisions(ctx, filter.ListPackageRevisionFilter)
+		revisions, err := r.cad.ListPackageRevisions(ctx, repositoryObj, filter.ListPackageRevisionFilter)
 		if err != nil {
 			return err
 		}
@@ -111,12 +106,7 @@ func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, 
 			continue
 		}
 
-		repository, err := r.cad.OpenRepository(ctx, repositoryObj)
-		if err != nil {
-			return err
-		}
-
-		revisions, err := repository.ListPackages(ctx, filter.ListPackageFilter)
+		revisions, err := r.cad.ListPackages(ctx, repositoryObj, filter.ListPackageFilter)
 		if err != nil {
 			return err
 		}
@@ -137,7 +127,7 @@ func (r *packageCommon) watchPackages(ctx context.Context, filter packageRevisio
 	return nil
 }
 
-func (r *packageCommon) openRepository(ctx context.Context, name string) (repository.Repository, error) {
+func (r *packageCommon) getRepositoryObjFromName(ctx context.Context, name string) (*configapi.Repository, error) {
 	ns, namespaced := genericapirequest.NamespaceFrom(ctx)
 	if !namespaced {
 		return nil, fmt.Errorf("namespace must be specified")
@@ -147,20 +137,11 @@ func (r *packageCommon) openRepository(ctx context.Context, name string) (reposi
 		return nil, apierrors.NewNotFound(r.gr, name)
 	}
 
-	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
-	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
-		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(r.gr, name)
-		}
-		return nil, fmt.Errorf("error getting repository %v: %w", repositoryID, err)
-	}
-	return r.cad.OpenRepository(ctx, &repositoryObj)
+	return r.getRepositoryObj(ctx, types.NamespacedName{Name: repositoryName, Namespace: ns})
 }
 
-func (r *packageCommon) getRepositoryObj(ctx context.Context, ns string, repositoryName string) (*configapi.Repository, error) {
+func (r *packageCommon) getRepositoryObj(ctx context.Context, repositoryID types.NamespacedName) (*configapi.Repository, error) {
 	var repositoryObj configapi.Repository
-	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
@@ -171,11 +152,11 @@ func (r *packageCommon) getRepositoryObj(ctx context.Context, ns string, reposit
 }
 
 func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (repository.PackageRevision, error) {
-	repo, err := r.openRepository(ctx, name)
+	repositoryObj, err := r.getRepositoryObjFromName(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-	revisions, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: name})
+	revisions, err := r.cad.ListPackageRevisions(ctx, repositoryObj, repository.ListPackageRevisionFilter{KubeObjectName: name})
 	if err != nil {
 		return nil, err
 	}
@@ -189,12 +170,12 @@ func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (re
 }
 
 func (r *packageCommon) getPackage(ctx context.Context, name string) (repository.Package, error) {
-	repo, err := r.openRepository(ctx, name)
+	repositoryObj, err := r.getRepositoryObjFromName(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	revisions, err := repo.ListPackages(ctx, repository.ListPackageFilter{KubeObjectName: name})
+	revisions, err := r.cad.ListPackages(ctx, repositoryObj, repository.ListPackageFilter{KubeObjectName: name})
 	if err != nil {
 		return nil, err
 	}
@@ -410,7 +391,7 @@ func (r *packageCommon) validateDelete(ctx context.Context, deleteValidation res
 	if err != nil {
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", repoName))
 	}
-	repositoryObj, err := r.getRepositoryObj(ctx, ns, repositoryName)
+	repositoryObj, err := r.getRepositoryObj(ctx, types.NamespacedName{Name: repositoryName, Namespace: ns})
 	if err != nil {
 		return nil, err
 	}
