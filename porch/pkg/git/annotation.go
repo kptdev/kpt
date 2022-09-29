@@ -33,6 +33,10 @@ type gitAnnotation struct {
 	// without having to check file paths.
 	PackagePath string `json:"package,omitempty"`
 
+	// Description holds the description of the package revision the commit
+	// belongs to.
+	Description string `json:"description,omitempty"`
+
 	// Revision hold the revision of the package revision the commit
 	// belongs to.
 	Revision string `json:"revision,omitempty"`

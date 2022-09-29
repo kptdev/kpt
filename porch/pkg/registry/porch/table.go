@@ -116,7 +116,8 @@ var (
 			return []interface{}{
 				pr.Name,
 				pr.Spec.PackageName,
-				pr.Spec.Revision,
+				pr.Spec.Description,
+				pr.Status.Revision,
 				isLatest(pr),
 				pr.Spec.Lifecycle,
 				pr.Spec.RepositoryName,
@@ -125,6 +126,7 @@ var (
 		columns: []metav1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Package", Type: "string"},
+			{Name: "Description", Type: "string"},
 			{Name: "Revision", Type: "string"},
 			{Name: "Latest", Type: "boolean"},
 			{Name: "Lifecycle", Type: "string"},

@@ -33,15 +33,16 @@ import (
 )
 
 type gitPackageRevision struct {
-	repo      *gitRepository // repo is repo containing the package
-	path      string
-	revision  string
-	updated   time.Time
-	updatedBy string
-	ref       *plumbing.Reference // ref is the Git reference at which the package exists
-	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
-	commit    plumbing.Hash       // Current version of the package (commit sha)
-	tasks     []v1alpha1.Task
+	repo        *gitRepository // repo is repo containing the package
+	path        string
+	revision    string
+	description string
+	updated     time.Time
+	updatedBy   string
+	ref         *plumbing.Reference // ref is the Git reference at which the package exists
+	tree        plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
+	commit      plumbing.Hash       // Current version of the package (commit sha)
+	tasks       []v1alpha1.Task
 }
 
 var _ repository.PackageRevision = &gitPackageRevision{}
@@ -55,28 +56,36 @@ var _ repository.PackageRevision = &gitPackageRevision{}
 // layer, the prefix will be removed (this may happen without notice) so it should not
 // be relied upon by clients.
 func (p *gitPackageRevision) KubeObjectName() string {
-	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.repo.name, p.path, p.revision)))
+	// The published package revisions on the main branch will have the same description
+	// as the most recently published package revision, so we need to ensure it has a unique
+	// and unchanging name.
+	var s string
+	if p.revision == string(p.repo.branch) {
+		s = p.revision
+	} else {
+		s = p.description
+	}
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.repo.name, p.path, s)))
 	return p.repo.name + "-" + hex.EncodeToString(hash[:])
 }
 
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
-		Repository: p.repo.name,
-		Package:    p.path,
-		Revision:   p.revision,
+		Repository:  p.repo.name,
+		Package:     p.path,
+		Revision:    p.revision,
+		Description: p.description,
 	}
 }
 
 func (p *gitPackageRevision) uid() types.UID {
-	return types.UID(fmt.Sprintf("uid:%s:%s", p.path, p.revision))
+	return types.UID(fmt.Sprintf("uid:%s:%s", p.path, p.description))
 }
 
 func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
-	key := p.Key()
-
 	_, lock, _ := p.GetUpstreamLock()
-
 	lockCopy := &v1alpha1.UpstreamLock{}
+
 	// TODO: Use kpt definition of UpstreamLock in the package revision status
 	// when https://github.com/GoogleContainerTools/kpt/issues/3297 is complete.
 	// Until then, we have to translate from one type to another.
@@ -94,10 +103,13 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 
 	status := v1alpha1.PackageRevisionStatus{
 		UpstreamLock: lockCopy,
+		Deployment:   p.repo.deployment,
 	}
-	status.Deployment = p.repo.deployment
+
+	key := p.Key()
 
 	if p.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+		status.Revision = key.Revision
 		if !p.updated.IsZero() {
 			status.PublishedAt = metav1.Time{Time: p.updated}
 		}
@@ -122,11 +134,10 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    key.Package,
-			Revision:       key.Revision,
 			RepositoryName: key.Repository,
-
-			Lifecycle: p.Lifecycle(),
-			Tasks:     p.tasks,
+			Description:    key.Description,
+			Lifecycle:      p.Lifecycle(),
+			Tasks:          p.tasks,
 		},
 		Status: status,
 	}
@@ -178,6 +189,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
 			PackageName:    key.Package,
+			Description:    key.Description,
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 

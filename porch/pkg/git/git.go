@@ -286,20 +286,42 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		return nil, fmt.Errorf("error when resolving target branch for the package: %w", err)
 	}
 
-	draft := createDraftName(obj.Spec.PackageName, obj.Spec.Revision)
+	// for backwards compatibility, if spec.revision is provided and spec.description is not, use spec.revision
+	// as spec.description
+	description := obj.Spec.Description
+	if description == "" {
+		if obj.Spec.Revision == "" {
+			return nil, fmt.Errorf("package revision with name %s in repo %s is missing spec.description", obj.Spec.PackageName, obj.Spec.RepositoryName)
+		}
+		description = obj.Spec.Revision
+		klog.Warningf("detected use of deprecated field spec.Revision in PackageRevision %s; using spec.revision"+
+			" as spec.description instead", obj.GetName())
+	}
+
+	// the description must be unique, because it used to generate the package revision's metadata.name
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: description})
+	if err != nil {
+		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
+	}
+	if len(revs) != 0 {
+		return nil, fmt.Errorf("package revision descriptions must be unique; package revision with name %s in repo %s with"+
+			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, description)
+	}
+
+	draft := createDraftName(obj.Spec.PackageName, description)
 
 	// TODO: This should also create a new 'Package' resource if one does not already exist
 
 	return &gitPackageDraft{
-		parent:    r,
-		path:      obj.Spec.PackageName,
-		revision:  obj.Spec.Revision,
-		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
-		updated:   time.Now(),
-		base:      nil, // Creating a new package
-		tasks:     nil, // Creating a new package
-		branch:    draft,
-		commit:    base,
+		parent:      r,
+		path:        obj.Spec.PackageName,
+		description: description,
+		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
+		updated:     time.Now(),
+		base:        nil, // Creating a new package
+		tasks:       nil, // Creating a new package
+		branch:      draft,
+		commit:      base,
 	}, nil
 }
 
@@ -331,15 +353,16 @@ func (r *gitRepository) UpdatePackageRevision(ctx context.Context, old repositor
 	}
 
 	return &gitPackageDraft{
-		parent:    r,
-		path:      oldGitPackage.path,
-		revision:  oldGitPackage.revision,
-		lifecycle: oldGitPackage.Lifecycle(),
-		updated:   rev.updated,
-		base:      rev.ref,
-		tree:      rev.tree,
-		commit:    rev.commit,
-		tasks:     rev.tasks,
+		parent:      r,
+		path:        oldGitPackage.path,
+		revision:    oldGitPackage.revision,
+		description: oldGitPackage.description,
+		lifecycle:   oldGitPackage.Lifecycle(),
+		updated:     rev.updated,
+		base:        rev.ref,
+		tree:        rev.tree,
+		commit:      rev.commit,
+		tasks:       rev.tasks,
 	}, nil
 }
 
@@ -486,7 +509,12 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 
 	var ref *plumbing.Reference = nil // Cannot determine ref; this package will be considered final (immutable).
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, version, ref)
+	description, err := getPkgDescription(commit, path)
+	if err != nil {
+		return nil, lock, err
+	}
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, version, description, ref)
 	if err != nil {
 		return nil, lock, err
 	}
@@ -520,7 +548,11 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 
 	var result []repository.PackageRevision
 	for _, krmPackage := range krmPackages.packages {
-		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, ref)
+		description, err := getPkgDescription(commit, krmPackage.path)
+		if err != nil {
+			return nil, err
+		}
+		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, description, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -531,7 +563,7 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 
 // loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
 func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) (*gitPackageRevision, error) {
-	name, revision, err := parseDraftName(ref)
+	name, description, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
 	}
@@ -556,7 +588,7 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 		return nil, nil
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, ref)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, "", description, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +596,7 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 	return packageRevision, nil
 }
 
-func parseDraftName(draft *plumbing.Reference) (name, revision string, err error) {
+func parseDraftName(draft *plumbing.Reference) (name, desc string, err error) {
 	refName := draft.Name()
 	var suffix string
 	if b, ok := getDraftBranchNameInLocal(refName); ok {
@@ -577,10 +609,10 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 
 	revIndex := strings.LastIndex(suffix, "/")
 	if revIndex <= 0 {
-		return "", "", fmt.Errorf("invalid draft ref name; missing revision suffix: %q", refName)
+		return "", "", fmt.Errorf("invalid draft ref name; missing description suffix: %q", refName)
 	}
-	name, revision = suffix[:revIndex], suffix[revIndex+1:]
-	return name, revision, nil
+	name, desc = suffix[:revIndex], suffix[revIndex+1:]
+	return name, desc, nil
 }
 
 func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]repository.PackageRevision, error) {
@@ -620,7 +652,12 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 		return nil, nil
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, tag)
+	description, err := getPkgDescription(commit, path)
+	if err != nil {
+		return nil, err
+	}
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, description, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -893,7 +930,7 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 	return nil
 }
 
-func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision string) ([]v1alpha1.Task, error) {
+func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision, description string) ([]v1alpha1.Task, error) {
 	var logOptions = git.LogOptions{
 		From:  startCommit.Hash,
 		Order: git.LogOrderCommitterTime,
@@ -927,7 +964,7 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		}
 
 		for _, gitAnnotation := range gitAnnotations {
-			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+			if gitAnnotation.PackagePath == packagePath && (gitAnnotation.Revision == revision || gitAnnotation.Description == description) {
 				// We are iterating through the commits in reverse order.
 				// Tasks that are read from separate commits will be recorded in
 				// reverse order.
@@ -1054,4 +1091,22 @@ func reverseSlice(s []v1alpha1.Task) {
 		first++
 		last--
 	}
+}
+
+func getPkgDescription(commit *object.Commit, packagePath string) (string, error) {
+	annotations, err := ExtractGitAnnotations(commit)
+	if err != nil {
+		return "", err
+	}
+	description := ""
+	for _, a := range annotations {
+		if a.PackagePath != packagePath {
+			continue
+		}
+		if a.Description != "" {
+			description = a.Description
+			break
+		}
+	}
+	return description, nil
 }

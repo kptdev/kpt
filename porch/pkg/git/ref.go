@@ -109,12 +109,12 @@ func getTagNameInLocalRepo(n plumbing.ReferenceName) (string, bool) {
 	return trimOptionalPrefix(n.String(), tagsPrefixInLocalRepo)
 }
 
-func createDraftName(pkg, rev string) BranchName {
-	return BranchName(draftsPrefix + pkg + "/" + rev)
+func createDraftName(pkg, desc string) BranchName {
+	return BranchName(draftsPrefix + pkg + "/" + desc)
 }
 
-func createProposedName(pkg, rev string) BranchName {
-	return BranchName(proposedPrefix + pkg + "/" + rev)
+func createProposedName(pkg, desc string) BranchName {
+	return BranchName(proposedPrefix + pkg + "/" + desc)
 }
 
 func trimOptionalPrefix(s, prefix string) (string, bool) {

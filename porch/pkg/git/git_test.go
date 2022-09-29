@@ -128,7 +128,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 	const (
 		repositoryName = "roundtrip"
 		packageName    = "test-package"
-		revision       = "v123"
+		description    = "test-description"
 		namespace      = "default"
 		deployment     = true
 	)
@@ -162,7 +162,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 			},
 			Spec: v1alpha1.PackageRevisionSpec{
 				PackageName:    packageName,
-				Revision:       revision,
+				Description:    description,
 				RepositoryName: repositoryName,
 			},
 			Status: v1alpha1.PackageRevisionStatus{},
@@ -195,9 +195,9 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		}
 
 		original := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-			Repository: repositoryName,
-			Package:    packageName,
-			Revision:   revision,
+			Repository:  repositoryName,
+			Package:     packageName,
+			Description: description,
 		})
 
 		update, err := repo.UpdatePackageRevision(ctx, original)
@@ -209,7 +209,11 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		}
 		approved, err := update.Close(ctx)
 		if err != nil {
-			t.Fatalf("Close() of %q, %q failed: %v", packageName, revision, err)
+			t.Fatalf("Close() of %q, %q failed: %v", packageName, description, err)
+		}
+		if approved.Key().Revision != "v1" {
+			t.Fatalf("UpdateLifecycle did not assign correct revision number; got %s, want v1",
+				approved.Key().Revision)
 		}
 
 		klog.Infof("approved revision %v", approved.KubeObjectName())
@@ -388,7 +392,7 @@ func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    "test-package",
-			Revision:       "v1",
+			Description:    "test-description",
 			RepositoryName: repositoryName,
 			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
 		},
@@ -473,7 +477,7 @@ func (g GitSuite) TestCreatePackageInTrivialRepository(t *testing.T) {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    "test-package",
-			Revision:       "v1",
+			Description:    "test-description",
 			RepositoryName: repositoryName,
 			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
 		},
@@ -556,9 +560,10 @@ func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 	for _, r := range revisions {
 		rev := r.GetPackageRevision()
 		got[repository.PackageRevisionKey{
-			Repository: rev.Spec.RepositoryName,
-			Package:    rev.Spec.PackageName,
-			Revision:   rev.Spec.Revision,
+			Repository:  rev.Spec.RepositoryName,
+			Package:     rev.Spec.PackageName,
+			Description: rev.Spec.Description,
+			Revision:    rev.Status.Revision,
 		}] = rev.Spec.Lifecycle
 	}
 
@@ -595,29 +600,30 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 	}
 
 	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
-		{Repository: "drafts", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", Revision: "v1", Description: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Revision: "v1", Description: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Revision: "v2", Description: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Revision: "v1", Description: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Revision: "v2", Description: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
 
-		{Repository: "drafts", Package: "bucket", Revision: "v1"}:           v1alpha1.PackageRevisionLifecycleDraft,
-		{Repository: "drafts", Package: "none", Revision: "v1"}:             v1alpha1.PackageRevisionLifecycleDraft,
-		{Repository: "drafts", Package: "pkg-with-history", Revision: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "bucket", Description: "v1"}:           v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "none", Description: "v1"}:             v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "pkg-with-history", Description: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
-		{Repository: "drafts", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Description: "v2", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", Description: "v1", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Description: "v2", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
 		rev := r.GetPackageRevision()
 		got[repository.PackageRevisionKey{
-			Repository: rev.Spec.RepositoryName,
-			Package:    rev.Spec.PackageName,
-			Revision:   rev.Spec.Revision,
+			Repository:  rev.Spec.RepositoryName,
+			Package:     rev.Spec.PackageName,
+			Revision:    rev.Status.Revision,
+			Description: rev.Spec.Description,
 		}] = rev.Spec.Lifecycle
 	}
 
@@ -788,7 +794,8 @@ func (g GitSuite) TestDeletePackages(t *testing.T) {
 		// Delete one of the packages
 		deleting := all[0]
 		pr := deleting.GetPackageRevision()
-		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
+		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName,
+			Revision: pr.Status.Revision, Description: pr.Spec.Description}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
 			// Verify the reference still exists
@@ -1051,12 +1058,16 @@ func (g GitSuite) TestNested(t *testing.T) {
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
 	for _, pr := range revisions {
 		rev := pr.GetPackageRevision()
-		if rev.Spec.Revision == g.branch {
+		if rev.Status.Revision == g.branch {
 			// skip packages with the revision of the main registered branch,
 			// to match the above simplified package discovery algo.
 			continue
 		}
-		got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Revision)] = rev.Spec.Lifecycle
+		if rev.Spec.Lifecycle == v1alpha1.PackageRevisionLifecyclePublished {
+			got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Status.Revision)] = rev.Spec.Lifecycle
+		} else {
+			got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Description)] = rev.Spec.Lifecycle
+		}
 	}
 
 	if !cmp.Equal(want, got) {

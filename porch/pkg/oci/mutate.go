@@ -51,13 +51,35 @@ func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.Pack
 		return nil, err
 	}
 
+	// for backwards compatibility, if spec.revision is provided and spec.description is not, use spec.revision
+	// as spec.description
+	description := obj.Spec.Description
+	if description == "" {
+		if obj.Spec.Revision == "" {
+			return nil, fmt.Errorf("package revision with name %s in repo %s is missing spec.description", obj.Spec.PackageName, obj.Spec.RepositoryName)
+		}
+		description = obj.Spec.Revision
+		klog.Warningf("detected use of deprecated field spec.Revision in PackageRevision %s; using spec.revision"+
+			" as spec.description instead", obj.GetName())
+	}
+
+	// the description must be unique, because it used to generate the package revision's metadata.name
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: description})
+	if err != nil {
+		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
+	}
+	if len(revs) != 0 {
+		return nil, fmt.Errorf("package revision descriptions must be unique; package revision with name %s in repo %s with"+
+			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, description)
+	}
+
 	// digestName := ImageDigestName{}
 	return &ociPackageDraft{
 		packageName: packageName,
 		parent:      r,
 		tasks:       []api.Task{},
 		base:        base,
-		tag:         ociRepo.Tag(obj.Spec.Revision),
+		tag:         ociRepo.Tag(description),
 		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
 	}, nil
 }
@@ -65,7 +87,7 @@ func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.Pack
 func (r *ociRepository) UpdatePackageRevision(ctx context.Context, old repository.PackageRevision) (repository.PackageDraft, error) {
 	oldPackage := old.(*ociPackageRevision)
 	packageName := oldPackage.packageName
-	revision := oldPackage.revision
+	description := oldPackage.description
 	// digestName := oldPackage.digestName
 
 	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
@@ -82,7 +104,7 @@ func (r *ociRepository) UpdatePackageRevision(ctx context.Context, old repositor
 		remote.WithContext(ctx),
 	}
 
-	ref := ociRepo.Tag(revision)
+	ref := ociRepo.Tag(description)
 
 	base, err := remote.Image(ref, options...)
 	if err != nil {
@@ -94,7 +116,7 @@ func (r *ociRepository) UpdatePackageRevision(ctx context.Context, old repositor
 		parent:      r,
 		tasks:       []api.Task{},
 		base:        base,
-		tag:         ociRepo.Tag(revision),
+		tag:         ref,
 		lifecycle:   oldPackage.Lifecycle(),
 	}, nil
 }
@@ -202,6 +224,7 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 
 	klog.Infof("pushing %s", ref)
 
+	revision := ""
 	addendums := append([]mutate.Addendum{}, p.addendums...)
 	if p.lifecycle != "" {
 		if len(addendums) == 0 {
@@ -219,6 +242,20 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 				addendum.Annotations = make(map[string]string)
 			}
 			addendum.Annotations[annotationKeyLifecycle] = string(p.lifecycle)
+
+			if p.lifecycle == v1alpha1.PackageRevisionLifecyclePublished {
+				r := p.parent
+				// Finalize the package revision. Assign it a revision number of latest + 1.
+				revisions, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
+					Package: p.packageName,
+				})
+				nextRevisionNumber, err := repository.NextRevisionNumber(revisions)
+				if err != nil {
+					return nil, err
+				}
+				addendum.Annotations[annotationKeyRevision] = nextRevisionNumber
+				revision = nextRevisionNumber
+			}
 		}
 	}
 
@@ -253,7 +290,7 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 		return nil, fmt.Errorf("error getting config file: %w", err)
 	}
 
-	return p.parent.buildPackageRevision(ctx, digestName, p.packageName, p.tag.TagStr(), configFile.Created.Time)
+	return p.parent.buildPackageRevision(ctx, digestName, p.packageName, p.tag.TagStr(), revision, configFile.Created.Time)
 }
 
 func constructResourceVersion(t time.Time) string {
@@ -267,7 +304,7 @@ func constructUID(ref string) types.UID {
 func (r *ociRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
 	oldPackage := old.(*ociPackageRevision)
 	packageName := oldPackage.packageName
-	revision := oldPackage.revision
+	description := oldPackage.description
 
 	ociRepo, err := name.NewRepository(path.Join(r.spec.Registry, packageName))
 	if err != nil {
@@ -283,7 +320,7 @@ func (r *ociRepository) DeletePackageRevision(ctx context.Context, old repositor
 		remote.WithContext(ctx),
 	}
 
-	ref := ociRepo.Tag(revision)
+	ref := ociRepo.Tag(description)
 
 	klog.Infof("deleting %s", ref)
 

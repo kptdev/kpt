@@ -52,9 +52,9 @@ type packageListEntry struct {
 
 // buildGitPackageRevision creates a gitPackageRevision for the packageListEntry
 // TODO: Can packageListEntry just _be_ a gitPackageRevision?
-func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision string, ref *plumbing.Reference) (*gitPackageRevision, error) {
+func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision, description string, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	repo := p.parent.parent
-	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, revision)
+	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, revision, description)
 	if err != nil {
 		return nil, err
 	}
@@ -88,16 +88,23 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 		// operation.
 	}
 
+	// for backwards compatibility with packages that existed before porch supported
+	// descriptions, we populate the description as the revision number if it is empty
+	if description == "" {
+		description = revision
+	}
+
 	return &gitPackageRevision{
-		repo:      repo,
-		path:      p.path,
-		revision:  revision,
-		updated:   updated,
-		updatedBy: updatedBy,
-		ref:       ref,
-		tree:      p.treeHash,
-		commit:    p.parent.commit.Hash,
-		tasks:     tasks,
+		repo:        repo,
+		path:        p.path,
+		description: description,
+		revision:    revision,
+		updated:     updated,
+		updatedBy:   updatedBy,
+		ref:         ref,
+		tree:        p.treeHash,
+		commit:      p.parent.commit.Hash,
+		tasks:       tasks,
 	}, nil
 }
 

@@ -125,18 +125,24 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 						Digest: digest,
 					},
 					packageName:     childName,
-					revision:        tag,
+					description:     tag,
 					created:         created,
 					parent:          r,
 					resourceVersion: constructResourceVersion(m.Created),
 				}
-				p.uid = constructUID(p.packageName + ":" + p.revision)
+				p.uid = constructUID(p.packageName + ":" + p.description)
 
 				lifecycle, err := r.getLifecycle(ctx, p.digestName)
 				if err != nil {
 					return nil, err
 				}
 				p.lifecycle = lifecycle
+
+				revision, err := r.getRevisionNumber(ctx, p.digestName)
+				if err != nil {
+					return nil, err
+				}
+				p.revision = revision
 
 				tasks, err := r.loadTasks(ctx, p.digestName)
 				if err != nil {
@@ -158,7 +164,7 @@ func (r *ociRepository) ListPackages(ctx context.Context, filter repository.List
 	return nil, fmt.Errorf("ListPackages not supported for OCI packages")
 }
 
-func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
+func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string, description, revision string, created time.Time) (repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)
 	}
@@ -166,15 +172,22 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.Image
 	ctx, span := tracer.Start(ctx, "ociRepository::buildPackageRevision")
 	defer span.End()
 
+	// for backwards compatibility with packages that existed before porch supported
+	// descriptions, we populate the description as the revision number if it is empty
+	if description == "" {
+		description = revision
+	}
+
 	p := &ociPackageRevision{
 		digestName:      name,
 		packageName:     packageName,
+		description:     description,
 		revision:        revision,
 		created:         created,
 		parent:          r,
 		resourceVersion: constructResourceVersion(created),
 	}
-	p.uid = constructUID(p.packageName + ":" + p.revision)
+	p.uid = constructUID(p.packageName + ":" + p.description)
 
 	lifecycle, err := r.getLifecycle(ctx, p.digestName)
 	if err != nil {
@@ -321,13 +334,13 @@ type ociPackageRevision struct {
 	digestName      oci.ImageDigestName
 	packageName     string
 	revision        string
+	description     string
 	created         time.Time
 	resourceVersion string
 	uid             types.UID
 
 	parent *ociRepository
-
-	tasks []v1alpha1.Task
+	tasks  []v1alpha1.Task
 
 	lifecycle v1alpha1.PackageRevisionLifecycle
 }
@@ -358,6 +371,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
 			PackageName:    key.Package,
+			Description:    key.Description,
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
@@ -367,15 +381,16 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 }
 
 func (p *ociPackageRevision) KubeObjectName() string {
-	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.revision)))
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.description)))
 	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
 
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
-		Repository: p.parent.name,
-		Package:    p.packageName,
-		Revision:   p.revision,
+		Repository:  p.parent.name,
+		Package:     p.packageName,
+		Revision:    p.revision,
+		Description: p.description,
 	}
 }
 
@@ -398,7 +413,6 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    key.Package,
-			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
 			Lifecycle: p.Lifecycle(),
@@ -407,6 +421,7 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		Status: v1alpha1.PackageRevisionStatus{
 			// TODO:        UpstreamLock,
 			Deployment: p.parent.deployment,
+			Revision:   key.Revision,
 		},
 	}
 }
