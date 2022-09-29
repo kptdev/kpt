@@ -62,11 +62,11 @@ type PackageRevisionSpec struct {
 	// PackageName identifies the package in the repository.
 	PackageName string `json:"packageName,omitempty"`
 
-	// Revision identifies the version of the package.
-	Revision string `json:"revision,omitempty"`
-
 	// RepositoryName is the name of the Repository object containing this package.
 	RepositoryName string `json:"repository,omitempty"`
+
+	// Description is a short, unique description of the changes contained in this package revision.
+	Description string `json:"description,omitempty"`
 
 	// Parent references a package that provides resources to us
 	Parent *ParentReference `json:"parent,omitempty"`
@@ -74,6 +74,14 @@ type PackageRevisionSpec struct {
 	Lifecycle PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 
 	Tasks []Task `json:"tasks,omitempty"`
+
+	// Deprecated: Revision identifies the version of the package.
+	// For backwards compatibility, if revision is specified in spec,
+	// it will get used as spec.description instead (if no other
+	// spec.description is provided). The revision is now auto-assigned
+	// upon publishing of a package revision and can be viewed in the
+	// package revision status.
+	Revision string `json:"revision,omitempty"`
 }
 
 // ParentReference is a reference to a parent package
@@ -86,6 +94,10 @@ type ParentReference struct {
 
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
+	// Revision identifies the version of the package.
+	Revision string `json:"revision,omitempty"`
+
+	// UpstreamLock identifies the upstream data for this package.
 	UpstreamLock *UpstreamLock `json:"upstreamLock,omitempty"`
 
 	// PublishedBy is the identity of the user who approved the packagerevision.

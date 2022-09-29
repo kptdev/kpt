@@ -45,6 +45,9 @@ type PackageRevisionResourcesSpec struct {
 	// PackageName identifies the package in the repository.
 	PackageName string `json:"packageName,omitempty"`
 
+	// Description identifies the description of the package.
+	Description string `json:"description,omitempty"`
+
 	// Revision identifies the version of the package.
 	Revision string `json:"revision,omitempty"`
 
