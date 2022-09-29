@@ -45,6 +45,9 @@ type PackageRevisionResourcesSpec struct {
 	// PackageName identifies the package in the repository.
 	PackageName string `json:"packageName,omitempty"`
 
+	// WorkspaceName identifies the workspace of the package.
+	WorkspaceName WorkspaceName `json:"workspaceName,omitempty"`
+
 	// Revision identifies the version of the package.
 	Revision string `json:"revision,omitempty"`
 

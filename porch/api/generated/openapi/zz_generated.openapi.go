@@ -717,7 +717,7 @@ func schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref common.ReferenceCal
 					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "`Description` is a short description of the package.",
+							Description: "`WorkspaceName` is a short description of the package.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1049,6 +1049,13 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref common.Ref
 							Format:      "",
 						},
 					},
+					"workspaceName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "WorkspaceName identifies the workspace of the package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"revision": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Revision identifies the version of the package.",
@@ -1099,16 +1106,23 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 							Format:      "",
 						},
 					},
-					"revision": {
+					"repository": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Revision identifies the version of the package.",
+							Description: "RepositoryName is the name of the Repository object containing this package.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"repository": {
+					"workspaceName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RepositoryName is the name of the Repository object containing this package.",
+							Description: "WorkspaceName is a short, unique description of the changes contained in this package revision.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"revision": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Revision identifies the version of the package.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1168,7 +1182,8 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 				Properties: map[string]spec.Schema{
 					"upstreamLock": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"),
+							Description: "UpstreamLock identifies the upstream data for this package.",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"),
 						},
 					},
 					"publishedBy": {
