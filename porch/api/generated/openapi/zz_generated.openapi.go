@@ -1008,6 +1008,13 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref common.Ref
 							Format:      "",
 						},
 					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description identifies the description of the package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"revision": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Revision identifies the version of the package.",
@@ -1058,16 +1065,16 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 							Format:      "",
 						},
 					},
-					"revision": {
+					"repository": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Revision identifies the version of the package.",
+							Description: "RepositoryName is the name of the Repository object containing this package.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"repository": {
+					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RepositoryName is the name of the Repository object containing this package.",
+							Description: "Description is a short, unique description of the changes contained in this package revision.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -1097,6 +1104,13 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 							},
 						},
 					},
+					"revision": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deprecated: Revision identifies the version of the package. For backwards compatibility, if revision is specified in spec, it will get used as spec.description instead (if no other spec.description is provided). The revision is now auto-assigned upon publishing of a package revision and can be viewed in the package revision status.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
@@ -1112,9 +1126,17 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 				Description: "PackageRevisionStatus defines the observed state of PackageRevision",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"revision": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Revision identifies the version of the package.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"upstreamLock": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"),
+							Description: "UpstreamLock identifies the upstream data for this package.",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock"),
 						},
 					},
 					"publishedBy": {
