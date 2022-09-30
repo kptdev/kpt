@@ -51,7 +51,7 @@ func (t *PorchSuite) TestPackageUpdateRecloneAndReplay(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "testns",
-			Revision:       "v1",
+			Description:    "testdescr",
 			RepositoryName: gitRepository,
 			Tasks: []porchapi.Task{
 				{

@@ -481,7 +481,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	const (
 		repository  = "re-render-test"
 		packageName = "simple-package"
-		revision    = "v3"
+		description = "description"
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -497,7 +497,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			Revision:       revision,
+			Description:    description,
 			RepositoryName: repository,
 		},
 	}
@@ -596,9 +596,9 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 
 func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	const (
-		repository      = "lifecycle"
-		packageName     = "test-package"
-		packageRevision = "v1"
+		repository  = "lifecycle"
+		packageName = "test-package"
+		description = "description"
 	)
 
 	// Register the repository
@@ -615,7 +615,7 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			Revision:       packageRevision,
+			Revision:       description,
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -1142,7 +1142,7 @@ func (t *PorchSuite) TestPodFunctionEvaluatorWithDistrolessImage(ctx context.Con
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-redis-bucket",
-			Revision:       "v1",
+			Description:    "test-description",
 			RepositoryName: "git-fn-distroless",
 			Tasks: []porchapi.Task{
 				{

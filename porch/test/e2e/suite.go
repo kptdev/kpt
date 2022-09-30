@@ -689,7 +689,7 @@ func MustFindPackageRevision(t *testing.T, packages *porchapi.PackageRevisionLis
 		pr := &packages.Items[i]
 		if pr.Spec.RepositoryName == name.Repository &&
 			pr.Spec.PackageName == name.Package &&
-			pr.Spec.Revision == name.Revision {
+			pr.Status.Revision == name.Revision {
 			return pr
 		}
 	}

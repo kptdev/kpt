@@ -221,7 +221,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 
 	// Get the package again, the resources should match what we push
 	{
-		version := "v123"
+		version := "v1"
 
 		path := "test-package"
 		packageRevision, gitLock, err := repo.GetPackageRevision(ctx, version, path)
@@ -434,7 +434,7 @@ func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 		t.Fatalf("Failed to open git repository for verification: %v", err)
 	}
 	logRefs(t, verify, "Ref: ")
-	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/v1")
+	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/test-description")
 	if _, err = verify.Reference(draftRefName, true); err != nil {
 		t.Errorf("Failed to resolve %q references: %v", draftRefName, err)
 	}
@@ -542,18 +542,18 @@ func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 	}
 
 	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
-		{Repository: "simple", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "empty", Revision: "v1", Description: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: "v1", Description: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: "v2", Description: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: "v1", Description: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: "v2", Description: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
 
 		// TODO: may want to filter these out, for example by including only those package
 		// revisions from main branch that differ in content (their tree hash) from another
 		// taged revision of the package.
-		{Repository: "simple", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "empty", Revision: g.branch, Description: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: g.branch, Description: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: g.branch, Description: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -611,9 +611,9 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 		{Repository: "drafts", Package: "pkg-with-history", Description: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
-		{Repository: "drafts", Package: "basens", Description: "v2", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "empty", Description: "v1", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Description: "v2", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Description: g.branch, Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", Description: g.branch, Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Description: g.branch, Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -660,9 +660,9 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	}
 
 	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-		Repository: repositoryName,
-		Package:    "bucket",
-		Revision:   "v1",
+		Repository:  repositoryName,
+		Package:     "bucket",
+		Description: "v1",
 	})
 
 	// Before Update; Check server references. Draft must exist, final not.
@@ -719,9 +719,9 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 	}
 
 	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-		Repository: repositoryName,
-		Package:    "pkg-with-history",
-		Revision:   "v1",
+		Repository:  repositoryName,
+		Package:     "pkg-with-history",
+		Description: "v1",
 	})
 
 	// Before Update; Check server references. Draft must exist, final not.
@@ -868,9 +868,10 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	)
 
 	newPackageName := repository.PackageRevisionKey{
-		Repository: "refresh",
-		Package:    "newpkg",
-		Revision:   "v3",
+		Repository:  "refresh",
+		Package:     "newpkg",
+		Revision:    "v3",
+		Description: "v3",
 	}
 
 	ctx := context.Background()
@@ -887,7 +888,8 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	}
 
 	// Confirm we listed some package(s)
-	findPackageRevision(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens", Revision: "v2"})
+	findPackageRevision(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens",
+		Revision: "v2", Description: "v2"})
 	packageMustNotExist(t, all, newPackageName)
 
 	// Create package in the upstream repository
@@ -969,31 +971,31 @@ func (g GitSuite) TestPruneRemotes(t *testing.T) {
 	}{
 		{
 			ref: "refs/heads/drafts/bucket/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "bucket", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "bucket", Description: "v1"},
 		},
 		{
 			ref: "refs/heads/drafts/none/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "none", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "none", Description: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v1", Description: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v2",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v2", Description: "v2"},
 		},
 		{
 			ref: "refs/tags/empty/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "empty", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "empty", Revision: "v1", Description: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v1", Description: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v2",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v2", Description: "v2"},
 		},
 	} {
 		repositoryMustHavePackageRevision(t, git, pair.pkg)
@@ -1079,7 +1081,11 @@ func createPackageRevisionMap(revisions []repository.PackageRevision) map[string
 	result := map[string]bool{}
 	for _, pr := range revisions {
 		key := pr.Key()
-		result[fmt.Sprintf("%s/%s", key.Package, key.Revision)] = true
+		if key.Description != "" {
+			result[fmt.Sprintf("%s/%s", key.Package, key.Description)] = true
+		} else {
+			result[fmt.Sprintf("%s/%s", key.Package, key.Revision)] = true
+		}
 	}
 	return result
 }
@@ -1157,34 +1163,38 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 	ctx := context.Background()
 
 	testCases := map[string]struct {
-		pkg       string
-		revision  string
-		author    string
-		timestamp time.Time
+		pkg         string
+		description string
+		revision    string
+		author      string
+		timestamp   time.Time
 	}{
 		"draft packagerevision does not have publishing info in status": {
-			pkg:       "draft-pkg",
-			revision:  "v1",
-			author:    "",
-			timestamp: time.Time{},
+			pkg:         "draft-pkg",
+			description: "v1",
+			author:      "",
+			timestamp:   time.Time{},
 		},
 		"published packagerevision on tag": {
-			pkg:       "pkg-with-anno",
-			revision:  "v1",
-			author:    "pkg-with-anno-author@example.com",
-			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
+			pkg:         "pkg-with-anno",
+			revision:    "v1",
+			description: "v1",
+			author:      "pkg-with-anno-author@example.com",
+			timestamp:   time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
 		},
 		"published packagerevision on main without commit annotations": {
-			pkg:       "pkg-without-anno",
-			revision:  g.branch,
-			author:    "",
-			timestamp: time.Time{},
+			pkg:         "pkg-without-anno",
+			revision:    g.branch,
+			description: g.branch,
+			author:      "",
+			timestamp:   time.Time{},
 		},
 		"published packagerevision on main with commit annotations": {
-			pkg:       "pkg-with-anno",
-			revision:  g.branch,
-			author:    "pkg-with-anno-author@example.com",
-			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
+			pkg:         "pkg-with-anno",
+			revision:    g.branch,
+			description: g.branch,
+			author:      "pkg-with-anno-author@example.com",
+			timestamp:   time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
 		},
 	}
 
@@ -1216,9 +1226,10 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 
 			_ = revisions
 			draftPkg := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-				Repository: repositoryName,
-				Package:    tc.pkg,
-				Revision:   tc.revision,
+				Repository:  repositoryName,
+				Package:     tc.pkg,
+				Description: tc.description,
+				Revision:    tc.revision,
 			})
 			rev := draftPkg.GetPackageRevision()
 			if got, want := rev.Status.PublishedBy, tc.author; got != want {

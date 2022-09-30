@@ -57,11 +57,11 @@ func TestLatestPackages(t *testing.T) {
 
 			if existing, ok := gotLatest[rev.Spec.PackageName]; ok {
 				t.Errorf("Multiple latest package revisions for package %q: %q and %q",
-					rev.Spec.PackageName, rev.Spec.Revision, existing)
+					rev.Spec.PackageName, rev.Status.Revision, existing)
 			}
 
 			// latest package
-			gotLatest[rev.Spec.PackageName] = rev.Spec.Revision
+			gotLatest[rev.Spec.PackageName] = rev.Status.Revision
 		}
 	}
 
@@ -76,8 +76,8 @@ func TestPublishedLatest(t *testing.T) {
 	_, cached := openRepositoryFromArchive(t, ctx, tarfile, "publish-test")
 
 	revisions, err := cached.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
-		Package:  "catalog/gcp/bucket",
-		Revision: "v2",
+		Package:     "catalog/gcp/bucket",
+		Description: "v2",
 	})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)
