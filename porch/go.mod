@@ -38,6 +38,7 @@ require (
 	golang.org/x/exp v0.0.0-20220916125017-b168a2c6b86b
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/oauth2 v0.0.0-20220718184931-c8730f7fcb92
+	golang.org/x/tools v0.1.12
 	google.golang.org/api v0.84.0
 	google.golang.org/genproto v0.0.0-20220616135557-88e70c0c3a90
 	google.golang.org/grpc v1.47.0

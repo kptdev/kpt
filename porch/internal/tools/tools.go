@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package licenses
+//go:build tools
+// +build tools
 
-// blank import is required as per
-// https://pkg.go.dev/embed#hdr-Strings_and_Bytes
-import _ "embed"
+package tools
 
-var (
-	//go:embed kpt.txt
-	AllOSSLicense string
+import (
+	_ "golang.org/x/tools/cmd/stringer"
 )
