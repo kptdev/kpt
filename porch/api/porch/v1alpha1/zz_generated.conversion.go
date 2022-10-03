@@ -977,6 +977,7 @@ func autoConvert_v1alpha1_PackageRevisionStatus_To_porch_PackageRevisionStatus(i
 	out.UpstreamLock = (*porch.UpstreamLock)(unsafe.Pointer(in.UpstreamLock))
 	out.PublishedBy = in.PublishedBy
 	out.PublishedAt = in.PublishedAt
+	out.Deployment = in.Deployment
 	return nil
 }
 
@@ -989,6 +990,7 @@ func autoConvert_porch_PackageRevisionStatus_To_v1alpha1_PackageRevisionStatus(i
 	out.UpstreamLock = (*UpstreamLock)(unsafe.Pointer(in.UpstreamLock))
 	out.PublishedBy = in.PublishedBy
 	out.PublishedAt = in.PublishedAt
+	out.Deployment = in.Deployment
 	return nil
 }
 

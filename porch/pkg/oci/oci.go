@@ -36,27 +36,29 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func OpenRepository(name string, namespace string, content configapi.RepositoryContent, spec *configapi.OciRepository, cacheDir string) (repository.Repository, error) {
+func OpenRepository(name string, namespace string, content configapi.RepositoryContent, spec *configapi.OciRepository, deployment bool, cacheDir string) (repository.Repository, error) {
 	storage, err := oci.NewStorage(cacheDir)
 	if err != nil {
 		return nil, err
 	}
 
 	return &ociRepository{
-		name:      name,
-		namespace: namespace,
-		content:   content,
-		spec:      *spec.DeepCopy(),
-		storage:   storage,
+		name:       name,
+		namespace:  namespace,
+		content:    content,
+		spec:       *spec.DeepCopy(),
+		deployment: deployment,
+		storage:    storage,
 	}, nil
 
 }
 
 type ociRepository struct {
-	name      string
-	namespace string
-	content   configapi.RepositoryContent
-	spec      configapi.OciRepository
+	name       string
+	namespace  string
+	content    configapi.RepositoryContent
+	spec       configapi.OciRepository
+	deployment bool
 
 	storage *oci.Storage
 }
@@ -401,6 +403,10 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 
 			Lifecycle: p.Lifecycle(),
 			Tasks:     p.tasks,
+		},
+		Status: v1alpha1.PackageRevisionStatus{
+			// TODO:        UpstreamLock,
+			Deployment: p.parent.deployment,
 		},
 	}
 }

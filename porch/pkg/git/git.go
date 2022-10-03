@@ -68,7 +68,7 @@ type GitRepositoryOptions struct {
 	MainBranchStrategy MainBranchStrategy
 }
 
-func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, root string, opts GitRepositoryOptions) (GitRepository, error) {
+func OpenRepository(ctx context.Context, name, namespace string, spec *configapi.GitRepository, deployment bool, root string, opts GitRepositoryOptions) (GitRepository, error) {
 	ctx, span := tracer.Start(ctx, "OpenRepository", trace.WithAttributes())
 	defer span.End()
 
@@ -129,6 +129,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		secret:             spec.SecretRef.Name,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
+		deployment:         deployment,
 	}
 
 	if err := repository.fetchRemoteRepository(ctx); err != nil {
@@ -153,6 +154,10 @@ type gitRepository struct {
 	repo               *git.Repository
 	credentialResolver repository.CredentialResolver
 	userInfoProvider   repository.UserInfoProvider
+
+	// deployment holds spec.deployment
+	// TODO: Better caching here, support repository spec changes
+	deployment bool
 
 	// credential contains the information needed to authenticate against
 	// a git repository.

@@ -1131,6 +1131,13 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
+					"deployment": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Deployment is true if this is a deployment package (in a deployment repository).",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
