@@ -19,8 +19,10 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -383,8 +385,13 @@ func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	}
 }
 
-func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
+func (p *ociPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.PackageRevision, error) {
 	key := p.Key()
+
+	kf, err := p.GetKptfile(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	return &v1alpha1.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
@@ -405,17 +412,35 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
-			Lifecycle: p.Lifecycle(),
-			Tasks:     p.tasks,
+			Lifecycle:      p.Lifecycle(),
+			Tasks:          p.tasks,
+			ReadinessGates: repository.ToApiReadinessGates(kf),
 		},
 		Status: v1alpha1.PackageRevisionStatus{
 			// TODO:        UpstreamLock,
 			Deployment: p.parent.deployment,
+			Conditions: repository.ToApiConditions(kf),
 		},
-	}
+	}, nil
 }
 
-func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
+func (p *ociPackageRevision) GetKptfile(ctx context.Context) (kptfile.KptFile, error) {
+	resources, err := LoadResources(ctx, p.parent.storage, &p.digestName)
+	if err != nil {
+		return kptfile.KptFile{}, fmt.Errorf("error loading package resources: %w", err)
+	}
+	kfString, found := resources.Contents[kptfile.KptFileName]
+	if !found {
+		return kptfile.KptFile{}, fmt.Errorf("packagerevision does not have a Kptfile")
+	}
+	kf, err := pkg.DecodeKptfile(strings.NewReader(kfString))
+	if err != nil {
+		return kptfile.KptFile{}, fmt.Errorf("error decoding Kptfile: %w", err)
+	}
+	return *kf, nil
+}
+
+func (p *ociPackageRevision) GetUpstreamLock(context.Context) (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.KubeObjectName())
 }
 

@@ -30,8 +30,7 @@ type PackageRevision struct {
 	PackageLifecycle   v1alpha1.PackageRevisionLifecycle
 	PackageRevision    *v1alpha1.PackageRevision
 	Resources          *v1alpha1.PackageRevisionResources
-	Upstream           kptfile.Upstream
-	UpstreamLock       kptfile.UpstreamLock
+	Kptfile            kptfile.KptFile
 }
 
 func (pr *PackageRevision) KubeObjectName() string {
@@ -50,18 +49,22 @@ func (pr *PackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 	return pr.PackageLifecycle
 }
 
-func (pr *PackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
-	return nil
+func (pr *PackageRevision) GetPackageRevision(context.Context) (*v1alpha1.PackageRevision, error) {
+	return nil, nil
 }
 
 func (f *PackageRevision) GetResources(context.Context) (*v1alpha1.PackageRevisionResources, error) {
 	return f.Resources, nil
 }
 
-func (f *PackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	return kptfile.Upstream{}, kptfile.UpstreamLock{}, nil
+func (f *PackageRevision) GetKptfile(ctx context.Context) (kptfile.KptFile, error) {
+	return f.Kptfile, nil
+}
+
+func (f *PackageRevision) GetUpstreamLock(context.Context) (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	return *f.Kptfile.Upstream, *f.Kptfile.UpstreamLock, nil
 }
 
 func (f *PackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	return kptfile.Upstream{}, kptfile.UpstreamLock{}, nil
+	return *f.Kptfile.Upstream, *f.Kptfile.UpstreamLock, nil
 }

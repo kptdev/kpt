@@ -15,6 +15,8 @@
 package cache
 
 import (
+	"context"
+
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 )
@@ -32,13 +34,16 @@ type cachedPackageRevision struct {
 	isLatestRevision bool
 }
 
-func (c *cachedPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
-	rev := c.PackageRevision.GetPackageRevision()
+func (c *cachedPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.PackageRevision, error) {
+	rev, err := c.PackageRevision.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if c.isLatestRevision {
 		if rev.Labels == nil {
 			rev.Labels = map[string]string{}
 		}
 		rev.Labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
 	}
-	return rev
+	return rev, nil
 }

@@ -62,14 +62,17 @@ type PackageRevision interface {
 	Lifecycle() v1alpha1.PackageRevisionLifecycle
 
 	// GetPackageRevision returns the PackageRevision ("DRY") API representation of this package-revision
-	GetPackageRevision() *v1alpha1.PackageRevision
+	GetPackageRevision(context.Context) (*v1alpha1.PackageRevision, error)
 
 	// GetResources returns the PackageRevisionResources ("WET") API representation of this package-revision
 	// TODO: return PackageResources or filesystem abstraction?
-	GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error)
+	GetResources(context.Context) (*v1alpha1.PackageRevisionResources, error)
 
 	// GetUpstreamLock returns the kpt lock information.
-	GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
+	GetUpstreamLock(context.Context) (kptfile.Upstream, kptfile.UpstreamLock, error)
+
+	// GetKptfile returns the Kptfile for hte package
+	GetKptfile(context.Context) (kptfile.KptFile, error)
 
 	// GetLock returns the current revision's lock information.
 	// This will be the upstream info for downstream revisions.

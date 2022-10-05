@@ -962,6 +962,35 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 	return tasks, nil
 }
 
+func (r *gitRepository) getResources(hash plumbing.Hash) (map[string]string, error) {
+	resources := map[string]string{}
+
+	tree, err := r.repo.TreeObject(hash)
+	if err == nil {
+		// Files() iterator iterates recursively over all files in the tree.
+		fit := tree.Files()
+		defer fit.Close()
+		for {
+			file, err := fit.Next()
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return nil, fmt.Errorf("failed to load package resources: %w", err)
+			}
+
+			content, err := file.Contents()
+			if err != nil {
+				return nil, fmt.Errorf("failed to read package file contents: %q, %w", file.Name, err)
+			}
+
+			// TODO: decide whether paths should include package directory or not.
+			resources[file.Name] = content
+			//resources[path.Join(p.path, file.Name)] = content
+		}
+	}
+	return resources, nil
+}
+
 // findLatestPackageCommit returns the latest commit from the history that pertains
 // to the package given by the packagePath. If no commit is found, it will return nil.
 func (r *gitRepository) findLatestPackageCommit(ctx context.Context, startCommit *object.Commit, packagePath string) (*object.Commit, error) {

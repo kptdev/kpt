@@ -419,7 +419,10 @@ func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 		t.Fatalf("draft.Close() failed: %v", err)
 	}
 
-	result := newRevision.GetPackageRevision()
+	result, err := newRevision.GetPackageRevision(ctx)
+	if err != nil {
+		t.Errorf("didn't expect error, but got %v", err)
+	}
 	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
 		t.Errorf("Newly created package type: got %q, want %q", got, want)
 	}
@@ -504,7 +507,10 @@ func (g GitSuite) TestCreatePackageInTrivialRepository(t *testing.T) {
 		t.Fatalf("draft.Close() failed: %v", err)
 	}
 
-	result := newRevision.GetPackageRevision()
+	result, err := newRevision.GetPackageRevision(ctx)
+	if err != nil {
+		t.Errorf("didn't expect error, but got %v", err)
+	}
 	if got, want := result.Spec.Lifecycle, v1alpha1.PackageRevisionLifecycleDraft; got != want {
 		t.Errorf("Newly created package type: got %q, want %q", got, want)
 	}
@@ -554,7 +560,10 @@ func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
-		rev := r.GetPackageRevision()
+		rev, err := r.GetPackageRevision(ctx)
+		if err != nil {
+			t.Errorf("didn't expect error, but got %v", err)
+		}
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
@@ -613,7 +622,10 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
 	for _, r := range revisions {
-		rev := r.GetPackageRevision()
+		rev, err := r.GetPackageRevision(ctx)
+		if err != nil {
+			t.Errorf("didn't expect error, but got %v", err)
+		}
 		got[repository.PackageRevisionKey{
 			Repository: rev.Spec.RepositoryName,
 			Package:    rev.Spec.PackageName,
@@ -675,7 +687,10 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 		t.Fatalf("Close failed: %v", err)
 	}
 
-	rev := new.GetPackageRevision()
+	rev, err := new.GetPackageRevision(ctx)
+	if err != nil {
+		t.Errorf("didn't expect error, but got %v", err)
+	}
 	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
 		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
 	}
@@ -734,7 +749,10 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 		t.Fatalf("Close failed: %v", err)
 	}
 
-	rev := new.GetPackageRevision()
+	rev, err := new.GetPackageRevision(ctx)
+	if err != nil {
+		t.Errorf("didn't expect error, but got %v", err)
+	}
 	if got, want := rev.Spec.Lifecycle, v1alpha1.PackageRevisionLifecyclePublished; got != want {
 		t.Errorf("Approved package lifecycle: got %s, want %s", got, want)
 	}
@@ -787,7 +805,10 @@ func (g GitSuite) TestDeletePackages(t *testing.T) {
 	for len(all) > 0 {
 		// Delete one of the packages
 		deleting := all[0]
-		pr := deleting.GetPackageRevision()
+		pr, err := deleting.GetPackageRevision(ctx)
+		if err != nil {
+			t.Fatalf("didn't expect error, but got %v", err)
+		}
 		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
@@ -1050,7 +1071,10 @@ func (g GitSuite) TestNested(t *testing.T) {
 
 	got := map[string]v1alpha1.PackageRevisionLifecycle{}
 	for _, pr := range revisions {
-		rev := pr.GetPackageRevision()
+		rev, err := pr.GetPackageRevision(ctx)
+		if err != nil {
+			t.Errorf("didn't expect error, but got %v", err)
+		}
 		if rev.Spec.Revision == g.branch {
 			// skip packages with the revision of the main registered branch,
 			// to match the above simplified package discovery algo.
@@ -1209,7 +1233,10 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 				Package:    tc.pkg,
 				Revision:   tc.revision,
 			})
-			rev := draftPkg.GetPackageRevision()
+			rev, err := draftPkg.GetPackageRevision(ctx)
+			if err != nil {
+				t.Errorf("didn't expect error, but got %v", err)
+			}
 			if got, want := rev.Status.PublishedBy, tc.author; got != want {
 				t.Errorf("expected %q, but got %q", want, got)
 			}

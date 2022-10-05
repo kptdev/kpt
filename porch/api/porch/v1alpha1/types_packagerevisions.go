@@ -74,6 +74,12 @@ type PackageRevisionSpec struct {
 	Lifecycle PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 
 	Tasks []Task `json:"tasks,omitempty"`
+
+	ReadinessGates []ReadinessGate `json:"readinessGates,omitempty"`
+}
+
+type ReadinessGate struct {
+	ConditionType string `json:"conditionType,omitempty"`
 }
 
 // ParentReference is a reference to a parent package
@@ -96,6 +102,8 @@ type PackageRevisionStatus struct {
 
 	// Deployment is true if this is a deployment package (in a deployment repository).
 	Deployment bool `json:"deployment,omitempty"`
+
+	Conditions []Condition `json:"conditions,omitempty"`
 }
 
 type TaskType string
@@ -313,3 +321,21 @@ type GitLock struct {
 	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
 }
+
+type Condition struct {
+	Type string `yaml:"type" json:"type"`
+
+	Status ConditionStatus `yaml:"status" json:"status"`
+
+	Reason string `yaml:"reason,omitempty" json:"reason,omitempty"`
+
+	Message string `yaml:"message,omitempty" json:"message,omitempty"`
+}
+
+type ConditionStatus string
+
+const (
+	ConditionTrue    ConditionStatus = "True"
+	ConditionFalse   ConditionStatus = "False"
+	ConditionUnknown ConditionStatus = "Unknown"
+)
