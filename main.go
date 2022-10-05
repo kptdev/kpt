@@ -20,6 +20,7 @@
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/rpkg internal/docs/generated/rpkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/sync internal/docs/generated/syncdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/wasm internal/docs/generated/wasmdocs --license=none --recursive=true --strategy=cmdDocs
+//go:generate $GOBIN/mdtogo site/reference/cli/alpha/license internal/docs/generated/licensedocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 

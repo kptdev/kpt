@@ -18,14 +18,15 @@ import (
 	"context"
 
 	"github.com/GoogleContainerTools/kpt/commands/alpha/license/info"
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/licensedocs"
 	"github.com/spf13/cobra"
 )
 
 func NewCommand(ctx context.Context, version string) *cobra.Command {
 	licenseCmd := &cobra.Command{
 		Use:   "license",
-		Short: "[Alpha] " + "Displays open source licenses.",
-		Long:  "[Alpha] " + "Displays open source licenses.",
+		Short: "[Alpha] " + licensedocs.LicenseShort,
+		Long:  "[Alpha] " + licensedocs.LicenseShort + "\n" + licensedocs.LicenseLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {

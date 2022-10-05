@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/licensedocs"
 	"github.com/GoogleContainerTools/kpt/licenses"
 	"github.com/spf13/cobra"
 )
@@ -27,9 +28,11 @@ func newRunner(ctx context.Context) *runner {
 		ctx: ctx,
 	}
 	c := &cobra.Command{
-		Use:   "info",
-		Short: "Displays licenses for the OSS libraries used by kpt CLI.",
-		RunE:  r.runE,
+		Use:     "info",
+		Short:   licensedocs.InfoShort,
+		Long:    licensedocs.InfoShort + "\n" + licensedocs.InfoLong,
+		Example: licensedocs.InfoExamples,
+		RunE:    r.runE,
 	}
 	r.Command = c
 	return r
