@@ -282,8 +282,11 @@ func (r *cachedRepository) Close() error {
 
 // pollForever will continue polling until signal channel is closed or ctx is done.
 func (r *cachedRepository) pollForever(ctx context.Context) {
-	ticker := time.NewTicker(1 * time.Minute)
+	// Poll immediately so we don't have to wait for the ticker to trigger the first
+	// sync of the repo.
+	r.pollOnce(ctx)
 
+	ticker := time.NewTicker(1 * time.Minute)
 	for {
 		select {
 		case <-ticker.C:
