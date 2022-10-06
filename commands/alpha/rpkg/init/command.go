@@ -90,8 +90,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	r.name = args[0]
-
-	return nil
+	return r.packageAlreadyExists(r.name)
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
@@ -127,5 +126,21 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintf(cmd.OutOrStdout(), "%s created\n", pr.Name)
+	return nil
+}
+
+func (r *runner) packageAlreadyExists(packageName string) error {
+	// only the first package revision can be created from init or clone, so
+	// we need to check that the package doesn't already exist.
+	packageRevisionList := porchapi.PackageRevisionList{}
+	if err := r.client.List(r.ctx, &packageRevisionList, &client.ListOptions{}); err != nil {
+		return err
+	}
+	for _, pr := range packageRevisionList.Items {
+		if pr.Spec.RepositoryName == r.repository && pr.Spec.PackageName == packageName {
+			return fmt.Errorf("`init` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
+				packageName, r.repository)
+		}
+	}
 	return nil
 }

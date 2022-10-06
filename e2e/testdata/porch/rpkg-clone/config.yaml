@@ -18,6 +18,17 @@ commands:
     stdout: "git-317a42f437be4e9695da4f043ff2c727f6001156 created\n"
   - args:
       - alpha
+      - rpkg
+      - clone
+      - --namespace=rpkg-clone
+      - https://github.com/platkrm/test-blueprints.git/basens@basens/v1
+      - --repository=git
+      - --revision=v1
+      - basens-clone
+    stderr: "error: `clone` cannot create a new revision for package \"basens-clone\" that already exists in repo \"git\"; make subsequent revisions using `copy`\n"
+    exitCode: 1
+  - args:
+      - alpha
       - repo
       - register
       - https://github.com/platkrm/test-blueprints.git
