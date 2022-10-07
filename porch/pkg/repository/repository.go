@@ -53,6 +53,8 @@ type PackageRevision interface {
 	// More "readable" values are returned by Key()
 	KubeObjectName() string
 
+	KubeObjectNamespace() string
+
 	// Key returns the "primary key" of the package.
 	Key() PackageRevisionKey
 

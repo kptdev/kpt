@@ -48,6 +48,7 @@ COPY pkg pkg
 COPY porch/api porch/api
 COPY porch/cmd porch/cmd
 COPY porch/pkg porch/pkg
+COPY porch/internal porch/internal
 COPY porch/controllers porch/controllers
 COPY porch/func porch/func
 

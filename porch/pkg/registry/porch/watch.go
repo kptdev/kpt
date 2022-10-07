@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/watch"
 	genericapirequest "k8s.io/apiserver/pkg/endpoints/request"
 	"k8s.io/klog/v2"
@@ -56,7 +58,7 @@ func (r *packageRevisionResources) Watch(ctx context.Context, options *metainter
 		resultChan: make(chan watch.Event, 64),
 	}
 
-	go w.listAndWatch(ctx, r, filter)
+	go w.listAndWatch(ctx, r, filter, options.LabelSelector)
 
 	return w, nil
 }
@@ -89,8 +91,8 @@ func (w *watcher) ResultChan() <-chan watch.Event {
 // listAndWatch implements watch by doing a list, then sending any observed changes.
 // This is not a compliant implementation of watch, but it is a good-enough start for most controllers.
 // One trick is that we start the watch _before_ we perform the list, so we don't miss changes that happen immediately after the list.
-func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter) {
-	if err := w.listAndWatchInner(ctx, r, filter); err != nil {
+func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter, selector labels.Selector) {
+	if err := w.listAndWatchInner(ctx, r, filter, selector); err != nil {
 		// TODO: We need to populate the object on this error
 		klog.Warningf("sending error to watch stream")
 		ev := watch.Event{
@@ -102,7 +104,7 @@ func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisionResources,
 	close(w.resultChan)
 }
 
-func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter) error {
+func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter, selector labels.Selector) error {
 	errorResult := make(chan error, 4)
 	done := false
 
@@ -131,7 +133,7 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResou
 	}
 
 	// TODO: Only if rv == 0?
-	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
 		obj, err := p.GetResources(ctx)
 		if err != nil {
 			done = true

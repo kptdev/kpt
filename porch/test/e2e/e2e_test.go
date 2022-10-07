@@ -27,6 +27,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	internalapi "github.com/GoogleContainerTools/kpt/porch/internal/api/porchinternal/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-cmp/cmp"
 	coreapi "k8s.io/api/core/v1"
@@ -920,6 +921,15 @@ func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
 	revisionResources.Spec.Resources["config-map.yaml"] = string(cm)
 	t.UpdateF(ctx, &revisionResources)
 
+	var newrr porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newrr)
+
+	by, _ := yaml.Marshal(&newrr)
+	t.Logf("PRR: %s", string(by))
+
 	t.GetF(ctx, client.ObjectKey{
 		Namespace: t.namespace,
 		Name:      pr.Name,
@@ -1482,6 +1492,197 @@ func (t *PorchSuite) TestRepositoryError(ctx context.Context) {
 	}
 }
 
+func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
+	const (
+		repository = "pkg-rev-labels"
+		labelKey1  = "kpt.dev/label"
+		labelVal1  = "foo"
+		labelKey2  = "kpt.dev/other-label"
+		labelVal2  = "bar"
+		annoKey1   = "kpt.dev/anno"
+		annoVal1   = "foo"
+		annoKey2   = "kpt.dev/other-anno"
+		annoVal2   = "bar"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a package with labels and annotations.
+	pr := porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Labels: map[string]string{
+				labelKey1: labelVal1,
+			},
+			Annotations: map[string]string{
+				annoKey1: annoVal1,
+				annoKey2: annoVal2,
+			},
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "new-package",
+			Revision:       "v1",
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeInit,
+					Init: &porchapi.PackageInitTaskSpec{
+						Description: "this is a test",
+					},
+				},
+			},
+		},
+	}
+	t.CreateF(ctx, &pr)
+	t.validateLabelsAndAnnos(ctx, pr.Name,
+		map[string]string{
+			labelKey1: labelVal1,
+		},
+		map[string]string{
+			annoKey1: annoVal1,
+			annoKey2: annoVal2,
+		},
+	)
+
+	// Propose the package.
+	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pr)
+	t.validateLabelsAndAnnos(ctx, pr.Name,
+		map[string]string{
+			labelKey1: labelVal1,
+		},
+		map[string]string{
+			annoKey1: annoVal1,
+			annoKey2: annoVal2,
+		},
+	)
+
+	// Approve the package
+	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	_ = t.UpdateApprovalF(ctx, &pr, metav1.UpdateOptions{})
+	t.validateLabelsAndAnnos(ctx, pr.Name,
+		map[string]string{
+			labelKey1:                         labelVal1,
+			porchapi.LatestPackageRevisionKey: porchapi.LatestPackageRevisionValue,
+		},
+		map[string]string{
+			annoKey1: annoVal1,
+			annoKey2: annoVal2,
+		},
+	)
+
+	// Update the labels and annotations on the approved package.
+	delete(pr.ObjectMeta.Labels, labelKey1)
+	pr.ObjectMeta.Labels[labelKey2] = labelVal2
+	delete(pr.ObjectMeta.Annotations, annoKey2)
+	t.UpdateF(ctx, &pr)
+	t.validateLabelsAndAnnos(ctx, pr.Name,
+		map[string]string{
+			labelKey2:                         labelVal2,
+			porchapi.LatestPackageRevisionKey: porchapi.LatestPackageRevisionValue,
+		},
+		map[string]string{
+			annoKey1: annoVal1,
+		},
+	)
+
+	// Create PackageRevision from upstream repo. Labels and annotations should
+	// not be retained from upstream.
+	clonedPr := porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "cloned-package",
+			Revision:       "v1",
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeClone,
+					Clone: &porchapi.PackageCloneTaskSpec{
+						Upstream: porchapi.UpstreamPackage{
+							UpstreamRef: &porchapi.PackageRevisionRef{
+								Name: pr.Name, // Package to be cloned
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	t.CreateF(ctx, &clonedPr)
+	t.validateLabelsAndAnnos(ctx, clonedPr.Name,
+		map[string]string{},
+		map[string]string{},
+	)
+}
+
+func (t *PorchSuite) TestRegisteredPackageRevisionLabels(ctx context.Context) {
+	const (
+		labelKey = "kpt.dev/label"
+		labelVal = "foo"
+		annoKey  = "kpt.dev/anno"
+		annoVal  = "foo"
+	)
+
+	t.registerGitRepositoryF(ctx, testBlueprintsRepo, "test-blueprints", "")
+
+	var list porchapi.PackageRevisionList
+	t.ListE(ctx, &list, client.InNamespace(t.namespace))
+
+	basens := MustFindPackageRevision(t.T, &list, repository.PackageRevisionKey{Repository: "test-blueprints", Package: "basens", Revision: "v1"})
+	if basens.ObjectMeta.Labels == nil {
+		basens.ObjectMeta.Labels = make(map[string]string)
+	}
+	basens.ObjectMeta.Labels[labelKey] = labelVal
+	if basens.ObjectMeta.Annotations == nil {
+		basens.ObjectMeta.Annotations = make(map[string]string)
+	}
+	basens.ObjectMeta.Annotations[annoKey] = annoVal
+	t.UpdateF(ctx, basens)
+
+	t.validateLabelsAndAnnos(ctx, basens.Name,
+		map[string]string{
+			labelKey: labelVal,
+		},
+		map[string]string{
+			annoKey: annoVal,
+		},
+	)
+}
+
+func (t *PorchSuite) validateLabelsAndAnnos(ctx context.Context, name string, labels, annos map[string]string) {
+	var pr porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &pr)
+
+	actualLabels := pr.ObjectMeta.Labels
+	actualAnnos := pr.ObjectMeta.Annotations
+
+	// Make this check to handle empty vs nil maps
+	if !(len(labels) == 0 && len(actualLabels) == 0) {
+		if diff := cmp.Diff(actualLabels, labels); diff != "" {
+			t.Errorf("Unexpected result (-want, +got): %s", diff)
+		}
+	}
+
+	if !(len(annos) == 0 && len(actualAnnos) == 0) {
+		if diff := cmp.Diff(actualAnnos, annos); diff != "" {
+			t.Errorf("Unexpected result (-want, +got): %s", diff)
+		}
+	}
+}
+
 func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, directory string) {
 	t.CreateF(ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
@@ -1586,6 +1787,8 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 				Namespace: t.namespace,
 			},
 		})
+		t.waitUntilRepositoryDeleted(ctx, name, t.namespace)
+		t.waitUntilAllPackagesDeleted(ctx, name)
 	})
 }
 
@@ -1675,5 +1878,57 @@ func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespa
 	})
 	if err != nil {
 		t.Errorf("Repository not ready after wait: %v", innerErr)
+	}
+}
+
+func (t *PorchSuite) waitUntilRepositoryDeleted(ctx context.Context, name, namespace string) {
+	err := wait.PollImmediateWithContext(ctx, time.Second, 20*time.Second, func(ctx context.Context) (done bool, err error) {
+		var repo configapi.Repository
+		nn := types.NamespacedName{
+			Name:      name,
+			Namespace: namespace,
+		}
+		if err := t.client.Get(ctx, nn, &repo); err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			return false, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("Repository %s/%s not deleted", namespace, name)
+	}
+}
+
+func (t *PorchSuite) waitUntilAllPackagesDeleted(ctx context.Context, repoName string) {
+	err := wait.PollImmediateWithContext(ctx, time.Second, 20*time.Second, func(ctx context.Context) (done bool, err error) {
+		var pkgRevList porchapi.PackageRevisionList
+		if err := t.client.List(ctx, &pkgRevList); err != nil {
+			t.Logf("error listing packages: %v", err)
+			return false, nil
+		}
+		for _, pkgRev := range pkgRevList.Items {
+			if strings.HasPrefix(fmt.Sprintf("%s-", pkgRev.Name), repoName) {
+				t.Logf("Found package %s from repo %s", pkgRev.Name, repoName)
+				return false, nil
+			}
+		}
+
+		var internalPkgRevList internalapi.PackageRevList
+		if err := t.client.List(ctx, &internalPkgRevList); err != nil {
+			t.Logf("error list internal packages: %v", err)
+			return false, nil
+		}
+		for _, internalPkgRev := range internalPkgRevList.Items {
+			if strings.HasPrefix(fmt.Sprintf("%s-", internalPkgRev.Name), repoName) {
+				t.Logf("Found internalPkg %s from repo %s", internalPkgRev.Name, repoName)
+				return false, nil
+			}
+		}
+		return true, nil
+	})
+	if err != nil {
+		t.Fatalf("Packages from repo %s still remains", repoName)
 	}
 }

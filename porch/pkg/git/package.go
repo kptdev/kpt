@@ -59,6 +59,10 @@ func (p *gitPackageRevision) KubeObjectName() string {
 	return p.repo.name + "-" + hex.EncodeToString(hash[:])
 }
 
+func (p *gitPackageRevision) KubeObjectNamespace() string {
+	return p.repo.namespace
+}
+
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
 		Repository: p.repo.name,

@@ -21,9 +21,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	internalapi "github.com/GoogleContainerTools/kpt/porch/internal/api/porchinternal/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sts/v1"
@@ -148,6 +150,9 @@ func (c completedConfig) getCoreClient() (client.WithWatch, error) {
 	if err := corev1.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("error building scheme: %w", err)
 	}
+	if err := internalapi.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("error building scheme: %w", err)
+	}
 
 	coreClient, err := client.NewWithWatch(restConfig, client.Options{
 		Scheme: scheme,
@@ -199,6 +204,8 @@ func (c completedConfig) New() (*PorchServer, error) {
 		porch.NewGcloudWIResolver(coreV1Client, stsClient),
 	}
 
+	metadataStore := meta.NewCrdMetadataStore(coreClient)
+
 	credentialResolver := porch.NewCredentialResolver(coreClient, resolverChain)
 	referenceResolver := porch.NewReferenceResolver(coreClient)
 	userInfoProvider := &porch.ApiserverUserInfoProvider{}
@@ -213,6 +220,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
 		CredentialResolver: credentialResolver,
 		UserInfoProvider:   userInfoProvider,
+		MetadataStore:      metadataStore,
 	})
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
@@ -225,6 +233,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithRenderer(renderer),
 		engine.WithReferenceResolver(referenceResolver),
 		engine.WithUserInfoProvider(userInfoProvider),
+		engine.WithMetadataStore(metadataStore),
 	)
 	if err != nil {
 		return nil, err

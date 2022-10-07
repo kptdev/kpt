@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 )
 
@@ -111,6 +112,13 @@ func WithReferenceResolver(resolver ReferenceResolver) EngineOption {
 func WithUserInfoProvider(provider repository.UserInfoProvider) EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
 		engine.userInfoProvider = provider
+		return nil
+	})
+}
+
+func WithMetadataStore(metadataStore meta.MetadataStore) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.metadataStore = metadataStore
 		return nil
 	})
 }

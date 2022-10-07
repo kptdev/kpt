@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
@@ -38,29 +39,51 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 	oldRevision := old.(*api.PackageRevision)
 	newRevision := obj.(*api.PackageRevision)
 
-	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
-		// valid
-
-	default:
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
-			strings.Join([]string{
-				string(api.PackageRevisionLifecycleDraft),
-				string(api.PackageRevisionLifecycleProposed),
-			}, ",")),
-		))
-
-	}
-
+	// Verify that the new lifecycle value is valid.
 	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
 		// valid
-
 	default:
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
 			strings.Join([]string{
 				string(api.PackageRevisionLifecycleDraft),
 				string(api.PackageRevisionLifecycleProposed),
+				string(api.PackageRevisionLifecyclePublished),
+			}, ",")),
+		))
+	}
+
+	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
+		// Packages in a draft or proposed state can only be updated to draft or proposed.
+		newLifecycle := newRevision.Spec.Lifecycle
+		if !(newLifecycle == api.PackageRevisionLifecycleDraft ||
+			newLifecycle == api.PackageRevisionLifecycleProposed ||
+			newLifecycle == "") {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
+				strings.Join([]string{
+					string(api.PackageRevisionLifecycleDraft),
+					string(api.PackageRevisionLifecycleProposed),
+				}, ",")),
+			))
+		}
+	case api.PackageRevisionLifecyclePublished:
+		// We don't allow any updates to the spec for packagerevision that have been published. That includes updates of the lifecycle. But
+		// we allow updates to metadata and status.
+		if !equality.Semantic.DeepEqual(oldRevision.Spec, newRevision.Spec) {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), newRevision.Spec, fmt.Sprintf("spec can only update package with lifecycle value one of %s",
+				strings.Join([]string{
+					string(api.PackageRevisionLifecycleDraft),
+					string(api.PackageRevisionLifecycleProposed),
+				}, ",")),
+			))
+		}
+	default:
+		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
+			strings.Join([]string{
+				string(api.PackageRevisionLifecycleDraft),
+				string(api.PackageRevisionLifecycleProposed),
+				string(api.PackageRevisionLifecyclePublished),
 			}, ",")),
 		))
 	}

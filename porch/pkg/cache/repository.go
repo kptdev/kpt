@@ -21,9 +21,13 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 )
@@ -40,9 +44,12 @@ var _ repository.Repository = &cachedRepository{}
 var _ repository.FunctionRepository = &cachedRepository{}
 
 type cachedRepository struct {
-	id     string
-	repo   repository.Repository
-	cancel context.CancelFunc
+	id string
+	// We need the kubernetes object so we can add the appropritate
+	// ownerreferences to PackageRevision resources.
+	repoSpec *configapi.Repository
+	repo     repository.Repository
+	cancel   context.CancelFunc
 
 	mutex                  sync.Mutex
 	cachedPackageRevisions map[repository.PackageRevisionKey]*cachedPackageRevision
@@ -56,15 +63,19 @@ type cachedRepository struct {
 	refreshPkgsError      error
 
 	objectCache *objectCache
+
+	metadataStore meta.MetadataStore
 }
 
-func newRepository(id string, repo repository.Repository, objectCache *objectCache) *cachedRepository {
+func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectCache *objectCache, metadataStore meta.MetadataStore) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &cachedRepository{
-		id:          id,
-		repo:        repo,
-		cancel:      cancel,
-		objectCache: objectCache,
+		id:            id,
+		repoSpec:      repoSpec,
+		repo:          repo,
+		cancel:        cancel,
+		objectCache:   objectCache,
+		metadataStore: metadataStore,
 	}
 
 	// TODO: Should we fetch the packages here?
@@ -200,12 +211,12 @@ func (r *cachedRepository) UpdatePackageRevision(ctx context.Context, old reposi
 	}, nil
 }
 
-func (r *cachedRepository) update(updated repository.PackageRevision) (*cachedPackageRevision, error) {
+func (r *cachedRepository) update(ctx context.Context, updated repository.PackageRevision) (*cachedPackageRevision, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	// TODO: Technically we only need this package, not all packages
-	if _, _, err := r.getCachedPackages(context.TODO(), false); err != nil {
+	if _, _, err := r.getCachedPackages(ctx, false); err != nil {
 		klog.Warningf("failed to get cached packages: %v", err)
 		// TODO: Invalidate all watches? We're dropping an add/update event
 		return nil, err
@@ -283,7 +294,6 @@ func (r *cachedRepository) Close() error {
 // pollForever will continue polling until signal channel is closed or ctx is done.
 func (r *cachedRepository) pollForever(ctx context.Context) {
 	ticker := time.NewTicker(1 * time.Minute)
-
 	for {
 		select {
 		case <-ticker.C:
@@ -328,6 +338,19 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// TODO: Avoid simultaneous fetches?
 	// TODO: Push-down partial refresh?
 
+	// Look up all existing PackageRevCRs so we an compare those to the
+	// actual Packagerevisions found in git/oci, and add/prune PackageRevCRs
+	// as necessary.
+	existingPkgRevCRs, err := r.metadataStore.List(ctx, r.repoSpec)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Create a map so we can quickly check if a specific PackageRevisionMeta exists.
+	existingPkgRevCRsMap := make(map[string]bool)
+	for _, pr := range existingPkgRevCRs {
+		existingPkgRevCRsMap[pr.Name] = true
+	}
+
 	// TODO: Can we avoid holding the lock for the ListPackageRevisions / identifyLatestRevisions section?
 	newPackageRevisions, err := r.repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
@@ -335,15 +358,18 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
+	newPackageRevisionNames := make(map[string]bool)
 	for _, newPackage := range newPackageRevisions {
 		k := newPackage.Key()
 		if newPackageRevisionMap[k] != nil {
 			klog.Warningf("found duplicate packages with key %v", k)
 		}
+
 		newPackageRevisionMap[k] = &cachedPackageRevision{
 			PackageRevision:  newPackage,
 			isLatestRevision: false,
 		}
+		newPackageRevisionNames[newPackage.KubeObjectName()] = true
 	}
 
 	identifyLatestRevisions(newPackageRevisionMap)
@@ -364,6 +390,43 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	r.cachedPackageRevisions = newPackageRevisionMap
 	r.cachedPackages = newPackageMap
 
+	// We go through all PackageRev CRs that represents PackageRevisions
+	// in the current repo and make sure they all have a corresponding
+	// PackageRevision. The ones that doesn't is removed.
+	for _, prm := range existingPkgRevCRs {
+		if _, found := newPackageRevisionNames[prm.Name]; !found {
+			if _, err := r.metadataStore.Delete(ctx, types.NamespacedName{
+				Name:      prm.Name,
+				Namespace: prm.Namespace,
+			}); err != nil {
+				if !apierrors.IsNotFound(err) {
+					// This will be retried the next time the sync runs.
+					klog.Warningf("unable to create PackageRev CR for %s/%s: %w",
+						prm.Name, prm.Namespace, err)
+				}
+			}
+		}
+	}
+
+	// We go through all the PackageRevisions and make sure they have
+	// a corresponding PackageRev CR.
+	for pkgRevName := range newPackageRevisionNames {
+		if _, found := existingPkgRevCRsMap[pkgRevName]; !found {
+			pkgRevMeta := meta.PackageRevisionMeta{
+				Name:      pkgRevName,
+				Namespace: r.repoSpec.Namespace,
+			}
+			if _, err := r.metadataStore.Create(ctx, pkgRevMeta, r.repoSpec); err != nil {
+				// TODO: We should try to find a way to make these errors available through
+				// either the repository CR or the PackageRevision CR. This will be
+				// retried on the next sync.
+				klog.Warningf("unable to create PackageRev CR for %s/%s: %w",
+					r.repoSpec.Namespace, pkgRevName, err)
+			}
+		}
+	}
+
+	// Send notification for packages that changed.
 	for k, newPackage := range r.cachedPackageRevisions {
 		oldPackage := oldPackageRevisions[k]
 		if oldPackage == nil {

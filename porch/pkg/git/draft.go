@@ -174,7 +174,10 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	}
 
 	if err := d.parent.pushAndCleanup(ctx, refSpecs); err != nil {
-		return nil, err
+		// No changes is fine. No need to return an error.
+		if !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			return nil, err
+		}
 	}
 
 	return &gitPackageRevision{

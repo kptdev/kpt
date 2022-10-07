@@ -27,9 +27,12 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/comments"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -42,18 +45,72 @@ type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
 	ObjectCache() cache.ObjectCache
 
-	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error)
-	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error)
+	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, error)
+	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error)
 
-	ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error)
-	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error)
-	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevision) (repository.PackageRevision, error)
-	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj repository.PackageRevision) error
+	ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]*PackageRevision, error)
+	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (*PackageRevision, error)
+	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevision) (*PackageRevision, error)
+	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *PackageRevision) error
 
-	ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error)
-	CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error)
-	UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, old, new *api.Package) (repository.Package, error)
-	DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, obj repository.Package) error
+	ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]*Package, error)
+	CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (*Package, error)
+	UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *Package, old, new *api.Package) (*Package, error)
+	DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *Package) error
+}
+
+type Package struct {
+	repoPackage repository.Package
+}
+
+func (p *Package) GetPackage() *api.Package {
+	return p.repoPackage.GetPackage()
+}
+
+func (p *Package) KubeObjectName() string {
+	return p.repoPackage.KubeObjectName()
+}
+
+type PackageRevision struct {
+	repoPackageRevision repository.PackageRevision
+	packageRevisionMeta meta.PackageRevisionMeta
+}
+
+func (p *PackageRevision) GetPackageRevision() *api.PackageRevision {
+	repoPkgRev := p.repoPackageRevision.GetPackageRevision()
+	var isLatest bool
+	if val, found := repoPkgRev.Labels[api.LatestPackageRevisionKey]; found && val == api.LatestPackageRevisionValue {
+		isLatest = true
+	}
+	repoPkgRev.Labels = p.packageRevisionMeta.Labels
+	if isLatest {
+		if repoPkgRev.Labels == nil {
+			repoPkgRev.Labels = make(map[string]string)
+		}
+		repoPkgRev.Labels[api.LatestPackageRevisionKey] = api.LatestPackageRevisionValue
+	}
+	repoPkgRev.Annotations = p.packageRevisionMeta.Annotations
+	return repoPkgRev
+}
+
+func (p *PackageRevision) KubeObjectName() string {
+	return p.repoPackageRevision.KubeObjectName()
+}
+
+func (p *PackageRevision) GetResources(ctx context.Context) (*api.PackageRevisionResources, error) {
+	return p.repoPackageRevision.GetResources(ctx)
+}
+
+type Function struct {
+	RepoFunction repository.Function
+}
+
+func (f *Function) Name() string {
+	return f.RepoFunction.Name()
+}
+
+func (f *Function) GetFunction() (*api.Function, error) {
+	return f.RepoFunction.GetFunction()
 }
 
 func NewCaDEngine(opts ...EngineOption) (CaDEngine, error) {
@@ -73,6 +130,7 @@ type cadEngine struct {
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
 	userInfoProvider   repository.UserInfoProvider
+	metadataStore      meta.MetadataStore
 }
 
 var _ CaDEngine = &cadEngine{}
@@ -93,7 +151,7 @@ func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *config
 	return cad.cache.OpenRepository(ctx, repositorySpec)
 }
 
-func (cad *cadEngine) ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+func (cad *cadEngine) ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::ListPackageRevisions", trace.WithAttributes())
 	defer span.End()
 
@@ -101,10 +159,34 @@ func (cad *cadEngine) ListPackageRevisions(ctx context.Context, repositorySpec *
 	if err != nil {
 		return nil, err
 	}
-	return repo.ListPackageRevisions(ctx, filter)
+	pkgRevs, err := repo.ListPackageRevisions(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var packageRevisions []*PackageRevision
+	for _, pr := range pkgRevs {
+		pkgRevMeta, err := cad.metadataStore.Get(ctx, types.NamespacedName{
+			Name:      pr.KubeObjectName(),
+			Namespace: pr.KubeObjectNamespace(),
+		})
+		if err != nil {
+			// If a PackageRev CR doesn't exist, we treat the
+			// Packagerevision as not existing.
+			if apierrors.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		packageRevisions = append(packageRevisions, &PackageRevision{
+			repoPackageRevision: pr,
+			packageRevisionMeta: pkgRevMeta,
+		})
+	}
+	return packageRevisions, nil
 }
 
-func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (repository.PackageRevision, error) {
+func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::CreatePackageRevision", trace.WithAttributes())
 	defer span.End()
 
@@ -140,7 +222,24 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Updates are done.
-	return draft.Close(ctx)
+	repoPkgRev, err := draft.Close(ctx)
+	if err != nil {
+		return nil, err
+	}
+	pkgRevMeta := meta.PackageRevisionMeta{
+		Name:        repoPkgRev.KubeObjectName(),
+		Namespace:   repoPkgRev.KubeObjectNamespace(),
+		Labels:      obj.Labels,
+		Annotations: obj.Annotations,
+	}
+	pkgRevMeta, err = cad.metadataStore.Create(ctx, pkgRevMeta, repositoryObj)
+	if err != nil {
+		return nil, err
+	}
+	return &PackageRevision{
+		repoPackageRevision: repoPkgRev,
+		packageRevisionMeta: pkgRevMeta,
+	}, nil
 }
 
 func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision) error {
@@ -180,6 +279,10 @@ func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDr
 	return nil
 }
 
+type RepositoryOpener interface {
+	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
+}
+
 func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task, isDeployment bool) (mutation, error) {
 	switch task.Type {
 	case api.TaskTypeInit:
@@ -199,7 +302,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			namespace:          obj.Namespace,
 			name:               obj.Spec.PackageName,
 			isDeployment:       isDeployment,
-			cad:                cad,
+			repoOpener:         cad,
 			credentialResolver: cad.credentialResolver,
 			referenceResolver:  cad.referenceResolver,
 		}, nil
@@ -216,7 +319,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			cloneTask:         cloneTask,
 			updateTask:        task,
 			namespace:         obj.Namespace,
-			cad:               cad,
+			repoOpener:        cad,
 			referenceResolver: cad.referenceResolver,
 			pkgName:           obj.Spec.PackageName,
 		}, nil
@@ -231,7 +334,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		return &editPackageMutation{
 			task:              task,
 			namespace:         obj.Namespace,
-			cad:               cad,
+			repoOpener:        cad,
 			referenceResolver: cad.referenceResolver,
 		}, nil
 
@@ -258,9 +361,14 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	}
 }
 
-func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, oldObj, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, oldObj, newObj *api.PackageRevision) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageRevision", trace.WithAttributes())
 	defer span.End()
+
+	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
+	if err != nil {
+		return nil, err
+	}
 
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := oldObj.Spec.Lifecycle; lifecycle {
@@ -269,8 +377,21 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// Draft or proposed can be updated.
 	case api.PackageRevisionLifecyclePublished:
-		// TODO: generate errors that can be translated to correct HTTP responses
-		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q", lifecycle)
+		// Only metadata (currently labels and annotations) can be updated for published packages.
+		repoPkgRev := oldPackage.repoPackageRevision
+
+		pkgRevMeta := meta.PackageRevisionMeta{
+			Name:        repoPkgRev.KubeObjectName(),
+			Namespace:   repoPkgRev.KubeObjectNamespace(),
+			Labels:      newObj.Labels,
+			Annotations: newObj.Annotations,
+		}
+		cad.metadataStore.Update(ctx, pkgRevMeta)
+
+		return &PackageRevision{
+			repoPackageRevision: repoPkgRev,
+			packageRevisionMeta: pkgRevMeta,
+		}, nil
 	}
 	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
 	default:
@@ -279,13 +400,14 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		// These values are ok
 	}
 
-	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
-	if err != nil {
-		return nil, err
-	}
-
 	if isRecloneAndReplay(oldObj, newObj) {
-		return cad.recloneAndReplay(ctx, repo, repositoryObj, newObj)
+		repoPkgRev, err := cad.recloneAndReplay(ctx, repo, repositoryObj, newObj)
+		if err != nil {
+			return nil, err
+		}
+		return &PackageRevision{
+			repoPackageRevision: repoPkgRev,
+		}, nil
 	}
 
 	var mutations []mutation
@@ -320,7 +442,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		mutation := &updatePackageMutation{
 			cloneTask:         cloneTask,
 			updateTask:        &newTask,
-			cad:               cad,
+			repoOpener:        cad,
 			referenceResolver: cad.referenceResolver,
 			namespace:         repositoryObj.Namespace,
 			pkgName:           oldObj.GetName(),
@@ -331,7 +453,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	// Re-render if we are making changes.
 	mutations = cad.conditionalAddRender(mutations)
 
-	draft, err := repo.UpdatePackageRevision(ctx, oldPackage)
+	draft, err := repo.UpdatePackageRevision(ctx, oldPackage.repoPackageRevision)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +479,23 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	// Updates are done.
-	return draft.Close(ctx)
+	repoPkgRev, err := draft.Close(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	pkgRevMeta := meta.PackageRevisionMeta{
+		Name:        repoPkgRev.KubeObjectName(),
+		Namespace:   repoPkgRev.KubeObjectNamespace(),
+		Labels:      newObj.Labels,
+		Annotations: newObj.Annotations,
+	}
+	cad.metadataStore.Update(ctx, pkgRevMeta)
+
+	return &PackageRevision{
+		repoPackageRevision: repoPkgRev,
+		packageRevisionMeta: pkgRevMeta,
+	}, nil
 }
 
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
@@ -379,7 +517,7 @@ func (cad *cadEngine) conditionalAddRender(mutations []mutation) []mutation {
 	})
 }
 
-func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision) error {
+func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision) error {
 	ctx, span := tracer.Start(ctx, "cadEngine::DeletePackageRevision", trace.WithAttributes())
 	defer span.End()
 
@@ -388,14 +526,22 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 		return err
 	}
 
-	if err := repo.DeletePackageRevision(ctx, oldPackage); err != nil {
+	if err := repo.DeletePackageRevision(ctx, oldPackage.repoPackageRevision); err != nil {
+		return err
+	}
+
+	namespacedName := types.NamespacedName{
+		Name:      oldPackage.repoPackageRevision.KubeObjectName(),
+		Namespace: oldPackage.repoPackageRevision.KubeObjectNamespace(),
+	}
+	if _, err := cad.metadataStore.Delete(ctx, namespacedName); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (cad *cadEngine) ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error) {
+func (cad *cadEngine) ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]*Package, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::ListPackages", trace.WithAttributes())
 	defer span.End()
 
@@ -404,10 +550,21 @@ func (cad *cadEngine) ListPackages(ctx context.Context, repositorySpec *configap
 		return nil, err
 	}
 
-	return repo.ListPackages(ctx, filter)
+	pkgs, err := repo.ListPackages(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var packages []*Package
+	for _, p := range pkgs {
+		packages = append(packages, &Package{
+			repoPackage: p,
+		})
+	}
+
+	return packages, nil
 }
 
-func (cad *cadEngine) CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (repository.Package, error) {
+func (cad *cadEngine) CreatePackage(ctx context.Context, repositoryObj *configapi.Repository, obj *api.Package) (*Package, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::CreatePackage", trace.WithAttributes())
 	defer span.End()
 
@@ -420,19 +577,21 @@ func (cad *cadEngine) CreatePackage(ctx context.Context, repositoryObj *configap
 		return nil, err
 	}
 
-	return pkg, nil
+	return &Package{
+		repoPackage: pkg,
+	}, nil
 }
 
-func (cad *cadEngine) UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package, oldObj, newObj *api.Package) (repository.Package, error) {
+func (cad *cadEngine) UpdatePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *Package, oldObj, newObj *api.Package) (*Package, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackage", trace.WithAttributes())
 	defer span.End()
 
 	// TODO
-	var pkg repository.Package
+	var pkg *Package
 	return pkg, fmt.Errorf("Updating packages is not yet supported")
 }
 
-func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.Package) error {
+func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *Package) error {
 	ctx, span := tracer.Start(ctx, "cadEngine::DeletePackage", trace.WithAttributes())
 	defer span.End()
 
@@ -441,18 +600,18 @@ func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configap
 		return err
 	}
 
-	if err := repo.DeletePackage(ctx, oldPackage); err != nil {
+	if err := repo.DeletePackage(ctx, oldPackage.repoPackage); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage repository.PackageRevision, old, new *api.PackageRevisionResources) (repository.PackageRevision, error) {
+func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
 
-	rev := oldPackage.GetPackageRevision()
+	rev := oldPackage.repoPackageRevision.GetPackageRevision()
 
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := rev.Spec.Lifecycle; lifecycle {
@@ -470,7 +629,7 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		return nil, err
 	}
 
-	draft, err := repo.UpdatePackageRevision(ctx, oldPackage)
+	draft, err := repo.UpdatePackageRevision(ctx, oldPackage.repoPackageRevision)
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +645,7 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 		},
 	}
 
-	apiResources, err := oldPackage.GetResources(ctx)
+	apiResources, err := oldPackage.repoPackageRevision.GetResources(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("cannot get package resources: %w", err)
 	}
@@ -499,7 +658,13 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	}
 
 	// No lifecycle change when updating package resources; updates are done.
-	return draft.Close(ctx)
+	repoPkgRev, err := draft.Close(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &PackageRevision{
+		repoPackageRevision: repoPkgRev,
+	}, nil
 }
 
 func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) error {
@@ -521,7 +686,7 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 	return nil
 }
 
-func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]repository.Function, error) {
+func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::ListFunctions", trace.WithAttributes())
 	defer span.End()
 
@@ -535,13 +700,20 @@ func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configap
 		return nil, err
 	}
 
-	return fns, nil
+	var functions []*Function
+	for _, f := range fns {
+		functions = append(functions, &Function{
+			RepoFunction: f,
+		})
+	}
+
+	return functions, nil
 }
 
 type updatePackageMutation struct {
 	cloneTask         *api.Task
 	updateTask        *api.Task
-	cad               CaDEngine
+	repoOpener        RepositoryOpener
 	referenceResolver ReferenceResolver
 	namespace         string
 	pkgName           string
@@ -562,7 +734,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	}
 
 	originalResources, err := (&PackageFetcher{
-		cad:               m.cad,
+		repoOpener:        m.repoOpener,
 		referenceResolver: m.referenceResolver,
 	}).FetchResources(ctx, currUpstreamPkgRef, m.namespace)
 	if err != nil {
@@ -571,7 +743,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	}
 
 	upstreamRevision, err := (&PackageFetcher{
-		cad:               m.cad,
+		repoOpener:        m.repoOpener,
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, targetUpstream.UpstreamRef, m.namespace)
 	if err != nil {

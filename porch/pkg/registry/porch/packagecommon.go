@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,7 +48,7 @@ type packageCommon struct {
 	createStrategy SimpleRESTCreateStrategy
 }
 
-func (r *packageCommon) listPackageRevisions(ctx context.Context, filter packageRevisionFilter, callback func(p repository.PackageRevision) error) error {
+func (r *packageCommon) listPackageRevisions(ctx context.Context, filter packageRevisionFilter, selector labels.Selector, callback func(p *engine.PackageRevision) error) error {
 	var opts []client.ListOption
 	if ns, namespaced := genericapirequest.NamespaceFrom(ctx); namespaced {
 		opts = append(opts, client.InNamespace(ns))
@@ -75,6 +76,11 @@ func (r *packageCommon) listPackageRevisions(ctx context.Context, filter package
 			return err
 		}
 		for _, rev := range revisions {
+			apiPkgRev := rev.GetPackageRevision()
+			if selector != nil && !selector.Matches(labels.Set(apiPkgRev.Labels)) {
+				continue
+			}
+
 			if err := callback(rev); err != nil {
 				return err
 			}
@@ -83,7 +89,7 @@ func (r *packageCommon) listPackageRevisions(ctx context.Context, filter package
 	return nil
 }
 
-func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, callback func(p repository.Package) error) error {
+func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, callback func(p *engine.Package) error) error {
 	var opts []client.ListOption
 	if ns, namespaced := genericapirequest.NamespaceFrom(ctx); namespaced {
 		opts = append(opts, client.InNamespace(ns))
@@ -151,7 +157,7 @@ func (r *packageCommon) getRepositoryObj(ctx context.Context, repositoryID types
 	return &repositoryObj, nil
 }
 
-func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (repository.PackageRevision, error) {
+func (r *packageCommon) getRepoPkgRev(ctx context.Context, name string) (*engine.PackageRevision, error) {
 	repositoryObj, err := r.getRepositoryObjFromName(ctx, name)
 	if err != nil {
 		return nil, err
@@ -169,7 +175,7 @@ func (r *packageCommon) getPackageRevision(ctx context.Context, name string) (re
 	return nil, apierrors.NewNotFound(r.gr, name)
 }
 
-func (r *packageCommon) getPackage(ctx context.Context, name string) (repository.Package, error) {
+func (r *packageCommon) getPackage(ctx context.Context, name string) (*engine.Package, error) {
 	repositoryObj, err := r.getRepositoryObjFromName(ctx, name)
 	if err != nil {
 		return nil, err
@@ -200,7 +206,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 	// isCreate tracks whether this is an update that creates an object (this happens in server-side apply)
 	isCreate := false
 
-	oldPackage, err := r.getPackageRevision(ctx, name)
+	oldRepoPkgRev, err := r.getRepoPkgRev(ctx, name)
 	if err != nil {
 		if forceAllowCreate && apierrors.IsNotFound(err) {
 			// For server-side apply, we can create the object here
@@ -210,12 +216,12 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		}
 	}
 
-	var oldRuntimeObj runtime.Object // We have to be runtime.Object (and not *api.PackageRevision) or else nil-checks fail (because a nil object is not a nil interface)
+	var oldApiPkgRev runtime.Object // We have to be runtime.Object (and not *api.PackageRevision) or else nil-checks fail (because a nil object is not a nil interface)
 	if !isCreate {
-		oldRuntimeObj = oldPackage.GetPackageRevision()
+		oldApiPkgRev = oldRepoPkgRev.GetPackageRevision()
 	}
 
-	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldRuntimeObj)
+	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldApiPkgRev)
 	if err != nil {
 		klog.Infof("update failed to construct UpdatedObject: %v", err)
 		return nil, false, err
@@ -232,12 +238,12 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		newRuntimeObj = typed
 	}
 
-	if err := r.validateUpdate(ctx, newRuntimeObj, oldRuntimeObj, isCreate, createValidation,
+	if err := r.validateUpdate(ctx, newRuntimeObj, oldApiPkgRev, isCreate, createValidation,
 		updateValidation, "PackageRevision", name); err != nil {
 		return nil, false, err
 	}
 
-	newObj, ok := newRuntimeObj.(*api.PackageRevision)
+	newApiPkgRev, ok := newRuntimeObj.(*api.PackageRevision)
 	if !ok {
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", newRuntimeObj))
 	}
@@ -247,7 +253,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid name %q", name))
 	}
 	if isCreate {
-		repositoryName = newObj.Spec.RepositoryName
+		repositoryName = newApiPkgRev.Spec.RepositoryName
 		if repositoryName == "" {
 			return nil, false, apierrors.NewBadRequest(fmt.Sprintf("invalid repositoryName %q", name))
 		}
@@ -263,23 +269,22 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 	}
 
 	if !isCreate {
-		rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldPackage, oldRuntimeObj.(*api.PackageRevision), newObj)
+		rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRev.(*api.PackageRevision), newApiPkgRev)
 		if err != nil {
 			return nil, false, apierrors.NewInternalError(err)
 		}
-
 		updated := rev.GetPackageRevision()
 
 		return updated, false, nil
 	} else {
-		rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, newObj)
+		rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, newApiPkgRev)
 		if err != nil {
 			klog.Infof("error creating package: %v", err)
 			return nil, false, apierrors.NewInternalError(err)
 		}
+		createdApiPkgRev := rev.GetPackageRevision()
 
-		created := rev.GetPackageRevision()
-		return created, true, nil
+		return createdApiPkgRev, true, nil
 	}
 }
 

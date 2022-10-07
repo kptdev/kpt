@@ -41,7 +41,7 @@ type clonePackageMutation struct {
 
 	name               string // package target name
 	isDeployment       bool   // is the package deployable instance
-	cad                CaDEngine
+	repoOpener         RepositoryOpener
 	credentialResolver repository.CredentialResolver
 	referenceResolver  ReferenceResolver
 }
@@ -105,7 +105,7 @@ func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context
 	}
 
 	upstreamRevision, err := (&PackageFetcher{
-		cad:               m.cad,
+		repoOpener:        m.repoOpener,
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, ref, m.namespace)
 	if err != nil {

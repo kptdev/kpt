@@ -24,7 +24,7 @@ import (
 )
 
 type PackageFetcher struct {
-	cad               CaDEngine
+	repoOpener        RepositoryOpener
 	referenceResolver ReferenceResolver
 }
 
@@ -38,7 +38,12 @@ func (p *PackageFetcher) FetchRevision(ctx context.Context, packageRef *api.Pack
 		return nil, fmt.Errorf("cannot find repository %s/%s: %w", namespace, repositoryName, err)
 	}
 
-	revisions, err := p.cad.ListPackageRevisions(ctx, &resolved, repository.ListPackageRevisionFilter{KubeObjectName: packageRef.Name})
+	repo, err := p.repoOpener.OpenRepository(ctx, &resolved)
+	if err != nil {
+		return nil, err
+	}
+
+	revisions, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{KubeObjectName: packageRef.Name})
 	if err != nil {
 		return nil, err
 	}

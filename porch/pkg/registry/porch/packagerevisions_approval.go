@@ -47,7 +47,7 @@ func (a *packageRevisionsApproval) NamespaceScoped() bool {
 }
 
 func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options *metav1.GetOptions) (runtime.Object, error) {
-	pkg, err := a.common.getPackageRevision(ctx, name)
+	pkg, err := a.common.getRepoPkgRev(ctx, name)
 	if err != nil {
 		return nil, err
 	}
