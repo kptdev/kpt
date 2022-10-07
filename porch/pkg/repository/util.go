@@ -15,12 +15,16 @@
 package repository
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"golang.org/x/mod/semver"
 )
+
+const revisionRegex = "^v[0-9]+$"
 
 func NextRevisionNumber(revs []PackageRevision) (string, error) {
 	// Computes the next revision number as the latest revision number + 1.
@@ -39,12 +43,8 @@ func NextRevisionNumber(revs []PackageRevision) (string, error) {
 		}
 
 		currentRev := current.Key().Revision
-		match, err := regexp.MatchString("^v[0-9]+$", currentRev)
-		if err != nil {
-			return "", err
-		}
 
-		if !match {
+		if err := ValidateRevisionNumber(currentRev); err != nil {
 			// ignore this revision
 			continue
 		}
@@ -68,4 +68,34 @@ func NextRevisionNumber(revs []PackageRevision) (string, error) {
 	i++
 	next := "v" + strconv.Itoa(i)
 	return next, nil
+}
+
+func ValidateDescription(descr string) error {
+	if len(descr) > 63 || len(descr) == 0 {
+		return fmt.Errorf("description %q must be at least 1 and at most 63 characters long", descr)
+	}
+	if strings.HasPrefix(descr, "-") || strings.HasSuffix(descr, "-") {
+		return fmt.Errorf("description %q must start and end with an alphanumeric character", descr)
+	}
+
+	match, err := regexp.MatchString(`^[a-zA-Z0-9-]{0,63}$`, descr)
+	if err != nil {
+		return err
+	}
+	if !match {
+		return fmt.Errorf("description %q must be comprised only of alphanumeric characters and '-'", descr)
+	}
+
+	return nil
+}
+
+func ValidateRevisionNumber(revision string) error {
+	match, err := regexp.MatchString(revisionRegex, revision)
+	if err != nil {
+		return err
+	}
+	if !match {
+		return fmt.Errorf("input string %s is not a valid revision number", revision)
+	}
+	return nil
 }

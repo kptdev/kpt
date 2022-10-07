@@ -20,7 +20,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -55,17 +54,7 @@ type packageListEntry struct {
 // TODO: Can packageListEntry just _be_ a gitPackageRevision?
 func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision, description string, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	repo := p.parent.parent
-	var tasks []v1alpha1.Task
-	var err error
-
-	// For backwards compatibility, we need to pass in the description as the revision parameter
-	// to load tasks if it's empty. Porch packages created before the "description" field existed
-	// would have git commit annotations with the revision being the branch name instead of the description.
-	if revision == "" {
-		tasks, err = repo.loadTasks(ctx, p.parent.commit, p.path, description, description)
-	} else {
-		tasks, err = repo.loadTasks(ctx, p.parent.commit, p.path, revision, description)
-	}
+	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, description)
 
 	if err != nil {
 		return nil, err

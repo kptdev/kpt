@@ -286,36 +286,33 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		return nil, fmt.Errorf("error when resolving target branch for the package: %w", err)
 	}
 
-	// for backwards compatibility, if spec.revision is provided and spec.description is not, use spec.revision
-	// as spec.description
-	description := obj.Spec.Description
-	if description == "" {
-		if obj.Spec.Revision == "" {
-			return nil, fmt.Errorf("package revision with name %s in repo %s is missing spec.description", obj.Spec.PackageName, obj.Spec.RepositoryName)
-		}
-		description = obj.Spec.Revision
-		klog.Warningf("detected use of deprecated field spec.Revision in PackageRevision %s; using spec.revision"+
-			" as spec.description instead", obj.GetName())
+	if obj.Spec.Description == "" {
+		return nil, fmt.Errorf("package revision with name %s with repo %s is missing spec.description", obj.Spec.PackageName,
+			obj.Spec.RepositoryName)
+	}
+
+	if err := repository.ValidateDescription(obj.Spec.Description); err != nil {
+		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
 	}
 
 	// the description must be unique, because it used to generate the package revision's metadata.name
-	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: description})
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: obj.Spec.Description})
 	if err != nil {
 		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
 	}
 	if len(revs) != 0 {
 		return nil, fmt.Errorf("package revision descriptions must be unique; package revision with name %s in repo %s with"+
-			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, description)
+			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.Description)
 	}
 
-	draft := createDraftName(obj.Spec.PackageName, description)
+	draft := createDraftName(obj.Spec.PackageName, obj.Spec.Description)
 
 	// TODO: This should also create a new 'Package' resource if one does not already exist
 
 	return &gitPackageDraft{
 		parent:      r,
 		path:        obj.Spec.PackageName,
-		description: description,
+		description: obj.Spec.Description,
 		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
 		updated:     time.Now(),
 		base:        nil, // Creating a new package
@@ -509,12 +506,27 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 
 	var ref *plumbing.Reference = nil // Cannot determine ref; this package will be considered final (immutable).
 
-	description, err := getPkgDescription(commit, path)
-	if err != nil {
-		return nil, lock, err
+	var revision string
+	var description string
+	last := strings.LastIndex(version, "/")
+
+	if strings.HasPrefix(version, "drafts/") || strings.HasPrefix(version, "proposed/") {
+		// the passed in version is a ref to an unpublished package revision
+		description = version[last+1:]
+	} else {
+		// the passed in version is a ref to a published package revision
+		if last < 0 {
+			revision = version
+		} else {
+			revision = version[last+1:]
+		}
+		description, err = getPkgDescription(commit, path)
+		if err != nil {
+			return nil, kptfilev1.GitLock{}, err
+		}
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, version, description, ref)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, description, ref)
 	if err != nil {
 		return nil, lock, err
 	}
@@ -930,7 +942,7 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 	return nil
 }
 
-func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision, description string) ([]v1alpha1.Task, error) {
+func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, description string) ([]v1alpha1.Task, error) {
 	var logOptions = git.LogOptions{
 		From:  startCommit.Hash,
 		Order: git.LogOrderCommitterTime,
@@ -964,7 +976,12 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		}
 
 		for _, gitAnnotation := range gitAnnotations {
-			if gitAnnotation.PackagePath == packagePath && (gitAnnotation.Revision == revision || gitAnnotation.Description == description) {
+			packageMatches := gitAnnotation.PackagePath == packagePath
+			descriptionMatches := gitAnnotation.Description == description ||
+				// this is needed for porch package revisions created before the description field existed
+				(gitAnnotation.Revision == description && gitAnnotation.Description == "")
+
+			if packageMatches && descriptionMatches {
 				// We are iterating through the commits in reverse order.
 				// Tasks that are read from separate commits will be recorded in
 				// reverse order.

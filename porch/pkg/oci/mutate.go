@@ -51,26 +51,23 @@ func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.Pack
 		return nil, err
 	}
 
-	// for backwards compatibility, if spec.revision is provided and spec.description is not, use spec.revision
-	// as spec.description
-	description := obj.Spec.Description
-	if description == "" {
-		if obj.Spec.Revision == "" {
-			return nil, fmt.Errorf("package revision with name %s in repo %s is missing spec.description", obj.Spec.PackageName, obj.Spec.RepositoryName)
-		}
-		description = obj.Spec.Revision
-		klog.Warningf("detected use of deprecated field spec.Revision in PackageRevision %s; using spec.revision"+
-			" as spec.description instead", obj.GetName())
+	if obj.Spec.Description == "" {
+		return nil, fmt.Errorf("package revision with name %s with repo %s is missing spec.description", obj.Spec.PackageName,
+			obj.Spec.RepositoryName)
+	}
+
+	if err := repository.ValidateDescription(obj.Spec.Description); err != nil {
+		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
 	}
 
 	// the description must be unique, because it used to generate the package revision's metadata.name
-	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: description})
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, Description: obj.Spec.Description})
 	if err != nil {
 		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
 	}
 	if len(revs) != 0 {
 		return nil, fmt.Errorf("package revision descriptions must be unique; package revision with name %s in repo %s with"+
-			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, description)
+			"description %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.Description)
 	}
 
 	// digestName := ImageDigestName{}
@@ -79,7 +76,7 @@ func (r *ociRepository) CreatePackageRevision(ctx context.Context, obj *api.Pack
 		parent:      r,
 		tasks:       []api.Task{},
 		base:        base,
-		tag:         ociRepo.Tag(description),
+		tag:         ociRepo.Tag(obj.Spec.Description),
 		lifecycle:   v1alpha1.PackageRevisionLifecycleDraft,
 	}, nil
 }
