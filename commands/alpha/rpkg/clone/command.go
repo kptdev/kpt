@@ -63,11 +63,11 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	r.Command = c
 
 	c.Flags().StringVar(&r.strategy, "strategy", string(porchapi.ResourceMerge),
-		"update strategy that should be used when updating this package; one of: "+strings.Join(strategies, ","))
+		"update strategy that should be used when updating this package revision; one of: "+strings.Join(strategies, ","))
 	c.Flags().StringVar(&r.directory, "directory", "", "Directory within the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.ref, "ref", "", "Branch in the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
-	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
+	c.Flags().StringVar(&r.description, "description", "", "Description of the downstream package revision.")
 
 	return r
 }
@@ -81,12 +81,12 @@ type runner struct {
 	clone porchapi.PackageCloneTaskSpec
 
 	// Flags
-	strategy   string
-	directory  string
-	ref        string
-	repository string // Target repository
-	revision   string // Target package revision
-	target     string // Target package name
+	strategy    string
+	directory   string
+	ref         string
+	repository  string // Target repository
+	description string // Target package description
+	target      string // Target package name
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -109,6 +109,10 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 	if r.repository == "" {
 		return errors.E(op, fmt.Errorf("--repository is required to specify downstream repository"))
+	}
+
+	if r.description == "" {
+		return errors.E(op, fmt.Errorf("--description is required to specify downstream package revision description"))
 	}
 
 	source := args[0]
@@ -182,7 +186,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    r.target,
-			Revision:       r.revision,
+			Description:    r.description,
 			RepositoryName: r.repository,
 			Tasks: []porchapi.Task{
 				{

@@ -17,15 +17,12 @@ package copy
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
-	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -55,7 +52,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
 	}
-	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the copied package.")
+	r.Command.Flags().StringVar(&r.description, "description", "", "Description of the package revision copy.")
 	return r
 }
 
@@ -67,7 +64,7 @@ type runner struct {
 
 	copy porchapi.PackageEditTaskSpec
 
-	revision string // Target package revision
+	description string // Target package description
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -83,6 +80,10 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 	if len(args) > 1 {
 		return errors.E(op, fmt.Errorf("too many arguments; SOURCE_PACKAGE is the only accepted positional arguments"))
+	}
+
+	if r.description == "" {
+		return errors.E(op, fmt.Errorf("--description is required to specify downstream package revision description"))
 	}
 
 	r.copy.Source = &porchapi.PackageRevisionRef{
@@ -126,79 +127,11 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 		return nil, err
 	}
 
-	if r.revision == "" {
-		var err error
-		r.revision, err = r.defaultPackageRevision(
-			packageRevision.Spec.PackageName,
-			packageRevision.Spec.RepositoryName,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	spec := &porchapi.PackageRevisionSpec{
 		PackageName:    packageRevision.Spec.PackageName,
-		Revision:       r.revision,
+		Description:    r.description,
 		RepositoryName: packageRevision.Spec.RepositoryName,
 	}
 	spec.Tasks = packageRevision.Spec.Tasks
 	return spec, nil
-}
-
-// defaultPackageRevision attempts to return a default package revision number
-// of "latest + 1" given a package name, repository, and namespace.
-func (r *runner) defaultPackageRevision(packageName, repository string) (string, error) {
-	// get all package revisions
-	packageRevisionList := porchapi.PackageRevisionList{}
-	err := r.client.List(r.ctx, &packageRevisionList, client.InNamespace(*r.cfg.Namespace))
-	if err != nil {
-		return "", err
-	}
-
-	var latestRevision string
-	allRevisions := make(map[string]bool) // this is a map for quick access
-
-	for _, rev := range packageRevisionList.Items {
-		if packageName != rev.Spec.PackageName ||
-			repository != rev.Spec.RepositoryName {
-			continue
-		}
-
-		if latest, ok := rev.Labels[porchapi.LatestPackageRevisionKey]; ok {
-			if latest == porchapi.LatestPackageRevisionValue {
-				latestRevision = rev.Spec.Revision
-			}
-		}
-		allRevisions[rev.Spec.Revision] = true
-	}
-	if latestRevision == "" {
-		return "", fmt.Errorf("no published packages exist; explicit --revision flag is required")
-	}
-
-	next, err := nextRevisionNumber(latestRevision)
-	if err != nil {
-		return "", err
-	}
-	if _, ok := allRevisions[next]; ok {
-		return "", fmt.Errorf("default revision %q already exists; explicit --revision flag is required", next)
-	}
-	return next, err
-}
-
-func nextRevisionNumber(latestRevision string) (string, error) {
-	if !semver.IsValid(latestRevision) {
-		return "", fmt.Errorf("invalid revision format %s; explicit --revision flag is required", latestRevision)
-	}
-
-	parts := strings.Split(latestRevision[1:], ".")
-	lastIndex := len(parts) - 1
-	i, err := strconv.Atoi(parts[lastIndex])
-	if err != nil {
-		return "", err
-	}
-	i++
-	parts[lastIndex] = strconv.Itoa(i)
-	next := "v" + strings.Join(parts, ".")
-	return next, nil
 }

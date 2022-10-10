@@ -150,7 +150,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 	git := map[string]interface{}{
 		"repo":     repository.Spec.Git.Repo,
-		"revision": fmt.Sprintf("%s/%s", pr.Spec.PackageName, pr.Spec.Revision),
+		"revision": fmt.Sprintf("%s/%s", pr.Spec.PackageName, pr.Status.Revision),
 		"dir":      pr.Spec.PackageName,
 		"branch":   repository.Spec.Git.Branch,
 	}

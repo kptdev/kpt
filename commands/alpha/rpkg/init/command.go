@@ -56,7 +56,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
-	c.Flags().StringVar(&r.revision, "revision", "v1", "Revision of the downstream package.")
+	c.Flags().StringVar(&r.description, "description", "", "Description of the downstream package.")
 
 	return r
 }
@@ -73,7 +73,7 @@ type runner struct {
 	Site        string
 	name        string // Target package name
 	repository  string // Target repository
-	revision    string // Target revision
+	description string // Target description
 }
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
@@ -107,7 +107,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    r.name,
-			Revision:       r.revision,
+			Description:    r.description,
 			RepositoryName: r.repository,
 			Tasks: []porchapi.Task{
 				{

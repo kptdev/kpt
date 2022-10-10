@@ -179,7 +179,7 @@ func (r *runner) findCloneTask(pr *porchapi.PackageRevision) *porchapi.Task {
 func (r *runner) findPackageRevisionForRef(name string) *porchapi.PackageRevision {
 	for i := range r.prs {
 		pr := r.prs[i]
-		if pr.Spec.PackageName == name && pr.Spec.Revision == r.revision {
+		if pr.Spec.PackageName == name && pr.Status.Revision == r.revision {
 			return &pr
 		}
 	}

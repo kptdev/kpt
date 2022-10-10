@@ -97,7 +97,5 @@ jobs:
       - name: e2e test
         run: go test -v .
         working-directory: ./porch/test/e2e
-      # TODO (natasha41575): Reenable the porch CLI tests in a followup PR that fixes the CLI
-      # to use the new package revision spec.description field. 
-      # - name: Porch CLI e2e test
-      #   run: make test-porch
+      - name: Porch CLI e2e test
+        run: make test-porch

@@ -62,6 +62,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	// Create flags
 	cmd.Flags().StringVar(&r.packageName, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
 	cmd.Flags().StringVar(&r.revision, "revision", "", "Revision of the packages to get. Any package whose revision matches this value will be included in the results.")
+	cmd.Flags().StringVar(&r.description, "description", "",
+		"Description of the packages to get. Any package whose description matches this value will be included in the results.")
 
 	r.getFlags.AddFlags(cmd)
 	r.printFlags.AddFlags(cmd)
@@ -80,6 +82,7 @@ type runner struct {
 	// Flags
 	packageName string
 	revision    string
+	description string
 	printFlags  *get.PrintFlags
 
 	requestTable bool
@@ -134,7 +137,10 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	if useSelectors {
 		fieldSelector := fields.Everything()
 		if r.revision != "" {
-			fieldSelector = fields.OneTermEqualSelector("spec.revision", r.revision)
+			fieldSelector = fields.OneTermEqualSelector("status.revision", r.revision)
+		}
+		if r.description != "" {
+			fieldSelector = fields.OneTermEqualSelector("spec.description", r.description)
 		}
 		if r.packageName != "" {
 			fieldSelector = fields.OneTermEqualSelector("spec.packageName", r.packageName)
@@ -230,7 +236,11 @@ func (r *runner) packageRevisionMatches(o *unstructured.Unstructured) (bool, err
 	if err != nil {
 		return false, err
 	}
-	revision, _, err := unstructured.NestedString(o.Object, "spec", "revision")
+	revision, _, err := unstructured.NestedString(o.Object, "status", "revision")
+	if err != nil {
+		return false, err
+	}
+	description, _, err := unstructured.NestedString(o.Object, "spec", "description")
 	if err != nil {
 		return false, err
 	}
@@ -238,6 +248,9 @@ func (r *runner) packageRevisionMatches(o *unstructured.Unstructured) (bool, err
 		return false, nil
 	}
 	if r.revision != "" && r.revision != revision {
+		return false, nil
+	}
+	if r.description != "" && r.description != description {
 		return false, nil
 	}
 	return true, nil
@@ -264,6 +277,7 @@ func (r *runner) filterTableRows(table *metav1.Table) error {
 	filtered := make([]metav1.TableRow, 0, len(table.Rows))
 	packageNameCol := findColumn(table.ColumnDefinitions, "Package")
 	revisionCol := findColumn(table.ColumnDefinitions, "Revision")
+	descriptionCol := findColumn(table.ColumnDefinitions, "Description")
 
 	for i := range table.Rows {
 		row := &table.Rows[i]
@@ -275,6 +289,11 @@ func (r *runner) filterTableRows(table *metav1.Table) error {
 		}
 		if revision, ok := getStringCell(row.Cells, revisionCol); ok {
 			if r.revision != "" && r.revision != revision {
+				continue
+			}
+		}
+		if description, ok := getStringCell(row.Cells, descriptionCol); ok {
+			if r.description != "" && r.description != description {
 				continue
 			}
 		}

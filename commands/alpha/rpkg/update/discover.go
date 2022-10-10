@@ -70,7 +70,7 @@ func (r *runner) findUpstreamUpdates(prs []porchapi.PackageRevision, repositorie
 		} else {
 			var revisions []string
 			for i := range availableUpdates {
-				revisions = append(revisions, availableUpdates[i].Spec.Revision)
+				revisions = append(revisions, availableUpdates[i].Status.Revision)
 			}
 			upstreamUpdates = append(upstreamUpdates, []string{pr.Name, upstreamName, strings.Join(revisions, ", ")})
 		}
@@ -86,7 +86,7 @@ func (r *runner) findDownstreamUpdates(prs []porchapi.PackageRevision, repositor
 	for _, pr := range prs {
 		availableUpdates, _ := r.availableUpdates(pr.Status.UpstreamLock, repositories)
 		for _, update := range availableUpdates {
-			key := fmt.Sprintf("%s:%s", update.Name, update.Spec.Revision)
+			key := fmt.Sprintf("%s:%s", update.Name, update.Status.Revision)
 			downstreamUpdatesMap[key] = append(downstreamUpdatesMap[key], pr)
 		}
 	}
@@ -132,7 +132,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositor
 	}
 
 	for _, upstreamRevision := range revisions {
-		switch cmp := semver.Compare(upstreamRevision.Spec.Revision, currentUpstreamRevision); {
+		switch cmp := semver.Compare(upstreamRevision.Status.Revision, currentUpstreamRevision); {
 		case cmp > 0: // upstreamRevision > currentUpstreamRevision
 			availableUpdates = append(availableUpdates, upstreamRevision)
 		case cmp == 0, cmp < 0: // upstreamRevision <= currentUpstreamRevision, do nothing
