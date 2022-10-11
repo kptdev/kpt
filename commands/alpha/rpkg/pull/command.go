@@ -199,7 +199,10 @@ var matchResourceContents = append(kio.MatchAll, kptfilev1.KptFileName)
 
 func includeFile(path string) bool {
 	for _, m := range matchResourceContents {
-		if matched, err := filepath.Match(m, path); err == nil && matched {
+		// Only use the filename for the check for whether we should
+		// include the file.
+		f := filepath.Base(path)
+		if matched, err := filepath.Match(m, f); err == nil && matched {
 			return true
 		}
 	}
