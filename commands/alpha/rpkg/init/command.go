@@ -133,7 +133,9 @@ func (r *runner) packageAlreadyExists(packageName string) error {
 	// only the first package revision can be created from init or clone, so
 	// we need to check that the package doesn't already exist.
 	packageRevisionList := porchapi.PackageRevisionList{}
-	if err := r.client.List(r.ctx, &packageRevisionList, &client.ListOptions{}); err != nil {
+	if err := r.client.List(r.ctx, &packageRevisionList, &client.ListOptions{
+		Namespace: *r.cfg.Namespace,
+	}); err != nil {
 		return err
 	}
 	for _, pr := range packageRevisionList.Items {
