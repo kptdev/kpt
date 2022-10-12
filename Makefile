@@ -21,6 +21,17 @@ GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
+LDFLAGS := -ldflags "-X github.com/GoogleContainerTools/kpt/run.version=${GIT_COMMIT}
+ifeq ($(OS),Windows_NT)
+	# Do nothing
+else
+    UNAME := $(shell uname -s)
+    ifeq ($(UNAME),Linux)
+        LDFLAGS += -extldflags '-z noexecstack'
+    endif
+endif
+LDFLAGS += "
+
 # T refers to an e2e test case matcher. This enables running e2e tests
 # selectively.  For example,
 # To invoke e2e tests related to fnconfig, run:
@@ -32,7 +43,7 @@ T ?= ".*"
 all: generate license fix vet fmt lint license-check test build tidy
 
 build:
-	go build -ldflags "-X github.com/GoogleContainerTools/kpt/run.version=${GIT_COMMIT}" -o $(GOBIN)/kpt -v .
+	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
 
 update-deps-to-head:
 	go get sigs.k8s.io/cli-utils@master
@@ -90,7 +101,7 @@ license-check: install-go-licenses
 	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
 
 test:
-	go test -cover ./...
+	go test -cover ${LDFLAGS} ./...
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
