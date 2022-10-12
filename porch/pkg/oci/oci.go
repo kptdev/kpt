@@ -412,7 +412,20 @@ func (p *ociPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 }
 
 func (p *ociPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("UpstreamLock is not supported for OCI packages (%s)", p.KubeObjectName())
+	return kptfile.Upstream{
+			Type: kptfile.OciOrigin,
+			Oci: &kptfile.Oci{
+				Image:     p.digestName.Image,
+				Directory: p.packageName,
+			},
+		}, kptfile.UpstreamLock{
+			Type: kptfile.OciOrigin,
+			Oci: &kptfile.OciLock{
+				Image:     p.digestName.Image,
+				Directory: p.packageName,
+				Digest:    p.digestName.String(),
+			},
+		}, nil
 }
 
 func (p *ociPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
