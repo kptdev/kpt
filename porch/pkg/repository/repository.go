@@ -93,8 +93,8 @@ type Package interface {
 
 type PackageDraft interface {
 	UpdateResources(ctx context.Context, new *v1alpha1.PackageRevisionResources, task *v1alpha1.Task) error
-	// Updates desired lifecycle of the package. The lifecycle is applied on Close.
-	UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error
+	// UpdateLifecycle updates the desired lifecycle of the package. The lifecycle is applied on Close.
+	UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle, labels map[string]string, annotations map[string]string) error
 	// Finish round of updates.
 	Close(ctx context.Context) (PackageRevision, error)
 }

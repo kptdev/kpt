@@ -28,6 +28,7 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -296,8 +297,8 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		revision:  obj.Spec.Revision,
 		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
 		updated:   time.Now(),
-		base:      nil, // Creating a new package
-		tasks:     nil, // Creating a new package
+		base:      nil,                 // Creating a new package
+		meta:      &meta.PackageMeta{}, // Creating a new package
 		branch:    draft,
 		commit:    base,
 	}, nil
@@ -339,7 +340,7 @@ func (r *gitRepository) UpdatePackageRevision(ctx context.Context, old repositor
 		base:      rev.ref,
 		tree:      rev.tree,
 		commit:    rev.commit,
-		tasks:     rev.tasks,
+		meta:      rev.meta.DeepCopy(),
 	}, nil
 }
 
@@ -893,7 +894,7 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 	return nil
 }
 
-func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision string) ([]v1alpha1.Task, error) {
+func (r *gitRepository) loadMeta(ctx context.Context, startCommit *object.Commit, packagePath, revision string) (*meta.PackageMeta, error) {
 	var logOptions = git.LogOptions{
 		From:  startCommit.Hash,
 		Order: git.LogOrderCommitterTime,
@@ -918,7 +919,7 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		return nil, fmt.Errorf("error walking commits: %w", err)
 	}
 
-	var tasks []v1alpha1.Task
+	meta := &meta.PackageMeta{}
 
 	visitCommit := func(commit *object.Commit) error {
 		gitAnnotations, err := ExtractGitAnnotations(commit)
@@ -934,7 +935,14 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 				// The entire `tasks` slice will get reversed later, which will give us the
 				// tasks in chronological order.
 				if gitAnnotation.Task != nil {
-					tasks = append(tasks, *gitAnnotation.Task)
+					meta.Tasks = append(meta.Tasks, *gitAnnotation.Task)
+				}
+				if gitAnnotation.Labels != nil {
+					meta.Labels = *gitAnnotation.Labels
+				}
+
+				if gitAnnotation.Annotations != nil {
+					meta.Annotations = *gitAnnotation.Annotations
 				}
 
 				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
@@ -957,9 +965,9 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 	}
 
 	// We need to reverse the tasks so they appear in chronological order
-	reverseSlice(tasks)
+	reverseSlice(meta.Tasks)
 
-	return tasks, nil
+	return meta, nil
 }
 
 // findLatestPackageCommit returns the latest commit from the history that pertains
