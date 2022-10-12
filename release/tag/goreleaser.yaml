@@ -51,7 +51,7 @@ builds:
     env:
       - CC=x86_64-linux-gnu-gcc
       - CXX=x86_64-linux-gnu-g++
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static -z noexecstack"
 
   - id: linux-arm64
     goos:
@@ -61,7 +61,7 @@ builds:
     env:
       - CC=aarch64-linux-gnu-gcc
       - CXX=aarch64-linux-gnu-g++
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static"
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -linkmode external -extldflags "-static -z noexecstack"
 
 dockers:
   - ids:
