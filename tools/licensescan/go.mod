@@ -1,4 +1,4 @@
-module licensescan
+module github.com/GoogleContainerTools/kpt/tools/licensescan
 
 go 1.18
 

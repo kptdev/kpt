@@ -78,6 +78,7 @@ func buildLicenseScanCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&opts.Binary, "binary", opts.Binary, "binary to analyze")
+	cmd.MarkFlagRequired("binary")
 
 	cmd.Flags().BoolVar(&opts.IncludeLicenses, "print", opts.IncludeLicenses, "include license text")
 
