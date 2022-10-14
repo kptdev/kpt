@@ -1,15 +1,5 @@
 # Generally we are following a permissive policy of code ownership
 # We use the @GoogleContainerTools/kpt-reviewers group so that we can assign a single person to each PR.
 
-# Docs
-/site @GoogleContainerTools/kpt-reviewers
-# These packages are referenced in docs.
-/package-examples/nginx/ @GoogleContainerTools/kpt-reviewers
-/package-examples/wordpress/ @GoogleContainerTools/kpt-reviewers
-
-# Schemas changes additional scrutiny.
-/pkg/api @GoogleContainerTools/kpt-reviewers
-
-# These tests enforce the behavior for fn
-kpt/e2e/testdata/fn-render @GoogleContainerTools/kpt-reviewers
-kpt/e2e/testdata/fn-eval @GoogleContainerTools/kpt-reviewers
+# Default
+/ @GoogleContainerTools/kpt-reviewers
