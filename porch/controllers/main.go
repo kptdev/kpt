@@ -43,6 +43,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/controllerrestmapper"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -112,6 +113,7 @@ func run(ctx context.Context) error {
 		LeaderElection:             false,
 		LeaderElectionID:           "porch-operators.config.porch.kpt.dev",
 		LeaderElectionResourceLock: resourcelock.LeasesResourceLock,
+		MapperProvider:             controllerrestmapper.New,
 	}
 
 	ctrl.SetLogger(klogr.New())
