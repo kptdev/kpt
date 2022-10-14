@@ -16,22 +16,28 @@ package cache
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta/fake"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/google/go-cmp/cmp"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/yaml"
 )
 
 func TestLatestPackages(t *testing.T) {
 	ctx := context.Background()
-	tarfile := filepath.Join("..", "git", "testdata", "nested-repository.tar")
-	_, cachedGit := openRepositoryFromArchive(t, ctx, tarfile, "nested")
+	testPath := filepath.Join("..", "git", "testdata")
+
+	_, cachedGit := openRepositoryFromArchive(t, ctx, testPath, "nested")
 
 	wantLatest := map[string]string{
 		"sample":                    "v2",
@@ -72,8 +78,8 @@ func TestLatestPackages(t *testing.T) {
 
 func TestPublishedLatest(t *testing.T) {
 	ctx := context.Background()
-	tarfile := filepath.Join("..", "git", "testdata", "nested-repository.tar")
-	_, cached := openRepositoryFromArchive(t, ctx, tarfile, "publish-test")
+	testPath := filepath.Join("..", "git", "testdata")
+	_, cached := openRepositoryFromArchive(t, ctx, testPath, "nested")
 
 	revisions, err := cached.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
 		Package:  "catalog/gcp/bucket",
@@ -113,13 +119,17 @@ func TestPublishedLatest(t *testing.T) {
 	}
 }
 
-func openRepositoryFromArchive(t *testing.T, ctx context.Context, tarfile, name string) (*gogit.Repository, *cachedRepository) {
+func openRepositoryFromArchive(t *testing.T, ctx context.Context, testPath, name string) (*gogit.Repository, *cachedRepository) {
 	t.Helper()
 
 	tempdir := t.TempDir()
+	tarfile := filepath.Join(testPath, fmt.Sprintf("%s-repository.tar", name))
 	repo, address := git.ServeGitRepository(t, tarfile, tempdir)
+	metadataStore := createMetadataStoreFromArchive(t, "", "")
 
-	cache := NewCache(t.TempDir(), CacheOptions{})
+	cache := NewCache(t.TempDir(), CacheOptions{
+		MetadataStore: metadataStore,
+	})
 	cachedGit, err := cache.OpenRepository(ctx, &v1alpha1.Repository{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       v1alpha1.RepositoryGVK.Kind,
@@ -143,4 +153,28 @@ func openRepositoryFromArchive(t *testing.T, ctx context.Context, tarfile, name 
 	}
 
 	return repo, cachedGit
+}
+
+func createMetadataStoreFromArchive(t *testing.T, testPath, name string) meta.MetadataStore {
+	t.Helper()
+
+	f := filepath.Join("..", "git", "testdata", "nested-metadata.yaml")
+	c, err := os.ReadFile(f)
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatalf("Error reading metadata file found for repository %s", name)
+	}
+	if os.IsNotExist(err) {
+		return &fake.MemoryMetadataStore{
+			Metas: []meta.PackageRevisionMeta{},
+		}
+	}
+
+	var metas []meta.PackageRevisionMeta
+	if err := yaml.Unmarshal(c, &metas); err != nil {
+		t.Fatalf("Error unmarshalling metadata file for repository %s", name)
+	}
+
+	return &fake.MemoryMetadataStore{
+		Metas: metas,
+	}
 }

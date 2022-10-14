@@ -31,6 +31,6 @@ func (cd *cachedDraft) Close(ctx context.Context) (repository.PackageRevision, e
 	if closed, err := cd.PackageDraft.Close(ctx); err != nil {
 		return nil, err
 	} else {
-		return cd.cache.update(closed)
+		return cd.cache.update(ctx, closed)
 	}
 }

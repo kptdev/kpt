@@ -33,6 +33,7 @@ import (
 	porchclient "github.com/GoogleContainerTools/kpt/porch/api/generated/clientset/versioned"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	internalapi "github.com/GoogleContainerTools/kpt/porch/internal/api/porchinternal/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
@@ -292,6 +293,7 @@ func createClientScheme(t *testing.T) *runtime.Scheme {
 
 	for _, api := range (runtime.SchemeBuilder{
 		porchapi.AddToScheme,
+		internalapi.AddToScheme,
 		configapi.AddToScheme,
 		coreapi.AddToScheme,
 		aggregatorv1.AddToScheme,

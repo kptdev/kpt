@@ -17,11 +17,12 @@ package porch
 import (
 	"context"
 	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
@@ -75,12 +76,12 @@ func (r *packageRevisionResources) List(ctx context.Context, options *metaintern
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
-		item, err := p.GetResources(ctx)
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, options.LabelSelector, func(p *engine.PackageRevision) error {
+		apiPkgResources, err := p.GetResources(ctx)
 		if err != nil {
 			return err
 		}
-		result.Items = append(result.Items, *item)
+		result.Items = append(result.Items, *apiPkgResources)
 		return nil
 	}); err != nil {
 		return nil, err
@@ -94,16 +95,16 @@ func (r *packageRevisionResources) Get(ctx context.Context, name string, options
 	ctx, span := tracer.Start(ctx, "packageRevisionResources::Get", trace.WithAttributes())
 	defer span.End()
 
-	pkg, err := r.packageCommon.getPackageRevision(ctx, name)
+	pkg, err := r.packageCommon.getRepoPkgRev(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	obj, err := pkg.GetResources(ctx)
+	apiPkgResources, err := pkg.GetResources(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return obj, nil
+	return apiPkgResources, nil
 }
 
 // Update finds a resource in the storage and updates it. Some implementations
@@ -118,18 +119,18 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
+	oldRepoPkgRev, err := r.packageCommon.getRepoPkgRev(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
 
-	oldObj, err := oldPackage.GetResources(ctx)
+	oldApiPkgRevResources, err := oldRepoPkgRev.GetResources(ctx)
 	if err != nil {
 		klog.Infof("update failed to retrieve old object: %v", err)
 		return nil, false, err
 	}
 
-	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldObj)
+	newRuntimeObj, err := objInfo.UpdatedObject(ctx, oldApiPkgRevResources)
 	if err != nil {
 		klog.Infof("update failed to construct UpdatedObject: %v", err)
 		return nil, false, err
@@ -140,7 +141,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 	}
 
 	if updateValidation != nil {
-		err := updateValidation(ctx, newObj, oldObj)
+		err := updateValidation(ctx, newObj, oldApiPkgRevResources)
 		if err != nil {
 			klog.Infof("update failed validation: %v", err)
 			return nil, false, err
@@ -161,7 +162,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	rev, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, oldPackage, oldObj, newObj)
+	rev, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRevResources, newObj)
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
@@ -170,5 +171,6 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
+
 	return created, false, nil
 }

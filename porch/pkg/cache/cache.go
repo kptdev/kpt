@@ -23,6 +23,7 @@ import (
 
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
@@ -44,6 +45,7 @@ type Cache struct {
 	cacheDir           string
 	credentialResolver repository.CredentialResolver
 	userInfoProvider   repository.UserInfoProvider
+	metadataStore      meta.MetadataStore
 
 	objectCache *objectCache
 }
@@ -51,6 +53,7 @@ type Cache struct {
 type CacheOptions struct {
 	CredentialResolver repository.CredentialResolver
 	UserInfoProvider   repository.UserInfoProvider
+	MetadataStore      meta.MetadataStore
 }
 
 func NewCache(cacheDir string, opts CacheOptions) *Cache {
@@ -61,6 +64,7 @@ func NewCache(cacheDir string, opts CacheOptions) *Cache {
 		cacheDir:           cacheDir,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
+		metadataStore:      opts.MetadataStore,
 		objectCache:        objectCache,
 	}
 }
@@ -91,7 +95,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			if err != nil {
 				return nil, err
 			}
-			cr = newRepository(key, r, c.objectCache)
+			cr = newRepository(key, repositorySpec, r, c.objectCache, c.metadataStore)
 			c.repositories[key] = cr
 		}
 		return cr, nil
@@ -127,7 +131,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			}); err != nil {
 				return nil, err
 			} else {
-				cr = newRepository(key, r, c.objectCache)
+				cr = newRepository(key, repositorySpec, r, c.objectCache, c.metadataStore)
 				c.repositories[key] = cr
 			}
 		} else {

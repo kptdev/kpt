@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -76,7 +76,7 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackageRevisions(ctx, filter, func(p repository.PackageRevision) error {
+	if err := r.packageCommon.listPackageRevisions(ctx, filter, options.LabelSelector, func(p *engine.PackageRevision) error {
 		item := p.GetPackageRevision()
 		result.Items = append(result.Items, *item)
 		return nil
@@ -92,13 +92,14 @@ func (r *packageRevisions) Get(ctx context.Context, name string, options *metav1
 	ctx, span := tracer.Start(ctx, "packageRevisions::Get", trace.WithAttributes())
 	defer span.End()
 
-	pkg, err := r.getPackageRevision(ctx, name)
+	repoPkgRev, err := r.getRepoPkgRev(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	obj := pkg.GetPackageRevision()
-	return obj, nil
+	apiPkgRev := repoPkgRev.GetPackageRevision()
+
+	return apiPkgRev, nil
 }
 
 // Create implements the Creater interface.
@@ -111,7 +112,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	obj, ok := runtimeObject.(*api.PackageRevision)
+	newApiPkgRev, ok := runtimeObject.(*api.PackageRevision)
 	if !ok {
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", runtimeObject))
 	}
@@ -119,11 +120,11 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 	// TODO: Accpept some form of client-provided name, for example using GenerateName
 	// and figure out where we can store it (in Kptfile?). Porch can then append unique
 	// suffix to the names while respecting client-provided value as well.
-	if obj.Name != "" {
-		klog.Warningf("Client provided metadata.name %q", obj.Name)
+	if newApiPkgRev.Name != "" {
+		klog.Warningf("Client provided metadata.name %q", newApiPkgRev.Name)
 	}
 
-	repositoryName := obj.Spec.RepositoryName
+	repositoryName := newApiPkgRev.Spec.RepositoryName
 	if repositoryName == "" {
 		return nil, apierrors.NewBadRequest("spec.repositoryName is required")
 	}
@@ -135,16 +136,17 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 
 	fieldErrors := r.createStrategy.Validate(ctx, runtimeObject)
 	if len(fieldErrors) > 0 {
-		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), obj.Name, fieldErrors)
+		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), newApiPkgRev.Name, fieldErrors)
 	}
 
-	rev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, obj)
+	createdRepoPkgRev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, newApiPkgRev)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
 
-	created := rev.GetPackageRevision()
-	return created, nil
+	createdApiPkgRev := createdRepoPkgRev.GetPackageRevision()
+
+	return createdApiPkgRev, nil
 }
 
 // Update implements the Updater interface.
@@ -179,21 +181,22 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 		return nil, false, apierrors.NewBadRequest("namespace must be specified")
 	}
 
-	oldPackage, err := r.packageCommon.getPackageRevision(ctx, name)
+	repoPkgRev, err := r.packageCommon.getRepoPkgRev(ctx, name)
 	if err != nil {
 		return nil, false, err
 	}
 
-	oldObj := oldPackage.GetPackageRevision()
-	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, oldObj, name, ns)
+	apiPkgRev := repoPkgRev.GetPackageRevision()
+
+	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, apiPkgRev, name, ns)
 	if err != nil {
 		return nil, false, err
 	}
 
-	if err := r.cad.DeletePackageRevision(ctx, repositoryObj, oldPackage); err != nil {
+	if err := r.cad.DeletePackageRevision(ctx, repositoryObj, repoPkgRev); err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
 
 	// TODO: Should we do an async delete?
-	return oldObj, true, nil
+	return apiPkgRev, true, nil
 }

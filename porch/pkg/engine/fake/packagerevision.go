@@ -25,6 +25,7 @@ import (
 // Implementation of the repository.PackageRevision interface for testing.
 type PackageRevision struct {
 	Name               string
+	Namespace          string
 	PackageRevisionKey repository.PackageRevisionKey
 	PackageLifecycle   v1alpha1.PackageRevisionLifecycle
 	PackageRevision    *v1alpha1.PackageRevision
@@ -35,6 +36,10 @@ type PackageRevision struct {
 
 func (pr *PackageRevision) KubeObjectName() string {
 	return pr.Name
+}
+
+func (pr *PackageRevision) KubeObjectNamespace() string {
+	return pr.Namespace
 }
 
 func (pr *PackageRevision) Key() repository.PackageRevisionKey {

@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
 	"go.opentelemetry.io/otel/trace"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
@@ -73,7 +73,7 @@ func (r *packages) List(ctx context.Context, options *metainternalversion.ListOp
 		return nil, err
 	}
 
-	if err := r.packageCommon.listPackages(ctx, filter, func(p repository.Package) error {
+	if err := r.packageCommon.listPackages(ctx, filter, func(p *engine.Package) error {
 		item := p.GetPackage()
 		result.Items = append(result.Items, *item)
 		return nil

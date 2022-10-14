@@ -22,7 +22,6 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine/fake"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-cmp/cmp"
@@ -57,8 +56,7 @@ info:
 			packageRevision,
 		},
 	}
-	cad := &fakeCaD{
-		cache:      cache.NewCache("", cache.CacheOptions{}),
+	repoOpener := &fakeRepositoryOpener{
 		repository: repo,
 	}
 
@@ -73,7 +71,7 @@ info:
 		},
 		namespace:         "test-namespace",
 		referenceResolver: &fakeReferenceResolver{},
-		cad:               cad,
+		repoOpener:        repoOpener,
 	}
 
 	res, _, err := epm.Apply(context.Background(), repository.PackageResources{})
@@ -104,54 +102,10 @@ func (f *fakeReferenceResolver) ResolveReference(ctx context.Context, namespace,
 	return nil
 }
 
-// Implementation of the engine.CaDEngine interface for testing.
-type fakeCaD struct {
-	cache      *cache.Cache
+type fakeRepositoryOpener struct {
 	repository repository.Repository
 }
 
-var _ CaDEngine = &fakeCaD{}
-
-func (f *fakeCaD) ObjectCache() cache.ObjectCache {
-	return f.cache.ObjectCache()
-}
-
-func (f *fakeCaD) ListPackageRevisions(ctx context.Context, _ *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
-	return f.repository.ListPackageRevisions(ctx, filter)
-}
-
-func (f *fakeCaD) CreatePackageRevision(context.Context, *configapi.Repository, *v1alpha1.PackageRevision) (repository.PackageRevision, error) {
-	return nil, nil
-}
-
-func (f *fakeCaD) UpdatePackageRevision(_ context.Context, _ *configapi.Repository, _ repository.PackageRevision, _, _ *v1alpha1.PackageRevision) (repository.PackageRevision, error) {
-	return nil, nil
-}
-
-func (f *fakeCaD) UpdatePackageResources(_ context.Context, _ *configapi.Repository, _ repository.PackageRevision, _, _ *v1alpha1.PackageRevisionResources) (repository.PackageRevision, error) {
-	return nil, nil
-}
-
-func (f *fakeCaD) DeletePackageRevision(context.Context, *configapi.Repository, repository.PackageRevision) error {
-	return nil
-}
-
-func (f *fakeCaD) ListFunctions(context.Context, *configapi.Repository) ([]repository.Function, error) {
-	return []repository.Function{}, nil
-}
-
-func (f *fakeCaD) ListPackages(ctx context.Context, _ *configapi.Repository, filter repository.ListPackageFilter) ([]repository.Package, error) {
-	return f.repository.ListPackages(ctx, filter)
-}
-
-func (f *fakeCaD) CreatePackage(context.Context, *configapi.Repository, *v1alpha1.Package) (repository.Package, error) {
-	return nil, nil
-}
-
-func (f *fakeCaD) UpdatePackage(_ context.Context, _ *configapi.Repository, _ repository.Package, _, _ *v1alpha1.Package) (repository.Package, error) {
-	return nil, nil
-}
-
-func (f *fakeCaD) DeletePackage(context.Context, *configapi.Repository, repository.Package) error {
-	return nil
+func (f *fakeRepositoryOpener) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {
+	return f.repository, nil
 }

@@ -371,6 +371,10 @@ func (p *ociPackageRevision) KubeObjectName() string {
 	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
 
+func (p *ociPackageRevision) KubeObjectNamespace() string {
+	return p.parent.namespace
+}
+
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
 		Repository: p.parent.name,

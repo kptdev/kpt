@@ -26,7 +26,7 @@ import (
 type editPackageMutation struct {
 	task              *api.Task
 	namespace         string
-	cad               CaDEngine
+	repoOpener        RepositoryOpener
 	referenceResolver ReferenceResolver
 }
 
@@ -39,7 +39,7 @@ func (m *editPackageMutation) Apply(ctx context.Context, resources repository.Pa
 	sourceRef := m.task.Edit.Source
 
 	sourceResources, err := (&PackageFetcher{
-		cad:               m.cad,
+		repoOpener:        m.repoOpener,
 		referenceResolver: m.referenceResolver,
 	}).FetchResources(ctx, sourceRef, m.namespace)
 	if err != nil {
