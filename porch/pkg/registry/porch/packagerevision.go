@@ -77,7 +77,10 @@ func (r *packageRevisions) List(ctx context.Context, options *metainternalversio
 	}
 
 	if err := r.packageCommon.listPackageRevisions(ctx, filter, options.LabelSelector, func(p *engine.PackageRevision) error {
-		item := p.GetPackageRevision()
+		item, err := p.GetPackageRevision(ctx)
+		if err != nil {
+			return err
+		}
 		result.Items = append(result.Items, *item)
 		return nil
 	}); err != nil {
@@ -97,7 +100,10 @@ func (r *packageRevisions) Get(ctx context.Context, name string, options *metav1
 		return nil, err
 	}
 
-	apiPkgRev := repoPkgRev.GetPackageRevision()
+	apiPkgRev, err := repoPkgRev.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	return apiPkgRev, nil
 }
@@ -144,7 +150,10 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInternalError(err)
 	}
 
-	createdApiPkgRev := createdRepoPkgRev.GetPackageRevision()
+	createdApiPkgRev, err := createdRepoPkgRev.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, apierrors.NewInternalError(err)
+	}
 
 	return createdApiPkgRev, nil
 }
@@ -186,7 +195,10 @@ func (r *packageRevisions) Delete(ctx context.Context, name string, deleteValida
 		return nil, false, err
 	}
 
-	apiPkgRev := repoPkgRev.GetPackageRevision()
+	apiPkgRev, err := repoPkgRev.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, false, apierrors.NewInternalError(err)
+	}
 
 	repositoryObj, err := r.packageCommon.validateDelete(ctx, deleteValidation, apiPkgRev, name, ns)
 	if err != nil {

@@ -323,6 +323,254 @@ metadata:
 pipeline: {}
 `,
 		},
+		"first readinessGate and condition added in upstream": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+  - conditionType: foo
+status:
+  conditions:
+  - type: foo
+    status: "True"
+    reason: reason
+    message: message
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+`,
+			updateUpstream: false,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+`,
+		},
+		"additional readinessGate and condition added in upstream": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+    - conditionType: bar
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+    - type: bar
+      status: "False"
+      reason: reason
+      message: message
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+`,
+			updateUpstream: false,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+    - conditionType: bar
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+    - type: bar
+      status: "False"
+      reason: reason
+      message: message
+		`,
+		},
+		"readinessGate added removed in upstream": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+`,
+			updateUpstream: false,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info: {}
+status: {}
+`,
+		},
+		"readinessGates removed and added in both upstream and local": {
+			origin: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+    - conditionType: bar
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+    - type: bar
+      status: "False"
+      reason: reason
+      message: message
+`,
+			updated: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+    - conditionType: zork
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+    - type: zork
+      status: "Unknown"
+      reason: reason
+      message: message
+`,
+			local: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: xandar
+    - conditionType: foo
+status:
+  conditions:
+    - type: xandar
+      status: "True"
+      reason: reason
+      message: message
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message  
+`,
+			updateUpstream: false,
+			expected: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: foo
+info:
+  readinessGates:
+    - conditionType: foo
+    - conditionType: zork
+status:
+  conditions:
+    - type: foo
+      status: "True"
+      reason: reason
+      message: message
+    - type: zork
+      status: Unknown
+      reason: reason
+      message: message
+`,
+		},
 	}
 
 	for tn, tc := range testCases {

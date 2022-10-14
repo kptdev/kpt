@@ -19,7 +19,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -75,10 +74,10 @@ func (p *gitPackageRevision) uid() types.UID {
 	return types.UID(fmt.Sprintf("uid:%s:%s", p.path, p.revision))
 }
 
-func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
+func (p *gitPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.PackageRevision, error) {
 	key := p.Key()
 
-	_, lock, _ := p.GetUpstreamLock()
+	_, lock, _ := p.GetUpstreamLock(ctx)
 
 	lockCopy := &v1alpha1.UpstreamLock{}
 	// TODO: Use kpt definition of UpstreamLock in the package revision status
@@ -96,10 +95,13 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 		}
 	}
 
+	kf, _ := p.GetKptfile(ctx)
+
 	status := v1alpha1.PackageRevisionStatus{
 		UpstreamLock: lockCopy,
+		Deployment:   p.repo.deployment,
+		Conditions:   repository.ToApiConditions(kf),
 	}
-	status.Deployment = p.repo.deployment
 
 	if p.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
 		if !p.updated.IsZero() {
@@ -129,38 +131,18 @@ func (p *gitPackageRevision) GetPackageRevision() *v1alpha1.PackageRevision {
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
-			Lifecycle: p.Lifecycle(),
-			Tasks:     p.tasks,
+			Lifecycle:      p.Lifecycle(),
+			Tasks:          p.tasks,
+			ReadinessGates: repository.ToApiReadinessGates(kf),
 		},
 		Status: status,
-	}
+	}, nil
 }
 
 func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {
-	resources := map[string]string{}
-
-	tree, err := p.repo.repo.TreeObject(p.tree)
-	if err == nil {
-		// Files() iterator iterates recursively over all files in the tree.
-		fit := tree.Files()
-		defer fit.Close()
-		for {
-			file, err := fit.Next()
-			if err == io.EOF {
-				break
-			} else if err != nil {
-				return nil, fmt.Errorf("failed to load package resources: %w", err)
-			}
-
-			content, err := file.Contents()
-			if err != nil {
-				return nil, fmt.Errorf("failed to read package file contents: %q, %w", file.Name, err)
-			}
-
-			// TODO: decide whether paths should include package directory or not.
-			resources[file.Name] = content
-			//resources[path.Join(p.path, file.Name)] = content
-		}
+	resources, err := p.repo.getResources(p.tree)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load package resources: %w", err)
 	}
 
 	key := p.Key()
@@ -190,20 +172,27 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 	}, nil
 }
 
+func (p *gitPackageRevision) GetKptfile(ctx context.Context) (kptfile.KptFile, error) {
+	resources, err := p.repo.getResources(p.tree)
+	if err != nil {
+		return kptfile.KptFile{}, fmt.Errorf("error loading package resources: %w", err)
+	}
+	kfString, found := resources[kptfile.KptFileName]
+	if !found {
+		return kptfile.KptFile{}, fmt.Errorf("packagerevision does not have a Kptfile")
+	}
+	kf, err := pkg.DecodeKptfile(strings.NewReader(kfString))
+	if err != nil {
+		return kptfile.KptFile{}, fmt.Errorf("error decoding Kptfile: %w", err)
+	}
+	return *kf, nil
+}
+
 // GetUpstreamLock returns the upstreamLock info present in the Kptfile of the package.
-func (p *gitPackageRevision) GetUpstreamLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	resources, err := p.GetResources(context.Background())
+func (p *gitPackageRevision) GetUpstreamLock(ctx context.Context) (kptfile.Upstream, kptfile.UpstreamLock, error) {
+	kf, err := p.GetKptfile(ctx)
 	if err != nil {
 		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock; cannot retrieve resources: %w", err)
-	}
-
-	// get the upstream package URL from the Kptfile
-	var kf *kptfile.KptFile
-	if contents, found := resources.Spec.Resources[kptfile.KptFileName]; found {
-		kf, err = pkg.DecodeKptfile(strings.NewReader(contents))
-		if err != nil {
-			return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot decode Kptfile: %w", err)
-		}
 	}
 
 	if kf.Upstream == nil || kf.UpstreamLock == nil || kf.Upstream.Git == nil {

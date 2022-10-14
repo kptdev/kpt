@@ -29,6 +29,7 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Condition":                    schema_porch_api_porch_v1alpha1_Condition(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Function":                     schema_porch_api_porch_v1alpha1_Function(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig":               schema_porch_api_porch_v1alpha1_FunctionConfig(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec":         schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref),
@@ -58,6 +59,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageUpdateTaskSpec":        schema_porch_api_porch_v1alpha1_PackageUpdateTaskSpec(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":              schema_porch_api_porch_v1alpha1_ParentReference(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec":                    schema_porch_api_porch_v1alpha1_PatchSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ReadinessGate":                schema_porch_api_porch_v1alpha1_ReadinessGate(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                    schema_porch_api_porch_v1alpha1_SecretRef(ref),
 		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                     schema_porch_api_porch_v1alpha1_Selector(ref),
@@ -116,6 +118,45 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                  schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
 		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                   schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
 		"k8s.io/apimachinery/pkg/version.Info":                                                      schema_k8sio_apimachinery_pkg_version_Info(ref),
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_Condition(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+					"reason": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+				Required: []string{"type", "status"},
+			},
+		},
 	}
 }
 
@@ -1097,11 +1138,24 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 							},
 						},
 					},
+					"readinessGates": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ReadinessGate"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ReadinessGate", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"},
 	}
 }
 
@@ -1138,11 +1192,24 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref common.ReferenceC
 							Format:      "",
 						},
 					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Condition"),
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Condition", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -1255,6 +1322,24 @@ func schema_porch_api_porch_v1alpha1_PatchSpec(ref common.ReferenceCallback) com
 						},
 					},
 					"patchType": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"string"},
+							Format: "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_ReadinessGate(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditionType": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",

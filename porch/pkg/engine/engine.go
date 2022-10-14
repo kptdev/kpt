@@ -15,6 +15,7 @@
 package engine
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/fs"
@@ -22,6 +23,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -76,8 +78,11 @@ type PackageRevision struct {
 	packageRevisionMeta meta.PackageRevisionMeta
 }
 
-func (p *PackageRevision) GetPackageRevision() *api.PackageRevision {
-	repoPkgRev := p.repoPackageRevision.GetPackageRevision()
+func (p *PackageRevision) GetPackageRevision(ctx context.Context) (*api.PackageRevision, error) {
+	repoPkgRev, err := p.repoPackageRevision.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var isLatest bool
 	if val, found := repoPkgRev.Labels[api.LatestPackageRevisionKey]; found && val == api.LatestPackageRevisionValue {
 		isLatest = true
@@ -90,7 +95,7 @@ func (p *PackageRevision) GetPackageRevision() *api.PackageRevision {
 		repoPkgRev.Labels[api.LatestPackageRevisionKey] = api.LatestPackageRevisionValue
 	}
 	repoPkgRev.Annotations = p.packageRevisionMeta.Annotations
-	return repoPkgRev
+	return repoPkgRev, nil
 }
 
 func (p *PackageRevision) KubeObjectName() string {
@@ -458,6 +463,23 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
+	// If any of the fields in the API that are projections from the Kptfile
+	// must be updated in the Kptfile as well.
+	kfPatchTask, created, err := createKptfilePatchTask(ctx, oldPackage.repoPackageRevision, newObj)
+	if err != nil {
+		return nil, err
+	}
+	if created {
+		kfPatchMutation, err := buildPatchMutation(ctx, kfPatchTask)
+		if err != nil {
+			return nil, err
+		}
+		mutations = append(mutations, kfPatchMutation)
+	}
+
+	// Re-render if we are making changes.
+	mutations = cad.conditionalAddRender(mutations)
+
 	// TODO: Handle the case if alongside lifecycle change, tasks are changed too.
 	// Update package contents only if the package is in draft state
 	if oldObj.Spec.Lifecycle == api.PackageRevisionLifecycleDraft {
@@ -496,6 +518,95 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		repoPackageRevision: repoPkgRev,
 		packageRevisionMeta: pkgRevMeta,
 	}, nil
+}
+
+func createKptfilePatchTask(ctx context.Context, oldPackage repository.PackageRevision, newObj *api.PackageRevision) (*api.Task, bool, error) {
+	kf, err := oldPackage.GetKptfile(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+
+	var orgKfString string
+	{
+		var buf bytes.Buffer
+		d := yaml.NewEncoder(&buf)
+		if err := d.Encode(kf); err != nil {
+			return nil, false, err
+		}
+		orgKfString = buf.String()
+	}
+
+	var readinessGates []kptfile.ReadinessGate
+	for _, rg := range newObj.Spec.ReadinessGates {
+		readinessGates = append(readinessGates, kptfile.ReadinessGate{
+			ConditionType: rg.ConditionType,
+		})
+	}
+
+	var conditions []kptfile.Condition
+	for _, c := range newObj.Status.Conditions {
+		conditions = append(conditions, kptfile.Condition{
+			Type:    c.Type,
+			Status:  convertStatusToKptfile(c.Status),
+			Reason:  c.Reason,
+			Message: c.Message,
+		})
+	}
+
+	if kf.Info == nil && len(readinessGates) > 0 {
+		kf.Info = &kptfile.PackageInfo{}
+	}
+	if len(readinessGates) > 0 {
+		kf.Info.ReadinessGates = readinessGates
+	}
+
+	if kf.Status == nil && len(conditions) > 0 {
+		kf.Status = &kptfile.Status{}
+	}
+	if len(conditions) > 0 {
+		kf.Status.Conditions = conditions
+	}
+
+	var newKfString string
+	{
+		var buf bytes.Buffer
+		d := yaml.NewEncoder(&buf)
+		if err := d.Encode(kf); err != nil {
+			return nil, false, err
+		}
+		newKfString = buf.String()
+	}
+
+	patchSpec, err := GeneratePatch(kptfile.KptFileName, orgKfString, newKfString)
+	if err != nil {
+		return nil, false, err
+	}
+	// If patch is empty, don't create a Task.
+	if patchSpec.Contents == "" {
+		return nil, false, nil
+	}
+
+	return &api.Task{
+		Type: api.TaskTypePatch,
+		Patch: &api.PackagePatchTaskSpec{
+			Patches: []api.PatchSpec{
+				patchSpec,
+			},
+		},
+	}, true, nil
+}
+
+func convertStatusToKptfile(s api.ConditionStatus) kptfile.ConditionStatus {
+	switch s {
+	case api.ConditionTrue:
+		return kptfile.ConditionTrue
+	case api.ConditionFalse:
+		return kptfile.ConditionFalse
+	case api.ConditionUnknown:
+		return kptfile.ConditionUnknown
+	default:
+		panic(fmt.Errorf("unknown condition status: %v", s))
+	}
 }
 
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
@@ -611,7 +722,10 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
 
-	rev := oldPackage.repoPackageRevision.GetPackageRevision()
+	rev, err := oldPackage.repoPackageRevision.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := rev.Spec.Lifecycle; lifecycle {

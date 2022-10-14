@@ -53,7 +53,10 @@ func TestLatestPackages(t *testing.T) {
 
 	gotLatest := map[string]string{}
 	for _, pr := range revisions {
-		rev := pr.GetPackageRevision()
+		rev, err := pr.GetPackageRevision(ctx)
+		if err != nil {
+			t.Errorf("didn't expect error, but got %v", err)
+		}
 
 		if latest, ok := rev.Labels[api.LatestPackageRevisionKey]; ok {
 			if got, want := latest, api.LatestPackageRevisionValue; got != want {
@@ -111,7 +114,10 @@ func TestPublishedLatest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Close failed: %v", err)
 	}
-	resource := closed.GetPackageRevision()
+	resource, err := closed.GetPackageRevision(ctx)
+	if err != nil {
+		t.Errorf("didn't expect error, but got %v", err)
+	}
 	if got, ok := resource.Labels[api.LatestPackageRevisionKey]; !ok {
 		t.Errorf("Label %s not found as expected", api.LatestPackageRevisionKey)
 	} else if want := api.LatestPackageRevisionValue; got != want {

@@ -51,8 +51,7 @@ func (a *packageRevisionsApproval) Get(ctx context.Context, name string, options
 	if err != nil {
 		return nil, err
 	}
-	obj := pkg.GetPackageRevision()
-	return obj, nil
+	return pkg.GetPackageRevision(ctx)
 }
 
 // Update finds a resource in the storage and updates it. Some implementations
