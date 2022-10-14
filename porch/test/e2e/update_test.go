@@ -58,8 +58,10 @@ func (t *PorchSuite) TestPackageUpdateRecloneAndReplay(ctx context.Context) {
 					Type: porchapi.TaskTypeClone,
 					Clone: &porchapi.PackageCloneTaskSpec{
 						Upstream: porchapi.UpstreamPackage{
-							UpstreamRef: &porchapi.PackageRevisionRef{
-								Name: basensV1.Name,
+							Git: &porchapi.GitPackage{
+								Repo:      testBlueprintsRepo,
+								Ref:       "v1",
+								Directory: "basens",
 							},
 						},
 					},

@@ -226,7 +226,7 @@ type SecretRef struct {
 	Name string `json:"name"`
 }
 
-// OciPackage describes a repository compatible with the Open Coutainer Registry standard.
+// OciPackage describes a repository compatible with the Open Container Registry standard.
 type OciPackage struct {
 	// Image is the address of an OCI image.
 	Image string `json:"image"`
