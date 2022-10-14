@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/util"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -90,7 +91,15 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	r.name = args[0]
-	return r.packageAlreadyExists(r.name)
+	pkgExists, err := util.PackageAlreadyExists(r.ctx, r.client, r.repository, r.name, *r.cfg.Namespace)
+	if err != nil {
+		return err
+	}
+	if pkgExists {
+		return fmt.Errorf("`init` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
+			r.name, r.repository)
+	}
+	return nil
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
@@ -126,23 +135,5 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Fprintf(cmd.OutOrStdout(), "%s created\n", pr.Name)
-	return nil
-}
-
-func (r *runner) packageAlreadyExists(packageName string) error {
-	// only the first package revision can be created from init or clone, so
-	// we need to check that the package doesn't already exist.
-	packageRevisionList := porchapi.PackageRevisionList{}
-	if err := r.client.List(r.ctx, &packageRevisionList, &client.ListOptions{
-		Namespace: *r.cfg.Namespace,
-	}); err != nil {
-		return err
-	}
-	for _, pr := range packageRevisionList.Items {
-		if pr.Spec.RepositoryName == r.repository && pr.Spec.PackageName == packageName {
-			return fmt.Errorf("`init` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
-				packageName, r.repository)
-		}
-	}
 	return nil
 }
