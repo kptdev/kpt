@@ -34,7 +34,6 @@ import (
 	"k8s.io/klog/v2/klogr"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -48,8 +47,6 @@ import (
 )
 
 var (
-	scheme = runtime.NewScheme()
-
 	reconcilers = map[string]newReconciler{
 		"rootsyncsets": func() Reconciler {
 			return &rootsyncset.RootSyncSetReconciler{}
@@ -75,11 +72,6 @@ type newReconciler func() Reconciler
 //+kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
-func init() {
-	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	//+kubebuilder:scaffold:scheme
-}
-
 func main() {
 	err := run(context.Background())
 	if err != nil {
@@ -104,6 +96,11 @@ func run(ctx context.Context) error {
 	flag.StringVar(&enabledReconcilersString, "reconcilers", "*", "reconcilers that should be enabled; use * to mean 'enable all'")
 
 	flag.Parse()
+
+	scheme := runtime.NewScheme()
+	if err := clientgoscheme.AddToScheme(scheme); err != nil {
+		return fmt.Errorf("error initializing scheme: %w", err)
+	}
 
 	managerOptions := ctrl.Options{
 		Scheme:                     scheme,
