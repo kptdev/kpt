@@ -689,7 +689,7 @@ spec:
                             last transition
                           type: string
                         reason:
-                          description: one-word CamelCase reason for the condition’s
+                          description: one-word CamelCase reason for the condition's
                             last transition
                           type: string
                         status:
@@ -909,7 +909,7 @@ spec:
                               about last transition
                             type: string
                           reason:
-                            description: one-word CamelCase reason for the condition’s
+                            description: one-word CamelCase reason for the condition's
                               last transition
                             type: string
                           status:
