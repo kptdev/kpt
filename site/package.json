@@ -12,7 +12,7 @@
     "href-checker": "etefera/href-checker#docsify",
     "jest": "^27.0.4",
     "markdownlint-cli": "^0.32.2",
-    "postcss-cli": "^5.0.1",
+    "postcss-cli": "^10.0.0",
     "super-simple-sitemap-generator": "etefera/super-simple-sitemap-generator"
   }
 }
