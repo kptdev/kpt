@@ -99,7 +99,7 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 
 	var deprecatedv1alpha1KptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
-		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[0] {
+		deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
 		tmplArgs["version"] = deprecatedv1alpha1KptfileError.Version
 		errMsg := deprecatedv1Alpha1KptfileMsg
 		return ResolvedResult{
@@ -109,7 +109,7 @@ func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResul
 
 	var deprecatedv1alpha2KptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
-		deprecatedv1alpha1KptfileError.Version == pkg.DeprecatedKptfileVersions[1] {
+		deprecatedv1alpha1KptfileError.Version == "v1alpha2" {
 		tmplArgs["version"] = deprecatedv1alpha2KptfileError.Version
 		errMsg := deprecatedv1Alpha2KptfileMsg
 		return ResolvedResult{

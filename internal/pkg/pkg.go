@@ -30,7 +30,6 @@ import (
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -45,17 +44,17 @@ const (
 	pkgPathAnnotation = "internal.config.kubernetes.io/package-path"
 )
 
-var DeprecatedKptfileVersions = []string{
-	"v1alpha1",
-	"v1alpha2",
+var DeprecatedKptfileVersions = []schema.GroupVersionKind{
+	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha1"),
+	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha2"),
 }
 
 // MatchAllKRM represents set of glob pattern to match all KRM
 // resources including Kptfile.
 var MatchAllKRM = append([]string{kptfilev1.KptFileName}, kio.MatchAll...)
 
-var SupportedKptfileVersions = []string{
-	kptfilev1.KptFileVersion,
+var SupportedKptfileVersions = []schema.GroupVersionKind{
+	kptfilev1.KptFileGVK(),
 }
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
@@ -286,18 +285,15 @@ func CheckKptfileVersion(content []byte) error {
 	if err != nil {
 		return err
 	}
+	gvk := gv.WithKind(kind)
 
 	switch {
 	// If the resource type matches what we are looking for, just return nil.
-	case gv.Group == kptfilev1.KptFileGroup &&
-		kind == kptfilev1.KptFileKind &&
-		isSupportedKptfileVersion(gv.Version):
+	case isSupportedKptfileVersion(gvk):
 		return nil
 	// If the kind and group is correct and the version is a known deprecated
 	// schema for the Kptfile, return DeprecatedKptfileError.
-	case gv.Group == kptfilev1.KptFileGroup &&
-		kind == kptfilev1.KptFileKind &&
-		isDeprecatedKptfileVersion(gv.Version):
+	case isDeprecatedKptfileVersion(gvk):
 		return &DeprecatedKptfileError{
 			Version: gv.Version,
 		}
@@ -310,12 +306,22 @@ func CheckKptfileVersion(content []byte) error {
 	}
 }
 
-func isDeprecatedKptfileVersion(version string) bool {
-	return slice.ContainsString(DeprecatedKptfileVersions, version, nil)
+func isDeprecatedKptfileVersion(gvk schema.GroupVersionKind) bool {
+	for _, v := range DeprecatedKptfileVersions {
+		if v == gvk {
+			return true
+		}
+	}
+	return false
 }
 
-func isSupportedKptfileVersion(version string) bool {
-	return slice.ContainsString(SupportedKptfileVersions, version, nil)
+func isSupportedKptfileVersion(gvk schema.GroupVersionKind) bool {
+	for _, v := range SupportedKptfileVersions {
+		if v == gvk {
+			return true
+		}
+	}
+	return false
 }
 
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
@@ -777,7 +783,7 @@ func filterResourceGroups(input []*yaml.RNode) (output []*yaml.RNode, err error)
 			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
 		}
 		// Filter out any non-ResourceGroup files.
-		if !(meta.APIVersion == rgfilev1alpha1.RGFileAPIVersion && meta.Kind == rgfilev1alpha1.RGFileKind) {
+		if !(meta.APIVersion == rgfilev1alpha1.ResourceGroupGVK().GroupVersion().String() && meta.Kind == rgfilev1alpha1.ResourceGroupGVK().Kind) {
 			continue
 		}
 

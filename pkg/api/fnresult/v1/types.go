@@ -15,7 +15,7 @@
 package v1
 
 import (
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -42,11 +42,24 @@ type Result struct {
 }
 
 const (
-	ResultListKind       = "FunctionResultList"
-	ResultListGroup      = kptfilev1.KptFileGroup
-	ResultListVersion    = kptfilev1.KptFileVersion
+	// Deprecated: prefer ResultListGVK
+	ResultListKind = "FunctionResultList"
+	// Deprecated: prefer ResultListGVK
+	ResultListGroup = "kpt.dev"
+	// Deprecated: prefer ResultListGVK
+	ResultListVersion = "v1"
+	// Deprecated: prefer ResultListGVK
 	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
 )
+
+// KptFileGVK is the GroupVersionKind of FunctionResultList objects
+func ResultListGVK() schema.GroupVersionKind {
+	return schema.GroupVersionKind{
+		Group:   "kpt.dev",
+		Version: "v1",
+		Kind:    "FunctionResultList",
+	}
+}
 
 // ResultList contains aggregated results from multiple functions
 type ResultList struct {

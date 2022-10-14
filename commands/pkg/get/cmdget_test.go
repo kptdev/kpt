@@ -66,8 +66,9 @@ func TestCmd_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind,
+			},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
@@ -126,8 +127,9 @@ func TestCmdMainBranch_execute(t *testing.T) {
 				},
 			},
 			TypeMeta: yaml.TypeMeta{
-				APIVersion: kptfilev1.KptFileAPIVersion,
-				Kind:       kptfilev1.KptFileKind},
+				APIVersion: kptfilev1.KptFileGVK().GroupVersion().String(),
+				Kind:       kptfilev1.KptFileGVK().Kind,
+			},
 		},
 		Upstream: &kptfilev1.Upstream{
 			Type: kptfilev1.GitOrigin,
