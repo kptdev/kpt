@@ -54,11 +54,11 @@ jobs:
 
     steps:
       - name: Set up Go 1.18
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
       - name: Checkout Porch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build kpt
         run: go install .
       - name: Build Docker Images
