@@ -20,9 +20,13 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
+	"strings"
+	"unicode"
 
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -33,7 +37,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/comments"
@@ -51,8 +59,8 @@ type CaDEngine interface {
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error)
 
 	ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]*PackageRevision, error)
-	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (*PackageRevision, error)
-	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevision) (*PackageRevision, error)
+	CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision, parent *PackageRevision) (*PackageRevision, error)
+	UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevision, parent *PackageRevision) (*PackageRevision, error)
 	DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *PackageRevision) error
 
 	ListPackages(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageFilter) ([]*Package, error)
@@ -191,9 +199,58 @@ func (cad *cadEngine) ListPackageRevisions(ctx context.Context, repositorySpec *
 	return packageRevisions, nil
 }
 
-func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision) (*PackageRevision, error) {
+func buildPackageConfig(ctx context.Context, obj *api.PackageRevision, parent *PackageRevision) (*builtins.PackageConfig, error) {
+	config := &builtins.PackageConfig{}
+
+	parentPath := ""
+
+	var parentConfig *unstructured.Unstructured
+	if parent != nil {
+		parentObj, err := parent.GetPackageRevision(ctx)
+		if err != nil {
+			return nil, err
+		}
+		parentPath = parentObj.Spec.PackageName
+
+		resources, err := parent.GetResources(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("error getting resources from parent package %q: %w", parentObj.Name, err)
+		}
+		configMapObj, err := ExtractContextConfigMap(resources.Spec.Resources)
+		if err != nil {
+			return nil, fmt.Errorf("error getting configuration from parent package %q: %w", parentObj.Name, err)
+		}
+		parentConfig = configMapObj
+
+		if parentConfig != nil {
+			// TODO: Should we support kinds other than configmaps?
+			var parentConfigMap corev1.ConfigMap
+			if err := runtime.DefaultUnstructuredConverter.FromUnstructured(parentConfig.Object, &parentConfigMap); err != nil {
+				return nil, fmt.Errorf("error parsing ConfigMap from parent configuration: %w", err)
+			}
+			if s := parentConfigMap.Data[builtins.ConfigKeyPackagePath]; s != "" {
+				parentPath = s + "/" + parentPath
+			}
+		}
+	}
+
+	if parentPath == "" {
+		config.PackagePath = obj.Spec.PackageName
+	} else {
+		config.PackagePath = parentPath + "/" + obj.Spec.PackageName
+	}
+
+	return config, nil
+}
+
+func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, obj *api.PackageRevision, parent *PackageRevision) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::CreatePackageRevision", trace.WithAttributes())
 	defer span.End()
+
+	packageConfig, err := buildPackageConfig(ctx, obj, parent)
+	if err != nil {
+		return nil, err
+	}
 
 	// Validate package lifecycle. Cannot create a final package
 	switch obj.Spec.Lifecycle {
@@ -218,7 +275,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	if err := cad.applyTasks(ctx, draft, repositoryObj, obj); err != nil {
+	if err := cad.applyTasks(ctx, draft, repositoryObj, obj, packageConfig); err != nil {
 		return nil, err
 	}
 
@@ -247,7 +304,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}, nil
 }
 
-func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision) error {
+func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision, packageConfig *builtins.PackageConfig) error {
 	var mutations []mutation
 
 	// Unless first task is Init or Clone, insert Init to create an empty package.
@@ -266,7 +323,7 @@ func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDr
 
 	for i := range tasks {
 		task := &tasks[i]
-		mutation, err := cad.mapTaskToMutation(ctx, obj, task, repositoryObj.Spec.Deployment)
+		mutation, err := cad.mapTaskToMutation(ctx, obj, task, repositoryObj.Spec.Deployment, packageConfig)
 		if err != nil {
 			return err
 		}
@@ -288,7 +345,7 @@ type RepositoryOpener interface {
 	OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error)
 }
 
-func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task, isDeployment bool) (mutation, error) {
+func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRevision, task *api.Task, isDeployment bool, packageConfig *builtins.PackageConfig) (mutation, error) {
 	switch task.Type {
 	case api.TaskTypeInit:
 		if task.Init == nil {
@@ -310,6 +367,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 			repoOpener:         cad,
 			credentialResolver: cad.credentialResolver,
 			referenceResolver:  cad.referenceResolver,
+			packageConfig:      packageConfig,
 		}, nil
 
 	case api.TaskTypeUpdate:
@@ -366,7 +424,7 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 	}
 }
 
-func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, oldObj, newObj *api.PackageRevision) (*PackageRevision, error) {
+func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, oldObj, newObj *api.PackageRevision, parent *PackageRevision) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageRevision", trace.WithAttributes())
 	defer span.End()
 
@@ -406,7 +464,11 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 
 	if isRecloneAndReplay(oldObj, newObj) {
-		repoPkgRev, err := cad.recloneAndReplay(ctx, repo, repositoryObj, newObj)
+		packageConfig, err := buildPackageConfig(ctx, newObj, parent)
+		if err != nil {
+			return nil, err
+		}
+		repoPkgRev, err := cad.recloneAndReplay(ctx, repo, repositoryObj, newObj, packageConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -1098,7 +1160,7 @@ func isRecloneAndReplay(oldObj, newObj *api.PackageRevision) bool {
 
 // recloneAndReplay performs an update by recloning the upstream package and replaying all tasks.
 // This is more like a git rebase operation than the "classic" kpt update algorithm, which is more like a git merge.
-func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repository, repositoryObj *configapi.Repository, newObj *api.PackageRevision) (repository.PackageRevision, error) {
+func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repository, repositoryObj *configapi.Repository, newObj *api.PackageRevision, packageConfig *builtins.PackageConfig) (repository.PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::recloneAndReplay", trace.WithAttributes())
 	defer span.End()
 
@@ -1109,7 +1171,7 @@ func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repo
 		return nil, err
 	}
 
-	if err := cad.applyTasks(ctx, draft, repositoryObj, newObj); err != nil {
+	if err := cad.applyTasks(ctx, draft, repositoryObj, newObj, packageConfig); err != nil {
 		return nil, err
 	}
 
@@ -1118,4 +1180,65 @@ func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repo
 	}
 
 	return draft.Close(ctx)
+}
+
+// ExtractContextConfigMap returns the package-context configmap, if found
+func ExtractContextConfigMap(resources map[string]string) (*unstructured.Unstructured, error) {
+	var matches []*unstructured.Unstructured
+
+	for itemPath, itemContents := range resources {
+		ext := path.Ext(itemPath)
+		ext = strings.ToLower(ext)
+
+		parse := false
+		switch ext {
+		case ".yaml", ".yml":
+			parse = true
+
+		default:
+			klog.Warningf("ignoring non-yaml file %s", itemPath)
+		}
+
+		if !parse {
+			continue
+		}
+		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
+		for _, s := range strings.Split(itemContents, "\n---\n") {
+			if isWhitespace(s) {
+				continue
+			}
+
+			o := &unstructured.Unstructured{}
+			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
+				return nil, fmt.Errorf("error parsing yaml from %s: %w", itemPath, err)
+			}
+
+			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
+
+			configMapGK := schema.GroupKind{Kind: "ConfigMap"}
+			if o.GroupVersionKind().GroupKind() == configMapGK {
+				if o.GetName() == builtins.PkgContextName {
+					matches = append(matches, o)
+				}
+			}
+		}
+	}
+	if len(matches) == 0 {
+		return nil, nil
+	}
+
+	if len(matches) > 1 {
+		return nil, fmt.Errorf("found multiple configmaps matching name %q", builtins.PkgContextFile)
+	}
+
+	return matches[0], nil
+}
+
+func isWhitespace(s string) bool {
+	for _, r := range s {
+		if !unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return true
 }

@@ -275,8 +275,17 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
+	var parentPackage *engine.PackageRevision
+	if newApiPkgRev.Spec.Parent != nil && newApiPkgRev.Spec.Parent.Name != "" {
+		p, err := r.getRepoPkgRev(ctx, newApiPkgRev.Spec.Parent.Name)
+		if err != nil {
+			return nil, false, fmt.Errorf("cannot get parent package %q: %w", newApiPkgRev.Spec.Parent.Name, err)
+		}
+		parentPackage = p
+	}
+
 	if !isCreate {
-		rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRev.(*api.PackageRevision), newApiPkgRev)
+		rev, err := r.cad.UpdatePackageRevision(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRev.(*api.PackageRevision), newApiPkgRev, parentPackage)
 		if err != nil {
 			return nil, false, apierrors.NewInternalError(err)
 		}
@@ -288,7 +297,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 
 		return updated, false, nil
 	} else {
-		rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, newApiPkgRev)
+		rev, err := r.cad.CreatePackageRevision(ctx, &repositoryObj, newApiPkgRev, parentPackage)
 		if err != nil {
 			klog.Infof("error creating package: %v", err)
 			return nil, false, apierrors.NewInternalError(err)

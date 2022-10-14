@@ -20,21 +20,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/google/go-cmp/cmp"
 )
 
 const (
 	updateGoldenFiles = "UPDATE_GOLDEN_FILES"
 )
-
-func TestUnknownBuiltinFunctionMutation(t *testing.T) {
-	const doesNotExist = "function-does-not-exist"
-	m, err := newBuiltinFunctionMutation(doesNotExist)
-	if err == nil || m != nil {
-		t.Errorf("creating builtin function runner for an unknown function %q unexpectedly succeeded", doesNotExist)
-	}
-}
 
 func TestPackageContext(t *testing.T) {
 	testdata, err := filepath.Abs(filepath.Join(".", "testdata", "context"))
@@ -44,7 +36,10 @@ func TestPackageContext(t *testing.T) {
 
 	input := readPackage(t, filepath.Join(testdata, "input"))
 
-	m, err := newBuiltinFunctionMutation(fnruntime.FuncGenPkgContext)
+	packageConfig := &builtins.PackageConfig{
+		PackagePath: "parent1/parent1.2/parent1.2.3/me",
+	}
+	m, err := newPackageContextGeneratorMutation(packageConfig)
 	if err != nil {
 		t.Fatalf("Failed to get builtin function mutation: %v", err)
 	}

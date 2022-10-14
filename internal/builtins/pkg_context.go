@@ -30,7 +30,9 @@ import (
 
 const (
 	PkgContextFile = "package-context.yaml"
-	pkgContextName = "kptfile.kpt.dev"
+	PkgContextName = "kptfile.kpt.dev"
+
+	ConfigKeyPackagePath = "package-path"
 )
 
 var (
@@ -42,7 +44,17 @@ var (
 // a KRM object that contains package context information that can be
 // used by functions such as `set-namespace` to customize package with
 // minimal configuration.
-type PackageContextGenerator struct{}
+type PackageContextGenerator struct {
+	// PackageConfig contains the package configuration to set.
+	PackageConfig *PackageConfig
+}
+
+// PackageConfig holds package automatic configuration
+type PackageConfig struct {
+	// PackagePath is the path to the package, as determined by the names of the parent packages.
+	// The path to a package is the parent package path joined with the package name.
+	PackagePath string
+}
 
 // Run function reads the function input `resourceList` from a given reader `r`
 // and writes the function output to the provided writer `w`.
@@ -66,14 +78,14 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 	// - Generates a package context resource for each kpt package (i.e Kptfile)
 	for _, resource := range resourceList.Items {
 		gvk := resid.GvkFromNode(resource)
-		if gvk.Equals(configMapGVK) && resource.GetName() == pkgContextName {
+		if gvk.Equals(configMapGVK) && resource.GetName() == PkgContextName {
 			// drop existing package context resources
 			continue
 		}
 		updatedResources = append(updatedResources, resource)
 		if gvk.Equals(kptfileGVK) {
 			// it's a Kptfile, generate a corresponding package context
-			pkgContext, err := pkgContextResource(resource)
+			pkgContext, err := pkgContextResource(resource, pc.PackageConfig)
 			if err != nil {
 				resourceList.Results = framework.Results{
 					&framework.Result{
@@ -102,10 +114,10 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
-func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
+func pkgContextResource(kptfile *yaml.RNode, packageConfig *PackageConfig) (*yaml.RNode, error) {
 	cm := yaml.MustParse(AbstractPkgContext())
 
-	kptfilePath, _, err := kioutil.GetFileAnnotations(kf)
+	kptfilePath, _, err := kioutil.GetFileAnnotations(kptfile)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +130,16 @@ func pkgContextResource(kf *yaml.RNode) (*yaml.RNode, error) {
 			return nil, err
 		}
 	}
-	cm.SetDataMap(map[string]string{
-		"name": kf.GetName(),
-	})
+	data := map[string]string{
+		"name": kptfile.GetName(),
+	}
+	if packageConfig != nil {
+		if packageConfig.PackagePath != "" {
+			data[ConfigKeyPackagePath] = packageConfig.PackagePath
+		}
+	}
+
+	cm.SetDataMap(data)
 	return cm, nil
 }
 
@@ -136,5 +155,5 @@ metadata:
     config.kubernetes.io/local-config: "true"
 data:
   name: example
-`, pkgContextName)
+`, PkgContextName)
 }

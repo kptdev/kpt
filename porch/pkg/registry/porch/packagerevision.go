@@ -123,7 +123,7 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewBadRequest(fmt.Sprintf("expected PackageRevision object, got %T", runtimeObject))
 	}
 
-	// TODO: Accpept some form of client-provided name, for example using GenerateName
+	// TODO: Accept some form of client-provided name, for example using GenerateName
 	// and figure out where we can store it (in Kptfile?). Porch can then append unique
 	// suffix to the names while respecting client-provided value as well.
 	if newApiPkgRev.Name != "" {
@@ -145,7 +145,16 @@ func (r *packageRevisions) Create(ctx context.Context, runtimeObject runtime.Obj
 		return nil, apierrors.NewInvalid(api.SchemeGroupVersion.WithKind("PackageRevision").GroupKind(), newApiPkgRev.Name, fieldErrors)
 	}
 
-	createdRepoPkgRev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, newApiPkgRev)
+	var parentPackage *engine.PackageRevision
+	if newApiPkgRev.Spec.Parent != nil && newApiPkgRev.Spec.Parent.Name != "" {
+		p, err := r.packageCommon.getRepoPkgRev(ctx, newApiPkgRev.Spec.Parent.Name)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get parent package %q: %w", newApiPkgRev.Spec.Parent.Name, err)
+		}
+		parentPackage = p
+	}
+
+	createdRepoPkgRev, err := r.cad.CreatePackageRevision(ctx, repositoryObj, newApiPkgRev, parentPackage)
 	if err != nil {
 		return nil, apierrors.NewInternalError(err)
 	}
