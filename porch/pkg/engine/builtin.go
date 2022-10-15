@@ -33,17 +33,13 @@ type builtinEvalMutation struct {
 	runner   fn.FunctionRunner
 }
 
-func newBuiltinFunctionMutation(function string) (mutation, error) {
-	var runner fn.FunctionRunner
-	switch function {
-	case fnruntime.FuncGenPkgContext:
-		runner = &builtins.PackageContextGenerator{}
-	default:
-		return nil, fmt.Errorf("unrecognized built-in function %q", function)
+func newPackageContextGeneratorMutation(packageConfig *builtins.PackageConfig) (mutation, error) {
+	runner := &builtins.PackageContextGenerator{
+		PackageConfig: packageConfig,
 	}
 
 	return &builtinEvalMutation{
-		function: function,
+		function: fnruntime.FuncGenPkgContext,
 		runner:   runner,
 	}, nil
 }
