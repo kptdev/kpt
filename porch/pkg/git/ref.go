@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -109,12 +110,12 @@ func getTagNameInLocalRepo(n plumbing.ReferenceName) (string, bool) {
 	return trimOptionalPrefix(n.String(), tagsPrefixInLocalRepo)
 }
 
-func createDraftName(pkg, rev string) BranchName {
-	return BranchName(draftsPrefix + pkg + "/" + rev)
+func createDraftName(pkg string, wn v1alpha1.WorkspaceName) BranchName {
+	return BranchName(draftsPrefix + pkg + "/" + string(wn))
 }
 
-func createProposedName(pkg, rev string) BranchName {
-	return BranchName(proposedPrefix + pkg + "/" + rev)
+func createProposedName(pkg string, wn v1alpha1.WorkspaceName) BranchName {
+	return BranchName(proposedPrefix + pkg + "/" + string(wn))
 }
 
 func trimOptionalPrefix(s, prefix string) (string, bool) {

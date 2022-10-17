@@ -30,10 +30,12 @@ type PackageResources struct {
 
 type PackageRevisionKey struct {
 	Repository, Package, Revision string
+	WorkspaceName                 v1alpha1.WorkspaceName
 }
 
 func (n PackageRevisionKey) String() string {
-	return fmt.Sprintf("Repository: %q, Package: %q, Revision: %q", n.Repository, n.Package, n.Revision)
+	return fmt.Sprintf("Repository: %q, Package: %q, Revision: %q, WorkspaceName: %q",
+		n.Repository, n.Package, n.Revision, string(n.WorkspaceName))
 }
 
 type PackageKey struct {
@@ -119,6 +121,9 @@ type ListPackageRevisionFilter struct {
 	// Package matches the name of the package (spec.package)
 	Package string
 
+	// WorkspaceName matches the description of the package (spec.workspaceName)
+	WorkspaceName v1alpha1.WorkspaceName
+
 	// Revision matches the revision of the package (spec.revision)
 	Revision string
 }
@@ -129,6 +134,9 @@ func (f *ListPackageRevisionFilter) Matches(p PackageRevision) bool {
 		return false
 	}
 	if f.Revision != "" && f.Revision != p.Key().Revision {
+		return false
+	}
+	if f.WorkspaceName != "" && f.WorkspaceName != p.Key().WorkspaceName {
 		return false
 	}
 	if f.KubeObjectName != "" && f.KubeObjectName != p.KubeObjectName() {

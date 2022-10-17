@@ -116,6 +116,7 @@ var (
 			return []interface{}{
 				pr.Name,
 				pr.Spec.PackageName,
+				pr.Spec.WorkspaceName,
 				pr.Spec.Revision,
 				isLatest(pr),
 				pr.Spec.Lifecycle,
@@ -125,6 +126,7 @@ var (
 		columns: []metav1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Package", Type: "string"},
+			{Name: "WorkspaceName", Type: "string"},
 			{Name: "Revision", Type: "string"},
 			{Name: "Latest", Type: "boolean"},
 			{Name: "Lifecycle", Type: "string"},
@@ -142,6 +144,7 @@ var (
 			return []interface{}{
 				pr.Name,
 				pr.Spec.PackageName,
+				pr.Spec.WorkspaceName,
 				pr.Spec.Revision,
 				pr.Spec.RepositoryName,
 				len(pr.Spec.Resources),
@@ -150,6 +153,7 @@ var (
 		columns: []metav1.TableColumnDefinition{
 			{Name: "Name", Type: "string"},
 			{Name: "Package", Type: "string"},
+			{Name: "WorkspaceName", Type: "string"},
 			{Name: "Revision", Type: "string"},
 			{Name: "Repository", Type: "string"},
 			{Name: "Files", Type: "integer"},

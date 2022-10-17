@@ -16,9 +16,14 @@ package repository
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"golang.org/x/mod/semver"
 )
 
 func ToApiReadinessGates(kf kptfile.KptFile) []api.ReadinessGate {
@@ -59,4 +64,79 @@ func toApiConditionStatus(s kptfile.ConditionStatus) api.ConditionStatus {
 	default:
 		panic(fmt.Errorf("unknown condition status: %v", s))
 	}
+}
+
+const revisionRegex = "^v[0-9]+$"
+
+func NextRevisionNumber(revs []PackageRevision) (string, error) {
+	// Computes the next revision number as the latest revision number + 1.
+	// This function only understands strict versioning format, e.g. v1, v2, etc. It will
+	// ignore all revision numbers it finds that do not adhere to this format.
+	// If there are no published revisions (in the recognized format), the revision
+	// number returned here will be "v1".
+
+	latestRev := "v0"
+	for _, current := range revs {
+
+		// Check if the current package revision is more recent than the one seen so far.
+		// Only consider Published packages
+		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
+			continue
+		}
+
+		currentRev := current.Key().Revision
+		if !semver.IsValid(currentRev) {
+			// ignore this revision
+			continue
+		}
+		// collect the major version. i.e. if we find that the latest published
+		// version is v3.1.1, we will end up returning v4
+		currentRev = semver.Major(currentRev)
+
+		switch cmp := semver.Compare(currentRev, latestRev); {
+		case cmp == 0:
+			// Same revision.
+		case cmp < 0:
+			// current < latest; no change
+		case cmp > 0:
+			// current > latest; update latest
+			latestRev = currentRev
+		}
+
+	}
+
+	i, err := strconv.Atoi(latestRev[1:])
+	if err != nil {
+		return "", err
+	}
+	i++
+	next := "v" + strconv.Itoa(i)
+	return next, nil
+}
+
+// ValidateWorkspaceName validates WorkspaceName. It must:
+//   - be at least 1 and at most 63 characters long
+//   - contain only lowercase alphanumeric characters or '-'
+//   - start and end with an alphanumeric character.
+//
+// '/ ' should never be allowed, because we use '/' to
+// delimit branch names (e.g. the 'drafts/' prefix).
+func ValidateWorkspaceName(workspace v1alpha1.WorkspaceName) error {
+	wn := string(workspace)
+	if len(wn) > 63 || len(wn) == 0 {
+		return fmt.Errorf("workspaceName %q must be at least 1 and at most 63 characters long", wn)
+	}
+	if strings.HasPrefix(wn, "-") || strings.HasSuffix(wn, "-") {
+		return fmt.Errorf("workspaceName %q must start and end with an alphanumeric character", wn)
+	}
+
+	match, err := regexp.MatchString(`^[a-z0-9-]+$`, wn)
+	if err != nil {
+		return err
+	}
+	if !match {
+		return fmt.Errorf("workspaceName %q must be comprised only of lowercase alphanumeric characters and '-'", wn)
+	}
+
+	return nil
 }

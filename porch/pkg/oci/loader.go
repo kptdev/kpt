@@ -37,12 +37,13 @@ import (
 
 const (
 	annotationKeyLifecycle = "kpt.dev/lifecycle"
+	annotationKeyRevision  = "kpt.dev/revision"
 )
 
 var tracer = otel.Tracer("oci")
 
 func (r *ociRepository) getLifecycle(ctx context.Context, imageRef oci.ImageDigestName) (v1alpha1.PackageRevisionLifecycle, error) {
-	ctx, span := tracer.Start(ctx, "ociRepository::loadTasks", trace.WithAttributes(
+	ctx, span := tracer.Start(ctx, "ociRepository::getLifecycle", trace.WithAttributes(
 		attribute.Stringer("image", imageRef),
 	))
 	defer span.End()
@@ -68,6 +69,25 @@ func (r *ociRepository) getLifecycle(ctx context.Context, imageRef oci.ImageDige
 	default:
 		return "", fmt.Errorf("unknown package revision lifecycle %q", lifecycleValue)
 	}
+}
+
+func (r *ociRepository) getRevisionNumber(ctx context.Context, imageRef oci.ImageDigestName) (string, error) {
+	ctx, span := tracer.Start(ctx, "ociRepository::getRevision", trace.WithAttributes(
+		attribute.Stringer("image", imageRef),
+	))
+	defer span.End()
+
+	ociImage, err := r.storage.ToRemoteImage(ctx, imageRef)
+	if err != nil {
+		return "", err
+	}
+
+	manifest, err := r.storage.CachedManifest(ctx, ociImage)
+	if err != nil {
+		return "", fmt.Errorf("error fetching manifest for image: %w", err)
+	}
+
+	return manifest.Annotations[annotationKeyRevision], nil
 }
 
 func (r *ociRepository) loadTasks(ctx context.Context, imageRef oci.ImageDigestName) ([]api.Task, error) {

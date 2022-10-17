@@ -266,6 +266,10 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("unsupported lifecycle value: %s", obj.Spec.Lifecycle)
 	}
 
+	if err := repository.ValidateWorkspaceName(obj.Spec.WorkspaceName); err != nil {
+		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
+	}
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err

@@ -33,6 +33,10 @@ type gitAnnotation struct {
 	// without having to check file paths.
 	PackagePath string `json:"package,omitempty"`
 
+	// WorkspaceName holds the workspaceName of the package revision the commit
+	// belongs to.
+	WorkspaceName v1alpha1.WorkspaceName `json:"workspaceName,omitempty"`
+
 	// Revision hold the revision of the package revision the commit
 	// belongs to.
 	Revision string `json:"revision,omitempty"`
