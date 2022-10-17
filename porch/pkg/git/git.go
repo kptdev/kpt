@@ -286,20 +286,35 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		return nil, fmt.Errorf("error when resolving target branch for the package: %w", err)
 	}
 
-	draft := createDraftName(obj.Spec.PackageName, obj.Spec.Revision)
+	if err := repository.ValidateWorkspaceName(obj.Spec.WorkspaceName); err != nil {
+		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
+	}
+
+	// The workspaceName must be unique, because it used to generate the package revision's metadata.name.
+	// We check uniqueness by looking for the existing git branch.
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, WorkspaceName: obj.Spec.WorkspaceName})
+	if err != nil {
+		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
+	}
+	if len(revs) != 0 {
+		return nil, fmt.Errorf("package revision workspaceNames must be unique; package revision with name %s in repo %s with"+
+			"workspaceName %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.WorkspaceName)
+	}
+
+	draft := createDraftName(obj.Spec.PackageName, obj.Spec.WorkspaceName)
 
 	// TODO: This should also create a new 'Package' resource if one does not already exist
 
 	return &gitPackageDraft{
-		parent:    r,
-		path:      obj.Spec.PackageName,
-		revision:  obj.Spec.Revision,
-		lifecycle: v1alpha1.PackageRevisionLifecycleDraft,
-		updated:   time.Now(),
-		base:      nil, // Creating a new package
-		tasks:     nil, // Creating a new package
-		branch:    draft,
-		commit:    base,
+		parent:        r,
+		path:          obj.Spec.PackageName,
+		workspaceName: obj.Spec.WorkspaceName,
+		lifecycle:     v1alpha1.PackageRevisionLifecycleDraft,
+		updated:       time.Now(),
+		base:          nil, // Creating a new package
+		tasks:         nil, // Creating a new package
+		branch:        draft,
+		commit:        base,
 	}, nil
 }
 
@@ -331,15 +346,16 @@ func (r *gitRepository) UpdatePackageRevision(ctx context.Context, old repositor
 	}
 
 	return &gitPackageDraft{
-		parent:    r,
-		path:      oldGitPackage.path,
-		revision:  oldGitPackage.revision,
-		lifecycle: oldGitPackage.Lifecycle(),
-		updated:   rev.updated,
-		base:      rev.ref,
-		tree:      rev.tree,
-		commit:    rev.commit,
-		tasks:     rev.tasks,
+		parent:        r,
+		path:          oldGitPackage.path,
+		revision:      oldGitPackage.revision,
+		workspaceName: oldGitPackage.workspaceName,
+		lifecycle:     oldGitPackage.Lifecycle(),
+		updated:       rev.updated,
+		base:          rev.ref,
+		tree:          rev.tree,
+		commit:        rev.commit,
+		tasks:         rev.tasks,
 	}, nil
 }
 
@@ -486,7 +502,27 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 
 	var ref *plumbing.Reference = nil // Cannot determine ref; this package will be considered final (immutable).
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, version, ref)
+	var revision string
+	var workspace v1alpha1.WorkspaceName
+	last := strings.LastIndex(version, "/")
+
+	if strings.HasPrefix(version, "drafts/") || strings.HasPrefix(version, "proposed/") {
+		// the passed in version is a ref to an unpublished package revision
+		workspace = v1alpha1.WorkspaceName(version[last+1:])
+	} else {
+		// the passed in version is a ref to a published package revision
+		if version == string(r.branch) || last < 0 {
+			revision = version
+		} else {
+			revision = version[last+1:]
+		}
+		workspace, err = getPkgWorkspace(ctx, commit, krmPackage, ref)
+		if err != nil {
+			return nil, kptfilev1.GitLock{}, err
+		}
+	}
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspace, ref)
 	if err != nil {
 		return nil, lock, err
 	}
@@ -520,7 +556,11 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 
 	var result []repository.PackageRevision
 	for _, krmPackage := range krmPackages.packages {
-		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, ref)
+		workspace, err := getPkgWorkspace(ctx, commit, krmPackage, ref)
+		if err != nil {
+			return nil, err
+		}
+		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspace, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -531,7 +571,7 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 
 // loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
 func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) (*gitPackageRevision, error) {
-	name, revision, err := parseDraftName(ref)
+	name, workspaceName, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
 	}
@@ -556,7 +596,7 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 		return nil, nil
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, ref)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, "", workspaceName, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +604,7 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 	return packageRevision, nil
 }
 
-func parseDraftName(draft *plumbing.Reference) (name, revision string, err error) {
+func parseDraftName(draft *plumbing.Reference) (name string, workspaceName v1alpha1.WorkspaceName, err error) {
 	refName := draft.Name()
 	var suffix string
 	if b, ok := getDraftBranchNameInLocal(refName); ok {
@@ -577,10 +617,10 @@ func parseDraftName(draft *plumbing.Reference) (name, revision string, err error
 
 	revIndex := strings.LastIndex(suffix, "/")
 	if revIndex <= 0 {
-		return "", "", fmt.Errorf("invalid draft ref name; missing revision suffix: %q", refName)
+		return "", "", fmt.Errorf("invalid draft ref name; missing workspaceName suffix: %q", refName)
 	}
-	name, revision = suffix[:revIndex], suffix[revIndex+1:]
-	return name, revision, nil
+	name, workspaceName = suffix[:revIndex], v1alpha1.WorkspaceName(suffix[revIndex+1:])
+	return name, workspaceName, nil
 }
 
 func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]repository.PackageRevision, error) {
@@ -620,7 +660,12 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 		return nil, nil
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, tag)
+	workspaceName, err := getPkgWorkspace(ctx, commit, krmPackage, tag)
+	if err != nil {
+		return nil, err
+	}
+
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspaceName, tag)
 	if err != nil {
 		return nil, err
 	}
@@ -893,7 +938,8 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 	return nil
 }
 
-func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath, revision string) ([]v1alpha1.Task, error) {
+func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commit, packagePath string,
+	workspaceName v1alpha1.WorkspaceName) ([]v1alpha1.Task, error) {
 	var logOptions = git.LogOptions{
 		From:  startCommit.Hash,
 		Order: git.LogOrderCommitterTime,
@@ -927,7 +973,12 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 		}
 
 		for _, gitAnnotation := range gitAnnotations {
-			if gitAnnotation.PackagePath == packagePath && gitAnnotation.Revision == revision {
+			packageMatches := gitAnnotation.PackagePath == packagePath
+			workspaceNameMatches := gitAnnotation.WorkspaceName == workspaceName ||
+				// this is needed for porch package revisions created before the workspaceName field existed
+				(gitAnnotation.Revision == string(workspaceName) && gitAnnotation.WorkspaceName == "")
+
+			if packageMatches && workspaceNameMatches {
 				// We are iterating through the commits in reverse order.
 				// Tasks that are read from separate commits will be recorded in
 				// reverse order.
@@ -1083,4 +1134,32 @@ func reverseSlice(s []v1alpha1.Task) {
 		first++
 		last--
 	}
+}
+
+func getPkgWorkspace(ctx context.Context, commit *object.Commit, p *packageListEntry, ref *plumbing.Reference) (v1alpha1.WorkspaceName, error) {
+	if ref == nil || (!isTagInLocalRepo(ref.Name()) && !isDraftBranchNameInLocal(ref.Name()) && !isProposedBranchNameInLocal(ref.Name())) {
+		// packages on the main branch may have unrelated commits, we need to find the latest commit relevant to this package
+		c, err := p.parent.parent.findLatestPackageCommit(ctx, p.parent.commit, p.path)
+		if err != nil {
+			return "", err
+		}
+		if c != nil {
+			commit = c
+		}
+	}
+	annotations, err := ExtractGitAnnotations(commit)
+	if err != nil {
+		return "", err
+	}
+	workspaceName := v1alpha1.WorkspaceName("")
+	for _, a := range annotations {
+		if a.PackagePath != p.path {
+			continue
+		}
+		if a.WorkspaceName != "" {
+			workspaceName = a.WorkspaceName
+			break
+		}
+	}
+	return workspaceName, nil
 }

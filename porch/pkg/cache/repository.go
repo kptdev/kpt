@@ -225,6 +225,17 @@ func (r *cachedRepository) update(ctx context.Context, updated repository.Packag
 	k := updated.Key()
 	// previous := r.cachedPackageRevisions[k]
 
+	if updated.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+		oldKey := repository.PackageRevisionKey{
+			Repository:    k.Repository,
+			Package:       k.Package,
+			WorkspaceName: k.WorkspaceName,
+		}
+		if _, ok := r.cachedPackageRevisions[oldKey]; ok {
+			delete(r.cachedPackageRevisions, oldKey)
+		}
+	}
+
 	cached := &cachedPackageRevision{PackageRevision: updated}
 	r.cachedPackageRevisions[k] = cached
 

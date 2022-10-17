@@ -127,18 +127,24 @@ func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter reposit
 						Digest: digest,
 					},
 					packageName:     childName,
-					revision:        tag,
+					workspaceName:   v1alpha1.WorkspaceName(tag),
 					created:         created,
 					parent:          r,
 					resourceVersion: constructResourceVersion(m.Created),
 				}
-				p.uid = constructUID(p.packageName + ":" + p.revision)
+				p.uid = constructUID(p.packageName + ":" + string(p.workspaceName))
 
 				lifecycle, err := r.getLifecycle(ctx, p.digestName)
 				if err != nil {
 					return nil, err
 				}
 				p.lifecycle = lifecycle
+
+				revision, err := r.getRevisionNumber(ctx, p.digestName)
+				if err != nil {
+					return nil, err
+				}
+				p.revision = revision
 
 				tasks, err := r.loadTasks(ctx, p.digestName)
 				if err != nil {
@@ -160,7 +166,8 @@ func (r *ociRepository) ListPackages(ctx context.Context, filter repository.List
 	return nil, fmt.Errorf("ListPackages not supported for OCI packages")
 }
 
-func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string, revision string, created time.Time) (repository.PackageRevision, error) {
+func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.ImageDigestName, packageName string,
+	workspace v1alpha1.WorkspaceName, revision string, created time.Time) (repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return nil, fmt.Errorf("repository is not a package repo, type is %v", r.content)
 	}
@@ -168,15 +175,22 @@ func (r *ociRepository) buildPackageRevision(ctx context.Context, name oci.Image
 	ctx, span := tracer.Start(ctx, "ociRepository::buildPackageRevision")
 	defer span.End()
 
+	// for backwards compatibility with packages that existed before porch supported
+	// workspaces, we populate the workspaceName as the revision number if it is empty
+	if workspace == "" {
+		workspace = v1alpha1.WorkspaceName(revision)
+	}
+
 	p := &ociPackageRevision{
 		digestName:      name,
 		packageName:     packageName,
+		workspaceName:   workspace,
 		revision:        revision,
 		created:         created,
 		parent:          r,
 		resourceVersion: constructResourceVersion(created),
 	}
-	p.uid = constructUID(p.packageName + ":" + p.revision)
+	p.uid = constructUID(p.packageName + ":" + string(p.workspaceName))
 
 	lifecycle, err := r.getLifecycle(ctx, p.digestName)
 	if err != nil {
@@ -323,13 +337,13 @@ type ociPackageRevision struct {
 	digestName      oci.ImageDigestName
 	packageName     string
 	revision        string
+	workspaceName   v1alpha1.WorkspaceName
 	created         time.Time
 	resourceVersion string
 	uid             types.UID
 
 	parent *ociRepository
-
-	tasks []v1alpha1.Task
+	tasks  []v1alpha1.Task
 
 	lifecycle v1alpha1.PackageRevisionLifecycle
 }
@@ -360,6 +374,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 		},
 		Spec: v1alpha1.PackageRevisionResourcesSpec{
 			PackageName:    key.Package,
+			WorkspaceName:  key.WorkspaceName,
 			Revision:       key.Revision,
 			RepositoryName: key.Repository,
 
@@ -369,7 +384,7 @@ func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 }
 
 func (p *ociPackageRevision) KubeObjectName() string {
-	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.revision)))
+	hash := sha1.Sum([]byte(fmt.Sprintf("%s:%s:%s", p.parent.name, p.packageName, p.workspaceName)))
 	return p.parent.name + "-" + hex.EncodeToString(hash[:])
 }
 
@@ -379,9 +394,10 @@ func (p *ociPackageRevision) KubeObjectNamespace() string {
 
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
-		Repository: p.parent.name,
-		Package:    p.packageName,
-		Revision:   p.revision,
+		Repository:    p.parent.name,
+		Package:       p.packageName,
+		Revision:      p.revision,
+		WorkspaceName: p.workspaceName,
 	}
 }
 
@@ -409,8 +425,9 @@ func (p *ociPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    key.Package,
-			Revision:       key.Revision,
 			RepositoryName: key.Repository,
+			Revision:       key.Revision,
+			WorkspaceName:  key.WorkspaceName,
 
 			Lifecycle:      p.Lifecycle(),
 			Tasks:          p.tasks,
