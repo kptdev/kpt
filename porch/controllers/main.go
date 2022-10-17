@@ -49,7 +49,7 @@ import (
 var (
 	reconcilers = map[string]newReconciler{
 		"rootsyncsets": func() Reconciler {
-			return &rootsyncset.RootSyncSetReconciler{}
+			return rootsyncset.NewRootSyncSetReconciler()
 		},
 		"remoterootsyncsets": func() Reconciler {
 			return &remoterootsyncset.RemoteRootSyncSetReconciler{}
