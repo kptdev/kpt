@@ -121,7 +121,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 	if pkgExists {
 		return fmt.Errorf("`clone` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
-			r.target, r.repository)
+			target, r.repository)
 	}
 
 	switch {

@@ -334,7 +334,7 @@ func (cad *cadEngine) ensureSameOrigin(ctx context.Context, obj *api.PackageRevi
 
 	}
 
-	firstObjTask := tasks[0]
+	firstObjTask := tasks[0].DeepCopy()
 	// iterate over existing package revisions, and look for one with a matching init or clone task
 	for _, rev := range revs {
 		p, err := rev.GetPackageRevision(ctx)
@@ -346,18 +346,25 @@ func (cad *cadEngine) ensureSameOrigin(ctx context.Context, obj *api.PackageRevi
 			// not a match
 			continue
 		}
-		firstRevTask := revTasks[0]
+		firstRevTask := revTasks[0].DeepCopy()
 		if firstRevTask.Type != firstObjTask.Type {
 			// not a match
 			continue
 		}
 		if firstObjTask.Type == api.TaskTypeClone {
-			// we want to make sure everything is equal except for the git upstream ref,
-			// so we make the git upstream refs equal before calling reflect.DeepEqual
-			firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
-			if reflect.DeepEqual(firstRevTask, firstObjTask) {
-				return true, nil
+			// the user is allowed to update the git upstream ref, so we exclude that from the equality check.
+			// We make the git upstream refs equal before calling reflect.DeepEqual
+			if firstRevTask.Clone != nil && firstObjTask.Clone != nil {
+				if firstRevTask.Clone.Upstream.Git != nil && firstObjTask.Clone.Upstream.Git != nil {
+					firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
+				}
+				if firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil {
+					firstRevTask.Clone.Upstream.UpstreamRef = firstObjTask.Clone.Upstream.UpstreamRef
+				}
 			}
+		}
+		if reflect.DeepEqual(firstRevTask, firstObjTask) {
+			return true, nil
 		}
 	}
 	return false, nil
