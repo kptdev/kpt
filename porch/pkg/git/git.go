@@ -290,16 +290,7 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
 	}
 
-	// The workspaceName must be unique, because it used to generate the package revision's metadata.name.
-	// We check uniqueness by looking for the existing git branch.
-	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, WorkspaceName: obj.Spec.WorkspaceName})
-	if err != nil {
-		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
-	}
-	if len(revs) != 0 {
-		return nil, fmt.Errorf("package revision workspaceNames must be unique; package revision with name %s in repo %s with"+
-			"workspaceName %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.WorkspaceName)
-	}
+	// TODO use git branches to leverage uniqueness
 
 	draft := createDraftName(obj.Spec.PackageName, obj.Spec.WorkspaceName)
 

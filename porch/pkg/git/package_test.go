@@ -54,15 +54,15 @@ func (g GitSuite) TestLock(t *testing.T) {
 	}
 
 	wantRefs := map[repository.PackageRevisionKey]string{
-		{Repository: repositoryName, Package: "empty", Revision: "v1"}:   "empty/v1",
-		{Repository: repositoryName, Package: "basens", Revision: "v1"}:  "basens/v1",
-		{Repository: repositoryName, Package: "basens", Revision: "v2"}:  "basens/v2",
-		{Repository: repositoryName, Package: "istions", Revision: "v1"}: "istions/v1",
-		{Repository: repositoryName, Package: "istions", Revision: "v2"}: "istions/v2",
+		{Repository: repositoryName, Package: "empty", Revision: "v1", WorkspaceName: "v1"}:   "empty/v1",
+		{Repository: repositoryName, Package: "basens", Revision: "v1", WorkspaceName: "v1"}:  "basens/v1",
+		{Repository: repositoryName, Package: "basens", Revision: "v2", WorkspaceName: "v2"}:  "basens/v2",
+		{Repository: repositoryName, Package: "istions", Revision: "v1", WorkspaceName: "v1"}: "istions/v1",
+		{Repository: repositoryName, Package: "istions", Revision: "v2", WorkspaceName: "v2"}: "istions/v2",
 
-		{Repository: repositoryName, Package: "basens", Revision: g.branch}:  g.branch,
-		{Repository: repositoryName, Package: "empty", Revision: g.branch}:   g.branch,
-		{Repository: repositoryName, Package: "istions", Revision: g.branch}: g.branch,
+		{Repository: repositoryName, Package: "basens", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}:  g.branch,
+		{Repository: repositoryName, Package: "empty", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}:   g.branch,
+		{Repository: repositoryName, Package: "istions", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}: g.branch,
 	}
 
 	for _, rev := range revisions {
