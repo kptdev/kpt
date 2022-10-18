@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/util"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
@@ -90,7 +91,14 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	r.name = args[0]
-
+	pkgExists, err := util.PackageAlreadyExists(r.ctx, r.client, r.repository, r.name, *r.cfg.Namespace)
+	if err != nil {
+		return err
+	}
+	if pkgExists {
+		return fmt.Errorf("`init` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
+			r.name, r.repository)
+	}
 	return nil
 }
 

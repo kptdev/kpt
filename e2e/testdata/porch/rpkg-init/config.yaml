@@ -68,3 +68,13 @@ commands:
           name: kptfile.kpt.dev
       kind: ResourceList
     yaml: true
+  - args:
+      - alpha
+      - rpkg
+      - init
+      - --namespace=rpkg-init
+      - --repository=git
+      - --revision=v1
+      - init-package
+    stderr: "error: `init` cannot create a new revision for package \"init-package\" that already exists in repo \"git\"; make subsequent revisions using `copy`\n"
+    exitCode: 1

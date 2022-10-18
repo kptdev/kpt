@@ -270,6 +270,16 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	if err != nil {
 		return nil, err
 	}
+
+	sameOrigin, err := cad.ensureSameOrigin(ctx, obj, repo)
+	if err != nil {
+		return nil, fmt.Errorf("error ensuring same origin: %w", err)
+	}
+
+	if !sameOrigin {
+		return nil, fmt.Errorf("cannot create revision of %s with a different origin than other package revisions in the same package", obj.Spec.PackageName)
+	}
+
 	draft, err := repo.CreatePackageRevision(ctx, obj)
 	if err != nil {
 		return nil, err
@@ -302,6 +312,62 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		repoPackageRevision: repoPkgRev,
 		packageRevisionMeta: pkgRevMeta,
 	}, nil
+}
+
+func (cad *cadEngine) ensureSameOrigin(ctx context.Context, obj *api.PackageRevision, r repository.Repository) (bool, error) {
+	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
+		Package: obj.Spec.PackageName})
+	if err != nil {
+		return false, fmt.Errorf("error listing package revisions: %w", err)
+	}
+	if len(revs) == 0 {
+		// no prior package revisions, no need to check anything else
+		return true, nil
+	}
+
+	tasks := obj.Spec.Tasks
+	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
+		// If there are no tasks, or the first task is not init or clone, then this revision was not
+		// created from another package revision. That means we expect it to be the first revision
+		// for this package.
+		return false, nil
+
+	}
+
+	firstObjTask := tasks[0].DeepCopy()
+	// iterate over existing package revisions, and look for one with a matching init or clone task
+	for _, rev := range revs {
+		p, err := rev.GetPackageRevision(ctx)
+		if err != nil {
+			return false, err
+		}
+		revTasks := p.Spec.Tasks
+		if len(revTasks) == 0 {
+			// not a match
+			continue
+		}
+		firstRevTask := revTasks[0].DeepCopy()
+		if firstRevTask.Type != firstObjTask.Type {
+			// not a match
+			continue
+		}
+		if firstObjTask.Type == api.TaskTypeClone {
+			// the user is allowed to update the git upstream ref, so we exclude that from the equality check.
+			// We make the git upstream refs equal before calling reflect.DeepEqual
+			if firstRevTask.Clone != nil && firstObjTask.Clone != nil {
+				if firstRevTask.Clone.Upstream.Git != nil && firstObjTask.Clone.Upstream.Git != nil {
+					firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
+				}
+				if firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil {
+					firstRevTask.Clone.Upstream.UpstreamRef = firstObjTask.Clone.Upstream.UpstreamRef
+				}
+			}
+		}
+		if reflect.DeepEqual(firstRevTask, firstObjTask) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision, packageConfig *builtins.PackageConfig) error {

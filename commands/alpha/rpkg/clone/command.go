@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/util"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/parse"
@@ -113,6 +114,15 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 	source := args[0]
 	target := args[1]
+
+	pkgExists, err := util.PackageAlreadyExists(r.ctx, r.client, r.repository, target, *r.cfg.Namespace)
+	if err != nil {
+		return err
+	}
+	if pkgExists {
+		return fmt.Errorf("`clone` cannot create a new revision for package %q that already exists in repo %q; make subsequent revisions using `copy`",
+			target, r.repository)
+	}
 
 	switch {
 	case strings.HasPrefix(source, "oci://"):
