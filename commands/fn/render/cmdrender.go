@@ -135,7 +135,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		RunnerOptions:  r.RunnerOptions,
 		FileSystem:     filesys.FileSystemOrOnDisk{},
 	}
-	if err := executor.Execute(r.ctx); err != nil {
+	if _, err := executor.Execute(r.ctx); err != nil {
 		return err
 	}
 
