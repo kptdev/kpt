@@ -864,7 +864,7 @@ spec:
                         last transition
                       type: string
                     reason:
-                      description: one-word CamelCase reason for the condition’s last
+                      description: one-word CamelCase reason for the condition's last
                         transition
                       type: string
                     status:
