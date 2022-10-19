@@ -20,6 +20,7 @@ kpt/kpt
 *.exe
 *.gif
 bin/
+porch/cmd/porch/__debug_bin
 
 # Emacs temp files
 *~

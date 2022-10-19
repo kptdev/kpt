@@ -55,7 +55,7 @@ type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
 	ObjectCache() cache.ObjectCache
 
-	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, error)
+	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, *api.RenderStatus, error)
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error)
 
 	ListPackageRevisions(ctx context.Context, repositorySpec *configapi.Repository, filter repository.ListPackageRevisionFilter) ([]*PackageRevision, error)
@@ -149,7 +149,7 @@ type cadEngine struct {
 var _ CaDEngine = &cadEngine{}
 
 type mutation interface {
-	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error)
+	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error)
 }
 
 // ObjectCache is a cache of all our objects.
@@ -400,7 +400,7 @@ func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDr
 	mutations = cad.conditionalAddRender(mutations)
 
 	baseResources := repository.PackageResources{}
-	if err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
+	if _, _, err := applyResourceMutations(ctx, draft, baseResources, mutations); err != nil {
 		return err
 	}
 
@@ -619,7 +619,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			Contents: apiResources.Spec.Resources,
 		}
 
-		if err := applyResourceMutations(ctx, draft, resources, mutations); err != nil {
+		if _, _, err := applyResourceMutations(ctx, draft, resources, mutations); err != nil {
 			return nil, err
 		}
 	}
@@ -846,34 +846,33 @@ func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configap
 	return nil
 }
 
-func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, error) {
+func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, *api.RenderStatus, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
 
 	rev, err := oldPackage.repoPackageRevision.GetPackageRevision(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Validate package lifecycle. Can only update a draft.
 	switch lifecycle := rev.Spec.Lifecycle; lifecycle {
 	default:
-		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
+		return nil, nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft:
 		// Only draf can be updated.
 	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
 		// TODO: generate errors that can be translated to correct HTTP responses
-		return nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
+		return nil, nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
 	}
 
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
 	draft, err := repo.UpdatePackageRevision(ctx, oldPackage.repoPackageRevision)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	mutations := []mutation{
@@ -881,51 +880,69 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 			newResources: new,
 			oldResources: old,
 		},
-		&renderPackageMutation{
-			renderer: cad.renderer,
-			runtime:  cad.runtime,
-		},
 	}
-
-	apiResources, err := oldPackage.repoPackageRevision.GetResources(ctx)
+	prevResources, err := oldPackage.repoPackageRevision.GetResources(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get package resources: %w", err)
+		return nil, nil, fmt.Errorf("cannot get package resources: %w", err)
 	}
 	resources := repository.PackageResources{
-		Contents: apiResources.Spec.Resources,
+		Contents: prevResources.Spec.Resources,
+	}
+	appliedResources, _, err := applyResourceMutations(ctx, draft, resources, mutations)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	if err := applyResourceMutations(ctx, draft, resources, mutations); err != nil {
-		return nil, err
+	// render the package
+	_, renderStatus, err := applyResourceMutations(ctx,
+		draft,
+		appliedResources,
+		[]mutation{&renderPackageMutation{
+			renderer: cad.renderer,
+			runtime:  cad.runtime,
+		}})
+	if err != nil {
+		// Render failure will not result in the overall API operation.
+		// The render error (and results) is also captured as part of renderStatus above
+		// that is saved in packageresourceresources API's status field. We continue with
+		// saving the non-rendered resources to avoid losing user's changes.
+		// and supress this err
+		err = nil
 	}
 
 	// No lifecycle change when updating package resources; updates are done.
 	repoPkgRev, err := draft.Close(ctx)
 	if err != nil {
-		return nil, err
+		return nil, renderStatus, err
 	}
 	return &PackageRevision{
 		repoPackageRevision: repoPkgRev,
-	}, nil
+	}, renderStatus, nil
 }
 
-func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) error {
+// applyResourceMutations mutates the resources and returns the most recent renderResult.
+func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (applied repository.PackageResources, renderStatus *api.RenderStatus, err error) {
 	for _, m := range mutations {
-		applied, task, err := m.Apply(ctx, baseResources)
+		updatedResources, taskResult, task, err := m.Apply(ctx, baseResources)
+		if taskResult != nil && taskResult.Type == api.TaskTypeEval {
+			renderStatus = taskResult.RenderStatus
+		}
+
 		if err != nil {
-			return err
+			return updatedResources, renderStatus, err
 		}
 		if err := draft.UpdateResources(ctx, &api.PackageRevisionResources{
 			Spec: api.PackageRevisionResourcesSpec{
-				Resources: applied.Contents,
+				Resources: updatedResources.Contents,
 			},
 		}, task); err != nil {
-			return err
+			return updatedResources, renderStatus, err
 		}
-		baseResources = applied
+		baseResources = updatedResources
+		applied = updatedResources
 	}
 
-	return nil
+	return applied, renderStatus, nil
 }
 
 func (cad *cadEngine) ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error) {
@@ -961,18 +978,18 @@ type updatePackageMutation struct {
 	pkgName           string
 }
 
-func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "updatePackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
 	currUpstreamPkgRef, err := m.currUpstream()
 	if err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, nil, nil, err
 	}
 
 	targetUpstream := m.updateTask.Update.Upstream
 	if targetUpstream.Type == api.RepositoryTypeGit || targetUpstream.Type == api.RepositoryTypeOCI {
-		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
 	}
 
 	originalResources, err := (&PackageFetcher{
@@ -980,7 +997,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		referenceResolver: m.referenceResolver,
 	}).FetchResources(ctx, currUpstreamPkgRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package %s with ref %+v",
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching the resources for package %s with ref %+v",
 			m.pkgName, *currUpstreamPkgRef)
 	}
 
@@ -989,11 +1006,11 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, targetUpstream.UpstreamRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("error fetching revision for target upstream %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching revision for target upstream %s", targetUpstream.UpstreamRef.Name)
 	}
 	upstreamResources, err := upstreamRevision.GetResources(ctx)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("error fetching resources for target upstream %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching resources for target upstream %s", targetUpstream.UpstreamRef.Name)
 	}
 
 	klog.Infof("performing pkg upgrade operation for pkg %s resource counts local[%d] original[%d] upstream[%d]",
@@ -1009,15 +1026,15 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 			Contents: upstreamResources.Spec.Resources,
 		})
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("error updating the package to revision %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("error updating the package to revision %s", targetUpstream.UpstreamRef.Name)
 	}
 
 	newUpstream, newUpstreamLock, err := upstreamRevision.GetLock()
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package revisions %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching the resources for package revisions %s", targetUpstream.UpstreamRef.Name)
 	}
 	if err := kpt.UpdateKptfileUpstream("", updatedResources.Contents, newUpstream, newUpstreamLock); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to apply upstream lock to package %q: %w", m.pkgName, err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to apply upstream lock to package %q: %w", m.pkgName, err)
 	}
 
 	// ensure merge-key comment is added to newly added resources.
@@ -1025,7 +1042,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	if err != nil {
 		klog.Infof("failed to add merge key comments: %v", err)
 	}
-	return result, m.updateTask, nil
+	return result, nil, m.updateTask, nil
 }
 
 // Currently assumption is that downstream packages will be forked from a porch package.
@@ -1102,7 +1119,7 @@ type mutationReplaceResources struct {
 	oldResources *api.PackageRevisionResources
 }
 
-func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "mutationReplaceResources::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -1111,7 +1128,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	old := resources.Contents
 	new, err := healConfig(old, m.newResources.Spec.Resources)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to heal resources: %w", err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to heal resources: %w", err)
 	}
 
 	for k, newV := range new {
@@ -1127,7 +1144,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 		} else if newV != oldV {
 			patchSpec, err := GeneratePatch(k, oldV, newV)
 			if err != nil {
-				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
+				return repository.PackageResources{}, nil, nil, fmt.Errorf("error generating patch: %w", err)
 			}
 
 			patch.Patches = append(patch.Patches, patchSpec)
@@ -1148,7 +1165,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 		Patch: patch,
 	}
 
-	return repository.PackageResources{Contents: new}, task, nil
+	return repository.PackageResources{Contents: new}, nil, task, nil
 }
 
 func healConfig(old, new map[string]string) (map[string]string, error) {

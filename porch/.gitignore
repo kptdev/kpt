@@ -1,6 +1,7 @@
 vendor/
 apiserver.local.config/
 /apiserver/porch
+cmd/porch/__debug_bin
 
 # Development artifact path
 .build/

@@ -46,7 +46,7 @@ func newPackageContextGeneratorMutation(packageConfig *builtins.PackageConfig) (
 
 var _ mutation = &builtinEvalMutation{}
 
-func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ff := &runtimeutil.FunctionFilter{
 		Run:     m.runner.Run,
 		Results: &yaml.RNode{},
@@ -70,12 +70,12 @@ func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.Pa
 	}
 
 	if err := pipeline.Execute(); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function %q: %w", m.function, err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to evaluate function %q: %w", m.function, err)
 	}
 
 	for k, v := range pr.extra {
 		result.Contents[k] = v
 	}
 
-	return result, nil, nil
+	return result, nil, nil, nil
 }

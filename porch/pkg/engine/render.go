@@ -35,15 +35,18 @@ type renderPackageMutation struct {
 
 var _ mutation = &renderPackageMutation{}
 
-func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "renderPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
 	fs := filesys.MakeFsInMemory()
-
+	taskResult := &api.TaskResult{
+		Type:         api.TaskTypeEval,
+		RenderStatus: &api.RenderStatus{},
+	}
 	pkgPath, err := writeResources(fs, resources)
 	if err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, nil, nil, err
 	}
 
 	if pkgPath == "" {
@@ -51,21 +54,26 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		// TODO: we should handle this better
 		klog.Warningf("skipping render as no package was found")
 	} else {
-		if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+		result, err := m.renderer.Render(ctx, fs, fn.RenderOptions{
 			PkgPath: pkgPath,
 			Runtime: m.runtime,
-		}); err != nil {
-			return repository.PackageResources{}, nil, err
+		})
+		if result != nil {
+			taskResult.RenderStatus.Result = *result
+		}
+		if err != nil {
+			taskResult.RenderStatus.Err = err.Error()
+			return repository.PackageResources{}, taskResult, nil, err
 		}
 	}
 
-	result, err := readResources(fs)
+	renderedResources, err := readResources(fs)
 	if err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, taskResult, nil, err
 	}
 
 	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
-	return result, &api.Task{
+	return renderedResources, taskResult, &api.Task{
 		Type: "eval",
 		Eval: &api.FunctionEvalTaskSpec{
 			Image:     "render",

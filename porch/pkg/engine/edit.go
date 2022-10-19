@@ -32,7 +32,7 @@ type editPackageMutation struct {
 
 var _ mutation = &editPackageMutation{}
 
-func (m *editPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *editPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "editPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -43,10 +43,10 @@ func (m *editPackageMutation) Apply(ctx context.Context, resources repository.Pa
 		referenceResolver: m.referenceResolver,
 	}).FetchResources(ctx, sourceRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to fetch resources for package %q: %w", sourceRef.Name, err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to fetch resources for package %q: %w", sourceRef.Name, err)
 	}
 
 	return repository.PackageResources{
 		Contents: sourceResources.Spec.Resources,
-	}, &api.Task{}, nil
+	}, nil, &api.Task{}, nil
 }

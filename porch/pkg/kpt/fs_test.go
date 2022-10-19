@@ -108,7 +108,7 @@ spec:
 	}
 	r.RunnerOptions.InitDefaults()
 	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
-	err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
 	}
@@ -223,7 +223,7 @@ spec:
 	r.RunnerOptions.InitDefaults()
 	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
 
-	err := r.Execute(fake.CtxWithDefaultPrinter())
+	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
 	}

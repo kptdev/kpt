@@ -24,6 +24,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/render"
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -39,7 +40,7 @@ type renderer struct {
 
 var _ fn.Renderer = &renderer{}
 
-func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) error {
+func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.RenderOptions) (*fnresult.ResultList, error) {
 	rr := render.Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,

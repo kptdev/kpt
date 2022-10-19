@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -125,6 +126,18 @@ type Task struct {
 	Edit   *PackageEditTaskSpec   `json:"edit,omitempty"`
 	Eval   *FunctionEvalTaskSpec  `json:"eval,omitempty"`
 	Update *PackageUpdateTaskSpec `json:"update,omitempty"`
+}
+
+type TaskResult struct {
+	Type         TaskType      `json:"type"`
+	RenderStatus *RenderStatus `json:"renderStatus,omitempty"`
+}
+
+// RenderStatus represents the result of performing render operation
+// on a package resources.
+type RenderStatus struct {
+	Result fnresult.ResultList `json:"result,omitempty"`
+	Err    string              `json:"err"`
 }
 
 // PackageInitTaskSpec defines the package initialization task.

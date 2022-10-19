@@ -60,7 +60,7 @@ func TestRender(t *testing.T) {
 		t.Fatalf("Failed to read package: %v", err)
 	}
 
-	rendered, _, err := render.Apply(context.Background(), w.output)
+	rendered, _, _, err := render.Apply(context.Background(), w.output)
 	if err != nil {
 		t.Errorf("package render failed: %v", err)
 	}

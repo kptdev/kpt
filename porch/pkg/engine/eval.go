@@ -34,7 +34,7 @@ type evalFunctionMutation struct {
 	task    *api.Task
 }
 
-func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "evalFunctionMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -46,13 +46,13 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		Image: e.Image,
 	})
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to create function runner: %w", err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to create function runner: %w", err)
 	}
 
 	var functionConfig *yaml.RNode
 	if m.task.Eval.ConfigMap != nil {
 		if cm, err := fnruntime.NewConfigMap(m.task.Eval.ConfigMap); err != nil {
-			return repository.PackageResources{}, nil, fmt.Errorf("failed to create function config: %w", err)
+			return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to create function config: %w", err)
 		} else {
 			functionConfig = cm
 		}
@@ -60,7 +60,7 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		// raw is JSON (we expect), but we take advantage of the fact that YAML is a superset of JSON
 		config, err := yaml.Parse(string(m.task.Eval.Config.Raw))
 		if err != nil {
-			return repository.PackageResources{}, nil, fmt.Errorf("error parsing function config: %w", err)
+			return repository.PackageResources{}, nil, nil, fmt.Errorf("error parsing function config: %w", err)
 		}
 		functionConfig = config
 	}
@@ -96,7 +96,7 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 	}
 
 	if err := pipeline.Execute(); err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to evaluate function: %w", err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to evaluate function: %w", err)
 	}
 
 	// Return extras. TODO: Apply should accept FS.
@@ -104,5 +104,5 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		result.Contents[k] = v
 	}
 
-	return result, m.task, nil
+	return result, nil, m.task, nil
 }

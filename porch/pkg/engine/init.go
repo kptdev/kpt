@@ -35,7 +35,7 @@ type initPackageMutation struct {
 
 var _ mutation = &initPackageMutation{}
 
-func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *initPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
 	ctx, span := tracer.Start(ctx, "initPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -47,7 +47,7 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 		pkgPath = "/" + m.task.Init.Subpackage
 	}
 	if err := fs.Mkdir(pkgPath); err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, nil, nil, err
 	}
 	err := m.Initialize(printer.WithContext(ctx, &fake.Printer{}), fs, kptpkg.InitOptions{
 		PkgPath:  pkgPath,
@@ -57,13 +57,13 @@ func (m *initPackageMutation) Apply(ctx context.Context, resources repository.Pa
 		Site:     m.task.Init.Site,
 	})
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to initialize pkg %q: %w", m.name, err)
+		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to initialize pkg %q: %w", m.name, err)
 	}
 
 	result, err := readResources(fs)
 	if err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, nil, nil, err
 	}
 
-	return result, m.task, nil
+	return result, nil, m.task, nil
 }
