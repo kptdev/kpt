@@ -35,18 +35,24 @@ type renderPackageMutation struct {
 
 var _ mutation = &renderPackageMutation{}
 
-func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
+func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "renderPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
 	fs := filesys.MakeFsInMemory()
 	taskResult := &api.TaskResult{
-		Type:         api.TaskTypeEval,
+		Task: &api.Task{
+			Type: api.TaskTypeEval,
+			Eval: &api.FunctionEvalTaskSpec{
+				Image:     "render",
+				ConfigMap: nil,
+			},
+		},
 		RenderStatus: &api.RenderStatus{},
 	}
 	pkgPath, err := writeResources(fs, resources)
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, err
+		return repository.PackageResources{}, nil, err
 	}
 
 	if pkgPath == "" {
@@ -63,23 +69,17 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		}
 		if err != nil {
 			taskResult.RenderStatus.Err = err.Error()
-			return repository.PackageResources{}, taskResult, nil, err
+			return repository.PackageResources{}, taskResult, err
 		}
 	}
 
 	renderedResources, err := readResources(fs)
 	if err != nil {
-		return repository.PackageResources{}, taskResult, nil, err
+		return repository.PackageResources{}, taskResult, err
 	}
 
 	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
-	return renderedResources, taskResult, &api.Task{
-		Type: "eval",
-		Eval: &api.FunctionEvalTaskSpec{
-			Image:     "render",
-			ConfigMap: nil,
-		},
-	}, nil
+	return renderedResources, taskResult, nil
 }
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources

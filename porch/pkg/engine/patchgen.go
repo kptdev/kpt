@@ -52,7 +52,7 @@ type applyPatchMutation struct {
 
 var _ mutation = &applyPatchMutation{}
 
-func (m *applyPatchMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
+func (m *applyPatchMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "applyPatchMutation:::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -69,7 +69,7 @@ func (m *applyPatchMutation) Apply(ctx context.Context, resources repository.Pac
 		case api.PatchTypeCreateFile:
 			if _, found := result.Contents[patchSpec.File]; found {
 				// TODO: We should be able to tolerate this.  Either do a merge or create as a different filename "-2"
-				return result, nil, nil, fmt.Errorf("patch wants to create file %q but already exists", patchSpec.File)
+				return result, nil, fmt.Errorf("patch wants to create file %q but already exists", patchSpec.File)
 			}
 			result.Contents[patchSpec.File] = patchSpec.Contents
 		case api.PatchTypeDeleteFile:
@@ -82,50 +82,50 @@ func (m *applyPatchMutation) Apply(ctx context.Context, resources repository.Pac
 		case api.PatchTypePatchFile:
 			oldContents, found := result.Contents[patchSpec.File]
 			if !found {
-				return result, nil, nil, fmt.Errorf("patch specifies file %q which does not exist", patchSpec.File)
+				return result, nil, fmt.Errorf("patch specifies file %q which does not exist", patchSpec.File)
 			}
 
 			files, preamble, err := gitdiff.Parse(strings.NewReader(patchSpec.Contents))
 			if err != nil {
-				return result, nil, nil, fmt.Errorf("error parsing patch: %w", err)
+				return result, nil, fmt.Errorf("error parsing patch: %w", err)
 			}
 
 			if len(files) == 0 {
-				return result, nil, nil, fmt.Errorf("patch did not specify any files")
+				return result, nil, fmt.Errorf("patch did not specify any files")
 			}
 			if len(files) > 1 {
-				return result, nil, nil, fmt.Errorf("patch specified multiple files")
+				return result, nil, fmt.Errorf("patch specified multiple files")
 			}
 			if preamble != "" {
-				return result, nil, nil, fmt.Errorf("patch had unexpected preamble %q", preamble)
+				return result, nil, fmt.Errorf("patch had unexpected preamble %q", preamble)
 			}
 
 			if files[0].OldName != patchSpec.File {
-				return result, nil, nil, fmt.Errorf("patch contained unexpected name; got %q, want %q", files[0].OldName, patchSpec.File)
+				return result, nil, fmt.Errorf("patch contained unexpected name; got %q, want %q", files[0].OldName, patchSpec.File)
 			}
 
 			if files[0].IsBinary {
-				return result, nil, nil, fmt.Errorf("patch was a binary diff; expected text diff")
+				return result, nil, fmt.Errorf("patch was a binary diff; expected text diff")
 			}
 			if files[0].IsCopy || files[0].IsDelete || files[0].IsNew || files[0].IsRename {
-				return result, nil, nil, fmt.Errorf("patch was of an unexpected type (copy/delete/new/rename)")
+				return result, nil, fmt.Errorf("patch was of an unexpected type (copy/delete/new/rename)")
 			}
 			if files[0].OldMode != files[0].NewMode {
-				return result, nil, nil, fmt.Errorf("patch contained file mode change")
+				return result, nil, fmt.Errorf("patch contained file mode change")
 			}
 			var output bytes.Buffer
 			if err := gitdiff.Apply(&output, strings.NewReader(oldContents), files[0]); err != nil {
-				return result, nil, nil, fmt.Errorf("error applying patch: %w", err)
+				return result, nil, fmt.Errorf("error applying patch: %w", err)
 			}
 
 			patched := output.String()
 			result.Contents[patchSpec.File] = patched
 		default:
-			return result, nil, nil, fmt.Errorf("unhandled patch type %q", patchSpec.PatchType)
+			return result, nil, fmt.Errorf("unhandled patch type %q", patchSpec.PatchType)
 		}
 	}
 
-	return result, nil, m.task, nil
+	return result, &api.TaskResult{Task: m.task}, nil
 }
 
 func buildPatchMutation(ctx context.Context, task *api.Task) (mutation, error) {

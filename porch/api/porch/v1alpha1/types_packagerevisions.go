@@ -129,7 +129,7 @@ type Task struct {
 }
 
 type TaskResult struct {
-	Type         TaskType      `json:"type"`
+	Task         *Task         `json:"task"`
 	RenderStatus *RenderStatus `json:"renderStatus,omitempty"`
 }
 
@@ -137,7 +137,7 @@ type TaskResult struct {
 // on a package resources.
 type RenderStatus struct {
 	Result fnresult.ResultList `json:"result,omitempty"`
-	Err    string              `json:"err"`
+	Err    string              `json:"error"`
 }
 
 // PackageInitTaskSpec defines the package initialization task.

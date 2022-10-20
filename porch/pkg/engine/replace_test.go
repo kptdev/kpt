@@ -46,7 +46,7 @@ func TestReplaceResources(t *testing.T) {
 		},
 	}
 
-	output, _, _, err := replace.Apply(ctx, input)
+	output, _, err := replace.Apply(ctx, input)
 	if err != nil {
 		t.Fatalf("mutationReplaceResources.Apply failed: %v", err)
 	}

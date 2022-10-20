@@ -11,7 +11,7 @@ replace (
 require (
 	cloud.google.com/go/container v1.2.0
 	cloud.google.com/go/iam v0.3.0
-	github.com/GoogleContainerTools/kpt v0.0.0-00010101000000-000000000000
+	github.com/GoogleContainerTools/kpt v1.0.0-beta.21
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-replacements v0.1.1
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.4.1

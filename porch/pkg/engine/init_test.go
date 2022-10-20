@@ -42,7 +42,7 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Failed to find testdata: %v", err)
 	}
 
-	initializedPkg, _, _, err := init.Apply(context.Background(), repository.PackageResources{})
+	initializedPkg, _, err := init.Apply(context.Background(), repository.PackageResources{})
 	if err != nil {
 		t.Errorf("package init failed: %v", err)
 	}

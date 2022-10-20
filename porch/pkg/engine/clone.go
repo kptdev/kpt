@@ -49,7 +49,7 @@ type clonePackageMutation struct {
 	packageConfig *builtins.PackageConfig
 }
 
-func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
+func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "clonePackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -67,7 +67,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 	}
 
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, err
+		return repository.PackageResources{}, nil, err
 	}
 
 	// Add any pre-existing parts of the config that have not been overwritten by the clone operation.
@@ -82,11 +82,11 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		// refactored once we finalize the task/mutation/commit model.
 		genPkgContextMutation, err := newPackageContextGeneratorMutation(m.packageConfig)
 		if err != nil {
-			return repository.PackageResources{}, nil, nil, err
+			return repository.PackageResources{}, nil, err
 		}
-		cloned, _, _, err = genPkgContextMutation.Apply(ctx, cloned)
+		cloned, _, err = genPkgContextMutation.Apply(ctx, cloned)
 		if err != nil {
-			return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to generate deployment context %w", err)
+			return repository.PackageResources{}, nil, fmt.Errorf("failed to generate deployment context %w", err)
 		}
 	}
 
@@ -99,7 +99,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		klog.Infof("failed to add merge-key to resources %v", err)
 	}
 
-	return result, nil, m.task, nil
+	return result, &api.TaskResult{Task: m.task}, nil
 }
 
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {

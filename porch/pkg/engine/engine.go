@@ -149,7 +149,7 @@ type cadEngine struct {
 var _ CaDEngine = &cadEngine{}
 
 type mutation interface {
-	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error)
+	Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error)
 }
 
 // ObjectCache is a cache of all our objects.
@@ -704,7 +704,6 @@ func createKptfilePatchTask(ctx context.Context, oldPackage repository.PackageRe
 		}
 		newKfString = buf.String()
 	}
-
 	patchSpec, err := GeneratePatch(kptfile.KptFileName, orgKfString, newKfString)
 	if err != nil {
 		return nil, false, err
@@ -902,11 +901,11 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 			runtime:  cad.runtime,
 		}})
 	if err != nil {
-		// Render failure will not result in the overall API operation.
-		// The render error (and results) is also captured as part of renderStatus above
-		// that is saved in packageresourceresources API's status field. We continue with
+		// Render failure will not fail the overall API operation.
+		// The render error and result is captured as part of renderStatus above
+		// and is returned in packageresourceresources API's status field. We continue with
 		// saving the non-rendered resources to avoid losing user's changes.
-		// and supress this err
+		// and supress this err.
 		err = nil
 	}
 
@@ -923,8 +922,12 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 // applyResourceMutations mutates the resources and returns the most recent renderResult.
 func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (applied repository.PackageResources, renderStatus *api.RenderStatus, err error) {
 	for _, m := range mutations {
-		updatedResources, taskResult, task, err := m.Apply(ctx, baseResources)
-		if taskResult != nil && taskResult.Type == api.TaskTypeEval {
+		updatedResources, taskResult, err := m.Apply(ctx, baseResources)
+		var task *api.Task
+		if taskResult != nil {
+			task = taskResult.Task
+		}
+		if taskResult != nil && task.Type == api.TaskTypeEval {
 			renderStatus = taskResult.RenderStatus
 		}
 
@@ -978,18 +981,18 @@ type updatePackageMutation struct {
 	pkgName           string
 }
 
-func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
+func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "updatePackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
 	currUpstreamPkgRef, err := m.currUpstream()
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, err
+		return repository.PackageResources{}, nil, err
 	}
 
 	targetUpstream := m.updateTask.Update.Upstream
 	if targetUpstream.Type == api.RepositoryTypeGit || targetUpstream.Type == api.RepositoryTypeOCI {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
+		return repository.PackageResources{}, nil, fmt.Errorf("update is not supported for non-porch upstream packages")
 	}
 
 	originalResources, err := (&PackageFetcher{
@@ -997,7 +1000,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		referenceResolver: m.referenceResolver,
 	}).FetchResources(ctx, currUpstreamPkgRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching the resources for package %s with ref %+v",
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package %s with ref %+v",
 			m.pkgName, *currUpstreamPkgRef)
 	}
 
@@ -1006,11 +1009,11 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 		referenceResolver: m.referenceResolver,
 	}).FetchRevision(ctx, targetUpstream.UpstreamRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching revision for target upstream %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching revision for target upstream %s", targetUpstream.UpstreamRef.Name)
 	}
 	upstreamResources, err := upstreamRevision.GetResources(ctx)
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching resources for target upstream %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching resources for target upstream %s", targetUpstream.UpstreamRef.Name)
 	}
 
 	klog.Infof("performing pkg upgrade operation for pkg %s resource counts local[%d] original[%d] upstream[%d]",
@@ -1026,15 +1029,15 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 			Contents: upstreamResources.Spec.Resources,
 		})
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("error updating the package to revision %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, fmt.Errorf("error updating the package to revision %s", targetUpstream.UpstreamRef.Name)
 	}
 
 	newUpstream, newUpstreamLock, err := upstreamRevision.GetLock()
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("error fetching the resources for package revisions %s", targetUpstream.UpstreamRef.Name)
+		return repository.PackageResources{}, nil, fmt.Errorf("error fetching the resources for package revisions %s", targetUpstream.UpstreamRef.Name)
 	}
 	if err := kpt.UpdateKptfileUpstream("", updatedResources.Contents, newUpstream, newUpstreamLock); err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to apply upstream lock to package %q: %w", m.pkgName, err)
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to apply upstream lock to package %q: %w", m.pkgName, err)
 	}
 
 	// ensure merge-key comment is added to newly added resources.
@@ -1042,7 +1045,7 @@ func (m *updatePackageMutation) Apply(ctx context.Context, resources repository.
 	if err != nil {
 		klog.Infof("failed to add merge key comments: %v", err)
 	}
-	return result, nil, m.updateTask, nil
+	return result, &api.TaskResult{Task: m.updateTask}, nil
 }
 
 // Currently assumption is that downstream packages will be forked from a porch package.
@@ -1119,7 +1122,7 @@ type mutationReplaceResources struct {
 	oldResources *api.PackageRevisionResources
 }
 
-func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, *api.Task, error) {
+func (m *mutationReplaceResources) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "mutationReplaceResources::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -1128,7 +1131,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 	old := resources.Contents
 	new, err := healConfig(old, m.newResources.Spec.Resources)
 	if err != nil {
-		return repository.PackageResources{}, nil, nil, fmt.Errorf("failed to heal resources: %w", err)
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to heal resources: %w", err)
 	}
 
 	for k, newV := range new {
@@ -1144,7 +1147,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 		} else if newV != oldV {
 			patchSpec, err := GeneratePatch(k, oldV, newV)
 			if err != nil {
-				return repository.PackageResources{}, nil, nil, fmt.Errorf("error generating patch: %w", err)
+				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
 			}
 
 			patch.Patches = append(patch.Patches, patchSpec)
@@ -1165,7 +1168,7 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 		Patch: patch,
 	}
 
-	return repository.PackageResources{Contents: new}, nil, task, nil
+	return repository.PackageResources{Contents: new}, &api.TaskResult{Task: task}, nil
 }
 
 func healConfig(old, new map[string]string) (map[string]string, error) {

@@ -74,7 +74,7 @@ info:
 		repoOpener:        repoOpener,
 	}
 
-	res, _, _, err := epm.Apply(context.Background(), repository.PackageResources{})
+	res, _, err := epm.Apply(context.Background(), repository.PackageResources{})
 	if err != nil {
 		t.Errorf("task apply failed: %v", err)
 	}
