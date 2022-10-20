@@ -15,36 +15,37 @@ commands:
       - --directory=basens
       - --ref=basens/v1
       - --repository=git
-      - --revision=v0
+      - --workspace=copy-1
       - basens-edit
-    stdout: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 created\n"
+    stdout: "git-eb5afe755bedd142f142c6a9363649c667ef77a5 created\n"
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-copy
-      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
-    stderr: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 proposed\n"
+      - git-eb5afe755bedd142f142c6a9363649c667ef77a5
+    stderr: "git-eb5afe755bedd142f142c6a9363649c667ef77a5 proposed\n"
   - args:
       - alpha
       - rpkg
       - approve
       - --namespace=rpkg-copy
-      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
-    stderr: "git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48 approved\n"
+      - git-eb5afe755bedd142f142c6a9363649c667ef77a5
+    stderr: "git-eb5afe755bedd142f142c6a9363649c667ef77a5 approved\n"
   - args:
       - alpha
       - rpkg
       - copy
       - --namespace=rpkg-copy
-      - git-f1fbc2b72ee70b2f34e64c2630031d0560e6cf48
-    stdout: "git-66579ccd78cf67f80a3cafaf63dc121db4d92b83 created\n"
+      - --workspace=copy-2
+      - git-eb5afe755bedd142f142c6a9363649c667ef77a5
+    stdout: "git-a29df72d1135fd010ea49f4d4877001dee423be6 created\n"
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-copy
-      - git-66579ccd78cf67f80a3cafaf63dc121db4d92b83
+      - git-a29df72d1135fd010ea49f4d4877001dee423be6
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
