@@ -27,8 +27,8 @@ type PackageRevisionResources struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec PackageRevisionResourcesSpec `json:"spec,omitempty"`
-	// Status PackageRevisionResourcesStatuc `json:"status,omitempty"`
+	Spec   PackageRevisionResourcesSpec   `json:"spec,omitempty"`
+	Status PackageRevisionResourcesStatus `json:"status,omitempty"`
 }
 
 // PackageRevisionResourcesList
@@ -53,4 +53,10 @@ type PackageRevisionResourcesSpec struct {
 
 	// Resources are the content of the package.
 	Resources map[string]string `json:"resources,omitempty"`
+}
+
+// PackageRevisionResourcesStatus represents state of the rendered package resources.
+type PackageRevisionResourcesStatus struct {
+	// RenderStatus contains the result of rendering the package resources.
+	RenderStatus RenderStatus `json:"renderStatus,omitempty"`
 }

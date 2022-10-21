@@ -16,10 +16,12 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	iofs "io/fs"
 	"path"
 	"strings"
 
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -65,7 +67,12 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 			Runtime: m.runtime,
 		})
 		if result != nil {
-			taskResult.RenderStatus.Result = *result
+			var rr api.ResultList
+			err := convertResultList(result, &rr)
+			if err != nil {
+				return repository.PackageResources{}, taskResult, err
+			}
+			taskResult.RenderStatus.Result = rr
 		}
 		if err != nil {
 			taskResult.RenderStatus.Err = err.Error()
@@ -80,6 +87,21 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 
 	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
 	return renderedResources, taskResult, nil
+}
+
+func convertResultList(in *fnresult.ResultList, out *api.ResultList) error {
+	if in == nil {
+		return nil
+	}
+	srcBytes, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(srcBytes, &out); err != nil {
+		return err
+	}
+	return nil
 }
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources

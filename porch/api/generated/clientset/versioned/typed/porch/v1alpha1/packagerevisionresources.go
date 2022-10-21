@@ -38,6 +38,7 @@ type PackageRevisionResourcesGetter interface {
 type PackageRevisionResourcesInterface interface {
 	Create(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.CreateOptions) (*v1alpha1.PackageRevisionResources, error)
 	Update(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.UpdateOptions) (*v1alpha1.PackageRevisionResources, error)
+	UpdateStatus(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.UpdateOptions) (*v1alpha1.PackageRevisionResources, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
 	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.PackageRevisionResources, error)
@@ -126,6 +127,22 @@ func (c *packageRevisionResources) Update(ctx context.Context, packageRevisionRe
 		Namespace(c.ns).
 		Resource("packagerevisionresources").
 		Name(packageRevisionResources.Name).
+		VersionedParams(&opts, scheme.ParameterCodec).
+		Body(packageRevisionResources).
+		Do(ctx).
+		Into(result)
+	return
+}
+
+// UpdateStatus was generated because the type contains a Status member.
+// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+func (c *packageRevisionResources) UpdateStatus(ctx context.Context, packageRevisionResources *v1alpha1.PackageRevisionResources, opts v1.UpdateOptions) (result *v1alpha1.PackageRevisionResources, err error) {
+	result = &v1alpha1.PackageRevisionResources{}
+	err = c.client.Put().
+		Namespace(c.ns).
+		Resource("packagerevisionresources").
+		Name(packageRevisionResources.Name).
+		SubResource("status").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(packageRevisionResources).
 		Do(ctx).

@@ -29,95 +29,105 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Condition":                    schema_porch_api_porch_v1alpha1_Condition(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Function":                     schema_porch_api_porch_v1alpha1_Function(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig":               schema_porch_api_porch_v1alpha1_FunctionConfig(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec":         schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionList":                 schema_porch_api_porch_v1alpha1_FunctionList(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef":                  schema_porch_api_porch_v1alpha1_FunctionRef(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionSpec":                 schema_porch_api_porch_v1alpha1_FunctionSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionStatus":               schema_porch_api_porch_v1alpha1_FunctionStatus(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitLock":                      schema_porch_api_porch_v1alpha1_GitLock(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitPackage":                   schema_porch_api_porch_v1alpha1_GitPackage(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.OciPackage":                   schema_porch_api_porch_v1alpha1_OciPackage(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Package":                      schema_porch_api_porch_v1alpha1_Package(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec":         schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec":          schema_porch_api_porch_v1alpha1_PackageEditTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec":          schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageList":                  schema_porch_api_porch_v1alpha1_PackageList(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec":         schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevision":              schema_porch_api_porch_v1alpha1_PackageRevision(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionList":          schema_porch_api_porch_v1alpha1_PackageRevisionList(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionRef":           schema_porch_api_porch_v1alpha1_PackageRevisionRef(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResources":     schema_porch_api_porch_v1alpha1_PackageRevisionResources(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesList": schema_porch_api_porch_v1alpha1_PackageRevisionResourcesList(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec": schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":          schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":        schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageSpec":                  schema_porch_api_porch_v1alpha1_PackageSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageStatus":                schema_porch_api_porch_v1alpha1_PackageStatus(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageUpdateTaskSpec":        schema_porch_api_porch_v1alpha1_PackageUpdateTaskSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":              schema_porch_api_porch_v1alpha1_ParentReference(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec":                    schema_porch_api_porch_v1alpha1_PatchSpec(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ReadinessGate":                schema_porch_api_porch_v1alpha1_ReadinessGate(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                    schema_porch_api_porch_v1alpha1_SecretRef(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                     schema_porch_api_porch_v1alpha1_Selector(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task":                         schema_porch_api_porch_v1alpha1_Task(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock":                 schema_porch_api_porch_v1alpha1_UpstreamLock(ref),
-		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage":              schema_porch_api_porch_v1alpha1_UpstreamPackage(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                             schema_pkg_apis_meta_v1_APIGroup(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                         schema_pkg_apis_meta_v1_APIGroupList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                          schema_pkg_apis_meta_v1_APIResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                      schema_pkg_apis_meta_v1_APIResourceList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                          schema_pkg_apis_meta_v1_APIVersions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                         schema_pkg_apis_meta_v1_ApplyOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                            schema_pkg_apis_meta_v1_Condition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                        schema_pkg_apis_meta_v1_CreateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                        schema_pkg_apis_meta_v1_DeleteOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                             schema_pkg_apis_meta_v1_Duration(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                             schema_pkg_apis_meta_v1_FieldsV1(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                           schema_pkg_apis_meta_v1_GetOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                            schema_pkg_apis_meta_v1_GroupKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                        schema_pkg_apis_meta_v1_GroupResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                         schema_pkg_apis_meta_v1_GroupVersion(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                             schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                     schema_pkg_apis_meta_v1_GroupVersionKind(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                 schema_pkg_apis_meta_v1_GroupVersionResource(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                        schema_pkg_apis_meta_v1_InternalEvent(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                        schema_pkg_apis_meta_v1_LabelSelector(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                             schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                 schema_pkg_apis_meta_v1_List(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                             schema_pkg_apis_meta_v1_ListMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                          schema_pkg_apis_meta_v1_ListOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                   schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                            schema_pkg_apis_meta_v1_MicroTime(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                           schema_pkg_apis_meta_v1_ObjectMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                       schema_pkg_apis_meta_v1_OwnerReference(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                                schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                            schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                                schema_pkg_apis_meta_v1_Patch(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                         schema_pkg_apis_meta_v1_PatchOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                        schema_pkg_apis_meta_v1_Preconditions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                            schema_pkg_apis_meta_v1_RootPaths(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                            schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                               schema_pkg_apis_meta_v1_Status(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                          schema_pkg_apis_meta_v1_StatusCause(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                        schema_pkg_apis_meta_v1_StatusDetails(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                                schema_pkg_apis_meta_v1_Table(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                                schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                         schema_pkg_apis_meta_v1_TableOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                             schema_pkg_apis_meta_v1_TableRow(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                    schema_pkg_apis_meta_v1_TableRowCondition(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                 schema_pkg_apis_meta_v1_Time(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                            schema_pkg_apis_meta_v1_Timestamp(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                             schema_pkg_apis_meta_v1_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                        schema_pkg_apis_meta_v1_UpdateOptions(ref),
-		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                           schema_pkg_apis_meta_v1_WatchEvent(ref),
-		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                              schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
-		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                  schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
-		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                   schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
-		"k8s.io/apimachinery/pkg/version.Info":                                                      schema_k8sio_apimachinery_pkg_version_Info(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Condition":                      schema_porch_api_porch_v1alpha1_Condition(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Field":                          schema_porch_api_porch_v1alpha1_Field(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.File":                           schema_porch_api_porch_v1alpha1_File(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Function":                       schema_porch_api_porch_v1alpha1_Function(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionConfig":                 schema_porch_api_porch_v1alpha1_FunctionConfig(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec":           schema_porch_api_porch_v1alpha1_FunctionEvalTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionList":                   schema_porch_api_porch_v1alpha1_FunctionList(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionRef":                    schema_porch_api_porch_v1alpha1_FunctionRef(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionSpec":                   schema_porch_api_porch_v1alpha1_FunctionSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionStatus":                 schema_porch_api_porch_v1alpha1_FunctionStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitLock":                        schema_porch_api_porch_v1alpha1_GitLock(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.GitPackage":                     schema_porch_api_porch_v1alpha1_GitPackage(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.NameMeta":                       schema_porch_api_porch_v1alpha1_NameMeta(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.OciPackage":                     schema_porch_api_porch_v1alpha1_OciPackage(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Package":                        schema_porch_api_porch_v1alpha1_Package(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec":           schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec":            schema_porch_api_porch_v1alpha1_PackageEditTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec":            schema_porch_api_porch_v1alpha1_PackageInitTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageList":                    schema_porch_api_porch_v1alpha1_PackageList(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec":           schema_porch_api_porch_v1alpha1_PackagePatchTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevision":                schema_porch_api_porch_v1alpha1_PackageRevision(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionList":            schema_porch_api_porch_v1alpha1_PackageRevisionList(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionRef":             schema_porch_api_porch_v1alpha1_PackageRevisionRef(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResources":       schema_porch_api_porch_v1alpha1_PackageRevisionResources(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesList":   schema_porch_api_porch_v1alpha1_PackageRevisionResourcesList(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec":   schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesStatus": schema_porch_api_porch_v1alpha1_PackageRevisionResourcesStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionSpec":            schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionStatus":          schema_porch_api_porch_v1alpha1_PackageRevisionStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageSpec":                    schema_porch_api_porch_v1alpha1_PackageSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageStatus":                  schema_porch_api_porch_v1alpha1_PackageStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageUpdateTaskSpec":          schema_porch_api_porch_v1alpha1_PackageUpdateTaskSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ParentReference":                schema_porch_api_porch_v1alpha1_ParentReference(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PatchSpec":                      schema_porch_api_porch_v1alpha1_PatchSpec(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ReadinessGate":                  schema_porch_api_porch_v1alpha1_ReadinessGate(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RenderStatus":                   schema_porch_api_porch_v1alpha1_RenderStatus(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RepositoryRef":                  schema_porch_api_porch_v1alpha1_RepositoryRef(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResourceIdentifier":             schema_porch_api_porch_v1alpha1_ResourceIdentifier(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Result":                         schema_porch_api_porch_v1alpha1_Result(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultItem":                     schema_porch_api_porch_v1alpha1_ResultItem(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultList":                     schema_porch_api_porch_v1alpha1_ResultList(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.SecretRef":                      schema_porch_api_porch_v1alpha1_SecretRef(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Selector":                       schema_porch_api_porch_v1alpha1_Selector(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task":                           schema_porch_api_porch_v1alpha1_Task(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.TaskResult":                     schema_porch_api_porch_v1alpha1_TaskResult(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamLock":                   schema_porch_api_porch_v1alpha1_UpstreamLock(ref),
+		"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.UpstreamPackage":                schema_porch_api_porch_v1alpha1_UpstreamPackage(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroup":                                               schema_pkg_apis_meta_v1_APIGroup(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIGroupList":                                           schema_pkg_apis_meta_v1_APIGroupList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResource":                                            schema_pkg_apis_meta_v1_APIResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIResourceList":                                        schema_pkg_apis_meta_v1_APIResourceList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.APIVersions":                                            schema_pkg_apis_meta_v1_APIVersions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ApplyOptions":                                           schema_pkg_apis_meta_v1_ApplyOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Condition":                                              schema_pkg_apis_meta_v1_Condition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.CreateOptions":                                          schema_pkg_apis_meta_v1_CreateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.DeleteOptions":                                          schema_pkg_apis_meta_v1_DeleteOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Duration":                                               schema_pkg_apis_meta_v1_Duration(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.FieldsV1":                                               schema_pkg_apis_meta_v1_FieldsV1(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GetOptions":                                             schema_pkg_apis_meta_v1_GetOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupKind":                                              schema_pkg_apis_meta_v1_GroupKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupResource":                                          schema_pkg_apis_meta_v1_GroupResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersion":                                           schema_pkg_apis_meta_v1_GroupVersion(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionForDiscovery":                               schema_pkg_apis_meta_v1_GroupVersionForDiscovery(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionKind":                                       schema_pkg_apis_meta_v1_GroupVersionKind(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.GroupVersionResource":                                   schema_pkg_apis_meta_v1_GroupVersionResource(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.InternalEvent":                                          schema_pkg_apis_meta_v1_InternalEvent(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelector":                                          schema_pkg_apis_meta_v1_LabelSelector(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.LabelSelectorRequirement":                               schema_pkg_apis_meta_v1_LabelSelectorRequirement(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.List":                                                   schema_pkg_apis_meta_v1_List(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta":                                               schema_pkg_apis_meta_v1_ListMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ListOptions":                                            schema_pkg_apis_meta_v1_ListOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ManagedFieldsEntry":                                     schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.MicroTime":                                              schema_pkg_apis_meta_v1_MicroTime(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta":                                             schema_pkg_apis_meta_v1_ObjectMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.OwnerReference":                                         schema_pkg_apis_meta_v1_OwnerReference(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadata":                                  schema_pkg_apis_meta_v1_PartialObjectMetadata(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PartialObjectMetadataList":                              schema_pkg_apis_meta_v1_PartialObjectMetadataList(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Patch":                                                  schema_pkg_apis_meta_v1_Patch(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.PatchOptions":                                           schema_pkg_apis_meta_v1_PatchOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Preconditions":                                          schema_pkg_apis_meta_v1_Preconditions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.RootPaths":                                              schema_pkg_apis_meta_v1_RootPaths(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.ServerAddressByClientCIDR":                              schema_pkg_apis_meta_v1_ServerAddressByClientCIDR(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Status":                                                 schema_pkg_apis_meta_v1_Status(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusCause":                                            schema_pkg_apis_meta_v1_StatusCause(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.StatusDetails":                                          schema_pkg_apis_meta_v1_StatusDetails(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Table":                                                  schema_pkg_apis_meta_v1_Table(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableColumnDefinition":                                  schema_pkg_apis_meta_v1_TableColumnDefinition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableOptions":                                           schema_pkg_apis_meta_v1_TableOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRow":                                               schema_pkg_apis_meta_v1_TableRow(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TableRowCondition":                                      schema_pkg_apis_meta_v1_TableRowCondition(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Time":                                                   schema_pkg_apis_meta_v1_Time(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.Timestamp":                                              schema_pkg_apis_meta_v1_Timestamp(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.TypeMeta":                                               schema_pkg_apis_meta_v1_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.UpdateOptions":                                          schema_pkg_apis_meta_v1_UpdateOptions(ref),
+		"k8s.io/apimachinery/pkg/apis/meta/v1.WatchEvent":                                             schema_pkg_apis_meta_v1_WatchEvent(ref),
+		"k8s.io/apimachinery/pkg/runtime.RawExtension":                                                schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref),
+		"k8s.io/apimachinery/pkg/runtime.TypeMeta":                                                    schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref),
+		"k8s.io/apimachinery/pkg/runtime.Unknown":                                                     schema_k8sio_apimachinery_pkg_runtime_Unknown(ref),
+		"k8s.io/apimachinery/pkg/version.Info":                                                        schema_k8sio_apimachinery_pkg_version_Info(ref),
 	}
 }
 
@@ -155,6 +165,67 @@ func schema_porch_api_porch_v1alpha1_Condition(ref common.ReferenceCallback) com
 					},
 				},
 				Required: []string{"type", "status"},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_Field(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Field references a field in a resource",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Path is the field path. This field is required.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"currentValue": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CurrentValue is the current field value",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"proposedValue": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProposedValue is the proposed value of the field to fix an issue.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_File(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "File references a file containing a resource",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"path": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Path is relative path to the file containing the resource. This field is required.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"index": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Index is the index into the file containing the resource (i.e. if there are multiple resources in a single file)",
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -585,6 +656,33 @@ func schema_porch_api_porch_v1alpha1_GitPackage(ref common.ReferenceCallback) co
 	}
 }
 
+func schema_porch_api_porch_v1alpha1_NameMeta(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "NameMeta contains name information.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the metadata.name field of a Resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Namespace is the metadata.namespace field of a Resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_porch_api_porch_v1alpha1_OciPackage(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -669,7 +767,7 @@ func schema_porch_api_porch_v1alpha1_PackageCloneTaskSpec(ref common.ReferenceCa
 					},
 					"strategy": {
 						SchemaProps: spec.SchemaProps{
-							Description: "\n\tDefines which strategy should be used to update the package. It defaults to 'resource-merge'.\n * resource-merge: Perform a structural comparison of the original /\n   updated resources, and merge the changes into the local package.\n * fast-forward: Fail without updating if the local package was modified\n   since it was fetched.\n * force-delete-replace: Wipe all the local changes to the package and replace\n   it with the remote version.",
+							Description: "\tDefines which strategy should be used to update the package. It defaults to 'resource-merge'.\n * resource-merge: Perform a structural comparison of the original /\n   updated resources, and merge the changes into the local package.\n * fast-forward: Fail without updating if the local package was modified\n   since it was fetched.\n * force-delete-replace: Wipe all the local changes to the package and replace\n   it with the remote version.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -978,11 +1076,17 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionResources(ref common.Referen
 							Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec"),
 						},
 					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesStatus"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageRevisionResourcesStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1082,6 +1186,28 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionResourcesSpec(ref common.Ref
 				},
 			},
 		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_PackageRevisionResourcesStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PackageRevisionResourcesStatus represents state of the rendered package resources.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"renderStatus": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RenderStatus contains the result of rendering the package resources.",
+							Default:     map[string]interface{}{},
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RenderStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RenderStatus"},
 	}
 }
 
@@ -1351,6 +1477,35 @@ func schema_porch_api_porch_v1alpha1_ReadinessGate(ref common.ReferenceCallback)
 	}
 }
 
+func schema_porch_api_porch_v1alpha1_RenderStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "RenderStatus represents the result of performing render operation on a package resources.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"result": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultList"),
+						},
+					},
+					"error": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"error"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultList"},
+	}
+}
+
 func schema_porch_api_porch_v1alpha1_RepositoryRef(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1370,6 +1525,229 @@ func schema_porch_api_porch_v1alpha1_RepositoryRef(ref common.ReferenceCallback)
 				Required: []string{"name"},
 			},
 		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_ResourceIdentifier(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResourceIdentifier contains the information needed to uniquely identify a resource in a cluster.",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the metadata.name field of a Resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"namespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Namespace is the metadata.namespace field of a Resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_Result(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Result contains the structured result from an individual function",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"Image": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Image is the full name of the image that generates this result Image and Exec are mutually exclusive",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ExecPath": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ExecPath is the the absolute os-specific path to the executable file If user provides an executable file with commands, ExecPath should contain the entire input string.",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"Stderr": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enable this once test harness supports filepath based assertions. Pkg is OS specific Absolute path to the package. Pkg string `yaml:\"pkg,omitempty\"` Stderr is the content in function stderr",
+							Default:     "",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"ExitCode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ExitCode is the exit code from running the function",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"Results": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Results is the list of results for the function",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: map[string]interface{}{},
+										Ref:     ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultItem"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"Image", "ExecPath", "Stderr", "ExitCode", "Results"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResultItem"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_ResultItem(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResultItem defines a validation result",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Message is a human readable message. This field is required.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity is the severity of this result",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resourceRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ResourceRef is a reference to a resource. Required fields: apiVersion, kind, name.",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResourceIdentifier"),
+						},
+					},
+					"field": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Field is a reference to the field in a resource this result refers to",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Field"),
+						},
+					},
+					"file": {
+						SchemaProps: spec.SchemaProps{
+							Description: "File references a file containing the resource this result refers to",
+							Ref:         ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.File"),
+						},
+					},
+					"tags": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Tags is an unstructured key value map stored with a result that may be set by external tools to store and retrieve arbitrary metadata",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Default: "",
+										Type:    []string{"string"},
+										Format:  "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Field", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.File", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.ResourceIdentifier"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_ResultList(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ResultList contains aggregated results from multiple functions",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Default: map[string]interface{}{},
+							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"ExitCode": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ExitCode is the exit code of kpt command",
+							Default:     0,
+							Type:        []string{"integer"},
+							Format:      "int32",
+						},
+					},
+					"Items": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Items contain a list of function result",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Result"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"ExitCode", "Items"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Result", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -1484,6 +1862,31 @@ func schema_porch_api_porch_v1alpha1_Task(ref common.ReferenceCallback) common.O
 		},
 		Dependencies: []string{
 			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.FunctionEvalTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageCloneTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageEditTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageInitTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackagePatchTaskSpec", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.PackageUpdateTaskSpec"},
+	}
+}
+
+func schema_porch_api_porch_v1alpha1_TaskResult(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"task": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"),
+						},
+					},
+					"renderStatus": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RenderStatus"),
+						},
+					},
+				},
+				Required: []string{"task"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.RenderStatus", "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1.Task"},
 	}
 }
 
@@ -2061,7 +2464,7 @@ func schema_pkg_apis_meta_v1_CreateOptions(ref common.ReferenceCallback) common.
 					},
 					"fieldValidation": {
 						SchemaProps: spec.SchemaProps{
-							Description: "fieldValidation determines how the server should respond to unknown/duplicate fields in the object in the request. Introduced as alpha in 1.23, older servers or servers with the `ServerSideFieldValidation` feature disabled will discard valid values specified in  this param and not perform any server side field validation. Valid values are: - Ignore: ignores unknown/duplicate fields. - Warn: responds with a warning for each unknown/duplicate field, but successfully serves the request. - Strict: fails the request on unknown/duplicate fields.",
+							Description: "fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields, provided that the `ServerSideFieldValidation` feature gate is also enabled. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23 and is the default behavior when the `ServerSideFieldValidation` feature gate is disabled. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default when the `ServerSideFieldValidation` feature gate is enabled. - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2574,7 +2977,7 @@ func schema_pkg_apis_meta_v1_ListMeta(ref common.ReferenceCallback) common.OpenA
 				Properties: map[string]spec.Schema{
 					"selfLink": {
 						SchemaProps: spec.SchemaProps{
-							Description: "selfLink is a URL representing this object. Populated by the system. Read-only.\n\nDEPRECATED Kubernetes will stop propagating this field in 1.20 release and the field is planned to be removed in 1.21 release.",
+							Description: "Deprecated: selfLink is a legacy read-only field that is no longer populated by the system.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2726,7 +3129,7 @@ func schema_pkg_apis_meta_v1_ManagedFieldsEntry(ref common.ReferenceCallback) co
 					},
 					"time": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Time is timestamp of when these fields were set. It should always be empty if Operation is 'Apply'",
+							Description: "Time is the timestamp of when the ManagedFields entry was added. The timestamp will also be updated if a field is added, the manager changes any of the owned fields value or removes a field. The timestamp does not update when a field is removed from the entry because another manager took it over.",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
@@ -2786,7 +3189,7 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 					},
 					"generateName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.\n\nIf this field is specified and the generated name exists, the server will NOT return a 409 - instead, it will either return 201 Created or 500 with Reason ServerTimeout indicating a unique name could not be found in the time allotted, and the client should retry (optionally after the time indicated in the Retry-After header).\n\nApplied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
+							Description: "GenerateName is an optional prefix, used by the server, to generate a unique name ONLY IF the Name field has not been provided. If this field is used, the name returned to the client will be different than the name passed. This value will also be combined with a unique suffix. The provided value has the same validation rules as the Name field, and may be truncated by the length of the suffix required to make the value unique on the server.\n\nIf this field is specified and the generated name exists, the server will return a 409.\n\nApplied only if Name is not specified. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#idempotency",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2800,7 +3203,7 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 					},
 					"selfLink": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SelfLink is a URL representing this object. Populated by the system. Read-only.\n\nDEPRECATED Kubernetes will stop propagating this field in 1.20 release and the field is planned to be removed in 1.21 release.",
+							Description: "Deprecated: selfLink is a legacy read-only field that is no longer populated by the system.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -2918,13 +3321,6 @@ func schema_pkg_apis_meta_v1_ObjectMeta(ref common.ReferenceCallback) common.Ope
 							},
 						},
 					},
-					"clusterName": {
-						SchemaProps: spec.SchemaProps{
-							Description: "The name of the cluster which the object belongs to. This is used to distinguish resources with same name and namespace in different clusters. This field is not set anywhere right now and apiserver is going to ignore it if set in create or update request.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"managedFields": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ManagedFields maps workflow-id and version to the set of fields that are managed by that workflow. This is mostly for internal housekeeping, and users typically shouldn't need to set or understand this field. A workflow can be the user's name, a controller's name, or the name of a specific apply path like \"ci-cd\". The set of fields is always in the version that the workflow used when modifying the object.",
@@ -2995,7 +3391,7 @@ func schema_pkg_apis_meta_v1_OwnerReference(ref common.ReferenceCallback) common
 					},
 					"blockOwnerDeletion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "If true, AND if the owner has the \"foregroundDeletion\" finalizer, then the owner cannot be deleted from the key-value store until this reference is removed. Defaults to false. To set this field, a user needs \"delete\" permission of the owner, otherwise 422 (Unprocessable Entity) will be returned.",
+							Description: "If true, AND if the owner has the \"foregroundDeletion\" finalizer, then the owner cannot be deleted from the key-value store until this reference is removed. See https://kubernetes.io/docs/concepts/architecture/garbage-collection/#foreground-deletion for how the garbage collector interacts with this field and enforces the foreground deletion. Defaults to false. To set this field, a user needs \"delete\" permission of the owner, otherwise 422 (Unprocessable Entity) will be returned.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -3162,7 +3558,7 @@ func schema_pkg_apis_meta_v1_PatchOptions(ref common.ReferenceCallback) common.O
 					},
 					"fieldValidation": {
 						SchemaProps: spec.SchemaProps{
-							Description: "fieldValidation determines how the server should respond to unknown/duplicate fields in the object in the request. Introduced as alpha in 1.23, older servers or servers with the `ServerSideFieldValidation` feature disabled will discard valid values specified in  this param and not perform any server side field validation. Valid values are: - Ignore: ignores unknown/duplicate fields. - Warn: responds with a warning for each unknown/duplicate field, but successfully serves the request. - Strict: fails the request on unknown/duplicate fields.",
+							Description: "fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields, provided that the `ServerSideFieldValidation` feature gate is also enabled. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23 and is the default behavior when the `ServerSideFieldValidation` feature gate is disabled. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default when the `ServerSideFieldValidation` feature gate is enabled. - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -3789,7 +4185,7 @@ func schema_pkg_apis_meta_v1_UpdateOptions(ref common.ReferenceCallback) common.
 					},
 					"fieldValidation": {
 						SchemaProps: spec.SchemaProps{
-							Description: "fieldValidation determines how the server should respond to unknown/duplicate fields in the object in the request. Introduced as alpha in 1.23, older servers or servers with the `ServerSideFieldValidation` feature disabled will discard valid values specified in  this param and not perform any server side field validation. Valid values are: - Ignore: ignores unknown/duplicate fields. - Warn: responds with a warning for each unknown/duplicate field, but successfully serves the request. - Strict: fails the request on unknown/duplicate fields.",
+							Description: "fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields, provided that the `ServerSideFieldValidation` feature gate is also enabled. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23 and is the default behavior when the `ServerSideFieldValidation` feature gate is disabled. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default when the `ServerSideFieldValidation` feature gate is enabled. - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -3834,7 +4230,7 @@ func schema_k8sio_apimachinery_pkg_runtime_RawExtension(ref common.ReferenceCall
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package: type MyAPIObject struct {\n\truntime.TypeMeta `json:\",inline\"`\n\tMyPlugin runtime.Object `json:\"myPlugin\"`\n} type PluginA struct {\n\tAOption string `json:\"aOption\"`\n}\n\n// External package: type MyAPIObject struct {\n\truntime.TypeMeta `json:\",inline\"`\n\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n} type PluginA struct {\n\tAOption string `json:\"aOption\"`\n}\n\n// On the wire, the JSON will look something like this: {\n\t\"kind\":\"MyAPIObject\",\n\t\"apiVersion\":\"v1\",\n\t\"myPlugin\": {\n\t\t\"kind\":\"PluginA\",\n\t\t\"aOption\":\"foo\",\n\t},\n}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)",
+				Description: "RawExtension is used to hold extensions in external versions.\n\nTo use this, make a field which has RawExtension as its type in your external, versioned struct, and Object in your internal struct. You also need to register your various plugin types.\n\n// Internal package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.Object `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// External package:\n\n\ttype MyAPIObject struct {\n\t\truntime.TypeMeta `json:\",inline\"`\n\t\tMyPlugin runtime.RawExtension `json:\"myPlugin\"`\n\t}\n\n\ttype PluginA struct {\n\t\tAOption string `json:\"aOption\"`\n\t}\n\n// On the wire, the JSON will look something like this:\n\n\t{\n\t\t\"kind\":\"MyAPIObject\",\n\t\t\"apiVersion\":\"v1\",\n\t\t\"myPlugin\": {\n\t\t\t\"kind\":\"PluginA\",\n\t\t\t\"aOption\":\"foo\",\n\t\t},\n\t}\n\nSo what happens? Decode first uses json or yaml to unmarshal the serialized data into your external MyAPIObject. That causes the raw JSON to be stored, but not unpacked. The next step is to copy (using pkg/conversion) into the internal struct. The runtime package's DefaultScheme has conversion functions installed which will unpack the JSON stored in RawExtension, turning it into the correct object type, and storing it in the Object. (TODO: In the case where the object is of an unknown type, a runtime.Unknown object will be created and stored.)",
 				Type:        []string{"object"},
 			},
 		},
@@ -3845,7 +4241,7 @@ func schema_k8sio_apimachinery_pkg_runtime_TypeMeta(ref common.ReferenceCallback
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "TypeMeta is shared by all top level objects. The proper way to use it is to inline it in your type, like this: type MyAwesomeAPIObject struct {\n     runtime.TypeMeta    `json:\",inline\"`\n     ... // other fields\n} func (obj *MyAwesomeAPIObject) SetGroupVersionKind(gvk *metav1.GroupVersionKind) { metav1.UpdateTypeMeta(obj,gvk) }; GroupVersionKind() *GroupVersionKind\n\nTypeMeta is provided here for convenience. You may use it directly from this package or define your own with the same fields.",
+				Description: "TypeMeta is shared by all top level objects. The proper way to use it is to inline it in your type, like this:\n\n\ttype MyAwesomeAPIObject struct {\n\t     runtime.TypeMeta    `json:\",inline\"`\n\t     ... // other fields\n\t}\n\nfunc (obj *MyAwesomeAPIObject) SetGroupVersionKind(gvk *metav1.GroupVersionKind) { metav1.UpdateTypeMeta(obj,gvk) }; GroupVersionKind() *GroupVersionKind\n\nTypeMeta is provided here for convenience. You may use it directly from this package or define your own with the same fields.",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"apiVersion": {
