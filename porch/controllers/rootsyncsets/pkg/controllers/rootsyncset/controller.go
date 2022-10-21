@@ -19,6 +19,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"sync"
 
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/api/v1alpha1"
@@ -26,6 +28,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -38,19 +41,53 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var (
-	rootSyncNamespace  = "config-management-system"
-	rootSyncApiVersion = "configsync.gke.io/v1beta1"
-	rootSyncKind       = "RootSync"
+	rootSyncNamespace = "config-management-system"
+	rootSyncGVK       = schema.GroupVersionKind{
+		Group:   "configsync.gke.io",
+		Version: "v1beta1",
+		Kind:    "RootSync",
+	}
+	rootSyncGVR = schema.GroupVersionResource{
+		Group:    "configsync.gke.io",
+		Version:  "v1beta1",
+		Resource: "rootsyncs",
+	}
+	rootSyncSetNameLabel      = "config.porch.kpt.dev/rootsyncset-name"
+	rootSyncSetNamespaceLabel = "config.porch.kpt.dev/rootsyncset-namespace"
+
+	containerClusterKind       = "ContainerCluster"
+	containerClusterApiVersion = "container.cnrm.cloud.google.com/v1beta1"
+
+	configControllerKind       = "ConfigControllerInstance"
+	configControllerApiVersion = "configcontroller.cnrm.cloud.google.com/v1beta1"
 )
+
+func NewRootSyncSetReconciler() *RootSyncSetReconciler {
+	return &RootSyncSetReconciler{
+		channel:  make(chan event.GenericEvent, 10),
+		watchers: make(map[v1alpha1.ClusterRef]*watcher),
+	}
+}
 
 // RootSyncSetReconciler reconciles a RootSyncSet object
 type RootSyncSetReconciler struct {
 	client.Client
 
 	WorkloadIdentityHelper
+
+	// channel is where watchers put events to trigger new reconcilations based
+	// on watch events from target clusters.
+	channel chan event.GenericEvent
+
+	mutex    sync.Mutex
+	watchers map[v1alpha1.ClusterRef]*watcher
 }
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-rootsyncsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -79,6 +116,7 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err := r.Get(ctx, req.NamespacedName, &rootsyncset); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+
 	myFinalizerName := "config.porch.kpt.dev/finalizer"
 	if rootsyncset.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
@@ -99,6 +137,8 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				// so that it can be retried
 				return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
 			}
+			// Make sure we stop any watches that are no longer needed.
+			r.pruneWatches(req.NamespacedName, []*v1alpha1.ClusterRef{})
 			// remove our finalizer from the list and update it.
 			controllerutil.RemoveFinalizer(&rootsyncset, myFinalizerName)
 			if err := r.Update(ctx, &rootsyncset); err != nil {
@@ -108,59 +148,246 @@ func (r *RootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		// Stop reconciliation as the item is being deleted
 		return ctrl.Result{}, nil
 	}
-	var patchErrs []error
-	for _, clusterRef := range rootsyncset.Spec.ClusterRefs {
-		clusterRefName := clusterRef.Kind + ":" + clusterRef.Name
+
+	results := make(reconcileResult)
+	for _, cr := range rootsyncset.Spec.ClusterRefs {
+		result := clusterRefResult{}
+		clusterRefName := cr.Kind + ":" + cr.Name
+		clusterRef, err := toCanonicalClusterRef(cr, rootsyncset.Namespace)
+		if err != nil {
+			result.clientError = err
+			results[clusterRefName] = result
+			continue
+		}
 		client, err := r.GetClient(ctx, clusterRef, rootsyncset.Namespace)
 		if err != nil {
-			patchErrs = append(patchErrs, err)
+			result.clientError = err
+			results[clusterRefName] = result
 			continue
 		}
-		rootSyncRes, newRootSync, err := BuildObjectsToApply(&rootsyncset)
-		if err != nil {
-			patchErrs = append(patchErrs, err)
-			continue
+		r.setupWatches(ctx, client, rootsyncset.Name, rootsyncset.Namespace, clusterRef)
+
+		if err := r.patchRootSync(ctx, client, req.Name, &rootsyncset); err != nil {
+			result.patchError = err
 		}
-		data, err := json.Marshal(newRootSync)
+
+		s, err := checkSyncStatus(ctx, client, req.Name)
 		if err != nil {
-			patchErrs = append(patchErrs, fmt.Errorf("failed to encode root sync to JSON: %w", err))
-			continue
-		}
-		rs, err := client.Resource(rootSyncRes).Namespace(rootSyncNamespace).Patch(ctx, req.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: req.Name})
-		if err != nil {
-			patchErrs = append(patchErrs, fmt.Errorf("failed to patch RootSync %s in cluster %s: %w", rootSyncNamespace+"/"+req.Name, clusterRefName, err))
+			result.statusError = err
+			result.status = "Unknown"
 		} else {
-			klog.Infof("Create/Update resource %s as %v", req.Name, rs)
+			result.status = s
 		}
+
+		results[clusterRefName] = result
 	}
-	if len(patchErrs) != 0 {
-		for _, patchErr := range patchErrs {
-			klog.Errorf("%v", patchErr)
-		}
-		return ctrl.Result{}, patchErrs[0]
+
+	r.pruneWatches(req.NamespacedName, rootsyncset.Spec.ClusterRefs)
+
+	if err := r.updateStatus(ctx, &rootsyncset, results); err != nil {
+		klog.Errorf("failed to update status: %w", err)
+		return ctrl.Result{}, err
 	}
+
+	if errs := results.Errors(); len(errs) > 0 {
+		klog.Warningf("Errors: %s", results.Error())
+		return ctrl.Result{}, results
+	}
+
 	return ctrl.Result{}, nil
 }
 
-// BuildObjectsToApply config root sync
-func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (schema.GroupVersionResource, *unstructured.Unstructured, error) {
-	gv, err := schema.ParseGroupVersion(rootSyncApiVersion)
-	if err != nil {
-		return schema.GroupVersionResource{}, nil, fmt.Errorf("failed to parse group version when building object: %w", err)
+func toCanonicalClusterRef(ref *v1alpha1.ClusterRef, rssNamespace string) (v1alpha1.ClusterRef, error) {
+	ns := ref.Namespace
+	if ns == "" {
+		ns = rssNamespace
 	}
-	rootSyncRes := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: "rootsyncs"}
-	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(rootsyncset.Spec.Template)
-	newRootSync["apiVersion"] = rootSyncApiVersion
-	newRootSync["kind"] = rootSyncKind
-	newRootSync["metadata"] = map[string]string{"name": rootsyncset.Name,
-		"namespace": rootSyncNamespace}
-	fmt.Printf("rootsync looks like %v", newRootSync)
+	apiVersion := ref.ApiVersion
+	if apiVersion == "" {
+		switch ref.Kind {
+		case containerClusterKind:
+			apiVersion = containerClusterApiVersion
+		case configControllerKind:
+			apiVersion = configControllerApiVersion
+		default:
+			return v1alpha1.ClusterRef{}, fmt.Errorf("clusterRef references unknown kind %q", ref.Kind)
+		}
+	}
+	return v1alpha1.ClusterRef{
+		ApiVersion: apiVersion,
+		Kind:       ref.Kind,
+		Name:       ref.Name,
+		Namespace:  ns,
+	}, nil
+}
+
+func (r *RootSyncSetReconciler) updateStatus(ctx context.Context, rss *v1alpha1.RootSyncSet, results reconcileResult) error {
+	crss := make([]v1alpha1.ClusterRefStatus, 0)
+
+	for _, clusterRef := range rss.Spec.ClusterRefs {
+		clusterRefName := clusterRef.Kind + ":" + clusterRef.Name
+		res := results[clusterRefName]
+		crss = append(crss, v1alpha1.ClusterRefStatus{
+			ApiVersion: clusterRef.ApiVersion,
+			Kind:       clusterRef.Kind,
+			Name:       clusterRef.Name,
+			Namespace:  clusterRef.Namespace,
+			SyncStatus: res.status,
+		})
+	}
+
+	// Don't update if there are no changes.
+	if equality.Semantic.DeepEqual(rss.Status.ClusterRefStatuses, crss) {
+		return nil
+	}
+
+	rss.Status.ClusterRefStatuses = crss
+	return r.Client.Status().Update(ctx, rss)
+}
+
+type reconcileResult map[string]clusterRefResult
+
+func (r reconcileResult) Errors() []error {
+	var errs []error
+	for _, crr := range r {
+		if crr.clientError != nil {
+			errs = append(errs, crr.clientError)
+		}
+		if crr.patchError != nil {
+			errs = append(errs, crr.patchError)
+		}
+		if crr.statusError != nil {
+			errs = append(errs, crr.statusError)
+		}
+	}
+	return errs
+}
+
+// TODO: Improve the formatting of the printed errors here.
+func (r reconcileResult) Error() string {
+	var sb strings.Builder
+	for clusterRef, res := range r {
+		if res.clientError != nil {
+			sb.WriteString(fmt.Sprintf("failed to create client for %s: %v\n", clusterRef, res.clientError))
+		}
+		if res.patchError != nil {
+			sb.WriteString(fmt.Sprintf("failed to patch %s: %v\n", clusterRef, res.patchError))
+		}
+		if res.statusError != nil {
+			sb.WriteString(fmt.Sprintf("failed to check status for %s: %v\n", clusterRef, res.statusError))
+		}
+	}
+	return sb.String()
+}
+
+type clusterRefResult struct {
+	clientError error
+	patchError  error
+	statusError error
+	status      string
+}
+
+// patchRootSync patches the RootSync in the remote clusters targeted by
+// the clusterRefs based on the latest revision of the template in the RootSyncSet.
+func (r *RootSyncSetReconciler) patchRootSync(ctx context.Context, client dynamic.Interface, name string, rss *v1alpha1.RootSyncSet) error {
+	newRootSync, err := BuildObjectsToApply(rss)
 	if err != nil {
-		return schema.GroupVersionResource{}, nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
+		return err
+	}
+	data, err := json.Marshal(newRootSync)
+	if err != nil {
+		return fmt.Errorf("failed to encode root sync to JSON: %w", err)
+	}
+	rs, err := client.Resource(rootSyncGVR).Namespace(rootSyncNamespace).Patch(ctx, name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: name})
+	if err != nil {
+		return fmt.Errorf("failed to patch RootSync: %w", err)
+	}
+	klog.Infof("Create/Update resource %s as %v", name, rs)
+	return nil
+}
+
+// setupWatches makes sure we have the necessary watches running against
+// the remote clusters we care about.
+func (r *RootSyncSetReconciler) setupWatches(ctx context.Context, client dynamic.Interface, rssName, ns string, clusterRef v1alpha1.ClusterRef) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	nn := types.NamespacedName{
+		Namespace: ns,
+		Name:      rssName,
+	}
+
+	// If we already have a watch running, make sure we have the current RootSyncSet
+	// listed in the liens map.
+	if w, found := r.watchers[clusterRef]; found {
+		w.liens[nn] = struct{}{}
+		return
+	}
+
+	// Since we don't currently have a watch running, create a new watcher
+	// and add it to the map of watchers.
+	watcherCtx, cancelFunc := context.WithCancel(context.Background())
+	w := &watcher{
+		clusterRef: clusterRef,
+		ctx:        watcherCtx,
+		cancelFunc: cancelFunc,
+		client:     client,
+		channel:    r.channel,
+		liens:      make(map[types.NamespacedName]struct{}),
+	}
+	go w.watch()
+	r.watchers[clusterRef] = w
+}
+
+// pruneWatches removes the current RootSyncSet from the liens map of all watchers
+// that it no longer needs. If any of the watchers are no longer used by any RootSyncSets,
+// they are shut down.
+func (r *RootSyncSetReconciler) pruneWatches(rssnn types.NamespacedName, clusterRefs []*v1alpha1.ClusterRef) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	// Look through all watchers to check if it used to be needed by the RootSyncSet
+	// but is no longer.
+	for clusterRef, w := range r.watchers {
+		// If the watcher is still needed, we don't need to do anything.
+		var found bool
+		for _, cr := range clusterRefs {
+			if clusterRef == *cr {
+				found = true
+			}
+		}
+		if found {
+			continue
+		}
+
+		// Delete the current RootSyncSet from the list of liens (it it exists)
+		delete(w.liens, rssnn)
+		// If no other RootSyncSets need the watch, stop it and remove the watcher from the map.
+		if len(w.liens) == 0 {
+			klog.Infof("clusterRef %s is no longer needed, so closing watch", clusterRef.Name)
+			w.cancelFunc()
+			delete(r.watchers, clusterRef)
+		}
+	}
+}
+
+// BuildObjectsToApply config root sync
+func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (*unstructured.Unstructured, error) {
+	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(rootsyncset.Spec.Template)
+	if err != nil {
+		return nil, err
 	}
 	u := unstructured.Unstructured{Object: newRootSync}
-
-	return rootSyncRes, &u, nil
+	u.SetGroupVersionKind(rootSyncGVK)
+	u.SetName(rootsyncset.Name)
+	u.SetNamespace(rootSyncNamespace)
+	u.SetLabels(map[string]string{
+		rootSyncSetNameLabel:      rootsyncset.Name,
+		rootSyncSetNamespaceLabel: rootsyncset.Namespace,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
+	}
+	return &u, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -176,25 +403,46 @@ func (r *RootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.RootSyncSet{}).
+		Watches(
+			&source.Channel{Source: r.channel},
+			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
+				var rssName string
+				var rssNamespace string
+				if o.GetLabels() != nil {
+					rssName = o.GetLabels()[rootSyncSetNameLabel]
+					rssNamespace = o.GetLabels()[rootSyncSetNamespaceLabel]
+				}
+				if rssName == "" || rssNamespace == "" {
+					return []reconcile.Request{}
+				}
+				klog.Infof("Resource %s contains a label for %s", o.GetName(), rssName)
+				return []reconcile.Request{
+					{
+						NamespacedName: types.NamespacedName{
+							Namespace: rssNamespace,
+							Name:      rssName,
+						},
+					},
+				}
+			}),
+		).
 		Complete(r)
 }
 
 func (r *RootSyncSetReconciler) deleteExternalResources(ctx context.Context, rootsyncset *v1alpha1.RootSyncSet) error {
 	var deleteErrs []error
-	for _, clusterRef := range rootsyncset.Spec.ClusterRefs {
+	for _, cr := range rootsyncset.Spec.ClusterRefs {
+		clusterRef, err := toCanonicalClusterRef(cr, rootsyncset.Namespace)
+		if err != nil {
+			return err
+		}
 		myClient, err := r.GetClient(ctx, clusterRef, rootsyncset.Namespace)
 		if err != nil {
 			deleteErrs = append(deleteErrs, fmt.Errorf("failed to get client when delete resource: %w", err))
 			continue
 		}
 		klog.Infof("deleting external resource %s ...", rootsyncset.Name)
-		gv, err := schema.ParseGroupVersion(rootSyncApiVersion)
-		if err != nil {
-			deleteErrs = append(deleteErrs, fmt.Errorf("failed to parse group version when deleting external resrouces: %w", err))
-			continue
-		}
-		rootSyncRes := schema.GroupVersionResource{Group: gv.Group, Version: gv.Version, Resource: "rootsyncs"}
-		err = myClient.Resource(rootSyncRes).Namespace("config-management-system").Delete(ctx, rootsyncset.Name, metav1.DeleteOptions{})
+		err = myClient.Resource(rootSyncGVR).Namespace("config-management-system").Delete(ctx, rootsyncset.Name, metav1.DeleteOptions{})
 		if err != nil && !apierrors.IsNotFound(err) {
 			deleteErrs = append(deleteErrs, fmt.Errorf("failed to delete external resource : %w", err))
 		}
@@ -267,7 +515,7 @@ func (r *RootSyncSetReconciler) GetCCRESTConfig(ctx context.Context, cluster *un
 	return restConfig, nil
 }
 
-func (r *RootSyncSetReconciler) GetClient(ctx context.Context, ref *v1alpha1.ClusterRef, ns string) (dynamic.Interface, error) {
+func (r *RootSyncSetReconciler) GetClient(ctx context.Context, ref v1alpha1.ClusterRef, ns string) (dynamic.Interface, error) {
 	key := types.NamespacedName{Namespace: ref.Namespace, Name: ref.Name}
 	if key.Namespace == "" {
 		key.Namespace = ns
@@ -287,9 +535,9 @@ func (r *RootSyncSetReconciler) GetClient(ctx context.Context, ref *v1alpha1.Clu
 	if err := r.Get(ctx, key, u); err != nil {
 		return nil, fmt.Errorf("failed to get cluster: %w", err)
 	}
-	if ref.Kind == "ContainerCluster" {
+	if ref.Kind == containerClusterKind {
 		config, err = r.GetGKERESTConfig(ctx, u)
-	} else if ref.Kind == "ConfigControllerInstance" {
+	} else if ref.Kind == configControllerKind {
 		config, err = r.GetCCRESTConfig(ctx, u) //TODO: tmp workaround, update after ACP add new fields
 	} else {
 		return nil, fmt.Errorf("failed to find target cluster, cluster kind has to be ContainerCluster or ConfigControllerInstance")

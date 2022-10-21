@@ -28,7 +28,7 @@ type ClusterRef struct {
 	ApiVersion string `json:"apiVersion,omitempty"`
 	Kind       string `json:"kind,omitempty"`
 	Name       string `json:"name,omitempty"`
-	Namespace  string `json:"namespace,'omitempty'"`
+	Namespace  string `json:"namespace,omitempty"`
 }
 
 type RootSyncInfo struct {
@@ -65,6 +65,16 @@ type SecretReference struct {
 type RootSyncSetStatus struct {
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	ClusterRefStatuses []ClusterRefStatus `json:"clusterRefStatuses,omitempty"`
+}
+
+type ClusterRefStatus struct {
+	ApiVersion string `json:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Namespace  string `json:"namespace,omitempty"`
+	SyncStatus string `json:"syncStatus,omitempty"`
 }
 
 //+kubebuilder:object:root=true
