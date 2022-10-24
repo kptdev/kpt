@@ -893,21 +893,18 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	}
 
 	// render the package
-	_, renderStatus, err := applyResourceMutations(ctx,
+	// Render failure will not fail the overall API operation.
+	// The render error and result is captured as part of renderStatus above
+	// and is returned in packageresourceresources API's status field. We continue with
+	// saving the non-rendered resources to avoid losing user's changes.
+	// and supress this err.
+	_, renderStatus, _ := applyResourceMutations(ctx,
 		draft,
 		appliedResources,
 		[]mutation{&renderPackageMutation{
 			renderer: cad.renderer,
 			runtime:  cad.runtime,
 		}})
-	if err != nil {
-		// Render failure will not fail the overall API operation.
-		// The render error and result is captured as part of renderStatus above
-		// and is returned in packageresourceresources API's status field. We continue with
-		// saving the non-rendered resources to avoid losing user's changes.
-		// and supress this err.
-		err = nil
-	}
 
 	// No lifecycle change when updating package resources; updates are done.
 	repoPkgRev, err := draft.Close(ctx)
