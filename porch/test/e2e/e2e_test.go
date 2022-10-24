@@ -30,6 +30,7 @@ import (
 	internalapi "github.com/GoogleContainerTools/kpt/porch/internal/api/porchinternal/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
 	coreapi "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -539,6 +540,11 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	if !ok {
 		t.Fatalf("Updated config map config-map.yaml not found")
 	}
+
+	renderStatus := newPackage.Status.RenderStatus
+	assert.Empty(t, renderStatus.Err, "render error must be empty for successful render operation.")
+	assert.Zero(t, renderStatus.Result.ExitCode, "exit code must be zero for successful render operation.")
+	assert.True(t, len(renderStatus.Result.Items) > 0)
 
 	golden := filepath.Join("testdata", "update-resources", "want-config-map.yaml")
 	if diff := t.CompareGoldenFileYAML(golden, updated); diff != "" {

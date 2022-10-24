@@ -119,6 +119,18 @@ type Task struct {
 	Update *PackageUpdateTaskSpec `json:"update,omitempty"`
 }
 
+type TaskResult struct {
+	Task         *Task         `json:"task"`
+	RenderStatus *RenderStatus `json:"renderStatus,omitempty"`
+}
+
+// RenderStatus represents the result of performing render operation
+// on a package resources.
+type RenderStatus struct {
+	Result ResultList `json:"result,omitempty"`
+	Err    string     `json:"error"`
+}
+
 // PackageInitTaskSpec defines the package initialization task.
 type PackageInitTaskSpec struct {
 	// `Subpackage` is a directory path to a subpackage to initialize. If unspecified, the main package will be initialized.
@@ -328,3 +340,107 @@ const (
 	ConditionFalse   ConditionStatus = "False"
 	ConditionUnknown ConditionStatus = "Unknown"
 )
+
+// Result contains the structured result from an individual function
+type Result struct {
+	// Image is the full name of the image that generates this result
+	// Image and Exec are mutually exclusive
+	Image string `yaml:"image,omitempty"`
+	// ExecPath is the the absolute os-specific path to the executable file
+	// If user provides an executable file with commands, ExecPath should
+	// contain the entire input string.
+	ExecPath string `yaml:"exec,omitempty"`
+	// TODO(droot): This is required for making structured results subpackage aware.
+	// Enable this once test harness supports filepath based assertions.
+	// Pkg is OS specific Absolute path to the package.
+	// Pkg string `yaml:"pkg,omitempty"`
+	// Stderr is the content in function stderr
+	Stderr string `yaml:"stderr,omitempty"`
+	// ExitCode is the exit code from running the function
+	ExitCode int `yaml:"exitCode"`
+	// Results is the list of results for the function
+	Results []ResultItem `yaml:"results,omitempty"`
+}
+
+const (
+	// Deprecated: prefer ResultListGVK
+	ResultListKind = "FunctionResultList"
+	// Deprecated: prefer ResultListGVK
+	ResultListGroup = "kpt.dev"
+	// Deprecated: prefer ResultListGVK
+	ResultListVersion = "v1"
+	// Deprecated: prefer ResultListGVK
+	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
+)
+
+// ResultList contains aggregated results from multiple functions
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+type ResultList struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// ExitCode is the exit code of kpt command
+	ExitCode int `yaml:"exitCode"`
+	// Items contain a list of function result
+	Items []*Result `yaml:"items,omitempty"`
+}
+
+// ResultItem defines a validation result
+type ResultItem struct {
+	// Message is a human readable message. This field is required.
+	Message string `yaml:"message,omitempty" json:"message,omitempty"`
+
+	// Severity is the severity of this result
+	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
+
+	// ResourceRef is a reference to a resource.
+	// Required fields: apiVersion, kind, name.
+	ResourceRef *ResourceIdentifier `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
+
+	// Field is a reference to the field in a resource this result refers to
+	Field *Field `yaml:"field,omitempty" json:"field,omitempty"`
+
+	// File references a file containing the resource this result refers to
+	File *File `yaml:"file,omitempty" json:"file,omitempty"`
+
+	// Tags is an unstructured key value map stored with a result that may be set
+	// by external tools to store and retrieve arbitrary metadata
+	Tags map[string]string `yaml:"tags,omitempty" json:"tags,omitempty"`
+}
+
+// File references a file containing a resource
+type File struct {
+	// Path is relative path to the file containing the resource.
+	// This field is required.
+	Path string `yaml:"path,omitempty" json:"path,omitempty"`
+
+	// Index is the index into the file containing the resource
+	// (i.e. if there are multiple resources in a single file)
+	Index int `yaml:"index,omitempty" json:"index,omitempty"`
+}
+
+// Field references a field in a resource
+type Field struct {
+	// Path is the field path. This field is required.
+	Path string `yaml:"path,omitempty" json:"path,omitempty"`
+
+	// CurrentValue is the current field value
+	CurrentValue string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
+
+	// ProposedValue is the proposed value of the field to fix an issue.
+	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
+}
+
+// ResourceIdentifier contains the information needed to uniquely
+// identify a resource in a cluster.
+type ResourceIdentifier struct {
+	metav1.TypeMeta `json:",inline"`
+	NameMeta        `json:",inline" yaml:",inline"`
+}
+
+// NameMeta contains name information.
+type NameMeta struct {
+	// Name is the metadata.name field of a Resource
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Namespace is the metadata.namespace field of a Resource
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+}

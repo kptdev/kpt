@@ -32,7 +32,7 @@ type editPackageMutation struct {
 
 var _ mutation = &editPackageMutation{}
 
-func (m *editPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *editPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "editPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -48,5 +48,5 @@ func (m *editPackageMutation) Apply(ctx context.Context, resources repository.Pa
 
 	return repository.PackageResources{
 		Contents: sourceResources.Spec.Resources,
-	}, &api.Task{}, nil
+	}, &api.TaskResult{Task: &api.Task{}}, nil
 }

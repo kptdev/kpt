@@ -44,6 +44,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*Field)(nil), (*porch.Field)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Field_To_porch_Field(a.(*Field), b.(*porch.Field), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.Field)(nil), (*Field)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_Field_To_v1alpha1_Field(a.(*porch.Field), b.(*Field), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*File)(nil), (*porch.File)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_File_To_porch_File(a.(*File), b.(*porch.File), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.File)(nil), (*File)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_File_To_v1alpha1_File(a.(*porch.File), b.(*File), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*Function)(nil), (*porch.Function)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_Function_To_porch_Function(a.(*Function), b.(*porch.Function), scope)
 	}); err != nil {
@@ -131,6 +151,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*porch.GitPackage)(nil), (*GitPackage)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_porch_GitPackage_To_v1alpha1_GitPackage(a.(*porch.GitPackage), b.(*GitPackage), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*NameMeta)(nil), (*porch.NameMeta)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_NameMeta_To_porch_NameMeta(a.(*NameMeta), b.(*porch.NameMeta), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.NameMeta)(nil), (*NameMeta)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_NameMeta_To_v1alpha1_NameMeta(a.(*porch.NameMeta), b.(*NameMeta), scope)
 	}); err != nil {
 		return err
 	}
@@ -264,6 +294,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*PackageRevisionResourcesStatus)(nil), (*porch.PackageRevisionResourcesStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus(a.(*PackageRevisionResourcesStatus), b.(*porch.PackageRevisionResourcesStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.PackageRevisionResourcesStatus)(nil), (*PackageRevisionResourcesStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus(a.(*porch.PackageRevisionResourcesStatus), b.(*PackageRevisionResourcesStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*PackageRevisionSpec)(nil), (*porch.PackageRevisionSpec)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_PackageRevisionSpec_To_porch_PackageRevisionSpec(a.(*PackageRevisionSpec), b.(*porch.PackageRevisionSpec), scope)
 	}); err != nil {
@@ -344,6 +384,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*RenderStatus)(nil), (*porch.RenderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_RenderStatus_To_porch_RenderStatus(a.(*RenderStatus), b.(*porch.RenderStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.RenderStatus)(nil), (*RenderStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_RenderStatus_To_v1alpha1_RenderStatus(a.(*porch.RenderStatus), b.(*RenderStatus), scope)
+	}); err != nil {
+		return err
+	}
 	if err := s.AddGeneratedConversionFunc((*RepositoryRef)(nil), (*porch.RepositoryRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_v1alpha1_RepositoryRef_To_porch_RepositoryRef(a.(*RepositoryRef), b.(*porch.RepositoryRef), scope)
 	}); err != nil {
@@ -351,6 +401,46 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*porch.RepositoryRef)(nil), (*RepositoryRef)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_porch_RepositoryRef_To_v1alpha1_RepositoryRef(a.(*porch.RepositoryRef), b.(*RepositoryRef), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResourceIdentifier)(nil), (*porch.ResourceIdentifier)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResourceIdentifier_To_porch_ResourceIdentifier(a.(*ResourceIdentifier), b.(*porch.ResourceIdentifier), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.ResourceIdentifier)(nil), (*ResourceIdentifier)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_ResourceIdentifier_To_v1alpha1_ResourceIdentifier(a.(*porch.ResourceIdentifier), b.(*ResourceIdentifier), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*Result)(nil), (*porch.Result)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Result_To_porch_Result(a.(*Result), b.(*porch.Result), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.Result)(nil), (*Result)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_Result_To_v1alpha1_Result(a.(*porch.Result), b.(*Result), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResultItem)(nil), (*porch.ResultItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResultItem_To_porch_ResultItem(a.(*ResultItem), b.(*porch.ResultItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.ResultItem)(nil), (*ResultItem)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_ResultItem_To_v1alpha1_ResultItem(a.(*porch.ResultItem), b.(*ResultItem), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*ResultList)(nil), (*porch.ResultList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_ResultList_To_porch_ResultList(a.(*ResultList), b.(*porch.ResultList), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.ResultList)(nil), (*ResultList)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_ResultList_To_v1alpha1_ResultList(a.(*porch.ResultList), b.(*ResultList), scope)
 	}); err != nil {
 		return err
 	}
@@ -381,6 +471,16 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}
 	if err := s.AddGeneratedConversionFunc((*porch.Task)(nil), (*Task)(nil), func(a, b interface{}, scope conversion.Scope) error {
 		return Convert_porch_Task_To_v1alpha1_Task(a.(*porch.Task), b.(*Task), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*TaskResult)(nil), (*porch.TaskResult)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_TaskResult_To_porch_TaskResult(a.(*TaskResult), b.(*porch.TaskResult), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*porch.TaskResult)(nil), (*TaskResult)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_porch_TaskResult_To_v1alpha1_TaskResult(a.(*porch.TaskResult), b.(*TaskResult), scope)
 	}); err != nil {
 		return err
 	}
@@ -431,6 +531,52 @@ func autoConvert_porch_Condition_To_v1alpha1_Condition(in *porch.Condition, out 
 // Convert_porch_Condition_To_v1alpha1_Condition is an autogenerated conversion function.
 func Convert_porch_Condition_To_v1alpha1_Condition(in *porch.Condition, out *Condition, s conversion.Scope) error {
 	return autoConvert_porch_Condition_To_v1alpha1_Condition(in, out, s)
+}
+
+func autoConvert_v1alpha1_Field_To_porch_Field(in *Field, out *porch.Field, s conversion.Scope) error {
+	out.Path = in.Path
+	out.CurrentValue = in.CurrentValue
+	out.ProposedValue = in.ProposedValue
+	return nil
+}
+
+// Convert_v1alpha1_Field_To_porch_Field is an autogenerated conversion function.
+func Convert_v1alpha1_Field_To_porch_Field(in *Field, out *porch.Field, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Field_To_porch_Field(in, out, s)
+}
+
+func autoConvert_porch_Field_To_v1alpha1_Field(in *porch.Field, out *Field, s conversion.Scope) error {
+	out.Path = in.Path
+	out.CurrentValue = in.CurrentValue
+	out.ProposedValue = in.ProposedValue
+	return nil
+}
+
+// Convert_porch_Field_To_v1alpha1_Field is an autogenerated conversion function.
+func Convert_porch_Field_To_v1alpha1_Field(in *porch.Field, out *Field, s conversion.Scope) error {
+	return autoConvert_porch_Field_To_v1alpha1_Field(in, out, s)
+}
+
+func autoConvert_v1alpha1_File_To_porch_File(in *File, out *porch.File, s conversion.Scope) error {
+	out.Path = in.Path
+	out.Index = in.Index
+	return nil
+}
+
+// Convert_v1alpha1_File_To_porch_File is an autogenerated conversion function.
+func Convert_v1alpha1_File_To_porch_File(in *File, out *porch.File, s conversion.Scope) error {
+	return autoConvert_v1alpha1_File_To_porch_File(in, out, s)
+}
+
+func autoConvert_porch_File_To_v1alpha1_File(in *porch.File, out *File, s conversion.Scope) error {
+	out.Path = in.Path
+	out.Index = in.Index
+	return nil
+}
+
+// Convert_porch_File_To_v1alpha1_File is an autogenerated conversion function.
+func Convert_porch_File_To_v1alpha1_File(in *porch.File, out *File, s conversion.Scope) error {
+	return autoConvert_porch_File_To_v1alpha1_File(in, out, s)
 }
 
 func autoConvert_v1alpha1_Function_To_porch_Function(in *Function, out *porch.Function, s conversion.Scope) error {
@@ -673,6 +819,28 @@ func autoConvert_porch_GitPackage_To_v1alpha1_GitPackage(in *porch.GitPackage, o
 // Convert_porch_GitPackage_To_v1alpha1_GitPackage is an autogenerated conversion function.
 func Convert_porch_GitPackage_To_v1alpha1_GitPackage(in *porch.GitPackage, out *GitPackage, s conversion.Scope) error {
 	return autoConvert_porch_GitPackage_To_v1alpha1_GitPackage(in, out, s)
+}
+
+func autoConvert_v1alpha1_NameMeta_To_porch_NameMeta(in *NameMeta, out *porch.NameMeta, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Namespace = in.Namespace
+	return nil
+}
+
+// Convert_v1alpha1_NameMeta_To_porch_NameMeta is an autogenerated conversion function.
+func Convert_v1alpha1_NameMeta_To_porch_NameMeta(in *NameMeta, out *porch.NameMeta, s conversion.Scope) error {
+	return autoConvert_v1alpha1_NameMeta_To_porch_NameMeta(in, out, s)
+}
+
+func autoConvert_porch_NameMeta_To_v1alpha1_NameMeta(in *porch.NameMeta, out *NameMeta, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Namespace = in.Namespace
+	return nil
+}
+
+// Convert_porch_NameMeta_To_v1alpha1_NameMeta is an autogenerated conversion function.
+func Convert_porch_NameMeta_To_v1alpha1_NameMeta(in *porch.NameMeta, out *NameMeta, s conversion.Scope) error {
+	return autoConvert_porch_NameMeta_To_v1alpha1_NameMeta(in, out, s)
 }
 
 func autoConvert_v1alpha1_OciPackage_To_porch_OciPackage(in *OciPackage, out *porch.OciPackage, s conversion.Scope) error {
@@ -920,6 +1088,9 @@ func autoConvert_v1alpha1_PackageRevisionResources_To_porch_PackageRevisionResou
 	if err := Convert_v1alpha1_PackageRevisionResourcesSpec_To_porch_PackageRevisionResourcesSpec(&in.Spec, &out.Spec, s); err != nil {
 		return err
 	}
+	if err := Convert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus(&in.Status, &out.Status, s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -931,6 +1102,9 @@ func Convert_v1alpha1_PackageRevisionResources_To_porch_PackageRevisionResources
 func autoConvert_porch_PackageRevisionResources_To_v1alpha1_PackageRevisionResources(in *porch.PackageRevisionResources, out *PackageRevisionResources, s conversion.Scope) error {
 	out.ObjectMeta = in.ObjectMeta
 	if err := Convert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResourcesSpec(&in.Spec, &out.Spec, s); err != nil {
+		return err
+	}
+	if err := Convert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus(&in.Status, &out.Status, s); err != nil {
 		return err
 	}
 	return nil
@@ -987,6 +1161,30 @@ func autoConvert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionR
 // Convert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResourcesSpec is an autogenerated conversion function.
 func Convert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResourcesSpec(in *porch.PackageRevisionResourcesSpec, out *PackageRevisionResourcesSpec, s conversion.Scope) error {
 	return autoConvert_porch_PackageRevisionResourcesSpec_To_v1alpha1_PackageRevisionResourcesSpec(in, out, s)
+}
+
+func autoConvert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus(in *PackageRevisionResourcesStatus, out *porch.PackageRevisionResourcesStatus, s conversion.Scope) error {
+	if err := Convert_v1alpha1_RenderStatus_To_porch_RenderStatus(&in.RenderStatus, &out.RenderStatus, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus is an autogenerated conversion function.
+func Convert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus(in *PackageRevisionResourcesStatus, out *porch.PackageRevisionResourcesStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha1_PackageRevisionResourcesStatus_To_porch_PackageRevisionResourcesStatus(in, out, s)
+}
+
+func autoConvert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus(in *porch.PackageRevisionResourcesStatus, out *PackageRevisionResourcesStatus, s conversion.Scope) error {
+	if err := Convert_porch_RenderStatus_To_v1alpha1_RenderStatus(&in.RenderStatus, &out.RenderStatus, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus is an autogenerated conversion function.
+func Convert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus(in *porch.PackageRevisionResourcesStatus, out *PackageRevisionResourcesStatus, s conversion.Scope) error {
+	return autoConvert_porch_PackageRevisionResourcesStatus_To_v1alpha1_PackageRevisionResourcesStatus(in, out, s)
 }
 
 func autoConvert_v1alpha1_PackageRevisionSpec_To_porch_PackageRevisionSpec(in *PackageRevisionSpec, out *porch.PackageRevisionSpec, s conversion.Scope) error {
@@ -1179,6 +1377,32 @@ func Convert_porch_ReadinessGate_To_v1alpha1_ReadinessGate(in *porch.ReadinessGa
 	return autoConvert_porch_ReadinessGate_To_v1alpha1_ReadinessGate(in, out, s)
 }
 
+func autoConvert_v1alpha1_RenderStatus_To_porch_RenderStatus(in *RenderStatus, out *porch.RenderStatus, s conversion.Scope) error {
+	if err := Convert_v1alpha1_ResultList_To_porch_ResultList(&in.Result, &out.Result, s); err != nil {
+		return err
+	}
+	out.Err = in.Err
+	return nil
+}
+
+// Convert_v1alpha1_RenderStatus_To_porch_RenderStatus is an autogenerated conversion function.
+func Convert_v1alpha1_RenderStatus_To_porch_RenderStatus(in *RenderStatus, out *porch.RenderStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha1_RenderStatus_To_porch_RenderStatus(in, out, s)
+}
+
+func autoConvert_porch_RenderStatus_To_v1alpha1_RenderStatus(in *porch.RenderStatus, out *RenderStatus, s conversion.Scope) error {
+	if err := Convert_porch_ResultList_To_v1alpha1_ResultList(&in.Result, &out.Result, s); err != nil {
+		return err
+	}
+	out.Err = in.Err
+	return nil
+}
+
+// Convert_porch_RenderStatus_To_v1alpha1_RenderStatus is an autogenerated conversion function.
+func Convert_porch_RenderStatus_To_v1alpha1_RenderStatus(in *porch.RenderStatus, out *RenderStatus, s conversion.Scope) error {
+	return autoConvert_porch_RenderStatus_To_v1alpha1_RenderStatus(in, out, s)
+}
+
 func autoConvert_v1alpha1_RepositoryRef_To_porch_RepositoryRef(in *RepositoryRef, out *porch.RepositoryRef, s conversion.Scope) error {
 	out.Name = in.Name
 	return nil
@@ -1197,6 +1421,112 @@ func autoConvert_porch_RepositoryRef_To_v1alpha1_RepositoryRef(in *porch.Reposit
 // Convert_porch_RepositoryRef_To_v1alpha1_RepositoryRef is an autogenerated conversion function.
 func Convert_porch_RepositoryRef_To_v1alpha1_RepositoryRef(in *porch.RepositoryRef, out *RepositoryRef, s conversion.Scope) error {
 	return autoConvert_porch_RepositoryRef_To_v1alpha1_RepositoryRef(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResourceIdentifier_To_porch_ResourceIdentifier(in *ResourceIdentifier, out *porch.ResourceIdentifier, s conversion.Scope) error {
+	if err := Convert_v1alpha1_NameMeta_To_porch_NameMeta(&in.NameMeta, &out.NameMeta, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_v1alpha1_ResourceIdentifier_To_porch_ResourceIdentifier is an autogenerated conversion function.
+func Convert_v1alpha1_ResourceIdentifier_To_porch_ResourceIdentifier(in *ResourceIdentifier, out *porch.ResourceIdentifier, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResourceIdentifier_To_porch_ResourceIdentifier(in, out, s)
+}
+
+func autoConvert_porch_ResourceIdentifier_To_v1alpha1_ResourceIdentifier(in *porch.ResourceIdentifier, out *ResourceIdentifier, s conversion.Scope) error {
+	if err := Convert_porch_NameMeta_To_v1alpha1_NameMeta(&in.NameMeta, &out.NameMeta, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Convert_porch_ResourceIdentifier_To_v1alpha1_ResourceIdentifier is an autogenerated conversion function.
+func Convert_porch_ResourceIdentifier_To_v1alpha1_ResourceIdentifier(in *porch.ResourceIdentifier, out *ResourceIdentifier, s conversion.Scope) error {
+	return autoConvert_porch_ResourceIdentifier_To_v1alpha1_ResourceIdentifier(in, out, s)
+}
+
+func autoConvert_v1alpha1_Result_To_porch_Result(in *Result, out *porch.Result, s conversion.Scope) error {
+	out.Image = in.Image
+	out.ExecPath = in.ExecPath
+	out.Stderr = in.Stderr
+	out.ExitCode = in.ExitCode
+	out.Results = *(*[]porch.ResultItem)(unsafe.Pointer(&in.Results))
+	return nil
+}
+
+// Convert_v1alpha1_Result_To_porch_Result is an autogenerated conversion function.
+func Convert_v1alpha1_Result_To_porch_Result(in *Result, out *porch.Result, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Result_To_porch_Result(in, out, s)
+}
+
+func autoConvert_porch_Result_To_v1alpha1_Result(in *porch.Result, out *Result, s conversion.Scope) error {
+	out.Image = in.Image
+	out.ExecPath = in.ExecPath
+	out.Stderr = in.Stderr
+	out.ExitCode = in.ExitCode
+	out.Results = *(*[]ResultItem)(unsafe.Pointer(&in.Results))
+	return nil
+}
+
+// Convert_porch_Result_To_v1alpha1_Result is an autogenerated conversion function.
+func Convert_porch_Result_To_v1alpha1_Result(in *porch.Result, out *Result, s conversion.Scope) error {
+	return autoConvert_porch_Result_To_v1alpha1_Result(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResultItem_To_porch_ResultItem(in *ResultItem, out *porch.ResultItem, s conversion.Scope) error {
+	out.Message = in.Message
+	out.Severity = in.Severity
+	out.ResourceRef = (*porch.ResourceIdentifier)(unsafe.Pointer(in.ResourceRef))
+	out.Field = (*porch.Field)(unsafe.Pointer(in.Field))
+	out.File = (*porch.File)(unsafe.Pointer(in.File))
+	out.Tags = *(*map[string]string)(unsafe.Pointer(&in.Tags))
+	return nil
+}
+
+// Convert_v1alpha1_ResultItem_To_porch_ResultItem is an autogenerated conversion function.
+func Convert_v1alpha1_ResultItem_To_porch_ResultItem(in *ResultItem, out *porch.ResultItem, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResultItem_To_porch_ResultItem(in, out, s)
+}
+
+func autoConvert_porch_ResultItem_To_v1alpha1_ResultItem(in *porch.ResultItem, out *ResultItem, s conversion.Scope) error {
+	out.Message = in.Message
+	out.Severity = in.Severity
+	out.ResourceRef = (*ResourceIdentifier)(unsafe.Pointer(in.ResourceRef))
+	out.Field = (*Field)(unsafe.Pointer(in.Field))
+	out.File = (*File)(unsafe.Pointer(in.File))
+	out.Tags = *(*map[string]string)(unsafe.Pointer(&in.Tags))
+	return nil
+}
+
+// Convert_porch_ResultItem_To_v1alpha1_ResultItem is an autogenerated conversion function.
+func Convert_porch_ResultItem_To_v1alpha1_ResultItem(in *porch.ResultItem, out *ResultItem, s conversion.Scope) error {
+	return autoConvert_porch_ResultItem_To_v1alpha1_ResultItem(in, out, s)
+}
+
+func autoConvert_v1alpha1_ResultList_To_porch_ResultList(in *ResultList, out *porch.ResultList, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	out.ExitCode = in.ExitCode
+	out.Items = *(*[]*porch.Result)(unsafe.Pointer(&in.Items))
+	return nil
+}
+
+// Convert_v1alpha1_ResultList_To_porch_ResultList is an autogenerated conversion function.
+func Convert_v1alpha1_ResultList_To_porch_ResultList(in *ResultList, out *porch.ResultList, s conversion.Scope) error {
+	return autoConvert_v1alpha1_ResultList_To_porch_ResultList(in, out, s)
+}
+
+func autoConvert_porch_ResultList_To_v1alpha1_ResultList(in *porch.ResultList, out *ResultList, s conversion.Scope) error {
+	out.ObjectMeta = in.ObjectMeta
+	out.ExitCode = in.ExitCode
+	out.Items = *(*[]*Result)(unsafe.Pointer(&in.Items))
+	return nil
+}
+
+// Convert_porch_ResultList_To_v1alpha1_ResultList is an autogenerated conversion function.
+func Convert_porch_ResultList_To_v1alpha1_ResultList(in *porch.ResultList, out *ResultList, s conversion.Scope) error {
+	return autoConvert_porch_ResultList_To_v1alpha1_ResultList(in, out, s)
 }
 
 func autoConvert_v1alpha1_SecretRef_To_porch_SecretRef(in *SecretRef, out *porch.SecretRef, s conversion.Scope) error {
@@ -1275,6 +1605,28 @@ func autoConvert_porch_Task_To_v1alpha1_Task(in *porch.Task, out *Task, s conver
 // Convert_porch_Task_To_v1alpha1_Task is an autogenerated conversion function.
 func Convert_porch_Task_To_v1alpha1_Task(in *porch.Task, out *Task, s conversion.Scope) error {
 	return autoConvert_porch_Task_To_v1alpha1_Task(in, out, s)
+}
+
+func autoConvert_v1alpha1_TaskResult_To_porch_TaskResult(in *TaskResult, out *porch.TaskResult, s conversion.Scope) error {
+	out.Task = (*porch.Task)(unsafe.Pointer(in.Task))
+	out.RenderStatus = (*porch.RenderStatus)(unsafe.Pointer(in.RenderStatus))
+	return nil
+}
+
+// Convert_v1alpha1_TaskResult_To_porch_TaskResult is an autogenerated conversion function.
+func Convert_v1alpha1_TaskResult_To_porch_TaskResult(in *TaskResult, out *porch.TaskResult, s conversion.Scope) error {
+	return autoConvert_v1alpha1_TaskResult_To_porch_TaskResult(in, out, s)
+}
+
+func autoConvert_porch_TaskResult_To_v1alpha1_TaskResult(in *porch.TaskResult, out *TaskResult, s conversion.Scope) error {
+	out.Task = (*Task)(unsafe.Pointer(in.Task))
+	out.RenderStatus = (*RenderStatus)(unsafe.Pointer(in.RenderStatus))
+	return nil
+}
+
+// Convert_porch_TaskResult_To_v1alpha1_TaskResult is an autogenerated conversion function.
+func Convert_porch_TaskResult_To_v1alpha1_TaskResult(in *porch.TaskResult, out *TaskResult, s conversion.Scope) error {
+	return autoConvert_porch_TaskResult_To_v1alpha1_TaskResult(in, out, s)
 }
 
 func autoConvert_v1alpha1_UpstreamLock_To_porch_UpstreamLock(in *UpstreamLock, out *porch.UpstreamLock, s conversion.Scope) error {

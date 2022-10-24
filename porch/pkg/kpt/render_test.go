@@ -67,7 +67,7 @@ func TestRender(t *testing.T) {
 			}
 			r.RunnerOptions.InitDefaults()
 
-			if err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
+			if _, err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
 				t.Errorf("Render failed: %v", err)
 			}
 

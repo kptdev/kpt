@@ -46,7 +46,7 @@ func newPackageContextGeneratorMutation(packageConfig *builtins.PackageConfig) (
 
 var _ mutation = &builtinEvalMutation{}
 
-func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ff := &runtimeutil.FunctionFilter{
 		Run:     m.runner.Run,
 		Results: &yaml.RNode{},
@@ -77,5 +77,5 @@ func (m *builtinEvalMutation) Apply(ctx context.Context, resources repository.Pa
 		result.Contents[k] = v
 	}
 
-	return result, nil, nil
+	return result, &api.TaskResult{}, nil
 }

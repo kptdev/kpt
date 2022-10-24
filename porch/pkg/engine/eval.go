@@ -34,7 +34,7 @@ type evalFunctionMutation struct {
 	task    *api.Task
 }
 
-func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "evalFunctionMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -104,5 +104,5 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 		result.Contents[k] = v
 	}
 
-	return result, m.task, nil
+	return result, &api.TaskResult{Task: m.task}, nil
 }

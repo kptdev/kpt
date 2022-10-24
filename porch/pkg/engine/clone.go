@@ -49,7 +49,7 @@ type clonePackageMutation struct {
 	packageConfig *builtins.PackageConfig
 }
 
-func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "clonePackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
@@ -86,7 +86,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		}
 		cloned, _, err = genPkgContextMutation.Apply(ctx, cloned)
 		if err != nil {
-			return repository.PackageResources{}, nil, fmt.Errorf("failed to generate deployment context: %w", err)
+			return repository.PackageResources{}, nil, fmt.Errorf("failed to generate deployment context %w", err)
 		}
 	}
 
@@ -99,7 +99,7 @@ func (m *clonePackageMutation) Apply(ctx context.Context, resources repository.P
 		klog.Infof("failed to add merge-key to resources %v", err)
 	}
 
-	return result, m.task, nil
+	return result, &api.TaskResult{Task: m.task}, nil
 }
 
 func (m *clonePackageMutation) cloneFromRegisteredRepository(ctx context.Context, ref *api.PackageRevisionRef) (repository.PackageResources, error) {

@@ -53,7 +53,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 
 	ch, err := newCommitHelper(d.parent.repo, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
-		return fmt.Errorf("failed to commit packgae: %w", err)
+		return fmt.Errorf("failed to commit package: %w", err)
 	}
 
 	for k, v := range new.Spec.Resources {

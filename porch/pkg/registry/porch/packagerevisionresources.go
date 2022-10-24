@@ -162,7 +162,7 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
 
-	rev, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRevResources, newObj)
+	rev, renderStatus, err := r.cad.UpdatePackageResources(ctx, &repositoryObj, oldRepoPkgRev, oldApiPkgRevResources, newObj)
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
 	}
@@ -170,6 +170,9 @@ func (r *packageRevisionResources) Update(ctx context.Context, name string, objI
 	created, err := rev.GetResources(ctx)
 	if err != nil {
 		return nil, false, apierrors.NewInternalError(err)
+	}
+	if renderStatus != nil {
+		created.Status.RenderStatus = *renderStatus
 	}
 
 	return created, false, nil

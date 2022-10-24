@@ -66,14 +66,14 @@ type Renderer struct {
 }
 
 // Execute runs a pipeline.
-func (e *Renderer) Execute(ctx context.Context) error {
+func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	const op errors.Op = "fn.render"
 
 	pr := printer.FromContextOrDie(ctx)
 
 	root, err := newPkgNode(e.FileSystem, e.PkgPath, nil)
 	if err != nil {
-		return errors.E(op, types.UniquePath(e.PkgPath), err)
+		return nil, errors.E(op, types.UniquePath(e.PkgPath), err)
 	}
 
 	// initialize hydration context
@@ -91,17 +91,17 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		// to avoid masking the hydration error.
 		// don't disable the CLI output in case of error
 		_ = e.saveFnResults(ctx, hctx.fnResults)
-		return errors.E(op, root.pkg.UniquePath, err)
+		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, err)
 	}
 
 	// adjust the relative paths of the resources.
 	err = adjustRelPath(hctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
-		return err
+		return nil, err
 	}
 
 	// add metrics annotation to output resources to track the usage as the resources
@@ -122,11 +122,11 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		}
 		err = pkgWriter.Write(hctx.root.resources)
 		if err != nil {
-			return fmt.Errorf("failed to save resources: %w", err)
+			return nil, fmt.Errorf("failed to save resources: %w", err)
 		}
 
 		if err = pruneResources(e.FileSystem, hctx); err != nil {
-			return err
+			return nil, err
 		}
 		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 	} else {
@@ -140,11 +140,11 @@ func (e *Renderer) Execute(ctx context.Context) error {
 		}
 		err = writer.Write(hctx.root.resources)
 		if err != nil {
-			return fmt.Errorf("failed to write resources: %w", err)
+			return nil, fmt.Errorf("failed to write resources: %w", err)
 		}
 	}
 
-	return e.saveFnResults(ctx, hctx.fnResults)
+	return hctx.fnResults, e.saveFnResults(ctx, hctx.fnResults)
 }
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {

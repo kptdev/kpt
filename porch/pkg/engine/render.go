@@ -16,10 +16,12 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	iofs "io/fs"
 	"path"
 	"strings"
 
+	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
@@ -35,12 +37,21 @@ type renderPackageMutation struct {
 
 var _ mutation = &renderPackageMutation{}
 
-func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.Task, error) {
+func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
 	ctx, span := tracer.Start(ctx, "renderPackageMutation::Apply", trace.WithAttributes())
 	defer span.End()
 
 	fs := filesys.MakeFsInMemory()
-
+	taskResult := &api.TaskResult{
+		Task: &api.Task{
+			Type: api.TaskTypeEval,
+			Eval: &api.FunctionEvalTaskSpec{
+				Image:     "render",
+				ConfigMap: nil,
+			},
+		},
+		RenderStatus: &api.RenderStatus{},
+	}
 	pkgPath, err := writeResources(fs, resources)
 	if err != nil {
 		return repository.PackageResources{}, nil, err
@@ -51,27 +62,46 @@ func (m *renderPackageMutation) Apply(ctx context.Context, resources repository.
 		// TODO: we should handle this better
 		klog.Warningf("skipping render as no package was found")
 	} else {
-		if err := m.renderer.Render(ctx, fs, fn.RenderOptions{
+		result, err := m.renderer.Render(ctx, fs, fn.RenderOptions{
 			PkgPath: pkgPath,
 			Runtime: m.runtime,
-		}); err != nil {
-			return repository.PackageResources{}, nil, err
+		})
+		if result != nil {
+			var rr api.ResultList
+			err := convertResultList(result, &rr)
+			if err != nil {
+				return repository.PackageResources{}, taskResult, err
+			}
+			taskResult.RenderStatus.Result = rr
+		}
+		if err != nil {
+			taskResult.RenderStatus.Err = err.Error()
+			return repository.PackageResources{}, taskResult, err
 		}
 	}
 
-	result, err := readResources(fs)
+	renderedResources, err := readResources(fs)
 	if err != nil {
-		return repository.PackageResources{}, nil, err
+		return repository.PackageResources{}, taskResult, err
 	}
 
 	// TODO: There are internal tasks not represented in the API; Update the Apply interface to enable them.
-	return result, &api.Task{
-		Type: "eval",
-		Eval: &api.FunctionEvalTaskSpec{
-			Image:     "render",
-			ConfigMap: nil,
-		},
-	}, nil
+	return renderedResources, taskResult, nil
+}
+
+func convertResultList(in *fnresult.ResultList, out *api.ResultList) error {
+	if in == nil {
+		return nil
+	}
+	srcBytes, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(srcBytes, &out); err != nil {
+		return err
+	}
+	return nil
 }
 
 // TODO: Implement filesystem abstraction directly rather than on top of PackageResources
