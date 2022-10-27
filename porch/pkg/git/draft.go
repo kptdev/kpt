@@ -33,16 +33,27 @@ import (
 )
 
 type gitPackageDraft struct {
-	parent    *gitRepository
-	path      string
-	revision  string
-	lifecycle v1alpha1.PackageRevisionLifecycle // New value of the package revision lifecycle
-	updated   time.Time
-	base      *plumbing.Reference // ref to the base of the package update commit chain (used for conditional push)
-	branch    BranchName          // name of the branch where the changes will be pushed
-	commit    plumbing.Hash       // Current HEAD of the package changes (commit sha)
-	tree      plumbing.Hash       // Cached tree of the package itself, some descendent of commit.Tree()
-	tasks     []v1alpha1.Task
+	parent        *gitRepository
+	path          string
+	revision      string
+	workspaceName v1alpha1.WorkspaceName
+	updated       time.Time
+	tasks         []v1alpha1.Task
+
+	// New value of the package revision lifecycle
+	lifecycle v1alpha1.PackageRevisionLifecycle
+
+	// ref to the base of the package update commit chain (used for conditional push)
+	base *plumbing.Reference
+
+	// name of the branch where the changes will be pushed
+	branch BranchName
+
+	// Current HEAD of the package changes (commit sha)
+	commit plumbing.Hash
+
+	// Cached tree of the package itself, some descendent of commit.Tree()
+	tree plumbing.Hash
 }
 
 var _ repository.PackageDraft = &gitPackageDraft{}
@@ -71,9 +82,10 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 	}
 
 	annotation := &gitAnnotation{
-		PackagePath: d.path,
-		Revision:    d.revision,
-		Task:        change,
+		PackagePath:   d.path,
+		WorkspaceName: d.workspaceName,
+		Revision:      d.revision,
+		Task:          change,
 	}
 	message := "Intermediate commit"
 	if change != nil {
@@ -112,13 +124,22 @@ func (d *gitPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 
 func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gitPackageRevision, error) {
 	refSpecs := newPushRefSpecBuilder()
-	draftBranch := createDraftName(d.path, d.revision)
-	proposedBranch := createProposedName(d.path, d.revision)
+	draftBranch := createDraftName(d.path, d.workspaceName)
+	proposedBranch := createProposedName(d.path, d.workspaceName)
 
 	var newRef *plumbing.Reference
 
 	switch d.lifecycle {
 	case v1alpha1.PackageRevisionLifecyclePublished:
+		// Finalize the package revision. Assign it a revision number of latest + 1.
+		revisions, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
+			Package: d.path,
+		})
+		d.revision, err = repository.NextRevisionNumber(revisions)
+		if err != nil {
+			return nil, err
+		}
+
 		// Finalize the package revision. Commit it to main branch.
 		commitHash, newTreeHash, commitBase, err := r.commitPackageToMain(ctx, d)
 		if err != nil {
@@ -180,15 +201,22 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 		}
 	}
 
+	// for backwards compatibility with packages that existed before porch supported
+	// descriptions, we populate the workspaceName as the revision number if it is empty
+	if d.workspaceName == "" {
+		d.workspaceName = v1alpha1.WorkspaceName(d.revision)
+	}
+
 	return &gitPackageRevision{
-		repo:     d.parent,
-		path:     d.path,
-		revision: d.revision,
-		updated:  d.updated,
-		ref:      newRef,
-		tree:     d.tree,
-		commit:   newRef.Hash(),
-		tasks:    d.tasks,
+		repo:          d.parent,
+		path:          d.path,
+		revision:      d.revision,
+		workspaceName: d.workspaceName,
+		updated:       d.updated,
+		ref:           newRef,
+		tree:          d.tree,
+		commit:        newRef.Hash(),
+		tasks:         d.tasks,
 	}, nil
 }
 
@@ -259,8 +287,9 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 	// Add a commit without changes to mark that the package revision is approved. The gitAnnotation is
 	// included so that we can later associate the commit with the correct packagerevision.
 	message, err := AnnotateCommitMessage(fmt.Sprintf("Approve %s/%s", packagePath, d.revision), &gitAnnotation{
-		PackagePath: packagePath,
-		Revision:    d.revision,
+		PackagePath:   packagePath,
+		WorkspaceName: d.workspaceName,
+		Revision:      d.revision,
 	})
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed annotation commit message for package %s: %v", packagePath, err)

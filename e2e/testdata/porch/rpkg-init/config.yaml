@@ -26,15 +26,15 @@ commands:
       - --site
       - http://kpt.dev/init-package
       - --repository=git
-      - --revision=v0
+      - --workspace=init-1
       - init-package
-    stdout: "git-e5041a7290c88ac4ac34182c8b3d658ab97d353d created\n"
+    stdout: "git-95686470a1fd3a3ba726cce4c8f449f6bbe2b02a created\n"
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-init
-      - git-e5041a7290c88ac4ac34182c8b3d658ab97d353d
+      - git-95686470a1fd3a3ba726cce4c8f449f6bbe2b02a
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
@@ -74,7 +74,7 @@ commands:
       - init
       - --namespace=rpkg-init
       - --repository=git
-      - --revision=v1
+      - --workspace=init-2
       - init-package
     stderr: "error: `init` cannot create a new revision for package \"init-package\" that already exists in repo \"git\"; make subsequent revisions using `copy`\n"
     exitCode: 1

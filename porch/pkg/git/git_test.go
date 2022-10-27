@@ -128,7 +128,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 	const (
 		repositoryName = "roundtrip"
 		packageName    = "test-package"
-		revision       = "v123"
+		workspace      = "test-workspace"
 		namespace      = "default"
 		deployment     = true
 	)
@@ -162,7 +162,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 			},
 			Spec: v1alpha1.PackageRevisionSpec{
 				PackageName:    packageName,
-				Revision:       revision,
+				WorkspaceName:  workspace,
 				RepositoryName: repositoryName,
 			},
 			Status: v1alpha1.PackageRevisionStatus{},
@@ -195,9 +195,9 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		}
 
 		original := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-			Repository: repositoryName,
-			Package:    packageName,
-			Revision:   revision,
+			Repository:    repositoryName,
+			Package:       packageName,
+			WorkspaceName: workspace,
 		})
 
 		update, err := repo.UpdatePackageRevision(ctx, original)
@@ -209,7 +209,11 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 		}
 		approved, err := update.Close(ctx)
 		if err != nil {
-			t.Fatalf("Close() of %q, %q failed: %v", packageName, revision, err)
+			t.Fatalf("Close() of %q, %q failed: %v", packageName, workspace, err)
+		}
+		if approved.Key().Revision != "v1" {
+			t.Fatalf("UpdateLifecycle did not assign correct revision number; got %s, want v1",
+				approved.Key().Revision)
 		}
 
 		klog.Infof("approved revision %v", approved.KubeObjectName())
@@ -217,7 +221,7 @@ func (g GitSuite) TestGitPackageRoundTrip(t *testing.T) {
 
 	// Get the package again, the resources should match what we push
 	{
-		version := "v123"
+		version := "v1"
 
 		path := "test-package"
 		packageRevision, gitLock, err := repo.GetPackageRevision(ctx, version, path)
@@ -388,7 +392,7 @@ func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    "test-package",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: repositoryName,
 			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
 		},
@@ -433,7 +437,7 @@ func (g GitSuite) TestListPackagesTrivial(t *testing.T) {
 		t.Fatalf("Failed to open git repository for verification: %v", err)
 	}
 	logRefs(t, verify, "Ref: ")
-	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/v1")
+	draftRefName := plumbing.NewBranchReferenceName("drafts/test-package/test-workspace")
 	if _, err = verify.Reference(draftRefName, true); err != nil {
 		t.Errorf("Failed to resolve %q references: %v", draftRefName, err)
 	}
@@ -476,7 +480,7 @@ func (g GitSuite) TestCreatePackageInTrivialRepository(t *testing.T) {
 		},
 		Spec: v1alpha1.PackageRevisionSpec{
 			PackageName:    "test-package",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: repositoryName,
 			Lifecycle:      v1alpha1.PackageRevisionLifecycleDraft,
 		},
@@ -544,18 +548,18 @@ func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 	}
 
 	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
-		{Repository: "simple", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "empty", Revision: "v1", WorkspaceName: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: "v1", WorkspaceName: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: "v2", WorkspaceName: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: "v1", WorkspaceName: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: "v2", WorkspaceName: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
 
 		// TODO: may want to filter these out, for example by including only those package
 		// revisions from main branch that differ in content (their tree hash) from another
 		// taged revision of the package.
-		{Repository: "simple", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "simple", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "empty", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "basens", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "simple", Package: "istions", Revision: g.branch, WorkspaceName: v1alpha1.WorkspaceName(g.branch)}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -565,9 +569,10 @@ func (g GitSuite) TestListPackagesSimple(t *testing.T) {
 			t.Errorf("didn't expect error, but got %v", err)
 		}
 		got[repository.PackageRevisionKey{
-			Repository: rev.Spec.RepositoryName,
-			Package:    rev.Spec.PackageName,
-			Revision:   rev.Spec.Revision,
+			Repository:    rev.Spec.RepositoryName,
+			Package:       rev.Spec.PackageName,
+			WorkspaceName: rev.Spec.WorkspaceName,
+			Revision:      rev.Spec.Revision,
 		}] = rev.Spec.Lifecycle
 	}
 
@@ -604,20 +609,20 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 	}
 
 	want := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{
-		{Repository: "drafts", Package: "empty", Revision: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "basens", Revision: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "basens", Revision: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", Revision: "v1", WorkspaceName: "v1"}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Revision: "v1", WorkspaceName: "v1"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", Revision: "v2", WorkspaceName: "v2"}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Revision: "v1", WorkspaceName: "v1"}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", Revision: "v2", WorkspaceName: "v2"}: v1alpha1.PackageRevisionLifecyclePublished,
 
-		{Repository: "drafts", Package: "bucket", Revision: "v1"}:           v1alpha1.PackageRevisionLifecycleDraft,
-		{Repository: "drafts", Package: "none", Revision: "v1"}:             v1alpha1.PackageRevisionLifecycleDraft,
-		{Repository: "drafts", Package: "pkg-with-history", Revision: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "bucket", WorkspaceName: "v1"}:           v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "none", WorkspaceName: "v1"}:             v1alpha1.PackageRevisionLifecycleDraft,
+		{Repository: "drafts", Package: "pkg-with-history", WorkspaceName: "v1"}: v1alpha1.PackageRevisionLifecycleDraft,
 
 		// TODO: filter main branch out? see above
-		{Repository: "drafts", Package: "basens", Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "empty", Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
-		{Repository: "drafts", Package: "istions", Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "basens", WorkspaceName: v1alpha1.WorkspaceName(g.branch), Revision: g.branch}:  v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "empty", WorkspaceName: v1alpha1.WorkspaceName(g.branch), Revision: g.branch}:   v1alpha1.PackageRevisionLifecyclePublished,
+		{Repository: "drafts", Package: "istions", WorkspaceName: v1alpha1.WorkspaceName(g.branch), Revision: g.branch}: v1alpha1.PackageRevisionLifecyclePublished,
 	}
 
 	got := map[repository.PackageRevisionKey]v1alpha1.PackageRevisionLifecycle{}
@@ -627,9 +632,10 @@ func (g GitSuite) TestListPackagesDrafts(t *testing.T) {
 			t.Errorf("didn't expect error, but got %v", err)
 		}
 		got[repository.PackageRevisionKey{
-			Repository: rev.Spec.RepositoryName,
-			Package:    rev.Spec.PackageName,
-			Revision:   rev.Spec.Revision,
+			Repository:    rev.Spec.RepositoryName,
+			Package:       rev.Spec.PackageName,
+			Revision:      rev.Spec.Revision,
+			WorkspaceName: rev.Spec.WorkspaceName,
 		}] = rev.Spec.Lifecycle
 	}
 
@@ -666,9 +672,9 @@ func (g GitSuite) TestApproveDraft(t *testing.T) {
 	}
 
 	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-		Repository: repositoryName,
-		Package:    "bucket",
-		Revision:   "v1",
+		Repository:    repositoryName,
+		Package:       "bucket",
+		WorkspaceName: "v1",
 	})
 
 	// Before Update; Check server references. Draft must exist, final not.
@@ -728,9 +734,9 @@ func (g GitSuite) TestApproveDraftWithHistory(t *testing.T) {
 	}
 
 	bucket := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-		Repository: repositoryName,
-		Package:    "pkg-with-history",
-		Revision:   "v1",
+		Repository:    repositoryName,
+		Package:       "pkg-with-history",
+		WorkspaceName: "v1",
 	})
 
 	// Before Update; Check server references. Draft must exist, final not.
@@ -809,7 +815,8 @@ func (g GitSuite) TestDeletePackages(t *testing.T) {
 		if err != nil {
 			t.Fatalf("didn't expect error, but got %v", err)
 		}
-		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName, Revision: pr.Spec.Revision}
+		name := repository.PackageRevisionKey{Repository: pr.Spec.RepositoryName, Package: pr.Spec.PackageName,
+			Revision: pr.Spec.Revision, WorkspaceName: pr.Spec.WorkspaceName}
 
 		if rn, ok := wantDeletedRefs[name]; ok {
 			// Verify the reference still exists
@@ -882,9 +889,10 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	)
 
 	newPackageName := repository.PackageRevisionKey{
-		Repository: "refresh",
-		Package:    "newpkg",
-		Revision:   "v3",
+		Repository:    "refresh",
+		Package:       "newpkg",
+		Revision:      "v3",
+		WorkspaceName: "v3",
 	}
 
 	ctx := context.Background()
@@ -901,7 +909,8 @@ func (g GitSuite) TestRefreshRepo(t *testing.T) {
 	}
 
 	// Confirm we listed some package(s)
-	findPackageRevision(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens", Revision: "v2"})
+	findPackageRevision(t, all, repository.PackageRevisionKey{Repository: "refresh", Package: "basens",
+		Revision: "v2", WorkspaceName: "v2"})
 	packageMustNotExist(t, all, newPackageName)
 
 	// Create package in the upstream repository
@@ -983,31 +992,31 @@ func (g GitSuite) TestPruneRemotes(t *testing.T) {
 	}{
 		{
 			ref: "refs/heads/drafts/bucket/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "bucket", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "bucket", WorkspaceName: "v1"},
 		},
 		{
 			ref: "refs/heads/drafts/none/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "none", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "none", WorkspaceName: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v1", WorkspaceName: "v1"},
 		},
 		{
 			ref: "refs/tags/basens/v2",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "basens", Revision: "v2", WorkspaceName: "v2"},
 		},
 		{
 			ref: "refs/tags/empty/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "empty", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "empty", Revision: "v1", WorkspaceName: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v1",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v1"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v1", WorkspaceName: "v1"},
 		},
 		{
 			ref: "refs/tags/istions/v2",
-			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v2"},
+			pkg: repository.PackageRevisionKey{Repository: "prune", Package: "istions", Revision: "v2", WorkspaceName: "v2"},
 		},
 	} {
 		repositoryMustHavePackageRevision(t, git, pair.pkg)
@@ -1080,7 +1089,11 @@ func (g GitSuite) TestNested(t *testing.T) {
 			// to match the above simplified package discovery algo.
 			continue
 		}
-		got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Revision)] = rev.Spec.Lifecycle
+		if rev.Spec.Lifecycle == v1alpha1.PackageRevisionLifecyclePublished {
+			got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.Revision)] = rev.Spec.Lifecycle
+		} else {
+			got[fmt.Sprintf("%s/%s", rev.Spec.PackageName, rev.Spec.WorkspaceName)] = rev.Spec.Lifecycle
+		}
 	}
 
 	if !cmp.Equal(want, got) {
@@ -1092,7 +1105,11 @@ func createPackageRevisionMap(revisions []repository.PackageRevision) map[string
 	result := map[string]bool{}
 	for _, pr := range revisions {
 		key := pr.Key()
-		result[fmt.Sprintf("%s/%s", key.Package, key.Revision)] = true
+		if key.WorkspaceName != "" {
+			result[fmt.Sprintf("%s/%s", key.Package, key.WorkspaceName)] = true
+		} else {
+			result[fmt.Sprintf("%s/%s", key.Package, key.Revision)] = true
+		}
 	}
 	return result
 }
@@ -1171,31 +1188,35 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 
 	testCases := map[string]struct {
 		pkg       string
+		workspace string
 		revision  string
 		author    string
 		timestamp time.Time
 	}{
 		"draft packagerevision does not have publishing info in status": {
 			pkg:       "draft-pkg",
-			revision:  "v1",
+			workspace: "v1",
 			author:    "",
 			timestamp: time.Time{},
 		},
 		"published packagerevision on tag": {
 			pkg:       "pkg-with-anno",
 			revision:  "v1",
+			workspace: "v1",
 			author:    "pkg-with-anno-author@example.com",
 			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
 		},
 		"published packagerevision on main without commit annotations": {
 			pkg:       "pkg-without-anno",
 			revision:  g.branch,
+			workspace: g.branch,
 			author:    "",
 			timestamp: time.Time{},
 		},
 		"published packagerevision on main with commit annotations": {
 			pkg:       "pkg-with-anno",
 			revision:  g.branch,
+			workspace: g.branch,
 			author:    "pkg-with-anno-author@example.com",
 			timestamp: time.Date(2022, time.August, 26, 22, 47, 35, 0, time.UTC),
 		},
@@ -1229,9 +1250,10 @@ func (g GitSuite) TestAuthor(t *testing.T) {
 
 			_ = revisions
 			draftPkg := findPackageRevision(t, revisions, repository.PackageRevisionKey{
-				Repository: repositoryName,
-				Package:    tc.pkg,
-				Revision:   tc.revision,
+				Repository:    repositoryName,
+				Package:       tc.pkg,
+				WorkspaceName: v1alpha1.WorkspaceName(tc.workspace),
+				Revision:      tc.revision,
 			})
 			rev, err := draftPkg.GetPackageRevision(ctx)
 			if err != nil {

@@ -57,16 +57,21 @@ const (
 	PackageRevisionLifecyclePublished PackageRevisionLifecycle = "Published"
 )
 
+type WorkspaceName string
+
 // PackageRevisionSpec defines the desired state of PackageRevision
 type PackageRevisionSpec struct {
 	// PackageName identifies the package in the repository.
 	PackageName string `json:"packageName,omitempty"`
 
-	// Revision identifies the version of the package.
-	Revision string `json:"revision,omitempty"`
-
 	// RepositoryName is the name of the Repository object containing this package.
 	RepositoryName string `json:"repository,omitempty"`
+
+	// WorkspaceName is a short, unique description of the changes contained in this package revision.
+	WorkspaceName WorkspaceName `json:"workspaceName,omitempty"`
+
+	// Revision identifies the version of the package.
+	Revision string `json:"revision,omitempty"`
 
 	// Parent references a package that provides resources to us
 	Parent *ParentReference `json:"parent,omitempty"`
@@ -92,6 +97,7 @@ type ParentReference struct {
 
 // PackageRevisionStatus defines the observed state of PackageRevision
 type PackageRevisionStatus struct {
+	// UpstreamLock identifies the upstream data for this package.
 	UpstreamLock *UpstreamLock `json:"upstreamLock,omitempty"`
 
 	// PublishedBy is the identity of the user who approved the packagerevision.
