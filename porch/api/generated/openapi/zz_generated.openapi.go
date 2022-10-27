@@ -1591,31 +1591,28 @@ func schema_porch_api_porch_v1alpha1_Result(ref common.ReferenceCallback) common
 				Description: "Result contains the structured result from an individual function",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"Image": {
+					"image": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Image is the full name of the image that generates this result Image and Exec are mutually exclusive",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"ExecPath": {
+					"exec": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ExecPath is the the absolute os-specific path to the executable file If user provides an executable file with commands, ExecPath should contain the entire input string.",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"Stderr": {
+					"stderr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Enable this once test harness supports filepath based assertions. Pkg is OS specific Absolute path to the package. Pkg string `yaml:\"pkg,omitempty\"` Stderr is the content in function stderr",
-							Default:     "",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"ExitCode": {
+					"exitCode": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ExitCode is the exit code from running the function",
 							Default:     0,
@@ -1623,7 +1620,7 @@ func schema_porch_api_porch_v1alpha1_Result(ref common.ReferenceCallback) common
 							Format:      "int32",
 						},
 					},
-					"Results": {
+					"results": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Results is the list of results for the function",
 							Type:        []string{"array"},
@@ -1638,7 +1635,7 @@ func schema_porch_api_porch_v1alpha1_Result(ref common.ReferenceCallback) common
 						},
 					},
 				},
-				Required: []string{"Image", "ExecPath", "Stderr", "ExitCode", "Results"},
+				Required: []string{"exitCode"},
 			},
 		},
 		Dependencies: []string{
@@ -1736,7 +1733,7 @@ func schema_porch_api_porch_v1alpha1_ResultList(ref common.ReferenceCallback) co
 							Ref:     ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"ExitCode": {
+					"exitCode": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ExitCode is the exit code of kpt command",
 							Default:     0,
@@ -1744,7 +1741,7 @@ func schema_porch_api_porch_v1alpha1_ResultList(ref common.ReferenceCallback) co
 							Format:      "int32",
 						},
 					},
-					"Items": {
+					"items": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Items contain a list of function result",
 							Type:        []string{"array"},
@@ -1758,7 +1755,7 @@ func schema_porch_api_porch_v1alpha1_ResultList(ref common.ReferenceCallback) co
 						},
 					},
 				},
-				Required: []string{"ExitCode", "Items"},
+				Required: []string{"exitCode"},
 			},
 		},
 		Dependencies: []string{

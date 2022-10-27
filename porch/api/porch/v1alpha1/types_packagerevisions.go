@@ -362,21 +362,21 @@ const (
 type Result struct {
 	// Image is the full name of the image that generates this result
 	// Image and Exec are mutually exclusive
-	Image string `yaml:"image,omitempty"`
+	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 	// ExecPath is the the absolute os-specific path to the executable file
 	// If user provides an executable file with commands, ExecPath should
 	// contain the entire input string.
-	ExecPath string `yaml:"exec,omitempty"`
+	ExecPath string `yaml:"exec,omitempty" json:"exec,omitempty"`
 	// TODO(droot): This is required for making structured results subpackage aware.
 	// Enable this once test harness supports filepath based assertions.
 	// Pkg is OS specific Absolute path to the package.
 	// Pkg string `yaml:"pkg,omitempty"`
 	// Stderr is the content in function stderr
-	Stderr string `yaml:"stderr,omitempty"`
+	Stderr string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
 	// ExitCode is the exit code from running the function
-	ExitCode int `yaml:"exitCode"`
+	ExitCode int `yaml:"exitCode" json:"exitCode"`
 	// Results is the list of results for the function
-	Results []ResultItem `yaml:"results,omitempty"`
+	Results []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
 }
 
 const (
@@ -396,9 +396,9 @@ type ResultList struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// ExitCode is the exit code of kpt command
-	ExitCode int `yaml:"exitCode"`
+	ExitCode int `yaml:"exitCode" json:"exitCode"`
 	// Items contain a list of function result
-	Items []*Result `yaml:"items,omitempty"`
+	Items []*Result `yaml:"items,omitempty" json:"items,omitempty"`
 }
 
 // ResultItem defines a validation result
