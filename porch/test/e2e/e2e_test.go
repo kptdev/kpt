@@ -32,9 +32,12 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	coreapi "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -1684,6 +1687,82 @@ func (t *PorchSuite) TestRegisteredPackageRevisionLabels(ctx context.Context) {
 	)
 }
 
+func (t *PorchSuite) TestPackageRevisionGarbageCollector(ctx context.Context) {
+	const (
+		repository  = "pkgrevgc"
+		workspace   = "test-workspace"
+		description = "empty-package description"
+		cmName      = "foo"
+	)
+
+	var (
+		packageRevisionGVK = porchapi.SchemeGroupVersion.WithKind("PackageRevision")
+		configMapGVK       = corev1.SchemeGroupVersion.WithKind("ConfigMap")
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "empty-package",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       configMapGVK.Kind,
+			APIVersion: configMapGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cmName,
+			Namespace: t.namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: porchapi.SchemeGroupVersion.String(),
+					Kind:       "PackageRevision",
+					Name:       pr.Name,
+					UID:        pr.UID,
+				},
+			},
+		},
+		Data: map[string]string{
+			"foo": "bar",
+		},
+	}
+	t.CreateF(ctx, cm)
+
+	t.DeleteF(ctx, pr)
+	t.waitUntilObjectDeleted(
+		ctx,
+		packageRevisionGVK,
+		types.NamespacedName{
+			Name:      pr.Name,
+			Namespace: pr.Namespace,
+		},
+		10*time.Second,
+	)
+	t.waitUntilObjectDeleted(
+		ctx,
+		configMapGVK,
+		types.NamespacedName{
+			Name:      cm.Name,
+			Namespace: cm.Namespace,
+		},
+		10*time.Second,
+	)
+}
+
 func (t *PorchSuite) validateLabelsAndAnnos(ctx context.Context, name string, labels, annos map[string]string) {
 	var pr porchapi.PackageRevision
 	t.GetF(ctx, client.ObjectKey{
@@ -1955,5 +2034,24 @@ func (t *PorchSuite) waitUntilAllPackagesDeleted(ctx context.Context, repoName s
 	})
 	if err != nil {
 		t.Fatalf("Packages from repo %s still remains", repoName)
+	}
+}
+
+func (t *PorchSuite) waitUntilObjectDeleted(ctx context.Context, gvk schema.GroupVersionKind, namespacedName types.NamespacedName, d time.Duration) {
+	var innerErr error
+	err := wait.PollImmediateWithContext(ctx, time.Second, d, func(ctx context.Context) (bool, error) {
+		var u unstructured.Unstructured
+		u.SetGroupVersionKind(gvk)
+		if err := t.client.Get(ctx, namespacedName, &u); err != nil {
+			if apierrors.IsNotFound(err) {
+				return true, nil
+			}
+			innerErr = err
+			return false, err
+		}
+		return false, nil
+	})
+	if err != nil {
+		t.Errorf("Object %s not deleted after %s: %v", namespacedName.String(), d.String(), innerErr)
 	}
 }
