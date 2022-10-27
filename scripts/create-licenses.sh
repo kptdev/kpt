@@ -163,9 +163,14 @@ declare -Ag CONTENT
 go mod vendor
 
 # Some cleanups
+# Rename all license files to `LICENSE`
 find vendor -type f -name LICENSE.md -execdir mv LICENSE.md LICENSE ';'
+# Move LICENSE file to root directory of each dependency. This is necessary for
+# dependencies where code is stored in a versioned sub-directory.
 V2_LICENSE_DIR="vendor/github.com/cpuguy83/go-md2man"
 mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
+GO_RESTFUL_LICENSE_DIR="vendor/github.com/emicklei/go-restful"
+mv ${GO_RESTFUL_LICENSE_DIR}/v3/LICENSE ${GO_RESTFUL_LICENSE_DIR}
 
 # Loop through every vendored package
 mozilla_repos=()
