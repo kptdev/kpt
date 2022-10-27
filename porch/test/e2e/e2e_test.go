@@ -111,7 +111,7 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-bucket",
-			Revision:       "v1",
+			WorkspaceName:  "workspace",
 			RepositoryName: "git",
 			Tasks: []porchapi.Task{
 				{
@@ -191,7 +191,7 @@ func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "istions",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: "downstream",
 			Tasks: []porchapi.Task{
 				{
@@ -267,6 +267,7 @@ func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
 		repository  = "git"
 		packageName = "empty-package"
 		revision    = "v1"
+		workspace   = "test-workspace"
 		description = "empty-package description"
 	)
 
@@ -284,7 +285,7 @@ func (t *PorchSuite) TestInitEmptyPackage(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "empty-package",
-			Revision:       "v1",
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 		},
 	}
@@ -313,6 +314,7 @@ func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
 		repository  = "git"
 		packageName = "new-package"
 		revision    = "v1"
+		workspace   = "test-workspace"
 		description = "New Package"
 		site        = "https://kpt.dev/new-package"
 	)
@@ -332,7 +334,7 @@ func (t *PorchSuite) TestInitTaskPackage(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "new-package",
-			Revision:       "v1",
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -372,6 +374,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	const downstreamRepository = "deployment"
 	const downstreamPackage = "istions"
 	const downstreamRevision = "v2"
+	const downstreamWorkspace = "test-workspace"
 
 	// Register the deployment repository
 	t.registerMainGitRepositoryF(ctx, downstreamRepository, withDeployment())
@@ -382,9 +385,10 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	var upstreamPackages porchapi.PackageRevisionList
 	t.ListE(ctx, &upstreamPackages, client.InNamespace(t.namespace))
 	upstreamPackage := MustFindPackageRevision(t.T, &upstreamPackages, repository.PackageRevisionKey{
-		Repository: "test-blueprints",
-		Package:    "basens",
-		Revision:   "v1",
+		Repository:    "test-blueprints",
+		Package:       "basens",
+		Revision:      "v1",
+		WorkspaceName: "v1",
 	})
 
 	// Create PackageRevision from upstream repo
@@ -398,7 +402,7 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    downstreamPackage,
-			Revision:       downstreamRevision,
+			WorkspaceName:  downstreamWorkspace,
 			RepositoryName: downstreamRepository,
 			Tasks: []porchapi.Task{
 				{
@@ -483,7 +487,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	const (
 		repository  = "re-render-test"
 		packageName = "simple-package"
-		revision    = "v3"
+		description = "description"
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -499,7 +503,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			Revision:       revision,
+			WorkspaceName:  description,
 			RepositoryName: repository,
 		},
 	}
@@ -603,9 +607,9 @@ func (t *PorchSuite) TestPublicGitRepository(ctx context.Context) {
 
 func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	const (
-		repository      = "lifecycle"
-		packageName     = "test-package"
-		packageRevision = "v1"
+		repository  = "lifecycle"
+		packageName = "test-package"
+		workspace   = "workspace"
 	)
 
 	// Register the repository
@@ -622,7 +626,7 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			Revision:       packageRevision,
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -666,6 +670,11 @@ func (t *PorchSuite) TestProposeApprove(ctx context.Context) {
 	if got, want := approved.Spec.Lifecycle, porchapi.PackageRevisionLifecyclePublished; got != want {
 		t.Fatalf("Approved package lifecycle value: got %s, want %s", got, want)
 	}
+
+	// Check its revision number
+	if got, want := approved.Spec.Revision, "v1"; got != want {
+		t.Fatalf("Approved package revision value: got %s, want %s", got, want)
+	}
 }
 
 func (t *PorchSuite) TestDeleteDraft(ctx context.Context) {
@@ -673,13 +682,14 @@ func (t *PorchSuite) TestDeleteDraft(ctx context.Context) {
 		repository  = "delete-draft"
 		packageName = "test-delete-draft"
 		revision    = "v1"
+		workspace   = "test-workspace"
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	created := t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
 
 	// Check the package exists
 	var draft porchapi.PackageRevision
@@ -701,13 +711,14 @@ func (t *PorchSuite) TestDeleteProposed(ctx context.Context) {
 		repository  = "delete-proposed"
 		packageName = "test-delete-proposed"
 		revision    = "v1"
+		workspace   = "workspace"
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	created := t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
 
 	// Check the package exists
 	var pkg porchapi.PackageRevision
@@ -733,13 +744,14 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 		repository  = "delete-final"
 		packageName = "test-delete-final"
 		revision    = "v1"
+		workspace   = "workspace"
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	created := t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
 
 	// Check the package exists
 	var pkg porchapi.PackageRevision
@@ -770,13 +782,14 @@ func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
 		repository  = "delete-and-recreate"
 		packageName = "test-delete-and-recreate"
 		revision    = "v1"
+		workspace   = "work"
 	)
 
 	// Register the repository
 	t.registerMainGitRepositoryF(ctx, repository)
 
 	// Create a draft package
-	created := t.createPackageDraftF(ctx, repository, packageName, revision)
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
 
 	// Check the package exists
 	var pkg porchapi.PackageRevision
@@ -784,6 +797,10 @@ func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
 
 	// Propose the package revision to be finalized
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	// Assign a revision number
+	pkg.Spec.Revision = "v1"
 	t.UpdateF(ctx, &pkg)
 
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
@@ -801,8 +818,8 @@ func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
 
 	t.mustNotExist(ctx, &pkg)
 
-	// Recreate the package with the same name and revision
-	created = t.createPackageDraftF(ctx, repository, packageName, revision)
+	// Recreate the package with the same name and workspace
+	created = t.createPackageDraftF(ctx, repository, packageName, workspace)
 
 	// Check the package exists
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
@@ -825,6 +842,7 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 		repository  = "clone-ls"
 		packageName = "test-clone-ls"
 		revision    = "v1"
+		workspace   = "workspace"
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -840,7 +858,7 @@ func (t *PorchSuite) TestCloneLeadingSlash(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			Revision:       revision,
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -894,7 +912,7 @@ func (t *PorchSuite) TestPackageUpdate(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "testns",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: gitRepository,
 			Tasks: []porchapi.Task{
 				{
@@ -1000,7 +1018,7 @@ func (t *PorchSuite) TestBuiltinFunctionEvaluator(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-builtin-fn-bucket",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: "git-builtin-fn",
 			Tasks: []porchapi.Task{
 				{
@@ -1078,7 +1096,7 @@ func (t *PorchSuite) TestExecFunctionEvaluator(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-bucket",
-			Revision:       "v1",
+			WorkspaceName:  "test-workspace",
 			RepositoryName: "git-fn",
 			Tasks: []porchapi.Task{
 				{
@@ -1158,7 +1176,7 @@ func (t *PorchSuite) TestPodFunctionEvaluatorWithDistrolessImage(ctx context.Con
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-redis-bucket",
-			Revision:       "v1",
+			WorkspaceName:  "test-description",
 			RepositoryName: "git-fn-distroless",
 			Tasks: []porchapi.Task{
 				{
@@ -1245,7 +1263,7 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-pod-hierarchy",
-			Revision:       "v1",
+			WorkspaceName:  "workspace-1",
 			RepositoryName: "git-fn-pod",
 			Tasks: []porchapi.Task{
 				{
@@ -1324,7 +1342,7 @@ func (t *PorchSuite) TestPodEvaluator(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-pod-hierarchy",
-			Revision:       "v2",
+			WorkspaceName:  "workspace-2",
 			RepositoryName: "git-fn-pod",
 			Tasks: []porchapi.Task{
 				{
@@ -1400,7 +1418,7 @@ func (t *PorchSuite) TestPodEvaluatorWithFailure(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "test-fn-pod-bucket",
-			Revision:       "v1",
+			WorkspaceName:  "workspace",
 			RepositoryName: "git-fn-pod-failure",
 			Tasks: []porchapi.Task{
 				{
@@ -1531,7 +1549,7 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "new-package",
-			Revision:       "v1",
+			WorkspaceName:  "workspace",
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -1585,6 +1603,7 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 	delete(pr.ObjectMeta.Labels, labelKey1)
 	pr.ObjectMeta.Labels[labelKey2] = labelVal2
 	delete(pr.ObjectMeta.Annotations, annoKey2)
+	pr.Spec.Revision = "v1"
 	t.UpdateF(ctx, &pr)
 	t.validateLabelsAndAnnos(ctx, pr.Name,
 		map[string]string{
@@ -1608,7 +1627,7 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    "cloned-package",
-			Revision:       "v1",
+			WorkspaceName:  "workspace",
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{
@@ -1764,7 +1783,7 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Description: "Porch Test Repository Description",
+			Description: "Porch Test Repository WorkspaceName",
 			Type:        configapi.RepositoryTypeGit,
 			Content:     configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
@@ -1817,7 +1836,7 @@ func withContent(content configapi.RepositoryContent) repositoryOption {
 }
 
 // Creates an empty package draft by initializing an empty package
-func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, revision string) *porchapi.PackageRevision {
+func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, workspace string) *porchapi.PackageRevision {
 	pr := &porchapi.PackageRevision{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevision",
@@ -1828,7 +1847,7 @@ func (t *PorchSuite) createPackageDraftF(ctx context.Context, repository, name, 
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    name,
-			Revision:       revision,
+			WorkspaceName:  porchapi.WorkspaceName(workspace),
 			RepositoryName: repository,
 			Tasks: []porchapi.Task{
 				{

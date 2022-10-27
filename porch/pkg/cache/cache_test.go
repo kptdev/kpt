@@ -85,8 +85,8 @@ func TestPublishedLatest(t *testing.T) {
 	_, cached := openRepositoryFromArchive(t, ctx, testPath, "nested")
 
 	revisions, err := cached.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
-		Package:  "catalog/gcp/bucket",
-		Revision: "v2",
+		Package:       "catalog/gcp/bucket",
+		WorkspaceName: "v2",
 	})
 	if err != nil {
 		t.Fatalf("ListPackageRevisions failed: %v", err)

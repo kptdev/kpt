@@ -20,6 +20,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -52,9 +53,9 @@ type packageListEntry struct {
 
 // buildGitPackageRevision creates a gitPackageRevision for the packageListEntry
 // TODO: Can packageListEntry just _be_ a gitPackageRevision?
-func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision string, ref *plumbing.Reference) (*gitPackageRevision, error) {
+func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision string, workspace v1alpha1.WorkspaceName, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	repo := p.parent.parent
-	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, revision)
+	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, workspace)
 	if err != nil {
 		return nil, err
 	}
@@ -88,16 +89,23 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 		// operation.
 	}
 
+	// for backwards compatibility with packages that existed before porch supported
+	// workspaceNames, we populate the workspaceName as the revision number if it is empty
+	if workspace == "" {
+		workspace = v1alpha1.WorkspaceName(revision)
+	}
+
 	return &gitPackageRevision{
-		repo:      repo,
-		path:      p.path,
-		revision:  revision,
-		updated:   updated,
-		updatedBy: updatedBy,
-		ref:       ref,
-		tree:      p.treeHash,
-		commit:    p.parent.commit.Hash,
-		tasks:     tasks,
+		repo:          repo,
+		path:          p.path,
+		workspaceName: workspace,
+		revision:      revision,
+		updated:       updated,
+		updatedBy:     updatedBy,
+		ref:           ref,
+		tree:          p.treeHash,
+		commit:        p.parent.commit.Hash,
+		tasks:         tasks,
 	}, nil
 }
 
