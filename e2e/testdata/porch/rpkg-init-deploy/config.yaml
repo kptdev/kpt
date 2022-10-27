@@ -27,15 +27,15 @@ commands:
       - --site
       - http://kpt.dev/deploy-package
       - --repository=git
-      - --revision=v0
+      - --workspace=deploy
       - deploy-package
-    stdout: "git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae created\n"
+    stdout: "git-628abd0a0903f5de6cb3604d917724f6fc1b5e08 created\n"
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-init-deploy
-      - git-480992fb1bc6d0e30d69d3ae84101d7413e1a5ae
+      - git-628abd0a0903f5de6cb3604d917724f6fc1b5e08
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:

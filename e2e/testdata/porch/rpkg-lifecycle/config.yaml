@@ -12,91 +12,91 @@ commands:
       - init
       - --namespace=rpkg-lifecycle
       - --repository=git
-      - --revision=v1
+      - --workspace=lifecycle
       - lifecycle-package
-    stdout: "git-635026ba389a2dd5417b6e7577430c7ccff30f36 created\n"
+    stdout: "git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 created\n"
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-lifecycle
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
     stderr: |
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36 proposed
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 proposed
   - args:
       - alpha
       - rpkg
       - get
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
       - --output=custom-columns=NAME:.metadata.name,PKG:.spec.packageName,REV:.spec.revision,LIFECYCLE:.spec.lifecycle
     stdout: |
-      NAME                                           PKG                 REV   LIFECYCLE
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1    Proposed
+      NAME                                           PKG                 REV      LIFECYCLE
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   <none>   Proposed
   - args:
       - alpha
       - rpkg
       - reject
       - --namespace=rpkg-lifecycle
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
     stderr: |
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36 rejected
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 rejected
   - args:
       - alpha
       - rpkg
       - get
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
     stdout: |
-      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         false    Draft       git
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle                  false    Draft       git
   - args:
       - alpha
       - rpkg
       - propose
       - --namespace=rpkg-lifecycle
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
     stderr: |
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36 proposed
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 proposed
   - args:
       - alpha
       - rpkg
       - get
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
     stdout: |
-      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         false    Proposed    git
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle                  false    Proposed    git
   - args:
       - alpha
       - rpkg
       - approve
       - --namespace=rpkg-lifecycle
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
     stderr: |
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36 approved
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 approved
   - args:
       - alpha
       - rpkg
       - get
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
     stdout: |
-      NAME                                           PACKAGE             REVISION   LATEST   LIFECYCLE   REPOSITORY
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36   lifecycle-package   v1         true     Published   git
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle       v1         true     Published   git
   - args:
       - alpha
       - rpkg
       - delete
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
     stderr: |
-      git-635026ba389a2dd5417b6e7577430c7ccff30f36 deleted
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 deleted
   - args:
       - alpha
       - rpkg
       - get
-      - git-635026ba389a2dd5417b6e7577430c7ccff30f36
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
-    stderr: "Error: the server could not find the requested resource (get packagerevisions.porch.kpt.dev git-635026ba389a2dd5417b6e7577430c7ccff30f36) \n"
+    stderr: "Error: the server could not find the requested resource (get packagerevisions.porch.kpt.dev git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034) \n"
     exitCode: 1

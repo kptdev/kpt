@@ -62,6 +62,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	// Create flags
 	cmd.Flags().StringVar(&r.packageName, "name", "", "Name of the packages to get. Any package whose name contains this value will be included in the results.")
 	cmd.Flags().StringVar(&r.revision, "revision", "", "Revision of the packages to get. Any package whose revision matches this value will be included in the results.")
+	cmd.Flags().StringVar(&r.workspace, "workspace", "",
+		"WorkspaceName of the packages to get. Any package whose workspaceName matches this value will be included in the results.")
 
 	r.getFlags.AddFlags(cmd)
 	r.printFlags.AddFlags(cmd)
@@ -80,6 +82,7 @@ type runner struct {
 	// Flags
 	packageName string
 	revision    string
+	workspace   string
 	printFlags  *get.PrintFlags
 
 	requestTable bool
@@ -135,6 +138,9 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		fieldSelector := fields.Everything()
 		if r.revision != "" {
 			fieldSelector = fields.OneTermEqualSelector("spec.revision", r.revision)
+		}
+		if r.workspace != "" {
+			fieldSelector = fields.OneTermEqualSelector("spec.workspaceName", r.workspace)
 		}
 		if r.packageName != "" {
 			fieldSelector = fields.OneTermEqualSelector("spec.packageName", r.packageName)
@@ -234,10 +240,17 @@ func (r *runner) packageRevisionMatches(o *unstructured.Unstructured) (bool, err
 	if err != nil {
 		return false, err
 	}
+	workspace, _, err := unstructured.NestedString(o.Object, "spec", "workspaceName")
+	if err != nil {
+		return false, err
+	}
 	if r.packageName != "" && r.packageName != packageName {
 		return false, nil
 	}
 	if r.revision != "" && r.revision != revision {
+		return false, nil
+	}
+	if r.workspace != "" && r.workspace != workspace {
 		return false, nil
 	}
 	return true, nil
@@ -264,6 +277,7 @@ func (r *runner) filterTableRows(table *metav1.Table) error {
 	filtered := make([]metav1.TableRow, 0, len(table.Rows))
 	packageNameCol := findColumn(table.ColumnDefinitions, "Package")
 	revisionCol := findColumn(table.ColumnDefinitions, "Revision")
+	workspaceCol := findColumn(table.ColumnDefinitions, "WorkspaceName")
 
 	for i := range table.Rows {
 		row := &table.Rows[i]
@@ -275,6 +289,11 @@ func (r *runner) filterTableRows(table *metav1.Table) error {
 		}
 		if revision, ok := getStringCell(row.Cells, revisionCol); ok {
 			if r.revision != "" && r.revision != revision {
+				continue
+			}
+		}
+		if workspace, ok := getStringCell(row.Cells, workspaceCol); ok {
+			if r.workspace != "" && r.workspace != workspace {
 				continue
 			}
 		}

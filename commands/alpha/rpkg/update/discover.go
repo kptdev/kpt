@@ -64,7 +64,7 @@ func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
 func (r *runner) findUpstreamUpdates(prs []porchapi.PackageRevision, repositories *configapi.RepositoryList, w io.Writer) error {
 	var upstreamUpdates [][]string
 	for _, pr := range prs {
-		availableUpdates, upstreamName := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		availableUpdates, upstreamName, _ := r.availableUpdates(pr.Status.UpstreamLock, repositories)
 		if len(availableUpdates) == 0 {
 			upstreamUpdates = append(upstreamUpdates, []string{pr.Name, upstreamName, "No update available"})
 		} else {
@@ -84,32 +84,42 @@ func (r *runner) findDownstreamUpdates(prs []porchapi.PackageRevision, repositor
 	downstreamUpdatesMap := make(map[string][]porchapi.PackageRevision)
 
 	for _, pr := range prs {
-		availableUpdates, _ := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		availableUpdates, _, draftName := r.availableUpdates(pr.Status.UpstreamLock, repositories)
 		for _, update := range availableUpdates {
-			key := fmt.Sprintf("%s:%s", update.Name, update.Spec.Revision)
+			key := fmt.Sprintf("%s:%s:%s", update.Name, update.Spec.Revision, draftName)
 			downstreamUpdatesMap[key] = append(downstreamUpdatesMap[key], pr)
 		}
 	}
 	return printDownstreamUpdates(downstreamUpdatesMap, args, w)
 }
 
-func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]porchapi.PackageRevision, string) {
+func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]porchapi.PackageRevision, string, string) {
 	var availableUpdates []porchapi.PackageRevision
 	var upstream string
 
 	if upstreamLock == nil || upstreamLock.Git == nil {
-		return nil, ""
+		return nil, "", ""
 	}
+	var currentUpstreamRevision string
+	var draftName string
+
 	// separate the revision number from the package name
-	lastIndex := strings.LastIndex(upstreamLock.Git.Ref, "v")
-	if lastIndex < 0 {
-		return nil, ""
+	lastIndex := strings.LastIndex(upstreamLock.Git.Ref, "/")
+
+	if strings.HasPrefix(upstreamLock.Git.Ref, "drafts") {
+		// The upstream is not a published package, so doesn't have a revision number.
+		// Use v0 as a placeholder, so that all published packages get returned as available
+		// updates.
+		currentUpstreamRevision = "v0"
+		draftName = upstreamLock.Git.Ref[lastIndex+1:]
+	} else {
+		currentUpstreamRevision = upstreamLock.Git.Ref[lastIndex+1:]
 	}
-	currentUpstreamRevision := upstreamLock.Git.Ref[lastIndex:]
 
 	// upstream.git.ref could look like drafts/pkgname/version or pkgname/version
-	upstreamPackageName := upstreamLock.Git.Ref[:lastIndex-1]
-	upstreamPackageName = strings.TrimPrefix(upstreamPackageName, "drafts/")
+	upstreamPackageName := upstreamLock.Git.Ref[:lastIndex]
+	upstreamPackageName = strings.TrimPrefix(upstreamPackageName, "drafts")
+	upstreamPackageName = strings.TrimPrefix(upstreamPackageName, "/")
 
 	if !strings.HasSuffix(upstreamLock.Git.Repo, ".git") {
 		upstreamLock.Git.Repo += ".git"
@@ -139,7 +149,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositor
 		}
 	}
 
-	return availableUpdates, upstream
+	return availableUpdates, upstream, draftName
 }
 
 // fetches all registered repositories
@@ -183,7 +193,14 @@ func printDownstreamUpdates(downstreamUpdatesMap map[string][]porchapi.PackageRe
 		split := strings.Split(upstreamPkgRev, ":")
 		upstreamPkgRevName := split[0]
 		upstreamPkgRevNum := split[1]
+		draftName := split[2]
 		for _, downstreamPkgRev := range downstreamPkgRevs {
+			if draftName != "" {
+				// the upstream package revision is not published, so does not have a revision number
+				downstreamUpdates = append(downstreamUpdates,
+					[]string{upstreamPkgRevName, downstreamPkgRev.Name, fmt.Sprintf("(draft %q)->%s", draftName, upstreamPkgRevNum)})
+				continue
+			}
 			// figure out which upstream revision the downstream revision is based on
 			lastIndex := strings.LastIndex(downstreamPkgRev.Status.UpstreamLock.Git.Ref, "v")
 			if lastIndex < 0 {

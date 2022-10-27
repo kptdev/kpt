@@ -12,15 +12,15 @@ commands:
       - init
       - --namespace=rpkg-push
       - --repository=git
-      - --revision=v0
+      - --workspace=push
       - test-package
-    stdout: "git-951628068ed2aee1a62fc568131134c6ec95d0be created\n"
+    stdout: "git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f created\n"
   - args:
       - alpha
       - rpkg
       - pull
       - --namespace=rpkg-push
-      - git-951628068ed2aee1a62fc568131134c6ec95d0be
+      - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
@@ -55,7 +55,7 @@ commands:
       - rpkg
       - push
       - --namespace=rpkg-push
-      - git-951628068ed2aee1a62fc568131134c6ec95d0be
+      - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
     stdin: |
       apiVersion: config.kubernetes.io/v1
       kind: ResourceList
@@ -99,7 +99,7 @@ commands:
       - rpkg
       - pull
       - --namespace=rpkg-push
-      - git-951628068ed2aee1a62fc568131134c6ec95d0be
+      - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:

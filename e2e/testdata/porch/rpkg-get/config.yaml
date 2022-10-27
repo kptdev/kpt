@@ -28,8 +28,8 @@ commands:
       - --namespace=rpkg-get
       - test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597
     stdout: |
-      NAME                                                       PACKAGE   REVISION   LATEST   LIFECYCLE   REPOSITORY
-      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1         false    Published   test-blueprints
+      NAME                                                       PACKAGE   WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1              v1         false    Published   test-blueprints
   - args:
       - alpha
       - rpkg
@@ -37,8 +37,8 @@ commands:
       - --namespace=rpkg-get
       - --name=basens
     stdout: |
-      NAME                                                       PACKAGE   REVISION   LATEST   LIFECYCLE   REPOSITORY
-      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens    main       false    Published   test-blueprints
-      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1         false    Published   test-blueprints
-      test-blueprints-499689d1e0c6fced058158330d922c004367d6cd   basens    v2         false    Published   test-blueprints
-      test-blueprints-913ab85d2d49621636a0ffa514a2a008e6a7012e   basens    v3         true     Published   test-blueprints
+      NAME                                                       PACKAGE   WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      test-blueprints-9626794e984ff13c9a4c64df5af0f15ec3a146bf   basens    main            main       false    Published   test-blueprints
+      test-blueprints-526fa27229adcc3b6a9a544c455c344a3b4d7597   basens    v1              v1         false    Published   test-blueprints
+      test-blueprints-499689d1e0c6fced058158330d922c004367d6cd   basens    v2              v2         false    Published   test-blueprints
+      test-blueprints-913ab85d2d49621636a0ffa514a2a008e6a7012e   basens    v3              v3         true     Published   test-blueprints
