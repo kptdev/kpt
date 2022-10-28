@@ -315,39 +315,39 @@ type OriginType string
 // UpstreamLock is a resolved locator for the last fetch of the package.
 type UpstreamLock struct {
 	// Type is the type of origin.
-	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
+	Type OriginType `json:"type,omitempty"`
 
 	// Git is the resolved locator for a package on Git.
-	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+	Git *GitLock `json:"git,omitempty"`
 }
 
 // GitLock is the resolved locator for a package on Git.
 type GitLock struct {
 	// Repo is the git repository that was fetched.
 	// e.g. 'https://github.com/kubernetes/examples.git'
-	Repo string `yaml:"repo,omitempty" json:"repo,omitempty"`
+	Repo string `json:"repo,omitempty"`
 
 	// Directory is the sub directory of the git repository that was fetched.
 	// e.g. 'staging/cockroachdb'
-	Directory string `yaml:"directory,omitempty" json:"directory,omitempty"`
+	Directory string `json:"directory,omitempty"`
 
 	// Ref can be a Git branch, tag, or a commit SHA-1 that was fetched.
 	// e.g. 'master'
-	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
+	Ref string `json:"ref,omitempty"`
 
 	// Commit is the SHA-1 for the last fetch of the package.
 	// This is set by kpt for bookkeeping purposes.
-	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
+	Commit string `json:"commit,omitempty"`
 }
 
 type Condition struct {
-	Type string `yaml:"type" json:"type"`
+	Type string `json:"type"`
 
-	Status ConditionStatus `yaml:"status" json:"status"`
+	Status ConditionStatus `json:"status"`
 
-	Reason string `yaml:"reason,omitempty" json:"reason,omitempty"`
+	Reason string `json:"reason,omitempty"`
 
-	Message string `yaml:"message,omitempty" json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type ConditionStatus string
@@ -362,21 +362,21 @@ const (
 type Result struct {
 	// Image is the full name of the image that generates this result
 	// Image and Exec are mutually exclusive
-	Image string `yaml:"image,omitempty" json:"image,omitempty"`
+	Image string `json:"image,omitempty"`
 	// ExecPath is the the absolute os-specific path to the executable file
 	// If user provides an executable file with commands, ExecPath should
 	// contain the entire input string.
-	ExecPath string `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecPath string `json:"exec,omitempty"`
 	// TODO(droot): This is required for making structured results subpackage aware.
 	// Enable this once test harness supports filepath based assertions.
 	// Pkg is OS specific Absolute path to the package.
 	// Pkg string `yaml:"pkg,omitempty"`
 	// Stderr is the content in function stderr
-	Stderr string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	Stderr string `json:"stderr,omitempty"`
 	// ExitCode is the exit code from running the function
-	ExitCode int `yaml:"exitCode" json:"exitCode"`
+	ExitCode int `json:"exitCode"`
 	// Results is the list of results for the function
-	Results []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	Results []ResultItem `json:"results,omitempty"`
 }
 
 const (
@@ -396,68 +396,68 @@ type ResultList struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 	// ExitCode is the exit code of kpt command
-	ExitCode int `yaml:"exitCode" json:"exitCode"`
+	ExitCode int `json:"exitCode"`
 	// Items contain a list of function result
-	Items []*Result `yaml:"items,omitempty" json:"items,omitempty"`
+	Items []*Result `json:"items,omitempty"`
 }
 
 // ResultItem defines a validation result
 type ResultItem struct {
 	// Message is a human readable message. This field is required.
-	Message string `yaml:"message,omitempty" json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 
 	// Severity is the severity of this result
-	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
+	Severity string `json:"severity,omitempty"`
 
 	// ResourceRef is a reference to a resource.
 	// Required fields: apiVersion, kind, name.
-	ResourceRef *ResourceIdentifier `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
+	ResourceRef *ResourceIdentifier `json:"resourceRef,omitempty"`
 
 	// Field is a reference to the field in a resource this result refers to
-	Field *Field `yaml:"field,omitempty" json:"field,omitempty"`
+	Field *Field `json:"field,omitempty"`
 
 	// File references a file containing the resource this result refers to
-	File *File `yaml:"file,omitempty" json:"file,omitempty"`
+	File *File `json:"file,omitempty"`
 
 	// Tags is an unstructured key value map stored with a result that may be set
 	// by external tools to store and retrieve arbitrary metadata
-	Tags map[string]string `yaml:"tags,omitempty" json:"tags,omitempty"`
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // File references a file containing a resource
 type File struct {
 	// Path is relative path to the file containing the resource.
 	// This field is required.
-	Path string `yaml:"path,omitempty" json:"path,omitempty"`
+	Path string `json:"path,omitempty"`
 
 	// Index is the index into the file containing the resource
 	// (i.e. if there are multiple resources in a single file)
-	Index int `yaml:"index,omitempty" json:"index,omitempty"`
+	Index int `json:"index,omitempty"`
 }
 
 // Field references a field in a resource
 type Field struct {
 	// Path is the field path. This field is required.
-	Path string `yaml:"path,omitempty" json:"path,omitempty"`
+	Path string `json:"path,omitempty"`
 
 	// CurrentValue is the current field value
-	CurrentValue string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
+	CurrentValue string `json:"currentValue,omitempty"`
 
 	// ProposedValue is the proposed value of the field to fix an issue.
-	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
+	ProposedValue string `json:"proposedValue,omitempty"`
 }
 
 // ResourceIdentifier contains the information needed to uniquely
 // identify a resource in a cluster.
 type ResourceIdentifier struct {
 	metav1.TypeMeta `json:",inline"`
-	NameMeta        `json:",inline" yaml:",inline"`
+	NameMeta        `json:",inline"`
 }
 
 // NameMeta contains name information.
 type NameMeta struct {
 	// Name is the metadata.name field of a Resource
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 	// Namespace is the metadata.namespace field of a Resource
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }
