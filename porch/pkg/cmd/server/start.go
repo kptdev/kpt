@@ -50,6 +50,7 @@ type PorchServerOptions struct {
 	CacheDirectory           string
 	CoreAPIKubeconfigPath    string
 	FunctionRunnerAddress    string
+	DefaultImagePrefix       string
 
 	SharedInformerFactory informers.SharedInformerFactory
 	StdOut                io.Writer
@@ -182,6 +183,7 @@ func (o *PorchServerOptions) Config() (*apiserver.Config, error) {
 			CoreAPIKubeconfigPath: o.CoreAPIKubeconfigPath,
 			CacheDirectory:        o.CacheDirectory,
 			FunctionRunnerAddress: o.FunctionRunnerAddress,
+			DefaultImagePrefix:    o.DefaultImagePrefix,
 		},
 	}
 	return config, nil
@@ -225,5 +227,6 @@ func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {
 	}
 
 	fs.StringVar(&o.FunctionRunnerAddress, "function-runner", "", "Address of the function runner gRPC service.")
+	fs.StringVar(&o.DefaultImagePrefix, "default-image-prefix", "gcr.io/kpt-fn/", "Default prefix for unqualified function names")
 	fs.StringVar(&o.CacheDirectory, "cache-directory", "", "Directory where Porch server stores repository and package caches.")
 }

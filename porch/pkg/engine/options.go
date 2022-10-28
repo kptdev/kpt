@@ -17,6 +17,7 @@ package engine
 import (
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/pkg/fn"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
@@ -88,9 +89,13 @@ func WithSimpleFunctionRuntime() EngineOption {
 	})
 }
 
-func WithRenderer(renderer fn.Renderer) EngineOption {
+func WithRunnerOptions(options fnruntime.RunnerOptions) EngineOption {
+	return WithRunnerOptionsResolver(func(namespace string) fnruntime.RunnerOptions { return options })
+}
+
+func WithRunnerOptionsResolver(fn func(namespace string) fnruntime.RunnerOptions) EngineOption {
 	return EngineOptionFunc(func(engine *cadEngine) error {
-		engine.renderer = renderer
+		engine.runnerOptionsResolver = fn
 		return nil
 	})
 }

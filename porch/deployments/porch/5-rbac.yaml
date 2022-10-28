@@ -24,6 +24,9 @@ rules:
     resources:
       ["mutatingwebhookconfigurations", "validatingwebhookconfigurations"]
     verbs: ["get", "watch", "list"]
+  - apiGroups: ["porch.kpt.dev"]
+    resources: ["functions"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
   - apiGroups: ["config.porch.kpt.dev"]
     resources: ["repositories", "repositories/status"]
     verbs: ["get", "list", "watch", "create", "update", "patch"]

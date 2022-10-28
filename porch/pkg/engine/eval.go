@@ -30,8 +30,9 @@ import (
 )
 
 type evalFunctionMutation struct {
-	runtime fn.FunctionRuntime
-	task    *api.Task
+	runtime       fn.FunctionRuntime
+	runnerOptions fnruntime.RunnerOptions
+	task          *api.Task
 }
 
 func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.PackageResources) (repository.PackageResources, *api.TaskResult, error) {
@@ -40,11 +41,20 @@ func (m *evalFunctionMutation) Apply(ctx context.Context, resources repository.P
 
 	e := m.task.Eval
 
+	function := v1.Function{
+		Image: e.Image,
+	}
+	if function.Image != "" && m.runnerOptions.ResolveToImage != nil {
+		img, err := m.runnerOptions.ResolveToImage(ctx, function.Image)
+		if err != nil {
+			return repository.PackageResources{}, nil, err
+		}
+		function.Image = img
+	}
+
 	// TODO: Apply should accept filesystem instead of PackageResources
 
-	runner, err := m.runtime.GetRunner(ctx, &v1.Function{
-		Image: e.Image,
-	})
+	runner, err := m.runtime.GetRunner(ctx, &function)
 	if err != nil {
 		return repository.PackageResources{}, nil, fmt.Errorf("failed to create function runner: %w", err)
 	}

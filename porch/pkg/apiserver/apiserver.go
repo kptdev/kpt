@@ -20,11 +20,11 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
+	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	internalapi "github.com/GoogleContainerTools/kpt/porch/internal/api/porchinternal/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/registry/porch"
 	"google.golang.org/api/option"
@@ -73,6 +73,7 @@ type ExtraConfig struct {
 	CoreAPIKubeconfigPath string
 	CacheDirectory        string
 	FunctionRunnerAddress string
+	DefaultImagePrefix    string
 }
 
 // Config defines the config for the apiserver
@@ -147,6 +148,11 @@ func (c completedConfig) getCoreClient() (client.WithWatch, error) {
 	if err := configapi.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("error building scheme: %w", err)
 	}
+
+	if err := porchapi.AddToScheme(scheme); err != nil {
+		return nil, fmt.Errorf("error building scheme: %w", err)
+	}
+
 	if err := corev1.AddToScheme(scheme); err != nil {
 		return nil, fmt.Errorf("error building scheme: %w", err)
 	}
@@ -210,18 +216,25 @@ func (c completedConfig) New() (*PorchServer, error) {
 	referenceResolver := porch.NewReferenceResolver(coreClient)
 	userInfoProvider := &porch.ApiserverUserInfoProvider{}
 
-	runnerOptions := fnruntime.RunnerOptions{}
-	runnerOptions.ResolveToImage = resolveToImagePorch
-
-	runnerOptions.InitDefaults()
-
-	renderer := kpt.NewRenderer(runnerOptions)
-
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
 		CredentialResolver: credentialResolver,
 		UserInfoProvider:   userInfoProvider,
 		MetadataStore:      metadataStore,
 	})
+
+	runnerOptionsResolver := func(namespace string) fnruntime.RunnerOptions {
+		runnerOptions := fnruntime.RunnerOptions{}
+		runnerOptions.InitDefaults()
+		r := &KubeFunctionResolver{
+			client:             coreClient,
+			defaultImagePrefix: c.ExtraConfig.DefaultImagePrefix,
+			namespace:          namespace,
+		}
+		runnerOptions.ResolveToImage = r.resolveToImagePorch
+
+		return runnerOptions
+	}
+
 	cad, err := engine.NewCaDEngine(
 		engine.WithCache(cache),
 		// The order of registering the function runtimes matters here. When
@@ -230,7 +243,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithBuiltinFunctionRuntime(),
 		engine.WithGRPCFunctionRuntime(c.ExtraConfig.FunctionRunnerAddress),
 		engine.WithCredentialResolver(credentialResolver),
-		engine.WithRenderer(renderer),
+		engine.WithRunnerOptionsResolver(runnerOptionsResolver),
 		engine.WithReferenceResolver(referenceResolver),
 		engine.WithUserInfoProvider(userInfoProvider),
 		engine.WithMetadataStore(metadataStore),
