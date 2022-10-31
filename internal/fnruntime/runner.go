@@ -427,7 +427,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 		for _, item := range fnResult.Results {
 			lines = append(lines, item.String())
 		}
-		ri := &multiLineFormatter{
+		ri := &MultiLineFormatter{
 			Title:          "Results",
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
@@ -448,7 +448,7 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 func printFnStderr(ctx context.Context, stdErr string) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(stdErr) > 0 {
-		errLines := &multiLineFormatter{
+		errLines := &MultiLineFormatter{
 			Title:          "Stderr",
 			Lines:          strings.Split(stdErr, "\n"),
 			UseQuote:       true,
@@ -492,9 +492,9 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	return nil
 }
 
-// multiLineFormatter knows how to format multiple lines in pretty format
+// MultiLineFormatter knows how to format multiple lines in pretty format
 // that can be displayed to an end user.
-type multiLineFormatter struct {
+type MultiLineFormatter struct {
 	// Title under which lines need to be printed
 	Title string
 
@@ -512,7 +512,7 @@ type multiLineFormatter struct {
 }
 
 // String returns multiline string.
-func (ri *multiLineFormatter) String() string {
+func (ri *MultiLineFormatter) String() string {
 	if ri.MaxLines == 0 {
 		ri.MaxLines = FnExecErrorTruncateLines
 	}

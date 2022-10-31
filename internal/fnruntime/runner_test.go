@@ -101,13 +101,13 @@ data: {foo: bar}
 
 func TestMultilineFormatter(t *testing.T) {
 	type testcase struct {
-		ml       *multiLineFormatter
+		ml       *MultiLineFormatter
 		expected string
 	}
 
 	testcases := map[string]testcase{
 		"multiline should format lines and truncate": {
-			ml: &multiLineFormatter{
+			ml: &MultiLineFormatter{
 				Title: "Results",
 				Lines: []string{
 					"line-1",
@@ -127,7 +127,7 @@ func TestMultilineFormatter(t *testing.T) {
 `,
 		},
 		"multiline should format without truncate": {
-			ml: &multiLineFormatter{
+			ml: &MultiLineFormatter{
 				Title: "Results",
 				Lines: []string{
 					"line-1",
