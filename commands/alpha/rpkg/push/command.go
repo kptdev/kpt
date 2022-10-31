@@ -138,9 +138,8 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	rs := pkgResources.Status.RenderStatus
 	if rs.Err != "" {
 		r.printer.Printf("Package is updated, but failed to render the package.\n")
-		r.printer.Printf("%s\n", rs.Err)
+		r.printer.Printf("Error: %s\n", rs.Err)
 	}
-	r.printer.Printf("%+v\n", rs)
 	if len(rs.Result.Items) > 0 {
 		for _, result := range rs.Result.Items {
 			r.printer.Printf("[RUNNING] %q \n", result.Image)
@@ -175,16 +174,6 @@ func printFnResult(ctx context.Context, fnResult *porchapi.Result, opt *printer.
 	}
 }
 
-// Severity indicates the severity of the Result
-const (
-	// Error indicates the result is an error.  Will cause the function to exit non-0.
-	Error string = "error"
-	// Warning indicates the result is a warning
-	Warning string = "warning"
-	// Info indicates the result is an informative message
-	Info string = "info"
-)
-
 // String provides a human-readable message for the result item
 func str(i porchapi.ResultItem) string {
 	identifier := i.ResourceRef
@@ -207,7 +196,7 @@ func str(i porchapi.ResultItem) string {
 	severity := i.Severity
 	// We default Severity to Info when converting a result to a message.
 	if i.Severity == "" {
-		severity = Info
+		severity = "info"
 	}
 	list := []interface{}{severity}
 	if len(idStringList) > 0 {

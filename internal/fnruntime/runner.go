@@ -295,10 +295,15 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	}
 	if err != nil {
 		var execErr *ExecError
+		// set exitCode to non-zero by default in case of an error.
+		// It will be overridden with appropriate exitCode if the function runtime returns execError.
+		// builtinruntime and podEvaluator function runtime do not return execError so having
+		// a default is important.
+		fnResult.ExitCode = 1
+		fr.fnResults.ExitCode = 1
 		if goerrors.As(err, &execErr) {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
-			fr.fnResults.ExitCode = 1
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
