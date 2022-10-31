@@ -12,29 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cache
+package engine
 
 import (
 	"context"
 	"sync"
 
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 )
 
 // ObjectCache caches objects across repositories, and allows for watching.
-type ObjectCache interface {
+type WatcherManager interface {
 	WatchPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, callback ObjectWatcher) error
 }
 
-// ObjectWatcher is the callback interface for watchers.
+// PackageRevisionWatcher is the callback interface for watchers.
 type ObjectWatcher interface {
-	OnPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision) bool
+	OnPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta) bool
 }
 
-// objectCache implements ObjectCache
-type objectCache struct {
+func NewWatcherManager() *watcherManager {
+	return &watcherManager{}
+}
+
+// watcherManager implements WatcherManager
+type watcherManager struct {
 	mutex sync.Mutex
 
 	// watchers is a list of all the change-listeners.
@@ -56,7 +61,7 @@ type watcher struct {
 }
 
 // WatchPackageRevision adds a change-listener that will be called for all changes.
-func (r *objectCache) WatchPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, callback ObjectWatcher) error {
+func (r *watcherManager) WatchPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, callback ObjectWatcher) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -84,7 +89,7 @@ func (r *objectCache) WatchPackageRevisions(ctx context.Context, filter reposito
 }
 
 // notifyPackageRevisionChange is called to send a change notification to all interested listeners.
-func (r *objectCache) notifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision) {
+func (r *watcherManager) NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -97,7 +102,7 @@ func (r *objectCache) notifyPackageRevisionChange(eventType watch.EventType, obj
 			r.watchers[i] = nil
 			continue
 		}
-		if keepGoing := watcher.callback.OnPackageRevisionChange(eventType, obj); !keepGoing {
+		if keepGoing := watcher.callback.OnPackageRevisionChange(eventType, obj, objMeta); !keepGoing {
 			klog.Infof("stopping watcher in response to !keepGoing")
 			r.watchers[i] = nil
 		}

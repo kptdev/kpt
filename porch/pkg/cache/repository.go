@@ -62,20 +62,20 @@ type cachedRepository struct {
 	refreshRevisionsError error
 	refreshPkgsError      error
 
-	objectCache *objectCache
+	objectNotifier objectNotifier
 
 	metadataStore meta.MetadataStore
 }
 
-func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectCache *objectCache, metadataStore meta.MetadataStore) *cachedRepository {
+func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectNotifier objectNotifier, metadataStore meta.MetadataStore) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &cachedRepository{
-		id:            id,
-		repoSpec:      repoSpec,
-		repo:          repo,
-		cancel:        cancel,
-		objectCache:   objectCache,
-		metadataStore: metadataStore,
+		id:             id,
+		repoSpec:       repoSpec,
+		repo:           repo,
+		cancel:         cancel,
+		objectNotifier: objectNotifier,
+		metadataStore:  metadataStore,
 	}
 
 	// TODO: Should we fetch the packages here?
@@ -357,9 +357,10 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		return nil, nil, err
 	}
 	// Create a map so we can quickly check if a specific PackageRevisionMeta exists.
-	existingPkgRevCRsMap := make(map[string]bool)
-	for _, pr := range existingPkgRevCRs {
-		existingPkgRevCRsMap[pr.Name] = true
+	existingPkgRevCRsMap := make(map[string]meta.PackageRevisionMeta)
+	for i := range existingPkgRevCRs {
+		pr := existingPkgRevCRs[i]
+		existingPkgRevCRsMap[pr.Name] = pr
 	}
 
 	// TODO: Can we avoid holding the lock for the ListPackageRevisions / identifyLatestRevisions section?
@@ -440,18 +441,26 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// Send notification for packages that changed.
 	for k, newPackage := range r.cachedPackageRevisions {
 		oldPackage := oldPackageRevisions[k]
+		metaPackage, found := existingPkgRevCRsMap[newPackage.KubeObjectName()]
+		if !found {
+			klog.Warningf("no PackageRev CR found for PackageRevision %s", newPackage.KubeObjectName())
+		}
 		if oldPackage == nil {
-			r.objectCache.notifyPackageRevisionChange(watch.Added, newPackage)
+			r.objectNotifier.NotifyPackageRevisionChange(watch.Added, newPackage, metaPackage)
 		} else {
 			// TODO: only if changed
 			klog.Warningf("over-notifying of package updates (even on unchanged packages)")
-			r.objectCache.notifyPackageRevisionChange(watch.Modified, newPackage)
+			r.objectNotifier.NotifyPackageRevisionChange(watch.Modified, newPackage, metaPackage)
 		}
 	}
 
 	for k, oldPackage := range oldPackageRevisions {
+		metaPackage, found := existingPkgRevCRsMap[oldPackage.KubeObjectName()]
+		if !found {
+			klog.Warningf("no PackageRev CR found for PackageRevision %s", oldPackage.KubeObjectName())
+		}
 		if newPackageRevisionMap[k] == nil {
-			r.objectCache.notifyPackageRevisionChange(watch.Deleted, oldPackage)
+			r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
 		}
 	}
 

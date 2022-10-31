@@ -46,6 +46,7 @@ var _ rest.Scoper = &packageRevisions{}
 var _ rest.Creater = &packageRevisions{}
 var _ rest.Updater = &packageRevisions{}
 var _ rest.GracefulDeleter = &packageRevisions{}
+var _ rest.Watcher = &packageRevisions{}
 
 func (r *packageRevisions) New() runtime.Object {
 	return &api.PackageRevision{}
