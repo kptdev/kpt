@@ -87,6 +87,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24/go.mod h1:4UJr5HIiMZrwgkSPdsjy2uOQExX/WEILpIrO9UPGuXs=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221027171429-622c0141f3d7 h1:WKfyM9TDvHaGJ0n98rO/U7qkPL8wAWPvLKQYNT7TNvY=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221027171429-622c0141f3d7/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0 h1:Nay/s1StXHUKyIxerpXb8o0hZUkRjrbteLO6ardI26Y=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd h1:sjQovDkwrZp8u+gxLtPgKGjk5hCxuy2hrRejBTA9xFU=
 github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd/go.mod h1:64YHyfSL2R96J44Nlwm39UHepQbyR5q10x7iYa1ks2E=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=

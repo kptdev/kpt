@@ -45,7 +45,7 @@ type ExecError struct {
 func (fe *ExecError) String() string {
 	var b strings.Builder
 
-	errLines := &multiLineFormatter{
+	errLines := &MultiLineFormatter{
 		Title:          "Stderr",
 		Lines:          strings.Split(fe.Stderr, "\n"),
 		UseQuote:       true,
