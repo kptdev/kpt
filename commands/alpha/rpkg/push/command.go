@@ -149,7 +149,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			} else {
 				r.printer.OptPrintf(printOpt, "[PASS] %q\n", result.Image)
 			}
-			printFnResult(r.ctx, result, printOpt)
+			r.printFnResult(result, printOpt)
 		}
 	}
 	return nil
@@ -157,8 +157,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 
 // printFnResult prints given function result in a user friendly
 // format on kpt CLI.
-func printFnResult(ctx context.Context, fnResult *porchapi.Result, opt *printer.Options) {
-	pr := printer.FromContextOrDie(ctx)
+func (r *runner) printFnResult(fnResult *porchapi.Result, opt *printer.Options) {
 	if len(fnResult.Results) > 0 {
 		// function returned structured results
 		var lines []string
@@ -170,7 +169,7 @@ func printFnResult(ctx context.Context, fnResult *porchapi.Result, opt *printer.
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
 		}
-		pr.OptPrintf(opt, "%s", ri.String())
+		r.printer.OptPrintf(opt, "%s", ri.String())
 	}
 }
 
