@@ -17,6 +17,7 @@ package workloadidentitybinding
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
@@ -37,10 +38,20 @@ const (
 	finalizerName = "config.porch.kpt.dev/workloadidentitybindings"
 )
 
+type Options struct {
+}
+
+func (o *Options) InitDefaults() {
+}
+
+func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
+}
+
 // WorkloadIdentityBindingReconciler reconciles WorkloadIdentityBinding objects
 type WorkloadIdentityBindingReconciler struct {
+	Options
+
 	client.Client
-	// Scheme *runtime.Scheme
 
 	dynamicClient dynamic.Interface
 	restMapper    meta.RESTMapper

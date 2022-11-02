@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"strings"
 	"sync"
@@ -69,15 +70,19 @@ var (
 	configControllerApiVersion = "configcontroller.cnrm.cloud.google.com/v1beta1"
 )
 
-func NewRootSyncSetReconciler() *RootSyncSetReconciler {
-	return &RootSyncSetReconciler{
-		channel:  make(chan event.GenericEvent, 10),
-		watchers: make(map[v1alpha1.ClusterRef]*watcher),
-	}
+type Options struct {
+}
+
+func (o *Options) InitDefaults() {
+}
+
+func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
 }
 
 // RootSyncSetReconciler reconciles a RootSyncSet object
 type RootSyncSetReconciler struct {
+	Options
+
 	client.Client
 
 	WorkloadIdentityHelper
@@ -392,6 +397,9 @@ func BuildObjectsToApply(rootsyncset *v1alpha1.RootSyncSet) (*unstructured.Unstr
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.channel = make(chan event.GenericEvent, 10)
+	r.watchers = make(map[v1alpha1.ClusterRef]*watcher)
+
 	if err := v1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
 	}
