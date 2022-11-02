@@ -50,6 +50,11 @@ const (
 	kptRepo            = "https://github.com/GoogleContainerTools/kpt.git"
 )
 
+var (
+	packageRevisionGVK = porchapi.SchemeGroupVersion.WithKind("PackageRevision")
+	configMapGVK       = corev1.SchemeGroupVersion.WithKind("ConfigMap")
+)
+
 func TestE2E(t *testing.T) {
 	e2e := os.Getenv("E2E")
 	if e2e == "" {
@@ -1687,17 +1692,12 @@ func (t *PorchSuite) TestRegisteredPackageRevisionLabels(ctx context.Context) {
 	)
 }
 
-func (t *PorchSuite) TestPackageRevisionGarbageCollector(ctx context.Context) {
+func (t *PorchSuite) TestPackageRevisionGCWithOwner(ctx context.Context) {
 	const (
-		repository  = "pkgrevgc"
-		workspace   = "test-workspace"
+		repository  = "pkgrevgcwithowner"
+		workspace   = "pkgrevgcwithowner-workspace"
 		description = "empty-package description"
 		cmName      = "foo"
-	)
-
-	var (
-		packageRevisionGVK = porchapi.SchemeGroupVersion.WithKind("PackageRevision")
-		configMapGVK       = corev1.SchemeGroupVersion.WithKind("ConfigMap")
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -1730,7 +1730,7 @@ func (t *PorchSuite) TestPackageRevisionGarbageCollector(ctx context.Context) {
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: porchapi.SchemeGroupVersion.String(),
-					Kind:       "PackageRevision",
+					Kind:       packageRevisionGVK.Kind,
 					Name:       pr.Name,
 					UID:        pr.UID,
 				},
@@ -1761,6 +1761,224 @@ func (t *PorchSuite) TestPackageRevisionGarbageCollector(ctx context.Context) {
 		},
 		10*time.Second,
 	)
+}
+
+func (t *PorchSuite) TestPackageRevisionGCAsOwner(ctx context.Context) {
+	const (
+		repository  = "pkgrevgcasowner"
+		workspace   = "pkgrevgcasowner-workspace"
+		description = "empty-package description"
+		cmName      = "foo"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       configMapGVK.Kind,
+			APIVersion: configMapGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cmName,
+			Namespace: t.namespace,
+		},
+		Data: map[string]string{
+			"foo": "bar",
+		},
+	}
+	t.CreateF(ctx, cm)
+
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: "v1",
+					Kind:       "ConfigMap",
+					Name:       cm.Name,
+					UID:        cm.UID,
+				},
+			},
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "empty-package",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	t.DeleteF(ctx, cm)
+	t.waitUntilObjectDeleted(
+		ctx,
+		configMapGVK,
+		types.NamespacedName{
+			Name:      cm.Name,
+			Namespace: cm.Namespace,
+		},
+		10*time.Second,
+	)
+	t.waitUntilObjectDeleted(
+		ctx,
+		packageRevisionGVK,
+		types.NamespacedName{
+			Name:      pr.Name,
+			Namespace: pr.Namespace,
+		},
+		10*time.Second,
+	)
+}
+
+func (t *PorchSuite) TestPackageRevisionOwnerReferences(ctx context.Context) {
+	const (
+		repository  = "pkgrevownerrefs"
+		workspace   = "pkgrevownerrefs-workspace"
+		description = "empty-package description"
+		cmName      = "foo"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	cm := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       configMapGVK.Kind,
+			APIVersion: configMapGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cmName,
+			Namespace: t.namespace,
+		},
+		Data: map[string]string{
+			"foo": "bar",
+		},
+	}
+	t.CreateF(ctx, cm)
+
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "empty-package",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+	t.validateOwnerReferences(ctx, pr.Name, []metav1.OwnerReference{})
+
+	ownerRef := metav1.OwnerReference{
+		APIVersion: "v1",
+		Kind:       "ConfigMap",
+		Name:       cm.Name,
+		UID:        cm.UID,
+	}
+	pr.ObjectMeta.OwnerReferences = []metav1.OwnerReference{ownerRef}
+	t.UpdateF(ctx, pr)
+	t.validateOwnerReferences(ctx, pr.Name, []metav1.OwnerReference{ownerRef})
+
+	pr.ObjectMeta.OwnerReferences = []metav1.OwnerReference{}
+	t.UpdateF(ctx, pr)
+	t.validateOwnerReferences(ctx, pr.Name, []metav1.OwnerReference{})
+}
+
+func (t *PorchSuite) TestPackageRevisionFinalizers(ctx context.Context) {
+	const (
+		repository  = "pkgrevfinalizers"
+		workspace   = "pkgrevfinalizers-workspace"
+		description = "empty-package description"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "empty-package",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+	t.validateFinalizers(ctx, pr.Name, []string{})
+
+	pr.Finalizers = append(pr.Finalizers, "foo-finalizer")
+	t.UpdateF(ctx, pr)
+	t.validateFinalizers(ctx, pr.Name, []string{"foo-finalizer"})
+
+	t.DeleteF(ctx, pr)
+	t.validateFinalizers(ctx, pr.Name, []string{"foo-finalizer"})
+
+	pr.Finalizers = []string{}
+	t.UpdateF(ctx, pr)
+	t.waitUntilObjectDeleted(ctx, packageRevisionGVK, types.NamespacedName{
+		Name:      pr.Name,
+		Namespace: pr.Namespace,
+	}, 10*time.Second)
+}
+
+func (t *PorchSuite) validateFinalizers(ctx context.Context, name string, finalizers []string) {
+	var pr porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &pr)
+
+	if len(finalizers) != len(pr.Finalizers) {
+		diff := cmp.Diff(finalizers, pr.Finalizers)
+		t.Errorf("Expected %d finalizers, but got %s", len(finalizers), diff)
+	}
+
+	for _, finalizer := range finalizers {
+		var found bool
+		for _, f := range pr.Finalizers {
+			if f == finalizer {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Expected finalizer %v, but didn't find it", finalizer)
+		}
+	}
+}
+
+func (t *PorchSuite) validateOwnerReferences(ctx context.Context, name string, ownerRefs []metav1.OwnerReference) {
+	var pr porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      name,
+	}, &pr)
+
+	if len(ownerRefs) != len(pr.OwnerReferences) {
+		diff := cmp.Diff(ownerRefs, pr.OwnerReferences)
+		t.Errorf("Expected %d ownerReferences, but got %s", len(ownerRefs), diff)
+	}
+
+	for _, ownerRef := range ownerRefs {
+		var found bool
+		for _, or := range pr.OwnerReferences {
+			if or == ownerRef {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("Expected ownerRef %v, but didn't find it", ownerRef)
+		}
+	}
 }
 
 func (t *PorchSuite) validateLabelsAndAnnos(ctx context.Context, name string, labels, annos map[string]string) {

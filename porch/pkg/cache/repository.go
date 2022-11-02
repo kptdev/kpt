@@ -299,6 +299,30 @@ func (r *cachedRepository) DeletePackage(ctx context.Context, old repository.Pac
 
 func (r *cachedRepository) Close() error {
 	r.cancel()
+
+	// Make sure that watch events are sent for packagerevisions that are
+	// removed as part of closing the repository.
+	for _, pr := range r.cachedPackageRevisions {
+		nn := types.NamespacedName{
+			Name:      pr.KubeObjectName(),
+			Namespace: pr.KubeObjectNamespace(),
+		}
+		// There isn't really any correct way to handle finalizers here. We are removing
+		// the repository, so we have to just delete the PackageRevision regardless of any
+		// finalizers.
+		pkgRevMeta, err := r.metadataStore.Delete(context.TODO(), nn, true)
+		if err != nil {
+			// There isn't much use in returning an error here, so we just log it
+			// and create a PackageRevisionMeta with just name and namespace. This
+			// makes sure that the Delete event is sent.
+			klog.Warningf("Error looking up PackageRev CR for %s: %v")
+			pkgRevMeta = meta.PackageRevisionMeta{
+				Name:      nn.Name,
+				Namespace: nn.Namespace,
+			}
+		}
+		r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, pr, pkgRevMeta)
+	}
 	return nil
 }
 
@@ -370,18 +394,19 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
-	newPackageRevisionNames := make(map[string]bool)
+	newPackageRevisionNames := make(map[string]*cachedPackageRevision, len(newPackageRevisions))
 	for _, newPackage := range newPackageRevisions {
 		k := newPackage.Key()
 		if newPackageRevisionMap[k] != nil {
 			klog.Warningf("found duplicate packages with key %v", k)
 		}
 
-		newPackageRevisionMap[k] = &cachedPackageRevision{
+		pkgRev := &cachedPackageRevision{
 			PackageRevision:  newPackage,
 			isLatestRevision: false,
 		}
-		newPackageRevisionNames[newPackage.KubeObjectName()] = true
+		newPackageRevisionMap[k] = pkgRev
+		newPackageRevisionNames[newPackage.KubeObjectName()] = pkgRev
 	}
 
 	identifyLatestRevisions(newPackageRevisionMap)
@@ -410,10 +435,10 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 			if _, err := r.metadataStore.Delete(ctx, types.NamespacedName{
 				Name:      prm.Name,
 				Namespace: prm.Namespace,
-			}); err != nil {
+			}, true); err != nil {
 				if !apierrors.IsNotFound(err) {
 					// This will be retried the next time the sync runs.
-					klog.Warningf("unable to create PackageRev CR for %s/%s: %w",
+					klog.Warningf("unable to delete PackageRev CR for %s/%s: %w",
 						prm.Name, prm.Namespace, err)
 				}
 			}
@@ -422,13 +447,13 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 
 	// We go through all the PackageRevisions and make sure they have
 	// a corresponding PackageRev CR.
-	for pkgRevName := range newPackageRevisionNames {
+	for pkgRevName, pkgRev := range newPackageRevisionNames {
 		if _, found := existingPkgRevCRsMap[pkgRevName]; !found {
 			pkgRevMeta := meta.PackageRevisionMeta{
 				Name:      pkgRevName,
 				Namespace: r.repoSpec.Namespace,
 			}
-			if _, err := r.metadataStore.Create(ctx, pkgRevMeta, r.repoSpec); err != nil {
+			if _, err := r.metadataStore.Create(ctx, pkgRevMeta, r.repoSpec.Name, pkgRev.UID()); err != nil {
 				// TODO: We should try to find a way to make these errors available through
 				// either the repository CR or the PackageRevision CR. This will be
 				// retried on the next sync.
@@ -455,11 +480,19 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	for k, oldPackage := range oldPackageRevisions {
-		metaPackage, found := existingPkgRevCRsMap[oldPackage.KubeObjectName()]
-		if !found {
-			klog.Warningf("no PackageRev CR found for PackageRevision %s", oldPackage.KubeObjectName())
-		}
 		if newPackageRevisionMap[k] == nil {
+			nn := types.NamespacedName{
+				Name:      oldPackage.KubeObjectName(),
+				Namespace: oldPackage.KubeObjectNamespace(),
+			}
+			metaPackage, err := r.metadataStore.Delete(ctx, nn, true)
+			if err != nil {
+				klog.Warningf("Error deleting PkgRevMeta %s: %v")
+				metaPackage = meta.PackageRevisionMeta{
+					Name:      nn.Name,
+					Namespace: nn.Namespace,
+				}
+			}
 			r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
 		}
 	}

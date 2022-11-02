@@ -72,6 +72,10 @@ func (p *gitPackageRevision) KubeObjectNamespace() string {
 	return p.repo.namespace
 }
 
+func (p *gitPackageRevision) UID() types.UID {
+	return p.uid()
+}
+
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
 		Repository:    p.repo.name,

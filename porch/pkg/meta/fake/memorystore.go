@@ -48,7 +48,7 @@ func (m *MemoryMetadataStore) List(ctx context.Context, repo *configapi.Reposito
 	return m.Metas, nil
 }
 
-func (m *MemoryMetadataStore) Create(ctx context.Context, pkgRevMeta meta.PackageRevisionMeta, repo *configapi.Repository) (meta.PackageRevisionMeta, error) {
+func (m *MemoryMetadataStore) Create(ctx context.Context, pkgRevMeta meta.PackageRevisionMeta, repoName string, pkgRevUID types.UID) (meta.PackageRevisionMeta, error) {
 	for _, m := range m.Metas {
 		if m.Name == pkgRevMeta.Name && m.Namespace == pkgRevMeta.Namespace {
 			return m, apierrors.NewAlreadyExists(
@@ -78,7 +78,7 @@ func (m *MemoryMetadataStore) Update(ctx context.Context, pkgRevMeta meta.Packag
 	return pkgRevMeta, nil
 }
 
-func (m *MemoryMetadataStore) Delete(ctx context.Context, namespacedName types.NamespacedName) (meta.PackageRevisionMeta, error) {
+func (m *MemoryMetadataStore) Delete(ctx context.Context, namespacedName types.NamespacedName, _ bool) (meta.PackageRevisionMeta, error) {
 	var metas []meta.PackageRevisionMeta
 	found := false
 	var deletedMeta meta.PackageRevisionMeta

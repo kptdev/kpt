@@ -21,6 +21,7 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/go-git/go-git/v5/plumbing/transport"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // TODO: 	"sigs.k8s.io/kustomize/kyaml/filesys" FileSystem?
@@ -55,7 +56,12 @@ type PackageRevision interface {
 	// More "readable" values are returned by Key()
 	KubeObjectName() string
 
+	// KubeObjectNamespace returns the namespace in which the PackageRevision
+	// belongs.
 	KubeObjectNamespace() string
+
+	// UID returns a unique identifier for the PackageRevision.
+	UID() types.UID
 
 	// Key returns the "primary key" of the package.
 	Key() PackageRevisionKey
