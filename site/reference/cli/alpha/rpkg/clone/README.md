@@ -59,8 +59,8 @@ TARGET_PACKAGE_NAME:
   Repository to which package revision will be cloned
   (downstream repository).
 
---revision
-  Revision for the new package.
+--workspace
+  Workspace for the new package. The default value is v1.
 
 --strategy
   Update strategy that should be used when updating the new

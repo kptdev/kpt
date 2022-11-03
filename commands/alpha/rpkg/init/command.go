@@ -57,7 +57,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
-	c.Flags().StringVar(&r.workspace, "workspace", "", "WorkspaceName of the downstream package.")
+	c.Flags().StringVar(&r.workspace, "workspace", "", "Workspace name of the downstream package.")
 
 	return r
 }
