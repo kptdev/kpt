@@ -159,6 +159,15 @@ package.
 The `LIFECYCLE` column indicates the lifecycle stage of the package revision,
 one of: `Published`, `Draft` or `Proposed`.
 
+The `REVISION` column indicates the revision of the package. Revisions are
+assigned when a package is `Published` and starts at `v1`.
+
+The `WORKSPACE` column indicates the workspace name of the package. The
+workspace name is assigned to a package revision when the draft package is first
+created and is used as branch name for proposed and draft package revisions. The
+workspace name must be must be unique among package revisions in the same
+package.
+
 *Note* on package revision names. Packages exist in a hierarchical directory
 structure maintained by the underlying repository such as git, or in a
 filesystem bundle of OCI images. The hierarchical, filesystem-compatible names
