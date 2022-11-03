@@ -34,17 +34,17 @@ PACKAGE_NAME:
 --repository
   Repository in which the new package will be created.
 
---revision
-  Revision of the new package. The default value if v1.
+--workspace
+  Workspace of the new package.
 
 --description
-  short description of the package
+  Short description of the package
 
 --keywords
-  list of keywords for the package
+  List of keywords for the package
 
 --site
-  link to page with information about the package
+  Link to page with information about the package
 ```
 
 <!--mdtogo-->
@@ -55,7 +55,7 @@ PACKAGE_NAME:
 
 ```shell
 # create a new package named foo in the repository blueprint.
-$ kpt alpha rpkg init foo --namespace=default --repository=blueprint
+$ kpt alpha rpkg init foo --namespace=default --repository=blueprint --workspace=v1
 ```
 
 <!--mdtogo-->

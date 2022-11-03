@@ -59,8 +59,8 @@ Flags:
     Repository to which package revision will be cloned
     (downstream repository).
   
-  --revision
-    Revision for the new package.
+  --workspace
+    Workspace for the new package. The default value is v1.
   
   --strategy
     Update strategy that should be used when updating the new
@@ -89,14 +89,12 @@ Args:
 
 Flags:
 
-  --revision
-    Revision for the new package. If this is not specified, the default
-    revision will be ` + "`" + `latest + 1` + "`" + `. The default can only be used if the
-    latest package revision is of the format ` + "`" + `^v[0-9]+$` + "`" + `.
+  --workspace
+    Workspace for the new package revision.
 `
 var CopyExamples = `
   # create a new package from package blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2
-  $ kpt alpha rpkg copy blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2 --revision=v10 --namespace=default
+  $ kpt alpha rpkg copy blueprint-b47eadc99f3c525571d3834cc61b974453bc6be2 --workspace=v10 --namespace=default
 `
 
 var DelShort = `Delete a package revision.`
@@ -160,21 +158,21 @@ Flags:
   --repository
     Repository in which the new package will be created.
   
-  --revision
-    Revision of the new package. The default value if v1.
+  --workspace
+    Workspace of the new package.
   
   --description
-    short description of the package
+    Short description of the package
   
   --keywords
-    list of keywords for the package
+    List of keywords for the package
   
   --site
-    link to page with information about the package
+    Link to page with information about the package
 `
 var InitExamples = `
   # create a new package named foo in the repository blueprint.
-  $ kpt alpha rpkg init foo --namespace=default --repository=blueprint
+  $ kpt alpha rpkg init foo --namespace=default --repository=blueprint --workspace=v1
 `
 
 var ProposeShort = `Propose that a package revision should be published.`
