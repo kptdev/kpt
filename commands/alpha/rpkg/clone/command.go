@@ -113,7 +113,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if r.workspace == "" {
-		return errors.E(op, fmt.Errorf("--workspace is required to specify downstream workspaceName"))
+		return errors.E(op, fmt.Errorf("--workspace is required to specify downstream workspace name"))
 	}
 
 	source := args[0]

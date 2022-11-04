@@ -124,7 +124,7 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 	}
 
 	if r.workspace == "" {
-		return nil, fmt.Errorf("--workspace is required to specify downstream workspaceName")
+		return nil, fmt.Errorf("--workspace is required to specify workspace name")
 	}
 
 	spec := &porchapi.PackageRevisionSpec{
