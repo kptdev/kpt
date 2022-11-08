@@ -26,9 +26,24 @@ import (
 // checkSyncStatus fetches the RootSync using the provided client and computes the sync status. The rules
 // for computing status here mirrors the one used in the status command in the nomos cli.
 func checkSyncStatus(ctx context.Context, client dynamic.Interface, rssName string) (string, error) {
+	// TODO: Change this to use the RootSync type instead of Unstructured.
 	rs, err := client.Resource(rootSyncGVR).Namespace(rootSyncNamespace).Get(ctx, rssName, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get RootSync: %w", err)
+	}
+
+	generation, _, err := unstructured.NestedInt64(rs.Object, "metadata", "generation")
+	if err != nil {
+		return "", fmt.Errorf("failed to read generation from RootSync: %w", err)
+	}
+
+	observedGeneration, _, err := unstructured.NestedInt64(rs.Object, "status", "observedGeneration")
+	if err != nil {
+		return "", fmt.Errorf("failed to read observedGeneration from RootSync: %w", err)
+	}
+
+	if generation != observedGeneration {
+		return "Pending", nil
 	}
 
 	conditions, _, err := unstructured.NestedSlice(rs.Object, "status", "conditions")
