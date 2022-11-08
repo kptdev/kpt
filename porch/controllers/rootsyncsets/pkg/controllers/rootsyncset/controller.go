@@ -100,7 +100,7 @@ type RootSyncSetReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/finalizers,verbs=update
-//+kubebuilder:rbac:groups=configcontroller.cnrm.cloud.google.com,resources=configcontrollerinstances,verbs=get;list
+//+kubebuilder:rbac:groups=configcontroller.cnrm.cloud.google.com,resources=configcontrollerinstances,verbs=get;list;watch
 //+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
 //+kubebuilder:rbac:groups=core.cnrm.cloud.google.com,resources=configconnectorcontexts,verbs=get;list;watch
 //+kubebuilder:rbac:groups=hub.gke.io,resources=memberships,verbs=get;list;watch
@@ -242,11 +242,13 @@ func (r *RootSyncSetReconciler) updateStatus(ctx context.Context, rss *v1alpha1.
 	}
 
 	// Don't update if there are no changes.
-	if equality.Semantic.DeepEqual(rss.Status.ClusterRefStatuses, crss) {
+	if equality.Semantic.DeepEqual(rss.Status.ClusterRefStatuses, crss) &&
+		rss.Generation == rss.Status.ObservedGeneration {
 		return nil
 	}
 
 	rss.Status.ClusterRefStatuses = crss
+	rss.Status.ObservedGeneration = rss.Generation
 	return r.Client.Status().Update(ctx, rss)
 }
 
@@ -337,8 +339,11 @@ func (r *RootSyncSetReconciler) setupWatches(ctx context.Context, client dynamic
 		cancelFunc: cancelFunc,
 		client:     client,
 		channel:    r.channel,
-		liens:      make(map[types.NamespacedName]struct{}),
+		liens: map[types.NamespacedName]struct{}{
+			nn: {},
+		},
 	}
+	klog.Infof("Creating watcher for %v", clusterRef)
 	go w.watch()
 	r.watchers[clusterRef] = w
 }
@@ -349,6 +354,7 @@ func (r *RootSyncSetReconciler) setupWatches(ctx context.Context, client dynamic
 func (r *RootSyncSetReconciler) pruneWatches(rssnn types.NamespacedName, clusterRefs []*v1alpha1.ClusterRef) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+	klog.Infof("Pruning watches for %s which has %v clusterRefs", rssnn.String(), clusterRefs)
 
 	// Look through all watchers to check if it used to be needed by the RootSyncSet
 	// but is no longer.
@@ -368,7 +374,6 @@ func (r *RootSyncSetReconciler) pruneWatches(rssnn types.NamespacedName, cluster
 		delete(w.liens, rssnn)
 		// If no other RootSyncSets need the watch, stop it and remove the watcher from the map.
 		if len(w.liens) == 0 {
-			klog.Infof("clusterRef %s is no longer needed, so closing watch", clusterRef.Name)
 			w.cancelFunc()
 			delete(r.watchers, clusterRef)
 		}
