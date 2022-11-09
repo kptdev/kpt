@@ -17,18 +17,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   creationTimestamp: null
-  name: porch-controllers-rootsyncsets
+  name: porch-controllers-klippy
 rules:
 - apiGroups:
-  - ""
+  - porch.kpt.dev
   resources:
-  - serviceaccounts/token
-  verbs:
-  - create
-- apiGroups:
-  - config.porch.kpt.dev
-  resources:
-  - rootsyncsets
+  - packagerevisionresources
   verbs:
   - create
   - delete
@@ -38,48 +32,30 @@ rules:
   - update
   - watch
 - apiGroups:
-  - config.porch.kpt.dev
+  - porch.kpt.dev
   resources:
-  - rootsyncsets/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - config.porch.kpt.dev
-  resources:
-  - rootsyncsets/status
+  - packagerevisionresources/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - configcontroller.cnrm.cloud.google.com
+  - porch.kpt.dev
   resources:
-  - configcontrollerinstances
+  - packagerevisions
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
+  - update
   - watch
 - apiGroups:
-  - container.cnrm.cloud.google.com
+  - porch.kpt.dev
   resources:
-  - containerclusters
+  - packagerevisions/status
   verbs:
   - get
-  - list
-  - watch
-- apiGroups:
-  - core.cnrm.cloud.google.com
-  resources:
-  - configconnectorcontexts
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - hub.gke.io
-  resources:
-  - memberships
-  verbs:
-  - get
-  - list
-  - watch
+  - patch
+  - update

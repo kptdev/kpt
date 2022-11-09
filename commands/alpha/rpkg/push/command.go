@@ -23,9 +23,11 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -117,7 +119,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	if err := r.client.Update(r.ctx, &porchapi.PackageRevisionResources{
+	pkgResources := porchapi.PackageRevisionResources{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "PackageRevisionResources",
 			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
@@ -129,10 +131,84 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		Spec: porchapi.PackageRevisionResourcesSpec{
 			Resources: resources,
 		},
-	}); err != nil {
+	}
+	if err := r.client.Update(r.ctx, &pkgResources); err != nil {
 		return errors.E(op, err)
 	}
+	rs := pkgResources.Status.RenderStatus
+	if rs.Err != "" {
+		r.printer.Printf("Package is updated, but failed to render the package.\n")
+		r.printer.Printf("Error: %s\n", rs.Err)
+	}
+	if len(rs.Result.Items) > 0 {
+		for _, result := range rs.Result.Items {
+			r.printer.Printf("[RUNNING] %q \n", result.Image)
+			printOpt := printer.NewOpt()
+			if result.ExitCode != 0 {
+				r.printer.OptPrintf(printOpt, "[FAIL] %q\n", result.Image)
+			} else {
+				r.printer.OptPrintf(printOpt, "[PASS] %q\n", result.Image)
+			}
+			r.printFnResult(result, printOpt)
+		}
+	}
 	return nil
+}
+
+// printFnResult prints given function result in a user friendly
+// format on kpt CLI.
+func (r *runner) printFnResult(fnResult *porchapi.Result, opt *printer.Options) {
+	if len(fnResult.Results) > 0 {
+		// function returned structured results
+		var lines []string
+		for _, item := range fnResult.Results {
+			lines = append(lines, str(item))
+		}
+		ri := &fnruntime.MultiLineFormatter{
+			Title:          "Results",
+			Lines:          lines,
+			TruncateOutput: printer.TruncateOutput,
+		}
+		r.printer.OptPrintf(opt, "%s", ri.String())
+	}
+}
+
+// String provides a human-readable message for the result item
+func str(i porchapi.ResultItem) string {
+	identifier := i.ResourceRef
+	var idStringList []string
+	if identifier != nil {
+		if identifier.APIVersion != "" {
+			idStringList = append(idStringList, identifier.APIVersion)
+		}
+		if identifier.Kind != "" {
+			idStringList = append(idStringList, identifier.Kind)
+		}
+		if identifier.Namespace != "" {
+			idStringList = append(idStringList, identifier.Namespace)
+		}
+		if identifier.Name != "" {
+			idStringList = append(idStringList, identifier.Name)
+		}
+	}
+	formatString := "[%s]"
+	severity := i.Severity
+	// We default Severity to Info when converting a result to a message.
+	if i.Severity == "" {
+		severity = "info"
+	}
+	list := []interface{}{severity}
+	if len(idStringList) > 0 {
+		formatString += " %s"
+		list = append(list, strings.Join(idStringList, "/"))
+	}
+	if i.Field != nil {
+		formatString += " %s"
+		list = append(list, i.Field.Path)
+	}
+	formatString += ": %s"
+	list = append(list, i.Message)
+	return fmt.Sprintf(formatString, list...)
 }
 
 func readFromDir(dir string) (map[string]string, error) {

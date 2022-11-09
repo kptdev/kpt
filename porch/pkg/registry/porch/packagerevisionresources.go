@@ -45,7 +45,6 @@ var _ rest.Lister = &packageRevisionResources{}
 var _ rest.Getter = &packageRevisionResources{}
 var _ rest.Scoper = &packageRevisionResources{}
 var _ rest.Updater = &packageRevisionResources{}
-var _ rest.Watcher = &packageRevisionResources{}
 
 func (r *packageRevisionResources) New() runtime.Object {
 	return &api.PackageRevisionResources{}

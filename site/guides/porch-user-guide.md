@@ -142,12 +142,12 @@ The `kpt alpha rpkg get` command list the packages in registered repositories:
 # List package revisions in registered repositories
 $ kpt alpha rpkg get
 
-NAME                                                 PACKAGE  REVISION  LATEST  LIFECYCLE  REPOSITORY
-blueprints-0349d71330b89ee48ac85167598ef23021fd0484  basens   main      false   Published  blueprints
-blueprints-2e47615fda05664491f72c58b8ab658683afa036  basens   v1        true    Published  blueprints
-blueprints-7e2fe44bfdbb744d49bdaaaeac596200102c5f7c  istions  main      false   Published  blueprints
-blueprints-ac6e872be4a4a3476922deca58cca3183b16a5f7  istions  v1        false   Published  blueprints
-blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3  istions  v2        true    Published  blueprints
+NAME                                                 PACKAGE  WORKSPACENAME  REVISION  LATEST  LIFECYCLE  REPOSITORY
+blueprints-0349d71330b89ee48ac85167598ef23021fd0484  basens   main           main      false   Published  blueprints
+blueprints-2e47615fda05664491f72c58b8ab658683afa036  basens   v1             v1        true    Published  blueprints
+blueprints-7e2fe44bfdbb744d49bdaaaeac596200102c5f7c  istions  main           main      false   Published  blueprints
+blueprints-ac6e872be4a4a3476922deca58cca3183b16a5f7  istions  v1             v1        false   Published  blueprints
+blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3  istions  v2             v2        true    Published  blueprints
 ...
 ```
 
@@ -158,6 +158,14 @@ package.
 
 The `LIFECYCLE` column indicates the lifecycle stage of the package revision,
 one of: `Published`, `Draft` or `Proposed`.
+
+The `REVISION` column indicates the revision of the package. Revisions are
+assigned when a package is `Published` and starts at `v1`.
+
+The `WORKSPACENAME` column indicates the workspace name of the package. The
+workspace name is assigned when a draft revision is created and is used as the
+branch name for proposed and draft package revisions. The workspace name must be
+must be unique among package revisions in the same package.
 
 *Note* on package revision names. Packages exist in a hierarchical directory
 structure maintained by the underlying repository such as git, or in a
@@ -174,8 +182,8 @@ match) is supported by the CLI using `--name` and `--revision` flags:
 # List package with `istio` in the package name, and `v2` revision
 $ kpt alpha rpkg get --name istio --revision=v2
 
-NAME                                                 PACKAGE  REVISION  LATEST  LIFECYCLE  REPOSITORY
-blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3  istions  v2        true    Published  blueprints
+NAME                                                 PACKAGE  WORKSPACENAME  REVISION  LATEST  LIFECYCLE  REPOSITORY
+blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3  istions  v2             v2        true    Published  blueprints
 ```
 
 The common `kubectl` flags that control output format are available as well:
@@ -196,6 +204,7 @@ spec:
   packageName: istions
   repository: blueprints
   revision: v2
+  workspaceName: v2
 ...
 ```
 
@@ -256,15 +265,15 @@ and save it in the specified repository.
 
 ```sh
 # Initialize a new (empty) package revision:
-$ kpt alpha rpkg init new-package --repository=deployments --revision=v1 -ndefault
+$ kpt alpha rpkg init new-package --repository=deployments --workspace=v1 -ndefault
 
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764 created
 
 # List the available package revisions.
 $ kpt alpha rpkg get
 
-NAME                                                  PACKAGE      REVISION  LATEST  LIFECYCLE  REPOSITORY
-deployments-c32b851b591b860efda29ba0e006725c8c1f7764  new-package  v1        false   Draft      deployments
+NAME                                                  PACKAGE      WORKSPACENAME  REVISION  LATEST  LIFECYCLE  REPOSITORY
+deployments-c32b851b591b860efda29ba0e006725c8c1f7764  new-package  v1                       false   Draft      deployments
 ...
 ```
 
@@ -274,7 +283,7 @@ all commands that create new package revision (`init`, `clone` and `copy`).
 Additional flags supported by the `kpt alpha rpkg init` command are:
 
 * `--repository` - Repository in which the package will be created.
-* `--revision` - Revision of the new package.
+* `--workspace` - Workspace of the new package.
 * `--description` -  Short description of the package.
 * `--keywords` - List of keywords for the package.
 * `--site` - Link to page with information about the package.
@@ -291,8 +300,8 @@ deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 created
 
 # Confirm the package revision was created
 kpt alpha rpkg get deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 -ndefault
-NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
-deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1         false    Draft       deployments
+NAME                                                   PACKAGE         WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1                         false    Draft       deployments
 ```
 
 `kpt alpha rpkg clone` can also be used to clone packages that are in
@@ -310,8 +319,8 @@ deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac created
 
 # Confirm the package revision was created
 kpt alpha rpkg get deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac -ndefault
-NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
-deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1         false    Draft       deployments
+NAME                                                   PACKAGE         WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1                         false    Draft       deployments
 ```
 
 The flags supported by the `kpt alpha rpkg clone` command are:
@@ -322,7 +331,7 @@ The flags supported by the `kpt alpha rpkg clone` command are:
   located. This can be a branch, tag, or SHA.
 * `--repository` - Repository to which package will be cloned (downstream
   repository).
-* `--revision` - Revision to assign to the downstream package.
+* `--workspace` - Workspace to assign to the downstream package.
 * `--strategy` - Update strategy that should be used when updating this package;
   one of: `resource-merge`, `fast-forward`, `force-delete-replace`.
 
@@ -334,13 +343,13 @@ revision.
 ```sh
 # Create a new revision of an existing package
 $ kpt alpha rpkg copy \
-  blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3 istions \
-  --repository=blueprints --revision=v3 -ndefault
+  blueprints-421a5b5e43b03bc697d96f471929efc6ba3f54b3 \
+  --workspace=v3 -ndefault
 
 # Confirm the package revision was created
 $ kpt alpha rpkg get blueprints-bf11228f80de09f1a5dd9374dc92ebde3b503689 -ndefault
-NAME                                                  PACKAGE   REVISION   LATEST   LIFECYCLE   REPOSITORY
-blueprints-bf11228f80de09f1a5dd9374dc92ebde3b503689   istions   v3         false    Draft       blueprints
+NAME                                                  PACKAGE   WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+blueprints-bf11228f80de09f1a5dd9374dc92ebde3b503689   istions   v3                         false    Draft       blueprints
 ```
 
 The `kpt alpha rpkg push` command can be used to update the resources (package
@@ -411,11 +420,11 @@ publishing some of them.
 ```sh
 # List package revisions to identify relevant drafts:
 $ kpt alpha rpkg get
-NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
+NAME                                                   PACKAGE         WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
 ...
-deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1         false    Draft       deployments
-deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1         false    Draft       deployments
-deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1         false    Draft       deployments
+deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1                         false    Draft       deployments
+deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1                         false    Draft       deployments
+deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1                         false    Draft       deployments
 
 # Propose two packge revisions to be be published
 $ kpt alpha rpkg propose \
@@ -428,11 +437,11 @@ deployments-c32b851b591b860efda29ba0e006725c8c1f7764 proposed
 
 # Confirm the package revisions are now Proposed
 $ kpt alpha rpkg get
-NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
+NAME                                                   PACKAGE         WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
 ...
-deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1         false    Draft       deployments
-deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1         false    Proposed    deployments
-deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1         false    Proposed    deployments
+deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1                         false    Draft       deployments
+deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1                         false    Proposed    deployments
+deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1                         false    Proposed    deployments
 ```
 
 At this point, a person in _platform administrator_ role, or even an automated
@@ -455,11 +464,11 @@ Now the user can confirm lifecycle stages of the package revisions:
 ```sh
 # Confirm package revision lifecycle stages after approvals:
 $ kpt alpha rpkg get
-NAME                                                   PACKAGE         REVISION   LATEST   LIFECYCLE   REPOSITORY
+NAME                                                   PACKAGE         WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
 ...
-deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1         false    Draft       deployments
-deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1         true     Published   deployments
-deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1         false    Draft       deployments
+deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1                         false    Draft       deployments
+deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1              v1         true     Published   deployments
+deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1                         false    Draft       deployments
 ```
 
 Observe that the rejected proposal returned the package revision back to _Draft_

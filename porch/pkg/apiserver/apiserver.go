@@ -216,10 +216,13 @@ func (c completedConfig) New() (*PorchServer, error) {
 	referenceResolver := porch.NewReferenceResolver(coreClient)
 	userInfoProvider := &porch.ApiserverUserInfoProvider{}
 
+	watcherMgr := engine.NewWatcherManager()
+
 	cache := cache.NewCache(c.ExtraConfig.CacheDirectory, cache.CacheOptions{
 		CredentialResolver: credentialResolver,
 		UserInfoProvider:   userInfoProvider,
 		MetadataStore:      metadataStore,
+		ObjectNotifier:     watcherMgr,
 	})
 
 	runnerOptionsResolver := func(namespace string) fnruntime.RunnerOptions {
@@ -247,6 +250,7 @@ func (c completedConfig) New() (*PorchServer, error) {
 		engine.WithReferenceResolver(referenceResolver),
 		engine.WithUserInfoProvider(userInfoProvider),
 		engine.WithMetadataStore(metadataStore),
+		engine.WithWatcherManager(watcherMgr),
 	)
 	if err != nil {
 		return nil, err

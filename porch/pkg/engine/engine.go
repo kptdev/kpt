@@ -44,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/kustomize/kyaml/comments"
@@ -55,7 +56,7 @@ var tracer = otel.Tracer("engine")
 
 type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
-	ObjectCache() cache.ObjectCache
+	ObjectCache() WatcherManager
 
 	UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, *api.RenderStatus, error)
 	ListFunctions(ctx context.Context, repositoryObj *configapi.Repository) ([]*Function, error)
@@ -81,6 +82,16 @@ func (p *Package) GetPackage() *api.Package {
 
 func (p *Package) KubeObjectName() string {
 	return p.repoPackage.KubeObjectName()
+}
+
+// TODO: This is a bit awkward, and we should see if there is a way to avoid
+// having to expose this function. Any functionality that requires creating new
+// engine.PackageRevision resources should be in the engine package.
+func ToPackageRevision(pkgRev repository.PackageRevision, pkgRevMeta meta.PackageRevisionMeta) *PackageRevision {
+	return &PackageRevision{
+		repoPackageRevision: pkgRev,
+		packageRevisionMeta: pkgRevMeta,
+	}
 }
 
 type PackageRevision struct {
@@ -149,6 +160,7 @@ type cadEngine struct {
 	referenceResolver  ReferenceResolver
 	userInfoProvider   repository.UserInfoProvider
 	metadataStore      meta.MetadataStore
+	watcherManager     *watcherManager
 }
 
 var _ CaDEngine = &cadEngine{}
@@ -158,8 +170,8 @@ type mutation interface {
 }
 
 // ObjectCache is a cache of all our objects.
-func (cad *cadEngine) ObjectCache() cache.ObjectCache {
-	return cad.cache.ObjectCache()
+func (cad *cadEngine) ObjectCache() WatcherManager {
+	return cad.watcherManager
 }
 
 func (cad *cadEngine) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (repository.Repository, error) {
@@ -327,6 +339,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	if err != nil {
 		return nil, err
 	}
+	cad.watcherManager.NotifyPackageRevisionChange(watch.Added, repoPkgRev, pkgRevMeta)
 	return &PackageRevision{
 		repoPackageRevision: repoPkgRev,
 		packageRevisionMeta: pkgRevMeta,
@@ -539,6 +552,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		}
 		cad.metadataStore.Update(ctx, pkgRevMeta)
 
+		cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
 		return &PackageRevision{
 			repoPackageRevision: repoPkgRev,
 			packageRevisionMeta: pkgRevMeta,
@@ -560,8 +574,19 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		if err != nil {
 			return nil, err
 		}
+
+		pkgRevMeta := meta.PackageRevisionMeta{
+			Name:        repoPkgRev.KubeObjectName(),
+			Namespace:   repoPkgRev.KubeObjectNamespace(),
+			Labels:      newObj.Labels,
+			Annotations: newObj.Annotations,
+		}
+		cad.metadataStore.Update(ctx, pkgRevMeta)
+
+		cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
 		return &PackageRevision{
 			repoPackageRevision: repoPkgRev,
+			packageRevisionMeta: pkgRevMeta,
 		}, nil
 	}
 
@@ -664,6 +689,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	}
 	cad.metadataStore.Update(ctx, pkgRevMeta)
 
+	cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
 	return &PackageRevision{
 		repoPackageRevision: repoPkgRev,
 		packageRevisionMeta: pkgRevMeta,
@@ -800,6 +826,7 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 		return err
 	}
 
+	cad.watcherManager.NotifyPackageRevisionChange(watch.Deleted, oldPackage.repoPackageRevision, oldPackage.packageRevisionMeta)
 	return nil
 }
 

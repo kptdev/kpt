@@ -347,6 +347,27 @@ const (
 	ConditionUnknown ConditionStatus = "Unknown"
 )
 
+const (
+	// Deprecated: prefer ResultListGVK
+	ResultListKind = "FunctionResultList"
+	// Deprecated: prefer ResultListGVK
+	ResultListGroup = "kpt.dev"
+	// Deprecated: prefer ResultListGVK
+	ResultListVersion = "v1"
+	// Deprecated: prefer ResultListGVK
+	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
+)
+
+// ResultList contains aggregated results from multiple functions
+type ResultList struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	// ExitCode is the exit code of kpt command
+	ExitCode int `json:"exitCode"`
+	// Items contain a list of function result
+	Items []*Result `json:"items,omitempty"`
+}
+
 // Result contains the structured result from an individual function
 type Result struct {
 	// Image is the full name of the image that generates this result
@@ -366,28 +387,6 @@ type Result struct {
 	ExitCode int `json:"exitCode"`
 	// Results is the list of results for the function
 	Results []ResultItem `json:"results,omitempty"`
-}
-
-const (
-	// Deprecated: prefer ResultListGVK
-	ResultListKind = "FunctionResultList"
-	// Deprecated: prefer ResultListGVK
-	ResultListGroup = "kpt.dev"
-	// Deprecated: prefer ResultListGVK
-	ResultListVersion = "v1"
-	// Deprecated: prefer ResultListGVK
-	ResultListAPIVersion = ResultListGroup + "/" + ResultListVersion
-)
-
-// ResultList contains aggregated results from multiple functions
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-type ResultList struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	// ExitCode is the exit code of kpt command
-	ExitCode int `json:"exitCode"`
-	// Items contain a list of function result
-	Items []*Result `json:"items,omitempty"`
 }
 
 // ResultItem defines a validation result

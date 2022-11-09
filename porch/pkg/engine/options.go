@@ -127,3 +127,10 @@ func WithMetadataStore(metadataStore meta.MetadataStore) EngineOption {
 		return nil
 	})
 }
+
+func WithWatcherManager(watcherManager *watcherManager) EngineOption {
+	return EngineOptionFunc(func(engine *cadEngine) error {
+		engine.watcherManager = watcherManager
+		return nil
+	})
+}

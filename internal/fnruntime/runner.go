@@ -295,10 +295,15 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 	}
 	if err != nil {
 		var execErr *ExecError
+		// set exitCode to non-zero by default in case of an error.
+		// It will be overridden with appropriate exitCode if the function runtime returns execError.
+		// builtinruntime and podEvaluator function runtime do not return execError so having
+		// a default is important.
+		fnResult.ExitCode = 1
+		fr.fnResults.ExitCode = 1
 		if goerrors.As(err, &execErr) {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
-			fr.fnResults.ExitCode = 1
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
@@ -427,7 +432,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 		for _, item := range fnResult.Results {
 			lines = append(lines, item.String())
 		}
-		ri := &multiLineFormatter{
+		ri := &MultiLineFormatter{
 			Title:          "Results",
 			Lines:          lines,
 			TruncateOutput: printer.TruncateOutput,
@@ -448,7 +453,7 @@ func printFnExecErr(ctx context.Context, fnErr *ExecError) {
 func printFnStderr(ctx context.Context, stdErr string) {
 	pr := printer.FromContextOrDie(ctx)
 	if len(stdErr) > 0 {
-		errLines := &multiLineFormatter{
+		errLines := &MultiLineFormatter{
 			Title:          "Stderr",
 			Lines:          strings.Split(stdErr, "\n"),
 			UseQuote:       true,
@@ -492,9 +497,9 @@ func enforcePathInvariants(nodes []*yaml.RNode) error {
 	return nil
 }
 
-// multiLineFormatter knows how to format multiple lines in pretty format
+// MultiLineFormatter knows how to format multiple lines in pretty format
 // that can be displayed to an end user.
-type multiLineFormatter struct {
+type MultiLineFormatter struct {
 	// Title under which lines need to be printed
 	Title string
 
@@ -512,7 +517,7 @@ type multiLineFormatter struct {
 }
 
 // String returns multiline string.
-func (ri *multiLineFormatter) String() string {
+func (ri *MultiLineFormatter) String() string {
 	if ri.MaxLines == 0 {
 		ri.MaxLines = FnExecErrorTruncateLines
 	}

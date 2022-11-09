@@ -63,6 +63,8 @@ type SecretReference struct {
 
 // RootSyncSetStatus defines the observed state of RootSyncSet
 type RootSyncSetStatus struct {
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 

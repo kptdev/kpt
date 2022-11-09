@@ -68,7 +68,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.directory, "directory", "", "Directory within the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.ref, "ref", "", "Branch in the repository where the upstream package is located.")
 	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
-	c.Flags().StringVar(&r.workspace, "workspace", "v1", "WorkspaceName of the downstream package.")
+	c.Flags().StringVar(&r.workspace, "workspace", "v1", "Workspace name of the downstream package.")
 
 	return r
 }
@@ -113,7 +113,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	if r.workspace == "" {
-		return errors.E(op, fmt.Errorf("--workspace is required to specify downstream workspaceName"))
+		return errors.E(op, fmt.Errorf("--workspace is required to specify downstream workspace name"))
 	}
 
 	source := args[0]

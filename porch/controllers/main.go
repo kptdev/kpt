@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
@@ -47,25 +48,27 @@ import (
 )
 
 var (
-	reconcilers = map[string]newReconciler{
-		"rootsyncsets": func() Reconciler {
-			return rootsyncset.NewRootSyncSetReconciler()
-		},
-		"remoterootsyncsets": func() Reconciler {
-			return &remoterootsyncset.RemoteRootSyncSetReconciler{}
-		},
-		"workloadidentitybindings": func() Reconciler {
-			return &workloadidentitybinding.WorkloadIdentityBindingReconciler{}
-		},
+	reconcilers = map[string]Reconciler{
+		"rootsyncsets":             &rootsyncset.RootSyncSetReconciler{},
+		"remoterootsyncsets":       &remoterootsyncset.RemoteRootSyncSetReconciler{},
+		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
+		"klippy":                   &klippy.KlippyReconciler{},
 	}
 )
 
+// Reconciler is the interface implemented by (our) reconcilers, which includes some configuration and initialization.
 type Reconciler interface {
 	reconcile.Reconciler
+
+	// InitDefaults populates default values into our options
+	InitDefaults()
+
+	// BindFlags binds options to flags
+	BindFlags(prefix string, flags *flag.FlagSet)
+
+	// SetupWithManager registers the reconciler to run under the specified manager
 	SetupWithManager(ctrl.Manager) error
 }
-
-type newReconciler func() Reconciler
 
 // We include our lease / events permissions in the main RBAC role
 
@@ -86,6 +89,10 @@ func run(ctx context.Context) error {
 	// var probeAddr string
 	var enabledReconcilersString string
 
+	for _, reconciler := range reconcilers {
+		reconciler.InitDefaults()
+	}
+
 	klog.InitFlags(nil)
 
 	// flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
@@ -95,7 +102,15 @@ func run(ctx context.Context) error {
 	// 		"Enabling this will ensure there is only one active controller manager.")
 	flag.StringVar(&enabledReconcilersString, "reconcilers", "*", "reconcilers that should be enabled; use * to mean 'enable all'")
 
+	for name, reconciler := range reconcilers {
+		reconciler.BindFlags(name+".", flag.CommandLine)
+	}
+
 	flag.Parse()
+
+	if len(flag.Args()) != 0 {
+		return fmt.Errorf("unexpected additional (non-flag) arguments: %v", flag.Args())
+	}
 
 	scheme := runtime.NewScheme()
 	if err := clientgoscheme.AddToScheme(scheme); err != nil {
@@ -121,12 +136,12 @@ func run(ctx context.Context) error {
 	}
 
 	enabledReconcilers := parseReconcilers(enabledReconcilersString)
-	for r, f := range reconcilers {
-		if !reconcilerIsEnabled(enabledReconcilers, r) {
+	for name, reconciler := range reconcilers {
+		if !reconcilerIsEnabled(enabledReconcilers, name) {
 			continue
 		}
-		if err = f().SetupWithManager(mgr); err != nil {
-			return fmt.Errorf("error creating %s reconciler: %w", r, err)
+		if err = reconciler.SetupWithManager(mgr); err != nil {
+			return fmt.Errorf("error creating %s reconciler: %w", name, err)
 		}
 	}
 

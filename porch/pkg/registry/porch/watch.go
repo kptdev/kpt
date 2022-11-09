@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/GoogleContainerTools/kpt/porch/pkg/engine"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
 	metainternalversion "k8s.io/apimachinery/pkg/apis/meta/internalversion"
@@ -30,16 +31,16 @@ import (
 )
 
 // Watch supports watching for changes.
-func (r *packageRevisionResources) Watch(ctx context.Context, options *metainternalversion.ListOptions) (watch.Interface, error) {
+func (r *packageRevisions) Watch(ctx context.Context, options *metainternalversion.ListOptions) (watch.Interface, error) {
 	// 'label' selects on labels; 'field' selects on the object's fields. Not all fields
 	// are supported; an error should be returned if 'field' tries to select on a field that
 	// isn't supported. 'resourceVersion' allows for continuing/starting a watch at a
 	// particular version.
 
-	ctx, span := tracer.Start(ctx, "packageRevisionResources::Watch", trace.WithAttributes())
+	ctx, span := tracer.Start(ctx, "packageRevisions::Watch", trace.WithAttributes())
 	defer span.End()
 
-	filter, err := parsePackageRevisionResourcesFieldSelector(options.FieldSelector)
+	filter, err := parsePackageRevisionFieldSelector(options.FieldSelector)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +71,7 @@ type watcher struct {
 	resultChan chan watch.Event
 
 	mutex         sync.Mutex
-	eventCallback func(eventType watch.EventType, pr repository.PackageRevision) bool
+	eventCallback func(eventType watch.EventType, pr engine.PackageRevision) bool
 }
 
 var _ watch.Interface = &watcher{}
@@ -91,7 +92,7 @@ func (w *watcher) ResultChan() <-chan watch.Event {
 // listAndWatch implements watch by doing a list, then sending any observed changes.
 // This is not a compliant implementation of watch, but it is a good-enough start for most controllers.
 // One trick is that we start the watch _before_ we perform the list, so we don't miss changes that happen immediately after the list.
-func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter, selector labels.Selector) {
+func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisions, filter packageRevisionFilter, selector labels.Selector) {
 	if err := w.listAndWatchInner(ctx, r, filter, selector); err != nil {
 		// TODO: We need to populate the object on this error
 		klog.Warningf("sending error to watch stream")
@@ -104,16 +105,16 @@ func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisionResources,
 	close(w.resultChan)
 }
 
-func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResources, filter packageRevisionFilter, selector labels.Selector) error {
+func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, filter packageRevisionFilter, selector labels.Selector) error {
 	errorResult := make(chan error, 4)
 	done := false
 
 	var backlog []watch.Event
-	w.eventCallback = func(eventType watch.EventType, pr repository.PackageRevision) bool {
+	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
 		if done {
 			return false
 		}
-		obj, err := pr.GetResources(ctx)
+		obj, err := pr.GetPackageRevision(ctx)
 		if err != nil {
 			done = true
 			errorResult <- err
@@ -134,7 +135,7 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResou
 
 	// TODO: Only if rv == 0?
 	if err := r.packageCommon.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
-		obj, err := p.GetResources(ctx)
+		obj, err := p.GetPackageRevision(ctx)
 		if err != nil {
 			done = true
 			return err
@@ -181,11 +182,11 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisionResou
 	}
 
 	klog.Infof("moving watch into streaming mode")
-	w.eventCallback = func(eventType watch.EventType, pr repository.PackageRevision) bool {
+	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
 		if done {
 			return false
 		}
-		obj, err := pr.GetResources(ctx)
+		obj, err := pr.GetPackageRevision(ctx)
 		if err != nil {
 			done = true
 			errorResult <- err
@@ -220,9 +221,9 @@ func (w *watcher) sendWatchEvent(ev watch.Event) {
 }
 
 // OnPackageRevisionChange is the callback called when a PackageRevision changes.
-func (w *watcher) OnPackageRevisionChange(eventType watch.EventType, pr repository.PackageRevision) bool {
+func (w *watcher) OnPackageRevisionChange(eventType watch.EventType, pr repository.PackageRevision, objMeta meta.PackageRevisionMeta) bool {
 	w.mutex.Lock()
 	defer w.mutex.Unlock()
 
-	return w.eventCallback(eventType, pr)
+	return w.eventCallback(eventType, *engine.ToPackageRevision(pr, objMeta))
 }

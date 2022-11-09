@@ -52,7 +52,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		RunE:    r.runE,
 		Hidden:  porch.HidePorchCommands,
 	}
-	r.Command.Flags().StringVar(&r.workspace, "workspace", "", "WorkspaceName of the copy of the package.")
+	r.Command.Flags().StringVar(&r.workspace, "workspace", "", "Workspace name of the copy of the package.")
 	return r
 }
 
@@ -124,7 +124,7 @@ func (r *runner) getPackageRevisionSpec() (*porchapi.PackageRevisionSpec, error)
 	}
 
 	if r.workspace == "" {
-		return nil, fmt.Errorf("--workspace is required to specify downstream workspaceName")
+		return nil, fmt.Errorf("--workspace is required to specify workspace name")
 	}
 
 	spec := &porchapi.PackageRevisionSpec{

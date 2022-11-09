@@ -23,9 +23,10 @@ import (
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	fakecache "github.com/GoogleContainerTools/kpt/porch/pkg/cache/fake"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
-	"github.com/GoogleContainerTools/kpt/porch/pkg/meta/fake"
+	fakemeta "github.com/GoogleContainerTools/kpt/porch/pkg/meta/fake"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	gogit "github.com/go-git/go-git/v5"
 	"github.com/google/go-cmp/cmp"
@@ -134,7 +135,8 @@ func openRepositoryFromArchive(t *testing.T, ctx context.Context, testPath, name
 	metadataStore := createMetadataStoreFromArchive(t, "", "")
 
 	cache := NewCache(t.TempDir(), CacheOptions{
-		MetadataStore: metadataStore,
+		MetadataStore:  metadataStore,
+		ObjectNotifier: &fakecache.ObjectNotifier{},
 	})
 	cachedGit, err := cache.OpenRepository(ctx, &v1alpha1.Repository{
 		TypeMeta: metav1.TypeMeta{
@@ -170,7 +172,7 @@ func createMetadataStoreFromArchive(t *testing.T, testPath, name string) meta.Me
 		t.Fatalf("Error reading metadata file found for repository %s", name)
 	}
 	if os.IsNotExist(err) {
-		return &fake.MemoryMetadataStore{
+		return &fakemeta.MemoryMetadataStore{
 			Metas: []meta.PackageRevisionMeta{},
 		}
 	}
@@ -180,7 +182,7 @@ func createMetadataStoreFromArchive(t *testing.T, testPath, name string) meta.Me
 		t.Fatalf("Error unmarshalling metadata file for repository %s", name)
 	}
 
-	return &fake.MemoryMetadataStore{
+	return &fakemeta.MemoryMetadataStore{
 		Metas: metas,
 	}
 }

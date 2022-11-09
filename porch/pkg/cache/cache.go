@@ -27,6 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 // Cache allows us to keep state for repositories, rather than querying them every time.
@@ -47,31 +48,29 @@ type Cache struct {
 	userInfoProvider   repository.UserInfoProvider
 	metadataStore      meta.MetadataStore
 
-	objectCache *objectCache
+	objectNotifier objectNotifier
+}
+
+type objectNotifier interface {
+	NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta)
 }
 
 type CacheOptions struct {
 	CredentialResolver repository.CredentialResolver
 	UserInfoProvider   repository.UserInfoProvider
 	MetadataStore      meta.MetadataStore
+	ObjectNotifier     objectNotifier
 }
 
 func NewCache(cacheDir string, opts CacheOptions) *Cache {
-	objectCache := &objectCache{}
-
 	return &Cache{
 		repositories:       make(map[string]*cachedRepository),
 		cacheDir:           cacheDir,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
 		metadataStore:      opts.MetadataStore,
-		objectCache:        objectCache,
+		objectNotifier:     opts.ObjectNotifier,
 	}
-}
-
-// ObjectCache() is a cache of all our objects.
-func (c *Cache) ObjectCache() ObjectCache {
-	return c.objectCache
 }
 
 func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Repository) (*cachedRepository, error) {
@@ -95,7 +94,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			if err != nil {
 				return nil, err
 			}
-			cr = newRepository(key, repositorySpec, r, c.objectCache, c.metadataStore)
+			cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore)
 			c.repositories[key] = cr
 		}
 		return cr, nil
@@ -131,7 +130,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 			}); err != nil {
 				return nil, err
 			} else {
-				cr = newRepository(key, repositorySpec, r, c.objectCache, c.metadataStore)
+				cr = newRepository(key, repositorySpec, r, c.objectNotifier, c.metadataStore)
 				c.repositories[key] = cr
 			}
 		} else {

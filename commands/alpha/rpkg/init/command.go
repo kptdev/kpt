@@ -56,8 +56,8 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c.Flags().StringVar(&r.Description, "description", "sample description", "short description of the package.")
 	c.Flags().StringSliceVar(&r.Keywords, "keywords", []string{}, "list of keywords for the package.")
 	c.Flags().StringVar(&r.Site, "site", "", "link to page with information about the package.")
-	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be cloned (downstream repository).")
-	c.Flags().StringVar(&r.workspace, "workspace", "", "WorkspaceName of the downstream package.")
+	c.Flags().StringVar(&r.repository, "repository", "", "Repository to which package will be created.")
+	c.Flags().StringVar(&r.workspace, "workspace", "", "Workspace name of the package.")
 
 	return r
 }
@@ -88,6 +88,14 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 
 	if len(args) < 1 {
 		return errors.E(op, "PACKAGE_NAME is a required positional argument")
+	}
+
+	if r.repository == "" {
+		return errors.E(op, fmt.Errorf("--repository is required to specify target repository"))
+	}
+
+	if r.workspace == "" {
+		return errors.E(op, fmt.Errorf("--workspace is required to specify workspace name"))
 	}
 
 	r.name = args[0]
