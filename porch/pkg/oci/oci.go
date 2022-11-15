@@ -392,6 +392,10 @@ func (p *ociPackageRevision) KubeObjectNamespace() string {
 	return p.parent.namespace
 }
 
+func (p *ociPackageRevision) UID() types.UID {
+	return p.uid
+}
+
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
 		Repository:    p.parent.name,

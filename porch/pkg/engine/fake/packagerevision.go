@@ -20,12 +20,14 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // Implementation of the repository.PackageRevision interface for testing.
 type PackageRevision struct {
 	Name               string
 	Namespace          string
+	Uid                types.UID
 	PackageRevisionKey repository.PackageRevisionKey
 	PackageLifecycle   v1alpha1.PackageRevisionLifecycle
 	PackageRevision    *v1alpha1.PackageRevision
@@ -39,6 +41,10 @@ func (pr *PackageRevision) KubeObjectName() string {
 
 func (pr *PackageRevision) KubeObjectNamespace() string {
 	return pr.Namespace
+}
+
+func (pr *PackageRevision) UID() types.UID {
+	return pr.Uid
 }
 
 func (pr *PackageRevision) Key() repository.PackageRevisionKey {

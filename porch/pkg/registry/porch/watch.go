@@ -95,7 +95,7 @@ func (w *watcher) ResultChan() <-chan watch.Event {
 func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisions, filter packageRevisionFilter, selector labels.Selector) {
 	if err := w.listAndWatchInner(ctx, r, filter, selector); err != nil {
 		// TODO: We need to populate the object on this error
-		klog.Warningf("sending error to watch stream")
+		klog.Warningf("sending error to watch stream: %v", err)
 		ev := watch.Event{
 			Type: watch.Error,
 		}
