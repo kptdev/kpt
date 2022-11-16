@@ -1,0 +1,4 @@
+# https://pkg.go.dev/github.com/apparentlymart/go-textseg/v13@v13.0.0
+license: Apache-2.0,MIT,Unicode-DFS-2016
+licenseURLs:
+- https://raw.githubusercontent.com/apparentlymart/go-textseg/master/LICENSE
