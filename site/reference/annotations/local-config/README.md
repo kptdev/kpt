@@ -24,8 +24,8 @@ YAML boolean (invalid annotation), not a string.
 
 ### Behavior
 
-Resources with the `local-config` annotation set to `true` will not be applied
-to the cluster when using `kpt live apply`.
+Resources with the `local-config` annotation set to any value except `false`
+will not be applied to the cluster when using `kpt live apply`.
 
 ### Example
 
