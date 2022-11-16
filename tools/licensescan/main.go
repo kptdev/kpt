@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"debug/buildinfo"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -34,6 +35,9 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/yaml"
 )
+
+//go:embed modules/*
+var modulesFS embed.FS
 
 func main() {
 	rootCmd := buildRootCommand()
@@ -125,7 +129,14 @@ func RunLicenseScan(ctx context.Context, opts RunLicenseScanOptions) error {
 		modules = append(modules, module)
 
 		p := filepath.Join("modules", module.Name, module.Version+".yaml")
-		b, err := ioutil.ReadFile(p)
+		b, err := os.ReadFile(p)
+		if err != nil && os.IsNotExist(err) {
+			b2, err2 := modulesFS.ReadFile(p)
+			if err2 == nil {
+				b = b2
+				err = err2
+			}
+		}
 		if err != nil {
 			if os.IsNotExist(err) {
 				if err := os.MkdirAll(filepath.Dir(p), 0755); err != nil {
