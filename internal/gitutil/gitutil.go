@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 )
 
 // RepoCacheDirEnv is the name of the environment variable that controls the cache directory

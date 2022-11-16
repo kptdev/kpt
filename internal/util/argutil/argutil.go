@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 

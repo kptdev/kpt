@@ -10,9 +10,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"

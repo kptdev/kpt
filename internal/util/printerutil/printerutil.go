@@ -17,7 +17,7 @@ package printerutil
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 )
 
 // PrintFnResultInfo displays information about the function results file.

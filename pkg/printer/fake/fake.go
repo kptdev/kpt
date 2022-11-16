@@ -19,7 +19,7 @@ import (
 	"io"
 
 	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 )
 
 // Printer implements the printer.Printer interface and just ignores

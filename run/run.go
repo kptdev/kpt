@@ -26,8 +26,8 @@ import (
 
 	kptcommands "github.com/GoogleContainerTools/kpt/commands"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )

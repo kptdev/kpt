@@ -21,8 +21,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

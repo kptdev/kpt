@@ -19,8 +19,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
-	fakeprint "github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	fakeprint "github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/spf13/cobra"

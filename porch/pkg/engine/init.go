@@ -18,9 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
-	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel/trace"

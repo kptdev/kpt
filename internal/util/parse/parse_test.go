@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
