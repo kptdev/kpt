@@ -186,6 +186,8 @@ function customize-container-env {
 
 function main() {
   # Repository CRD
+  cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_functions.yaml" \
+     "${DESTINATION}/0-functions.yaml"
   cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"
   cp "./internal/api/porchinternal/v1alpha1/config.porch.kpt.dev_packagerevs.yaml" \

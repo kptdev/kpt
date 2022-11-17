@@ -42,7 +42,12 @@ var (
 		Kind:    "Repository",
 	}
 
-	AllKinds = []KindInfo{KindRepository}
+	KindFunction = KindInfo{
+		Resource: GroupVersion.WithResource("functions"),
+		objects:  []runtime.Object{&Function{}, &FunctionList{}},
+	}
+
+	AllKinds = []KindInfo{KindRepository, KindFunction}
 )
 
 //+kubebuilder:object:generate=false
