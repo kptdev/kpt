@@ -23,9 +23,9 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	. "github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 

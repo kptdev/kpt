@@ -17,9 +17,9 @@ package get_test
 import (
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer/fake"
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 )
 
 func ExampleCommand() {

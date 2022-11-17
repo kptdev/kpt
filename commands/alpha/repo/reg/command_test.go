@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	fakeprinter "github.com/GoogleContainerTools/kpt/internal/printer/fake"
+	fakeprinter "github.com/GoogleContainerTools/kpt/pkg/printer/fake"
 	"github.com/google/go-cmp/cmp"
 	"gopkg.in/yaml.v3"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

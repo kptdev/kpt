@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"github.com/go-errors/errors"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"

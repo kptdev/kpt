@@ -28,8 +28,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/printer"
 	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
