@@ -38,12 +38,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-func OpenRepository(name string, namespace string, content configapi.RepositoryContent, spec *configapi.OciRepository, deployment bool, cacheDir string) (repository.Repository, error) {
-	storage, err := oci.NewStorage(cacheDir)
-	if err != nil {
-		return nil, err
-	}
-
+func OpenRepository(name string, namespace string, content configapi.RepositoryContent, spec *configapi.OciRepository, deployment bool, storage *oci.Storage) (repository.Repository, error) {
 	return &ociRepository{
 		name:       name,
 		namespace:  namespace,

@@ -153,7 +153,7 @@ func (r *packageCommon) getRepositoryObj(ctx context.Context, repositoryID types
 	var repositoryObj configapi.Repository
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
+			return nil, apierrors.NewNotFound(configapi.TypeRepository.GroupResource(), repositoryID.Name)
 		}
 		return nil, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
@@ -269,7 +269,7 @@ func (r *packageCommon) updatePackageRevision(ctx context.Context, name string, 
 	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
+			return nil, false, apierrors.NewNotFound(configapi.TypeRepository.GroupResource(), repositoryID.Name)
 		}
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}
@@ -379,7 +379,7 @@ func (r *packageCommon) updatePackage(ctx context.Context, name string, objInfo 
 	repositoryID := types.NamespacedName{Namespace: ns, Name: repositoryName}
 	if err := r.coreClient.Get(ctx, repositoryID, &repositoryObj); err != nil {
 		if apierrors.IsNotFound(err) {
-			return nil, false, apierrors.NewNotFound(configapi.KindRepository.GroupResource(), repositoryID.Name)
+			return nil, false, apierrors.NewNotFound(configapi.TypeRepository.GroupResource(), repositoryID.Name)
 		}
 		return nil, false, apierrors.NewInternalError(fmt.Errorf("error getting repository %v: %w", repositoryID, err))
 	}

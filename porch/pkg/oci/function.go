@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"github.com/google/go-containerregistry/pkg/name"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -121,7 +122,48 @@ func (f *ociFunction) GetFunction() (*v1alpha1.Function, error) {
 		},
 		Status: v1alpha1.FunctionStatus{},
 	}, nil
+}
 
+func (f *ociFunction) GetCRD() (*configapi.Function, error) {
+	var functionTypes []configapi.FunctionType
+	for _, fnType := range f.meta.FunctionTypes {
+		switch {
+		case fnType == string(v1alpha1.FunctionTypeMutator):
+			functionTypes = append(functionTypes, configapi.FunctionTypeMutator)
+		case fnType == string(v1alpha1.FunctionTypeValidator):
+			functionTypes = append(functionTypes, configapi.FunctionTypeValidator)
+		default:
+			// unrecognized custom FunctionType
+		}
+	}
+	var fnConfigs []configapi.FunctionConfig
+	for _, metaFnConfig := range f.meta.FunctionConfigs {
+		fnConfigs = append(fnConfigs, configapi.FunctionConfig{
+			TypeMeta:       metaFnConfig.TypeMeta,
+			RequiredFields: metaFnConfig.RequiredFields,
+		})
+	}
+
+	name := fmt.Sprintf("%s.%s.%s", f.parent.name, f.name, f.version)
+
+	return &configapi.Function{
+		TypeMeta: metav1.TypeMeta{},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: f.parent.namespace,
+		},
+		Spec: configapi.FunctionSpec{
+			Image: f.tag.Name(),
+			RepositoryRef: configapi.RepositoryRef{
+				Name: f.parent.name,
+			},
+			FunctionTypes:    functionTypes,
+			Description:      f.meta.Description,
+			DocumentationUrl: f.meta.DocumentationUrl,
+			Keywords:         f.meta.Keywords,
+			FunctionConfigs:  fnConfigs,
+		},
+	}, nil
 }
 
 // RepositoryStr is the repository part of the resource name,

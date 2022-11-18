@@ -1465,8 +1465,8 @@ func (t *PorchSuite) TestRepositoryError(ctx context.Context) {
 	)
 	t.CreateF(ctx, &configapi.Repository{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       configapi.RepositoryGVK.Kind,
-			APIVersion: configapi.GroupVersion.Identifier(),
+			Kind:       configapi.TypeRepository.Kind,
+			APIVersion: configapi.TypeRepository.APIVersion(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      repositoryName,

@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
@@ -90,7 +91,13 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 		cr := c.repositories[key]
 
 		if cr == nil {
-			r, err := oci.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, repositorySpec.Spec.Content, ociSpec, repositorySpec.Spec.Deployment, filepath.Join(c.cacheDir, "oci"))
+			cacheDir := filepath.Join(c.cacheDir, "oci")
+			storage, err := kptoci.NewStorage(cacheDir)
+			if err != nil {
+				return nil, err
+			}
+
+			r, err := oci.OpenRepository(repositorySpec.Name, repositorySpec.Namespace, repositorySpec.Spec.Content, ociSpec, repositorySpec.Spec.Deployment, storage)
 			if err != nil {
 				return nil, err
 			}
