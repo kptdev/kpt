@@ -350,7 +350,7 @@ func (r *WorkloadIdentityBindingReconciler) updateServiceAccount(ctx context.Con
 		return err
 	}
 
-	mapping, err := r.restMapper.RESTMapping(corev1.SchemeGroupVersion.WithKind("ServiceAccount").GroupKind())
+	mapping, err := r.restMapper.RESTMapping(corev1.SchemeGroupVersion.WithKind("ServiceAccount").GroupKind(), corev1.SchemeGroupVersion.Version)
 	if err != nil {
 		return err
 	}
