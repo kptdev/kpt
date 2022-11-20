@@ -175,6 +175,12 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 		return err
 	}
 
+	// objs may contain kind List
+	objs, err = live.Flatten(objs)
+	if err != nil {
+		return err
+	}
+
 	invInfo, err := live.ToInventoryInfo(inv)
 	if err != nil {
 		return err
