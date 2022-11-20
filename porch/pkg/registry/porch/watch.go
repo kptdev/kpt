@@ -68,10 +68,12 @@ func (r *packageRevisions) Watch(ctx context.Context, options *metainternalversi
 type watcher struct {
 	cancel func()
 
-	resultChan chan watch.Event
-
+	// mutex that protects the eventCallback, resultChan, and done fields
+	// from concurrent access.
 	mutex         sync.Mutex
 	eventCallback func(eventType watch.EventType, pr engine.PackageRevision) bool
+	resultChan    chan watch.Event
+	done          bool
 }
 
 var _ watch.Interface = &watcher{}
@@ -89,10 +91,15 @@ func (w *watcher) ResultChan() <-chan watch.Event {
 	return w.resultChan
 }
 
+type packageReader interface {
+	watchPackages(ctx context.Context, filter packageRevisionFilter, callback engine.ObjectWatcher) error
+	listPackageRevisions(ctx context.Context, filter packageRevisionFilter, selector labels.Selector, callback func(p *engine.PackageRevision) error) error
+}
+
 // listAndWatch implements watch by doing a list, then sending any observed changes.
 // This is not a compliant implementation of watch, but it is a good-enough start for most controllers.
 // One trick is that we start the watch _before_ we perform the list, so we don't miss changes that happen immediately after the list.
-func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisions, filter packageRevisionFilter, selector labels.Selector) {
+func (w *watcher) listAndWatch(ctx context.Context, r packageReader, filter packageRevisionFilter, selector labels.Selector) {
 	if err := w.listAndWatchInner(ctx, r, filter, selector); err != nil {
 		// TODO: We need to populate the object on this error
 		klog.Warningf("sending error to watch stream: %v", err)
@@ -102,21 +109,22 @@ func (w *watcher) listAndWatch(ctx context.Context, r *packageRevisions, filter 
 		w.resultChan <- ev
 	}
 	w.cancel()
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
 	close(w.resultChan)
 }
 
-func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, filter packageRevisionFilter, selector labels.Selector) error {
+func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter packageRevisionFilter, selector labels.Selector) error {
 	errorResult := make(chan error, 4)
-	done := false
 
 	var backlog []watch.Event
 	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
-		if done {
+		if w.done {
 			return false
 		}
 		obj, err := pr.GetPackageRevision(ctx)
 		if err != nil {
-			done = true
+			w.done = true
 			errorResult <- err
 			return false
 		}
@@ -129,15 +137,15 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, fi
 		return true
 	}
 	klog.Infof("starting watch before listing")
-	if err := r.packageCommon.watchPackages(ctx, filter, w); err != nil {
+	if err := r.watchPackages(ctx, filter, w); err != nil {
 		return err
 	}
 
 	// TODO: Only if rv == 0?
-	if err := r.packageCommon.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
+	if err := r.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
 		obj, err := p.GetPackageRevision(ctx)
 		if err != nil {
-			done = true
+			w.done = true
 			return err
 		}
 		// TODO: Check resource version?
@@ -148,7 +156,7 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, fi
 		w.sendWatchEvent(ev)
 		return nil
 	}); err != nil {
-		done = true
+		w.done = true
 		return err
 	}
 	klog.Infof("finished list")
@@ -183,12 +191,12 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, fi
 
 	klog.Infof("moving watch into streaming mode")
 	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
-		if done {
+		if w.done {
 			return false
 		}
 		obj, err := pr.GetPackageRevision(ctx)
 		if err != nil {
-			done = true
+			w.done = true
 			errorResult <- err
 			return false
 		}
@@ -204,11 +212,15 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, fi
 
 	select {
 	case <-ctx.Done():
-		done = true
+		w.mutex.Lock()
+		defer w.mutex.Unlock()
+		w.done = true
 		return ctx.Err()
 
 	case err := <-errorResult:
-		done = true
+		w.mutex.Lock()
+		defer w.mutex.Unlock()
+		w.done = true
 		return err
 	}
 
@@ -217,6 +229,8 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r *packageRevisions, fi
 func (w *watcher) sendWatchEvent(ev watch.Event) {
 	// TODO: Handle the case that the watch channel is full?
 	klog.Infof("sending watch event %v", ev)
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
 	w.resultChan <- ev
 }
 

@@ -56,7 +56,7 @@ func (pr *PackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 }
 
 func (pr *PackageRevision) GetPackageRevision(context.Context) (*v1alpha1.PackageRevision, error) {
-	return nil, nil
+	return pr.PackageRevision, nil
 }
 
 func (f *PackageRevision) GetResources(context.Context) (*v1alpha1.PackageRevisionResources, error) {
