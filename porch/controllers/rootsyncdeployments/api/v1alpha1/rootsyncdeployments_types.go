@@ -35,6 +35,8 @@ type PackageRevisionRef struct {
 
 // RootSyncDeploymentStatus defines the observed state of RootSyncDeployment
 type RootSyncDeploymentStatus struct {
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 

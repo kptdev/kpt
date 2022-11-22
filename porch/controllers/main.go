@@ -44,6 +44,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncdeployments/pkg/controllers/rootsyncdeployment"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncrollouts/pkg/controllers/rootsyncrollout"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/controllerrestmapper"
@@ -59,6 +60,7 @@ var (
 		"klippy":                   &klippy.KlippyReconciler{},
 		"rootsyncdeployments":      rootsyncdeployment.NewRootSyncDeploymentReconciler(),
 		"functiondiscovery":        &functiondiscovery.FunctionReconciler{},
+		"rootsyncrollouts":         rootsyncrollout.NewRootSyncRolloutReconciler(),
 	}
 )
 
