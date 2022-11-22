@@ -41,6 +41,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncdeployments/pkg/controllers/rootsyncdeployment"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncsets/pkg/controllers/rootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/controllerrestmapper"
@@ -53,6 +54,7 @@ var (
 		"remoterootsyncsets":       &remoterootsyncset.RemoteRootSyncSetReconciler{},
 		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
 		"klippy":                   &klippy.KlippyReconciler{},
+		"rootsyncdeployments":      rootsyncdeployment.NewRootSyncDeploymentReconciler(),
 	}
 )
 
@@ -100,7 +102,7 @@ func run(ctx context.Context) error {
 	// flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 	// 	"Enable leader election for controller manager. "+
 	// 		"Enabling this will ensure there is only one active controller manager.")
-	flag.StringVar(&enabledReconcilersString, "reconcilers", "*", "reconcilers that should be enabled; use * to mean 'enable all'")
+	flag.StringVar(&enabledReconcilersString, "reconcilers", "", "reconcilers that should be enabled; use * to mean 'enable all'")
 
 	for name, reconciler := range reconcilers {
 		reconciler.BindFlags(name+".", flag.CommandLine)
