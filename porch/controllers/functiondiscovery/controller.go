@@ -101,7 +101,7 @@ func (r *FunctionReconciler) reconcileRepository(ctx context.Context, subject *a
 
 	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
 
-	objects, err := r.BuildObjectsToApply(ctx, subject)
+	objects, err := r.buildObjectsToApply(ctx, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +139,8 @@ func (r *FunctionReconciler) reconcileRepository(ctx context.Context, subject *a
 	return results, nil
 }
 
-// BuildObjectsToApply config root sync
-func (r *FunctionReconciler) BuildObjectsToApply(ctx context.Context, subject *api.Repository) ([]applyset.ApplyableObject, error) {
+// buildObjectsToApply discovers the functions in the repository.
+func (r *FunctionReconciler) buildObjectsToApply(ctx context.Context, subject *api.Repository) ([]applyset.ApplyableObject, error) {
 	functions, err := r.listFunctions(ctx, subject)
 	if err != nil {
 		return nil, err
