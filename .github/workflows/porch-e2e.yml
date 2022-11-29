@@ -95,7 +95,7 @@ jobs:
             fi
           done
       - name: e2e test
-        run: E2E=1 go test -v .
+        run: E2E=1 go test -v -timeout 20m .
         working-directory: ./porch/test/e2e
       - name: Porch CLI e2e test
         run: make test-porch
