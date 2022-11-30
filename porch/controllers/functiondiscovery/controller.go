@@ -18,6 +18,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math/rand"
+	"time"
 
 	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -65,21 +67,21 @@ func (r *FunctionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var result ctrl.Result
-
 	applyResults, err := r.reconcileRepository(ctx, &subject)
 	if err != nil {
 		// TODO: Update status?
 		// TODO: Post event?
-		return result, err
+		return ctrl.Result{}, err
 	}
 
 	if applyResults != nil && !(applyResults.AllApplied() && applyResults.AllHealthy()) {
-		result.Requeue = true
-		return result, nil
+		return ctrl.Result{Requeue: true}, nil
 	}
 
-	return result, nil
+	// Poll the repo every 15 minutes (with some jitter)
+	jitter := time.Duration(rand.Intn(60)) * time.Second
+	pollInterval := 15*time.Minute + jitter
+	return ctrl.Result{RequeueAfter: pollInterval}, nil
 }
 
 func (r *FunctionReconciler) reconcileRepository(ctx context.Context, subject *api.Repository) (*applyset.ApplyResults, error) {
