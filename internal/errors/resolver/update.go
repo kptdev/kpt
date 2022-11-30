@@ -15,6 +15,8 @@
 package resolver
 
 import (
+	"fmt"
+
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/update"
 )
@@ -23,17 +25,6 @@ import (
 func init() {
 	AddErrorResolver(&updateErrorResolver{})
 }
-
-var (
-	//nolint:lll
-	pkgNotGitRepo = `
-Package {{ printf "%q" .repo }} is not within a git repository. Please initialize a repository using 'git init' and then commit the changes using 'git commit -m "<commit message>"'.
-`
-
-	pkgRepoDirty = `
-Package {{ printf "%q" .repo }} contains uncommitted changes. Please commit the changes using 'git commit -m "<commit message>"'.
-`
-)
 
 // updateErrorResolver is an implementation of the ErrorResolver interface
 // to resolve update errors.
@@ -44,16 +35,15 @@ func (*updateErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	var pkgNotGitRepoError *update.PkgNotGitRepoError
 	if errors.As(err, &pkgNotGitRepoError) {
-		msg = ExecuteTemplate(pkgNotGitRepo, map[string]interface{}{
-			"repo": pkgNotGitRepoError.Path,
-		})
+		//nolint:lll
+		msg = fmt.Sprintf("Package %q is not within a git repository.", pkgNotGitRepoError.Path)
+		msg += " Please initialize a repository using 'git init' and then commit the changes using 'git commit -m \"<commit message>\"'."
 	}
 
 	var pkgRepoDirtyError *update.PkgRepoDirtyError
 	if errors.As(err, &pkgRepoDirtyError) {
-		msg = ExecuteTemplate(pkgRepoDirty, map[string]interface{}{
-			"repo": pkgRepoDirtyError.Path,
-		})
+		msg = fmt.Sprintf("Package %q contains uncommitted changes.", pkgRepoDirtyError.Path)
+		msg += " Please commit the changes using 'git commit -m \"<commit message>\"'."
 	}
 
 	if msg != "" {
