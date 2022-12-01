@@ -43,7 +43,7 @@ func run(ctx context.Context) error {
 	version := os.Args[1]
 	url := "https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz"
 
-	formula, err := buildFormula(url)
+	formula, err := buildFormula(http.DefaultClient, url)
 	if err != nil {
 		return err
 	}
@@ -55,8 +55,8 @@ func run(ctx context.Context) error {
 	return nil
 }
 
-func buildFormula(url string) (string, error) {
-	sha256, err := hashURL(url, sha256.New())
+func buildFormula(httpClient *http.Client, url string) (string, error) {
+	sha256, err := hashURL(httpClient, url, sha256.New())
 	if err != nil {
 		return "", err
 	}
@@ -69,11 +69,11 @@ func buildFormula(url string) (string, error) {
 	return formula, nil
 }
 
-func hashURL(url string, hasher hash.Hash) (string, error) {
+func hashURL(httpClient *http.Client, url string, hasher hash.Hash) (string, error) {
 	fmt.Printf("fetching %q\n", url)
 
 	// get the content
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error getting %q: %w", url, err)
 	}

@@ -15,6 +15,9 @@
 package main
 
 import (
+	"bytes"
+	"io"
+	"net/http"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -38,8 +41,8 @@ func TestFormula(t *testing.T) {
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
   homepage "https://googlecontainertools.github.io/kpt"
-  url "https://github.com/GoogleContainerTools/kpt/archive/v1.0.0-beta.23.tar.gz"
-  sha256 "45c34e7f6fb8246dbe1b35769d988fe18c64d668b2fba747d45fd1e22eacf99b"
+  url "https://github.com/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz"
+  sha256 "4e42c5ce1a23511405beb5f51cfe07885fa953db448265fe74ee9b81e0def277"
 
   depends_on "go" => :build
 
@@ -54,12 +57,31 @@ class Kpt < Formula
 end
 `
 
-	url := "https://github.com/GoogleContainerTools/kpt/archive/v1.0.0-beta.23.tar.gz"
-	got, err := buildFormula(url)
+	httpClient := &http.Client{
+		Transport: &fakeServer{t: t},
+	}
+	url := "https://github.com/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz"
+	got, err := buildFormula(httpClient, url)
 	if err != nil {
 		t.Fatalf("error from buildFormula(%q): %v", url, err)
 	}
-	if diff := cmp.Diff(got, want); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("buildFormula(%q) returned unexpected diff (-want +got):\n%s", url, diff)
 	}
+}
+
+type fakeServer struct {
+	t *testing.T
+}
+
+func (s *fakeServer) RoundTrip(req *http.Request) (*http.Response, error) {
+	if req.URL.Path != "/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz" {
+		s.t.Errorf("Expected to request '/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz', got: %s", req.URL.Path)
+	}
+	body := bytes.NewReader([]byte(`This is fake content so that our tests don't download big files`))
+	return &http.Response{
+		Status:     http.StatusText(http.StatusOK),
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(body),
+	}, nil
 }
