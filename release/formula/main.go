@@ -15,103 +15,84 @@
 package main
 
 import (
-	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"text/template"
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "must specify new version\n")
+	err := run(context.Background())
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
-	input := Input{Version: os.Args[1]}
-	var err error
-	input.Sha, err = getSha(input.Version)
+}
+
+func run(ctx context.Context) error {
+	if len(os.Args) < 2 {
+		return fmt.Errorf("must specify new version")
+	}
+
+	version := os.Args[1]
+	url := "https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz"
+
+	formula, err := buildFormula(http.DefaultClient, url)
 	if err != nil {
-		os.Exit(1)
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("Formula", "kpt.rb"), []byte(formula), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func buildFormula(httpClient *http.Client, url string) (string, error) {
+	sha256, err := hashURL(httpClient, url, sha256.New())
+	if err != nil {
+		return "", err
 	}
 
 	// generate the formula text
-	t, err := template.New("formula").Parse(formula)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
-	}
+	formula := formulaTemplate
+	formula = strings.ReplaceAll(formula, "{{url}}", url)
+	formula = strings.ReplaceAll(formula, "{{sha256}}", sha256)
 
-	// write the new formula
-	b := &bytes.Buffer{}
-	if err = t.Execute(b, input); err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
-	}
-
-	err = os.WriteFile(filepath.Join("Formula", "kpt.rb"), b.Bytes(), 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		os.Exit(1)
-	}
+	return formula, nil
 }
 
-func getSha(version string) (string, error) {
-	// create the dir for the data
-	d, err := os.MkdirTemp("", "kpt-bin")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return "", err
-	}
-	defer os.RemoveAll(d)
+func hashURL(httpClient *http.Client, url string, hasher hash.Hash) (string, error) {
+	fmt.Printf("fetching %q\n", url)
 
-	fmt.Println(
-		"fetching https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz")
 	// get the content
-	resp, err := http.Get(
-		"https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz")
+	resp, err := httpClient.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return "", err
+		return "", fmt.Errorf("error getting %q: %w", url, err)
 	}
 	defer resp.Body.Close()
 
-	// write the file
-	func() {
-		out, err := os.Create(filepath.Join(d, version+".tar.gz"))
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v", err)
-			os.Exit(1)
-		}
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("unexpected response from %q: %v", url, resp.Status)
+	}
 
-		if _, err = io.Copy(out, resp.Body); err != nil {
-			fmt.Fprintf(os.Stderr, "%v", err)
-			os.Exit(1)
-		}
-		out.Close()
-	}()
+	if _, err := io.Copy(hasher, resp.Body); err != nil {
+		return "", fmt.Errorf("error hashing response from %q: %w", url, err)
+	}
 
 	// calculate the sha
-	e := exec.Command("sha256sum", filepath.Join(d, version+".tar.gz"))
-	o, err := e.Output()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return "", err
-	}
-	parts := strings.Split(string(o), " ")
-	fmt.Println("new sha: " + parts[0])
-	return parts[0], nil
+	hash := hasher.Sum(nil)
+	return hex.EncodeToString(hash), nil
 }
 
-type Input struct {
-	Version string
-	Sha     string
-}
-
-const formula = `# Copyright 2019 Google LLC
+const formulaTemplate = `# Copyright 2019 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -128,8 +109,8 @@ const formula = `# Copyright 2019 Google LLC
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
   homepage "https://googlecontainertools.github.io/kpt"
-  url "https://github.com/GoogleContainerTools/kpt/archive/{{.Version}}.tar.gz"
-  sha256 "{{.Sha}}"
+  url "{{url}}"
+  sha256 "{{sha256}}"
 
   depends_on "go" => :build
 
