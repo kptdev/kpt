@@ -27,7 +27,6 @@ metadata:
 pipeline:
   mutators:
   - image: example.com/fn1
-  - image: 
   - configPath: config1
   - image: example.com/fn2
 `

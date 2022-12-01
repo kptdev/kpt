@@ -15,14 +15,12 @@
 package pkgbuilder
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
-	"text/template"
 
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
@@ -561,53 +559,6 @@ func buildRGFile(pkg *pkg) string {
 	return string(b)
 }
 
-// TODO: Consider using the Kptfile struct for this instead of a template.
-var kptfileTemplate = `apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: {{.PkgName}}
-{{- if .Pkg.Kptfile.Upstream }}
-upstream:
-  type: git
-  git:
-    repo: {{.Pkg.Kptfile.Upstream.Repo}}
-    directory: {{.Pkg.Kptfile.Upstream.Dir}}
-    ref: {{.Pkg.Kptfile.Upstream.Ref}}
-  updateStrategy: {{.Pkg.Kptfile.Upstream.Strategy}}
-{{- end }}
-{{- if .Pkg.Kptfile.UpstreamLock }}
-upstreamLock:
-  type: git
-  git:
-    repo: {{.Pkg.Kptfile.UpstreamLock.Repo}}
-    directory: {{.Pkg.Kptfile.UpstreamLock.Dir}}
-    ref: {{.Pkg.Kptfile.UpstreamLock.Ref}}
-    commit: {{.Pkg.Kptfile.UpstreamLock.Commit}}
-{{- end }}
-{{- if .Pkg.Kptfile.Pipeline }}
-pipeline:
-  mutators:
-{{- range .Pkg.Kptfile.Pipeline.Functions }}
-  - image: {{ .Image }}
-{{- if .ConfigPath }}
-  - configPath: {{ .ConfigPath }}
-{{- end }}
-{{- end }}
-{{- end }}
-{{- if .Pkg.Kptfile.Inventory }}
-inventory:
-{{- if .Pkg.Kptfile.Inventory.Name }}
-  name: {{ .Pkg.Kptfile.Inventory.Name }}
-{{- end }}
-{{- if .Pkg.Kptfile.Inventory.Namespace }}
-  namespace: {{ .Pkg.Kptfile.Inventory.Namespace }}
-{{- end }}
-{{- if .Pkg.Kptfile.Inventory.ID }}
-  inventoryID: {{ .Pkg.Kptfile.Inventory.ID }}
-{{- end }}
-{{- end }}
-`
-
 type ReposInfo interface {
 	ResolveRepoRef(repoRef string) (string, bool)
 	ResolveCommitIndex(repoRef string, index int) (string, bool)
@@ -635,20 +586,62 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 			pkg.Kptfile.UpstreamLock.Ref = newRef
 		}
 	}
-	tmpl, err := template.New("test").Parse(kptfileTemplate)
+
+	kptfile := &kptfilev1.KptFile{}
+	kptfile.APIVersion, kptfile.Kind = kptfilev1.KptFileGVK().ToAPIVersionAndKind()
+	kptfile.ObjectMeta.Name = pkgName
+	if pkg.Kptfile.Upstream != nil {
+		kptfile.Upstream = &kptfilev1.Upstream{
+			Type: "git",
+			Git: &kptfilev1.Git{
+				Repo:      pkg.Kptfile.Upstream.Repo,
+				Directory: pkg.Kptfile.Upstream.Dir,
+				Ref:       pkg.Kptfile.Upstream.Ref,
+			},
+			UpdateStrategy: kptfilev1.UpdateStrategyType(pkg.Kptfile.Upstream.Strategy),
+		}
+	}
+	if pkg.Kptfile.UpstreamLock != nil {
+		kptfile.UpstreamLock = &kptfilev1.UpstreamLock{
+			Type: "git",
+			Git: &kptfilev1.GitLock{
+				Repo:      pkg.Kptfile.UpstreamLock.Repo,
+				Directory: pkg.Kptfile.UpstreamLock.Dir,
+				Ref:       pkg.Kptfile.UpstreamLock.Ref,
+				Commit:    pkg.Kptfile.UpstreamLock.Commit,
+			},
+		}
+	}
+	if pkg.Kptfile.Pipeline != nil {
+		kptfile.Pipeline = &kptfilev1.Pipeline{}
+		for _, fn := range pkg.Kptfile.Pipeline.Functions {
+			mutator := kptfilev1.Function{
+				Image: fn.Image,
+			}
+			if fn.ConfigPath != "" {
+				mutator.ConfigPath = fn.ConfigPath
+			}
+			kptfile.Pipeline.Mutators = append(kptfile.Pipeline.Mutators, mutator)
+		}
+	}
+
+	if inventory := pkg.Kptfile.Inventory; inventory != nil {
+		kptfile.Inventory = &kptfilev1.Inventory{}
+		if inventory.Name != "" {
+			kptfile.Inventory.Name = inventory.Name
+		}
+		if inventory.Namespace != "" {
+			kptfile.Inventory.Namespace = inventory.Namespace
+		}
+		if inventory.ID != "" {
+			kptfile.Inventory.InventoryID = inventory.ID
+		}
+	}
+	b, err := yaml.Marshal(kptfile)
 	if err != nil {
 		panic(err)
 	}
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, map[string]interface{}{
-		"Pkg":     pkg,
-		"PkgName": pkgName,
-	})
-	if err != nil {
-		panic(err)
-	}
-	result := buf.String()
-	return result
+	return string(b)
 }
 
 // resolveRepoRef looks up the repo path for a repo from the reposInfo
