@@ -27,50 +27,6 @@ func init() {
 	AddErrorResolver(&gitExecErrorResolver{})
 }
 
-const (
-	genericGitExecError = `
-Error: Failed to execute git command {{ printf "%q " .gitcmd }}
-{{- if gt (len .repo) 0 -}}
-against repo {{ printf "%q " .repo }}
-{{- end }}
-{{- if gt (len .ref) 0 -}}
-for reference {{ printf "%q " .ref }}
-{{- end }}
-
-{{- template "ExecOutputDetails" . }}
-`
-
-	unknownRefGitExecError = `
-Error: Unknown ref {{ printf "%q" .ref }}. Please verify that the reference exists in upstream repo {{ printf "%q" .repo }}.
-
-{{- template "ExecOutputDetails" . }}
-`
-
-	noGitBinaryError = `
-Error: No git executable found. kpt requires git to be installed and available in the path.
-
-{{- template "ExecOutputDetails" . }}
-`
-
-	httpsAuthRequired = `
-Error: Repository {{ printf "%q" .repo }} requires authentication. kpt does not support this for the 'https' protocol. Please use the 'git' protocol instead.
-
-{{- template "ExecOutputDetails" . }}
-`
-
-	repositoryUnavailable = `
-Error: Unable to access repository {{ printf "%q" .repo }}.
-
-{{- template "ExecOutputDetails" . }}
-`
-
-	repositoryNotFound = `
-Error: Repository {{ printf "%q" .repo }} not found.
-
-{{- template "ExecOutputDetails" . }}
-`
-)
-
 // gitExecErrorResolver is an implementation of the ErrorResolver interface
 // that can produce error messages for errors of the gitutil.GitExecError type.
 type gitExecErrorResolver struct{}
@@ -82,29 +38,55 @@ func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	}
 	fullCommand := fmt.Sprintf("git %s %s", gitExecErr.Command,
 		strings.Join(gitExecErr.Args, " "))
-	tmplArgs := map[string]interface{}{
-		"gitcmd": fullCommand,
-		"repo":   gitExecErr.Repo,
-		"ref":    gitExecErr.Ref,
-		"stdout": gitExecErr.StdOut,
-		"stderr": gitExecErr.StdErr,
-	}
+
 	var msg string
 	switch gitExecErr.Type {
 	case gitutil.UnknownReference:
-		msg = ExecuteTemplate(unknownRefGitExecError, tmplArgs)
+		msg = fmt.Sprintf("Error: Unknown ref %q. Please verify that the reference exists in upstream repo %q.", gitExecErr.Ref, gitExecErr.Repo)
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
+
 	case gitutil.GitExecutableNotFound:
-		msg = ExecuteTemplate(noGitBinaryError, tmplArgs)
+		msg = "Error: No git executable found. kpt requires git to be installed and available in the path."
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
+
 	case gitutil.HTTPSAuthRequired:
-		msg = ExecuteTemplate(httpsAuthRequired, tmplArgs)
+		msg = fmt.Sprintf("Error: Repository %q requires authentication.", gitExecErr.Repo)
+		msg += " kpt does not support this for the 'https' protocol."
+		msg += " Please use the 'git' protocol instead."
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
+
 	case gitutil.RepositoryUnavailable:
-		msg = ExecuteTemplate(repositoryUnavailable, tmplArgs)
+		msg = fmt.Sprintf("Error: Unable to access repository %q.", gitExecErr.Repo)
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
+
 	case gitutil.RepositoryNotFound:
-		msg = ExecuteTemplate(repositoryNotFound, tmplArgs)
+		msg = fmt.Sprintf("Error: Repository %q not found.", gitExecErr.Repo)
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 	default:
-		msg = ExecuteTemplate(genericGitExecError, tmplArgs)
+		msg = fmt.Sprintf("Error: Failed to execute git command %q", fullCommand)
+		if gitExecErr.Repo != "" {
+			msg += fmt.Sprintf(" against repo %q", gitExecErr.Repo)
+		}
+		if gitExecErr.Ref != "" {
+			msg += fmt.Sprintf(" for reference %q", gitExecErr.Ref)
+		}
+		msg = msg + "\n" + BuildOutputDetails(gitExecErr.StdOut, gitExecErr.StdErr)
 	}
 	return ResolvedResult{
 		Message: msg,
 	}, true
+}
+
+func BuildOutputDetails(stdout string, stderr string) string {
+	var sb strings.Builder
+	if len(stdout) > 0 || len(stderr) > 0 {
+		sb.WriteString("\nDetails:\n")
+	}
+	if len(stdout) > 0 {
+		sb.WriteString(stdout)
+	}
+	if len(stderr) > 0 {
+		sb.WriteString(stderr)
+	}
+	return sb.String()
 }

@@ -64,7 +64,7 @@ type KptfileError struct {
 }
 
 func (k *KptfileError) Error() string {
-	return fmt.Sprintf("error reading Kptfile at %q: %s", k.Path.String(), k.Err.Error())
+	return fmt.Sprintf("error reading Kptfile at %q: %v", k.Path.String(), k.Err)
 }
 
 func (k *KptfileError) Unwrap() error {

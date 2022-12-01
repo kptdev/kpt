@@ -15,6 +15,8 @@
 package resolver
 
 import (
+	"fmt"
+
 	initialization "github.com/GoogleContainerTools/kpt/commands/live/init"
 	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -45,14 +47,6 @@ Error: Package has multiple inventory object templates.
 The package should have one and only one inventory object template.
 `
 
-	resourceGroupCRDInstallErrorMsg = `
-Error: Unable to install the ResourceGroup CRD.
-
-{{- if gt (len .cause) 0 }}
-{{ printf "\nDetails:" }}
-{{ printf "%s" .cause }}
-{{- end }}
-`
 	//nolint:lll
 	noResourceGroupCRDMsg = `
 Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command.
@@ -76,25 +70,6 @@ Error: Inventory information has already been added to the package Kptfile objec
 	multipleResourceGroupsMsg = `
 Error: Multiple ResourceGroup objects found. Please make sure at most one ResourceGroup object exists within the package.
 `
-
-	//nolint:lll
-	inventoryInfoValidationMsg = `
-Error: The inventory information is not valid. Please update the information in the ResourceGroup file or provide information with the command line flags. To generate the inventory information the first time, use the 'kpt live init' command.
-
-Details:
-{{- range .err.Violations}}
-{{printf "%s" .Reason }}
-{{- end}}
-`
-
-	unknownTypesMsg = `
-Error: {{ printf "%d" (len .err.GroupVersionKinds) }} resource types could not be found in the cluster or as CRDs among the applied resources.
-
-Resource types:
-{{- range .err.GroupVersionKinds}}
-{{ printf "%s" .String }}
-{{- end}}
-`
 )
 
 // liveErrorResolver is an implementation of the ErrorResolver interface
@@ -104,92 +79,79 @@ type liveErrorResolver struct{}
 func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var noInventoryObjError *inventory.NoInventoryObjError
 	if errors.As(err, &noInventoryObjError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(noInventoryObjErrorMsg, map[string]interface{}{
-				"err": *noInventoryObjError,
-			}),
-		}, true
+		msg := noInventoryObjErrorMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var multipleInventoryObjError *inventory.MultipleInventoryObjError
 	if errors.As(err, &multipleInventoryObjError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(multipleInventoryObjErrorMsg, map[string]interface{}{
-				"err": *multipleInventoryObjError,
-			}),
-		}, true
+		msg := multipleInventoryObjErrorMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var resourceGroupCRDInstallError *cmdutil.ResourceGroupCRDInstallError
 	if errors.As(err, &resourceGroupCRDInstallError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(resourceGroupCRDInstallErrorMsg, map[string]interface{}{
-				"cause": resourceGroupCRDInstallError.Err.Error(),
-			}),
-		}, true
+		msg := "Error: Unable to install the ResourceGroup CRD."
+
+		cause := resourceGroupCRDInstallError.Err
+		msg += fmt.Sprintf("\nDetails: %v", cause)
+
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var noResourceGroupCRDError *cmdutil.NoResourceGroupCRDError
 	if errors.As(err, &noResourceGroupCRDError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(noResourceGroupCRDMsg, map[string]interface{}{
-				"err": *noResourceGroupCRDError,
-			}),
-		}, true
+		msg := noResourceGroupCRDMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var invExistsError *initialization.InvExistsError
 	if errors.As(err, &invExistsError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(invInfoAlreadyExistsMsg, map[string]interface{}{
-				"err": *invExistsError,
-			}),
-		}, true
+		msg := invInfoAlreadyExistsMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var invInfoInRGAlreadyExistsError *initialization.InvInRGExistsError
 	if errors.As(err, &invInfoInRGAlreadyExistsError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(invInfoInRGAlreadyExistsMsg, map[string]interface{}{
-				"err": *invInfoInRGAlreadyExistsError,
-			}),
-		}, true
+		msg := invInfoInRGAlreadyExistsMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var invInKfExistsError *initialization.InvInKfExistsError
 	if errors.As(err, &invInKfExistsError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(invInfoInKfAlreadyExistsMsg, map[string]interface{}{
-				"err": *invInKfExistsError,
-			}),
-		}, true
+		msg := invInfoInKfAlreadyExistsMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var multipleResourceGroupsError *pkg.MultipleResourceGroupsError
 	if errors.As(err, &multipleResourceGroupsError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(multipleResourceGroupsMsg, map[string]interface{}{
-				"err": *multipleResourceGroupsError,
-			}),
-		}, true
+		msg := multipleResourceGroupsMsg
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var inventoryInfoValidationError *live.InventoryInfoValidationError
 	if errors.As(err, &inventoryInfoValidationError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(inventoryInfoValidationMsg, map[string]interface{}{
-				"err": *inventoryInfoValidationError,
-			}),
-		}, true
+		msg := "Error: The inventory information is not valid."
+		msg += " Please update the information in the ResourceGroup file or provide information with the command line flags."
+		msg += " To generate the inventory information the first time, use the 'kpt live init' command."
+
+		msg += "\nDetails:\n"
+		for _, v := range inventoryInfoValidationError.Violations {
+			msg += fmt.Sprintf("%s\n", v.Reason)
+		}
+
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var unknownTypesError *manifestreader.UnknownTypesError
 	if errors.As(err, &unknownTypesError) {
-		return ResolvedResult{
-			Message: ExecuteTemplate(unknownTypesMsg, map[string]interface{}{
-				"err": *unknownTypesError,
-			}),
-		}, true
+		msg := fmt.Sprintf("Error: %d resource types could not be found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds))
+		msg += "\n\nResource types:\n"
+		for _, gvk := range unknownTypesError.GroupVersionKinds {
+			msg += fmt.Sprintf("%s\n", gvk)
+		}
+
+		return ResolvedResult{Message: msg}, true
 	}
 
 	var resultError *common.ResultError

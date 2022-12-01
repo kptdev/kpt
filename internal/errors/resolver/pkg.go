@@ -15,6 +15,7 @@
 package resolver
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
@@ -27,33 +28,6 @@ func init() {
 	AddErrorResolver(&pkgErrorResolver{})
 }
 
-const (
-	noKptfileMsg = `
-Error: No Kptfile found at {{ printf "%q" .path }}.
-`
-
-	//nolint:lll
-	deprecatedv1Alpha1KptfileMsg = `
-Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
-Please update the package to the latest format by following https://kpt.dev/installation/migration.
-`
-
-	deprecatedv1Alpha2KptfileMsg = `
-Error: Kptfile at {{ printf "%q" .path }} has an old version ({{ printf "%q" .version }}) of the Kptfile schema.
-Please run "kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.2 --include-meta-resources" to upgrade the package and retry.
-`
-
-	unknownKptfileResourceMsg = `
-Error: Kptfile at {{ printf "%q" .path }} has an unknown resource type ({{ printf "%q" .gvk.String }}).
-`
-
-	kptfileReadErrMsg = `
-Error: Kptfile at {{ printf "%q" .path }} can't be read.
-
-{{- template "NestedErrDetails" . }}
-`
-)
-
 // pkgErrorResolver is an implementation of the ErrorResolver interface
 // that can produce error messages for errors of the pkg.KptfileError type.
 type pkgErrorResolver struct{}
@@ -62,22 +36,15 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var kptfileError *pkg.KptfileError
 	if errors.As(err, &kptfileError) {
 		path := kptfileError.Path
-		tmplArgs := map[string]interface{}{
-			"path": path,
-			"err":  kptfileError,
-		}
 
-		return resolveNestedErr(kptfileError, tmplArgs)
+		return resolveNestedErr(kptfileError, path.String())
 	}
 
 	var remoteKptfileError *pkg.RemoteKptfileError
 	if errors.As(err, &remoteKptfileError) {
 		path := remoteKptfileError.RepoSpec.RepoRef()
-		tmplArgs := map[string]interface{}{
-			"path": path,
-			"err":  kptfileError,
-		}
-		return resolveNestedErr(remoteKptfileError, tmplArgs)
+
+		return resolveNestedErr(remoteKptfileError, path)
 	}
 
 	var validateError *kptfile.ValidateError
@@ -90,42 +57,58 @@ func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	return ResolvedResult{}, false
 }
 
-func resolveNestedErr(err error, tmplArgs map[string]interface{}) (ResolvedResult, bool) {
+func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 	if errors.Is(err, os.ErrNotExist) {
+		msg := fmt.Sprintf("Error: No Kptfile found at %q.", path)
+
 		return ResolvedResult{
-			Message: ExecuteTemplate(noKptfileMsg, tmplArgs),
+			Message: msg,
 		}, true
 	}
 
 	var deprecatedv1alpha1KptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
 		deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
-		tmplArgs["version"] = deprecatedv1alpha1KptfileError.Version
-		errMsg := deprecatedv1Alpha1KptfileMsg
+		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha1KptfileError.Version)
+		msg += "Please update the package to the latest format by following https://kpt.dev/installation/migration."
+
 		return ResolvedResult{
-			Message: ExecuteTemplate(errMsg, tmplArgs),
+			Message: msg,
 		}, true
 	}
 
 	var deprecatedv1alpha2KptfileError *pkg.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
-		deprecatedv1alpha1KptfileError.Version == "v1alpha2" {
-		tmplArgs["version"] = deprecatedv1alpha2KptfileError.Version
-		errMsg := deprecatedv1Alpha2KptfileMsg
+		deprecatedv1alpha2KptfileError.Version == "v1alpha2" {
+		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha2KptfileError.Version)
+		msg += "Please run \"kpt fn eval <PKG_PATH> -i gcr.io/kpt-fn/fix:v0.2 --include-meta-resources\" to upgrade the package and retry."
+
 		return ResolvedResult{
-			Message: ExecuteTemplate(errMsg, tmplArgs),
+			Message: msg,
 		}, true
 	}
 
 	var unknownKptfileResourceError *pkg.UnknownKptfileResourceError
 	if errors.As(err, &unknownKptfileResourceError) {
-		tmplArgs["gvk"] = unknownKptfileResourceError.GVK
+		msg := fmt.Sprintf("Error: Kptfile at %q has an unknown resource type (%q).", path, unknownKptfileResourceError.GVK.String())
 		return ResolvedResult{
-			Message: ExecuteTemplate(unknownKptfileResourceMsg, tmplArgs),
+			Message: msg,
 		}, true
 	}
 
+	msg := fmt.Sprintf("Error: Kptfile at %q can't be read.", path)
+	if err != nil {
+		var kptFileError *pkg.KptfileError
+		if errors.As(err, &kptFileError) {
+			if kptFileError.Err != nil {
+				msg += fmt.Sprintf("\n\nDetails:\n%v", kptFileError.Err)
+			}
+		} else {
+			msg += fmt.Sprintf("\n\nDetails:\n%v", err)
+		}
+	}
+
 	return ResolvedResult{
-		Message: ExecuteTemplate(kptfileReadErrMsg, tmplArgs),
+		Message: msg,
 	}, true
 }
