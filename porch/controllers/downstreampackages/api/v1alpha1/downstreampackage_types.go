@@ -46,8 +46,8 @@ const (
 	AdoptionPolicyAdoptExisting AdoptionPolicy = "adoptExisting"
 	AdoptionPolicyAdoptNone     AdoptionPolicy = "adoptNone"
 
-	DeletionPolicyDelete = "delete"
-	DeletionPolicyDisown = "disown"
+	DeletionPolicyDelete DeletionPolicy = "delete"
+	DeletionPolicyDisown DeletionPolicy = "orphan"
 )
 
 // DownstreamPackageSpec defines the desired state of DownstreamPackage

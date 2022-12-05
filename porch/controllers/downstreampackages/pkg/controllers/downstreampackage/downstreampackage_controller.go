@@ -25,7 +25,6 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/downstreampackages/api/v1alpha1"
 	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -40,11 +39,7 @@ func (o *Options) BindFlags(_ string, _ *flag.FlagSet) {}
 // DownstreamPackageReconciler reconciles a DownstreamPackage object
 type DownstreamPackageReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
-
 	Options
-
-	packageRevs porchapi.PackageRevisionList
 }
 
 const (
@@ -59,7 +54,7 @@ const (
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *DownstreamPackageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	dp, err := r.init(ctx, req)
+	dp, prList, err := r.init(ctx, req)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -68,39 +63,40 @@ func (r *DownstreamPackageReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	upstream := r.getUpstreamPR(dp.Spec.Upstream)
+	upstream := r.getUpstreamPR(dp.Spec.Upstream, prList)
 	if upstream == nil {
 		return ctrl.Result{}, fmt.Errorf("could not find upstream package revision")
 	}
 
-	if err := r.ensureDownstreamPackage(ctx, dp, upstream); err != nil {
+	if err := r.ensureDownstreamPackage(ctx, dp, upstream, prList); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// TODO: Prune (propose deletion of) deployment packages created by this controller
 	//   that are no longer needed. Part of this will be to implement the DeletionPolicy
-	//   field, which will allow the user to specify whether to "disown" or "delete".
+	//   field, which will allow the user to specify whether to "orphan" or "delete".
 
 	return ctrl.Result{}, nil
 }
 
-func (r *DownstreamPackageReconciler) init(ctx context.Context, req ctrl.Request) (*api.DownstreamPackage, error) {
+func (r *DownstreamPackageReconciler) init(ctx context.Context,
+	req ctrl.Request) (*api.DownstreamPackage, *porchapi.PackageRevisionList, error) {
 	var dp api.DownstreamPackage
-
 	if err := r.Client.Get(ctx, req.NamespacedName, &dp); err != nil {
-		return nil, client.IgnoreNotFound(err)
+		return nil, nil, client.IgnoreNotFound(err)
 	}
 
 	var prList porchapi.PackageRevisionList
 	if err := r.Client.List(ctx, &prList, client.InNamespace(dp.Namespace)); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	r.packageRevs = prList
-	return &dp, nil
+
+	return &dp, &prList, nil
 }
 
-func (r *DownstreamPackageReconciler) getUpstreamPR(upstream *api.Upstream) *porchapi.PackageRevision {
-	for _, pr := range r.packageRevs.Items {
+func (r *DownstreamPackageReconciler) getUpstreamPR(upstream *api.Upstream,
+	prList *porchapi.PackageRevisionList) *porchapi.PackageRevision {
+	for _, pr := range prList.Items {
 		if pr.Spec.RepositoryName == upstream.Repo &&
 			pr.Spec.PackageName == upstream.Package &&
 			pr.Spec.Revision == upstream.Revision {
@@ -120,8 +116,9 @@ func (r *DownstreamPackageReconciler) getUpstreamPR(upstream *api.Upstream) *por
 //     or a downgrade).
 func (r *DownstreamPackageReconciler) ensureDownstreamPackage(ctx context.Context,
 	dp *api.DownstreamPackage,
-	upstream *porchapi.PackageRevision) error {
-	existing, err := r.findAndUpdateExistingRevision(ctx, dp, upstream)
+	upstream *porchapi.PackageRevision,
+	prList *porchapi.PackageRevisionList) error {
+	existing, err := r.findAndUpdateExistingRevision(ctx, dp, upstream, prList)
 	if err != nil {
 		return err
 	}
@@ -175,10 +172,11 @@ func (r *DownstreamPackageReconciler) ensureDownstreamPackage(ctx context.Contex
 
 func (r *DownstreamPackageReconciler) findAndUpdateExistingRevision(ctx context.Context,
 	dp *api.DownstreamPackage,
-	upstream *porchapi.PackageRevision) (*porchapi.PackageRevision, error) {
+	upstream *porchapi.PackageRevision,
+	prList *porchapi.PackageRevisionList) (*porchapi.PackageRevision, error) {
 	// First, check if a downstream package exists. If not, just return nil. The
 	// caller will create one.
-	downstream := r.getDownstreamPR(dp)
+	downstream := r.getDownstreamPR(dp, prList)
 	if downstream == nil {
 		return nil, nil
 	}
@@ -200,7 +198,8 @@ func (r *DownstreamPackageReconciler) findAndUpdateExistingRevision(ctx context.
 	return r.updateDraft(ctx, downstream, upstream)
 }
 
-func (r *DownstreamPackageReconciler) getDownstreamPR(dp *api.DownstreamPackage) *porchapi.PackageRevision {
+func (r *DownstreamPackageReconciler) getDownstreamPR(dp *api.DownstreamPackage,
+	prList *porchapi.PackageRevisionList) *porchapi.PackageRevision {
 	downstream := dp.Spec.Downstream
 
 	var latestPublished *porchapi.PackageRevision
@@ -208,7 +207,7 @@ func (r *DownstreamPackageReconciler) getDownstreamPR(dp *api.DownstreamPackage)
 	// so use v0 as a placeholder for comparison
 	latestVersion := "v0"
 
-	for _, pr := range r.packageRevs.Items {
+	for _, pr := range prList.Items {
 		// look for the downstream package in the target repo
 		if pr.Spec.RepositoryName != downstream.Repo ||
 			pr.Spec.PackageName != downstream.Package {
@@ -299,21 +298,7 @@ func (r *DownstreamPackageReconciler) copyPublished(ctx context.Context,
 		return nil, err
 	}
 
-	// get the newly created package revision back
-	var prList porchapi.PackageRevisionList
-	if err := r.Client.List(ctx, &prList, client.InNamespace(source.Namespace)); err != nil {
-		return nil, err
-	}
-	for _, pr := range prList.Items {
-		if pr.Spec.RepositoryName == source.Spec.RepositoryName &&
-			pr.Spec.PackageName == source.Spec.PackageName &&
-			pr.Spec.Revision == "" &&
-			pr.Spec.WorkspaceName == newPR.Spec.WorkspaceName {
-			return &pr, nil
-		}
-	}
-
-	return nil, fmt.Errorf("could not find newly created package revision")
+	return newPR, nil
 }
 
 func newWorkspaceName(oldWorkspaceName porchapi.WorkspaceName) porchapi.WorkspaceName {
