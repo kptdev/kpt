@@ -20,6 +20,7 @@ import (
 
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -116,6 +117,7 @@ type PackageDraft interface {
 type Function interface {
 	Name() string
 	GetFunction() (*v1alpha1.Function, error)
+	GetCRD() (*configapi.Function, error)
 }
 
 // ListPackageRevisionFilter is a predicate for filtering PackageRevision objects;

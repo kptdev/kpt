@@ -186,6 +186,8 @@ function customize-container-env {
 
 function main() {
   # Repository CRD
+  cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_functions.yaml" \
+     "${DESTINATION}/0-functions.yaml"
   cp "./api/porchconfig/v1alpha1/config.porch.kpt.dev_repositories.yaml" \
      "${DESTINATION}/0-repositories.yaml"
   cp "./internal/api/porchinternal/v1alpha1/config.porch.kpt.dev_packagerevs.yaml" \
@@ -198,9 +200,11 @@ function main() {
 
   IFS=',' read -ra RECONCILERS <<< "$ENABLED_RECONCILERS"
   for i in "${RECONCILERS[@]}"; do
-    # Copy over the CRD
-    cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_${i}.yaml" \
-    "${DESTINATION}/0-${i}.yaml"
+    if [[ -f "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_${i}.yaml" ]]; then
+      # Copy over the CRD (if it exists)
+      cp "${PORCH_DIR}/controllers/config/crd/bases/config.porch.kpt.dev_${i}.yaml" \
+         "${DESTINATION}/0-${i}.yaml"
+    fi
     # Update the porch-controllers Deployment env variables to enable the reconciler.
     customize-container-env \
       "ENABLE_${i^^}" \

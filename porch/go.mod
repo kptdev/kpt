@@ -24,6 +24,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.8
 	github.com/google/go-containerregistry v0.11.0
+	github.com/google/uuid v1.3.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
@@ -109,7 +110,6 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.0.0-20220520183353-fd19c99a87aa // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect

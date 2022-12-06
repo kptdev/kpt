@@ -31,31 +31,43 @@ var (
 
 	// We removed SchemeBuilder to keep our dependencies small
 
-	KindRepository = KindInfo{
+	TypeRepository = TypeInfo{
+		Kind:     "Repository",
 		Resource: GroupVersion.WithResource("repositories"),
 		objects:  []runtime.Object{&Repository{}, &RepositoryList{}},
 	}
 
-	RepositoryGVK = schema.GroupVersionKind{
-		Group:   GroupVersion.Group,
-		Version: GroupVersion.Version,
-		Kind:    "Repository",
+	TypeFunction = TypeInfo{
+		Kind:     "Function",
+		Resource: GroupVersion.WithResource("functions"),
+		objects:  []runtime.Object{&Function{}, &FunctionList{}},
 	}
 
-	AllKinds = []KindInfo{KindRepository}
+	AllKinds = []TypeInfo{TypeRepository, TypeFunction}
 )
 
 //+kubebuilder:object:generate=false
 
-// KindInfo holds type meta-information
-type KindInfo struct {
+// TypeInfo holds type meta-information
+type TypeInfo struct {
+	Kind     string
 	Resource schema.GroupVersionResource
 	objects  []runtime.Object
 }
 
+// GVK returns the schema.GroupVersionKind for the type
+func (t *TypeInfo) GVK() schema.GroupVersionKind {
+	return t.Resource.GroupVersion().WithKind(t.Kind)
+}
+
+// APIVersion returns the apiVersion for the type
+func (t *TypeInfo) APIVersion() string {
+	return t.Resource.GroupVersion().Identifier()
+}
+
 // GroupResource returns the GroupResource for the kind
-func (k *KindInfo) GroupResource() schema.GroupResource {
-	return k.Resource.GroupResource()
+func (t *TypeInfo) GroupResource() schema.GroupResource {
+	return t.Resource.GroupResource()
 }
 
 func AddToScheme(scheme *runtime.Scheme) error {

@@ -140,8 +140,8 @@ func openRepositoryFromArchive(t *testing.T, ctx context.Context, testPath, name
 	})
 	cachedGit, err := cache.OpenRepository(ctx, &v1alpha1.Repository{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       v1alpha1.RepositoryGVK.Kind,
-			APIVersion: v1alpha1.RepositoryGVK.GroupVersion().Identifier(),
+			Kind:       v1alpha1.TypeRepository.Kind,
+			APIVersion: v1alpha1.TypeRepository.APIVersion(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,

@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncdeployments/pkg/controllers/rootsyncdeployment"
@@ -55,6 +56,7 @@ var (
 		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
 		"klippy":                   &klippy.KlippyReconciler{},
 		"rootsyncdeployments":      rootsyncdeployment.NewRootSyncDeploymentReconciler(),
+		"functiondiscovery":        &functiondiscovery.FunctionReconciler{},
 	}
 )
 
