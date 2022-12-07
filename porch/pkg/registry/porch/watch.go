@@ -66,13 +66,13 @@ func (r *packageRevisions) Watch(ctx context.Context, options *metainternalversi
 
 // watcher implements watch.Interface, and holds the state for an active watch.
 type watcher struct {
-	cancel func()
+	cancel     func()
+	resultChan chan watch.Event
 
-	// mutex that protects the eventCallback, resultChan, and done fields
+	// mutex that protects the eventCallback and done fields
 	// from concurrent access.
 	mutex         sync.Mutex
 	eventCallback func(eventType watch.EventType, pr engine.PackageRevision) bool
-	resultChan    chan watch.Event
 	done          bool
 }
 
@@ -109,8 +109,6 @@ func (w *watcher) listAndWatch(ctx context.Context, r packageReader, filter pack
 		w.resultChan <- ev
 	}
 	w.cancel()
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
 	close(w.resultChan)
 }
 
@@ -118,6 +116,9 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 	errorResult := make(chan error, 4)
 
 	var backlog []watch.Event
+	// Make sure we hold the lock when setting the eventCallback, as it
+	// will be read by other goroutines when events happen.
+	w.mutex.Lock()
 	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
 		if w.done {
 			return false
@@ -136,6 +137,8 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 
 		return true
 	}
+	w.mutex.Unlock()
+
 	klog.Infof("starting watch before listing")
 	if err := r.watchPackages(ctx, filter, w); err != nil {
 		return err
@@ -145,7 +148,9 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 	if err := r.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
 		obj, err := p.GetPackageRevision(ctx)
 		if err != nil {
+			w.mutex.Lock()
 			w.done = true
+			w.mutex.Unlock()
 			return err
 		}
 		// TODO: Check resource version?
@@ -156,7 +161,9 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 		w.sendWatchEvent(ev)
 		return nil
 	}); err != nil {
+		w.mutex.Lock()
 		w.done = true
+		w.mutex.Unlock()
 		return err
 	}
 	klog.Infof("finished list")
@@ -229,8 +236,6 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 func (w *watcher) sendWatchEvent(ev watch.Event) {
 	// TODO: Handle the case that the watch channel is full?
 	klog.Infof("sending watch event %v", ev)
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
 	w.resultChan <- ev
 }
 
