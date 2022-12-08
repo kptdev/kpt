@@ -1,11 +1,11 @@
 # Namespace provisioning using UI
 
-In this guide, we will learn how to create a kpt package from scratch using
-Config as Data UI. We will also learn how to enable customization of the package
-with minimal steps for package consumers and deploy the package to a Kubernetes
+This guide will teach us how to create a kpt package from scratch using Config
+as Data UI. We will also learn how to enable customization of the package with
+minimal steps for package consumers and deploy the package to a Kubernetes
 cluster.
 
-## What package are we creating ?
+## What package are we creating?
 
 Onboarding a new application or a micro-service is a very common task for a
 platform team. It involves provisioning a dedicated namespace (and other
@@ -31,154 +31,146 @@ Users will create deployable packages from the packages in the blueprint repo.
 
 ### Registering blueprint repository
 
-Start by clicking the `Register Repository` button in the upper right corner to
-register a blueprint repository. Enter the following details in the Register
+Start by clicking the **Register Repository** link on the Team Blueprints card
+to register a blueprint repository. Enter the following details in the Register
 Repository flow:
 
-- In `Repository Details`, the Repository URL is the clone URL from your
-  repository. Branch and directory can be left blank. Branch will default to
-  `main` and directory will default to `/`.
-- In `Repository Authentication`, you`ll need to use the GitHub Personal Access
-  Token (unless your repository allows for unauthenticated writes). Github
-  Personal Access Tokens can be created at https://github.com/settings/tokens,
-  and must include the 'repo' scope.
-- In `Repository Content`, select `Team Blueprints`.
+- In the Repository Details section, the Repository URL is the clone URL from
+  your repository. Branch and directory can be left blank. Branch will default
+  to "main" and directory will default to "/".
+- In the Repository Authentication section, you will need to use the GitHub
+  Personal Access Token (unless your repository allows for unauthenticated
+  writes). GitHub Personal Access Tokens can be created at
+  <https://github.com/settings/tokens>, and must include the 'repo' scope.
+- In the Repository Content section, select "Team Blueprints".
 
 Once the repository is registered, use the breadcrumbs (upper left) to navigate
-back to the Repositories view.
+to the **Package Management** screen.
 
 ### Registering deployment repository
 
-Start by clicking the `Register Repository` button in the upper right corner to
+Start by clicking the **Register Repository** link on the Deployments card to
 register a deployment repository. Enter the following details in the Register
 Repository flow:
 
-- In `Repository Details`, the Repository URL is the clone URL from your
-  repository. Branch and Directory can be left blank. Branch will default to
-  `main`, and directory will default to `/`.
-- In `Repository Authentication`, either create a new secret, or optionally
-  select the same secret in the Authentication Secret dropdown you created for
-  registering blueprint repository.
-- In `Repository Content`, select Deployments.
+- In the Repository Details section, the Repository URL is the clone URL from
+  your repository. Branch and Directory can be left blank. Branch will default
+  to "main", and directory will default to "/".
+- In the Repository Authentication section, either create a new secret, or
+  optionally select the same secret in the Authentication Secret dropdown you
+  created for registering the blueprint repository.
+- In the Repository Content section, select "Deployments".
 
-Once the repository is created, use the breadcrumbs (upper left) to navigate
-back to the Repositories view.
+Once the repository is created, use the breadcrumbs (upper left) to navigate to
+the **Package Management** screen.
 
 ## Creating a Blueprint from scratch
 
-Now that we have our repositories registered, we are ready to create our first
-blueprint using the UI.
+Now that we have our repositories registered, we are ready to create the simple
+namespace team blueprint using the UI.
 
-- On the Repositories Page, click the row of the team blueprint repository where
-  you want to add the new blueprint to.
-- Clicking the row will take you to a new screen where you can see the
-  packages/blueprints in the selected repository. If this is a new repository,
-  the list will be empty.
-- Click the `Add Team Blueprint` button in the upper right corner to create a
+- From the **Package Management** screen, click the **Team Blueprints →** link.
+- Clicking the link will take you to a Team Blueprints screen where you can view
+  and add team blueprints.
+- Click the **ADD TEAM BLUEPRINT** button in the upper right corner to create a
   new team blueprint.
-- In `Add Team Blueprint`, create a new team blueprint from scratch with the
-  name `simplens`.
-  ![add-blueprint](/static/images/porch-ui/blueprint/add-blueprint.png)
-- After completing the above flow, you`ll be taken to your newly created
-  blueprint (see screenshot below). Here you will have a chance to add, edit,
-  and remove resources and functions.
-  ![new-blueprint](/static/images/porch-ui/blueprint/new-blueprint.png)
-- Clicking any of the resources on the table (currently the `Kptfile` and
-  `ConfigMap`) will show the resource viewer dialog where you can see quick
-  information for each resource and view the yaml for the resource.
-- On the blueprint (see the above screenshot), click `Edit` to be able to edit
-  the blueprint. After clicking `Edit`, you should see this screen where you
-  have an option to add new resources.
-  ![add-resources](/static/images/porch-ui/blueprint/edit-new-blueprint.png)
-- Using the `Add Resource` button, add a new Namespace resource. Name the
-  namespace `example`.
-- Click the Kptfile resource and add a new mutator
-  - Search for `namespace` and select `set-namespace` with the latest version
-    available for selection.
-  - Select `ConfigMap: kptfile.kpt.dev` for the function config
-  - By setting both of these values, anytime the blueprint is rendered (for
-    instance, on save or when a deployable instance of the blueprint is
-    created), the namespace will be set to the name of the package.
-- Using the `Add Resource` button, add a new Role Binding resource
-  - Name the resource `app-admin`
-  - In Role Reference, select `Cluster Role` and set `app-admin` as the name
-  - Click Add Subject, and in the newly added subject, select `Group` and set
-    the name to `example.admin@bigco.com`.
-- Using the `Add Resource` button, add a new Apply Replacements resource.
-  - Name the resource `update-rolebinding`
-  - In Source, select `ConfigMap: kptfile.kpt.dev` as the source resource and
-    set `data.name: example` as source path
-  - In Target, select `RoleBinding: app-admin` as the target resource and set
-    `subjects.0.name: example.admin@bigco.com` as the target path. Select
-    `Partial Value` as the replace value option, with `period (.)` as the
-    delimiter selecting `example` to replace.
-- Click the Kptfile resource to see the `apply-replacements` mutator has been
-  added automatically by the previous step
-  - The UI knows to add this mutator anytime a an `ApplyReplacements` resource
-    is added
-  - Screenshot of the Kptifle showing the two mutators
-    ![kptfile-mutators](/static/images/porch-ui/blueprint/edit-kptfile-mutators.png)
-- Using the `Add Resource` button, add a new Resource Quota resource
-  - Name the resource `base`
-  - Set Max CPU Requests to `40` and Max Memory Requests to `40G`
-- After you are done with the above, you should have the following resources
-  ![new-blueprint-resources](/static/images/porch-ui/blueprint/edit-new-blueprint-resources.png)
-- Clicking `Save` will save the resources, apply the mutator, and take you back
-  to the blueprint screen you started on. Note that the namespace has been
-  updated on the resources from the `set-namespace` mutator.
-  ![saved-new-blueprint](/static/images/porch-ui/blueprint/saved-new-blueprint.png)
-- Click the individual resources to see the first class editors.
-- Click Propose to propose the blueprint (button will change to Approve)
-- Click Approve to approve the blueprint
+- On the Add Team Blueprint screen:
+  - Choose "Create a new team blueprint from scratch".
+  - Click Next to proceed to the Metadata section.
+  - Set the team blueprint name to "simplens".
+  - Click Next to proceed to the Namespace section.
+  - Check the "Add namespace resource to the team blueprint" checkbox. Checking
+    this checkbox will automatically add a Namespace resource to the team
+    blueprint.
+  - Set namespace option to "Set the namespace to the name of the deployment
+    instance". This option will set the name of the namespace equal to the name
+    of the deployment package when a deployment package is created/cloned from
+    this team blueprint by adding the set-namespace mutator to the Kptfile
+    resource. Since we are creating a team blueprint, the namespace will be set
+    to "example".
+  - Click Next to proceed to the Validate Resources section.
+  - Click Next to proceed to the Confirm section.
+  - Click the **CREATE TEAM BLUEPRINT** button.
+- The next screen is the package editor screen for the new _Draft_ team
+  blueprint package you have just created. Here we will want to add a few
+  resources to complete the team blueprint.
+  - Click the **EDIT** button to allow the team blueprint to be updated.
+  - Click the **ADD BUTTON** button and add a new Role Binding resource.
+    - In the Resource Metadata section, name the resource "app-admin".
+    - In Role Reference section, set the kind to "Cluster Role" and name to
+      "app-admin" .
+    - Click the **ADD SUBJECT** button, and in the newly added subject section,
+      set the kind to "Group" and name to "example.admin@bigco.com".
+    - Click the **SAVE** button to close the add resource dialog.
+  - Click the **ADD BUTTON** button and add a new Apply Replacements resource.
+    - In the Resource Metadata section, name the resource "update-rolebinding"
+    - In the Source section, set the source resource as "ConfigMap:
+      kptfile.kpt.dev" and source path to "data.name: example"
+    - In the Target section, set the target resource to "RoleBinding:
+      app-admin", the target path to "subjects.0.name: example.admin@bigco.com".
+      Set the replacement value option to "Partial value", delimiter to "period
+      (.)", and replace to "example".
+    - Click the **SAVE** button to close the add resource dialog.
+  - Click the **ADD BUTTON** button and add a new Resource Quota resource.
+    - In the Resource Metadata section, name the resource "base".
+    - In the Compute Resources setion, set Max CPU Requests to "40" and Max
+      Memory Requests to "40G".
+    - Click the **SAVE** button to close the add resource dialog.
+  - Click the **SAVE** button on the upper right corner of the screen.
+- This will bring you back to the team blueprint screen. The team blueprint is
+  still in _Draft_ status so we will need to publish it to make it available for
+  deployment.
+  - Click the **PROPOSE** button to propose the simplens team blueprint package
+    for review.
+  - It will change to **APPROVE** momentarily. Click that button to publish the
+    simplens team blueprint.
 - Using the breadcrumbs, click back to view your blueprints repository - here
-  you should see the blueprint you just created has been finalized.
-  ![finalized-blueprint](/static/images/porch-ui/blueprint/finalized-blueprint.png)
+  you should see the blueprint you just created has been published.
 
-So, with that, we created a blueprint from scratch and published it in a team
-blueprint repository. You should be able to see the blueprint by viewing the
-`git` repository directly well.
+This completes the simplens team blueprint. The next section shows how
+deployable instances can be created using this team blueprint.
 
-## Create a deployable instance of a blueprint
+## Create a deployable instance of the team blueprint
 
-In this section, we will walk through the steps of creating a deployable
-instance of a blueprint.
+In this section, we will walk through creating a deployable instance of the
+simplens team blueprint.
 
-- Starting from the team blueprints repository, you should see the `simplens`
-  blueprint created above.
-  ![finalized-blueprint](/static/images/porch-ui/blueprint/finalized-blueprint.png)
-- Click the `simplens` blueprint.
-  ![show-blueprint](/static/images/porch-ui/deployment/show-blueprint.png)
-- Click the `Clone` button in the upper right corner to take you to the clone
-  flow. For Action, select
-  `Create a new deployment by cloning the simplens team blueprint` and name the
-  deployment `backend`.
-  ![add-deployment](/static/images/porch-ui/deployment/add-deployment.png)
-- Completing the flow will add the package to your deployments repository. Note
-  that the namespace across all the namespace scoped resources have been updated
-  to the name of the package.
-  ![added-deployment](/static/images/porch-ui/deployment/backend-deployment-added.png)
-- Click the `Diff` button for the `RoleBinding app-admin` resource. Here you’ll
-  see the differences between this resource and the same resource in the
-  upstream `simplens` team blueprint. In addition to the namespace being
-  updated, the binding has also been updated from the Apply Replacements
-  resource.
-  ![draft-deployment-screenshot](/static/images/porch-ui/deployment/rolebinding-diff.png)
-- After closing the diff dialog, using the breadcrumbs, click back the
-  deployments view to see your new deployment is added in Draft status.
-  ![draft-deployment-screenshot](/static/images/porch-ui/deployment/deployments-list.png)
-- Click into the backend deployment and move the deployment to Proposed, then
-  Published by approving the deployment. Optionally, before moving the
-  deployment to Proposed, you can make changes to the deployment by
-  adding/removing/updating resources.
-- Once the deployment is published, click `Create Sync` to have `Config Sync`
-  sync the deployment to the Kubernetes cluster.
-  ![published-deployment](/static/images/porch-ui/deployment/published-deployment.png)
-- After a few seconds, you`ll see the Sync status update in the upper right-hand
-  corner.
-  ![synced-deployment](/static/images/porch-ui/deployment/synced-deployment.png)
-- If you navigate back to the `deployment` repository, you will see `sync`
-  status next to each deployment instance.
-  ![synced-deployment-screenshot](/static/images/porch-ui/deployment/synced-deployment-list.png)
+- From the **Package Management** screen, click the **Team Blueprints →** link.
+- Here you should see the "simplens" team blueprint created in the section
+  above.
+- Click the "simplens" team blueprint row to view the blueprint.
+- Click the **CLONE** button.
+- In the **Clone simplens** screen:
+  - Choose "Crete a new deployment by closing the simplens team blueprint"
+    option.
+  - Click Next to proceed to the Metadata section.
+  - Update the deployment name to "backend".
+  - Click Next to proceed to the Namespace section.
+  - Click Next to proceed to the Validate Resources section.
+  - Click Next to proceed to the Confirm section.
+  - Click the **CREATE DEPLOYMENT** button.
+- The next screen is the package editor screen for the new _Draft_ deployment
+  package you have just created. Note that the namespace across all the
+  namespace scoped resources have been updated to the name of the package.
+  - Click the **DIFF** button for any resource to view the differences between
+    the resource and the same resource in the upstream simplens team blueprint.
+    For many of the deployable resources, only the namespace will be updated.
+    For the app-admin RoleBiding resource, the group binding has also been
+    updated by the Apply Replacements resource.
+- We need to publish the deployment package to make it available for deployment.
+  - Before moving the deployment to _Proposed_, you can make changes by editing
+    the deployment and adding, removing, and updating resources.
+  - Click the **PROPOSE** button to propose the backend deployment package for
+    review.
+  - It will change to **APPROVE** momentarily. Click that button to publish the
+    backend deployment package.
+- Once the deployment package is published, click the **CREATE SYNC** button to
+  have _Config Sync_ sync the deployment to the Kubernetes cluster.
+  - After a few seconds, you will see the Sync status update in the upper
+    right-hand corner.
+- Navigating back to the deployment repository the _SYNC STATUS_ column shows
+  the status of each deployment package.
 
-So, this completes our end-to-end workflow of creating a blueprint from scratch
-and deploying it to a Kubernetes cluster using the Config as Data UI.
+This completes our end-to-end workflow of creating a blueprint from scratch and
+deploying a variant of the blueprint to a Kubernetes cluster using the Config as
+Data UI.
