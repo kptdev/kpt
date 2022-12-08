@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/GoogleContainerTools/kpt/porch/controllers/downstreampackages/pkg/controllers/downstreampackage"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
@@ -51,6 +52,7 @@ import (
 
 var (
 	reconcilers = map[string]Reconciler{
+		"downstreampackages":       &downstreampackage.DownstreamPackageReconciler{},
 		"rootsyncsets":             &rootsyncset.RootSyncSetReconciler{},
 		"remoterootsyncsets":       &remoterootsyncset.RemoteRootSyncSetReconciler{},
 		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
