@@ -19,21 +19,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: rootsyncdeployments.config.porch.kpt.dev
+  name: rootsyncrollouts.config.porch.kpt.dev
 spec:
   group: config.porch.kpt.dev
   names:
-    kind: RootSyncDeployment
-    listKind: RootSyncDeploymentList
-    plural: rootsyncdeployments
-    singular: rootsyncdeployment
+    kind: RootSyncRollout
+    listKind: RootSyncRolloutList
+    plural: rootsyncrollouts
+    singular: rootsyncrollout
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RootSyncDeployment is the Schema for the rootsyncdeployments
-          API
+        description: RootSyncRollout is the Schema for the rootsyncrollouts API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -48,14 +47,59 @@ spec:
           metadata:
             type: object
           spec:
-            description: RootSyncDeploymentSpec defines the desired state of RootSyncDeployment
+            description: RootSyncRolloutSpec
             properties:
-              packageRevision:
+              packages:
                 properties:
-                  name:
-                    type: string
                   namespace:
                     type: string
+                  selector:
+                    description: A label selector is a label query over a set of resources.
+                      The result of matchLabels and matchExpressions are ANDed. An
+                      empty label selector matches all objects. A null label selector
+                      matches no objects.
+                    properties:
+                      matchExpressions:
+                        description: matchExpressions is a list of label selector
+                          requirements. The requirements are ANDed.
+                        items:
+                          description: A label selector requirement is a selector
+                            that contains values, a key, and an operator that relates
+                            the key and values.
+                          properties:
+                            key:
+                              description: key is the label key that the selector
+                                applies to.
+                              type: string
+                            operator:
+                              description: operator represents a key's relationship
+                                to a set of values. Valid operators are In, NotIn,
+                                Exists and DoesNotExist.
+                              type: string
+                            values:
+                              description: values is an array of string values. If
+                                the operator is In or NotIn, the values array must
+                                be non-empty. If the operator is Exists or DoesNotExist,
+                                the values array must be empty. This array is replaced
+                                during a strategic merge patch.
+                              items:
+                                type: string
+                              type: array
+                          required:
+                          - key
+                          - operator
+                          type: object
+                        type: array
+                      matchLabels:
+                        additionalProperties:
+                          type: string
+                        description: matchLabels is a map of {key,value} pairs. A
+                          single {key,value} in the matchLabels map is equivalent
+                          to an element of matchExpressions, whose key field is "key",
+                          the operator is "In", and the values array contains only
+                          "value". The requirements are ANDed.
+                        type: object
+                    type: object
                 type: object
               targets:
                 properties:
@@ -109,27 +153,8 @@ spec:
                 type: object
             type: object
           status:
-            description: RootSyncDeploymentStatus defines the observed state of RootSyncDeployment
+            description: RootSyncRolloutStatus defines the observed state of RootSyncRollout
             properties:
-              clusterRefStatuses:
-                items:
-                  properties:
-                    apiVersion:
-                      type: string
-                    kind:
-                      type: string
-                    name:
-                      type: string
-                    namespace:
-                      type: string
-                    revision:
-                      type: string
-                    synced:
-                      type: boolean
-                  required:
-                  - synced
-                  type: object
-                type: array
               conditions:
                 description: Conditions describes the reconciliation state of the
                   object.
@@ -200,9 +225,31 @@ spec:
                   - type
                   type: object
                 type: array
-              observedGeneration:
-                format: int64
-                type: integer
+              packageStatus:
+                items:
+                  properties:
+                    package:
+                      type: string
+                    revision:
+                      items:
+                        properties:
+                          count:
+                            type: integer
+                          revision:
+                            type: string
+                          syncedCount:
+                            type: integer
+                        required:
+                        - count
+                        - revision
+                        - syncedCount
+                        type: object
+                      type: array
+                  required:
+                  - package
+                  - revision
+                  type: object
+                type: array
             type: object
         type: object
     served: true

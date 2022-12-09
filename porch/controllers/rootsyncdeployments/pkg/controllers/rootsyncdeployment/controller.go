@@ -157,13 +157,14 @@ func (r *RootSyncDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.R
 	return ctrl.Result{}, nil
 }
 
-func (r *RootSyncDeploymentReconciler) updateStatus(ctx context.Context, rds *v1alpha1.RootSyncDeployment, clusterRefStatuses []v1alpha1.ClusterRefStatus) error {
-	if equality.Semantic.DeepEqual(rds.Status.ClusterRefStatuses, clusterRefStatuses) {
+func (r *RootSyncDeploymentReconciler) updateStatus(ctx context.Context, rsd *v1alpha1.RootSyncDeployment, clusterRefStatuses []v1alpha1.ClusterRefStatus) error {
+	if equality.Semantic.DeepEqual(rsd.Status.ClusterRefStatuses, clusterRefStatuses) {
 		klog.Infof("Status has not changed, update not needed.")
 		return nil
 	}
-	rds.Status.ClusterRefStatuses = clusterRefStatuses
-	return r.Status().Update(ctx, rds)
+	rsd.Status.ObservedGeneration = rsd.Generation
+	rsd.Status.ClusterRefStatuses = clusterRefStatuses
+	return r.Status().Update(ctx, rsd)
 }
 
 func (r *RootSyncDeploymentReconciler) syncRootSyncDeployment(ctx context.Context, rsd *v1alpha1.RootSyncDeployment) ([]v1alpha1.ClusterRefStatus, error) {
