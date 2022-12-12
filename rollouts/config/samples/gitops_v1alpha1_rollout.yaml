@@ -1,0 +1,12 @@
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: Rollout
+metadata:
+  labels:
+    app.kubernetes.io/name: rollout
+    app.kubernetes.io/instance: rollout-sample
+    app.kubernetes.io/part-of: rollouts
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: rollouts
+  name: rollout-sample
+spec:
+  # TODO(user): Add fields here
