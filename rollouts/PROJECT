@@ -1,0 +1,16 @@
+domain: kpt.dev
+layout:
+- go.kubebuilder.io/v3
+projectName: rollouts
+repo: github.com/GoogleContainerTools/kpt
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kpt.dev
+  group: gitops
+  kind: Rollout
+  path: github.com/GoogleContainerTools/kpt/api/v1alpha1
+  version: v1alpha1
+version: "3"
