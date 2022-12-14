@@ -8,6 +8,11 @@ using Porch. You will need:
   the `repo` scope for Porch to authenticate with the repository and allow it
   to create commits in the repository.
 
+A repository is a porch representation of either a git repo or an oci registry.
+Package revisions always belong to a single repository. A repository exists in
+a Kubernetes namespace and all package revisions in a repo also belong to
+the same namespace.
+
 Use the `kpt alpha repo register` command to register your repository with
 Porch: The command below uses the repository `deployments.git`.
 Your repository name may be different; please update the command with the
