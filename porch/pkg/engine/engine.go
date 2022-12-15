@@ -1246,7 +1246,9 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			if err != nil {
 				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
 			}
-
+			if patchSpec.Contents == "" {
+				continue
+			}
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
@@ -1260,12 +1262,17 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
-	task := &api.Task{
-		Type:  api.TaskTypePatch,
-		Patch: patch,
+	// If patch is empty, don't create a Task.
+	var taskResult *api.TaskResult
+	if len(patch.Patches) > 0 {
+		taskResult = &api.TaskResult{
+			Task: &api.Task{
+				Type:  api.TaskTypePatch,
+				Patch: patch,
+			},
+		}
 	}
-
-	return repository.PackageResources{Contents: new}, &api.TaskResult{Task: task}, nil
+	return repository.PackageResources{Contents: new}, taskResult, nil
 }
 
 func healConfig(old, new map[string]string) (map[string]string, error) {
