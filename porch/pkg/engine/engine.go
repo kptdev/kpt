@@ -804,13 +804,7 @@ func convertStatusToKptfile(s api.ConditionStatus) kptfile.ConditionStatus {
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
 // entry is not already a render mutation.
 func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mutation) []mutation {
-	if len(mutations) == 0 {
-		return mutations
-	}
-
-	lastMutation := mutations[len(mutations)-1]
-	_, isRender := lastMutation.(*renderPackageMutation)
-	if isRender {
+	if len(mutations) == 0 || isRenderMutation(mutations[len(mutations)-1]) {
 		return mutations
 	}
 
@@ -820,6 +814,11 @@ func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mu
 		runnerOptions: runnerOptions,
 		runtime:       cad.runtime,
 	})
+}
+
+func isRenderMutation(m mutation) bool {
+	_, isRender := m.(*renderPackageMutation)
+	return isRender
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision) error {
@@ -1018,8 +1017,18 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 
 // applyResourceMutations mutates the resources and returns the most recent renderResult.
 func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (applied repository.PackageResources, renderStatus *api.RenderStatus, err error) {
+	var lastApplied mutation
 	for _, m := range mutations {
 		updatedResources, taskResult, err := m.Apply(ctx, baseResources)
+		if taskResult == nil {
+			// a nil taskResult means nothing changed
+			continue
+		}
+		// if the last applied mutation was a render mutation, and so is this one, skip it
+		if lastApplied != nil && isRenderMutation(m) && isRenderMutation(lastApplied) {
+			continue
+		}
+		lastApplied = m
 		var task *api.Task
 		if taskResult != nil {
 			task = taskResult.Task
