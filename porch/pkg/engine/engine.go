@@ -804,13 +804,7 @@ func convertStatusToKptfile(s api.ConditionStatus) kptfile.ConditionStatus {
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
 // entry is not already a render mutation.
 func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mutation) []mutation {
-	if len(mutations) == 0 {
-		return mutations
-	}
-
-	lastMutation := mutations[len(mutations)-1]
-	_, isRender := lastMutation.(*renderPackageMutation)
-	if isRender {
+	if len(mutations) == 0 || isRenderMutation(mutations[len(mutations)-1]) {
 		return mutations
 	}
 
@@ -820,6 +814,11 @@ func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mu
 		runnerOptions: runnerOptions,
 		runtime:       cad.runtime,
 	})
+}
+
+func isRenderMutation(m mutation) bool {
+	_, isRender := m.(*renderPackageMutation)
+	return isRender
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision) error {
@@ -1018,8 +1017,14 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 
 // applyResourceMutations mutates the resources and returns the most recent renderResult.
 func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (applied repository.PackageResources, renderStatus *api.RenderStatus, err error) {
+	var lastApplied mutation
 	for _, m := range mutations {
 		updatedResources, taskResult, err := m.Apply(ctx, baseResources)
+		if taskResult == nil && err == nil {
+			// a nil taskResult means nothing changed
+			continue
+		}
+
 		var task *api.Task
 		if taskResult != nil {
 			task = taskResult.Task
@@ -1027,10 +1032,16 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 		if taskResult != nil && task.Type == api.TaskTypeEval {
 			renderStatus = taskResult.RenderStatus
 		}
-
 		if err != nil {
 			return updatedResources, renderStatus, err
 		}
+
+		// if the last applied mutation was a render mutation, and so is this one, skip it
+		if lastApplied != nil && isRenderMutation(m) && isRenderMutation(lastApplied) {
+			continue
+		}
+		lastApplied = m
+
 		if err := draft.UpdateResources(ctx, &api.PackageRevisionResources{
 			Spec: api.PackageRevisionResourcesSpec{
 				Resources: updatedResources.Contents,
@@ -1246,7 +1257,9 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			if err != nil {
 				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
 			}
-
+			if patchSpec.Contents == "" {
+				continue
+			}
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
@@ -1260,12 +1273,17 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
-	task := &api.Task{
-		Type:  api.TaskTypePatch,
-		Patch: patch,
+	// If patch is empty, don't create a Task.
+	var taskResult *api.TaskResult
+	if len(patch.Patches) > 0 {
+		taskResult = &api.TaskResult{
+			Task: &api.Task{
+				Type:  api.TaskTypePatch,
+				Patch: patch,
+			},
+		}
 	}
-
-	return repository.PackageResources{Contents: new}, &api.TaskResult{Task: task}, nil
+	return repository.PackageResources{Contents: new}, taskResult, nil
 }
 
 func healConfig(old, new map[string]string) (map[string]string, error) {

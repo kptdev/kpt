@@ -495,7 +495,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	const (
 		repository  = "re-render-test"
 		packageName = "simple-package"
-		description = "description"
+		workspace   = "workspace"
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -511,7 +511,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			WorkspaceName:  description,
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 		},
 	}
@@ -562,6 +562,66 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	if diff := t.CompareGoldenFileYAML(golden, updated); diff != "" {
 		t.Errorf("Unexpected updated confg map contents: (-want,+got): %s", diff)
 	}
+}
+
+// Test will initialize an empty package, and then make a call to update the resources
+// without actually making any changes. This test is ensuring that no additional
+// tasks get added.
+func (t *PorchSuite) TestUpdateResourcesEmptyPatch(ctx context.Context) {
+	const (
+		repository  = "empty-patch-test"
+		packageName = "simple-package"
+		workspace   = "workspace"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	// Check its task list
+	var newPackage porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackage)
+	tasksBeforeUpdate := newPackage.Spec.Tasks
+	assert.Equal(t, 2, len(tasksBeforeUpdate))
+
+	// Get the package resources
+	var newPackageResources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackageResources)
+
+	// "Update" the package resources, without changing anything
+	t.UpdateF(ctx, &newPackageResources)
+
+	// Check the task list
+	var newPackageUpdated porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackageUpdated)
+	tasksAfterUpdate := newPackageUpdated.Spec.Tasks
+	assert.Equal(t, 2, len(tasksAfterUpdate))
+
+	assert.True(t, reflect.DeepEqual(tasksBeforeUpdate, tasksAfterUpdate))
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
@@ -2080,7 +2140,7 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Description: "Porch Test Repository WorkspaceName",
+			Description: "Porch Test Repository Description",
 			Type:        configapi.RepositoryTypeGit,
 			Content:     configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{
