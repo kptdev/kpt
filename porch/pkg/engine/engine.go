@@ -1020,15 +1020,11 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 	var lastApplied mutation
 	for _, m := range mutations {
 		updatedResources, taskResult, err := m.Apply(ctx, baseResources)
-		if taskResult == nil {
+		if taskResult == nil && err == nil {
 			// a nil taskResult means nothing changed
 			continue
 		}
-		// if the last applied mutation was a render mutation, and so is this one, skip it
-		if lastApplied != nil && isRenderMutation(m) && isRenderMutation(lastApplied) {
-			continue
-		}
-		lastApplied = m
+
 		var task *api.Task
 		if taskResult != nil {
 			task = taskResult.Task
@@ -1036,10 +1032,16 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 		if taskResult != nil && task.Type == api.TaskTypeEval {
 			renderStatus = taskResult.RenderStatus
 		}
-
 		if err != nil {
 			return updatedResources, renderStatus, err
 		}
+
+		// if the last applied mutation was a render mutation, and so is this one, skip it
+		if lastApplied != nil && isRenderMutation(m) && isRenderMutation(lastApplied) {
+			continue
+		}
+		lastApplied = m
+
 		if err := draft.UpdateResources(ctx, &api.PackageRevisionResources{
 			Spec: api.PackageRevisionResourcesSpec{
 				Resources: updatedResources.Contents,
