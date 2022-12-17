@@ -18,18 +18,54 @@ package controllers
 
 import (
 	"context"
+	"flag"
 
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/api/v1alpha1"
+	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
+	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
 )
+
+var (
+	rootSyncNamespace = "config-management-system"
+	rootSyncGVK       = schema.GroupVersionKind{
+		Group:   "configsync.gke.io",
+		Version: "v1beta1",
+		Kind:    "RootSync",
+	}
+	rootSyncGVR = schema.GroupVersionResource{
+		Group:    "configsync.gke.io",
+		Version:  "v1beta1",
+		Resource: "rootsyncs",
+	}
+	containerClusterKind       = "ContainerCluster"
+	containerClusterApiVersion = "container.cnrm.cloud.google.com/v1beta1"
+
+	configControllerKind       = "ConfigControllerInstance"
+	configControllerApiVersion = "configcontroller.cnrm.cloud.google.com/v1beta1"
+)
+
+type Options struct {
+}
+
+func (o *Options) InitDefaults() {
+}
+
+func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
+}
 
 // RolloutReconciler reconciles a Rollout object
 type RolloutReconciler struct {
 	client.Client
+
+	store *clusterstore.ClusterStore
+
 	Scheme *runtime.Scheme
 }
 
@@ -46,16 +82,62 @@ type RolloutReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
+//
+// Dumb reconciliation of Rollout API includes the following:
+// Fetch the READY kcc clusters.
+// For each kcc cluster, fetch RootSync objects in each of the KCC clusters.
 func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	var rollout gitopsv1alpha1.Rollout
 
-	// TODO(user): your logic here
+	if err := r.Get(ctx, req.NamespacedName, &rollout); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	return ctrl.Result{}, nil
+	logger := log.FromContext(ctx)
+
+	logger.Info("reconciling", "key", req.NamespacedName)
+
+	gkeClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	r.store.PrintClusterInfos(ctx, gkeClusters)
+
+	for _, gkeCluster := range gkeClusters.Items {
+		cl, err := r.store.GetClusterClient(ctx, &gkeCluster)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+		r.testClusterClient(ctx, cl)
+	}
+	return ctrl.Result{}, err
+}
+
+func (r *RolloutReconciler) testClusterClient(ctx context.Context, cl client.Client) error {
+	logger := log.FromContext(ctx)
+	podList := &v1.PodList{}
+	err := cl.List(context.Background(), podList, client.InNamespace("kube-system"))
+	if err != nil {
+		return err
+	}
+	logger.Info("found podlist", "number of pods", len(podList.Items))
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.Client = mgr.GetClient()
+	gkeclusterapis.AddToScheme(mgr.GetScheme())
+
+	// setup the clusterstore
+	r.store = &clusterstore.ClusterStore{
+		Config: mgr.GetConfig(),
+		Client: r.Client,
+	}
+	if err := r.store.Init(); err != nil {
+		return err
+	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
 		Complete(r)
