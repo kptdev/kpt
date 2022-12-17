@@ -25,12 +25,24 @@ import (
 
 // RolloutSpec defines the desired state of Rollout
 type RolloutSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Test is an dummy test field of Rollout.
-	Test string `json:"test,omitempty"`
+	// Description is a user friendly description of this Rollout.
+	Description string `json:"description,omitempty"`
+
+	// Targets specifies the clusters that will receive the KRM config packages.
+	Targets ClusterTargetSelector `json:"targets,omitempty"`
+
+	// PackageSourceType identifies how the KRM config unit will be sourced.
+	PackageSourceType PackageSourceType `json:"packageSourceType,omitempty"`
 }
+
+type ClusterTargetSelector struct {
+	Selector *metav1.LabelSelector `json:"selector,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=gitRepo;gitDir
+type PackageSourceType string
 
 // RolloutStatus defines the observed state of Rollout
 type RolloutStatus struct {
