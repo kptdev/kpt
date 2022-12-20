@@ -382,6 +382,14 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		// Delete the tag
 		refSpecs.AddRefToDelete(ref)
 
+		// If this revision was proposed for deletion, we need to delete the associated branch.
+		refSpecsForDeletionProposed := newPushRefSpecBuilder()
+		deletionProposedBranch := createDeletionProposedName(oldGit.path, oldGit.revision)
+		refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), oldGit.commit))
+		if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
+			// the deletionProposed branch might not have existed, so we ignore any errors here
+		}
+
 	case isDraftBranchNameInLocal(rn), isProposedBranchNameInLocal(rn):
 		// PackageRevision is proposed or draft; delete the branch directly.
 		refSpecs.AddRefToDelete(ref)

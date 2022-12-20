@@ -130,7 +130,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 	var newRef *plumbing.Reference
 
 	switch d.lifecycle {
-	case v1alpha1.PackageRevisionLifecyclePublished:
+	case v1alpha1.PackageRevisionLifecyclePublished, v1alpha1.PackageRevisionLifecycleDeletionProposed:
 		// Finalize the package revision. Assign it a revision number of latest + 1.
 		revisions, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
 			Package: d.path,
@@ -187,7 +187,7 @@ func (r *gitRepository) closeDraft(ctx context.Context, d *gitPackageDraft) (*gi
 			refSpecs.AddRefToDelete(base)
 		}
 
-		// Update package referemce (commit and tree hash stay the same)
+		// Update package reference (commit and tree hash stay the same)
 		newRef = plumbing.NewHashReference(draftBranch.RefInLocal(), d.commit)
 
 	default:

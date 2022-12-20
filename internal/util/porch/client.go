@@ -30,12 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
-	config, err := flags.ToRESTConfig()
-	if err != nil {
-		return nil, err
-	}
-
+func CreateClient(config *rest.Config) (client.Client, error) {
 	scheme, err := createScheme()
 	if err != nil {
 		return nil, err
@@ -50,6 +45,15 @@ func CreateClient(flags *genericclioptions.ConfigFlags) (client.Client, error) {
 	}
 
 	return c, nil
+}
+
+func CreateClientWithFlags(flags *genericclioptions.ConfigFlags) (client.Client, error) {
+	config, err := flags.ToRESTConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return CreateClient(config)
 }
 
 func CreateDynamicClient(flags *genericclioptions.ConfigFlags) (client.WithWatch, error) {

@@ -43,6 +43,10 @@ type gitAnnotation struct {
 
 	// Task holds the task we performed, if a task caused the commit.
 	Task *v1alpha1.Task `json:"task,omitempty"`
+
+	// Lifecycle holds the lifecycle of the package revision at the time that the
+	// commit was made.
+	Lifecycle v1alpha1.PackageRevisionLifecycle `json:"lifecycle,omitempty"`
 }
 
 // ExtractGitAnnotations reads the gitAnnotations from the given commit.

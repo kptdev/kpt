@@ -35,7 +35,7 @@ func identifyLatestRevisions(result map[repository.PackageRevisionKey]*cachedPac
 
 		// Check if the current package revision is more recent than the one seen so far.
 		// Only consider Published packages
-		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
+		if !v1alpha1.LifecycleIsPublished(current.Lifecycle()) {
 			continue
 		}
 

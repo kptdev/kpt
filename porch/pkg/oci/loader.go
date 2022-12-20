@@ -66,6 +66,8 @@ func (r *ociRepository) getLifecycle(ctx context.Context, imageRef oci.ImageDige
 		return v1alpha1.PackageRevisionLifecycleProposed, nil
 	case string(v1alpha1.PackageRevisionLifecyclePublished):
 		return v1alpha1.PackageRevisionLifecyclePublished, nil
+	case string(v1alpha1.PackageRevisionLifecycleDeletionProposed):
+		return v1alpha1.PackageRevisionLifecycleDeletionProposed, nil
 	default:
 		return "", fmt.Errorf("unknown package revision lifecycle %q", lifecycleValue)
 	}

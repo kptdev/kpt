@@ -72,7 +72,7 @@ type runner struct {
 
 func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	const op errors.Op = command + ".preRunE"
-	c, err := porch.CreateClient(r.cfg)
+	c, err := porch.CreateClientWithFlags(r.cfg)
 	if err != nil {
 		return errors.E(op, err)
 	}

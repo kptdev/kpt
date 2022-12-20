@@ -119,6 +119,7 @@ func (p *PackageRevision) GetPackageRevision(ctx context.Context) (*api.PackageR
 	repoPkgRev.Finalizers = p.packageRevisionMeta.Finalizers
 	repoPkgRev.OwnerReferences = p.packageRevisionMeta.OwnerReferences
 	repoPkgRev.DeletionTimestamp = p.packageRevisionMeta.DeletionTimestamp
+
 	return repoPkgRev, nil
 }
 
@@ -279,7 +280,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// These values are ok
-	case api.PackageRevisionLifecyclePublished:
+	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot create a package revision with lifecycle value 'Final'")
 	default:
@@ -565,8 +566,14 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// Draft or proposed can be updated.
-	case api.PackageRevisionLifecyclePublished:
-		// Only metadata (currently labels and annotations) can be updated for published packages.
+	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
+		// Only metadata (currently labels and annotations) and lifecycle can be updated for published packages.
+		if oldObj.Spec.Lifecycle != newObj.Spec.Lifecycle {
+			if err := oldPackage.repoPackageRevision.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+				return nil, err
+			}
+		}
+
 		pkgRevMeta, err = cad.updatePkgRevMeta(ctx, repoPkgRev, newObj)
 		if err != nil {
 			return nil, err
@@ -578,7 +585,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
 	default:
 		return nil, fmt.Errorf("invalid desired lifecycle value: %q", lifecycle)
-	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// These values are ok
 	}
 
@@ -957,8 +964,8 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	default:
 		return nil, nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft:
-		// Only draf can be updated.
-	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
+		// Only drafts can be updated.
+	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
 	}

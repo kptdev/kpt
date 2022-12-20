@@ -225,7 +225,7 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 			}
 			addendum.Annotations[annotationKeyLifecycle] = string(p.lifecycle)
 
-			if p.lifecycle == v1alpha1.PackageRevisionLifecyclePublished {
+			if v1alpha1.LifecycleIsPublished(p.lifecycle) {
 				r := p.parent
 				// Finalize the package revision. Assign it a revision number of latest + 1.
 				revisions, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{

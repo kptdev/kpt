@@ -225,7 +225,7 @@ func (r *cachedRepository) update(ctx context.Context, updated repository.Packag
 	k := updated.Key()
 	// previous := r.cachedPackageRevisions[k]
 
-	if updated.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+	if v1alpha1.LifecycleIsPublished(updated.Lifecycle()) {
 		oldKey := repository.PackageRevisionKey{
 			Repository:    k.Repository,
 			Package:       k.Package,

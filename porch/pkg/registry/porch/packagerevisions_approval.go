@@ -72,7 +72,24 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 	oldRevision := old.(*api.PackageRevision)
 	newRevision := obj.(*api.PackageRevision)
 
-	if lifecycle := oldRevision.Spec.Lifecycle; lifecycle != api.PackageRevisionLifecycleProposed {
+	switch lifecycle := oldRevision.Spec.Lifecycle; lifecycle {
+
+	case api.PackageRevisionLifecyclePublished:
+		if newRevision.Spec.Lifecycle != api.PackageRevisionLifecycleDeletionProposed {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle,
+				fmt.Sprintf("package with %s lifecycle value can only be updated to 'ProposeDeletion'", lifecycle)))
+		}
+
+	case api.PackageRevisionLifecycleDeletionProposed:
+		if newRevision.Spec.Lifecycle != api.PackageRevisionLifecyclePublished {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle,
+				fmt.Sprintf("package with %s lifecycle value can only be updated to 'Published'", lifecycle)))
+		}
+
+	case api.PackageRevisionLifecycleProposed:
+		// valid
+
+	default:
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle,
 			fmt.Sprintf("cannot approve package with %s lifecycle value; only Proposed packages can be approved", lifecycle)))
 	}
@@ -81,6 +98,12 @@ func (s packageRevisionApprovalStrategy) ValidateUpdate(ctx context.Context, obj
 	// TODO: signal rejection of the approval differently than by returning to draft?
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecyclePublished:
 		// valid
+
+	case api.PackageRevisionLifecycleDeletionProposed:
+		if oldRevision.Spec.Lifecycle != api.PackageRevisionLifecyclePublished {
+			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle,
+				fmt.Sprintf("cannot update lifecycle %s; only Published packages require approval for deletion", lifecycle)))
+		}
 
 	default:
 		allErrs = append(allErrs,

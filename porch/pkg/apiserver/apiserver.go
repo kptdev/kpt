@@ -17,6 +17,7 @@ package apiserver
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/install"
@@ -39,6 +40,7 @@ import (
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -277,5 +279,14 @@ func (c completedConfig) New() (*PorchServer, error) {
 
 func (s *PorchServer) Run(ctx context.Context) error {
 	porch.RunBackground(ctx, s.coreClient, s.cache)
+	certStorageDir, found := os.LookupEnv("CERT_STORAGE_DIR")
+	if found && certStorageDir != "" {
+		if err := setupWebhooks(ctx, certStorageDir); err != nil {
+			klog.Errorf("%v\n", err)
+			return err
+		}
+	} else {
+		klog.Infoln("Cert storage dir not provided, skipping webhook setup")
+	}
 	return s.GenericAPIServer.PrepareRun().Run(ctx.Done())
 }

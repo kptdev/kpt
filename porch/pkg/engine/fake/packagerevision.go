@@ -74,3 +74,7 @@ func (f *PackageRevision) GetUpstreamLock(context.Context) (kptfile.Upstream, kp
 func (f *PackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
 	return *f.Kptfile.Upstream, *f.Kptfile.UpstreamLock, nil
 }
+
+func (f *PackageRevision) UpdateLifecycle(context.Context, v1alpha1.PackageRevisionLifecycle) error {
+	return nil
+}
