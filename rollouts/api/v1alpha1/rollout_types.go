@@ -30,19 +30,46 @@ type RolloutSpec struct {
 	// Description is a user friendly description of this Rollout.
 	Description string `json:"description,omitempty"`
 
+	// Packages source for this Rollout.
+	Packages PackagesConfig `json:"packages"`
+
 	// Targets specifies the clusters that will receive the KRM config packages.
 	Targets ClusterTargetSelector `json:"targets,omitempty"`
-
-	// PackageSourceType identifies how the KRM config unit will be sourced.
-	PackageSourceType PackageSourceType `json:"packageSourceType,omitempty"`
 }
 
 type ClusterTargetSelector struct {
 	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=gitRepo;gitDir
+// +kubebuilder:validation:Enum=git
 type PackageSourceType string
+
+// PackagesConfig defines the packages the Rollout should deploy.
+type PackagesConfig struct {
+	SourceType PackageSourceType `json:"sourceType"`
+
+	Git GitSource `json:"git"`
+}
+
+// GitSource defines the packages source in Git.
+type GitSource struct {
+	GitRepoSelector GitSelector `json:"selector"`
+}
+
+// GitSelector defines the selector to apply to Git.
+type GitSelector struct {
+	Org          string          `json:"org"`
+	Name         string          `json:"name"`
+	PackagesPath string          `json:"packagesPath"`
+	Revision     string          `json:"revision"`
+	SecretRef    SecretReference `json:"secretRef,omitempty"`
+}
+
+// SecretReference contains the reference to the secret
+type SecretReference struct {
+	// Name represents the secret name
+	Name string `json:"name,omitempty"`
+}
 
 // RolloutStatus defines the observed state of Rollout
 type RolloutStatus struct {

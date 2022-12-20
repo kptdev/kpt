@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/iam v0.7.0
 	github.com/GoogleCloudPlatform/k8s-config-connector v1.98.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-github/v48 v48.2.0
 	github.com/onsi/ginkgo/v2 v2.1.6
 	github.com/onsi/gomega v1.20.1
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
@@ -43,6 +44,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
