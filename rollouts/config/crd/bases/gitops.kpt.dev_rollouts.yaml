@@ -38,6 +38,20 @@ spec:
               description:
                 description: Description is a user friendly description of this Rollout.
                 type: string
+              packageToTargetMatcher:
+                description: PackageToTargetMatcher specifies the clusters that will
+                  receive a specific package.
+                properties:
+                  matchExpression:
+                    type: string
+                  type:
+                    enum:
+                    - CEL
+                    type: string
+                required:
+                - matchExpression
+                - type
+                type: object
               packages:
                 description: Packages source for this Rollout.
                 properties:
@@ -50,9 +64,9 @@ spec:
                         properties:
                           directory:
                             type: string
-                          name:
-                            type: string
                           org:
+                            type: string
+                          repo:
                             type: string
                           revision:
                             type: string
@@ -66,8 +80,8 @@ spec:
                             type: object
                         required:
                         - directory
-                        - name
                         - org
+                        - repo
                         - revision
                         type: object
                     required:
@@ -135,6 +149,7 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
             required:
+            - packageToTargetMatcher
             - packages
             type: object
           status:

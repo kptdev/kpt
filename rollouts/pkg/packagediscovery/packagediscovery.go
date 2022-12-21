@@ -35,7 +35,7 @@ type PackageDiscovery struct {
 
 type DiscoveredPackage struct {
 	Org       string
-	Name      string
+	Repo      string
 	Directory string
 	Revision  string
 }
@@ -55,7 +55,7 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage
 		return nil, fmt.Errorf("unable to create git client: %w", err)
 	}
 
-	tree, _, err := gitClient.Git.GetTree(ctx, gitRepoSelector.Org, gitRepoSelector.Name, gitRepoSelector.Revision, true)
+	tree, _, err := gitClient.Git.GetTree(ctx, gitRepoSelector.Org, gitRepoSelector.Repo, gitRepoSelector.Revision, true)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch tree from git: %w", err)
 	}
@@ -72,7 +72,7 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage
 	discoveredPackages := []DiscoveredPackage{}
 
 	for _, path := range packagesPaths {
-		thisDiscoveredPackage := DiscoveredPackage{Org: gitRepoSelector.Org, Name: gitRepoSelector.Name, Revision: gitRepoSelector.Revision, Directory: path}
+		thisDiscoveredPackage := DiscoveredPackage{Org: gitRepoSelector.Org, Repo: gitRepoSelector.Repo, Revision: gitRepoSelector.Revision, Directory: path}
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}
 
