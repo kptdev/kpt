@@ -30,6 +30,7 @@ import (
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
+	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
 )
 
 var (
@@ -111,6 +112,25 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		}
 		r.testClusterClient(ctx, cl)
 	}
+
+	if err := r.Get(ctx, req.NamespacedName, &rollout); err != nil {
+		logger.Error(err, "unable to fetch Rollout")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	packageDiscoveryClient := packagediscovery.NewPackageDiscovery(rollout.Spec.Packages, r.Client, req.Namespace)
+
+	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx)
+	if err != nil {
+		logger.Error(err, "package discovery failed")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
+
 	return ctrl.Result{}, err
 }
 
