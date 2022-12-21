@@ -41,6 +41,12 @@ type ClusterTargetSelector struct {
 	Selector *metav1.LabelSelector `json:"selector,omitempty"`
 }
 
+// ClusterReference contains the identify information
+// need to refer a cluster.
+type ClusterRef struct {
+	Name string `json:"name"`
+}
+
 // +kubebuilder:validation:Enum=git
 type PackageSourceType string
 

@@ -1,0 +1,22 @@
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: RemoteRootSync
+metadata:
+  labels:
+    app.kubernetes.io/name: remoterootsync
+    app.kubernetes.io/instance: remoterootsync-sample
+    app.kubernetes.io/part-of: rollouts
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: rollouts
+  name: remoterootsync-sample
+spec:
+  # TODO(user): Add fields here
+  clusterRef:
+    name: dev-1
+  template:
+    spec:
+      sourceFormat: unstructured 
+      git:
+        repo: https://github.com/droot/oahu.git
+        branch: main
+        revision: main
+        auth: none

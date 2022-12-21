@@ -1,0 +1,27 @@
+# permissions for end users to view remoterootsyncs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: remoterootsync-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: rollouts
+    app.kubernetes.io/part-of: rollouts
+    app.kubernetes.io/managed-by: kustomize
+  name: remoterootsync-viewer-role
+rules:
+- apiGroups:
+  - gitops.kpt.dev
+  resources:
+  - remoterootsyncs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gitops.kpt.dev
+  resources:
+  - remoterootsyncs/status
+  verbs:
+  - get
