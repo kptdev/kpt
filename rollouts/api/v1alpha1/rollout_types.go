@@ -58,11 +58,11 @@ type GitSource struct {
 
 // GitSelector defines the selector to apply to Git.
 type GitSelector struct {
-	Org          string          `json:"org"`
-	Name         string          `json:"name"`
-	PackagesPath string          `json:"packagesPath"`
-	Revision     string          `json:"revision"`
-	SecretRef    SecretReference `json:"secretRef,omitempty"`
+	Org       string          `json:"org"`
+	Name      string          `json:"name"`
+	Directory string          `json:"directory"`
+	Revision  string          `json:"revision"`
+	SecretRef SecretReference `json:"secretRef,omitempty"`
 }
 
 // SecretReference contains the reference to the secret

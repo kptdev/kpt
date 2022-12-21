@@ -30,7 +30,7 @@ spec:
       selector:
         org: GoogleContainerTools
         name: kpt-samples
-        packagesPath: "*"
+        directory: "*"
         revision: main
   targets:
     selector:

@@ -48,11 +48,11 @@ spec:
                         description: GitSelector defines the selector to apply to
                           Git.
                         properties:
+                          directory:
+                            type: string
                           name:
                             type: string
                           org:
-                            type: string
-                          packagesPath:
                             type: string
                           revision:
                             type: string
@@ -65,9 +65,9 @@ spec:
                                 type: string
                             type: object
                         required:
+                        - directory
                         - name
                         - org
-                        - packagesPath
                         - revision
                         type: object
                     required:

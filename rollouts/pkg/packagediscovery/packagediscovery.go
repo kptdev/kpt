@@ -67,7 +67,7 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage
 		}
 	}
 
-	packagesPaths := discoverPackagePaths(gitRepoSelector.PackagesPath, allPaths)
+	packagesPaths := filterDirectories(gitRepoSelector.Directory, allPaths)
 
 	discoveredPackages := []DiscoveredPackage{}
 
@@ -105,14 +105,14 @@ func (d *PackageDiscovery) getGitHubClient(ctx context.Context) (*github.Client,
 	return gitClient, nil
 }
 
-func discoverPackagePaths(pattern string, paths []string) []string {
-	packagePaths := []string{}
+func filterDirectories(pattern string, directories []string) []string {
+	filteredDirectories := []string{}
 
-	for _, path := range paths {
-		if isMatch, _ := filepath.Match(pattern, path); isMatch {
-			packagePaths = append(packagePaths, path)
+	for _, directory := range directories {
+		if isMatch, _ := filepath.Match(pattern, directory); isMatch {
+			filteredDirectories = append(filteredDirectories, directory)
 		}
 	}
 
-	return packagePaths
+	return filteredDirectories
 }
