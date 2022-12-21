@@ -22,7 +22,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -31,25 +30,6 @@ import (
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
-)
-
-var (
-	rootSyncNamespace = "config-management-system"
-	rootSyncGVK       = schema.GroupVersionKind{
-		Group:   "configsync.gke.io",
-		Version: "v1beta1",
-		Kind:    "RootSync",
-	}
-	rootSyncGVR = schema.GroupVersionResource{
-		Group:    "configsync.gke.io",
-		Version:  "v1beta1",
-		Resource: "rootsyncs",
-	}
-	containerClusterKind       = "ContainerCluster"
-	containerClusterApiVersion = "container.cnrm.cloud.google.com/v1beta1"
-
-	configControllerKind       = "ConfigControllerInstance"
-	configControllerApiVersion = "configcontroller.cnrm.cloud.google.com/v1beta1"
 )
 
 type Options struct {
@@ -106,7 +86,7 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	r.store.PrintClusterInfos(ctx, gkeClusters)
 
 	for _, gkeCluster := range gkeClusters.Items {
-		cl, err := r.store.GetClusterClient(ctx, &gkeCluster)
+		cl, _, err := r.store.GetClusterClient(ctx, &gkeCluster)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
