@@ -38,13 +38,49 @@ spec:
               description:
                 description: Description is a user friendly description of this Rollout.
                 type: string
-              packageSourceType:
-                description: PackageSourceType identifies how the KRM config unit
-                  will be sourced.
-                enum:
-                - gitRepo
-                - gitDir
-                type: string
+              packages:
+                description: Packages source for this Rollout.
+                properties:
+                  git:
+                    description: GitSource defines the packages source in Git.
+                    properties:
+                      selector:
+                        description: GitSelector defines the selector to apply to
+                          Git.
+                        properties:
+                          directory:
+                            type: string
+                          name:
+                            type: string
+                          org:
+                            type: string
+                          revision:
+                            type: string
+                          secretRef:
+                            description: SecretReference contains the reference to
+                              the secret
+                            properties:
+                              name:
+                                description: Name represents the secret name
+                                type: string
+                            type: object
+                        required:
+                        - directory
+                        - name
+                        - org
+                        - revision
+                        type: object
+                    required:
+                    - selector
+                    type: object
+                  sourceType:
+                    enum:
+                    - git
+                    type: string
+                required:
+                - git
+                - sourceType
+                type: object
               targets:
                 description: Targets specifies the clusters that will receive the
                   KRM config packages.
@@ -98,6 +134,8 @@ spec:
                     type: object
                     x-kubernetes-map-type: atomic
                 type: object
+            required:
+            - packages
             type: object
           status:
             description: RolloutStatus defines the observed state of Rollout
