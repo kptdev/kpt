@@ -23,8 +23,15 @@ metadata:
     app.kubernetes.io/created-by: rollouts
   name: rollout-sample
 spec:
-  packageSourceType: gitRepo
   description: "this is first rollout :)"
+  packages:
+    sourceType: git
+    git:
+      selector:
+        org: GoogleContainerTools
+        name: kpt-samples
+        directory: "*"
+        revision: main
   targets:
     selector:
       matchExpressions:
