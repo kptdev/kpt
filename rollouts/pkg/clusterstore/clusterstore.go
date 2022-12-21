@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
 )
 
@@ -78,16 +79,33 @@ func (cs *ClusterStore) PrintClusterInfos(ctx context.Context, clusters *gkeclus
 	}
 }
 
-func (cs *ClusterStore) GetClusterClient(ctx context.Context, cluster *gkeclusterapis.ContainerCluster) (client.Client, error) {
+func (cs *ClusterStore) GetCluster(ctx context.Context, name string) (*gkeclusterapis.ContainerCluster, error) {
+	gkeCluster := gkeclusterapis.ContainerCluster{}
+	clusterKey := client.ObjectKey{
+		Namespace: "config-control",
+		Name:      name,
+	}
+	if err := cs.Get(ctx, clusterKey, &gkeCluster); err != nil {
+		return nil, err
+	}
+
+	return &gkeCluster, nil
+}
+
+func (cs *ClusterStore) GetClusterClient(ctx context.Context, cluster *gkeclusterapis.ContainerCluster) (client.Client, dynamic.Interface, error) {
 	clusterClientConfig, err := cs.getRESTConfig(ctx, cluster)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	cl, err := client.New(clusterClientConfig, client.Options{})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return cl, nil
+	dynCl, err := dynamic.NewForConfig(clusterClientConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	return cl, dynCl, err
 }
 
 func (cs *ClusterStore) getRESTConfig(ctx context.Context, cluster *gkeclusterapis.ContainerCluster) (*rest.Config, error) {
