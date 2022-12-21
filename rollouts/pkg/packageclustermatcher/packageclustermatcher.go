@@ -46,35 +46,53 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 	clusters := m.clusters
 	packages := m.packages
 
+	type ClusterMap struct {
+		cluster     gkeclusterapis.ContainerCluster
+		declaration map[string]interface{}
+	}
+
+	type PackageMap struct {
+		discoveredPackage packagediscovery.DiscoveredPackage
+		declaration       map[string]interface{}
+	}
+
 	allClusterPackages := []ClusterPackages{}
 
+	allClusters := []ClusterMap{}
 	for _, cluster := range clusters {
-		matchedPackages := []packagediscovery.DiscoveredPackage{}
-
-		celCluster := map[string]interface{}{
+		declaration := map[string]interface{}{
 			"name":   cluster.ObjectMeta.Name,
 			"labels": cluster.ObjectMeta.Labels,
 		}
+		allClusters = append(allClusters, ClusterMap{cluster, declaration})
+	}
 
-		for _, discoveredPackage := range packages {
-			celPackage := map[string]interface{}{
-				"org":       discoveredPackage.Org,
-				"repo":      discoveredPackage.Repo,
-				"directory": discoveredPackage.Directory,
-			}
+	allPackages := []PackageMap{}
+	for _, discoveredPackage := range packages {
+		declaration := map[string]interface{}{
+			"org":       discoveredPackage.Org,
+			"repo":      discoveredPackage.Repo,
+			"directory": discoveredPackage.Directory,
+		}
+		allPackages = append(allPackages, PackageMap{discoveredPackage, declaration})
+	}
 
-			isMatch, err := isPackageClusterMatch(matcher.MatchExpression, celCluster, celPackage)
+	for _, cluster := range allClusters {
+		matchedPackages := []packagediscovery.DiscoveredPackage{}
+
+		for _, onePackage := range allPackages {
+			isMatch, err := isPackageClusterMatch(matcher.MatchExpression, cluster.declaration, onePackage.declaration)
 			if err != nil {
 				return nil, fmt.Errorf("unable to execute package cluster matcher expression: %w", err)
 			}
 
 			if isMatch {
-				matchedPackages = append(matchedPackages, discoveredPackage)
+				matchedPackages = append(matchedPackages, onePackage.discoveredPackage)
 			}
 		}
 
 		clusterPackages := ClusterPackages{
-			Cluster:  cluster,
+			Cluster:  cluster.cluster,
 			Packages: matchedPackages,
 		}
 
