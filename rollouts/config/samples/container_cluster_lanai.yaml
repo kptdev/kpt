@@ -15,13 +15,13 @@
 apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerCluster
 metadata:
-  name: maui
+  name: lanai
   namespace: config-control
   labels:
-    location/island: maui
+    location/island: lanai
     location/state: hawaii
 spec:
-  description: Maui autopilot cluster
+  description: Lanai autopilot cluster
   enableAutopilot: true
   location: us-central1
   releaseChannel:

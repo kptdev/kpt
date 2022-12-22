@@ -15,15 +15,9 @@
 apiVersion: gitops.kpt.dev/v1alpha1
 kind: Rollout
 metadata:
-  labels:
-    app.kubernetes.io/name: rollout
-    app.kubernetes.io/instance: rollout-sample
-    app.kubernetes.io/part-of: rollouts
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: rollouts
-  name: rollout-sample
+  name: rollout-kpt-samples
 spec:
-  description: "this is first rollout :)"
+  description: kpt samples rollout
   packages:
     sourceType: git
     git:
