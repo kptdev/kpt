@@ -29,10 +29,13 @@ spec:
     git:
       selector:
         org: GoogleContainerTools
-        name: kpt-samples
+        repo: kpt-samples
         directory: "*"
         revision: main
   targets:
     selector:
       matchExpressions:
         - {key: location/island, operator: In, values: [oahu, maui]}
+  packageToTargetMatcher:
+    type: CEL
+    matchExpression: 'true'
