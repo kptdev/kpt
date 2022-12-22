@@ -35,6 +35,9 @@ type RolloutSpec struct {
 
 	// Targets specifies the clusters that will receive the KRM config packages.
 	Targets ClusterTargetSelector `json:"targets,omitempty"`
+
+	// PackageToTargetMatcher specifies the clusters that will receive a specific package.
+	PackageToTargetMatcher PackageToClusterMatcher `json:"packageToTargetMatcher"`
 }
 
 type ClusterTargetSelector struct {
@@ -65,7 +68,7 @@ type GitSource struct {
 // GitSelector defines the selector to apply to Git.
 type GitSelector struct {
 	Org       string          `json:"org"`
-	Name      string          `json:"name"`
+	Repo      string          `json:"repo"`
 	Directory string          `json:"directory"`
 	Revision  string          `json:"revision"`
 	SecretRef SecretReference `json:"secretRef,omitempty"`
@@ -75,6 +78,14 @@ type GitSelector struct {
 type SecretReference struct {
 	// Name represents the secret name
 	Name string `json:"name,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=CEL
+type MatcherType string
+
+type PackageToClusterMatcher struct {
+	Type            MatcherType `json:"type"`
+	MatchExpression string      `json:"matchExpression"`
 }
 
 // RolloutStatus defines the observed state of Rollout

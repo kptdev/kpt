@@ -29,6 +29,7 @@ import (
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
+	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packageclustermatcher"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
 )
 
@@ -109,7 +110,20 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
+	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(gkeClusters.Items, discoveredPackages)
+
+	allClusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
+
+	if err != nil {
+		logger.Error(err, "get cluster packages failed")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	for _, clusterPackages := range allClusterPackages {
+		clusterName := clusterPackages.Cluster.Name
+
+		logger.Info("cluster packages", "cluster", clusterName, "packagesCount", len(clusterPackages.Packages), "packages", clusterPackages.Packages)
+	}
 
 	return ctrl.Result{}, err
 }
