@@ -64,7 +64,7 @@ type PackagesConfig struct {
 
 // GitSource defines the packages source in Git.
 type GitSource struct {
-	GitRepoSelector GitSelector `json:"selector"`
+	Selector GitSelector `json:"selector"`
 }
 
 // GitSelector defines the selector to apply to Git.
