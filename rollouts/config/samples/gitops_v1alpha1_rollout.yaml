@@ -28,14 +28,18 @@ spec:
     sourceType: git
     git:
       selector:
-        org: GoogleContainerTools
-        repo: kpt-samples
-        directory: "*"
+        org: droot
+        repo: oahu
+        directory: namespaces
         revision: main
-  targets:
-    selector:
-      matchExpressions:
-        - {key: location/island, operator: In, values: [oahu, maui]}
   packageToTargetMatcher:
     type: CEL
     matchExpression: 'true'
+  targets:
+    selector:
+      matchLabels:
+        env: staging
+#      matchExpressions:
+#        - {key: env, operator: In, values: [dev, staging]}
+  strategy:
+    type: AllAtOnce
