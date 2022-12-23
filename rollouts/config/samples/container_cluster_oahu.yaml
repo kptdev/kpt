@@ -18,6 +18,7 @@ metadata:
   name: oahu
   namespace: config-control
   labels:
+    env: staging
     location/island: oahu
     location/state: hawaii
 spec:

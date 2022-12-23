@@ -18,6 +18,7 @@ metadata:
   name: lanai
   namespace: config-control
   labels:
+    env: dev
     location/island: lanai
     location/state: hawaii
 spec:

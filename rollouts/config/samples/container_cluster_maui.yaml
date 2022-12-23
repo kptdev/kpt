@@ -18,6 +18,7 @@ metadata:
   name: maui
   namespace: config-control
   labels:
+    env: prod
     location/island: maui
     location/state: hawaii
 spec:

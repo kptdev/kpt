@@ -15,23 +15,23 @@
 apiVersion: gitops.kpt.dev/v1alpha1
 kind: Rollout
 metadata:
-  name: rollout-kpt-samples
+  name: rollout-oahu
 spec:
-  description: kpt samples rollout
+  description: oahu rollout
   packages:
     sourceType: git
     git:
       selector:
-        org: GoogleContainerTools
-        repo: kpt-samples
-        directory: "*"
+        org: droot
+        repo: oahu
+        directory: namespaces
         revision: main
-  targets:
-    selector:
-      matchExpressions:
-        - {key: location/island, operator: In, values: [oahu, maui]}
   packageToTargetMatcher:
     type: CEL
     matchExpression: 'true'
+  targets:
+    selector:
+      matchLabels:
+        env: staging
   strategy:
     type: AllAtOnce

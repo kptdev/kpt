@@ -33,3 +33,5 @@ spec:
   packageToTargetMatcher:
     type: CEL
     matchExpression: rolloutPackage.repo == cluster.labels['location/island'] + '-apps'
+  strategy:
+    type: AllAtOnce
