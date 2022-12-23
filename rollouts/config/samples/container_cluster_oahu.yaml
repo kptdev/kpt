@@ -15,10 +15,12 @@
 apiVersion: container.cnrm.cloud.google.com/v1beta1
 kind: ContainerCluster
 metadata:
-  name: containercluster-oahu
+  name: oahu
   namespace: config-control
   labels:
+    env: staging
     location/island: oahu
+    location/state: hawaii
 spec:
   description: Oahu autopilot cluster
   enableAutopilot: true
