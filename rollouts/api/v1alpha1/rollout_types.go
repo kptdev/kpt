@@ -38,6 +38,8 @@ type RolloutSpec struct {
 
 	// PackageToTargetMatcher specifies the clusters that will receive a specific package.
 	PackageToTargetMatcher PackageToClusterMatcher `json:"packageToTargetMatcher"`
+	// Strategy specifies the rollout strategy to use for this rollout.
+	Strategy RolloutStrategy `json:"strategy"`
 }
 
 type ClusterTargetSelector struct {
@@ -88,10 +90,52 @@ type PackageToClusterMatcher struct {
 	MatchExpression string      `json:"matchExpression"`
 }
 
+// +kubebuilder:validation:Enum=AllAtOnce;Rolling;Progressive
+type StrategyType string
+
+const (
+	AllAtOnce   StrategyType = "AllAtOnce"
+	Rolling     StrategyType = "Rolling"
+	Progressive StrategyType = "Progressive"
+)
+
+type StrategyAllAtOnce struct{}
+
+type StrategyRolling struct {
+	MaxUnavailable int64 `json:"maxUnavailable"`
+}
+
+// StrategyProgressive allows staged rollouts
+// where the entire rollout will progress through different stages (aka steps, phases or waves).
+type StrategyProgressive struct{}
+
+type RolloutStrategy struct {
+	Type        StrategyType         `json:"type"`
+	AllAtOnce   *StrategyAllAtOnce   `json:"allAtOnce,omitempty"`
+	Rolling     *StrategyRolling     `json:"rolling,omitempty"`
+	Progressive *StrategyProgressive `json:"progressive,omitempty"`
+}
+
 // RolloutStatus defines the observed state of Rollout
 type RolloutStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Conditions describes the reconciliation state of the object.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	ClusterStatuses []ClusterStatus `json:"clusterStatuses,omitempty"`
+}
+
+type ClusterStatus struct {
+	Name          string        `json:"name"`
+	PackageStatus PackageStatus `json:"packageStatus"`
+}
+
+type PackageStatus struct {
+	PackageID  string `json:"packageId"`
+	SyncStatus string `json:"syncStatus"`
 }
 
 //+kubebuilder:object:root=true
