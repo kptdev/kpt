@@ -18,7 +18,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"path/filepath"
+	"regexp"
+	"strings"
 
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/google/go-github/v48/github"
@@ -49,30 +50,84 @@ func NewPackageDiscovery(config gitopsv1alpha1.PackagesConfig, client client.Cli
 }
 
 func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage, error) {
-	gitRepoSelector := d.config.Git.GitRepoSelector
 	gitClient, err := d.getGitHubClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create git client: %w", err)
 	}
 
-	tree, _, err := gitClient.Git.GetTree(ctx, gitRepoSelector.Org, gitRepoSelector.Repo, gitRepoSelector.Revision, true)
-	if err != nil {
-		return nil, fmt.Errorf("unable to fetch tree from git: %w", err)
-	}
-
-	allPaths := []string{}
-	for _, entry := range tree.Entries {
-		if *entry.Type == "tree" {
-			allPaths = append(allPaths, *entry.Path)
-		}
-	}
-
-	packagesPaths := filterDirectories(gitRepoSelector.Directory, allPaths)
-
 	discoveredPackages := []DiscoveredPackage{}
 
-	for _, path := range packagesPaths {
-		thisDiscoveredPackage := DiscoveredPackage{Org: gitRepoSelector.Org, Repo: gitRepoSelector.Repo, Revision: gitRepoSelector.Revision, Directory: path}
+	repositoryNames, err := d.getRepositoryNames(gitClient, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get repositories: %w", err)
+	}
+
+	for _, repositoryName := range repositoryNames {
+		repoPackages, err := d.getPackagesForRepository(gitClient, ctx, repositoryName)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get packages: %w", err)
+		}
+
+		discoveredPackages = append(discoveredPackages, repoPackages...)
+	}
+
+	return discoveredPackages, nil
+}
+
+func (d *PackageDiscovery) getRepositoryNames(gitClient *github.Client, ctx context.Context) ([]string, error) {
+	selector := d.config.Git.Selector
+	repositoryNames := []string{}
+
+	if isSelectorField(selector.Repo) {
+		// TOOD: add pagination
+		listOptions := github.RepositoryListOptions{}
+		listOptions.PerPage = 150
+
+		repositories, _, err := gitClient.Repositories.List(ctx, selector.Org, &listOptions)
+		if err != nil {
+			return nil, err
+		}
+
+		allRepositoryNames := []string{}
+		for _, repository := range repositories {
+			allRepositoryNames = append(allRepositoryNames, *repository.Name)
+		}
+
+		matchRepositoryNames := filterByPattern(selector.Repo, allRepositoryNames)
+
+		repositoryNames = append(repositoryNames, matchRepositoryNames...)
+	} else {
+		repositoryNames = append(repositoryNames, selector.Repo)
+	}
+
+	return repositoryNames, nil
+}
+
+func (d *PackageDiscovery) getPackagesForRepository(gitClient *github.Client, ctx context.Context, repoName string) ([]DiscoveredPackage, error) {
+	discoveredPackages := []DiscoveredPackage{}
+	selector := d.config.Git.Selector
+
+	if isSelectorField(selector.Directory) {
+		tree, _, err := gitClient.Git.GetTree(ctx, selector.Org, repoName, selector.Revision, true)
+		if err != nil {
+			return nil, err
+		}
+
+		allDirectories := []string{}
+		for _, entry := range tree.Entries {
+			if *entry.Type == "tree" {
+				allDirectories = append(allDirectories, *entry.Path)
+			}
+		}
+
+		directories := filterByPattern(selector.Directory, allDirectories)
+
+		for _, directory := range directories {
+			thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: directory}
+			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
+		}
+	} else {
+		thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: selector.Directory}
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}
 
@@ -80,11 +135,11 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage
 }
 
 func (d *PackageDiscovery) getGitHubClient(ctx context.Context) (*github.Client, error) {
-	gitRepoSelector := d.config.Git.GitRepoSelector
+	selector := d.config.Git.Selector
 
 	httpClient := &http.Client{}
 
-	if secretName := gitRepoSelector.SecretRef.Name; secretName != "" {
+	if secretName := selector.SecretRef.Name; secretName != "" {
 		var repositorySecret coreapi.Secret
 		key := client.ObjectKey{Namespace: d.namespace, Name: secretName}
 		if err := d.client.Get(ctx, key, &repositorySecret); err != nil {
@@ -105,14 +160,40 @@ func (d *PackageDiscovery) getGitHubClient(ctx context.Context) (*github.Client,
 	return gitClient, nil
 }
 
-func filterDirectories(pattern string, directories []string) []string {
-	filteredDirectories := []string{}
+func filterByPattern(pattern string, list []string) []string {
+	matches := []string{}
 
-	for _, directory := range directories {
-		if isMatch, _ := filepath.Match(pattern, directory); isMatch {
-			filteredDirectories = append(filteredDirectories, directory)
+	regexPattern := getRegexPattern(pattern)
+
+	for _, value := range list {
+		if isMatch := match(regexPattern, value); isMatch {
+			matches = append(matches, value)
 		}
 	}
 
-	return filteredDirectories
+	return matches
+}
+
+func getRegexPattern(pattern string) string {
+	var result strings.Builder
+
+	result.WriteString("^")
+	for i, literal := range strings.Split(pattern, "*") {
+		if i > 0 {
+			result.WriteString("[^/]+")
+		}
+		result.WriteString(regexp.QuoteMeta(literal))
+	}
+	result.WriteString("$")
+
+	return result.String()
+}
+
+func match(pattern string, value string) bool {
+	result, _ := regexp.MatchString(pattern, value)
+	return result
+}
+
+func isSelectorField(value string) bool {
+	return strings.Contains(value, "*")
 }

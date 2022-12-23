@@ -12,18 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: container.cnrm.cloud.google.com/v1beta1
-kind: ContainerCluster
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: Rollout
 metadata:
-  name: maui
-  namespace: config-control
-  labels:
-    env: prod
-    location/island: maui
-    location/state: hawaii
+  name: rollout-oahu
 spec:
-  description: Maui autopilot cluster
-  enableAutopilot: true
-  location: us-central1
-  releaseChannel:
-    channel: REGULAR
+  description: oahu rollout
+  packages:
+    sourceType: git
+    git:
+      selector:
+        org: droot
+        repo: oahu
+        directory: namespaces
+        revision: main
+  packageToTargetMatcher:
+    type: CEL
+    matchExpression: 'true'
+  targets:
+    selector:
+      matchLabels:
+        env: staging
+  strategy:
+    type: AllAtOnce
