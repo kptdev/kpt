@@ -26,9 +26,6 @@ spec:
         repo: oahu
         directory: namespaces
         revision: main
-  packageToTargetMatcher:
-    type: CEL
-    matchExpression: 'true'
   targets:
     selector:
       matchLabels:

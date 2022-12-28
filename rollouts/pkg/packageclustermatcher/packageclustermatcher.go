@@ -42,7 +42,7 @@ func NewPackageClusterMatcher(clusters []gkeclusterapis.ContainerCluster, packag
 	}
 }
 
-func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.PackageToClusterMatcher) ([]ClusterPackages, error) {
+func (m *PackageClusterMatcher) GetClusterPackages(matcher *gitopsv1alpha1.PackageToClusterMatcher) ([]ClusterPackages, error) {
 	clusters := m.clusters
 	packages := m.packages
 
@@ -51,21 +51,10 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 	for _, cluster := range clusters {
 		matchedPackages := []packagediscovery.DiscoveredPackage{}
 
-		celCluster := map[string]interface{}{
-			"name":   cluster.ObjectMeta.Name,
-			"labels": cluster.ObjectMeta.Labels,
-		}
-
 		for _, discoveredPackage := range packages {
-			celPackage := map[string]interface{}{
-				"org":       discoveredPackage.Org,
-				"repo":      discoveredPackage.Repo,
-				"directory": discoveredPackage.Directory,
-			}
-
-			isMatch, err := isPackageClusterMatch(matcher.MatchExpression, celCluster, celPackage)
+			isMatch, err := isPackageClusterMatch(matcher, cluster, discoveredPackage)
 			if err != nil {
-				return nil, fmt.Errorf("unable to execute package cluster matcher expression: %w", err)
+				return nil, fmt.Errorf("unable to execute package cluster matcher: %w", err)
 			}
 
 			if isMatch {
@@ -84,7 +73,30 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 	return allClusterPackages, nil
 }
 
-func isPackageClusterMatch(expr string, cluster, rolloutPackage map[string]interface{}) (bool, error) {
+func isPackageClusterMatch(matcher *gitopsv1alpha1.PackageToClusterMatcher, cluster gkeclusterapis.ContainerCluster, discoveredPackage packagediscovery.DiscoveredPackage) (bool, error) {
+	switch {
+	case matcher == nil:
+		return true, nil
+
+	case matcher.Type == "CEL":
+		celCluster := map[string]interface{}{
+			"name":   cluster.ObjectMeta.Name,
+			"labels": cluster.ObjectMeta.Labels,
+		}
+		celPackage := map[string]interface{}{
+			"org":       discoveredPackage.Org,
+			"repo":      discoveredPackage.Repo,
+			"directory": discoveredPackage.Directory,
+		}
+
+		return isCELPackageClusterMatch(matcher.MatchExpression, celCluster, celPackage)
+
+	default:
+		return false, fmt.Errorf("failed finding matcher for %s", matcher.Type)
+	}
+}
+
+func isCELPackageClusterMatch(expr string, cluster, rolloutPackage map[string]interface{}) (bool, error) {
 	env, err := cel.NewEnv(
 		cel.Declarations(
 			decls.NewVar("cluster", decls.Dyn),

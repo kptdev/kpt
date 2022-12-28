@@ -30,8 +30,5 @@ spec:
     selector:
       matchExpressions:
         - {key: location/island, operator: In, values: [oahu, maui]}
-  packageToTargetMatcher:
-    type: CEL
-    matchExpression: 'true'
   strategy:
     type: AllAtOnce

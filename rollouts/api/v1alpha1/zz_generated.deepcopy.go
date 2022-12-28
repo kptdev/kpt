@@ -338,7 +338,11 @@ func (in *RolloutSpec) DeepCopyInto(out *RolloutSpec) {
 	*out = *in
 	out.Packages = in.Packages
 	in.Targets.DeepCopyInto(&out.Targets)
-	out.PackageToTargetMatcher = in.PackageToTargetMatcher
+	if in.PackageToTargetMatcher != nil {
+		in, out := &in.PackageToTargetMatcher, &out.PackageToTargetMatcher
+		*out = new(PackageToClusterMatcher)
+		**out = **in
+	}
 	in.Strategy.DeepCopyInto(&out.Strategy)
 }
 

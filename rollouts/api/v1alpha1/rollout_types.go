@@ -37,7 +37,10 @@ type RolloutSpec struct {
 	Targets ClusterTargetSelector `json:"targets,omitempty"`
 
 	// PackageToTargetMatcher specifies the clusters that will receive a specific package.
-	PackageToTargetMatcher PackageToClusterMatcher `json:"packageToTargetMatcher"`
+	// +nullable
+	// +optional
+	PackageToTargetMatcher *PackageToClusterMatcher `json:"packageToTargetMatcher,omitempty"`
+
 	// Strategy specifies the rollout strategy to use for this rollout.
 	Strategy RolloutStrategy `json:"strategy"`
 }

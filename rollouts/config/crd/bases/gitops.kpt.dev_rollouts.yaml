@@ -41,6 +41,7 @@ spec:
               packageToTargetMatcher:
                 description: PackageToTargetMatcher specifies the clusters that will
                   receive a specific package.
+                nullable: true
                 properties:
                   matchExpression:
                     type: string
@@ -177,7 +178,6 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
             required:
-            - packageToTargetMatcher
             - packages
             - strategy
             type: object
