@@ -20,8 +20,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v48/github"
 	"golang.org/x/oauth2"
 	coreapi "k8s.io/api/core/v1"
@@ -29,9 +32,10 @@ import (
 )
 
 type PackageDiscovery struct {
-	config    gitopsv1alpha1.PackagesConfig
 	client    client.Client
 	namespace string
+	mutex     sync.Mutex
+	cache     *Cache
 }
 
 type DiscoveredPackage struct {
@@ -41,29 +45,43 @@ type DiscoveredPackage struct {
 	Revision  string
 }
 
-func NewPackageDiscovery(config gitopsv1alpha1.PackagesConfig, client client.Client, namespace string) *PackageDiscovery {
+type Cache struct {
+	config     gitopsv1alpha1.PackagesConfig
+	packages   []DiscoveredPackage
+	expiration time.Time
+}
+
+func NewPackageDiscovery(client client.Client, namespace string) *PackageDiscovery {
 	return &PackageDiscovery{
-		config:    config,
 		client:    client,
 		namespace: namespace,
 	}
 }
 
-func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage, error) {
-	gitClient, err := d.getGitHubClient(ctx)
+func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
+	if d.useCache(config) {
+		return d.cache.packages, nil
+	}
+
+	gitSelector := config.Git.Selector
+
+	gitClient, err := d.getGitHubClient(ctx, gitSelector)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create git client: %w", err)
 	}
 
 	discoveredPackages := []DiscoveredPackage{}
 
-	repositoryNames, err := d.getRepositoryNames(gitClient, ctx)
+	repositoryNames, err := d.getRepositoryNames(gitClient, gitSelector, ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get repositories: %w", err)
 	}
 
 	for _, repositoryName := range repositoryNames {
-		repoPackages, err := d.getPackagesForRepository(gitClient, ctx, repositoryName)
+		repoPackages, err := d.getPackagesForRepository(gitClient, ctx, gitSelector, repositoryName)
 		if err != nil {
 			return nil, fmt.Errorf("unable to get packages: %w", err)
 		}
@@ -71,11 +89,16 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context) ([]DiscoveredPackage
 		discoveredPackages = append(discoveredPackages, repoPackages...)
 	}
 
+	d.cache = &Cache{
+		packages:   discoveredPackages,
+		config:     config,
+		expiration: time.Now().Add(1 * time.Minute),
+	}
+
 	return discoveredPackages, nil
 }
 
-func (d *PackageDiscovery) getRepositoryNames(gitClient *github.Client, ctx context.Context) ([]string, error) {
-	selector := d.config.Git.Selector
+func (d *PackageDiscovery) getRepositoryNames(gitClient *github.Client, selector gitopsv1alpha1.GitSelector, ctx context.Context) ([]string, error) {
 	repositoryNames := []string{}
 
 	if isSelectorField(selector.Repo) {
@@ -103,9 +126,8 @@ func (d *PackageDiscovery) getRepositoryNames(gitClient *github.Client, ctx cont
 	return repositoryNames, nil
 }
 
-func (d *PackageDiscovery) getPackagesForRepository(gitClient *github.Client, ctx context.Context, repoName string) ([]DiscoveredPackage, error) {
+func (d *PackageDiscovery) getPackagesForRepository(gitClient *github.Client, ctx context.Context, selector gitopsv1alpha1.GitSelector, repoName string) ([]DiscoveredPackage, error) {
 	discoveredPackages := []DiscoveredPackage{}
-	selector := d.config.Git.Selector
 
 	if isSelectorField(selector.Directory) {
 		tree, _, err := gitClient.Git.GetTree(ctx, selector.Org, repoName, selector.Revision, true)
@@ -134,9 +156,7 @@ func (d *PackageDiscovery) getPackagesForRepository(gitClient *github.Client, ct
 	return discoveredPackages, nil
 }
 
-func (d *PackageDiscovery) getGitHubClient(ctx context.Context) (*github.Client, error) {
-	selector := d.config.Git.Selector
-
+func (d *PackageDiscovery) getGitHubClient(ctx context.Context, selector gitopsv1alpha1.GitSelector) (*github.Client, error) {
 	httpClient := &http.Client{}
 
 	if secretName := selector.SecretRef.Name; secretName != "" {
@@ -158,6 +178,10 @@ func (d *PackageDiscovery) getGitHubClient(ctx context.Context) (*github.Client,
 	gitClient := github.NewClient(httpClient)
 
 	return gitClient, nil
+}
+
+func (d *PackageDiscovery) useCache(config gitopsv1alpha1.PackagesConfig) bool {
+	return d.cache != nil && cmp.Equal(config, d.cache.config) && time.Now().Before(d.cache.expiration)
 }
 
 func filterByPattern(pattern string, list []string) []string {
