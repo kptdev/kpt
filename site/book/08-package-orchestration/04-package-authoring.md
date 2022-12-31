@@ -109,6 +109,13 @@ You can find out more about the `upstream` and `upstreamLock` sections of the
 `Kptfile` in an [earlier chapter](/book/03-packages/01-getting-a-package)
 of the book.
 
+> A cloned package must be created in a repository in the same namespace as
+> the source package. Cloning a package with the Package Orchestration Service
+> retains a reference to the upstream package revision in the clone, and
+> cross-namespace references are not allowed. Package revisions in repositories
+> in other namespaces can be cloned using a reference directly to the underlying
+> oci or git repository as described below.
+
 You can also clone a package from a repository that is _not_ registered with
 Porch, for example:
 
