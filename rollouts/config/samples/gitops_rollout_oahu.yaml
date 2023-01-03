@@ -19,8 +19,8 @@ metadata:
 spec:
   description: oahu rollout
   packages:
-    sourceType: git
-    git:
+    sourceType: GitHub
+    github:
       selector:
         org: droot
         repo: oahu
