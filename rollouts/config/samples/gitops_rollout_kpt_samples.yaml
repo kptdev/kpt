@@ -19,8 +19,8 @@ metadata:
 spec:
   description: kpt samples rollout
   packages:
-    sourceType: git
-    git:
+    sourceType: GitHub
+    github:
       selector:
         org: GoogleContainerTools
         repo: kpt-samples
