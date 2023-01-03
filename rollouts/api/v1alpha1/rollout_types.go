@@ -52,23 +52,27 @@ type ClusterRef struct {
 	Name string `json:"name"`
 }
 
-// +kubebuilder:validation:Enum=git
+const (
+	GitHub PackageSourceType = "GitHub"
+)
+
+// +kubebuilder:validation:Enum=GitHub
 type PackageSourceType string
 
 // PackagesConfig defines the packages the Rollout should deploy.
 type PackagesConfig struct {
 	SourceType PackageSourceType `json:"sourceType"`
 
-	Git GitSource `json:"git"`
+	GitHub GitHubSource `json:"github"`
 }
 
-// GitSource defines the packages source in Git.
-type GitSource struct {
-	Selector GitSelector `json:"selector"`
+// GitHubSource defines the packages source in Git.
+type GitHubSource struct {
+	Selector GitHubSelector `json:"selector"`
 }
 
-// GitSelector defines the selector to apply to Git.
-type GitSelector struct {
+// GitHubSelector defines the selector to apply to Git.
+type GitHubSelector struct {
 	Org       string          `json:"org"`
 	Repo      string          `json:"repo"`
 	Directory string          `json:"directory"`
