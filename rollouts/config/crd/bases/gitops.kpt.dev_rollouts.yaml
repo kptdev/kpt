@@ -55,12 +55,12 @@ spec:
               packages:
                 description: Packages source for this Rollout.
                 properties:
-                  git:
-                    description: GitSource defines the packages source in Git.
+                  github:
+                    description: GitHubSource defines the packages source in Git.
                     properties:
                       selector:
-                        description: GitSelector defines the selector to apply to
-                          Git.
+                        description: GitHubSelector defines the selector to apply
+                          to Git.
                         properties:
                           directory:
                             type: string
@@ -89,10 +89,10 @@ spec:
                     type: object
                   sourceType:
                     enum:
-                    - git
+                    - GitHub
                     type: string
                 required:
-                - git
+                - github
                 - sourceType
                 type: object
               strategy:

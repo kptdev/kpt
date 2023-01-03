@@ -19,8 +19,8 @@ metadata:
 spec:
   description: repo selector rollout
   packages:
-    sourceType: git
-    git:
+    sourceType: GitHub
+    github:
       selector:
         org: droot
         repo: "*-apps"
