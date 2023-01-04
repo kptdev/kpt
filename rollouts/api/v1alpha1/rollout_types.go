@@ -75,7 +75,7 @@ type GitHubSource struct {
 type GitHubSelector struct {
 	Org       string          `json:"org"`
 	Repo      string          `json:"repo"`
-	Directory string          `json:"directory"`
+	Directory string          `json:"directory,omitempty"`
 	Revision  string          `json:"revision"`
 	SecretRef SecretReference `json:"secretRef,omitempty"`
 }

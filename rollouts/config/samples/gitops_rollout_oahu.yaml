@@ -24,7 +24,7 @@ spec:
       selector:
         org: droot
         repo: oahu
-        directory: namespaces
+        directory: "/"
         revision: main
   packageToTargetMatcher:
     type: CEL

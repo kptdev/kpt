@@ -79,7 +79,6 @@ spec:
                                 type: string
                             type: object
                         required:
-                        - directory
                         - org
                         - repo
                         - revision
