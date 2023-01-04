@@ -128,18 +128,7 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	packageDiscoveryClient := func() *packagediscovery.PackageDiscovery {
-		r.mutex.Lock()
-		defer r.mutex.Unlock()
-
-		client, found := r.packageDiscoveryCache[req.NamespacedName]
-		if !found {
-			client = packagediscovery.NewPackageDiscovery(r.Client, rollout.Namespace)
-			r.packageDiscoveryCache[req.NamespacedName] = client
-		}
-
-		return client
-	}()
+	packageDiscoveryClient := r.getPackageDiscoveryClient(req.NamespacedName)
 
 	err := r.reconcileRollout(ctx, &rollout, packageDiscoveryClient)
 	if err != nil {
@@ -147,6 +136,19 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName types.NamespacedName) *packagediscovery.PackageDiscovery {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	client, found := r.packageDiscoveryCache[rolloutNamespacedName]
+	if !found {
+		client = packagediscovery.NewPackageDiscovery(r.Client, rolloutNamespacedName.Namespace)
+		r.packageDiscoveryCache[rolloutNamespacedName] = client
+	}
+
+	return client
 }
 
 func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
