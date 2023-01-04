@@ -18,7 +18,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"os"
 
 	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
@@ -28,11 +27,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/discovery"
-	memory "k8s.io/client-go/discovery/cached"
-	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/restmapper"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,6 +53,8 @@ func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
 // RemoteRootSyncSetReconciler reconciles RemoteRootSyncSet objects
 type RemoteRootSyncSetReconciler struct {
 	Options
+
+	remoteclient.RemoteClientGetter
 
 	client.Client
 
@@ -229,37 +226,20 @@ func updateAggregateStatus(subject *api.RemoteRootSyncSet) bool {
 }
 
 func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, subject *api.RemoteRootSyncSet, clusterRef *api.ClusterRef) (*applyset.ApplyResults, error) {
-	var restConfig *rest.Config
-
-	if os.Getenv("HACK_ENABLE_LOOPBACK") != "" {
-		if clusterRef.Name == "loopback!" {
-			restConfig = r.localRESTConfig
-			klog.Warningf("HACK: using loopback! configuration")
-		}
-	}
-
-	if restConfig == nil {
-		rc, err := remoteclient.GetRemoteClient(ctx, r.Client, clusterRef, subject.Namespace)
-		if err != nil {
-			return nil, err
-		}
-		restConfig = rc
-	}
-
-	client, err := dynamic.NewForConfig(restConfig)
+	remoteClient, err := r.GetRemoteClient(ctx, clusterRef, subject.Namespace)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create a new dynamic client: %w", err)
+		return nil, err
 	}
 
-	// TODO: Use a better discovery client
-	discovery, err := discovery.NewDiscoveryClientForConfig(restConfig)
+	restMapper, err := remoteClient.RESTMapper()
 	if err != nil {
-		return nil, fmt.Errorf("error building discovery client: %w", err)
+		return nil, err
 	}
 
-	cached := memory.NewMemCacheClient(discovery)
-
-	restMapper := restmapper.NewDeferredDiscoveryRESTMapper(cached)
+	dynamicClient, err := remoteClient.DynamicClient()
+	if err != nil {
+		return nil, err
+	}
 
 	objects, err := r.BuildObjectsToApply(ctx, subject)
 	if err != nil {
@@ -278,7 +258,7 @@ func (r *RemoteRootSyncSetReconciler) applyToClusterRef(ctx context.Context, sub
 
 	applyset, err := applyset.New(applyset.Options{
 		RESTMapper:   restMapper,
-		Client:       client,
+		Client:       dynamicClient,
 		PatchOptions: patchOptions,
 	})
 	if err != nil {
@@ -336,6 +316,10 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 // SetupWithManager sets up the controller with the Manager.
 func (r *RemoteRootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+		return err
+	}
+
+	if err := r.RemoteClientGetter.Init(mgr); err != nil {
 		return err
 	}
 

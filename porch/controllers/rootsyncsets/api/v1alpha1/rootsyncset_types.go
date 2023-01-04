@@ -31,6 +31,22 @@ type ClusterRef struct {
 	Namespace  string `json:"namespace,omitempty"`
 }
 
+func (r *ClusterRef) GetKind() string {
+	return r.Kind
+}
+
+func (r *ClusterRef) GetName() string {
+	return r.Name
+}
+
+func (r *ClusterRef) GetNamespace() string {
+	return r.Namespace
+}
+
+func (r *ClusterRef) GetAPIVersion() string {
+	return r.ApiVersion
+}
+
 type RootSyncInfo struct {
 	Spec *RootSyncSpec `json:"spec,omitempty"`
 }
