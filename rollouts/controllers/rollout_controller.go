@@ -406,6 +406,10 @@ func toRootSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.Ro
 }
 
 func pkgID(dpkg *packagediscovery.DiscoveredPackage) string {
+	if dpkg.Directory == "" || dpkg.Directory == "." || dpkg.Directory == "/" {
+		return fmt.Sprintf("%s-%s", dpkg.Org, dpkg.Repo)
+	}
+
 	return fmt.Sprintf("%s-%s-%s", dpkg.Org, dpkg.Repo, dpkg.Directory)
 }
 
