@@ -20,6 +20,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -273,11 +274,23 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 }
 
 func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, targets *Targets) ([]gitopsv1alpha1.ClusterStatus, error) {
-
 	clusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
-	if rollout.Spec.Strategy.Type != gitopsv1alpha1.AllAtOnce {
+	if rollout.Spec.Strategy.Type != gitopsv1alpha1.AllAtOnce && rollout.Spec.Strategy.Type != gitopsv1alpha1.RollingUpdate {
 		return clusterStatuses, fmt.Errorf("%v strategy not supported yet", rollout.Spec.Strategy.Type)
+	}
+
+	concurrentUpgrades := 0
+	maxConcurrent := math.MaxInt
+
+	for _, target := range targets.Unchanged {
+		if !isRRSSynced(target) {
+			concurrentUpgrades++
+		}
+	}
+
+	if rollout.Spec.Strategy.Type == gitopsv1alpha1.RollingUpdate {
+		maxConcurrent = int(rollout.Spec.Strategy.RollingUpdate.MaxConcurrent)
 	}
 
 	for _, target := range targets.ToBeCreated {
@@ -287,31 +300,59 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 			rootSyncSpec,
 			pkgID(target.packageRef),
 		)
-		if err := r.Create(ctx, rrs); err != nil {
-			klog.Warningf("Error creating RemoteRootSync %s: %v", rrs.Name, err)
-			return nil, err
+
+		if maxConcurrent > concurrentUpgrades {
+			if err := r.Create(ctx, rrs); err != nil {
+				klog.Warningf("Error creating RemoteRootSync %s: %v", rrs.Name, err)
+				return nil, err
+			}
+			concurrentUpgrades++
+			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
+				Name: rrs.Spec.ClusterRef.Name,
+				PackageStatus: gitopsv1alpha1.PackageStatus{
+					PackageID:  rrs.Name,
+					SyncStatus: rrs.Status.SyncStatus,
+					Status:     "Progressing",
+				},
+			})
+		} else {
+			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
+				Name: rrs.Spec.ClusterRef.Name,
+				PackageStatus: gitopsv1alpha1.PackageStatus{
+					PackageID:  rrs.Name,
+					SyncStatus: "OutOfSync",
+					Status:     "Waiting",
+				},
+			})
+
 		}
-		clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
-			Name: rrs.Spec.ClusterRef.Name,
-			PackageStatus: gitopsv1alpha1.PackageStatus{
-				PackageID:  rrs.Name,
-				SyncStatus: rrs.Status.SyncStatus,
-			},
-		})
 	}
 
 	for _, target := range targets.ToBeUpdated {
-		if err := r.Update(ctx, target); err != nil {
-			klog.Warningf("Error updating RemoteRootSync %s: %v", target.Name, err)
-			return nil, err
+		if maxConcurrent > concurrentUpgrades {
+			if err := r.Update(ctx, target); err != nil {
+				klog.Warningf("Error updating RemoteRootSync %s: %v", target.Name, err)
+				return nil, err
+			}
+			concurrentUpgrades++
+			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
+				Name: target.Spec.ClusterRef.Name,
+				PackageStatus: gitopsv1alpha1.PackageStatus{
+					PackageID:  target.Name,
+					SyncStatus: target.Status.SyncStatus,
+					Status:     "Progressing",
+				},
+			})
+		} else {
+			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
+				Name: target.Spec.ClusterRef.Name,
+				PackageStatus: gitopsv1alpha1.PackageStatus{
+					PackageID:  target.Name,
+					SyncStatus: "OutOfSync",
+					Status:     "Waiting",
+				},
+			})
 		}
-		clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
-			Name: target.Spec.ClusterRef.Name,
-			PackageStatus: gitopsv1alpha1.PackageStatus{
-				PackageID:  target.Name,
-				SyncStatus: target.Status.SyncStatus,
-			},
-		})
 	}
 
 	for _, target := range targets.ToBeDeleted {
@@ -322,11 +363,20 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.Unchanged {
+		status := "Progressing"
+
+		if isRRSSynced(target) {
+			status = "Synced"
+		} else if isRRSErrored(target) {
+			status = "Stalled"
+		}
+
 		clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
 			Name: target.Spec.ClusterRef.Name,
 			PackageStatus: gitopsv1alpha1.PackageStatus{
 				PackageID:  target.Name,
 				SyncStatus: target.Status.SyncStatus,
+				Status:     status,
 			},
 		})
 	}
@@ -384,6 +434,17 @@ func isRRSSynced(rss *gitopsv1alpha1.RemoteRootSync) bool {
 	}
 
 	if rss.Status.SyncStatus == "Synced" {
+		return true
+	}
+	return false
+}
+
+func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
+	if rss.Generation != rss.Status.ObservedGeneration {
+		return false
+	}
+
+	if rss.Status.SyncStatus == "Error" {
 		return true
 	}
 	return false

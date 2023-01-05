@@ -32,6 +32,8 @@ spec:
   targets:
     selector:
       matchLabels:
-        env: staging
+        location/state: hawaii
   strategy:
-    type: AllAtOnce
+    type: RollingUpdate
+    rollingUpdate:
+      maxConcurrent: 2

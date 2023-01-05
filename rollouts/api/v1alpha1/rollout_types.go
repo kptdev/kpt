@@ -94,19 +94,19 @@ type PackageToClusterMatcher struct {
 	MatchExpression string      `json:"matchExpression"`
 }
 
-// +kubebuilder:validation:Enum=AllAtOnce;Rolling;Progressive
+// +kubebuilder:validation:Enum=AllAtOnce;RollingUpdate;Progressive
 type StrategyType string
 
 const (
-	AllAtOnce   StrategyType = "AllAtOnce"
-	Rolling     StrategyType = "Rolling"
-	Progressive StrategyType = "Progressive"
+	AllAtOnce     StrategyType = "AllAtOnce"
+	RollingUpdate StrategyType = "RollingUpdate"
+	Progressive   StrategyType = "Progressive"
 )
 
 type StrategyAllAtOnce struct{}
 
-type StrategyRolling struct {
-	MaxUnavailable int64 `json:"maxUnavailable"`
+type StrategyRollingUpdate struct {
+	MaxConcurrent int64 `json:"maxConcurrent"`
 }
 
 // StrategyProgressive allows staged rollouts
@@ -114,10 +114,10 @@ type StrategyRolling struct {
 type StrategyProgressive struct{}
 
 type RolloutStrategy struct {
-	Type        StrategyType         `json:"type"`
-	AllAtOnce   *StrategyAllAtOnce   `json:"allAtOnce,omitempty"`
-	Rolling     *StrategyRolling     `json:"rolling,omitempty"`
-	Progressive *StrategyProgressive `json:"progressive,omitempty"`
+	Type          StrategyType           `json:"type"`
+	AllAtOnce     *StrategyAllAtOnce     `json:"allAtOnce,omitempty"`
+	RollingUpdate *StrategyRollingUpdate `json:"rollingUpdate,omitempty"`
+	Progressive   *StrategyProgressive   `json:"progressive,omitempty"`
 }
 
 // RolloutStatus defines the observed state of Rollout
@@ -140,6 +140,7 @@ type ClusterStatus struct {
 type PackageStatus struct {
 	PackageID  string `json:"packageId"`
 	SyncStatus string `json:"syncStatus"`
+	Status     string `json:"status"`
 }
 
 //+kubebuilder:object:root=true
