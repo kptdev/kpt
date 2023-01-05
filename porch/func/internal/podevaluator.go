@@ -205,29 +205,44 @@ func (pcm *podCacheManager) warmupCache(podTTLConfig string) error {
 		return err
 	}
 
-	// We create the pods concurrently to speed it up.
-	var wg sync.WaitGroup
-	for fnImage, ttlStr := range podsTTL {
-		wg.Add(1)
-		go func(img, ttlSt string) {
-			klog.Infof("preloading pod cache for function %v with TTL %v", img, ttlSt)
-			defer wg.Done()
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			defer cancel()
-			ttl, err := time.ParseDuration(ttlSt)
-			if err != nil {
-				klog.Warningf("unable to parse duration from the config file for function %v: %w", fnImage, err)
-				ttl = pcm.podTTL
-			}
-			// We invoke the function with useGenerateName=false so that the pod name is fixed,
-			// since we want to ensure only one pod is created for each function.
-			pcm.podManager.getFuncEvalPodClient(ctx, img, ttl, false)
-			klog.Infof("preloaded pod cache for function %v", img)
-		}(fnImage, ttlStr)
-	}
-	// Wait for the cache warming up to finish before returning.
-	wg.Wait()
+	// We precreate the pods (concurrently) to speed it up.
+	forEachConcurrently(podsTTL, func(fnImage string, ttlStr string) {
+		klog.Infof("preloading pod cache for function %v with TTL %v", fnImage, ttlStr)
+
+		ttl, err := time.ParseDuration(ttlStr)
+		if err != nil {
+			klog.Warningf("unable to parse duration from the config file for function %v: %w", fnImage, err)
+			ttl = pcm.podTTL
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+
+		// We invoke the function with useGenerateName=false so that the pod name is fixed,
+		// since we want to ensure only one pod is created for each function.
+		pcm.podManager.getFuncEvalPodClient(ctx, fnImage, ttl, false)
+		klog.Infof("preloaded pod cache for function %v", fnImage)
+	})
+
 	return nil
+}
+
+// forEachConcurrently runs fn for each entry in the map m, in parallel goroutines.
+// It waits for each to finish before returning.
+func forEachConcurrently(m map[string]string, fn func(k string, v string)) {
+	var wg sync.WaitGroup
+	for k, v := range m {
+		k := k
+		v := v
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			fn(k, v)
+		}()
+	}
+	// Wait for all the functions to complete.
+	wg.Wait()
 }
 
 // podCacheManager responds to the requestCh and the podReadyCh and does the
