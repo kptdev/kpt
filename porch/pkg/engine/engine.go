@@ -20,11 +20,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
-	"unicode"
 
 	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -35,6 +33,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/objects"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -1385,42 +1384,17 @@ func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repo
 
 // ExtractContextConfigMap returns the package-context configmap, if found
 func ExtractContextConfigMap(resources map[string]string) (*unstructured.Unstructured, error) {
+	unstructureds, err := objects.Parser{}.AsUnstructureds(resources)
+	if err != nil {
+		return nil, err
+	}
+
 	var matches []*unstructured.Unstructured
-
-	for itemPath, itemContents := range resources {
-		ext := path.Ext(itemPath)
-		ext = strings.ToLower(ext)
-
-		parse := false
-		switch ext {
-		case ".yaml", ".yml":
-			parse = true
-
-		default:
-			klog.Warningf("ignoring non-yaml file %s", itemPath)
-		}
-
-		if !parse {
-			continue
-		}
-		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
-		for _, s := range strings.Split(itemContents, "\n---\n") {
-			if isWhitespace(s) {
-				continue
-			}
-
-			o := &unstructured.Unstructured{}
-			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
-				return nil, fmt.Errorf("error parsing yaml from %s: %w", itemPath, err)
-			}
-
-			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
-
-			configMapGK := schema.GroupKind{Kind: "ConfigMap"}
-			if o.GroupVersionKind().GroupKind() == configMapGK {
-				if o.GetName() == builtins.PkgContextName {
-					matches = append(matches, o)
-				}
+	for _, o := range unstructureds {
+		configMapGK := schema.GroupKind{Kind: "ConfigMap"}
+		if o.GroupVersionKind().GroupKind() == configMapGK {
+			if o.GetName() == builtins.PkgContextName {
+				matches = append(matches, o)
 			}
 		}
 	}
@@ -1433,13 +1407,4 @@ func ExtractContextConfigMap(resources map[string]string) (*unstructured.Unstruc
 	}
 
 	return matches[0], nil
-}
-
-func isWhitespace(s string) bool {
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			return false
-		}
-	}
-	return true
 }
