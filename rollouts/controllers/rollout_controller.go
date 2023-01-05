@@ -20,11 +20,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"sync"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,6 +60,9 @@ type RolloutReconciler struct {
 	store *clusterstore.ClusterStore
 
 	Scheme *runtime.Scheme
+
+	mutex                 sync.Mutex
+	packageDiscoveryCache map[types.NamespacedName]*packagediscovery.PackageDiscovery
 }
 
 //+kubebuilder:rbac:groups=gitops.kpt.dev,resources=rollouts,verbs=get;list;watch;create;update;patch;delete
@@ -105,6 +110,14 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	} else {
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(&rollout, myFinalizerName) {
+			func() {
+				r.mutex.Lock()
+				defer r.mutex.Unlock()
+
+				// clean cache
+				delete(r.packageDiscoveryCache, req.NamespacedName)
+			}()
+
 			// remove our finalizer from the list and update it.
 			controllerutil.RemoveFinalizer(&rollout, myFinalizerName)
 			if err := r.Update(ctx, &rollout); err != nil {
@@ -115,7 +128,9 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	err := r.reconcileRollout(ctx, &rollout)
+	packageDiscoveryClient := r.getPackageDiscoveryClient(req.NamespacedName)
+
+	err := r.reconcileRollout(ctx, &rollout, packageDiscoveryClient)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -123,7 +138,20 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	return ctrl.Result{}, nil
 }
 
-func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout) error {
+func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName types.NamespacedName) *packagediscovery.PackageDiscovery {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	client, found := r.packageDiscoveryCache[rolloutNamespacedName]
+	if !found {
+		client = packagediscovery.NewPackageDiscovery(r.Client, rolloutNamespacedName.Namespace)
+		r.packageDiscoveryCache[rolloutNamespacedName] = client
+	}
+
+	return client
+}
+
+func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
 	logger := log.FromContext(ctx)
 
 	clusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
@@ -132,9 +160,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	}
 	logger.Info("discovered clusters", "count", len(clusters.Items))
 
-	packageDiscoveryClient := packagediscovery.NewPackageDiscovery(rollout.Spec.Packages, r.Client, rollout.Namespace)
-
-	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx)
+	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
 		logger.Error(err, "failed to discover packages")
 		return client.IgnoreNotFound(err)
@@ -422,6 +448,8 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 	r.Client = mgr.GetClient()
+
+	r.packageDiscoveryCache = make(map[types.NamespacedName]*packagediscovery.PackageDiscovery)
 
 	// setup the clusterstore
 	r.store = &clusterstore.ClusterStore{
