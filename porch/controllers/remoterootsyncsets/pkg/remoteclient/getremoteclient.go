@@ -49,21 +49,32 @@ const (
 	configControllerApiVersion = "configcontroller.cnrm.cloud.google.com/v1beta1"
 )
 
+var hubMembershipGVK = schema.GroupVersionKind{
+	Kind:    "GKEHubMembership",
+	Group:   "gkehub.cnrm.cloud.google.com",
+	Version: "v1beta1",
+}
+
 type RemoteClientGetter struct {
 	client.Client
 
 	workloadIdentity WorkloadIdentityHelper
+
+	projectCache ProjectCache
 }
 
 // Init performs one-off initialization of the object.
 func (r *RemoteClientGetter) Init(mgr ctrl.Manager) error {
 	r.Client = mgr.GetClient()
 
+	if err := r.projectCache.Init(mgr); err != nil {
+		return err
+	}
+
 	return r.workloadIdentity.Init(mgr.GetConfig())
 }
 
-// getCCRESTConfig builds a rest.Config for accessing the config controller cluster,
-// this is a tmp workaround.
+// getCCRESTConfig builds a rest.Config for accessing the config controller cluster.
 func (r *RemoteClientGetter) getCCRESTConfig(ctx context.Context, cluster *unstructured.Unstructured) (*rest.Config, error) {
 	gkeResourceLink, _, err := unstructured.NestedString(cluster.Object, "status", "gkeResourceLink")
 	if err != nil {
@@ -81,11 +92,12 @@ func (r *RemoteClientGetter) getCCRESTConfig(ctx context.Context, cluster *unstr
 	clusterName := googleURL.Extra["clusters"]
 	klog.Infof("cluster name is %s", clusterName)
 
-	tokenSource, err := r.getConfigConnectorContextTokenSource(ctx, cluster.GetNamespace())
+	tokenSource, err := r.getConfigConnectorTokenSource(ctx, cluster.GetNamespace())
 	if err != nil {
 		return nil, err
 	}
 
+	// Temporary workaround for getting the cluster certificate, update after ACP add new fields
 	gkeClient, err := container.NewClusterManagerClient(ctx, option.WithTokenSource(tokenSource), option.WithQuotaProject(projectID))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new cluster manager client: %w", err)
@@ -122,8 +134,8 @@ func (r *RemoteClientGetter) getCCRESTConfig(ctx context.Context, cluster *unstr
 	return restConfig, nil
 }
 
-// getConfigConnectorContextTokenSource gets and returns the ConfigConnectorContext for the given namespace.
-func (r *RemoteClientGetter) getConfigConnectorContextTokenSource(ctx context.Context, ns string) (oauth2.TokenSource, error) {
+// getConfigConnectorTokenSource gets and returns the token source to authenticate as KCC in the given namespace.
+func (r *RemoteClientGetter) getConfigConnectorTokenSource(ctx context.Context, ns string) (oauth2.TokenSource, error) {
 	if os.Getenv("USE_DEV_AUTH") != "" {
 		klog.Warningf("using default authentication, intended for local development only")
 		accessToken, err := GetDefaultAccessToken(ctx)
@@ -136,6 +148,58 @@ func (r *RemoteClientGetter) getConfigConnectorContextTokenSource(ctx context.Co
 	gvr := schema.GroupVersionResource{
 		Group:    "core.cnrm.cloud.google.com",
 		Version:  "v1beta1",
+		Resource: "configconnectors",
+	}
+
+	id := types.NamespacedName{
+		Name: "configconnector.core.cnrm.cloud.google.com",
+	}
+	cr, err := r.workloadIdentity.dynamicClient.Resource(gvr).Get(ctx, id.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("unable to get ConfigConnector resource %v: %w", id, err)
+	}
+
+	mode, _, err := unstructured.NestedString(cr.Object, "spec", "mode")
+	if err != nil {
+		return nil, fmt.Errorf("error reading spec.mode from ConfigConnector resource: %w", err)
+	}
+
+	// Default is namespaced
+	if mode == "" {
+		mode = "namespaced"
+	}
+
+	switch mode {
+	case "namespaced":
+		return r.getConfigConnectorTokenSourceNamespaced(ctx, ns)
+	case "cluster":
+		// ok
+	default:
+		return nil, fmt.Errorf("unknown spec.mode %q in ConfigConnector resource", mode)
+	}
+
+	googleServiceAccount, _, err := unstructured.NestedString(cr.Object, "spec", "googleServiceAccount")
+	if err != nil {
+		return nil, fmt.Errorf("error reading spec.googleServiceAccount from ConfigConnector resource: %w", err)
+	}
+
+	if googleServiceAccount == "" {
+		return nil, fmt.Errorf("could not find spec.googleServiceAccount from ConfigConnector resource")
+	}
+
+	kubeServiceAccount := types.NamespacedName{
+		Namespace: "cnrm-system",
+		Name:      "cnrm-controller-manager",
+	}
+	return r.workloadIdentity.GetGcloudAccessTokenSource(ctx, kubeServiceAccount, googleServiceAccount)
+}
+
+// getConfigConnectorTokenSourceNamespaced gets and returns the ConfigConnectorContext for the given namespace,
+// when running in namespace mode.
+func (r *RemoteClientGetter) getConfigConnectorTokenSourceNamespaced(ctx context.Context, ns string) (oauth2.TokenSource, error) {
+	gvr := schema.GroupVersionResource{
+		Group:    "core.cnrm.cloud.google.com",
+		Version:  "v1beta1",
 		Resource: "configconnectorcontexts",
 	}
 
@@ -145,7 +209,7 @@ func (r *RemoteClientGetter) getConfigConnectorContextTokenSource(ctx context.Co
 	}
 	cr, err := r.workloadIdentity.dynamicClient.Resource(gvr).Namespace(id.Namespace).Get(ctx, id.Name, metav1.GetOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("unable to get configconnectorcontext %v: %w", id, err)
+		return nil, fmt.Errorf("unable to get ConfigConnectorContext resource %v: %w", id, err)
 	}
 
 	googleServiceAccount, _, err := unstructured.NestedString(cr.Object, "spec", "googleServiceAccount")
@@ -154,7 +218,7 @@ func (r *RemoteClientGetter) getConfigConnectorContextTokenSource(ctx context.Co
 	}
 
 	if googleServiceAccount == "" {
-		return nil, fmt.Errorf("could not find spec.googleServiceAccount from ConfigConnectorContext in %q: %w", ns, err)
+		return nil, fmt.Errorf("could not find spec.googleServiceAccount from ConfigConnectorContext in %q", ns)
 	}
 
 	kubeServiceAccount := types.NamespacedName{
@@ -194,6 +258,8 @@ func toCompletedReference(in Reference, defaultNamespace string) (completedRefer
 		switch ref.Kind {
 		case containerClusterKind:
 			ref.APIVersion = containerClusterApiVersion
+		case hubMembershipGVK.Kind:
+			ref.APIVersion = hubMembershipGVK.GroupVersion().Identifier()
 		case configControllerKind:
 			ref.APIVersion = configControllerApiVersion
 		default:
@@ -256,7 +322,9 @@ func (r *RemoteClientGetter) GetRemoteClient(ctx context.Context, clusterRef Ref
 	if ref.Kind == containerClusterKind {
 		restConfig, err = r.getGKERESTConfig(ctx, u)
 	} else if ref.Kind == configControllerKind {
-		restConfig, err = r.getCCRESTConfig(ctx, u) //TODO: tmp workaround, update after ACP add new fields
+		restConfig, err = r.getCCRESTConfig(ctx, u)
+	} else if ref.Kind == hubMembershipGVK.Kind {
+		restConfig, err = r.getHubMembershipRESTConfig(ctx, u)
 	} else {
 		return nil, fmt.Errorf("failed to find target cluster, cluster kind has to be ContainerCluster or ConfigControllerInstance")
 	}
@@ -298,7 +366,7 @@ func (r *RemoteClientGetter) getGKERESTConfig(ctx context.Context, cluster *unst
 	restConfig.Host = "https://" + endpoint
 	klog.Infof("Host endpoint is %s", restConfig.Host)
 
-	tokenSource, err := r.getConfigConnectorContextTokenSource(ctx, cluster.GetNamespace())
+	tokenSource, err := r.getConfigConnectorTokenSource(ctx, cluster.GetNamespace())
 	if err != nil {
 		return nil, fmt.Errorf("error building authentication token provider: %w", err)
 	}
@@ -306,6 +374,49 @@ func (r *RemoteClientGetter) getGKERESTConfig(ctx context.Context, cluster *unst
 	if err != nil {
 		return nil, fmt.Errorf("error getting authentication token: %w", err)
 	}
+	restConfig.BearerToken = token.AccessToken
+
+	return restConfig, nil
+}
+
+// getHubMembershipRESTConfig builds a rest.Config for accessing the specified cluster through connect gateway.
+func (r *RemoteClientGetter) getHubMembershipRESTConfig(ctx context.Context, cluster *unstructured.Unstructured) (*rest.Config, error) {
+	restConfig := &rest.Config{}
+
+	// TODO: We could really use a selfLink field here!
+
+	projectID := cluster.GetAnnotations()["cnrm.cloud.google.com/project-id"]
+	if projectID == "" {
+		return nil, fmt.Errorf("cannot determine project-id for object")
+	}
+
+	membershipName, _, err := unstructured.NestedString(cluster.Object, "spec", "resourceID")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get spec.resourceID: %w", err)
+	}
+	if membershipName == "" {
+		return nil, fmt.Errorf("spec.resourceID field was not set")
+	}
+
+	tokenSource, err := r.getConfigConnectorTokenSource(ctx, cluster.GetNamespace())
+	if err != nil {
+		return nil, fmt.Errorf("error building authentication token provider: %w", err)
+	}
+
+	projectInfo, err := r.projectCache.LookupByProjectID(ctx, projectID, tokenSource)
+	if err != nil {
+		return nil, err
+	}
+
+	host := fmt.Sprintf("https://connectgateway.googleapis.com/v1/projects/%d/locations/global/memberships/%s", projectInfo.ProjectNumber, membershipName)
+	restConfig.Host = host
+	klog.Infof("Host endpoint is %s", restConfig.Host)
+
+	token, err := tokenSource.Token()
+	if err != nil {
+		return nil, fmt.Errorf("error getting authentication token: %w", err)
+	}
+
 	restConfig.BearerToken = token.AccessToken
 
 	return restConfig, nil

@@ -93,8 +93,12 @@ type RootSyncDeploymentReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncdeployments/finalizers,verbs=update
 //+kubebuilder:rbac:groups=porch.kpt.dev,resources=packagerevisions,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=repositories,verbs=get;list;watch
+
 //+kubebuilder:rbac:groups=configcontroller.cnrm.cloud.google.com,resources=configcontrollerinstances,verbs=get;list;watch
 //+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
+//+kubebuilder:rbac:groups=gkehub.cnrm.cloud.google.com,resources=gkehubmemberships,verbs=get;list;watch
+
+//+kubebuilder:rbac:groups=core.cnrm.cloud.google.com,resources=configconnectors;configconnectorcontexts,verbs=get;list;watch
 
 func (r *RootSyncDeploymentReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var rootsyncdeployment v1alpha1.RootSyncDeployment

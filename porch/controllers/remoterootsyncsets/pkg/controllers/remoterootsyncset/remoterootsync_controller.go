@@ -82,6 +82,12 @@ type RemoteRootSyncSetReconciler struct {
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=remoterootsyncsets/finalizers,verbs=update
 //+kubebuilder:rbac:groups=porch.kpt.dev,resources=packagerevisions;packagerevisionresources,verbs=get;list;watch
 
+//+kubebuilder:rbac:groups=configcontroller.cnrm.cloud.google.com,resources=configcontrollerinstances,verbs=get;list;watch
+//+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
+//+kubebuilder:rbac:groups=gkehub.cnrm.cloud.google.com,resources=gkehubmemberships,verbs=get;list;watch
+
+//+kubebuilder:rbac:groups=core.cnrm.cloud.google.com,resources=configconnectors;configconnectorcontexts,verbs=get;list;watch
+
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var subject api.RemoteRootSyncSet

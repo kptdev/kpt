@@ -70,6 +70,23 @@ rules:
   - list
   - watch
 - apiGroups:
+  - core.cnrm.cloud.google.com
+  resources:
+  - configconnectorcontexts
+  - configconnectors
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gkehub.cnrm.cloud.google.com
+  resources:
+  - gkehubmemberships
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - porch.kpt.dev
   resources:
   - packagerevisions
