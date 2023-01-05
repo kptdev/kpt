@@ -144,6 +144,7 @@ func run(ctx context.Context) error {
 	}
 
 	enabledReconcilers := parseReconcilers(enabledReconcilersString)
+	var enabled []string
 	for name, reconciler := range reconcilers {
 		if !reconcilerIsEnabled(enabledReconcilers, name) {
 			continue
@@ -151,6 +152,13 @@ func run(ctx context.Context) error {
 		if err = reconciler.SetupWithManager(mgr); err != nil {
 			return fmt.Errorf("error creating %s reconciler: %w", name, err)
 		}
+		enabled = append(enabled, name)
+	}
+
+	if len(enabled) == 0 {
+		klog.Warningf("no reconcilers are enabled; did you forget to pass the --reconcilers flag?")
+	} else {
+		klog.Infof("enabled reconcilers: %v", strings.Join(enabled, ","))
 	}
 
 	//+kubebuilder:scaffold:builder
