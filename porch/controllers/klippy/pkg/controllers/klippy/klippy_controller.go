@@ -18,12 +18,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"path/filepath"
 	"strings"
-	"unicode"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/objects"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -34,7 +33,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/yaml"
 )
 
 type Options struct {
@@ -98,15 +96,6 @@ func (r *KlippyReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 	return ctrl.Result{}, nil
 }
 
-func isWhitespace(s string) bool {
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			return false
-		}
-	}
-	return true
-}
-
 func (r *KlippyReconciler) reconcile(ctx context.Context, parent *api.PackageRevision, parentResources *api.PackageRevisionResources) error {
 	log := log.FromContext(ctx)
 
@@ -121,7 +110,7 @@ func (r *KlippyReconciler) reconcile(ctx context.Context, parent *api.PackageRev
 		return err
 	}
 
-	parentObjects, err := parseObjects(ctx, parentResources)
+	parentObjects, err := objects.Parser{}.AsUnstructureds(parentResources.Spec.Resources)
 	if err != nil {
 		return err
 	}
@@ -166,10 +155,11 @@ func (r *KlippyReconciler) parseBlueprints(ctx context.Context, packageRevisions
 			return nil, fmt.Errorf("error fetching PackageRevisionResources %v: %w", id, err)
 		}
 
-		objects, err := parseObjects(ctx, &packageRevisionResources)
+		objects, err := objects.Parser{}.AsUnstructureds(packageRevisionResources.Spec.Resources)
 		if err != nil {
 			return nil, err
 		}
+
 		blueprint := &blueprint{
 			Objects:     objects,
 			ID:          id,
@@ -178,41 +168,6 @@ func (r *KlippyReconciler) parseBlueprints(ctx context.Context, packageRevisions
 		blueprints = append(blueprints, blueprint)
 	}
 	return blueprints, nil
-}
-
-func parseObjects(ctx context.Context, subject *api.PackageRevisionResources) ([]*unstructured.Unstructured, error) {
-	log := log.FromContext(ctx)
-
-	// TODO: Does this function exist somewhere?
-	var objects []*unstructured.Unstructured
-
-	for path, contents := range subject.Spec.Resources {
-		ext := filepath.Ext(path)
-		ext = strings.ToLower(ext)
-
-		switch ext {
-		case ".yaml", ".yml":
-			// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
-			for _, s := range strings.Split(contents, "\n---\n") {
-				if isWhitespace(s) {
-					continue
-				}
-
-				o := &unstructured.Unstructured{}
-				if err := yaml.Unmarshal([]byte(s), o); err != nil {
-					return nil, fmt.Errorf("error parsing package as kubernetes object: %w", err)
-				}
-
-				// TODO: sync with kpt logic; skip objects marked with the local-only annotation
-				objects = append(objects, o)
-			}
-
-		default:
-			log.V(2).Info("skipping file with unhandled extension", "path", path)
-		}
-	}
-
-	return objects, nil
 }
 
 type bindingSlotRequirements struct {

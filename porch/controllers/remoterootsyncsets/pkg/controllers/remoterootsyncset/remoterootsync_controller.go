@@ -19,18 +19,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path"
-	"strings"
-	"unicode"
 
 	kptoci "github.com/GoogleContainerTools/kpt/pkg/oci"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/applyset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/remoteclient"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/objects"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/oci"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/discovery"
 	memory "k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/dynamic"
@@ -40,7 +37,6 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"sigs.k8s.io/yaml"
 )
 
 var (
@@ -325,50 +321,16 @@ func (r *RemoteRootSyncSetReconciler) BuildObjectsToApply(ctx context.Context, s
 		return nil, err
 	}
 
-	var objects []applyset.ApplyableObject
-
-	for filePath, fileContents := range resources.Contents {
-		ext := path.Ext(filePath)
-		ext = strings.ToLower(ext)
-
-		parse := false
-		switch ext {
-		case ".yaml", ".yml":
-			parse = true
-
-		default:
-			klog.Warningf("ignoring non-yaml file %s", filePath)
-		}
-
-		if !parse {
-			continue
-		}
-		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
-		for _, s := range strings.Split(fileContents, "\n---\n") {
-			if isWhitespace(s) {
-				continue
-			}
-
-			o := &unstructured.Unstructured{}
-			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
-				return nil, fmt.Errorf("error parsing yaml from %s: %w", filePath, err)
-			}
-
-			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
-			objects = append(objects, o)
-		}
+	unstructureds, err := objects.Parser{}.AsUnstructureds(resources.Contents)
+	if err != nil {
+		return nil, err
 	}
 
-	return objects, nil
-}
-
-func isWhitespace(s string) bool {
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			return false
-		}
+	var applyables []applyset.ApplyableObject
+	for _, u := range unstructureds {
+		applyables = append(applyables, u)
 	}
-	return true
+	return applyables, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
