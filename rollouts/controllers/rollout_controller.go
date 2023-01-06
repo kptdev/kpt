@@ -356,9 +356,21 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.ToBeDeleted {
-		if err := r.Delete(ctx, target); err != nil {
-			klog.Warningf("Error deleting RemoteRootSync %s: %v", target.Name, err)
-			return nil, err
+		if maxConcurrent > concurrentUpdates {
+			if err := r.Delete(ctx, target); err != nil {
+				klog.Warningf("Error deleting RemoteRootSync %s: %v", target.Name, err)
+				return nil, err
+			}
+			concurrentUpdates++
+		} else {
+			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
+				Name: target.Spec.ClusterRef.Name,
+				PackageStatus: gitopsv1alpha1.PackageStatus{
+					PackageID:  target.Name,
+					SyncStatus: "OutOfSync",
+					Status:     "Waiting",
+				},
+			})
 		}
 	}
 
