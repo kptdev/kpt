@@ -129,6 +129,27 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
+	progressiveStrategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{}
+	// validate the strategy as early as possible
+	switch typ := rollout.Spec.Strategy.Type; typ {
+	case gitopsv1alpha1.AllAtOnce, gitopsv1alpha1.Rolling:
+	case gitopsv1alpha1.Progressive:
+		strategyRef := types.NamespacedName{
+			Namespace: rollout.Spec.Strategy.Progressive.Namespace,
+			Name:      rollout.Spec.Strategy.Progressive.Name,
+		}
+		if err := r.Get(ctx, strategyRef, progressiveStrategy); err != nil {
+			logger.Error(err, "unable to fetch progressive rollout strategy", "strategyref", strategyRef)
+			// TODO (droot): signal this as a condition in the rollout status
+			return ctrl.Result{}, err
+		}
+		logger.Info("progressive rollout is not supported yet, so nothing to reconcile here.")
+		return ctrl.Result{}, nil
+	default:
+		// TODO (droot): signal this as a condition in the rollout status
+		return ctrl.Result{}, fmt.Errorf("%v strategy not supported yet", typ)
+	}
+
 	packageDiscoveryClient := r.getPackageDiscoveryClient(req.NamespacedName)
 
 	err := r.reconcileRollout(ctx, &rollout, packageDiscoveryClient)

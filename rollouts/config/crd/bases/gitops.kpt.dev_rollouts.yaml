@@ -101,9 +101,17 @@ spec:
                   allAtOnce:
                     type: object
                   progressive:
-                    description: StrategyProgressive allows staged rollouts where
-                      the entire rollout will progress through different stages (aka
-                      steps, phases or waves).
+                    description: StrategyProgressive defines the progressive rollout
+                      strategy to use.
+                    properties:
+                      name:
+                        description: Reference of ProgressiveRolloutStrategy to use.
+                        type: string
+                      namespace:
+                        type: string
+                    required:
+                    - name
+                    - namespace
                     type: object
                   rollingUpdate:
                     properties:

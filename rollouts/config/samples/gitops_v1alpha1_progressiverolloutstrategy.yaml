@@ -1,0 +1,18 @@
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: ProgressiveRolloutStrategy
+metadata:
+  name: cluster-addons-default-rollout
+spec:
+  waves:
+    - name: "dev clusters"
+      targets:
+        selector:
+          matchLabels:
+            env: dev
+      maxConcurrent: 2
+    - name: "staging clusters"
+      targets:
+        selector:
+          matchLabels:
+            env: staging
+      maxConcurrent: 1

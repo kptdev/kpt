@@ -8,6 +8,32 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
+  - progressiverolloutstrategies
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - gitops.kpt.dev
+  resources:
+  - progressiverolloutstrategies/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - gitops.kpt.dev
+  resources:
+  - progressiverolloutstrategies/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - gitops.kpt.dev
+  resources:
   - remoterootsyncs
   verbs:
   - create
