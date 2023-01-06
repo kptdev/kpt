@@ -105,18 +105,18 @@ spec:
                       the entire rollout will progress through different stages (aka
                       steps, phases or waves).
                     type: object
-                  rolling:
+                  rollingUpdate:
                     properties:
-                      maxUnavailable:
+                      maxConcurrent:
                         format: int64
                         type: integer
                     required:
-                    - maxUnavailable
+                    - maxConcurrent
                     type: object
                   type:
                     enum:
                     - AllAtOnce
-                    - Rolling
+                    - RollingUpdate
                     - Progressive
                     type: string
                 required:
@@ -192,10 +192,13 @@ spec:
                       properties:
                         packageId:
                           type: string
+                        status:
+                          type: string
                         syncStatus:
                           type: string
                       required:
                       - packageId
+                      - status
                       - syncStatus
                       type: object
                   required:
