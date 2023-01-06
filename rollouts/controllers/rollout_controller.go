@@ -280,12 +280,12 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		return clusterStatuses, fmt.Errorf("%v strategy not supported yet", rollout.Spec.Strategy.Type)
 	}
 
-	concurrentUpgrades := 0
+	concurrentUpdates := 0
 	maxConcurrent := math.MaxInt
 
 	for _, target := range targets.Unchanged {
 		if !isRRSSynced(target) {
-			concurrentUpgrades++
+			concurrentUpdates++
 		}
 	}
 
@@ -301,12 +301,12 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 			pkgID(target.packageRef),
 		)
 
-		if maxConcurrent > concurrentUpgrades {
+		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rrs); err != nil {
 				klog.Warningf("Error creating RemoteRootSync %s: %v", rrs.Name, err)
 				return nil, err
 			}
-			concurrentUpgrades++
+			concurrentUpdates++
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
 				Name: rrs.Spec.ClusterRef.Name,
 				PackageStatus: gitopsv1alpha1.PackageStatus{
@@ -329,12 +329,12 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.ToBeUpdated {
-		if maxConcurrent > concurrentUpgrades {
+		if maxConcurrent > concurrentUpdates {
 			if err := r.Update(ctx, target); err != nil {
 				klog.Warningf("Error updating RemoteRootSync %s: %v", target.Name, err)
 				return nil, err
 			}
-			concurrentUpgrades++
+			concurrentUpdates++
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
 				Name: target.Spec.ClusterRef.Name,
 				PackageStatus: gitopsv1alpha1.PackageStatus{
