@@ -320,7 +320,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 				Name: rrs.Spec.ClusterRef.Name,
 				PackageStatus: gitopsv1alpha1.PackageStatus{
 					PackageID:  rrs.Name,
-					SyncStatus: "OutOfSync",
+					SyncStatus: "",
 					Status:     "Waiting",
 				},
 			})
