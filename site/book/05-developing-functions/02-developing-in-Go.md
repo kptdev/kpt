@@ -13,6 +13,8 @@ You can develop a KRM function in Go using [the kpt function SDK].
 
 - [Install Docker](https://docs.docker.com/get-docker/)
 
+- [Golang](https://go.dev/dl/) (at least version 1.19)
+
 ## Quickstart
 
 In this quickstart, we will write a function that adds an annotation 
@@ -41,30 +43,52 @@ go mod tidy
 Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
-// main.go
+// Copyright 2022 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
-  "fmt"
-  "os"
+	"context"
+	"os"
 
-  "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 )
 
-// EDIT THIS FUNCTION!
-// This is the main logic. rl is the input `ResourceList` which has the `FunctionConfig` and `Items` fields.
-// You can modify the `Items` and add result information to `rl.Results`.
-func Run(rl *fn.ResourceList) (bool, error) {
-  // Your code
+var _ fn.Runner = &YourFunction{}
+
+// TODO: Change to your functionConfig "Kind" name.
+type YourFunction struct {
+	FnConfigBool bool
+	FnConfigInt  int
+	FnConfigFoo  string
+}
+
+// Run is the main function logic.
+// `items` is parsed from the STDIN "ResourceList.Items".
+// `functionConfig` is from the STDIN "ResourceList.FunctionConfig". The value has been assigned to the r attributes
+// `results` is the "ResourceList.Results" that you can write result info to.
+func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
+	// TODO: Write your code.
+	return true
 }
 
 func main() {
-  // CUSTOMIZE IF NEEDED
-  // `AsMain` accepts a `ResourceListProcessor` interface.
-  // You can explore other `ResourceListProcessor` structs in the SDK or define your own.
-  if err := fn.AsMain(fn.ResourceListProcessorFunc(Run)); err != nil {
-    os.Exit(1)
-  }
+	runner := fn.WithContext(context.Background(), &YourFunction{})
+	if err := fn.AsMain(runner); err != nil {
+		os.Exit(1)
+	}
 }
 ```
 
@@ -76,15 +100,15 @@ The set-annotation function (see below) iterates the `ResourceList.Items`, finds
 adds the annotation. After the iteration, it adds some user message to the `ResourceList.Results`
 
 ```go
-func Run(rl *fn.ResourceList) (bool, error) {
-    for _, kubeObject := range rl.Items {
-        if kubeObject.IsGVK("apps/v1", "Deployment") {
-            kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
-        }
-    }
-    // This result message will be displayed in the function evaluation time. 
-    rl.Results = append(rl.Results, fn.GeneralResult("Add config.kubernetes.io/managed-by=kpt to all `Deployment` resources", fn.Info))
-    return true, nil
+func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items fn.KubeObjects, results *fn.Results) bool {
+	for _, kubeObject := range items {
+		if kubeObject.IsGVK("apps", "v1", "Deployment") {
+			kubeObject.SetAnnotation("config.kubernetes.io/managed-by", "kpt")
+		}
+	}
+	// This result message will be displayed in the function evaluation time.
+	*results = append(*results, fn.GeneralResult("Add config.kubernetes.io/managed-by=kpt to all `Deployment` resources", fn.Info))
+	return true
 }
 ```
 
@@ -93,16 +117,16 @@ Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.co
 
 ### Test the KRM function
 
-The "get-started" package contains a `./data` directory. You can use this to test out your functions. 
+The "get-started" package contains a `./testdata` directory. You can use this to test out your functions. 
 
 ```shell
-# Edit the `data/resources.yaml` with your KRM resources. 
+# Edit the `testdata/resources.yaml` with your KRM resources. 
 # resources.yaml already has a `Deployment` and `Service` as test data. 
 vim data/resources.yaml
 
 # Convert the KRM resources and FunctionConfig resource to `ResourceList`, and 
 # then pipe the ResourceList as StdIn to your function
-kpt fn source data | go run main.go
+kpt fn source testdata | go run main.go
 
 # Verify the KRM function behavior in the StdOutput `ResourceList`
 ```
@@ -111,7 +135,10 @@ kpt fn source data | go run main.go
 
 Build the image
 
-The "get-started" package provides the `Dockerfile`.
+The "get-started" package provides the `Dockerfile` that you can download using:
+```shell
+wget https://raw.githubusercontent.com/GoogleContainerTools/kpt-functions-sdk/master/go/kfn/commands/embed/Dockerfile
+```
 
 ```shell
 export FN_CONTAINER_REGISTRY=<Your GCR or docker hub>
@@ -119,9 +146,9 @@ export TAG=<Your KRM function tag>
 docker build . -t ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
-To verify the image using the same `./data` resources
+To verify the image using the same `./testdata` resources
 ```shell
-kpt fn eval ./data --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
+kpt fn eval ./testdata/test1/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${FUNCTION_NAME}:${TAG}
 ```
 
 ## Next Steps
