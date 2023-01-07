@@ -18,4 +18,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: remoterootsyncs.gitops.kpt.dev
+  name: progressiverolloutstrategies.gitops.kpt.dev
