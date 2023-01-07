@@ -25,8 +25,6 @@ import (
 
 // RolloutSpec defines the desired state of Rollout
 type RolloutSpec struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Description is a user friendly description of this Rollout.
 	Description string `json:"description,omitempty"`
 
@@ -109,9 +107,12 @@ type StrategyRollingUpdate struct {
 	MaxConcurrent int64 `json:"maxConcurrent"`
 }
 
-// StrategyProgressive allows staged rollouts
-// where the entire rollout will progress through different stages (aka steps, phases or waves).
-type StrategyProgressive struct{}
+// StrategyProgressive defines the progressive rollout strategy to use.
+type StrategyProgressive struct {
+	// Reference of ProgressiveRolloutStrategy to use.
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+}
 
 type RolloutStrategy struct {
 	Type          StrategyType           `json:"type"`

@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# The following patch adds a directive for certmanager to inject CA into the CRD
-apiVersion: apiextensions.k8s.io/v1
-kind: CustomResourceDefinition
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: ProgressiveRolloutStrategy
 metadata:
-  annotations:
-    cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
-  name: remoterootsyncs.gitops.kpt.dev
+  name: cluster-addons-default-rollout
+spec:
+  waves:
+    - name: "dev clusters"
+      targets:
+        selector:
+          matchLabels:
+            env: dev
+      maxConcurrent: 2
+    - name: "staging clusters"
+      targets:
+        selector:
+          matchLabels:
+            env: staging
+      maxConcurrent: 1

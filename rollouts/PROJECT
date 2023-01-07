@@ -22,4 +22,13 @@ resources:
   kind: RemoteRootSync
   path: github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kpt.dev
+  group: gitops
+  kind: ProgressiveRolloutStrategy
+  path: github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1
+  version: v1alpha1
 version: "3"

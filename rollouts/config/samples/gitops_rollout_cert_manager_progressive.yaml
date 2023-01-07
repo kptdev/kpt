@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +13,28 @@
 # limitations under the License.
 
 apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: Rollout
 metadata:
-  labels:
-    app.kubernetes.io/name: remoterootsync
-    app.kubernetes.io/instance: remoterootsync-sample
-    app.kubernetes.io/part-of: rollouts
-    app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: rollouts
-  name: remoterootsync-sample
+  name: cm-progressive
 spec:
-  # TODO(user): Add fields here
-  clusterRef:
-    name: dev-1
-  template:
-    spec:
-      sourceFormat: unstructured 
-      git:
-        repo: https://github.com/droot/oahu.git
-        branch: main
+  description: kpt samples rollout
+  packages:
+    sourceType: GitHub
+    github:
+      selector:
+        org: droot
+        repo: kpt-packages
+        directory: cert-manager
         revision: main
-        auth: none
+  targets:
+    selector:
+      matchExpressions:
+        - {key: env, operator: In, values: [dev, staging]}
+  packageToTargetMatcher:
+    type: CEL
+    matchExpression: 'true'
+  strategy:
+    type: Progressive
+    progressive:
+      name: cluster-addons-default-rollout
+      namespace: default
