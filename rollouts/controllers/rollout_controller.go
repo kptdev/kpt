@@ -132,7 +132,7 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	progressiveStrategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{}
 	// validate the strategy as early as possible
 	switch typ := rollout.Spec.Strategy.Type; typ {
-	case gitopsv1alpha1.AllAtOnce, gitopsv1alpha1.Rolling:
+	case gitopsv1alpha1.AllAtOnce, gitopsv1alpha1.RollingUpdate:
 	case gitopsv1alpha1.Progressive:
 		strategyRef := types.NamespacedName{
 			Namespace: rollout.Spec.Strategy.Progressive.Namespace,
