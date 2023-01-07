@@ -195,27 +195,53 @@ func (c *TestSuite) list(ctx context.Context, list client.ObjectList, opts []cli
 	}
 }
 
+func DebugFormat(obj client.Object) string {
+	var s string
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	if gvk.Empty() {
+		s = fmt.Sprintf("%T", obj)
+	} else {
+		s = gvk.Kind
+	}
+	ns := obj.GetNamespace()
+	if ns != "" {
+		s += " " + ns + "/"
+	} else {
+		s += " "
+	}
+	s += obj.GetName()
+	return s
+}
+
 func (c *TestSuite) create(ctx context.Context, obj client.Object, opts []client.CreateOption, eh ErrorHandler) {
+	c.Logf("creating object %v", DebugFormat(obj))
+
 	if err := c.client.Create(ctx, obj, opts...); err != nil {
-		eh("failed to create resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+		eh("failed to create resource %s: %v", DebugFormat(obj), err)
 	}
 }
 
 func (c *TestSuite) delete(ctx context.Context, obj client.Object, opts []client.DeleteOption, eh ErrorHandler) {
+	c.Logf("deleting object %v", DebugFormat(obj))
+
 	if err := c.client.Delete(ctx, obj, opts...); err != nil {
-		eh("failed to delete resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+		eh("failed to delete resource %s: %v", DebugFormat(obj), err)
 	}
 }
 
 func (t *TestSuite) update(ctx context.Context, obj client.Object, opts []client.UpdateOption, eh ErrorHandler) {
+	t.Logf("updating object %v", DebugFormat(obj))
+
 	if err := t.client.Update(ctx, obj, opts...); err != nil {
-		eh("failed to update resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+		eh("failed to update resource %s: %v", DebugFormat(obj), err)
 	}
 }
 
 func (t *TestSuite) patch(ctx context.Context, obj client.Object, patch client.Patch, opts []client.PatchOption, eh ErrorHandler) {
+	t.Logf("patching object %v", DebugFormat(obj))
+
 	if err := t.client.Patch(ctx, obj, patch, opts...); err != nil {
-		eh("failed to patch resource %s %s/%s: %v", obj.GetObjectKind().GroupVersionKind(), obj.GetNamespace(), obj.GetName(), err)
+		eh("failed to patch resource %s: %v", DebugFormat(obj), err)
 	}
 }
 
