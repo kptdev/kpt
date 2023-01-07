@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# permissions for end users to view remoterootsyncs.
+# permissions for end users to view progressiverolloutstrategies.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/name: clusterrole
-    app.kubernetes.io/instance: remoterootsync-viewer-role
+    app.kubernetes.io/instance: progressiverolloutstrategy-viewer-role
     app.kubernetes.io/component: rbac
     app.kubernetes.io/created-by: rollouts
     app.kubernetes.io/part-of: rollouts
     app.kubernetes.io/managed-by: kustomize
-  name: remoterootsync-viewer-role
+  name: progressiverolloutstrategy-viewer-role
 rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs
+  - progressiverolloutstrategies
   verbs:
   - get
   - list
@@ -36,6 +36,6 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs/status
+  - progressiverolloutstrategies/status
   verbs:
   - get

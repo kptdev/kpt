@@ -18,6 +18,7 @@
 resources:
 - bases/gitops.kpt.dev_rollouts.yaml
 - bases/gitops.kpt.dev_remoterootsyncs.yaml
+- bases/gitops.kpt.dev_progressiverolloutstrategies.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:
@@ -25,12 +26,14 @@ patchesStrategicMerge:
 # patches here are for enabling the conversion webhook for each CRD
 #- patches/webhook_in_rollouts.yaml
 #- patches/webhook_in_remoterootsyncs.yaml
+#- patches/webhook_in_progressiverolloutstrategies.yaml
 #+kubebuilder:scaffold:crdkustomizewebhookpatch
 
 # [CERTMANAGER] To enable cert-manager, uncomment all the sections with [CERTMANAGER] prefix.
 # patches here are for enabling the CA injection for each CRD
 #- patches/cainjection_in_rollouts.yaml
 #- patches/cainjection_in_remoterootsyncs.yaml
+#- patches/cainjection_in_progressiverolloutstrategies.yaml
 #+kubebuilder:scaffold:crdkustomizecainjectionpatch
 
 # the following config is for teaching kustomize how to do kustomization for CRDs.
