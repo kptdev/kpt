@@ -192,9 +192,9 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		return err
 	}
 
-	clustersMap := make(map[string]int)
+	clusterWaveMap := make(map[string]int)
 	for _, cluster := range allClusters.Items {
-		clustersMap[cluster.Name] = -1
+		clusterWaveMap[cluster.Name] = -1
 	}
 
 	for waveIdx, wave := range strategy.Spec.Waves {
@@ -208,7 +208,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		}
 
 		for _, cluster := range waveClusters.Items {
-			currentClusterWave, found := clustersMap[cluster.Name]
+			currentClusterWave, found := clusterWaveMap[cluster.Name]
 			if !found {
 				// this should never happen
 				return fmt.Errorf("wave %d references cluster %s not selected by the rollout", waveIdx, cluster.Name)
@@ -218,12 +218,12 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %d and %d", cluster.Name, currentClusterWave, waveIdx)
 			}
 
-			clustersMap[cluster.Name] = waveIdx
+			clusterWaveMap[cluster.Name] = waveIdx
 		}
 	}
 
 	for _, cluster := range allClusters.Items {
-		wave, _ := clustersMap[cluster.Name]
+		wave, _ := clusterWaveMap[cluster.Name]
 		if wave == -1 {
 			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Name)
 		}
