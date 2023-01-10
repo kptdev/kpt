@@ -382,14 +382,14 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, waveAlreadyInProgress bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
+func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, previousWaveAlreadyInProgress bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
 	clusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
 	concurrentUpdates := 0
 	maxConcurrent := int(wave.MaxConcurrent)
 	waiting := "Waiting"
 
-	if waveAlreadyInProgress {
+	if previousWaveAlreadyInProgress {
 		maxConcurrent = 0
 		waiting = "Waiting (Upcoming Wave)"
 	}
@@ -499,9 +499,9 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		})
 	}
 
-	waveComplete := concurrentUpdates > 0
+	thisWaveInProgress := concurrentUpdates > 0
 
-	return waveComplete, clusterStatuses, nil
+	return thisWaveInProgress, clusterStatuses, nil
 }
 
 type Targets struct {
