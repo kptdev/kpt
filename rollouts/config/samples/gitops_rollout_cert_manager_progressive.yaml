@@ -31,8 +31,7 @@ spec:
       matchExpressions:
         - {key: env, operator: In, values: [dev, staging]}
   packageToTargetMatcher:
-    type: CEL
-    matchExpression: 'true'
+    type: AllClusters
   strategy:
     type: Progressive
     progressive:

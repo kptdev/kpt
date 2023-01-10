@@ -60,10 +60,10 @@ spec:
                     type: string
                   type:
                     enum:
-                    - CEL
+                    - AllClusters
+                    - Custom
                     type: string
                 required:
-                - matchExpression
                 - type
                 type: object
               packages:
@@ -299,9 +299,6 @@ spec:
                   type: object
                 type: array
               observedGeneration:
-                description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
-                  of cluster Important: Run "make" to regenerate code after modifying
-                  this file'
                 format: int64
                 type: integer
             type: object
