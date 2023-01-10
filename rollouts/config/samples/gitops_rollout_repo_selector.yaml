@@ -31,7 +31,7 @@ spec:
       matchExpressions:
         - {key: location/state, operator: In, values: [hawaii]}
   packageToTargetMatcher:
-    type: custom
+    type: Custom
     matchExpression: rolloutPackage.repo == cluster.labels['location/island'] + '-apps'
   strategy:
     type: AllAtOnce

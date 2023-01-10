@@ -85,12 +85,12 @@ type SecretReference struct {
 	Name string `json:"name,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=allClusters;custom
+// +kubebuilder:validation:Enum=AllClusters;Custom
 type MatcherType string
 
 const (
-	MatchAllClusters MatcherType = "allClusters"
-	CustomMatcher    MatcherType = "custom"
+	MatchAllClusters MatcherType = "AllClusters"
+	CustomMatcher    MatcherType = "Custom"
 )
 
 type PackageToClusterMatcher struct {
