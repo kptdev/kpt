@@ -31,7 +31,6 @@ spec:
       matchExpressions:
         - {key: location/island, operator: In, values: [oahu, maui]}
   packageToTargetMatcher:
-    type: CEL
-    matchExpression: 'true'
+    type: AllClusters
   strategy:
     type: AllAtOnce
