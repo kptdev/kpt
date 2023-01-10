@@ -27,8 +27,7 @@ spec:
         directory: "/"
         revision: main
   packageToTargetMatcher:
-    type: CEL
-    matchExpression: 'true'
+    type: AllClusters
   targets:
     selector:
       matchLabels:
