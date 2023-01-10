@@ -48,22 +48,30 @@ func (cs *ClusterStore) Init() error {
 	return nil
 }
 
-func (cs *ClusterStore) ListClusters(ctx context.Context, selector *metav1.LabelSelector) (*gkeclusterapis.ContainerClusterList, error) {
-	gkeClusters := &gkeclusterapis.ContainerClusterList{}
+func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.LabelSelector) (*gkeclusterapis.ContainerClusterList, error) {
+	gkeClusters, err := cs.listClusters(ctx, selectors[0])
+	if err != nil {
+		return nil, err
+	}
 
-	var opts []client.ListOption
-	if selector != nil {
-		selector, err := metav1.LabelSelectorAsSelector(selector)
+	for _, selector := range selectors[1:] {
+		selectorClusters, err := cs.listClusters(ctx, selector)
 		if err != nil {
 			return nil, err
 		}
-		opts = append(opts, client.MatchingLabelsSelector{Selector: selector})
-	}
 
-	// TODO: make it configurable ?
-	opts = append(opts, client.InNamespace("config-control"))
-	if err := cs.List(ctx, gkeClusters, opts...); err != nil {
-		return nil, err
+		intersection := []gkeclusterapis.ContainerCluster{}
+
+		for _, cluster := range gkeClusters.Items {
+			for _, selectorCluster := range selectorClusters.Items {
+				if cluster.Name == selectorCluster.Name {
+					intersection = append(intersection, cluster)
+					break
+				}
+			}
+		}
+
+		gkeClusters.Items = intersection
 	}
 
 	return gkeClusters, nil
@@ -106,6 +114,28 @@ func (cs *ClusterStore) GetClusterClient(ctx context.Context, cluster *gkecluste
 		return nil, nil, err
 	}
 	return cl, dynCl, err
+}
+
+func (cs *ClusterStore) listClusters(ctx context.Context, selector *metav1.LabelSelector) (*gkeclusterapis.ContainerClusterList, error) {
+	gkeClusters := &gkeclusterapis.ContainerClusterList{}
+
+	var opts []client.ListOption
+
+	if selector != nil {
+		selector, err := metav1.LabelSelectorAsSelector(selector)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, client.MatchingLabelsSelector{Selector: selector})
+	}
+
+	// TODO: make it configurable ?
+	opts = append(opts, client.InNamespace("config-control"))
+	if err := cs.List(ctx, gkeClusters, opts...); err != nil {
+		return nil, err
+	}
+
+	return gkeClusters, nil
 }
 
 func (cs *ClusterStore) getRESTConfig(ctx context.Context, cluster *gkeclusterapis.ContainerCluster) (*rest.Config, error) {
