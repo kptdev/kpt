@@ -36,6 +36,7 @@ type RolloutSpec struct {
 
 	// PackageToTargetMatcher specifies the clusters that will receive a specific package.
 	PackageToTargetMatcher PackageToClusterMatcher `json:"packageToTargetMatcher"`
+
 	// Strategy specifies the rollout strategy to use for this rollout.
 	Strategy RolloutStrategy `json:"strategy"`
 }
@@ -84,12 +85,17 @@ type SecretReference struct {
 	Name string `json:"name,omitempty"`
 }
 
-// +kubebuilder:validation:Enum=CEL
+// +kubebuilder:validation:Enum=allClusters;custom
 type MatcherType string
+
+const (
+	MatchAllClusters MatcherType = "allClusters"
+	CustomMatcher    MatcherType = "custom"
+)
 
 type PackageToClusterMatcher struct {
 	Type            MatcherType `json:"type"`
-	MatchExpression string      `json:"matchExpression"`
+	MatchExpression string      `json:"matchExpression,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=AllAtOnce;RollingUpdate;Progressive
@@ -123,8 +129,6 @@ type RolloutStrategy struct {
 
 // RolloutStatus defines the observed state of Rollout
 type RolloutStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
 	// Conditions describes the reconciliation state of the object.

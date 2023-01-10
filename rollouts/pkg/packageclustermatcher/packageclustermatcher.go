@@ -51,26 +51,37 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 	for _, cluster := range clusters {
 		matchedPackages := []packagediscovery.DiscoveredPackage{}
 
-		celCluster := map[string]interface{}{
-			"name":   cluster.ObjectMeta.Name,
-			"labels": cluster.ObjectMeta.Labels,
+		switch matcherType := matcher.Type; matcherType {
+		case gitopsv1alpha1.MatchAllClusters:
+			matchedPackages = packages
+		case gitopsv1alpha1.CustomMatcher:
+			celCluster := map[string]interface{}{
+				"name":   cluster.ObjectMeta.Name,
+				"labels": cluster.ObjectMeta.Labels,
+			}
+
+			for _, discoveredPackage := range packages {
+				celPackage := map[string]interface{}{
+					"org":       discoveredPackage.Org,
+					"repo":      discoveredPackage.Repo,
+					"directory": discoveredPackage.Directory,
+				}
+
+				isMatch, err := isPackageClusterMatch(matcher.MatchExpression, celCluster, celPackage)
+				if err != nil {
+					return nil, fmt.Errorf("unable to execute package cluster matcher expression: %w", err)
+				}
+
+				if isMatch {
+					matchedPackages = append(matchedPackages, discoveredPackage)
+				}
+			}
+		default:
+			return nil, fmt.Errorf("%v matcher is not supported", matcherType)
 		}
 
-		for _, discoveredPackage := range packages {
-			celPackage := map[string]interface{}{
-				"org":       discoveredPackage.Org,
-				"repo":      discoveredPackage.Repo,
-				"directory": discoveredPackage.Directory,
-			}
-
-			isMatch, err := isPackageClusterMatch(matcher.MatchExpression, celCluster, celPackage)
-			if err != nil {
-				return nil, fmt.Errorf("unable to execute package cluster matcher expression: %w", err)
-			}
-
-			if isMatch {
-				matchedPackages = append(matchedPackages, discoveredPackage)
-			}
+		if len(matchedPackages) > 1 {
+			return nil, fmt.Errorf("more than one package rollout is not supported yet. Found %d packages for cluster %s", len(matchedPackages), cluster.Name)
 		}
 
 		clusterPackages := ClusterPackages{
