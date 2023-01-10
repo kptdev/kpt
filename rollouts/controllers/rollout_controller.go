@@ -129,35 +129,107 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, nil
 	}
 
-	progressiveStrategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{}
-	// validate the strategy as early as possible
-	switch typ := rollout.Spec.Strategy.Type; typ {
-	case gitopsv1alpha1.AllAtOnce, gitopsv1alpha1.RollingUpdate:
-	case gitopsv1alpha1.Progressive:
-		strategyRef := types.NamespacedName{
-			Namespace: rollout.Spec.Strategy.Progressive.Namespace,
-			Name:      rollout.Spec.Strategy.Progressive.Name,
-		}
-		if err := r.Get(ctx, strategyRef, progressiveStrategy); err != nil {
-			logger.Error(err, "unable to fetch progressive rollout strategy", "strategyref", strategyRef)
-			// TODO (droot): signal this as a condition in the rollout status
-			return ctrl.Result{}, err
-		}
-		logger.Info("progressive rollout is not supported yet, so nothing to reconcile here.")
-		return ctrl.Result{}, nil
-	default:
-		// TODO (droot): signal this as a condition in the rollout status
-		return ctrl.Result{}, fmt.Errorf("%v strategy not supported yet", typ)
+	strategy, err := r.getStrategy(ctx, &rollout)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	packageDiscoveryClient := r.getPackageDiscoveryClient(req.NamespacedName)
 
-	err := r.reconcileRollout(ctx, &rollout, packageDiscoveryClient)
+	err = r.reconcileRollout(ctx, &rollout, strategy, packageDiscoveryClient)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *RolloutReconciler) getStrategy(ctx context.Context, rollout *gitopsv1alpha1.Rollout) (*gitopsv1alpha1.ProgressiveRolloutStrategy, error) {
+	logger := log.FromContext(ctx)
+
+	progressiveStrategy := gitopsv1alpha1.ProgressiveRolloutStrategy{}
+	progressiveStrategy.Spec = gitopsv1alpha1.ProgressiveRolloutStrategySpec{Waves: []gitopsv1alpha1.Wave{}}
+
+	// validate the strategy as early as possible
+	switch typ := rollout.Spec.Strategy.Type; typ {
+	case gitopsv1alpha1.AllAtOnce:
+		wave := gitopsv1alpha1.Wave{MaxConcurrent: math.MaxInt, Targets: rollout.Spec.Targets}
+		progressiveStrategy.Spec.Waves = append(progressiveStrategy.Spec.Waves, wave)
+
+	case gitopsv1alpha1.RollingUpdate:
+		wave := gitopsv1alpha1.Wave{MaxConcurrent: rollout.Spec.Strategy.RollingUpdate.MaxConcurrent, Targets: rollout.Spec.Targets}
+		progressiveStrategy.Spec.Waves = append(progressiveStrategy.Spec.Waves, wave)
+
+	case gitopsv1alpha1.Progressive:
+		strategyRef := types.NamespacedName{
+			Namespace: rollout.Spec.Strategy.Progressive.Namespace,
+			Name:      rollout.Spec.Strategy.Progressive.Name,
+		}
+		if err := r.Get(ctx, strategyRef, &progressiveStrategy); err != nil {
+			logger.Error(err, "unable to fetch progressive rollout strategy", "strategyref", strategyRef)
+			// TODO (droot): signal this as a condition in the rollout status
+			return nil, err
+		}
+
+		err := r.validateProgressiveRolloutStrategy(ctx, rollout, &progressiveStrategy)
+		if err != nil {
+			logger.Error(err, "progressive rollout strategy failed validation", "strategyref", strategyRef)
+			// TODO (cfry): signal this as a condition in the rollout status
+			return nil, err
+		}
+
+	default:
+		// TODO (droot): signal this as a condition in the rollout status
+		return nil, fmt.Errorf("%v strategy not supported yet", typ)
+	}
+
+	return &progressiveStrategy, nil
+}
+
+func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy) error {
+	allClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
+	if err != nil {
+		return err
+	}
+
+	clustersMap := make(map[string]int)
+	for _, cluster := range allClusters.Items {
+		clustersMap[cluster.Name] = -1
+	}
+
+	for waveIdx, wave := range strategy.Spec.Waves {
+		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
+		if err != nil {
+			return err
+		}
+
+		if len(waveClusters.Items) == 0 {
+			return fmt.Errorf("wave %d does not target any clusters", waveIdx)
+		}
+
+		for _, cluster := range waveClusters.Items {
+			currentClusterWave, found := clustersMap[cluster.Name]
+			if !found {
+				// this should never happen
+				return fmt.Errorf("wave %d references cluster %s not selected by the rollout", waveIdx, cluster.Name)
+			}
+
+			if currentClusterWave > -1 {
+				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %d and %d", cluster.Name, currentClusterWave, waveIdx)
+			}
+
+			clustersMap[cluster.Name] = waveIdx
+		}
+	}
+
+	for _, cluster := range allClusters.Items {
+		wave, _ := clustersMap[cluster.Name]
+		if wave == -1 {
+			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Name)
+		}
+	}
+
+	return nil
 }
 
 func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName types.NamespacedName) *packagediscovery.PackageDiscovery {
@@ -173,14 +245,8 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 	return client
 }
 
-func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
+func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
 	logger := log.FromContext(ctx)
-
-	clusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
-	if err != nil {
-		return err
-	}
-	logger.Info("discovered clusters", "count", len(clusters.Items))
 
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
@@ -189,30 +255,46 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	}
 	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
 
-	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(clusters.Items, discoveredPackages)
+	allClusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
-	allClusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
-	if err != nil {
-		logger.Error(err, "get cluster packages failed")
-		return client.IgnoreNotFound(err)
+	waveInProgress := false
+
+	for _, wave := range strategy.Spec.Waves {
+		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
+		if err != nil {
+			return err
+		}
+
+		packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(waveClusters.Items, discoveredPackages)
+		allClusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
+		if err != nil {
+			logger.Error(err, "get cluster packages failed")
+			return client.IgnoreNotFound(err)
+		}
+
+		for _, clusterPackages := range allClusterPackages {
+			clusterName := clusterPackages.Cluster.Name
+			logger.Info("cluster packages", "cluster", clusterName, "packagesCount", len(clusterPackages.Packages), "packages", clusterPackages.Packages)
+		}
+
+		targets, err := r.computeTargets(ctx, rollout, allClusterPackages, waveClusters.Items)
+		if err != nil {
+			return err
+		}
+
+		thisWaveInProgress, clusterStatuses, err := r.rolloutTargets(ctx, rollout, &wave, targets, waveInProgress)
+		if err != nil {
+			return err
+		}
+
+		if thisWaveInProgress {
+			waveInProgress = true
+		}
+
+		allClusterStatuses = append(allClusterStatuses, clusterStatuses...)
 	}
 
-	for _, clusterPackages := range allClusterPackages {
-		clusterName := clusterPackages.Cluster.Name
-		logger.Info("cluster packages", "cluster", clusterName, "packagesCount", len(clusterPackages.Packages), "packages", clusterPackages.Packages)
-	}
-
-	targets, err := r.computeTargets(ctx, rollout, allClusterPackages)
-	if err != nil {
-		return err
-	}
-
-	clusterStatuses, err := r.rolloutTargets(ctx, rollout, targets)
-	if err != nil {
-		return err
-	}
-
-	if err := r.updateStatus(ctx, rollout, clusterStatuses); err != nil {
+	if err := r.updateStatus(ctx, rollout, allClusterStatuses); err != nil {
 		return err
 	}
 	return nil
@@ -234,7 +316,7 @@ For RRS, make rootSyncTemplate
 */
 func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	rollout *gitopsv1alpha1.Rollout,
-	clusterPackages []packageclustermatcher.ClusterPackages) (*Targets, error) {
+	clusterPackages []packageclustermatcher.ClusterPackages, allowClusters []gkeclusterapis.ContainerCluster) (*Targets, error) {
 
 	RRSkeysToBeDeleted := map[client.ObjectKey]*gitopsv1alpha1.RemoteRootSync{}
 	// let's take a look at existing remoterootsyncs
@@ -242,10 +324,16 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
 	// initially assume all the keys to be deleted
 	for _, rrs := range existingRRSs {
-		RRSkeysToBeDeleted[client.ObjectKeyFromObject(rrs)] = rrs
+		for _, cluster := range allowClusters {
+			if rrs.Spec.ClusterRef.Name == cluster.Name {
+				RRSkeysToBeDeleted[client.ObjectKeyFromObject(rrs)] = rrs
+			}
+		}
 	}
+
 	klog.Infof("Found remoterootsyncs: %s", toRemoteRootSyncNames(existingRRSs))
 	targets := &Targets{}
 	// track keys of all the desired remote rootsyncs
@@ -294,24 +382,22 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, targets *Targets) ([]gitopsv1alpha1.ClusterStatus, error) {
+func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, waveAlreadyInProgress bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
 	clusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
-	if rollout.Spec.Strategy.Type != gitopsv1alpha1.AllAtOnce && rollout.Spec.Strategy.Type != gitopsv1alpha1.RollingUpdate {
-		return clusterStatuses, fmt.Errorf("%v strategy not supported yet", rollout.Spec.Strategy.Type)
-	}
-
 	concurrentUpdates := 0
-	maxConcurrent := math.MaxInt
+	maxConcurrent := int(wave.MaxConcurrent)
+	waiting := "Waiting"
+
+	if waveAlreadyInProgress {
+		maxConcurrent = 0
+		waiting = "Waiting (Upcoming Wave)"
+	}
 
 	for _, target := range targets.Unchanged {
 		if !isRRSSynced(target) {
 			concurrentUpdates++
 		}
-	}
-
-	if rollout.Spec.Strategy.Type == gitopsv1alpha1.RollingUpdate {
-		maxConcurrent = int(rollout.Spec.Strategy.RollingUpdate.MaxConcurrent)
 	}
 
 	for _, target := range targets.ToBeCreated {
@@ -325,7 +411,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rrs); err != nil {
 				klog.Warningf("Error creating RemoteRootSync %s: %v", rrs.Name, err)
-				return nil, err
+				return false, nil, err
 			}
 			concurrentUpdates++
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
@@ -342,10 +428,9 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 				PackageStatus: gitopsv1alpha1.PackageStatus{
 					PackageID:  rrs.Name,
 					SyncStatus: "",
-					Status:     "Waiting",
+					Status:     waiting,
 				},
 			})
-
 		}
 	}
 
@@ -353,7 +438,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Update(ctx, target); err != nil {
 				klog.Warningf("Error updating RemoteRootSync %s: %v", target.Name, err)
-				return nil, err
+				return false, nil, err
 			}
 			concurrentUpdates++
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
@@ -370,7 +455,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 				PackageStatus: gitopsv1alpha1.PackageStatus{
 					PackageID:  target.Name,
 					SyncStatus: "OutOfSync",
-					Status:     "Waiting",
+					Status:     waiting,
 				},
 			})
 		}
@@ -380,7 +465,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Delete(ctx, target); err != nil {
 				klog.Warningf("Error deleting RemoteRootSync %s: %v", target.Name, err)
-				return nil, err
+				return false, nil, err
 			}
 			concurrentUpdates++
 		} else {
@@ -389,7 +474,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 				PackageStatus: gitopsv1alpha1.PackageStatus{
 					PackageID:  target.Name,
 					SyncStatus: "OutOfSync",
-					Status:     "Waiting",
+					Status:     waiting,
 				},
 			})
 		}
@@ -414,7 +499,9 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		})
 	}
 
-	return clusterStatuses, nil
+	waveComplete := concurrentUpdates > 0
+
+	return waveComplete, clusterStatuses, nil
 }
 
 type Targets struct {
