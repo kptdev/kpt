@@ -694,17 +694,30 @@ func getWaveStatus(wave gitopsv1alpha1.Wave, clusterStatuses []gitopsv1alpha1.Cl
 func getOverallStatus(clusterStatuses []gitopsv1alpha1.ClusterStatus) string {
 	overall := "Completed"
 
+	anyProgressing := false
+	anyStalled := false
+	anyWaiting := false
+
 	for _, clusterStatus := range clusterStatuses {
 		switch {
 		case clusterStatus.PackageStatus.Status == "Progressing":
-			overall = "Progressing"
+			anyProgressing = true
 
-		case clusterStatus.PackageStatus.Status == "Stalled" && overall != "Progressing":
-			overall = "Stalled"
+		case clusterStatus.PackageStatus.Status == "Stalled":
+			anyStalled = true
 
-		case strings.HasPrefix(clusterStatus.PackageStatus.Status, "Waiting") && overall != "Progressing":
-			overall = "Waiting"
+		case strings.HasPrefix(clusterStatus.PackageStatus.Status, "Waiting"):
+			anyWaiting = true
 		}
+	}
+
+	switch {
+	case anyProgressing:
+		overall = "Progressing"
+	case anyStalled:
+		overall = "Stalled"
+	case anyWaiting:
+		overall = "Waiting"
 	}
 
 	return overall
