@@ -685,9 +685,10 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 func getWaveStatus(wave gitopsv1alpha1.Wave, clusterStatuses []gitopsv1alpha1.ClusterStatus, wavePaused bool) gitopsv1alpha1.WaveStatus {
 	return gitopsv1alpha1.WaveStatus{
-		Name:   wave.Name,
-		Status: getOverallStatus(clusterStatuses),
-		Paused: wavePaused,
+		Name:            wave.Name,
+		Status:          getOverallStatus(clusterStatuses),
+		Paused:          wavePaused,
+		ClusterStatuses: clusterStatuses,
 	}
 }
 

@@ -151,9 +151,10 @@ type RolloutStatus struct {
 }
 
 type WaveStatus struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	Paused bool   `json:"paused,omitempty"`
+	Name            string          `json:"name"`
+	Status          string          `json:"status"`
+	Paused          bool            `json:"paused,omitempty"`
+	ClusterStatuses []ClusterStatus `json:"clusterStatuses,omitempty"`
 }
 
 type ClusterStatus struct {
