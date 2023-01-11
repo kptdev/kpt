@@ -74,6 +74,26 @@ type ClusterRef struct {
 	Namespace  string `json:"namespace,omitempty"`
 }
 
+func (r *ClusterRef) GetKind() string {
+	return r.Kind
+}
+
+func (r *ClusterRef) GetName() string {
+	return r.Name
+}
+
+func (r *ClusterRef) GetNamespace() string {
+	return r.Namespace
+}
+
+func (r *ClusterRef) GetAPIVersion() string {
+	return r.ApiVersion
+}
+
+type PackageRef struct {
+	Name string `json:"name,omitempty"`
+}
+
 type RootSyncTemplate struct {
 	SourceFormat string `json:"sourceFormat,omitempty"`
 	// Git          *GitInfo `json:"git,omitempty"`
