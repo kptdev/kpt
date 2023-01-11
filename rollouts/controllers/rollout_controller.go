@@ -192,41 +192,54 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		return err
 	}
 
-	clusterWaveMap := make(map[string]int)
+	clusterWaveMap := make(map[string]string)
 	for _, cluster := range allClusters.Items {
-		clusterWaveMap[cluster.Name] = -1
+		clusterWaveMap[cluster.Name] = ""
 	}
 
-	for waveIdx, wave := range strategy.Spec.Waves {
+	pauseAfterWaveName := ""
+	pauseWaveNameFound := false
+
+	if rollout.Spec.Strategy.Progressive != nil {
+		pauseAfterWaveName = rollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName
+	}
+
+	for _, wave := range strategy.Spec.Waves {
 		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
 		if err != nil {
 			return err
 		}
 
 		if len(waveClusters.Items) == 0 {
-			return fmt.Errorf("wave %d does not target any clusters", waveIdx)
+			return fmt.Errorf("wave %q does not target any clusters", wave.Name)
 		}
 
 		for _, cluster := range waveClusters.Items {
 			currentClusterWave, found := clusterWaveMap[cluster.Name]
 			if !found {
 				// this should never happen
-				return fmt.Errorf("wave %d references cluster %s not selected by the rollout", waveIdx, cluster.Name)
+				return fmt.Errorf("wave %q references cluster %s not selected by the rollout", wave.Name, cluster.Name)
 			}
 
-			if currentClusterWave > -1 {
-				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %d and %d", cluster.Name, currentClusterWave, waveIdx)
+			if currentClusterWave != "" {
+				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %q and %q", cluster.Name, currentClusterWave, wave.Name)
 			}
 
-			clusterWaveMap[cluster.Name] = waveIdx
+			clusterWaveMap[cluster.Name] = wave.Name
 		}
+
+		pauseWaveNameFound = pauseWaveNameFound || pauseAfterWaveName == wave.Name
 	}
 
 	for _, cluster := range allClusters.Items {
 		wave, _ := clusterWaveMap[cluster.Name]
-		if wave == -1 {
+		if wave == "" {
 			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Name)
 		}
+	}
+
+	if pauseAfterWaveName != "" && !pauseWaveNameFound {
+		return fmt.Errorf("%q pause wave not found in progressive rollout strategy", pauseAfterWaveName)
 	}
 
 	return nil
@@ -257,7 +270,12 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 
 	allClusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
-	waveInProgress := false
+	pauseFutureWaves := false
+	pauseAfterWaveName := ""
+
+	if rollout.Spec.Strategy.Progressive != nil {
+		pauseAfterWaveName = rollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName
+	}
 
 	for _, wave := range strategy.Spec.Waves {
 		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
@@ -282,13 +300,13 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 			return err
 		}
 
-		thisWaveInProgress, clusterStatuses, err := r.rolloutTargets(ctx, rollout, &wave, targets, waveInProgress)
+		thisWaveInProgress, clusterStatuses, err := r.rolloutTargets(ctx, rollout, &wave, targets, pauseFutureWaves)
 		if err != nil {
 			return err
 		}
 
-		if thisWaveInProgress {
-			waveInProgress = true
+		if thisWaveInProgress || wave.Name == pauseAfterWaveName {
+			pauseFutureWaves = true
 		}
 
 		allClusterStatuses = append(allClusterStatuses, clusterStatuses...)
@@ -382,14 +400,14 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, previousWaveAlreadyInProgress bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
+func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, pauseWave bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
 	clusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 
 	concurrentUpdates := 0
 	maxConcurrent := int(wave.MaxConcurrent)
 	waiting := "Waiting"
 
-	if previousWaveAlreadyInProgress {
+	if pauseWave {
 		maxConcurrent = 0
 		waiting = "Waiting (Upcoming Wave)"
 	}

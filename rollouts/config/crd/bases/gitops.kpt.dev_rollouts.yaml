@@ -119,10 +119,23 @@ spec:
                       strategy to use.
                     properties:
                       name:
-                        description: Reference of ProgressiveRolloutStrategy to use.
+                        description: Name of the ProgressiveRolloutStrategy to use.
                         type: string
                       namespace:
+                        description: Namespace of the ProgressiveRolloutStrategy to
+                          use.
                         type: string
+                      pauseAfterWave:
+                        description: PauseAfterWave represents the highest wave the
+                          strategy will deploy.
+                        properties:
+                          waveName:
+                            description: WaveName represents name of the wave defined
+                              in the ProgressiveRolloutStrategy.
+                            type: string
+                        required:
+                        - waveName
+                        type: object
                     required:
                     - name
                     - namespace
