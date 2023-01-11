@@ -314,6 +314,22 @@ spec:
               observedGeneration:
                 format: int64
                 type: integer
+              overall:
+                type: string
+              waveStatuses:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    paused:
+                      type: boolean
+                    status:
+                      type: string
+                  required:
+                  - name
+                  - status
+                  type: object
+                type: array
             type: object
         type: object
     served: true

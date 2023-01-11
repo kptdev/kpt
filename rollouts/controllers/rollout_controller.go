@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -272,10 +273,13 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 
 	pauseFutureWaves := false
 	pauseAfterWaveName := ""
+	afterPauseAfterWave := false
 
 	if rollout.Spec.Strategy.Progressive != nil {
 		pauseAfterWaveName = rollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName
 	}
+
+	waveStatuses := []gitopsv1alpha1.WaveStatus{}
 
 	for _, wave := range strategy.Spec.Waves {
 		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
@@ -305,22 +309,36 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 			return err
 		}
 
-		if thisWaveInProgress || wave.Name == pauseAfterWaveName {
+		if thisWaveInProgress {
 			pauseFutureWaves = true
 		}
 
 		allClusterStatuses = append(allClusterStatuses, clusterStatuses...)
+
+		waveStatuses = append(waveStatuses, getWaveStatus(wave, clusterStatuses, afterPauseAfterWave))
+
+		if wave.Name == pauseAfterWaveName {
+			pauseFutureWaves = true
+			afterPauseAfterWave = true
+		}
 	}
 
-	if err := r.updateStatus(ctx, rollout, allClusterStatuses); err != nil {
+	if err := r.updateStatus(ctx, rollout, waveStatuses, allClusterStatuses); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1alpha1.Rollout, clusterStatuses []gitopsv1alpha1.ClusterStatus) error {
+func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1alpha1.Rollout, waveStatuses []gitopsv1alpha1.WaveStatus, clusterStatuses []gitopsv1alpha1.ClusterStatus) error {
 	logger := log.FromContext(ctx)
 	logger.Info("updating the status", "cluster statuses", len(clusterStatuses))
+
+	rollout.Status.Overall = getOverallStatus(clusterStatuses)
+
+	if len(waveStatuses) > 1 {
+		rollout.Status.WaveStatuses = waveStatuses
+	}
+
 	rollout.Status.ClusterStatuses = clusterStatuses
 	rollout.Status.ObservedGeneration = rollout.Generation
 	return r.Client.Status().Update(ctx, rollout)
@@ -663,4 +681,31 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gitopsv1alpha1.Rollout{}).
 		Owns(&gitopsv1alpha1.RemoteRootSync{}).
 		Complete(r)
+}
+
+func getWaveStatus(wave gitopsv1alpha1.Wave, clusterStatuses []gitopsv1alpha1.ClusterStatus, wavePaused bool) gitopsv1alpha1.WaveStatus {
+	return gitopsv1alpha1.WaveStatus{
+		Name:   wave.Name,
+		Status: getOverallStatus(clusterStatuses),
+		Paused: wavePaused,
+	}
+}
+
+func getOverallStatus(clusterStatuses []gitopsv1alpha1.ClusterStatus) string {
+	overall := "Completed"
+
+	for _, clusterStatus := range clusterStatuses {
+		switch {
+		case clusterStatus.PackageStatus.Status == "Progressing":
+			overall = "Progressing"
+
+		case clusterStatus.PackageStatus.Status == "Stalled" && overall != "Progressing":
+			overall = "Stalled"
+
+		case strings.HasPrefix(clusterStatus.PackageStatus.Status, "Waiting") && overall != "Progressing":
+			overall = "Waiting"
+		}
+	}
+
+	return overall
 }

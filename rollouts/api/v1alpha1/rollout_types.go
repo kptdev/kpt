@@ -144,7 +144,16 @@ type RolloutStatus struct {
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
+	Overall      string       `json:"overall,omitempty"`
+	WaveStatuses []WaveStatus `json:"waveStatuses,omitempty"`
+
 	ClusterStatuses []ClusterStatus `json:"clusterStatuses,omitempty"`
+}
+
+type WaveStatus struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+	Paused bool   `json:"paused,omitempty"`
 }
 
 type ClusterStatus struct {
