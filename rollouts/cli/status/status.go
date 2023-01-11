@@ -18,8 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	rolloutsapi "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/rollouts/rolloutsclient"
 	"github.com/spf13/cobra"
+
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 func newRunner(ctx context.Context) *runner {
@@ -64,11 +67,20 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("CLUSTER PACKAGE_ID PACKAGE_STATUS PACKAGE_SYNC_STATUS\n")
+	renderStatusAsTable(cmd, rollout)
+	return nil
+}
+
+func renderStatusAsTable(cmd *cobra.Command, rollout *rolloutsapi.Rollout) {
+	t := table.NewWriter()
+	t.SetOutputMirror(cmd.OutOrStdout())
+	t.AppendHeader(table.Row{"CLUSTER", "PACKAGE ID", "PACKAGE STATUS", "SYNC STATUS"})
 	for _, cluster := range rollout.Status.ClusterStatuses {
 		pkgStatus := cluster.PackageStatus
-		fmt.Printf("%s %s %s %s\n", cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus)
+		t.AppendRow([]interface{}{cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
 	}
-
-	return nil
+	t.AppendSeparator()
+	// t.AppendRow([]interface{}{300, "Tyrion", "Lannister", 5000})
+	// t.AppendFooter(table.Row{"", "", "Total", 10000})
+	t.Render()
 }
