@@ -123,6 +123,13 @@ spec:
                         type: string
                       namespace:
                         type: string
+                      pauseAfterWave:
+                        properties:
+                          waveName:
+                            type: string
+                        required:
+                        - waveName
+                        type: object
                     required:
                     - name
                     - namespace
