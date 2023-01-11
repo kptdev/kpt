@@ -211,18 +211,18 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		}
 
 		if len(waveClusters.Items) == 0 {
-			return fmt.Errorf("wave '%s' does not target any clusters", wave.Name)
+			return fmt.Errorf("wave %q does not target any clusters", wave.Name)
 		}
 
 		for _, cluster := range waveClusters.Items {
 			currentClusterWave, found := clusterWaveMap[cluster.Name]
 			if !found {
 				// this should never happen
-				return fmt.Errorf("wave '%s' references cluster %s not selected by the rollout", wave.Name, cluster.Name)
+				return fmt.Errorf("wave %q references cluster %s not selected by the rollout", wave.Name, cluster.Name)
 			}
 
 			if currentClusterWave != "" {
-				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves '%s' and '%s'", cluster.Name, currentClusterWave, wave.Name)
+				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %q and %q", cluster.Name, currentClusterWave, wave.Name)
 			}
 
 			clusterWaveMap[cluster.Name] = wave.Name
@@ -239,7 +239,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 	}
 
 	if pauseAfterWaveName != "" && !pauseWaveNameFound {
-		return fmt.Errorf("'%s' pause wave not found in progressive rollout strategy", pauseAfterWaveName)
+		return fmt.Errorf("%q pause wave not found in progressive rollout strategy", pauseAfterWaveName)
 	}
 
 	return nil
