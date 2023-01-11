@@ -115,13 +115,18 @@ type StrategyRollingUpdate struct {
 
 // StrategyProgressive defines the progressive rollout strategy to use.
 type StrategyProgressive struct {
-	// Reference of ProgressiveRolloutStrategy to use.
-	Name           string         `json:"name"`
-	Namespace      string         `json:"namespace"`
+	// Name of the ProgressiveRolloutStrategy to use.
+	Name string `json:"name"`
+
+	// Namespace of the ProgressiveRolloutStrategy to use.
+	Namespace string `json:"namespace"`
+
+	// PauseAfterWave represents the highest wave the strategy will deploy.
 	PauseAfterWave PauseAfterWave `json:"pauseAfterWave,omitempty"`
 }
 
 type PauseAfterWave struct {
+	// WaveName represents name of the wave defined in the ProgressiveRolloutStrategy.
 	WaveName string `json:"waveName"`
 }
 
