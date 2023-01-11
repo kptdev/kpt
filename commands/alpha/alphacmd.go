@@ -20,6 +20,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/commands/alpha/license"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/live"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/repo"
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/sync"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/wasm"
@@ -54,6 +55,7 @@ func GetCommand(ctx context.Context, name, version string) *cobra.Command {
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
 		license.NewCommand(ctx, version),
+		rollouts.NewCommand(ctx, version),
 	)
 
 	return alpha
