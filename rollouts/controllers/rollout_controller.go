@@ -337,7 +337,9 @@ func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1a
 
 	rollout.Status.Overall = getOverallStatus(clusterStatuses)
 
-	rollout.Status.WaveStatuses = waveStatuses
+	if len(waveStatuses) > 1 {
+		rollout.Status.WaveStatuses = waveStatuses
+	}
 
 	rollout.Status.ClusterStatuses = clusterStatuses
 	rollout.Status.ObservedGeneration = rollout.Generation
