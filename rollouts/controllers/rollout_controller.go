@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"sync"
 
@@ -322,6 +323,8 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 		}
 	}
 
+	sortClusterStatuses(allClusterStatuses)
+
 	if err := r.updateStatus(ctx, rollout, waveStatuses, allClusterStatuses); err != nil {
 		return err
 	}
@@ -334,9 +337,7 @@ func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1a
 
 	rollout.Status.Overall = getOverallStatus(clusterStatuses)
 
-	if len(waveStatuses) > 1 {
-		rollout.Status.WaveStatuses = waveStatuses
-	}
+	rollout.Status.WaveStatuses = waveStatuses
 
 	rollout.Status.ClusterStatuses = clusterStatuses
 	rollout.Status.ObservedGeneration = rollout.Generation
@@ -536,6 +537,8 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 
 	thisWaveInProgress := concurrentUpdates > 0
 
+	sortClusterStatuses(clusterStatuses)
+
 	return thisWaveInProgress, clusterStatuses, nil
 }
 
@@ -680,6 +683,12 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&gitopsv1alpha1.Rollout{}).
 		Owns(&gitopsv1alpha1.RemoteRootSync{}).
 		Complete(r)
+}
+
+func sortClusterStatuses(clusterStatuses []gitopsv1alpha1.ClusterStatus) {
+	sort.Slice(clusterStatuses, func(i, j int) bool {
+		return strings.Compare(clusterStatuses[i].Name, clusterStatuses[j].Name) == -1
+	})
 }
 
 func getWaveStatus(wave gitopsv1alpha1.Wave, clusterStatuses []gitopsv1alpha1.ClusterStatus, wavePaused bool) gitopsv1alpha1.WaveStatus {
