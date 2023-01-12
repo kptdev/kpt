@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sort"
+	"strings"
 
 	"golang.org/x/oauth2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -73,6 +75,10 @@ func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.L
 
 		gkeClusters.Items = intersection
 	}
+
+	sort.Slice(gkeClusters.Items, func(i, j int) bool {
+		return strings.Compare(gkeClusters.Items[i].Name, gkeClusters.Items[j].Name) == -1
+	})
 
 	return gkeClusters, nil
 }
