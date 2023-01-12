@@ -91,7 +91,6 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	logger.Info("reconciling", "key", req.NamespacedName)
 
 	if err := r.Get(ctx, req.NamespacedName, &rollout); err != nil {
-		logger.Error(err, "unable to fetch Rollout")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
 		// on deleted requests.
@@ -373,12 +372,12 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	klog.Infof("Found remoterootsyncs: %s", toRemoteRootSyncNames(existingRRSs))
 	targets := &Targets{}
 	// track keys of all the desired remote rootsyncs
-	for _, clusterPkg := range clusterPackages {
+	for idx, clusterPkg := range clusterPackages {
 		// TODO: figure out multiple packages per cluster story
 		if len(clusterPkg.Packages) < 1 {
 			continue
 		}
-		cluster := &clusterPkg.Cluster
+		cluster := &clusterPackages[idx].Cluster
 		pkg := &clusterPkg.Packages[0]
 		rrs := gitopsv1alpha1.RemoteRootSync{}
 		key := client.ObjectKey{
