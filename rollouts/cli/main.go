@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/GoogleContainerTools/kpt/rollouts/cli/advance"
 	"github.com/GoogleContainerTools/kpt/rollouts/cli/get"
 	"github.com/GoogleContainerTools/kpt/rollouts/cli/status"
 	"github.com/spf13/cobra"
@@ -44,6 +45,7 @@ func main() {
 	}
 
 	rolloutsCmd.AddCommand(
+		advance.NewCommand(ctx),
 		get.NewCommand(ctx),
 		status.NewCommand(ctx),
 	)
