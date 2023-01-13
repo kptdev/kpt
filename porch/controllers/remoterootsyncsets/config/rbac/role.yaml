@@ -45,3 +45,12 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - porch.kpt.dev
+  resources:
+  - packagerevisionresources
+  - packagerevisions
+  verbs:
+  - get
+  - list
+  - watch
