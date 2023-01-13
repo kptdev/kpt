@@ -67,6 +67,10 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if len(rollout.Status.WaveStatuses) > 0 {
+		renderWaveStatusAsTable(cmd, rollout)
+		return nil
+	}
 	renderStatusAsTable(cmd, rollout)
 	return nil
 }
@@ -80,6 +84,26 @@ func renderStatusAsTable(cmd *cobra.Command, rollout *rolloutsapi.Rollout) {
 		t.AppendRow([]interface{}{cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
 	}
 	t.AppendSeparator()
+	// t.AppendRow([]interface{}{300, "Tyrion", "Lannister", 5000})
+	// t.AppendFooter(table.Row{"", "", "Total", 10000})
+	t.Render()
+}
+
+func renderWaveStatusAsTable(cmd *cobra.Command, rollout *rolloutsapi.Rollout) {
+	t := table.NewWriter()
+	t.SetOutputMirror(cmd.OutOrStdout())
+	t.AppendHeader(table.Row{"WAVE", "CLUSTER", "PACKAGE ID", "PACKAGE STATUS", "SYNC STATUS"})
+	for _, wave := range rollout.Status.WaveStatuses {
+		for i, cluster := range wave.ClusterStatuses {
+			pkgStatus := cluster.PackageStatus
+			waveName := ""
+			if i == 0 {
+				waveName = wave.Name
+			}
+			t.AppendRow([]interface{}{waveName, cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
+		}
+		t.AppendSeparator()
+	}
 	// t.AppendRow([]interface{}{300, "Tyrion", "Lannister", 5000})
 	// t.AppendFooter(table.Row{"", "", "Total", 10000})
 	t.Render()
