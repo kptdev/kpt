@@ -10,17 +10,18 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-github/v48 v48.2.0
 	github.com/jedib0t/go-pretty/v6 v6.4.4
-	github.com/onsi/ginkgo/v2 v2.1.6
-	github.com/onsi/gomega v1.20.1
-	github.com/spf13/cobra v1.4.0
+	github.com/onsi/ginkgo/v2 v2.2.0
+	github.com/onsi/gomega v1.20.2
+	github.com/spf13/cobra v1.5.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/api v0.103.0
 	google.golang.org/genproto v0.0.0-20221201164419-0e50fba7f41c
-	k8s.io/api v0.25.0
+	k8s.io/api v0.25.3
 	k8s.io/apimachinery v0.25.4
-	k8s.io/client-go v0.25.0
+	k8s.io/client-go v0.25.3
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.80.1
+	sigs.k8s.io/cli-utils v0.34.0
 	sigs.k8s.io/controller-runtime v0.13.1
 )
 
@@ -89,8 +90,8 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.25.0 // indirect
-	k8s.io/component-base v0.25.0 // indirect
+	k8s.io/apiextensions-apiserver v0.25.3 // indirect
+	k8s.io/component-base v0.25.3 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	k8s.io/utils v0.0.0-20221108210102-8e77b1f39fe2 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
