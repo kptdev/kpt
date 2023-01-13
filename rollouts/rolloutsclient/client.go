@@ -90,3 +90,11 @@ func (rlc *Client) Get(ctx context.Context, name string) (*rolloutsapi.Rollout, 
 
 	return rollout, nil
 }
+
+func (rlc *Client) Update(ctx context.Context, rollout *rolloutsapi.Rollout) error {
+	if err := rlc.client.Update(context.Background(), rollout); err != nil {
+		return err
+	}
+
+	return nil
+}
