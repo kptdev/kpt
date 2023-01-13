@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
@@ -147,6 +148,12 @@ func (r *cachedRepository) getCachedPackages(ctx context.Context, forceRefresh b
 	if forceRefresh {
 		packages = nil
 		packageRevisions = nil
+
+		if gitRepo, isGitRepo := r.repo.(git.GitRepository); isGitRepo {
+			if err := gitRepo.UpdateDeletionProposedCache(); err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	if packages == nil {

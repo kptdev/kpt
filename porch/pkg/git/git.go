@@ -51,6 +51,7 @@ const (
 type GitRepository interface {
 	repository.Repository
 	GetPackageRevision(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
+	UpdateDeletionProposedCache() error
 }
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=MainBranchStrategy -linecomment
@@ -163,6 +164,11 @@ type gitRepository struct {
 	// a git repository.
 	credential repository.Credential
 	mutex      sync.Mutex
+
+	// deletionProposedCache contains the deletionProposed branches that
+	// exist in the repo so that we can easily check them without iterating
+	// through all the refs each time
+	deletionProposedCache map[BranchName]bool
 }
 
 var _ GitRepository = &gitRepository{}
@@ -387,7 +393,17 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		deletionProposedBranch := createDeletionProposedName(oldGit.path, oldGit.revision)
 		refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), oldGit.commit))
 		if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
-			// the deletionProposed branch might not have existed, so we ignore any errors here
+			if strings.HasPrefix(err.Error(),
+				fmt.Sprintf("remote ref %s%s required to be", branchPrefixInRemoteRepo, deletionProposedBranch)) &&
+				strings.HasSuffix(err.Error(), "but is absent") {
+
+				// the deletionProposed branch might not have existed, so we ignore this error
+				klog.Warningf("branch %s does not exist", deletionProposedBranch)
+
+			} else {
+				klog.Errorf("unexpected error while removing deletionProposed branch: %v", err)
+				return err
+			}
 		}
 
 	case isDraftBranchNameInLocal(rn), isProposedBranchNameInLocal(rn):
@@ -601,6 +617,37 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 	}
 
 	return packageRevision, nil
+}
+
+func (r *gitRepository) UpdateDeletionProposedCache() error {
+	r.deletionProposedCache = make(map[BranchName]bool)
+
+	err := r.fetchRemoteRepository(context.Background())
+	if err != nil {
+		return err
+	}
+	refs, err := r.repo.References()
+	if err != nil {
+		return err
+	}
+
+	for {
+		ref, err := refs.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			klog.Errorf("error getting next ref: %v", err)
+			break
+		}
+
+		branch, isDeletionProposedBranch := getdeletionProposedBranchNameInLocal(ref.Name())
+		if isDeletionProposedBranch {
+			r.deletionProposedCache[deletionProposedPrefix+branch] = true
+		}
+	}
+
+	return nil
 }
 
 func parseDraftName(draft *plumbing.Reference) (name string, workspaceName v1alpha1.WorkspaceName, err error) {

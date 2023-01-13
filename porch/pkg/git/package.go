@@ -20,7 +20,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 	"time"
 
@@ -39,7 +38,6 @@ type gitPackageRevision struct {
 	repo          *gitRepository // repo is repo containing the package
 	path          string
 	revision      string
-	lifecycle     v1alpha1.PackageRevisionLifecycle
 	workspaceName v1alpha1.WorkspaceName
 	updated       time.Time
 	updatedBy     string
@@ -266,49 +264,32 @@ func (p *gitPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, 
 }
 
 func (p *gitPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
-	if p.lifecycle == "" {
-		switch ref := p.ref; {
-		case ref == nil:
-			p.lifecycle = p.checkPublishedLifecycle()
-		case isDraftBranchNameInLocal(ref.Name()):
-			p.lifecycle = v1alpha1.PackageRevisionLifecycleDraft
-		case isProposedBranchNameInLocal(ref.Name()):
-			p.lifecycle = v1alpha1.PackageRevisionLifecycleProposed
-		default:
-			p.lifecycle = p.checkPublishedLifecycle()
-		}
+	switch ref := p.ref; {
+	case ref == nil:
+		return p.checkPublishedLifecycle()
+	case isDraftBranchNameInLocal(ref.Name()):
+		return v1alpha1.PackageRevisionLifecycleDraft
+	case isProposedBranchNameInLocal(ref.Name()):
+		return v1alpha1.PackageRevisionLifecycleProposed
+	default:
+		return p.checkPublishedLifecycle()
 	}
-	return p.lifecycle
+
 }
 
 func (p *gitPackageRevision) checkPublishedLifecycle() v1alpha1.PackageRevisionLifecycle {
-	err := p.repo.fetchRemoteRepository(context.Background())
-	if err != nil {
-		klog.Errorf("failed to fetch remote repository", err)
-		return v1alpha1.PackageRevisionLifecyclePublished
-	}
-	refs, err := p.repo.repo.References()
-	if err != nil {
-		klog.Errorf("error getting references: %v", err)
-		return v1alpha1.PackageRevisionLifecyclePublished
+	if p.repo.deletionProposedCache == nil {
+		if err := p.repo.UpdateDeletionProposedCache(); err != nil {
+			klog.Errorf("failed to update deletionProposed cache: %v", err)
+			return v1alpha1.PackageRevisionLifecyclePublished
+		}
 	}
 
-	for {
-		ref, err := refs.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			klog.Errorf("error getting next ref: %v", err)
-			break
-		}
-
-		branch, isDeletionProposedBranch := getdeletionProposedBranchNameInLocal(ref.Name())
-		if isDeletionProposedBranch &&
-			deletionProposedPrefix+branch == createDeletionProposedName(p.path, p.revision) {
-			return v1alpha1.PackageRevisionLifecycleDeletionProposed
-		}
+	branchName := createDeletionProposedName(p.path, p.revision)
+	if _, found := p.repo.deletionProposedCache[branchName]; found {
+		return v1alpha1.PackageRevisionLifecycleDeletionProposed
 	}
+
 	return v1alpha1.PackageRevisionLifecyclePublished
 }
 
@@ -326,7 +307,7 @@ func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.P
 		}
 
 		// Push the package revision into a deletionProposed branch.
-		p.lifecycle = v1alpha1.PackageRevisionLifecycleDeletionProposed
+		p.repo.deletionProposedCache[deletionProposedBranch] = true
 		refSpecs.AddRefToPush(p.commit, deletionProposedBranch.RefInLocal())
 	}
 	if old == v1alpha1.PackageRevisionLifecycleDeletionProposed {
@@ -335,7 +316,7 @@ func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.P
 		}
 
 		// Delete the deletionProposed branch
-		p.lifecycle = v1alpha1.PackageRevisionLifecyclePublished
+		delete(p.repo.deletionProposedCache, deletionProposedBranch)
 		ref := plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), p.commit)
 		refSpecs.AddRefToDelete(ref)
 	}

@@ -71,7 +71,7 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// We don't allow any updates to the spec for packagerevision that have been published. That includes updates of the lifecycle. But
 		// we allow updates to metadata and status. The only exception is that the lifecycle
-		// can change between Published and DeletionProposed.
+		// can change between Published and DeletionProposed and vice versa.
 		newLifecycle := newRevision.Spec.Lifecycle
 		if api.LifecycleIsPublished(newLifecycle) {
 			// copy the lifecycle value over before calling reflect.DeepEqual to allow comparison
