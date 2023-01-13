@@ -17,12 +17,15 @@ package rolloutsclient
 import (
 	"context"
 	"fmt"
+	"time"
 
 	rolloutsapi "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/cli-utils/pkg/flowcontrol"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -37,7 +40,9 @@ func New() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	cl, err := client.New(config.GetConfigOrDie(), client.Options{
+
+	config := useServerSideThrottling(config.GetConfigOrDie())
+	cl, err := client.New(config, client.Options{
 		Scheme: scheme,
 	})
 	if err != nil {
@@ -97,4 +102,22 @@ func (rlc *Client) Update(ctx context.Context, rollout *rolloutsapi.Rollout) err
 	}
 
 	return nil
+}
+
+func useServerSideThrottling(config *rest.Config) *rest.Config {
+	// Timeout if the query takes too long
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	enabled, err := flowcontrol.IsEnabled(ctx, config)
+	if err != nil {
+		fmt.Printf("Failed to query apiserver to check for flow control enablement: %v\n", err)
+	}
+
+	if enabled {
+		config.QPS = -1
+		config.Burst = -1
+	}
+
+	return config
 }
