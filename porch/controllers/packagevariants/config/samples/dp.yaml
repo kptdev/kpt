@@ -13,7 +13,7 @@
 # limitations under the License.
 
 apiVersion: config.porch.kpt.dev/v1alpha1
-kind: DownstreamPackage
+kind: PackageVariant
 metadata:
   name: my-dp
   namespace: default

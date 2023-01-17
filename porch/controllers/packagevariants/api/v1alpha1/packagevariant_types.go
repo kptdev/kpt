@@ -21,18 +21,18 @@ import (
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// DownstreamPackage represents an upstream and downstream porch package pair.
-// The upstream package should already exist. The DownstreamPackage controller is
+// PackageVariant represents an upstream and downstream porch package pair.
+// The upstream package should already exist. The PackageVariant controller is
 // responsible for creating the downstream package revisions based on the spec.
-type DownstreamPackage struct {
+type PackageVariant struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   DownstreamPackageSpec   `json:"spec,omitempty"`
-	Status DownstreamPackageStatus `json:"status,omitempty"`
+	Spec   PackageVariantSpec   `json:"spec,omitempty"`
+	Status PackageVariantStatus `json:"status,omitempty"`
 }
 
-func (o *DownstreamPackage) GetSpec() *DownstreamPackageSpec {
+func (o *PackageVariant) GetSpec() *PackageVariantSpec {
 	if o == nil {
 		return nil
 	}
@@ -50,8 +50,8 @@ const (
 	DeletionPolicyOrphan DeletionPolicy = "orphan"
 )
 
-// DownstreamPackageSpec defines the desired state of DownstreamPackage
-type DownstreamPackageSpec struct {
+// PackageVariantSpec defines the desired state of PackageVariant
+type PackageVariantSpec struct {
 	Upstream   *Upstream   `json:"upstream,omitempty"`
 	Downstream *Downstream `json:"downstream,omitempty"`
 
@@ -70,18 +70,18 @@ type Downstream struct {
 	Package string `json:"package,omitempty"`
 }
 
-// DownstreamPackageStatus defines the observed state of DownstreamPackage
-type DownstreamPackageStatus struct{}
+// PackageVariantStatus defines the observed state of PackageVariant
+type PackageVariantStatus struct{}
 
 //+kubebuilder:object:root=true
 
-// DownstreamPackageList contains a list of DownstreamPackage
-type DownstreamPackageList struct {
+// PackageVariantList contains a list of PackageVariant
+type PackageVariantList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []DownstreamPackage `json:"items"`
+	Items           []PackageVariant `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&DownstreamPackage{}, &DownstreamPackageList{})
+	SchemeBuilder.Register(&PackageVariant{}, &PackageVariantList{})
 }
