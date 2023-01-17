@@ -320,7 +320,7 @@ func (r *RootSyncRolloutReconciler) getPackages(ctx context.Context, rollout *v1
 		packageRevision := packageRevisionList.Items[i]
 		packageName := packageRevision.Spec.PackageName
 		// TODO: See if we can handle this with a FieldSelector on packagerevisions.
-		if packageRevision.Spec.Lifecycle != porchapi.PackageRevisionLifecyclePublished {
+		if !porchapi.LifecycleIsPublished(packageRevision.Spec.Lifecycle) {
 			continue
 		}
 		if _, found := packageMap[packageName]; !found {

@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -26,9 +27,11 @@ import (
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 )
 
 type gitPackageRevision struct {
@@ -124,7 +127,7 @@ func (p *gitPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.
 		Conditions:   repository.ToApiConditions(kf),
 	}
 
-	if p.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+	if v1alpha1.LifecycleIsPublished(p.Lifecycle()) {
 		if !p.updated.IsZero() {
 			status.PublishedAt = metav1.Time{Time: p.updated}
 		}
@@ -263,14 +266,68 @@ func (p *gitPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, 
 func (p *gitPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 	switch ref := p.ref; {
 	case ref == nil:
-		return v1alpha1.PackageRevisionLifecyclePublished
+		return p.checkPublishedLifecycle()
 	case isDraftBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleDraft
 	case isProposedBranchNameInLocal(ref.Name()):
 		return v1alpha1.PackageRevisionLifecycleProposed
 	default:
-		return v1alpha1.PackageRevisionLifecyclePublished
+		return p.checkPublishedLifecycle()
 	}
+
+}
+
+func (p *gitPackageRevision) checkPublishedLifecycle() v1alpha1.PackageRevisionLifecycle {
+	if p.repo.deletionProposedCache == nil {
+		if err := p.repo.UpdateDeletionProposedCache(); err != nil {
+			klog.Errorf("failed to update deletionProposed cache: %v", err)
+			return v1alpha1.PackageRevisionLifecyclePublished
+		}
+	}
+
+	branchName := createDeletionProposedName(p.path, p.revision)
+	if _, found := p.repo.deletionProposedCache[branchName]; found {
+		return v1alpha1.PackageRevisionLifecycleDeletionProposed
+	}
+
+	return v1alpha1.PackageRevisionLifecyclePublished
+}
+
+func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error {
+	old := p.Lifecycle()
+	if !v1alpha1.LifecycleIsPublished(old) {
+		return fmt.Errorf("cannot update lifecycle for draft package revision")
+	}
+	refSpecs := newPushRefSpecBuilder()
+	deletionProposedBranch := createDeletionProposedName(p.path, p.revision)
+
+	if old == v1alpha1.PackageRevisionLifecyclePublished {
+		if new != v1alpha1.PackageRevisionLifecycleDeletionProposed {
+			return fmt.Errorf("invalid new lifecycle value: %q", new)
+		}
+
+		// Push the package revision into a deletionProposed branch.
+		p.repo.deletionProposedCache[deletionProposedBranch] = true
+		refSpecs.AddRefToPush(p.commit, deletionProposedBranch.RefInLocal())
+	}
+	if old == v1alpha1.PackageRevisionLifecycleDeletionProposed {
+		if new != v1alpha1.PackageRevisionLifecyclePublished {
+			return fmt.Errorf("invalid new lifecycle value: %q", new)
+		}
+
+		// Delete the deletionProposed branch
+		delete(p.repo.deletionProposedCache, deletionProposedBranch)
+		ref := plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), p.commit)
+		refSpecs.AddRefToDelete(ref)
+	}
+
+	if err := p.repo.pushAndCleanup(ctx, refSpecs); err != nil {
+		if !errors.Is(err, git.NoErrAlreadyUpToDate) {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // TODO: Define a type `gitPackage` to implement the Repository.Package interface

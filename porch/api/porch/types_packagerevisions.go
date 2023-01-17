@@ -44,9 +44,10 @@ type PackageRevisionList struct {
 type PackageRevisionLifecycle string
 
 const (
-	PackageRevisionLifecycleDraft     PackageRevisionLifecycle = "Draft"
-	PackageRevisionLifecycleProposed  PackageRevisionLifecycle = "Proposed"
-	PackageRevisionLifecyclePublished PackageRevisionLifecycle = "Published"
+	PackageRevisionLifecycleDraft            PackageRevisionLifecycle = "Draft"
+	PackageRevisionLifecycleProposed         PackageRevisionLifecycle = "Proposed"
+	PackageRevisionLifecyclePublished        PackageRevisionLifecycle = "Published"
+	PackageRevisionLifecycleDeletionProposed PackageRevisionLifecycle = "DeletionProposed"
 )
 
 type WorkspaceName string

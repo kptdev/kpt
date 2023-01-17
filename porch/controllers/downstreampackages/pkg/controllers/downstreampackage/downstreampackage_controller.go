@@ -187,7 +187,7 @@ func (r *DownstreamPackageReconciler) findAndUpdateExistingRevision(ctx context.
 		return downstream, nil
 	}
 
-	if downstream.Spec.Lifecycle == porchapi.PackageRevisionLifecyclePublished {
+	if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
 		var err error
 		downstream, err = r.copyPublished(ctx, downstream, dp)
 		if err != nil {
@@ -231,7 +231,7 @@ func (r *DownstreamPackageReconciler) getDownstreamPR(dp *api.DownstreamPackage,
 
 		// Check if this PR is a draft. We should only have one draft created by this controller at a time,
 		// so we can just return it.
-		if pr.Spec.Lifecycle != porchapi.PackageRevisionLifecyclePublished {
+		if !porchapi.LifecycleIsPublished(pr.Spec.Lifecycle) {
 			return &pr
 		} else {
 			latestPublished, latestVersion = compare(&pr, latestPublished, latestVersion)

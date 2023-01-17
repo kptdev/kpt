@@ -811,7 +811,6 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	const (
 		repository  = "delete-final"
 		packageName = "test-delete-final"
-		revision    = "v1"
 		workspace   = "workspace"
 	)
 
@@ -834,7 +833,75 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
-	// Delete the package
+	// Try to delete the package. This should fail because it hasn't been proposed for deletion.
+	t.DeleteL(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+
+	t.mustNotExist(ctx, &pkg)
+}
+
+func (t *PorchSuite) TestProposeDeleteAndUndo(ctx context.Context) {
+	const (
+		repository  = "test-propose-delete-and-undo"
+		packageName = "test-propose-delete-and-undo"
+		workspace   = "workspace"
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
+
+	// Check the package exists
+	var pkg porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	// Undo proposal of deletion
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	// Try to delete the package. This should fail because the lifecycle should be changed back to Published.
+	t.DeleteL(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
@@ -867,16 +934,15 @@ func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
 	t.UpdateF(ctx, &pkg)
 
-	// Assign a revision number
-	pkg.Spec.Revision = "v1"
-	t.UpdateF(ctx, &pkg)
-
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
 
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
-	// Delete the package
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,

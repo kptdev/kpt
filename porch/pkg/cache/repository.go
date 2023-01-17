@@ -22,6 +22,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/git"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
@@ -147,6 +148,14 @@ func (r *cachedRepository) getCachedPackages(ctx context.Context, forceRefresh b
 	if forceRefresh {
 		packages = nil
 		packageRevisions = nil
+
+		if gitRepo, isGitRepo := r.repo.(git.GitRepository); isGitRepo {
+			// TODO: Figure out a way to do this without the cache layer
+			//  needing to know what type of repo we are working with.
+			if err := gitRepo.UpdateDeletionProposedCache(); err != nil {
+				return nil, nil, err
+			}
+		}
 	}
 
 	if packages == nil {
@@ -225,7 +234,7 @@ func (r *cachedRepository) update(ctx context.Context, updated repository.Packag
 	k := updated.Key()
 	// previous := r.cachedPackageRevisions[k]
 
-	if updated.Lifecycle() == v1alpha1.PackageRevisionLifecyclePublished {
+	if v1alpha1.LifecycleIsPublished(updated.Lifecycle()) {
 		oldKey := repository.PackageRevisionKey{
 			Repository:    k.Repository,
 			Package:       k.Package,

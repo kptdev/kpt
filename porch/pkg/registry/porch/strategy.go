@@ -41,7 +41,7 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 
 	// Verify that the new lifecycle value is valid.
 	switch lifecycle := newRevision.Spec.Lifecycle; lifecycle {
-	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
+	case "", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// valid
 	default:
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("value can be only updated to %s",
@@ -49,6 +49,7 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 				string(api.PackageRevisionLifecycleDraft),
 				string(api.PackageRevisionLifecycleProposed),
 				string(api.PackageRevisionLifecyclePublished),
+				string(api.PackageRevisionLifecycleDeletionProposed),
 			}, ",")),
 		))
 	}
@@ -67,9 +68,16 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 				}, ",")),
 			))
 		}
-	case api.PackageRevisionLifecyclePublished:
+	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// We don't allow any updates to the spec for packagerevision that have been published. That includes updates of the lifecycle. But
-		// we allow updates to metadata and status.
+		// we allow updates to metadata and status. The only exception is that the lifecycle
+		// can change between Published and DeletionProposed and vice versa.
+		newLifecycle := newRevision.Spec.Lifecycle
+		if api.LifecycleIsPublished(newLifecycle) {
+			// copy the lifecycle value over before calling reflect.DeepEqual to allow comparison
+			// of all other fields without error
+			newRevision.Spec.Lifecycle = oldRevision.Spec.Lifecycle
+		}
 		if !equality.Semantic.DeepEqual(oldRevision.Spec, newRevision.Spec) {
 			allErrs = append(allErrs, field.Invalid(field.NewPath("spec"), newRevision.Spec, fmt.Sprintf("spec can only update package with lifecycle value one of %s",
 				strings.Join([]string{
@@ -78,12 +86,14 @@ func (s packageRevisionStrategy) ValidateUpdate(ctx context.Context, obj, old ru
 				}, ",")),
 			))
 		}
+		newRevision.Spec.Lifecycle = newLifecycle
 	default:
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "lifecycle"), lifecycle, fmt.Sprintf("can only update package with lifecycle value one of %s",
 			strings.Join([]string{
 				string(api.PackageRevisionLifecycleDraft),
 				string(api.PackageRevisionLifecycleProposed),
 				string(api.PackageRevisionLifecyclePublished),
+				string(api.PackageRevisionLifecycleDeletionProposed),
 			}, ",")),
 		))
 	}
