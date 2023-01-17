@@ -69,8 +69,15 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	if err := validatePackageVariant(pv); err != nil {
-		return ctrl.Result{}, err
+	if errs := validatePackageVariant(pv); len(errs) > 0 {
+		pv.Status.ValidationErrors = nil
+		for _, validationErr := range errs {
+			if validationErr.Error() != "" {
+				pv.Status.ValidationErrors = append(pv.Status.ValidationErrors, validationErr.Error())
+			}
+		}
+		statusUpdateErr := r.Client.Status().Update(ctx, pv)
+		return ctrl.Result{}, statusUpdateErr
 	}
 
 	upstream := r.getUpstreamPR(pv.Spec.Upstream, prList)
@@ -100,7 +107,7 @@ func (r *PackageVariantReconciler) init(ctx context.Context,
 	return &pv, &prList, nil
 }
 
-func validatePackageVariant(pv *api.PackageVariant) error {
+func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if pv.Spec.Upstream == nil {
 		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream"), "{}", "missing required field"))
@@ -143,7 +150,7 @@ func validatePackageVariant(pv *api.PackageVariant) error {
 			fmt.Sprintf("field can only be %q or %q",
 				api.DeletionPolicyOrphan, api.DeletionPolicyDelete)))
 	}
-	return allErrs.ToAggregate()
+	return allErrs
 }
 
 func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
@@ -160,8 +167,8 @@ func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
 
 // ensurePackageVariant needs to:
 //   - Check if the downstream package revision already exists. If not, create it.
-//   - If it does already exist, we need to make sure it is up-to-date. If there is
-//     a downstream package draft, we look at the draft. Otherwise, we look at the latest
+//   - If it does already exist, we need to make sure it is up-to-date. If there are
+//     downstream package drafts, we look at all drafts. Otherwise, we look at the latest
 //     published downstream package revision.
 //   - Compare pd.Spec.Upstream.Revision to the revision number that the downstream
 //     package is based on. If it is different, we need to do an update (could be an upgrade
@@ -262,6 +269,13 @@ func (r *PackageVariantReconciler) getDownstreamPRs(ctx context.Context,
 	latestVersion := "v0"
 
 	for _, pr := range prList.Items {
+		// TODO: When we have a way to find the upstream packagerevision without
+		//   listing all packagerevisions, we should add a label to the resources we
+		//   own so that we can fetch only those packagerevisions. (A caveat here is
+		//   that if the adoptionPolicy is set to adoptExisting, we will still have
+		//   to fetch all the packagerevisions so that we can determine which ones
+		//   we need to adopt. A mechanism to filter packagerevisions by repo/package
+		//   would be helpful for that.)
 		owned := r.hasOurOwnerReference(pv, pr.ObjectMeta.OwnerReferences)
 		if !owned && pv.Spec.AdoptionPolicy != api.AdoptionPolicyAdoptExisting {
 			// this package revision doesn't belong to us

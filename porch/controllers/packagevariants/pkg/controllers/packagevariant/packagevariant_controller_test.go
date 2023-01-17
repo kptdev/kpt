@@ -101,7 +101,7 @@ spec:
 		t.Run(tn, func(t *testing.T) {
 			var pv api.PackageVariant
 			require.NoError(t, yaml.Unmarshal([]byte(tc.packageVariant), &pv))
-			actualErr := validatePackageVariant(&pv)
+			actualErr := validatePackageVariant(&pv).ToAggregate()
 			if tc.expectedErr == "" {
 				require.NoError(t, actualErr)
 			} else {

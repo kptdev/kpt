@@ -71,7 +71,9 @@ type Downstream struct {
 }
 
 // PackageVariantStatus defines the observed state of PackageVariant
-type PackageVariantStatus struct{}
+type PackageVariantStatus struct {
+	ValidationErrors []string `json:"validationErrors,omitempty"`
+}
 
 //+kubebuilder:object:root=true
 
