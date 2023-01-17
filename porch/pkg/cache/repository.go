@@ -150,6 +150,8 @@ func (r *cachedRepository) getCachedPackages(ctx context.Context, forceRefresh b
 		packageRevisions = nil
 
 		if gitRepo, isGitRepo := r.repo.(git.GitRepository); isGitRepo {
+			// TODO: Figure out a way to do this without the cache layer
+			//  needing to know what type of repo we are working with.
 			if err := gitRepo.UpdateDeletionProposedCache(); err != nil {
 				return nil, nil, err
 			}
