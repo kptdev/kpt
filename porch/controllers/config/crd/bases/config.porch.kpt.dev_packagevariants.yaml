@@ -1,4 +1,4 @@
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,23 +19,23 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: downstreampackages.config.porch.kpt.dev
+  name: packagevariants.config.porch.kpt.dev
 spec:
   group: config.porch.kpt.dev
   names:
-    kind: DownstreamPackage
-    listKind: DownstreamPackageList
-    plural: downstreampackages
-    singular: downstreampackage
+    kind: PackageVariant
+    listKind: PackageVariantList
+    plural: packagevariants
+    singular: packagevariant
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DownstreamPackage represents an upstream and downstream porch
-          package pair. The upstream package should already exist. The DownstreamPackage
-          controller is responsible for creating the downstream package revisions
-          based on the spec.
+        description: PackageVariant represents an upstream and downstream porch package
+          pair. The upstream package should already exist. The PackageVariant controller
+          is responsible for creating the downstream package revisions based on the
+          spec.
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -50,7 +50,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: DownstreamPackageSpec defines the desired state of DownstreamPackage
+            description: PackageVariantSpec defines the desired state of PackageVariant
             properties:
               adoptionPolicy:
                 type: string
@@ -74,7 +74,12 @@ spec:
                 type: object
             type: object
           status:
-            description: DownstreamPackageStatus defines the observed state of DownstreamPackage
+            description: PackageVariantStatus defines the observed state of PackageVariant
+            properties:
+              validationErrors:
+                items:
+                  type: string
+                type: array
             type: object
         type: object
     served: true
