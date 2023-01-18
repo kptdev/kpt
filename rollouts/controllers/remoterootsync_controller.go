@@ -24,6 +24,7 @@ import (
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -40,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
+	"github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/k8s/v1alpha1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
 )
@@ -59,6 +61,9 @@ var (
 
 	remoteRootSyncNameLabel      = "gitops.kpt.dev/remoterootsync-name"
 	remoteRootSyncNamespaceLabel = "gitops.kpt.dev/remoterootsync-namespace"
+
+	clusterNotReady           = "ClusterNotReady"
+	clusterConnectivityFailed = "ClusterConnectivityFailed"
 )
 
 // RemoteRootSyncReconciler reconciles a RemoteRootSync object
@@ -136,25 +141,41 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	gkeCluster, err := r.store.GetCluster(ctx, cr.Name)
 	if err != nil {
+		r.updateStatus(ctx, &remoterootsync, clusterConnectivityFailed, nil)
+		return ctrl.Result{}, err
+	}
+
+	readyCondition, found, err := getStatusCondition(gkeCluster.Status.Conditions, "Ready")
+	if !found {
+		r.updateStatus(ctx, &remoterootsync, clusterNotReady, nil)
+		return ctrl.Result{}, err
+	}
+
+	if readyCondition.Status == "False" {
+		r.updateStatus(ctx, &remoterootsync, clusterNotReady, nil)
 		return ctrl.Result{}, err
 	}
 
 	_, dynCl, err := r.store.GetClusterClient(ctx, gkeCluster)
 	if err != nil {
+		r.updateStatus(ctx, &remoterootsync, clusterConnectivityFailed, nil)
 		return ctrl.Result{}, err
 	}
+
 	r.setupWatches(ctx, dynCl, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
 
 	if err := r.patchRootSync(ctx, dynCl, req.Name, &remoterootsync); err != nil {
+		r.updateStatus(ctx, &remoterootsync, clusterConnectivityFailed, nil)
 		return ctrl.Result{}, err
 	}
 
 	syncStatus, err := checkSyncStatus(ctx, dynCl, req.Name)
 	if err != nil {
+		r.updateStatus(ctx, &remoterootsync, clusterConnectivityFailed, nil)
 		return ctrl.Result{}, err
 	}
 
-	if err := r.updateStatus(ctx, &remoterootsync, syncStatus); err != nil {
+	if err := r.updateStatus(ctx, &remoterootsync, "Ready", &syncStatus); err != nil {
 		klog.Errorf("failed to update status: %v", err)
 		return ctrl.Result{}, err
 	}
@@ -162,16 +183,39 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return ctrl.Result{}, nil
 }
 
-func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, syncStatus string) error {
+func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, readyReason string, syncStatus *string) error {
 	logger := log.FromContext(ctx)
 
+	rssReady := metav1.ConditionTrue
+	if readyReason != "Ready" {
+		rssReady = metav1.ConditionFalse
+	}
+
 	// Don't update if there are no changes.
-	if rrs.Status.SyncStatus == syncStatus && rrs.Generation == rrs.Status.ObservedGeneration {
+	syncStatusChanged := syncStatus != nil && rrs.Status.SyncStatus != *syncStatus
+	generationChanged := rrs.Generation == rrs.Status.ObservedGeneration
+	readyStatusChanged := len(rrs.Status.Conditions) == 0 || rrs.Status.Conditions[0].Type != "Ready" || rrs.Status.Conditions[0].Status != rssReady
+
+	if !generationChanged && !syncStatusChanged && !readyStatusChanged {
 		return nil
 	}
+
 	logger.Info("updating the status")
-	rrs.Status.SyncStatus = syncStatus
 	rrs.Status.ObservedGeneration = rrs.Generation
+	if syncStatus != nil {
+		rrs.Status.SyncStatus = *syncStatus
+	}
+	if readyStatusChanged {
+		rrs.Status.Conditions = []metav1.Condition{
+			{
+				Type:               "Ready",
+				Reason:             readyReason,
+				Status:             rssReady,
+				LastTransitionTime: v1.Now(),
+			},
+		}
+	}
+
 	return r.Client.Status().Update(ctx, rrs)
 }
 
@@ -338,4 +382,13 @@ func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			}),
 		).
 		Complete(r)
+}
+
+func getStatusCondition(conditions []v1alpha1.Condition, condType string) (v1alpha1.Condition, bool, error) {
+	for _, cond := range conditions {
+		if cond.Type == condType {
+			return cond, true, nil
+		}
+	}
+	return v1alpha1.Condition{}, false, nil
 }
