@@ -28,13 +28,19 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
@@ -54,6 +60,14 @@ func (o *Options) BindFlags(prefix string, flags *flag.FlagSet) {
 
 const (
 	rolloutLabel = "gitops.kpt.dev/rollout-name"
+)
+
+var (
+	configConnectorContainerClusterGVK = schema.GroupVersionKind{
+		Group:   "container.cnrm.cloud.google.com",
+		Version: "v1beta1",
+		Kind:    "ContainerCluster",
+	}
 )
 
 // RolloutReconciler reconciles a Rollout object
@@ -588,6 +602,19 @@ func (r *RolloutReconciler) listRemoteRootSyncs(ctx context.Context, rsdName, rs
 	return remoterootsyncs, nil
 }
 
+func (r *RolloutReconciler) listAllRollouts(ctx context.Context) ([]*gitopsv1alpha1.Rollout, error) {
+	var list gitopsv1alpha1.RolloutList
+	if err := r.List(ctx, &list); err != nil {
+		return nil, err
+	}
+	var rollouts []*gitopsv1alpha1.Rollout
+	for i := range list.Items {
+		item := &list.Items[i]
+		rollouts = append(rollouts, item)
+	}
+	return rollouts, nil
+}
+
 func isRRSSynced(rss *gitopsv1alpha1.RemoteRootSync) bool {
 	if rss.Generation != rss.Status.ObservedGeneration {
 		return false
@@ -680,11 +707,47 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := r.store.Init(); err != nil {
 		return err
 	}
-	// TODO: watch cluster resources as well
+
+	var containerCluster unstructured.Unstructured
+	containerCluster.SetGroupVersionKind(configConnectorContainerClusterGVK)
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
 		Owns(&gitopsv1alpha1.RemoteRootSync{}).
+		Watches(
+			&source.Kind{Type: &containerCluster},
+			handler.EnqueueRequestsFromMapFunc(r.mapClusterUpdateToRequest),
+		).
 		Complete(r)
+}
+
+func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []reconcile.Request {
+	logger := log.FromContext(context.Background())
+
+	var requests []reconcile.Request
+
+	allRollouts, err := r.listAllRollouts(context.Background())
+	if err != nil {
+		logger.Error(err, "failed to list rollouts")
+		return []reconcile.Request{}
+	}
+
+	for _, rollout := range allRollouts {
+		selector, err := metav1.LabelSelectorAsSelector(rollout.Spec.Targets.Selector)
+		if err != nil {
+			logger.Error(err, "failed to create label selector", "rolloutName", rollout.Name)
+			continue
+		}
+
+		rolloutDeploysToCluster := rolloutIncludesCluster(rollout, cluster.GetName())
+		clusterInTargetSet := selector.Matches(labels.Set(cluster.GetLabels()))
+
+		if rolloutDeploysToCluster || clusterInTargetSet {
+			requests = append(requests, reconcile.Request{NamespacedName: types.NamespacedName{Name: rollout.Name, Namespace: rollout.Namespace}})
+		}
+	}
+
+	return requests
 }
 
 func sortClusterStatuses(clusterStatuses []gitopsv1alpha1.ClusterStatus) {
@@ -732,4 +795,14 @@ func getOverallStatus(clusterStatuses []gitopsv1alpha1.ClusterStatus) string {
 	}
 
 	return overall
+}
+
+func rolloutIncludesCluster(rollout *gitopsv1alpha1.Rollout, clusterName string) bool {
+	for _, clusterStatus := range rollout.Status.ClusterStatuses {
+		if clusterStatus.Name == clusterName {
+			return true
+		}
+	}
+
+	return false
 }
