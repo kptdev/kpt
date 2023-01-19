@@ -110,11 +110,16 @@ func RunLicenseScan(ctx context.Context, opts RunLicenseScanOptions) error {
 
 	var modules []*Module
 	for _, dep := range buildInfo.Deps {
+		ignore := false
 		for _, ignorePackage := range opts.IgnorePackage {
 			if ignorePackage == dep.Path {
 				klog.Infof("ignoring package %s@%s", dep.Path, dep.Version)
-				continue
+				ignore = true
+				break
 			}
+		}
+		if ignore {
+			continue
 		}
 
 		module := &Module{
@@ -166,7 +171,7 @@ func RunLicenseScan(ctx context.Context, opts RunLicenseScanOptions) error {
 	if len(errors) == 0 && opts.IncludeLicenses {
 		for _, module := range modules {
 			if licenseFiles, err := includeLicense(ctx, module); err != nil {
-				errors = append(errors, fmt.Errorf("error getting license for %s@%s: %w", module.Name, module.Version, err))
+				errors = append(errors, fmt.Errorf("error getting license text for %s@%s: %w", module.Name, module.Version, err))
 			} else {
 				module.LicenseFiles = licenseFiles
 			}
