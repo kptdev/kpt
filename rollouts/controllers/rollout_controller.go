@@ -738,7 +738,13 @@ func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []r
 		rolloutDeploysToCluster := rolloutIncludesCluster(&rollout, cluster.GetName())
 		clusterInTargetSet := selector.Matches(labels.Set(cluster.GetLabels()))
 
-		if rolloutDeploysToCluster || clusterInTargetSet {
+		// Rollouts will be reconciled for cluster updates when
+		// 1) a cluster is added to the rollout target set (clusterInTargetSet will be true)
+		// 2) a cluster is removed from the rollout target saet (rolloutDeploysToCluster will be true)
+		// 3) an cluster in the rollout target set is being updated where the package matching logic may produce different results (both variables will be true)
+		reconcileRollout := rolloutDeploysToCluster || clusterInTargetSet
+
+		if reconcileRollout {
 			requests = append(requests, reconcile.Request{NamespacedName: types.NamespacedName{Name: rollout.Name, Namespace: rollout.Namespace}})
 		}
 	}
