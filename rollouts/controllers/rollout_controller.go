@@ -704,8 +704,6 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	var containerCluster gkeclusterapis.ContainerCluster
-	containerCluster.SetGroupVersionKind(kccClusterGVK)
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
 		Owns(&gitopsv1alpha1.RemoteRootSync{}).
