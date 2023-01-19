@@ -2152,6 +2152,11 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, dir
 		},
 	})
 
+	// TODO: Replace with readiness check or similar, once we get to CRDs
+	// Sometimes we see "failed to list resources" here, I believe because we need to wait for the repository to be crawled.
+	t.Logf("HACK: sleeping for 5 seconds to allow for repository registration")
+	time.Sleep(5 * time.Second)
+
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
