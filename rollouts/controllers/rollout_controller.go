@@ -63,7 +63,7 @@ const (
 )
 
 var (
-	configConnectorContainerClusterGVK = schema.GroupVersionKind{
+	kccClusterGVK = schema.GroupVersionKind{
 		Group:   "container.cnrm.cloud.google.com",
 		Version: "v1beta1",
 		Kind:    "ContainerCluster",
@@ -709,7 +709,7 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	var containerCluster unstructured.Unstructured
-	containerCluster.SetGroupVersionKind(configConnectorContainerClusterGVK)
+	containerCluster.SetGroupVersionKind(kccClusterGVK)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
