@@ -192,7 +192,7 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 
 	// Don't update if there are no changes.
 	syncStatusChanged := syncStatus != nil && rrs.Status.SyncStatus != *syncStatus
-	generationChanged := rrs.Generation == rrs.Status.ObservedGeneration
+	generationChanged := rrs.Generation != rrs.Status.ObservedGeneration
 	readyStatusChanged := len(rrs.Status.Conditions) == 0 || rrs.Status.Conditions[0].Type != "Ready" || rrs.Status.Conditions[0].Status != rssReady
 
 	if !generationChanged && !syncStatusChanged && !readyStatusChanged {
