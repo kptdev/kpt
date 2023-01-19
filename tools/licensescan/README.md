@@ -5,7 +5,7 @@ Keeps license detection easy - relies on a static set of files.
 To generate in a nice format:
 
 ```
-go run . scan --binary ~/bin/kpt \
+go run . scan --binary ~/bin/kpt | \
   jq -r '.[] | [.name, (.licenseInfo.licenseURLs | join(" ")), .licenseInfo.license, "kpt", "YES", if .licenseInfo.mustShipCode then  "YES" else "NO" end ] | @csv'
 ```
 
