@@ -28,7 +28,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -704,7 +703,7 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	var containerCluster unstructured.Unstructured
+	var containerCluster gkeclusterapis.ContainerCluster
 	containerCluster.SetGroupVersionKind(kccClusterGVK)
 
 	return ctrl.NewControllerManagedBy(mgr).
