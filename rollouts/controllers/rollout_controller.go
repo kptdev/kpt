@@ -602,17 +602,13 @@ func (r *RolloutReconciler) listRemoteRootSyncs(ctx context.Context, rsdName, rs
 	return remoterootsyncs, nil
 }
 
-func (r *RolloutReconciler) listAllRollouts(ctx context.Context) ([]*gitopsv1alpha1.Rollout, error) {
-	var list gitopsv1alpha1.RolloutList
-	if err := r.List(ctx, &list); err != nil {
+func (r *RolloutReconciler) listAllRollouts(ctx context.Context) ([]gitopsv1alpha1.Rollout, error) {
+	var rolloutsList gitopsv1alpha1.RolloutList
+	if err := r.List(ctx, &rolloutsList); err != nil {
 		return nil, err
 	}
-	var rollouts []*gitopsv1alpha1.Rollout
-	for i := range list.Items {
-		item := &list.Items[i]
-		rollouts = append(rollouts, item)
-	}
-	return rollouts, nil
+
+	return rolloutsList.Items, nil
 }
 
 func isRRSSynced(rss *gitopsv1alpha1.RemoteRootSync) bool {
@@ -739,7 +735,7 @@ func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []r
 			continue
 		}
 
-		rolloutDeploysToCluster := rolloutIncludesCluster(rollout, cluster.GetName())
+		rolloutDeploysToCluster := rolloutIncludesCluster(&rollout, cluster.GetName())
 		clusterInTargetSet := selector.Matches(labels.Set(cluster.GetLabels()))
 
 		if rolloutDeploysToCluster || clusterInTargetSet {
