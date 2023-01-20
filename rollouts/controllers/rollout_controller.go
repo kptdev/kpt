@@ -431,39 +431,54 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 	allWaves []gitopsv1alpha1.Wave) ([]WaveTarget, error) {
 	allWaveTargets := []WaveTarget{}
 
+	clusterNameToWaveTarget := make(map[string]*WaveTarget)
+
 	for i := range allWaves {
 		wave := allWaves[i]
+		thisWaveTarget := WaveTarget{Wave: &wave, Targets: &Targets{}}
 
 		waveClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector, wave.Targets.Selector)
 		if err != nil {
 			return nil, err
 		}
 
-		targets := getTargetsForWave(allTargets, rollout, waveClusters.Items, wave.Name)
-
-		allWaveTargets = append(allWaveTargets, WaveTarget{Wave: &wave, Targets: targets})
-	}
-
-	if len(allTargets.ToBeDeleted) > 0 {
-		lastWaveTargets := allWaveTargets[len(allWaveTargets)-1]
-
-		waveIncludesDeleteTarget := func(deleteTarget *gitopsv1alpha1.RemoteRootSync) bool {
-			for _, waveTargets := range allWaveTargets {
-				for _, waveToBeDeleted := range waveTargets.Targets.ToBeDeleted {
-					if waveToBeDeleted == deleteTarget {
-						return true
-					}
-				}
-			}
-
-			return false
+		for _, cluster := range waveClusters.Items {
+			clusterNameToWaveTarget[cluster.Name] = &thisWaveTarget
 		}
 
-		for _, toBeDeleted := range allTargets.ToBeDeleted {
-			found := waveIncludesDeleteTarget(toBeDeleted)
+		allWaveTargets = append(allWaveTargets, thisWaveTarget)
+	}
 
-			if !found {
-				lastWaveTargets.Targets.ToBeDeleted = append(lastWaveTargets.Targets.ToBeDeleted, toBeDeleted)
+	for _, toCreate := range allTargets.ToBeCreated {
+		wavetTargets := clusterNameToWaveTarget[toCreate.cluster.Name].Targets
+		wavetTargets.ToBeCreated = append(wavetTargets.ToBeCreated, toCreate)
+	}
+
+	for _, rrs := range allTargets.ToBeUpdated {
+		wavetTargets := clusterNameToWaveTarget[rrs.Spec.ClusterRef.Name].Targets
+		wavetTargets.ToBeUpdated = append(wavetTargets.ToBeUpdated, rrs)
+	}
+
+	for _, rrs := range allTargets.Unchanged {
+		wavetTargets := clusterNameToWaveTarget[rrs.Spec.ClusterRef.Name].Targets
+		wavetTargets.Unchanged = append(wavetTargets.Unchanged, rrs)
+	}
+
+	for _, rrs := range allTargets.ToBeDeleted {
+		// The remote root sync will be associated back to it's previous wave and then removed as part
+		// of that wave. If the previous wave the remote root sync cannot be determined, then the remote
+		// root sync will be removed with the last wave of the rollout.
+
+		waveName, found := findWaveNameForCluster(rollout, rrs.Spec.ClusterRef.Name)
+
+		if !found {
+			waveName = allWaveTargets[len(allWaveTargets)-1].Wave.Name
+		}
+
+		for _, waveTarget := range allWaveTargets {
+			if waveTarget.Wave.Name == waveName {
+				wavetTargets := waveTarget.Targets
+				wavetTargets.ToBeDeleted = append(wavetTargets.ToBeDeleted, rrs)
 			}
 		}
 	}
@@ -793,50 +808,6 @@ func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []r
 	return requests
 }
 
-func getTargetsForWave(allTargets *Targets,
-	rollout *gitopsv1alpha1.Rollout,
-	waveClusters []gkeclusterapis.ContainerCluster, waveName string) *Targets {
-	targets := &Targets{}
-
-	clusterNames := make(map[string]struct{})
-
-	for _, cluster := range waveClusters {
-		clusterNames[cluster.Name] = struct{}{}
-	}
-
-	for _, toCreate := range allTargets.ToBeCreated {
-		if _, inWave := clusterNames[toCreate.cluster.Name]; inWave {
-			targets.ToBeCreated = append(targets.ToBeCreated, toCreate)
-		}
-	}
-
-	for _, rrs := range allTargets.ToBeUpdated {
-		if _, inWave := clusterNames[rrs.Spec.ClusterRef.Name]; inWave {
-			targets.ToBeUpdated = append(targets.ToBeUpdated, rrs)
-		}
-	}
-
-	for _, rrs := range allTargets.Unchanged {
-		if _, inWave := clusterNames[rrs.Spec.ClusterRef.Name]; inWave {
-			targets.Unchanged = append(targets.Unchanged, rrs)
-		}
-	}
-
-	if len(allTargets.ToBeDeleted) > 0 && len(rollout.Status.WaveStatuses) > 0 {
-		waveStatus, _ := findWaveStatus(rollout, waveName)
-
-		for _, rrs := range allTargets.ToBeDeleted {
-			for _, clusterStatus := range waveStatus.ClusterStatuses {
-				if rrs.Spec.ClusterRef.Name == clusterStatus.Name {
-					targets.ToBeDeleted = append(targets.ToBeDeleted, rrs)
-				}
-			}
-		}
-	}
-
-	return targets
-}
-
 func sortClusterStatuses(clusterStatuses []gitopsv1alpha1.ClusterStatus) {
 	sort.Slice(clusterStatuses, func(i, j int) bool {
 		return strings.Compare(clusterStatuses[i].Name, clusterStatuses[j].Name) == -1
@@ -884,14 +855,16 @@ func getOverallStatus(clusterStatuses []gitopsv1alpha1.ClusterStatus) string {
 	return overall
 }
 
-func findWaveStatus(rollout *gitopsv1alpha1.Rollout, waveName string) (gitopsv1alpha1.WaveStatus, bool) {
+func findWaveNameForCluster(rollout *gitopsv1alpha1.Rollout, clusterName string) (string, bool) {
 	for _, waveStatus := range rollout.Status.WaveStatuses {
-		if waveStatus.Name == waveName {
-			return waveStatus, true
+		for _, clusterStatus := range waveStatus.ClusterStatuses {
+			if clusterStatus.Name == clusterName {
+				return waveStatus.Name, true
+			}
 		}
 	}
 
-	return gitopsv1alpha1.WaveStatus{}, false
+	return "", false
 }
 
 func rolloutIncludesCluster(rollout *gitopsv1alpha1.Rollout, clusterName string) bool {
