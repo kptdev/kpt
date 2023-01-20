@@ -284,17 +284,23 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
 
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters.Items, discoveredPackages)
-	allClusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
+	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
 	if err != nil {
 		return err
 	}
 
-	targets, err := r.computeTargets(ctx, rollout, allClusterPackages)
+	targets, err := r.computeTargets(ctx, rollout, clusterPackages)
 	if err != nil {
 		return err
 	}
 
 	allClusterStatuses := []gitopsv1alpha1.ClusterStatus{}
+	waveStatuses := []gitopsv1alpha1.WaveStatus{}
+
+	allWaveTargets, err := r.getWaveTargets(ctx, rollout, targets, strategy.Spec.Waves)
+	if err != nil {
+		return err
+	}
 
 	pauseFutureWaves := false
 	pauseAfterWaveName := ""
@@ -302,13 +308,6 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 
 	if rollout.Spec.Strategy.Progressive != nil {
 		pauseAfterWaveName = rollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName
-	}
-
-	waveStatuses := []gitopsv1alpha1.WaveStatus{}
-
-	allWaveTargets, err := r.getWaveTargets(ctx, rollout, targets, strategy.Spec.Waves)
-	if err != nil {
-		return err
 	}
 
 	for _, waveTargets := range allWaveTargets {
