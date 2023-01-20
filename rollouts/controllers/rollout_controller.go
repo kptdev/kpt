@@ -310,9 +310,10 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 		pauseAfterWaveName = rollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName
 	}
 
-	for _, waveTargets := range allWaveTargets {
-		wave := waveTargets.Wave
-		waveTargets := waveTargets.Targets
+	for i := range allWaveTargets {
+		thisWaveTargets := allWaveTargets[i]
+		waveTargets := thisWaveTargets.Targets
+		wave := thisWaveTargets.Wave
 
 		thisWaveInProgress, clusterStatuses, err := r.rolloutTargets(ctx, rollout, wave, waveTargets, pauseFutureWaves)
 		if err != nil {
