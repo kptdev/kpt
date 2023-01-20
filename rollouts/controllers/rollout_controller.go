@@ -286,8 +286,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters.Items, discoveredPackages)
 	allClusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
 	if err != nil {
-		logger.Error(err, "get cluster packages failed")
-		return client.IgnoreNotFound(err)
+		return err
 	}
 
 	targets, err := r.computeTargets(ctx, rollout, allClusterPackages)
