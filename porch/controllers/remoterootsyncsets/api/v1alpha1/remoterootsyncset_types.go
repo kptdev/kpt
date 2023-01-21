@@ -94,10 +94,27 @@ type PackageRef struct {
 	Name string `json:"name,omitempty"`
 }
 
+func (r *PackageRef) GetName() string {
+	if r == nil {
+		return ""
+	}
+	return r.Name
+}
+
 type RootSyncTemplate struct {
 	SourceFormat string `json:"sourceFormat,omitempty"`
 	// Git          *GitInfo `json:"git,omitempty"`
 	OCI *OCISpec `json:"oci,omitempty"`
+
+	// PackageRef specifies a package as the source of the objects to be applied.
+	PackageRef *PackageRef `json:"packageRef,omitempty"`
+}
+
+func (o *RootSyncTemplate) GetSourceFormat() string {
+	if o == nil {
+		return ""
+	}
+	return o.SourceFormat
 }
 
 func (o *RootSyncTemplate) GetOCI() *OCISpec {
@@ -105,6 +122,13 @@ func (o *RootSyncTemplate) GetOCI() *OCISpec {
 		return nil
 	}
 	return o.OCI
+}
+
+func (o *RootSyncTemplate) GetPackageRef() *PackageRef {
+	if o == nil {
+		return nil
+	}
+	return o.PackageRef
 }
 
 type OCISpec struct {
