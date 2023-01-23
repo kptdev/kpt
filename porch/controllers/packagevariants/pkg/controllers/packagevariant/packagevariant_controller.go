@@ -32,6 +32,7 @@ import (
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -67,6 +68,36 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if pv == nil {
 		// maybe the pv was deleted
 		return ctrl.Result{}, nil
+	}
+
+	if !pv.ObjectMeta.DeletionTimestamp.IsZero() {
+		// This object is being deleted, so we need to make sure the packagerevisions owned by this object
+		// are deleted. Normally, garbage collection can handle this, but we have a special case here because
+		// (a) we cannot delete published packagerevisions and instead have to propose deletion of them
+		// (b) we may want to orphan packagerevisions instead of deleting them.
+		for _, pr := range prList.Items {
+			if r.hasOurOwnerReference(pv, pr.OwnerReferences) {
+				r.deleteOrOrphan(ctx, &pr, pv)
+				if porchapi.LifecycleIsPublished(pr.Spec.Lifecycle) {
+					// orphan published package revisions so that the GC does not automatically delete it
+					r.orphanPackageRevision(ctx, &pr, pv)
+				}
+			}
+		}
+		// Remove our finalizer from the list and update it.
+		controllerutil.RemoveFinalizer(pv, api.Finalizer)
+		if err := r.Update(ctx, pv); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to update %s after delete finalizer: %w", req.Name, err)
+		}
+		return ctrl.Result{}, nil
+	}
+
+	// the object is not being deleted, so let's ensure that our finalizer is here
+	if !controllerutil.ContainsFinalizer(pv, api.Finalizer) {
+		controllerutil.AddFinalizer(pv, api.Finalizer)
+		if err := r.Update(ctx, pv); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to update %s after add finalizer: %w", req.Name, err)
+		}
 	}
 
 	if errs := validatePackageVariant(pv); len(errs) > 0 {
@@ -351,25 +382,27 @@ func (r *PackageVariantReconciler) deleteOrOrphan(ctx context.Context,
 		r.deletePackageRevision(ctx, pr)
 	case api.DeletionPolicyOrphan:
 		klog.Infoln(fmt.Sprintf("package variant %q is orphaning package revision %q", pv.Name, pr.Name))
-		pr.ObjectMeta.OwnerReferences = r.orphanPackageRevision(pr.OwnerReferences, pv.UID)
-		if err := r.Client.Update(ctx, pr); err != nil {
-			klog.Errorf("error orphaning package revision: %v", err)
-		}
+		r.orphanPackageRevision(ctx, pr, pv)
 	default:
 		// this should never happen, because the pv should already be validated beforehand
 		klog.Errorf("invalid deletion policy %s", pv.Spec.DeletionPolicy)
 	}
 }
 
-func (r *PackageVariantReconciler) orphanPackageRevision(currentOwners []metav1.OwnerReference,
-	pvUID types.UID) []metav1.OwnerReference {
+func (r *PackageVariantReconciler) orphanPackageRevision(ctx context.Context,
+	pr *porchapi.PackageRevision,
+	pv *api.PackageVariant) {
+	currentOwners := pr.OwnerReferences
 	var newOwners []metav1.OwnerReference
 	for _, owner := range currentOwners {
-		if owner.UID != pvUID {
+		if owner.UID != pv.UID {
 			newOwners = append(newOwners, owner)
 		}
 	}
-	return newOwners
+	pr.ObjectMeta.OwnerReferences = newOwners
+	if err := r.Client.Update(ctx, pr); err != nil {
+		klog.Errorf("error orphaning package revision: %v", err)
+	}
 }
 
 func (r *PackageVariantReconciler) deletePackageRevision(ctx context.Context, pr *porchapi.PackageRevision) {

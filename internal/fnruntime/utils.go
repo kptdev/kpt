@@ -147,7 +147,7 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 	} else {
 		for _, node := range input {
 			for _, selector := range selectors {
-				if isMatch(node, selector) {
+				if IsMatch(node, selector) {
 					selectedInput = append(selectedInput, node)
 				}
 			}
@@ -160,7 +160,7 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 	for _, node := range selectedInput {
 		matchesExclusion := false
 		for _, exclusion := range exclusions {
-			if !exclusion.IsEmpty() && isMatch(node, exclusion) {
+			if !exclusion.IsEmpty() && IsMatch(node, exclusion) {
 				matchesExclusion = true
 				break
 			}
@@ -172,8 +172,8 @@ func SelectInput(input []*yaml.RNode, selectors, exclusions []kptfilev1.Selector
 	return filteredInput, nil
 }
 
-// isMatch returns true if the resource matches input selection criteria
-func isMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
+// IsMatch returns true if the resource matches input selection criteria
+func IsMatch(node *yaml.RNode, selector kptfilev1.Selector) bool {
 	// keep expanding with new selectors
 	return nameMatch(node, selector) && namespaceMatch(node, selector) &&
 		kindMatch(node, selector) && apiVersionMatch(node, selector) &&

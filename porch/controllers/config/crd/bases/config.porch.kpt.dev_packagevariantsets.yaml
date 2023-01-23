@@ -1,0 +1,174 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.8.0
+  creationTimestamp: null
+  name: packagevariantsets.config.porch.kpt.dev
+spec:
+  group: config.porch.kpt.dev
+  names:
+    kind: PackageVariantSet
+    listKind: PackageVariantSetList
+    plural: packagevariantsets
+    singular: packagevariantset
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      schema:
+        openAPIV3Schema:
+          description: PackageVariantSet represents an upstream package revision and
+            a way to target specific downstream repositories where a variant of the
+            upstream package should be created.
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: PackageVariantSetSpec defines the desired state of PackageVariantSet
+              properties:
+                adoptionPolicy:
+                  type: string
+                deletionPolicy:
+                  type: string
+                targets:
+                  items:
+                    properties:
+                      objects:
+                        description: 'option 3: a selector against a set of arbitrary
+                        objects'
+                        properties:
+                          repoName:
+                            properties:
+                              fromField:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          selectors:
+                            items:
+                              properties:
+                                annotations:
+                                  additionalProperties:
+                                    type: string
+                                  description: Annotations on the target resources
+                                  type: object
+                                apiVersion:
+                                  description: APIVersion of the target resources
+                                  type: string
+                                kind:
+                                  description: Kind of the target resources
+                                  type: string
+                                labels:
+                                  additionalProperties:
+                                    type: string
+                                  description: Labels on the target resources
+                                  type: object
+                                name:
+                                  description: Name of the target resources
+                                  type: string
+                                namespace:
+                                  description: Namespace of the target resources
+                                  type: string
+                              type: object
+                            type: array
+                        type: object
+                      package:
+                        description: 'option 1: an explicit repo/package name pair'
+                        properties:
+                          name:
+                            type: string
+                          repo:
+                            type: string
+                        type: object
+                      packageName:
+                        description: For options 2 and 3, PackageName specifies how
+                          to create the name of the package variant
+                        properties:
+                          baseName:
+                            properties:
+                              fromField:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          namePrefix:
+                            properties:
+                              fromField:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                          nameSuffix:
+                            properties:
+                              fromField:
+                                type: string
+                              value:
+                                type: string
+                            type: object
+                        type: object
+                      repositories:
+                        additionalProperties:
+                          type: string
+                        description: 'option 2: a label selector against a set of repositories'
+                        type: object
+                    type: object
+                  type: array
+                upstream:
+                  properties:
+                    package:
+                      properties:
+                        name:
+                          type: string
+                        repo:
+                          type: string
+                      type: object
+                    ref:
+                      type: string
+                    revision:
+                      type: string
+                  type: object
+              type: object
+            status:
+              description: PackageVariantSetStatus defines the observed state of PackageVariantSet
+              properties:
+                validationErrors:
+                  items:
+                    type: string
+                  type: array
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

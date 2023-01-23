@@ -42,6 +42,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/pkg/controllers/packagevariant"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/pkg/controllers/packagevariantset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncdeployments/pkg/controllers/rootsyncdeployment"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncrollouts/pkg/controllers/rootsyncrollout"
@@ -54,6 +55,7 @@ import (
 var (
 	reconcilers = map[string]Reconciler{
 		"packagevariants":          &packagevariant.PackageVariantReconciler{},
+		"packagevariantsets":       &packagevariantset.PackageVariantSetReconciler{},
 		"rootsyncsets":             &rootsyncset.RootSyncSetReconciler{},
 		"remoterootsyncsets":       &remoterootsyncset.RemoteRootSyncSetReconciler{},
 		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
