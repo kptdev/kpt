@@ -53,7 +53,10 @@ require (
 	k8s.io/klog/v2 v2.70.1
 	k8s.io/kube-aggregator v0.24.0-beta.0
 	k8s.io/utils v0.0.0-20220823124924-e9cbc92d1a73
+<<<<<<< HEAD
 	sigs.k8s.io/cli-utils v0.34.0
+=======
+>>>>>>> c96a7193 (Rollouts rebase kpt main (#3750))
 	sigs.k8s.io/controller-runtime v0.13.0
 	sigs.k8s.io/kustomize/kyaml v0.13.9
 	sigs.k8s.io/yaml v1.3.0
@@ -188,6 +191,10 @@ require (
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	k8s.io/kubectl v0.25.3 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.33 // indirect
+<<<<<<< HEAD
+=======
+	sigs.k8s.io/cli-utils v0.34.0 // indirect
+>>>>>>> c96a7193 (Rollouts rebase kpt main (#3750))
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
