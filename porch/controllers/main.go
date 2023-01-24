@@ -39,9 +39,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	"github.com/GoogleContainerTools/kpt/porch/controllers/downstreampackages/pkg/controllers/downstreampackage"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
+	"github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/pkg/controllers/packagevariant"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/remoterootsyncsets/pkg/controllers/remoterootsyncset"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncdeployments/pkg/controllers/rootsyncdeployment"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/rootsyncrollouts/pkg/controllers/rootsyncrollout"
@@ -53,7 +53,7 @@ import (
 
 var (
 	reconcilers = map[string]Reconciler{
-		"downstreampackages":       &downstreampackage.DownstreamPackageReconciler{},
+		"packagevariants":          &packagevariant.PackageVariantReconciler{},
 		"rootsyncsets":             &rootsyncset.RootSyncSetReconciler{},
 		"remoterootsyncsets":       &remoterootsyncset.RemoteRootSyncSetReconciler{},
 		"workloadidentitybindings": &workloadidentitybinding.WorkloadIdentityBindingReconciler{},
@@ -144,6 +144,7 @@ func run(ctx context.Context) error {
 	}
 
 	enabledReconcilers := parseReconcilers(enabledReconcilersString)
+	var enabled []string
 	for name, reconciler := range reconcilers {
 		if !reconcilerIsEnabled(enabledReconcilers, name) {
 			continue
@@ -151,6 +152,13 @@ func run(ctx context.Context) error {
 		if err = reconciler.SetupWithManager(mgr); err != nil {
 			return fmt.Errorf("error creating %s reconciler: %w", name, err)
 		}
+		enabled = append(enabled, name)
+	}
+
+	if len(enabled) == 0 {
+		klog.Warningf("no reconcilers are enabled; did you forget to pass the --reconcilers flag?")
+	} else {
+		klog.Infof("enabled reconcilers: %v", strings.Join(enabled, ","))
 	}
 
 	//+kubebuilder:scaffold:builder

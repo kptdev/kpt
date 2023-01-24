@@ -467,3 +467,28 @@ func (p *ociPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, 
 func (p *ociPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 	return p.lifecycle
 }
+
+// UpdateLifecycle should update the package revision lifecycle from DeletionProposed to Published or vice versa.
+//   This function is currently only partially implemented; it still needs to store whether the package has been
+//   proposed for deletion somewhere in OCI, probably as another OCI image with a "deletionProposed" tag.
+func (p *ociPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error {
+	old := p.Lifecycle()
+
+	if old == v1alpha1.PackageRevisionLifecyclePublished {
+		if new != v1alpha1.PackageRevisionLifecycleDeletionProposed {
+			return fmt.Errorf("invalid new lifecycle value: %q", new)
+		}
+
+		// TODO: Create a "deletionProposed" OCI image tag.
+		p.lifecycle = v1alpha1.PackageRevisionLifecycleDeletionProposed
+	}
+	if old == v1alpha1.PackageRevisionLifecycleDeletionProposed {
+		if new != v1alpha1.PackageRevisionLifecyclePublished {
+			return fmt.Errorf("invalid new lifecycle value: %q", new)
+		}
+
+		// TODO: Delete the "deletionProposed" OCI image tag.
+		p.lifecycle = v1alpha1.PackageRevisionLifecyclePublished
+	}
+	return nil
+}

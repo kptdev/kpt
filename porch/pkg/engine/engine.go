@@ -20,11 +20,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"strings"
-	"unicode"
 
 	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -35,6 +33,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cache"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/kpt"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/meta"
+	"github.com/GoogleContainerTools/kpt/porch/pkg/objects"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -119,6 +118,7 @@ func (p *PackageRevision) GetPackageRevision(ctx context.Context) (*api.PackageR
 	repoPkgRev.Finalizers = p.packageRevisionMeta.Finalizers
 	repoPkgRev.OwnerReferences = p.packageRevisionMeta.OwnerReferences
 	repoPkgRev.DeletionTimestamp = p.packageRevisionMeta.DeletionTimestamp
+
 	return repoPkgRev, nil
 }
 
@@ -279,7 +279,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		obj.Spec.Lifecycle = api.PackageRevisionLifecycleDraft
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// These values are ok
-	case api.PackageRevisionLifecyclePublished:
+	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, fmt.Errorf("cannot create a package revision with lifecycle value 'Final'")
 	default:
@@ -565,8 +565,14 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed:
 		// Draft or proposed can be updated.
-	case api.PackageRevisionLifecyclePublished:
-		// Only metadata (currently labels and annotations) can be updated for published packages.
+	case api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
+		// Only metadata (currently labels and annotations) and lifecycle can be updated for published packages.
+		if oldObj.Spec.Lifecycle != newObj.Spec.Lifecycle {
+			if err := oldPackage.repoPackageRevision.UpdateLifecycle(ctx, newObj.Spec.Lifecycle); err != nil {
+				return nil, err
+			}
+		}
+
 		pkgRevMeta, err = cad.updatePkgRevMeta(ctx, repoPkgRev, newObj)
 		if err != nil {
 			return nil, err
@@ -578,7 +584,7 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
 	default:
 		return nil, fmt.Errorf("invalid desired lifecycle value: %q", lifecycle)
-	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
+	case api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// These values are ok
 	}
 
@@ -804,13 +810,7 @@ func convertStatusToKptfile(s api.ConditionStatus) kptfile.ConditionStatus {
 // conditionalAddRender adds a render mutation to the end of the mutations slice if the last
 // entry is not already a render mutation.
 func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mutation) []mutation {
-	if len(mutations) == 0 {
-		return mutations
-	}
-
-	lastMutation := mutations[len(mutations)-1]
-	_, isRender := lastMutation.(*renderPackageMutation)
-	if isRender {
+	if len(mutations) == 0 || isRenderMutation(mutations[len(mutations)-1]) {
 		return mutations
 	}
 
@@ -820,6 +820,11 @@ func (cad *cadEngine) conditionalAddRender(subject client.Object, mutations []mu
 		runnerOptions: runnerOptions,
 		runtime:       cad.runtime,
 	})
+}
+
+func isRenderMutation(m mutation) bool {
+	_, isRender := m.(*renderPackageMutation)
+	return isRender
 }
 
 func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision) error {
@@ -957,8 +962,8 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	default:
 		return nil, nil, fmt.Errorf("invalid original lifecycle value: %q", lifecycle)
 	case api.PackageRevisionLifecycleDraft:
-		// Only draf can be updated.
-	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished:
+		// Only drafts can be updated.
+	case api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed:
 		// TODO: generate errors that can be translated to correct HTTP responses
 		return nil, nil, fmt.Errorf("cannot update a package revision with lifecycle value %q; package must be Draft", lifecycle)
 	}
@@ -1018,8 +1023,14 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 
 // applyResourceMutations mutates the resources and returns the most recent renderResult.
 func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, baseResources repository.PackageResources, mutations []mutation) (applied repository.PackageResources, renderStatus *api.RenderStatus, err error) {
+	var lastApplied mutation
 	for _, m := range mutations {
 		updatedResources, taskResult, err := m.Apply(ctx, baseResources)
+		if taskResult == nil && err == nil {
+			// a nil taskResult means nothing changed
+			continue
+		}
+
 		var task *api.Task
 		if taskResult != nil {
 			task = taskResult.Task
@@ -1027,10 +1038,16 @@ func applyResourceMutations(ctx context.Context, draft repository.PackageDraft, 
 		if taskResult != nil && task.Type == api.TaskTypeEval {
 			renderStatus = taskResult.RenderStatus
 		}
-
 		if err != nil {
 			return updatedResources, renderStatus, err
 		}
+
+		// if the last applied mutation was a render mutation, and so is this one, skip it
+		if lastApplied != nil && isRenderMutation(m) && isRenderMutation(lastApplied) {
+			continue
+		}
+		lastApplied = m
+
 		if err := draft.UpdateResources(ctx, &api.PackageRevisionResources{
 			Spec: api.PackageRevisionResourcesSpec{
 				Resources: updatedResources.Contents,
@@ -1246,7 +1263,9 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			if err != nil {
 				return repository.PackageResources{}, nil, fmt.Errorf("error generating patch: %w", err)
 			}
-
+			if patchSpec.Contents == "" {
+				continue
+			}
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
@@ -1260,12 +1279,17 @@ func (m *mutationReplaceResources) Apply(ctx context.Context, resources reposito
 			patch.Patches = append(patch.Patches, patchSpec)
 		}
 	}
-	task := &api.Task{
-		Type:  api.TaskTypePatch,
-		Patch: patch,
+	// If patch is empty, don't create a Task.
+	var taskResult *api.TaskResult
+	if len(patch.Patches) > 0 {
+		taskResult = &api.TaskResult{
+			Task: &api.Task{
+				Type:  api.TaskTypePatch,
+				Patch: patch,
+			},
+		}
 	}
-
-	return repository.PackageResources{Contents: new}, &api.TaskResult{Task: task}, nil
+	return repository.PackageResources{Contents: new}, taskResult, nil
 }
 
 func healConfig(old, new map[string]string) (map[string]string, error) {
@@ -1367,42 +1391,17 @@ func (cad *cadEngine) recloneAndReplay(ctx context.Context, repo repository.Repo
 
 // ExtractContextConfigMap returns the package-context configmap, if found
 func ExtractContextConfigMap(resources map[string]string) (*unstructured.Unstructured, error) {
+	unstructureds, err := objects.Parser{}.AsUnstructureds(resources)
+	if err != nil {
+		return nil, err
+	}
+
 	var matches []*unstructured.Unstructured
-
-	for itemPath, itemContents := range resources {
-		ext := path.Ext(itemPath)
-		ext = strings.ToLower(ext)
-
-		parse := false
-		switch ext {
-		case ".yaml", ".yml":
-			parse = true
-
-		default:
-			klog.Warningf("ignoring non-yaml file %s", itemPath)
-		}
-
-		if !parse {
-			continue
-		}
-		// TODO: Use https://github.com/kubernetes-sigs/kustomize/blob/a5b61016bb40c30dd1b0a78290b28b2330a0383e/kyaml/kio/byteio_reader.go#L170 or similar?
-		for _, s := range strings.Split(itemContents, "\n---\n") {
-			if isWhitespace(s) {
-				continue
-			}
-
-			o := &unstructured.Unstructured{}
-			if err := yaml.Unmarshal([]byte(s), &o); err != nil {
-				return nil, fmt.Errorf("error parsing yaml from %s: %w", itemPath, err)
-			}
-
-			// TODO: sync with kpt logic; skip objects marked with the local-only annotation
-
-			configMapGK := schema.GroupKind{Kind: "ConfigMap"}
-			if o.GroupVersionKind().GroupKind() == configMapGK {
-				if o.GetName() == builtins.PkgContextName {
-					matches = append(matches, o)
-				}
+	for _, o := range unstructureds {
+		configMapGK := schema.GroupKind{Kind: "ConfigMap"}
+		if o.GroupVersionKind().GroupKind() == configMapGK {
+			if o.GetName() == builtins.PkgContextName {
+				matches = append(matches, o)
 			}
 		}
 	}
@@ -1415,13 +1414,4 @@ func ExtractContextConfigMap(resources map[string]string) (*unstructured.Unstruc
 	}
 
 	return matches[0], nil
-}
-
-func isWhitespace(s string) bool {
-	for _, r := range s {
-		if !unicode.IsSpace(r) {
-			return false
-		}
-	}
-	return true
 }

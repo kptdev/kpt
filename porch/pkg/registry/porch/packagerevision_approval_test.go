@@ -33,27 +33,32 @@ func TestApprovalUpdateStrategy(t *testing.T) {
 		{
 			old:     "",
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed},
 		},
 		{
 			old:     "Wrong",
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed},
 		},
 		{
 			old:     api.PackageRevisionLifecycleDraft,
 			valid:   []api.PackageRevisionLifecycle{},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished, api.PackageRevisionLifecycleDeletionProposed},
 		},
 		{
 			old:     api.PackageRevisionLifecyclePublished,
-			valid:   []api.PackageRevisionLifecycle{},
+			valid:   []api.PackageRevisionLifecycle{api.PackageRevisionLifecycleDeletionProposed},
 			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecyclePublished},
+		},
+		{
+			old:     api.PackageRevisionLifecycleDeletionProposed,
+			valid:   []api.PackageRevisionLifecycle{api.PackageRevisionLifecyclePublished},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleDeletionProposed},
 		},
 		{
 			old:     api.PackageRevisionLifecycleProposed,
 			valid:   []api.PackageRevisionLifecycle{api.PackageRevisionLifecycleDraft, api.PackageRevisionLifecyclePublished},
-			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleProposed},
+			invalid: []api.PackageRevisionLifecycle{"", "Wrong", api.PackageRevisionLifecycleProposed, api.PackageRevisionLifecycleDeletionProposed},
 		},
 	} {
 		for _, new := range tc.valid {

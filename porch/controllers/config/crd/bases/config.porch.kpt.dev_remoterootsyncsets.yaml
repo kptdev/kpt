@@ -95,6 +95,13 @@ spec:
                       repository:
                         type: string
                     type: object
+                  packageRef:
+                    description: PackageRef specifies a package as the source of the
+                      objects to be applied.
+                    properties:
+                      name:
+                        type: string
+                    type: object
                   sourceFormat:
                     type: string
                 type: object

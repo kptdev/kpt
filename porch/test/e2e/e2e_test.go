@@ -495,7 +495,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	const (
 		repository  = "re-render-test"
 		packageName = "simple-package"
-		description = "description"
+		workspace   = "workspace"
 	)
 
 	t.registerMainGitRepositoryF(ctx, repository)
@@ -511,7 +511,7 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    packageName,
-			WorkspaceName:  description,
+			WorkspaceName:  workspace,
 			RepositoryName: repository,
 		},
 	}
@@ -562,6 +562,66 @@ func (t *PorchSuite) TestUpdateResources(ctx context.Context) {
 	if diff := t.CompareGoldenFileYAML(golden, updated); diff != "" {
 		t.Errorf("Unexpected updated confg map contents: (-want,+got): %s", diff)
 	}
+}
+
+// Test will initialize an empty package, and then make a call to update the resources
+// without actually making any changes. This test is ensuring that no additional
+// tasks get added.
+func (t *PorchSuite) TestUpdateResourcesEmptyPatch(ctx context.Context) {
+	const (
+		repository  = "empty-patch-test"
+		packageName = "simple-package"
+		workspace   = "workspace"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	// Check its task list
+	var newPackage porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackage)
+	tasksBeforeUpdate := newPackage.Spec.Tasks
+	assert.Equal(t, 2, len(tasksBeforeUpdate))
+
+	// Get the package resources
+	var newPackageResources porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackageResources)
+
+	// "Update" the package resources, without changing anything
+	t.UpdateF(ctx, &newPackageResources)
+
+	// Check the task list
+	var newPackageUpdated porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &newPackageUpdated)
+	tasksAfterUpdate := newPackageUpdated.Spec.Tasks
+	assert.Equal(t, 2, len(tasksAfterUpdate))
+
+	assert.True(t, reflect.DeepEqual(tasksBeforeUpdate, tasksAfterUpdate))
 }
 
 func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
@@ -751,7 +811,6 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 	const (
 		repository  = "delete-final"
 		packageName = "test-delete-final"
-		revision    = "v1"
 		workspace   = "workspace"
 	)
 
@@ -774,7 +833,75 @@ func (t *PorchSuite) TestDeleteFinal(ctx context.Context) {
 
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
-	// Delete the package
+	// Try to delete the package. This should fail because it hasn't been proposed for deletion.
+	t.DeleteL(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	t.DeleteE(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+
+	t.mustNotExist(ctx, &pkg)
+}
+
+func (t *PorchSuite) TestProposeDeleteAndUndo(ctx context.Context) {
+	const (
+		repository  = "test-propose-delete-and-undo"
+		packageName = "test-propose-delete-and-undo"
+		workspace   = "workspace"
+	)
+
+	// Register the repository
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a draft package
+	created := t.createPackageDraftF(ctx, repository, packageName, workspace)
+
+	// Check the package exists
+	var pkg porchapi.PackageRevision
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose the package revision to be finalized
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, &pkg)
+
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	// Undo proposal of deletion
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
+	// Try to delete the package. This should fail because the lifecycle should be changed back to Published.
+	t.DeleteL(ctx, &porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+			Name:      created.Name,
+		},
+	})
+	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
@@ -807,16 +934,15 @@ func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
 	t.UpdateF(ctx, &pkg)
 
-	// Assign a revision number
-	pkg.Spec.Revision = "v1"
-	t.UpdateF(ctx, &pkg)
-
 	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
 	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
 
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
-	// Delete the package
+	// Propose deletion and then delete the package
+	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+
 	t.DeleteE(ctx, &porchapi.PackageRevision{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: t.namespace,
@@ -2026,6 +2152,11 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, dir
 		},
 	})
 
+	// TODO: Replace with readiness check or similar, once we get to CRDs
+	// Sometimes we see "failed to list resources" here, I believe because we need to wait for the repository to be crawled.
+	t.Logf("HACK: sleeping for 5 seconds to allow for repository registration")
+	time.Sleep(5 * time.Second)
+
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2080,7 +2211,7 @@ func (t *PorchSuite) registerMainGitRepositoryF(ctx context.Context, name string
 			Namespace: t.namespace,
 		},
 		Spec: configapi.RepositorySpec{
-			Description: "Porch Test Repository WorkspaceName",
+			Description: "Porch Test Repository Description",
 			Type:        configapi.RepositoryTypeGit,
 			Content:     configapi.RepositoryContentPackage,
 			Git: &configapi.GitRepository{

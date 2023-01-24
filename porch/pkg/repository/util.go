@@ -66,21 +66,17 @@ func toApiConditionStatus(s kptfile.ConditionStatus) api.ConditionStatus {
 	}
 }
 
-const revisionRegex = "^v[0-9]+$"
-
 func NextRevisionNumber(revs []PackageRevision) (string, error) {
 	// Computes the next revision number as the latest revision number + 1.
 	// This function only understands strict versioning format, e.g. v1, v2, etc. It will
 	// ignore all revision numbers it finds that do not adhere to this format.
 	// If there are no published revisions (in the recognized format), the revision
 	// number returned here will be "v1".
-
 	latestRev := "v0"
 	for _, current := range revs {
-
 		// Check if the current package revision is more recent than the one seen so far.
 		// Only consider Published packages
-		if current.Lifecycle() != v1alpha1.PackageRevisionLifecyclePublished {
+		if !v1alpha1.LifecycleIsPublished(current.Lifecycle()) {
 			continue
 		}
 

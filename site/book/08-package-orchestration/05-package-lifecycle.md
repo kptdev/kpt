@@ -66,6 +66,10 @@ deployments-8baf4892d6bdeda0f26ef4b1088fddb85c5a2486 rejected
 ?> Refer to the [approve][rpkg-approve] and [reject][rpkg-reject] command
 reference for usage.
 
+> Approving a package revisions requires that the current user has been granted
+> update access to the `approve` subresource of `packagerevisions`. This allows
+> for giving only a limited set of users permission to approve package revisions.
+
 Now, confirm lifecycle stages of the package revisions:
 
 ```sh

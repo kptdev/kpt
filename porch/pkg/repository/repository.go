@@ -70,6 +70,11 @@ type PackageRevision interface {
 	// Lifecycle returns the current lifecycle state of the package.
 	Lifecycle() v1alpha1.PackageRevisionLifecycle
 
+	// UpdateLifecycle updates the desired lifecycle of the package. This can only
+	// be used for Published package revisions to go from Published to DeletionProposed
+	// or vice versa. Draft revisions should use PackageDraft.UpdateLifecycle.
+	UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error
+
 	// GetPackageRevision returns the PackageRevision ("DRY") API representation of this package-revision
 	GetPackageRevision(context.Context) (*v1alpha1.PackageRevision, error)
 

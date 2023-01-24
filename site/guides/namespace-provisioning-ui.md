@@ -141,7 +141,7 @@ simplens team blueprint.
 - Click the "simplens" team blueprint row to view the blueprint.
 - Click the **CLONE** button.
 - In the **Clone simplens** screen:
-  - Choose "Crete a new deployment by closing the simplens team blueprint"
+  - Choose "Create a new deployment by cloning the simplens team blueprint"
     option.
   - Click Next to proceed to the Metadata section.
   - Update the deployment name to "backend".
@@ -151,7 +151,7 @@ simplens team blueprint.
   - Click the **CREATE DEPLOYMENT** button.
 - The next screen is the package editor screen for the new _Draft_ deployment
   package you have just created. Note that the namespace across all the
-  namespace scoped resources have been updated to the name of the package.
+  namespace scoped resources has been updated to the name of the package.
   - Click the **DIFF** button for any resource to view the differences between
     the resource and the same resource in the upstream simplens team blueprint.
     For many of the deployable resources, only the namespace will be updated.

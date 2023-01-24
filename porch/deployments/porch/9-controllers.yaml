@@ -45,5 +45,3 @@ spec:
         env:
         - name: GCP_PROJECT_ID
           value: example-google-project-id
-        - name: HACK_ENABLE_LOOPBACK
-          value: "1"

@@ -48,6 +48,8 @@ func (r *packages) New() runtime.Object {
 	return &api.Package{}
 }
 
+func (r *packages) Destroy() {}
+
 func (r *packages) NewList() runtime.Object {
 	return &api.PackageList{}
 }

@@ -50,6 +50,8 @@ func (r *packageRevisionResources) New() runtime.Object {
 	return &api.PackageRevisionResources{}
 }
 
+func (r *packageRevisionResources) Destroy() {}
+
 func (r *packageRevisionResources) NewList() runtime.Object {
 	return &api.PackageRevisionResourcesList{}
 }

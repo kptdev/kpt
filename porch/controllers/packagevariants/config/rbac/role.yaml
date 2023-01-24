@@ -12,15 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: ClusterRole
 metadata:
-  name: porch-system:porch-controllers-downstreampackages
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: porch-controllers-downstreampackages
-subjects:
-- kind: ServiceAccount
-  name: porch-controllers
-  namespace: porch-system
+  creationTimestamp: null
+  name: porch-controllers-packagevariants
+rules:
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - packagevariants
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+    - porch.kpt.dev
+  resources:
+    - packagerevisions
+  verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - packagevariants/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - packagevariants/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -34,12 +34,17 @@ const (
 	branchRefSpec config.RefSpec = config.RefSpec("+" + branchPrefixInRemoteRepo + "*:" + branchPrefixInLocalRepo + "*")
 	tagRefSpec    config.RefSpec = config.RefSpec("+" + tagsPrefixInRemoteRepo + "*:" + tagsPrefixInLocalRepo + "*")
 
-	draftsPrefix               = "drafts/"
-	draftsPrefixInLocalRepo    = branchPrefixInLocalRepo + draftsPrefix
-	draftsPrefixInRemoteRepo   = branchPrefixInRemoteRepo + draftsPrefix
+	draftsPrefix             = "drafts/"
+	draftsPrefixInLocalRepo  = branchPrefixInLocalRepo + draftsPrefix
+	draftsPrefixInRemoteRepo = branchPrefixInRemoteRepo + draftsPrefix
+
 	proposedPrefix             = "proposed/"
 	proposedPrefixInLocalRepo  = branchPrefixInLocalRepo + proposedPrefix
 	proposedPrefixInRemoteRepo = branchPrefixInRemoteRepo + proposedPrefix
+
+	deletionProposedPrefix             = "deletionProposed/"
+	deletionProposedPrefixInLocalRepo  = branchPrefixInLocalRepo + deletionProposedPrefix
+	deletionProposedPrefixInRemoteRepo = branchPrefixInRemoteRepo + deletionProposedPrefix
 )
 
 var (
@@ -94,6 +99,15 @@ func getDraftBranchNameInLocal(n plumbing.ReferenceName) (BranchName, bool) {
 	return BranchName(b), ok
 }
 
+func isDeletionProposedBranchNameInLocal(n plumbing.ReferenceName) bool {
+	return strings.HasPrefix(n.String(), deletionProposedPrefixInLocalRepo)
+}
+
+func getdeletionProposedBranchNameInLocal(n plumbing.ReferenceName) (BranchName, bool) {
+	b, ok := trimOptionalPrefix(n.String(), deletionProposedPrefixInLocalRepo)
+	return BranchName(b), ok
+}
+
 func isBranchInLocalRepo(n plumbing.ReferenceName) bool {
 	return strings.HasPrefix(n.String(), branchPrefixInLocalRepo)
 }
@@ -116,6 +130,10 @@ func createDraftName(pkg string, wn v1alpha1.WorkspaceName) BranchName {
 
 func createProposedName(pkg string, wn v1alpha1.WorkspaceName) BranchName {
 	return BranchName(proposedPrefix + pkg + "/" + string(wn))
+}
+
+func createDeletionProposedName(pkg string, revision string) BranchName {
+	return BranchName(deletionProposedPrefix + pkg + "/" + revision)
 }
 
 func trimOptionalPrefix(s, prefix string) (string, bool) {
