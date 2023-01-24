@@ -2152,11 +2152,6 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, dir
 		},
 	})
 
-	// TODO: Replace with readiness check or similar, once we get to CRDs
-	// Sometimes we see "failed to list resources" here, I believe because we need to wait for the repository to be crawled.
-	t.Logf("HACK: sleeping for 5 seconds to allow for repository registration")
-	time.Sleep(5 * time.Second)
-
 	t.Cleanup(func() {
 		t.DeleteL(ctx, &configapi.Repository{
 			ObjectMeta: metav1.ObjectMeta{
@@ -2165,6 +2160,10 @@ func (t *PorchSuite) registerGitRepositoryF(ctx context.Context, repo, name, dir
 			},
 		})
 	})
+
+	// Make sure the repository is ready before we test to (hopefully)
+	// avoid flakiness.
+	t.waitUntilRepositoryReady(ctx, name, t.namespace)
 }
 
 type repositoryOption func(*configapi.Repository)
@@ -2310,6 +2309,9 @@ func (t *PorchSuite) mustNotExist(ctx context.Context, obj client.Object) {
 
 // waitUntilRepositoryReady waits for up to 10 seconds for the repository with the
 // provided name and namespace is ready, i.e. the Ready condition is true.
+// It also queries for Functions and PackageRevisions, to ensure these are also
+// ready - this is an artifact of the way we've implemented the aggregated apiserver,
+// where the first fetch can sometimes be synchronous.
 func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespace string) {
 	nn := types.NamespacedName{
 		Name:      name,
@@ -2332,6 +2334,31 @@ func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespa
 	if err != nil {
 		t.Errorf("Repository not ready after wait: %v", innerErr)
 	}
+
+	// While we're using an aggregated apiserver, make sure we can query the generated objects
+	if err := wait.PollImmediateWithContext(ctx, time.Second, 10*time.Second, func(ctx context.Context) (bool, error) {
+		var revisions porchapi.PackageRevisionList
+		if err := t.client.List(ctx, &revisions, client.InNamespace(nn.Namespace)); err != nil {
+			innerErr = err
+			return false, nil
+		}
+		return true, nil
+	}); err != nil {
+		t.Errorf("unable to query PackageRevisions after wait: %v", innerErr)
+	}
+
+	// Check for functions also (until we move them to CRDs)
+	if err := wait.PollImmediateWithContext(ctx, time.Second, 10*time.Second, func(ctx context.Context) (bool, error) {
+		var functions porchapi.FunctionList
+		if err := t.client.List(ctx, &functions, client.InNamespace(nn.Namespace)); err != nil {
+			innerErr = err
+			return false, nil
+		}
+		return true, nil
+	}); err != nil {
+		t.Errorf("unable to query Functions after wait: %v", innerErr)
+	}
+
 }
 
 func (t *PorchSuite) waitUntilRepositoryDeleted(ctx context.Context, name, namespace string) {
