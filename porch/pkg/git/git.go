@@ -38,6 +38,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/mod/semver"
 	"k8s.io/klog/v2"
 )
 
@@ -238,7 +239,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 				klog.Warningf("no package draft found for ref %v", ref)
 			}
 		case isTagInLocalRepo(ref.Name()):
-			tagged, err := r.loadTaggedPackages(ctx, ref)
+			tagged, err := r.loadPackagesForGitTag(ctx, ref)
 			if err != nil {
 				// this tag is not associated with any package (e.g. could be a release tag)
 				continue
@@ -253,7 +254,7 @@ func (r *gitRepository) ListPackageRevisions(ctx context.Context, filter reposit
 
 	if main != nil {
 		// TODO: ignore packages that are unchanged in main branch, compared to a tagged version?
-		mainpkgs, err := r.discoverFinalizedPackages(ctx, main)
+		mainpkgs, err := r.loadPackagesForGitBranch(ctx, main)
 		if err != nil {
 			return nil, err
 		}
@@ -437,8 +438,6 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 
 	gitRepo := r.repo
 
-	var hash plumbing.Hash
-
 	// Trim leading and trailing slashes
 	path = strings.Trim(path, "/")
 
@@ -448,38 +447,38 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 	// * prefixed (tag=<packageDir/<version>) - solving the co-versioning problem.
 	//
 	// We have to check both forms when looking up a version.
-	refNames := []string{}
+	var refNames []plumbing.ReferenceName
 	if path != "" {
-		refNames = append(refNames, path+"/"+version)
-		// HACK: Is this always refs/remotes/origin ?  Is it ever not (i.e. do we need both forms?)
-		refNames = append(refNames, "refs/remotes/origin/"+path+"/"+version)
+		// TODO: Need to support sub-paths, we can have any parent directory as the prefix
+		refNames = append(refNames, plumbing.NewTagReferenceName(path+"/"+version))
+		refNames = append(refNames, plumbing.NewRemoteReferenceName("origin", path+"/"+version))
 	}
-	refNames = append(refNames, version)
-	// HACK: Is this always refs/remotes/origin ?  Is it ever not (i.e. do we need both forms?)
-	refNames = append(refNames, "refs/remotes/origin/"+version)
+	refNames = append(refNames, plumbing.NewTagReferenceName(version))
+	refNames = append(refNames, plumbing.NewRemoteReferenceName("origin", version))
 
-	for _, ref := range refNames {
-		if resolved, err := gitRepo.ResolveRevision(plumbing.Revision(ref)); err != nil {
+	var foundRef *plumbing.Reference
+	for _, refName := range refNames {
+		if ref, err := gitRepo.Reference(refName, true); err != nil {
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
 				continue
 			}
-			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving git reference %q: %w", ref, err)
+			return nil, kptfilev1.GitLock{}, fmt.Errorf("error resolving git reference %q: %w", refName, err)
 		} else {
-			hash = *resolved
+			foundRef = ref
 			break
 		}
 	}
 
-	if hash.IsZero() {
+	if foundRef == nil {
 		r.dumpAllRefs()
 
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find git reference (tried %v)", refNames)
 	}
 
-	return r.loadPackageRevision(ctx, version, path, hash)
+	return r.loadPackageRevision(ctx, version, path, foundRef)
 }
 
-func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path string, hash plumbing.Hash) (repository.PackageRevision, kptfilev1.GitLock, error) {
+func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path string, ref *plumbing.Reference) (repository.PackageRevision, kptfilev1.GitLock, error) {
 	ctx, span := tracer.Start(ctx, "gitRepository::loadPackageRevision", trace.WithAttributes())
 	defer span.End()
 
@@ -500,9 +499,9 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 		Ref:       version,
 	}
 
-	commit, err := git.CommitObject(hash)
+	commit, err := git.CommitObject(ref.Hash())
 	if err != nil {
-		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash: %s) to commit: %w", version, hash, err)
+		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash: %s) to commit: %w", version, ref.Hash(), err)
 	}
 	lock.Commit = commit.Hash.String()
 
@@ -515,9 +514,7 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 		return nil, lock, fmt.Errorf("cannot find package %s@%s", path, version)
 	}
 
-	var ref *plumbing.Reference = nil // Cannot determine ref; this package will be considered final (immutable).
-
-	var revision string
+	// var revision string
 	var workspace v1alpha1.WorkspaceName
 	last := strings.LastIndex(version, "/")
 
@@ -526,42 +523,31 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 		workspace = v1alpha1.WorkspaceName(version[last+1:])
 	} else {
 		// the passed in version is a ref to a published package revision
-		if version == string(r.branch) || last < 0 {
-			revision = version
-		} else {
-			revision = version[last+1:]
-		}
+		// if version == string(r.branch) || last < 0 {
+		// 	revision = version
+		// } else {
+		// 	revision = version[last+1:]
+		// }
 		workspace, err = getPkgWorkspace(ctx, commit, krmPackage, ref)
 		if err != nil {
 			return nil, kptfilev1.GitLock{}, err
 		}
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspace, ref)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, workspace, ref)
 	if err != nil {
 		return nil, lock, err
 	}
 	return packageRevision, lock, nil
 }
 
-func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plumbing.Reference) ([]repository.PackageRevision, error) {
+func (r *gitRepository) loadPackagesForGitBranch(ctx context.Context, ref *plumbing.Reference) ([]repository.PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "gitRepository::discoverFinalizedPackages", trace.WithAttributes())
 	defer span.End()
 
-	git := r.repo
-	commit, err := git.CommitObject(ref.Hash())
+	commit, err := r.repo.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
-	}
-
-	var revision string
-	if rev, ok := getBranchNameInLocalRepo(ref.Name()); ok {
-		revision = rev
-	} else if rev, ok = getTagNameInLocalRepo(ref.Name()); ok {
-		revision = rev
-	} else {
-		// TODO: ignore the ref instead?
-		return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
 	}
 
 	krmPackages, err := r.DiscoverPackagesInTree(commit, DiscoverPackagesOptions{FilterPrefix: r.directory, Recurse: true})
@@ -575,7 +561,8 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 		if err != nil {
 			return nil, err
 		}
-		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspace, ref)
+
+		packageRevision, err := krmPackage.buildGitPackageRevision(ctx, workspace, ref)
 		if err != nil {
 			return nil, err
 		}
@@ -611,7 +598,7 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 		return nil, nil
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, "", workspaceName, ref)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, workspaceName, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -669,7 +656,11 @@ func parseDraftName(draft *plumbing.Reference) (name string, workspaceName v1alp
 	return name, workspaceName, nil
 }
 
-func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]repository.PackageRevision, error) {
+func isSemver(s string) bool {
+	return semver.IsValid(s)
+}
+
+func (r *gitRepository) loadPackagesForGitTag(ctx context.Context, tag *plumbing.Reference) ([]repository.PackageRevision, error) {
 	name, ok := getTagNameInLocalRepo(tag.Name())
 	if !ok {
 		return nil, fmt.Errorf("invalid tag ref: %q", tag)
@@ -683,8 +674,9 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 
 	}
 
+	// TODO: I think tag can actually be any prefix of path, so there can be multiple packages here
 	// tag=<package path>/version
-	path, revision := name[:slash], name[slash+1:]
+	path, _ := name[:slash], name[slash+1:]
 
 	if !packageInDirectory(path, r.directory) {
 		return nil, nil
@@ -711,7 +703,7 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 		return nil, err
 	}
 
-	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, revision, workspaceName, tag)
+	packageRevision, err := krmPackage.buildGitPackageRevision(ctx, workspaceName, tag)
 	if err != nil {
 		return nil, err
 	}
