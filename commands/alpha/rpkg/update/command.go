@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -46,6 +47,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Use:     "update SOURCE_PACKAGE",
 		PreRunE: r.preRunE,
 		RunE:    r.runE,
+		Short:   rpkgdocs.UpdateShort,
+		Long:    rpkgdocs.UpdateShort + "\n" + rpkgdocs.UpdateLong,
+		Example: rpkgdocs.UpdateExamples,
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command.Flags().StringVar(&r.revision, "revision", "", "Revision of the upstream package to update to.")
