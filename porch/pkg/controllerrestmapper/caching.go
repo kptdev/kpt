@@ -101,7 +101,7 @@ func (c *cachedGroupVersion) fetch(discovery discovery.DiscoveryInterface) (map[
 		if meta.IsNoMatchError(err) || apierrors.IsNotFound(err) {
 			return nil, nil
 		} else {
-			klog.Infof("unexpected error from ServerResourcesForGroupVersion(%v): %w", c.gv, err)
+			klog.Infof("unexpected error from ServerResourcesForGroupVersion(%v): %v", c.gv, err)
 			return nil, fmt.Errorf("error from ServerResourcesForGroupVersion(%v): %w", c.gv, err)
 		}
 	}
