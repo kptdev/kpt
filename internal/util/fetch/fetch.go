@@ -178,6 +178,8 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 		c.cachedRepo[c.repoSpec.CloneSpec()] = upstreamRepo
 	}
 
+	version := c.repoSpec.Ref
+
 	// Check if we have a ref in the upstream that matches the package-specific
 	// reference. If we do, we use that reference.
 	ps := strings.Split(c.repoSpec.Path, "/")
@@ -239,6 +241,18 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 			errors.Internal,
 			err,
 			fmt.Errorf("path %q does not exist in repo %q", c.repoSpec.Path, c.repoSpec.OrgRepo))
+	}
+
+	versionedDir := filepath.Join(pkgPath, version)
+	if _, err := os.Stat(versionedDir); err == nil {
+		pkgPath = versionedDir
+	} else if os.IsNotExist(err) {
+		// Not using versioned paths
+	} else {
+		return errors.E(op,
+			errors.Internal,
+			err,
+			fmt.Errorf("unexpected error getting stat of %q/%s in repo %q", c.repoSpec.Path, version, c.repoSpec.OrgRepo))
 	}
 
 	// Copy the content of the pkg into the temp directory.
