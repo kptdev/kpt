@@ -268,3 +268,8 @@ run-in-kind:
 	kubectl rollout status deployment function-runner --namespace porch-system
 	kubectl rollout status deployment porch-controllers --namespace porch-system
 	kubectl rollout status deployment porch-server --namespace porch-system
+
+.PHONY: vulncheck
+vulncheck: build
+	# Scan the source
+	GOFLAGS= go run golang.org/x/vuln/cmd/govulncheck@latest ./...

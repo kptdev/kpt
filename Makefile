@@ -205,3 +205,8 @@ release-ci:
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" release \
 		--skip-validate
+
+.PHONY: vulncheck
+vulncheck: build
+	# Scan the source
+	GOFLAGS= go run golang.org/x/vuln/cmd/govulncheck@latest ./...
