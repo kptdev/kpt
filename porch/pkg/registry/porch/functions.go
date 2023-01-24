@@ -48,6 +48,8 @@ func (f *functions) New() runtime.Object {
 	return &v1alpha1.Function{}
 }
 
+func (f *functions) Destroy() {}
+
 func (f *functions) NamespaceScoped() bool {
 	return true
 }

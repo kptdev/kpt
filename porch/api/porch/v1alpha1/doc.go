@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen --input-dirs ./ -O zz_generated.deepcopy --go-header-file ../../../scripts/boilerplate.go.txt
+//go:generate go run k8s.io/code-generator/cmd/deepcopy-gen@v0.25.3 --input-dirs ../v1alpha1 -O zz_generated.deepcopy --go-header-file ../../../scripts/boilerplate.go.txt
 //go:generate go run k8s.io/code-generator/cmd/defaulter-gen --input-dirs ./ -O zz_generated.defaults --go-header-file ../../../scripts/boilerplate.go.txt
 //go:generate go run k8s.io/code-generator/cmd/client-gen --clientset-name versioned --input-base "" --input github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1 --output-package github.com/GoogleContainerTools/kpt/porch/api/generated/clientset --plural-exceptions PackageRevisionResources:PackageRevisionResources --go-header-file ../../../scripts/boilerplate.go.txt
 //go:generate go run k8s.io/code-generator/cmd/lister-gen --input-dirs github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1 --output-package github.com/GoogleContainerTools/kpt/porch/api/generated/listers --go-header-file ../../../scripts/boilerplate.go.txt
