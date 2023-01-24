@@ -114,7 +114,7 @@ type fakeReader struct {
 	expectedErr    error
 }
 
-func (f *fakeReader) Get(ctx context.Context, key client.ObjectKey, obj client.Object) error {
+func (f *fakeReader) Get(ctx context.Context, key client.ObjectKey, obj client.Object, opts ...client.GetOption) error {
 	if f.expectedErr != nil {
 		return f.expectedErr
 	}

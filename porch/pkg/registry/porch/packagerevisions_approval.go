@@ -41,6 +41,8 @@ func (a *packageRevisionsApproval) New() runtime.Object {
 	return &api.PackageRevision{}
 }
 
+func (a *packageRevisionsApproval) Destroy() {}
+
 // NamespaceScoped returns true if the storage is namespaced
 func (a *packageRevisionsApproval) NamespaceScoped() bool {
 	return true

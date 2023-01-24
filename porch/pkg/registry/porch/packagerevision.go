@@ -52,6 +52,8 @@ func (r *packageRevisions) New() runtime.Object {
 	return &api.PackageRevision{}
 }
 
+func (r *packageRevisions) Destroy() {}
+
 func (r *packageRevisions) NewList() runtime.Object {
 	return &api.PackageRevisionList{}
 }
