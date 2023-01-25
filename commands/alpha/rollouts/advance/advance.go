@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/rolloutsclient"
 	"github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/rolloutsclient"
 	"github.com/spf13/cobra"
 )
 
@@ -55,11 +55,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("must provide rollout name\n")
+		return fmt.Errorf("must provide rollout name")
 	}
 
 	if len(args) == 1 {
-		return fmt.Errorf("must provide wave name\n")
+		return fmt.Errorf("must provide wave name")
 	}
 
 	rolloutName := args[0]
@@ -72,7 +72,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	}
 
 	if rollout.Spec.Strategy.Type != v1alpha1.Progressive {
-		return fmt.Errorf("rollout must be using the progressive strategy to use this command\n")
+		return fmt.Errorf("rollout must be using the progressive strategy to use this command")
 	}
 
 	if rollout.Status.WaveStatuses != nil {
@@ -86,7 +86,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 
 		if !waveFound {
-			return fmt.Errorf("wave %q not found in this rollout\n", waveName)
+			return fmt.Errorf("wave %q not found in this rollout", waveName)
 		}
 	}
 

@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/rolloutsclient"
 	rolloutsapi "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/rolloutsclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )

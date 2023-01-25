@@ -469,8 +469,9 @@ func (p *ociPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 }
 
 // UpdateLifecycle should update the package revision lifecycle from DeletionProposed to Published or vice versa.
-//   This function is currently only partially implemented; it still needs to store whether the package has been
-//   proposed for deletion somewhere in OCI, probably as another OCI image with a "deletionProposed" tag.
+//
+//	This function is currently only partially implemented; it still needs to store whether the package has been
+//	proposed for deletion somewhere in OCI, probably as another OCI image with a "deletionProposed" tag.
 func (p *ociPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.PackageRevisionLifecycle) error {
 	old := p.Lifecycle()
 
