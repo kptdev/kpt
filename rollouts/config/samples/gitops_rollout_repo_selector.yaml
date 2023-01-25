@@ -18,6 +18,8 @@ metadata:
   name: rollout-repo-selector
 spec:
   description: repo selector rollout
+  clusters:
+    sourceType: KCC
   packages:
     sourceType: GitHub
     github:

@@ -20,13 +20,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // RolloutSpec defines the desired state of Rollout
 type RolloutSpec struct {
 	// Description is a user friendly description of this Rollout.
 	Description string `json:"description,omitempty"`
+
+	// Clusters specifies the source for discovering the clusters.
+	Clusters ClusterDiscovery `json:"clusters"`
 
 	// Packages source for this Rollout.
 	Packages PackagesConfig `json:"packages"`
@@ -49,6 +51,20 @@ type ClusterTargetSelector struct {
 // need to refer a cluster.
 type ClusterRef struct {
 	Name string `json:"name"`
+}
+
+// different types of cluster sources
+const (
+	KCC      ClusterSourceType = "KCC"
+	GCPFleet ClusterSourceType = "GCPFleet"
+)
+
+// +kubebuilder:validation:Enum=KCC;GCPFleet
+type ClusterSourceType string
+
+// ClusterDiscovery represents configuration needed to discover clusters.
+type ClusterDiscovery struct {
+	SourceType ClusterSourceType `json:"sourceType"`
 }
 
 const (
