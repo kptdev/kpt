@@ -21,7 +21,6 @@ import (
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/get"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/status"
 	"github.com/spf13/cobra"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func NewCommand(ctx context.Context) *cobra.Command {
