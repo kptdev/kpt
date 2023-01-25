@@ -18,6 +18,8 @@ metadata:
   name: cert-manager-rollout
 spec:
   description: kpt samples rollout
+  clusters:
+    sourceType: KCC
   packages:
     sourceType: GitHub
     github:

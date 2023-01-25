@@ -18,6 +18,8 @@ metadata:
   name: rollout-kpt-samples
 spec:
   description: kpt samples rollout
+  clusters:
+    sourceType: KCC
   packages:
     sourceType: GitHub
     github:

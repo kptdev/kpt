@@ -49,6 +49,17 @@ spec:
           spec:
             description: RolloutSpec defines the desired state of Rollout
             properties:
+              clusters:
+                description: Clusters specifies the source for discovering the clusters.
+                properties:
+                  sourceType:
+                    enum:
+                    - KCC
+                    - GCPFleet
+                    type: string
+                required:
+                - sourceType
+                type: object
               description:
                 description: Description is a user friendly description of this Rollout.
                 type: string
@@ -211,6 +222,7 @@ spec:
                     x-kubernetes-map-type: atomic
                 type: object
             required:
+            - clusters
             - packageToTargetMatcher
             - packages
             - strategy
