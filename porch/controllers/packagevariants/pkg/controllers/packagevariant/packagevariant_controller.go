@@ -78,8 +78,9 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		for _, pr := range prList.Items {
 			if r.hasOurOwnerReference(pv, pr.OwnerReferences) {
 				r.deleteOrOrphan(ctx, &pr, pv)
-				if porchapi.LifecycleIsPublished(pr.Spec.Lifecycle) {
-					// orphan published package revisions so that the GC does not automatically delete it
+				if pr.Spec.Lifecycle == porchapi.PackageRevisionLifecycleDeletionProposed {
+					// We need to orphan this package revision; otherwise it will automatically
+					// get deleted after its parent PackageVariant object is deleted.
 					r.orphanPackageRevision(ctx, &pr, pv)
 				}
 			}
@@ -392,17 +393,21 @@ func (r *PackageVariantReconciler) deleteOrOrphan(ctx context.Context,
 func (r *PackageVariantReconciler) orphanPackageRevision(ctx context.Context,
 	pr *porchapi.PackageRevision,
 	pv *api.PackageVariant) {
-	currentOwners := pr.OwnerReferences
-	var newOwners []metav1.OwnerReference
-	for _, owner := range currentOwners {
-		if owner.UID != pv.UID {
-			newOwners = append(newOwners, owner)
-		}
-	}
-	pr.ObjectMeta.OwnerReferences = newOwners
+	pr.ObjectMeta.OwnerReferences = removeOwnerRefByUID(pr.OwnerReferences, pv.UID)
 	if err := r.Client.Update(ctx, pr); err != nil {
 		klog.Errorf("error orphaning package revision: %v", err)
 	}
+}
+
+func removeOwnerRefByUID(ownerRefs []metav1.OwnerReference,
+	ownerToRemove types.UID) []metav1.OwnerReference {
+	var result []metav1.OwnerReference
+	for _, owner := range ownerRefs {
+		if owner.UID != ownerToRemove {
+			result = append(result, owner)
+		}
+	}
+	return result
 }
 
 func (r *PackageVariantReconciler) deletePackageRevision(ctx context.Context, pr *porchapi.PackageRevision) {

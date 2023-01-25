@@ -57,7 +57,7 @@ type PackageVariantSetReconciler struct {
 	serializer *json.Serializer
 }
 
-const PackageVariantSetOwnerLabel = "internal.porch.kpt.dev/packagevariantset-id"
+const PackageVariantSetOwnerLabel = "config.porch.kpt.dev/packagevariantset"
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariantsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
 
@@ -67,7 +67,7 @@ const PackageVariantSetOwnerLabel = "internal.porch.kpt.dev/packagevariantset-id
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	pvs, repoList, err := r.init(ctx, req)
+	pvs, err := r.init(ctx, req)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -96,7 +96,7 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	downstreams, err := r.unrollDownstreamTargets(ctx, pvs,
-		upstream.Package, repoList)
+		upstream.Package)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -108,18 +108,12 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	return ctrl.Result{}, nil
 }
 
-func (r *PackageVariantSetReconciler) init(ctx context.Context,
-	req ctrl.Request) (*api.PackageVariantSet,
-	*configapi.RepositoryList, error) {
+func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request) (*api.PackageVariantSet, error) {
 	var pvs api.PackageVariantSet
 	if err := r.Client.Get(ctx, req.NamespacedName, &pvs); err != nil {
-		return nil, nil, client.IgnoreNotFound(err)
+		return nil, client.IgnoreNotFound(err)
 	}
-	var repoList configapi.RepositoryList
-	if err := r.Client.List(ctx, &repoList, client.InNamespace(pvs.Namespace)); err != nil {
-		return nil, nil, err
-	}
-	return &pvs, &repoList, nil
+	return &pvs, nil
 }
 
 func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
@@ -223,8 +217,7 @@ func (r *PackageVariantSetReconciler) getUpstreamPR(
 
 func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Context,
 	pvs *api.PackageVariantSet,
-	upstreamPackageName string,
-	repoList *configapi.RepositoryList) ([]*pkgvarapi.Downstream, error) {
+	upstreamPackageName string) ([]*pkgvarapi.Downstream, error) {
 	var result []*pkgvarapi.Downstream
 	for _, target := range pvs.Spec.Targets {
 		switch {
@@ -234,7 +227,17 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 
 		case target.Repositories != nil:
 			// a label selector against a set of repositories
-			pkgs, err := r.repositorySet(&target, upstreamPackageName, repoList)
+			selector, err := metav1.LabelSelectorAsSelector(target.Repositories)
+			if err != nil {
+				return nil, err
+			}
+			var repoList configapi.RepositoryList
+			if err := r.Client.List(ctx, &repoList,
+				client.InNamespace(pvs.Namespace),
+				client.MatchingLabelsSelector{Selector: selector}); err != nil {
+				return nil, err
+			}
+			pkgs, err := r.repositorySet(&target, upstreamPackageName, &repoList)
 			if err != nil {
 				return nil, fmt.Errorf("error when selecting repository set: %v", err)
 			}
@@ -268,33 +271,24 @@ func (r *PackageVariantSetReconciler) repositorySet(
 	target *api.Target,
 	upstreamPackageName string,
 	repoList *configapi.RepositoryList) ([]*pkgvarapi.Downstream, error) {
+
 	var result []*pkgvarapi.Downstream
 	for _, repo := range repoList.Items {
-		if labelsMatch(target.Repositories, repo.Labels) {
-			repoAsRNode, err := r.convertObjectToRNode(&repo)
-			if err != nil {
-				return nil, fmt.Errorf("error converting repo to RNode: %v", err)
-			}
-			downstreamPackageName, err := r.getDownstreamPackageName(target.PackageName, upstreamPackageName, repoAsRNode)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, &pkgvarapi.Downstream{
-				Repo:    repo.Name,
-				Package: downstreamPackageName,
-			})
+		repoAsRNode, err := r.convertObjectToRNode(&repo)
+		if err != nil {
+			return nil, fmt.Errorf("error converting repo to RNode: %v", err)
 		}
+		downstreamPackageName, err := r.getDownstreamPackageName(target.PackageName, upstreamPackageName, repoAsRNode)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &pkgvarapi.Downstream{
+			Repo:    repo.Name,
+			Package: downstreamPackageName,
+		})
+
 	}
 	return result, nil
-}
-
-func labelsMatch(matchLabels map[string]string, repoLabels map[string]string) bool {
-	for labelKey, labelValue := range matchLabels {
-		if repoValue, labelFound := repoLabels[labelKey]; !labelFound || labelValue != repoValue {
-			return false
-		}
-	}
-	return true
 }
 
 func (r *PackageVariantSetReconciler) objectSet(ctx context.Context,

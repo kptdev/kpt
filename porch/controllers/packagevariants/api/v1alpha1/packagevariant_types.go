@@ -49,7 +49,7 @@ const (
 	DeletionPolicyDelete DeletionPolicy = "delete"
 	DeletionPolicyOrphan DeletionPolicy = "orphan"
 
-	Finalizer = "config.porch.kpt.dev/finalizer"
+	Finalizer = "config.porch.kpt.dev/packagevariants"
 )
 
 // PackageVariantSpec defines the desired state of PackageVariant

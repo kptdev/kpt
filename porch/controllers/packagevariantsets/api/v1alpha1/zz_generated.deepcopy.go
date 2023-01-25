@@ -20,6 +20,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -206,10 +207,8 @@ func (in *Selector) DeepCopyInto(out *Selector) {
 	*out = *in
 	if in.Labels != nil {
 		in, out := &in.Labels, &out.Labels
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+		*out = new(v1.LabelSelector)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Annotations != nil {
 		in, out := &in.Annotations, &out.Annotations
@@ -240,10 +239,8 @@ func (in *Target) DeepCopyInto(out *Target) {
 	}
 	if in.Repositories != nil {
 		in, out := &in.Repositories, &out.Repositories
-		*out = make(map[string]string, len(*in))
-		for key, val := range *in {
-			(*out)[key] = val
-		}
+		*out = new(v1.LabelSelector)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Objects != nil {
 		in, out := &in.Objects, &out.Objects

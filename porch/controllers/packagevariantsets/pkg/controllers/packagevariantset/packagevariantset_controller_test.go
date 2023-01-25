@@ -249,35 +249,18 @@ items:
 - apiVersion: config.porch.kpt.dev/v1alpha1
   kind: Repository
   metadata:
-    name: my-repo-1 # no labels
-- apiVersion: config.porch.kpt.dev/v1alpha1
-  kind: Repository
-  metadata:
-    name: my-repo-2 # has only one of the required labels
-    labels:
-      foo: bar
-- apiVersion: config.porch.kpt.dev/v1alpha1
-  kind: Repository
-  metadata:
-    name: my-repo-3 # matches both required labels
+    name: my-repo-1
     labels:
       foo: bar
       abc: def
 - apiVersion: config.porch.kpt.dev/v1alpha1
   kind: Repository
   metadata:
-    name: my-repo-4 # matches both required labels, and has an extra one
+    name: my-repo-2
     labels:
       foo: bar
       abc: def
       efg: hij
-- apiVersion: config.porch.kpt.dev/v1alpha1
-  kind: Repository
-  metadata:
-    name: my-repo-4 # has both required label keys, but wrong value
-    labels:
-      foo: car
-      abc: def
 `), &repoList))
 
 	var target api.Target
@@ -292,13 +275,13 @@ packageName:
 	s := json.NewSerializerWithOptions(json.DefaultMetaFactory, nil, nil, json.SerializerOptions{Yaml: true})
 	r := PackageVariantSetReconciler{serializer: s}
 
-	result, err := r.repositorySet(&target, "upstream-package-name", &repoList)
+	result, err := r.repositorySet(&target, "upn", &repoList)
 	require.NoError(t, err)
 	require.Equal(t, []*pkgvarapi.Downstream{{
-		Repo:    "my-repo-3",
+		Repo:    "my-repo-1",
 		Package: "dpn",
 	}, {
-		Repo:    "my-repo-4",
+		Repo:    "my-repo-2",
 		Package: "dpn",
 	},
 	}, result)

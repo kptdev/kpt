@@ -29,143 +29,225 @@ spec:
     singular: packagevariantset
   scope: Namespaced
   versions:
-    - name: v1alpha1
-      schema:
-        openAPIV3Schema:
-          description: PackageVariantSet represents an upstream package revision and
-            a way to target specific downstream repositories where a variant of the
-            upstream package should be created.
-          properties:
-            apiVersion:
-              description: 'APIVersion defines the versioned schema of this representation
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: PackageVariantSet represents an upstream package revision and
+          a way to target specific downstream repositories where a variant of the
+          upstream package should be created.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
               internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-              type: string
-            kind:
-              description: 'Kind is a string value representing the REST resource this
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
               submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-              type: string
-            metadata:
-              type: object
-            spec:
-              description: PackageVariantSetSpec defines the desired state of PackageVariantSet
-              properties:
-                adoptionPolicy:
-                  type: string
-                deletionPolicy:
-                  type: string
-                targets:
-                  items:
-                    properties:
-                      objects:
-                        description: 'option 3: a selector against a set of arbitrary
-                        objects'
-                        properties:
-                          repoName:
-                            properties:
-                              fromField:
-                                type: string
-                              value:
-                                type: string
-                            type: object
-                          selectors:
-                            items:
-                              properties:
-                                annotations:
-                                  additionalProperties:
-                                    type: string
-                                  description: Annotations on the target resources
-                                  type: object
-                                apiVersion:
-                                  description: APIVersion of the target resources
-                                  type: string
-                                kind:
-                                  description: Kind of the target resources
-                                  type: string
-                                labels:
-                                  additionalProperties:
-                                    type: string
-                                  description: Labels on the target resources
-                                  type: object
-                                name:
-                                  description: Name of the target resources
-                                  type: string
-                                namespace:
-                                  description: Namespace of the target resources
-                                  type: string
-                              type: object
-                            type: array
-                        type: object
-                      package:
-                        description: 'option 1: an explicit repo/package name pair'
-                        properties:
-                          name:
-                            type: string
-                          repo:
-                            type: string
-                        type: object
-                      packageName:
-                        description: For options 2 and 3, PackageName specifies how
-                          to create the name of the package variant
-                        properties:
-                          baseName:
-                            properties:
-                              fromField:
-                                type: string
-                              value:
-                                type: string
-                            type: object
-                          namePrefix:
-                            properties:
-                              fromField:
-                                type: string
-                              value:
-                                type: string
-                            type: object
-                          nameSuffix:
-                            properties:
-                              fromField:
-                                type: string
-                              value:
-                                type: string
-                            type: object
-                        type: object
-                      repositories:
-                        additionalProperties:
-                          type: string
-                        description: 'option 2: a label selector against a set of repositories'
-                        type: object
-                    type: object
-                  type: array
-                upstream:
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PackageVariantSetSpec defines the desired state of PackageVariantSet
+            properties:
+              adoptionPolicy:
+                type: string
+              deletionPolicy:
+                type: string
+              targets:
+                items:
                   properties:
+                    objects:
+                      description: 'option 3: a selector against a set of arbitrary
+                        objects'
+                      properties:
+                        repoName:
+                          properties:
+                            fromField:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        selectors:
+                          items:
+                            properties:
+                              annotations:
+                                additionalProperties:
+                                  type: string
+                                description: Annotations on the target resources
+                                type: object
+                              apiVersion:
+                                description: APIVersion of the target resources
+                                type: string
+                              kind:
+                                description: Kind of the target resources
+                                type: string
+                              labelSelector:
+                                description: Labels on the target resources
+                                properties:
+                                  matchExpressions:
+                                    description: matchExpressions is a list of label
+                                      selector requirements. The requirements are
+                                      ANDed.
+                                    items:
+                                      description: A label selector requirement is
+                                        a selector that contains values, a key, and
+                                        an operator that relates the key and values.
+                                      properties:
+                                        key:
+                                          description: key is the label key that the
+                                            selector applies to.
+                                          type: string
+                                        operator:
+                                          description: operator represents a key's
+                                            relationship to a set of values. Valid
+                                            operators are In, NotIn, Exists and DoesNotExist.
+                                          type: string
+                                        values:
+                                          description: values is an array of string
+                                            values. If the operator is In or NotIn,
+                                            the values array must be non-empty. If
+                                            the operator is Exists or DoesNotExist,
+                                            the values array must be empty. This array
+                                            is replaced during a strategic merge patch.
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - key
+                                      - operator
+                                      type: object
+                                    type: array
+                                  matchLabels:
+                                    additionalProperties:
+                                      type: string
+                                    description: matchLabels is a map of {key,value}
+                                      pairs. A single {key,value} in the matchLabels
+                                      map is equivalent to an element of matchExpressions,
+                                      whose key field is "key", the operator is "In",
+                                      and the values array contains only "value".
+                                      The requirements are ANDed.
+                                    type: object
+                                type: object
+                              name:
+                                description: Name of the target resources
+                                type: string
+                              namespace:
+                                description: Namespace of the target resources
+                                type: string
+                            type: object
+                          type: array
+                      type: object
                     package:
+                      description: 'option 1: an explicit repo/package name pair'
                       properties:
                         name:
                           type: string
                         repo:
                           type: string
                       type: object
-                    ref:
-                      type: string
-                    revision:
-                      type: string
+                    packageName:
+                      description: For options 2 and 3, PackageName specifies how
+                        to create the name of the package variant
+                      properties:
+                        baseName:
+                          properties:
+                            fromField:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        namePrefix:
+                          properties:
+                            fromField:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        nameSuffix:
+                          properties:
+                            fromField:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                      type: object
+                    repositories:
+                      description: 'option 2: a label selector against a set of repositories'
+                      properties:
+                        matchExpressions:
+                          description: matchExpressions is a list of label selector
+                            requirements. The requirements are ANDed.
+                          items:
+                            description: A label selector requirement is a selector
+                              that contains values, a key, and an operator that relates
+                              the key and values.
+                            properties:
+                              key:
+                                description: key is the label key that the selector
+                                  applies to.
+                                type: string
+                              operator:
+                                description: operator represents a key's relationship
+                                  to a set of values. Valid operators are In, NotIn,
+                                  Exists and DoesNotExist.
+                                type: string
+                              values:
+                                description: values is an array of string values.
+                                  If the operator is In or NotIn, the values array
+                                  must be non-empty. If the operator is Exists or
+                                  DoesNotExist, the values array must be empty. This
+                                  array is replaced during a strategic merge patch.
+                                items:
+                                  type: string
+                                type: array
+                            required:
+                            - key
+                            - operator
+                            type: object
+                          type: array
+                        matchLabels:
+                          additionalProperties:
+                            type: string
+                          description: matchLabels is a map of {key,value} pairs.
+                            A single {key,value} in the matchLabels map is equivalent
+                            to an element of matchExpressions, whose key field is
+                            "key", the operator is "In", and the values array contains
+                            only "value". The requirements are ANDed.
+                          type: object
+                      type: object
                   type: object
-              type: object
-            status:
-              description: PackageVariantSetStatus defines the observed state of PackageVariantSet
-              properties:
-                validationErrors:
-                  items:
+                type: array
+              upstream:
+                properties:
+                  package:
+                    properties:
+                      name:
+                        type: string
+                      repo:
+                        type: string
+                    type: object
+                  ref:
                     type: string
-                  type: array
-              type: object
-          type: object
-      served: true
-      storage: true
-      subresources:
-        status: {}
+                  revision:
+                    type: string
+                type: object
+            type: object
+          status:
+            description: PackageVariantSetStatus defines the observed state of PackageVariantSet
+            properties:
+              validationErrors:
+                description: 'TODO: Move this to conditions.'
+                items:
+                  type: string
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
 status:
   acceptedNames:
     kind: ""
