@@ -39,6 +39,9 @@ type RolloutSpec struct {
 	// PackageToTargetMatcher specifies the clusters that will receive a specific package.
 	PackageToTargetMatcher PackageToClusterMatcher `json:"packageToTargetMatcher"`
 
+	// SyncTemplate defines the type and attributes for the RSync object used to syncing the packages.
+	SyncTemplate *SyncTemplate `json:"syncTemplate,omitempty"`
+
 	// Strategy specifies the rollout strategy to use for this rollout.
 	Strategy RolloutStrategy `json:"strategy"`
 }
@@ -99,6 +102,33 @@ type GitHubSelector struct {
 type SecretReference struct {
 	// Name represents the secret name
 	Name string `json:"name,omitempty"`
+}
+
+// different types of sync templates.
+const (
+	TemplateTypeRootSync SyncTemplateType = "RootSync"
+	TemplateTypeRepoSync SyncTemplateType = "RepoSync"
+)
+
+// +kubebuilder:validation:Enum=RootSync;RepoSync
+type SyncTemplateType string
+
+// SyncTemplate defines the configuration for RSync templates.
+type SyncTemplate struct {
+	Type     SyncTemplateType  `json:"type"`
+	RootSync *RootSyncTemplate `json:"rootSync,omitempty"`
+	RepoSync *RepoSyncTemplate `json:"repoSync,omitempty"`
+}
+
+// RootSyncTemplate represent the sync template for RootSync.
+type RootSyncTemplate struct {
+	SourceFormat string   `json:"sourceFormat,omitempty"`
+	Git          *GitInfo `json:"git,omitempty"`
+}
+
+type RepoSyncTemplate struct {
+	SourceFormat string   `json:"sourceFormat,omitempty"`
+	Git          *GitInfo `json:"git,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=AllClusters;Custom

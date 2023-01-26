@@ -168,6 +168,94 @@ spec:
                 required:
                 - type
                 type: object
+              syncTemplate:
+                description: SyncTemplate defines the type and attributes for the
+                  RSync object used to syncing the packages.
+                properties:
+                  repoSync:
+                    properties:
+                      git:
+                        properties:
+                          auth:
+                            type: string
+                          branch:
+                            type: string
+                          dir:
+                            type: string
+                          gcpServiceAccountEmail:
+                            type: string
+                          noSSLVerify:
+                            type: boolean
+                          period:
+                            type: string
+                          proxy:
+                            type: string
+                          repo:
+                            type: string
+                          revision:
+                            type: string
+                          secretRef:
+                            description: SecretReference contains the reference to
+                              the secret
+                            properties:
+                              name:
+                                description: Name represents the secret name
+                                type: string
+                            type: object
+                        required:
+                        - auth
+                        - repo
+                        type: object
+                      sourceFormat:
+                        type: string
+                    type: object
+                  rootSync:
+                    description: RootSyncTemplate represent the sync template for
+                      RootSync.
+                    properties:
+                      git:
+                        properties:
+                          auth:
+                            type: string
+                          branch:
+                            type: string
+                          dir:
+                            type: string
+                          gcpServiceAccountEmail:
+                            type: string
+                          noSSLVerify:
+                            type: boolean
+                          period:
+                            type: string
+                          proxy:
+                            type: string
+                          repo:
+                            type: string
+                          revision:
+                            type: string
+                          secretRef:
+                            description: SecretReference contains the reference to
+                              the secret
+                            properties:
+                              name:
+                                description: Name represents the secret name
+                                type: string
+                            type: object
+                        required:
+                        - auth
+                        - repo
+                        type: object
+                      sourceFormat:
+                        type: string
+                    type: object
+                  type:
+                    enum:
+                    - RootSync
+                    - RepoSync
+                    type: string
+                required:
+                - type
+                type: object
               targets:
                 description: Targets specifies the clusters that will receive the
                   KRM config packages.
