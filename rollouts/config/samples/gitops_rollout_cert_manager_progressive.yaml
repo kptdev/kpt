@@ -34,6 +34,10 @@ spec:
         - {key: env, operator: In, values: [dev, staging]}
   packageToTargetMatcher:
     type: AllClusters
+  syncTemplate:
+    type: RootSync
+    rootSync:
+      sourceFormat: unstructured
   strategy:
     type: Progressive
     progressive:
