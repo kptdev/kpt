@@ -17,7 +17,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.4.1
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.3
 	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33
 	github.com/bluekeyes/go-gitdiff v0.6.1
 	github.com/go-git/go-billy/v5 v5.3.1
 	github.com/go-git/go-git/v5 v5.4.3-0.20220408232334-4f916225cb2f

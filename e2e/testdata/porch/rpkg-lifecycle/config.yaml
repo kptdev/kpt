@@ -26,6 +26,17 @@ commands:
   - args:
       - alpha
       - rpkg
+      - propose-delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    exitCode: 1
+    stderr: |
+      can only propose published packages for deletion; package git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 is not published
+      Error: errors:
+        can only propose published packages for deletion; package git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 is not published 
+  - args:
+      - alpha
+      - rpkg
       - get
       - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle
@@ -50,6 +61,17 @@ commands:
     stdout: |
       NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
       git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle                  false    Draft       git
+  - args:
+      - alpha
+      - rpkg
+      - propose-delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    exitCode: 1
+    stderr: |
+      can only propose published packages for deletion; package git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 is not published
+      Error: errors:
+        can only propose published packages for deletion; package git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 is not published 
   - args:
       - alpha
       - rpkg
@@ -95,3 +117,44 @@ commands:
       git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 failed (admission webhook "packagerevdeletion.google.com" denied the request: failed to delete package revision "git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034": published PackageRevisions must be proposed for deletion by setting spec.lifecycle to 'DeletionProposed' prior to deletion)
       Error: errors:
         admission webhook "packagerevdeletion.google.com" denied the request: failed to delete package revision "git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034": published PackageRevisions must be proposed for deletion by setting spec.lifecycle to 'DeletionProposed' prior to deletion 
+  - args:
+      - alpha
+      - rpkg
+      - propose-delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 proposed for deletion
+  - args:
+      - alpha
+      - rpkg
+      - propose-delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 is already proposed for deletion
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stdout: |
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE          REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle       v1         true     DeletionProposed   git
+  - args:
+      - alpha
+      - rpkg
+      - delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 deleted
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: "Error: the server could not find the requested resource (get packagerevisions.porch.kpt.dev git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034) \n"
+    exitCode: 1

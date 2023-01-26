@@ -3,7 +3,7 @@ module github.com/GoogleContainerTools/kpt
 go 1.18
 
 require (
-	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0
+	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33
 	github.com/bytecodealliance/wasmtime-go v0.39.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.2
 	github.com/go-errors/errors v1.4.2

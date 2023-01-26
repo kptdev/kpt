@@ -87,8 +87,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/toml v0.4.1/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24/go.mod h1:4UJr5HIiMZrwgkSPdsjy2uOQExX/WEILpIrO9UPGuXs=
-github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0 h1:Nay/s1StXHUKyIxerpXb8o0hZUkRjrbteLO6ardI26Y=
-github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20221028161857-aa271f292cc0/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33 h1:9M1bvq7hU/JTY4VVcqhCQT0eAa5HznrFaLAm2ldfe70=
+github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=
