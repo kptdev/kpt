@@ -126,33 +126,52 @@ func (r *RemoteRootSyncSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	var result ctrl.Result
 
-	var patchErrs []error
+	var applyErrors []error
 	for _, clusterRef := range subject.Spec.ClusterRefs {
 		results, err := r.applyToClusterRef(ctx, &subject, clusterRef)
 		if err != nil {
-			patchErrs = append(patchErrs, err)
+			klog.Errorf("error applying to ref %v: %v", clusterRef, err)
+			applyErrors = append(applyErrors, err)
 		}
-		if updateTargetStatus(&subject, clusterRef, results, err) {
-			if err := r.client.Status().Update(ctx, &subject); err != nil {
-				patchErrs = append(patchErrs, err)
-			}
-		}
+
+		updateTargetStatus(&subject, clusterRef, results, err)
+
+		// TODO: Do we ever want to do a partial flush of results?  Should we exit the loop and re-reconcile?
 
 		if results != nil && !(results.AllApplied() && results.AllHealthy()) {
 			result.Requeue = true
 		}
 	}
 
-	if len(patchErrs) != 0 {
-		for _, patchErr := range patchErrs {
-			klog.Errorf("%v", patchErr)
+	specTargets := make(map[api.ClusterRef]bool)
+	for _, ref := range subject.Spec.ClusterRefs {
+		specTargets[*ref] = true
+	}
+
+	// Remove any old target statuses
+	var keepTargets []api.TargetStatus
+	for i := range subject.Status.Targets {
+		target := &subject.Status.Targets[i]
+		if specTargets[target.Ref] {
+			keepTargets = append(keepTargets, *target)
 		}
-		return ctrl.Result{}, patchErrs[0]
+	}
+	subject.Status.Targets = keepTargets
+
+	updateAggregateStatus(&subject)
+
+	// TODO: Do this in a lazy way?
+	if err := r.client.Status().Update(ctx, &subject); err != nil {
+		return result, fmt.Errorf("error updating status: %w", err)
+	}
+
+	if len(applyErrors) != 0 {
+		return result, applyErrors[0]
 	}
 	return result, nil
 }
 
-func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, applyResults *applyset.ApplyResults, err error) bool {
+func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, applyResults *applyset.ApplyResults, err error) {
 	var found *api.TargetStatus
 	for i := range subject.Status.Targets {
 		target := &subject.Status.Targets[i]
@@ -186,9 +205,6 @@ func updateTargetStatus(subject *api.RemoteRootSyncSet, ref *api.ClusterRef, app
 			meta.SetStatusCondition(&found.Conditions, metav1.Condition{Type: "Ready", Status: metav1.ConditionTrue, Reason: "Ready"})
 		}
 	}
-	// TODO: SetStatusCondition should return an indiciation if anything has changes
-
-	return updateAggregateStatus(subject)
 }
 
 func updateAggregateStatus(subject *api.RemoteRootSyncSet) bool {
