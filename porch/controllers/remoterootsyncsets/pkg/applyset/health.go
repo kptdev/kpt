@@ -15,74 +15,11 @@
 package applyset
 
 import (
-	"encoding/json"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/klog/v2"
+
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 )
 
-// isHealthy reports whether the object should be considered "healthy"
-// TODO: Replace with kstatus library
-func isHealthy(u *unstructured.Unstructured) bool {
-	ready := true
-
-	statusConditions, found, err := unstructured.NestedFieldNoCopy(u.Object, "status", "conditions")
-	if err != nil || !found {
-		klog.Infof("status conditions not found for %s", u.GroupVersionKind())
-		return true
-	}
-
-	statusConditionsList, ok := statusConditions.([]interface{})
-	if !ok {
-		klog.Warningf("expected status.conditions to be list, got %T", statusConditions)
-		return true
-	}
-	for i := range statusConditionsList {
-		condition := statusConditionsList[i]
-		conditionMap, ok := condition.(map[string]interface{})
-		if !ok {
-			klog.Warningf("expected status.conditions[%d] to be map, got %T", i, condition)
-			return true
-		}
-
-		conditionType := ""
-		conditionStatus := ""
-		for k, v := range conditionMap {
-			switch k {
-			case "type":
-				s, ok := v.(string)
-				if !ok {
-					klog.Warningf("expected status.conditions[].type to be string, got %T", v)
-				} else {
-					conditionType = s
-				}
-			case "status":
-				s, ok := v.(string)
-				if !ok {
-					klog.Warningf("expected status.conditions[].status to be string, got %T", v)
-				} else {
-					conditionStatus = s
-				}
-			}
-		}
-
-		// TODO: Check conditionType?
-
-		switch conditionStatus {
-		case "True":
-			// ready
-
-		case "False":
-			j, _ := json.Marshal(condition)
-			klog.Infof("status.conditions indicates object is not ready: %v", string(j))
-			ready = false
-
-		case "":
-			klog.Warningf("ignoring status.conditions[] type %q with unknown status %q", conditionType, conditionStatus)
-
-		}
-	}
-
-	klog.Infof("isHealthy %s => %v", u.GroupVersionKind(), ready)
-	return ready
+func computeHealth(u *unstructured.Unstructured) (*status.Result, error) {
+	return status.Compute(u)
 }

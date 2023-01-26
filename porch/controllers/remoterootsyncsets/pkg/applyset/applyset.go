@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/cli-utils/pkg/kstatus/status"
 )
 
 // ApplySet is a set of objects that we want to apply to the cluster.
@@ -210,7 +211,24 @@ func (a *ApplySet) ApplyOnce(ctx context.Context) (*ApplyResults, error) {
 		tracker.lastApplied = applied
 		results.applySuccess(gvk, nn)
 
-		tracker.isHealthy = isHealthy(applied)
+		health, err := computeHealth(applied)
+		if err != nil {
+			klog.Warningf("error computing health: %v", err)
+			tracker.isHealthy = false
+		} else {
+			switch health.Status {
+			case status.CurrentStatus:
+				tracker.isHealthy = true
+			case status.InProgressStatus:
+				// TODO: Do we want a different status here?
+				tracker.isHealthy = false
+			case status.FailedStatus:
+				tracker.isHealthy = false
+			default:
+				klog.Warningf("unexpected health status %v", health)
+				tracker.isHealthy = false
+			}
+		}
 		results.reportHealth(gvk, nn, tracker.isHealthy)
 	}
 	return results, nil
