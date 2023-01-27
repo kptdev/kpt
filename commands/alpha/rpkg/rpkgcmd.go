@@ -26,6 +26,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/get"
 	initialization "github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/init"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/propose"
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/proposedelete"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/pull"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/push"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/reject"
@@ -80,6 +81,7 @@ func NewCommand(ctx context.Context, version string) *cobra.Command {
 		del.NewCommand(ctx, kubeflags),
 		copy.NewCommand(ctx, kubeflags),
 		update.NewCommand(ctx, kubeflags),
+		proposedelete.NewCommand(ctx, kubeflags),
 	)
 
 	return repo
