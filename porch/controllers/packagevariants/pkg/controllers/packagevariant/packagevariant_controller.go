@@ -269,6 +269,14 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 	var err error
 	for i, downstream := range downstreams {
 		if r.isUpToDate(pv, downstream) {
+			if downstream.Spec.Lifecycle == porchapi.PackageRevisionLifecycleDeletionProposed {
+				// We proposed this package revision for deletion in the past, but now it
+				// matches our target, so we no longer want it to be deleted.
+				downstream.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+				if err := r.Client.Update(ctx, downstream); err != nil {
+					klog.Errorf("error updating package revision lifecycle: %v", err)
+				}
+			}
 			continue
 		}
 		if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
