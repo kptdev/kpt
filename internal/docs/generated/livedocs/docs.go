@@ -65,10 +65,6 @@ Flags:
   
     The default value is ‘events’.
   
-  --poll-period:
-    The frequency with which the cluster will be polled to determine
-    the status of the applied resources. The default value is 2 seconds.
-  
   --prune-propagation-policy:
     The propagation policy that should be used when pruning resources. The
     default value here is 'Background'. The other options are 'Foreground' and 'Orphan'.
