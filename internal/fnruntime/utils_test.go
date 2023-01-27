@@ -135,7 +135,7 @@ spec:
 		t.Run(tc.name, func(t *testing.T) {
 			node, err := yaml.Parse(tc.input)
 			assert.NoError(t, err)
-			actual := isMatch(node, tc.selector)
+			actual := IsMatch(node, tc.selector)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}

@@ -48,6 +48,8 @@ const (
 
 	DeletionPolicyDelete DeletionPolicy = "delete"
 	DeletionPolicyOrphan DeletionPolicy = "orphan"
+
+	Finalizer = "config.porch.kpt.dev/packagevariants"
 )
 
 // PackageVariantSpec defines the desired state of PackageVariant
@@ -72,6 +74,7 @@ type Downstream struct {
 
 // PackageVariantStatus defines the observed state of PackageVariant
 type PackageVariantStatus struct {
+	// TODO: Move this to conditions.
 	ValidationErrors []string `json:"validationErrors,omitempty"`
 }
 
