@@ -145,6 +145,48 @@ commands:
   - args:
       - alpha
       - rpkg
+      - reject
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 no longer proposed for deletion
+  - args:
+      - alpha
+      - rpkg
+      - reject
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      cannot reject git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 with lifecycle 'Published'
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stdout: |
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle       v1         true     Published   git
+  - args:
+      - alpha
+      - rpkg
+      - propose-delete
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stderr: |
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 proposed for deletion
+  - args:
+      - alpha
+      - rpkg
+      - get
+      - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
+      - --namespace=rpkg-lifecycle
+    stdout: |
+      NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE          REPOSITORY
+      git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034   lifecycle-package   lifecycle       v1         true     DeletionProposed   git
+  - args:
+      - alpha
+      - rpkg
       - delete
       - git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034
       - --namespace=rpkg-lifecycle

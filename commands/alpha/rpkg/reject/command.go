@@ -62,6 +62,7 @@ type runner struct {
 	ctx     context.Context
 	cfg     *genericclioptions.ConfigFlags
 	client  rest.Interface
+	porchClient client.Client
 	Command *cobra.Command
 
 	// Flags
@@ -79,6 +80,12 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 	r.client = client
+
+	porchClient, err := porch.CreateClientWithFlags(r.cfg)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	r.porchClient = porchClient
 	return nil
 }
 
@@ -89,14 +96,34 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	namespace := *r.cfg.Namespace
 
 	for _, name := range args {
-		if err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
+		pr := &v1alpha1.PackageRevision{}
+		if err := r.porchClient.Get(r.ctx, client.ObjectKey{
 			Namespace: namespace,
 			Name:      name,
-		}, v1alpha1.PackageRevisionLifecycleDraft); err != nil {
-			messages = append(messages, err.Error())
-			fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
-		} else {
-			fmt.Fprintf(r.Command.OutOrStderr(), "%s rejected\n", name)
+		}, pr); err != nil {
+			return errors.E(op, err)
+		}
+		switch pr.Spec.Lifecycle {
+		case v1alpha1.PackageRevisionLifecycleProposed:
+			if err := porch.UpdatePackageRevisionApproval(r.ctx, r.client, client.ObjectKey{
+				Namespace: namespace,
+				Name:      name,
+			}, v1alpha1.PackageRevisionLifecycleDraft); err != nil {
+				messages = append(messages, err.Error())
+				fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+			} else {
+				fmt.Fprintf(r.Command.OutOrStderr(), "%s rejected\n", name)
+			}
+		case v1alpha1.PackageRevisionLifecycleDeletionProposed:
+			pr.Spec.Lifecycle = v1alpha1.PackageRevisionLifecyclePublished
+			if err := r.porchClient.Update(r.ctx, pr); err != nil {
+				messages = append(messages, err.Error())
+				fmt.Fprintf(r.Command.ErrOrStderr(), "%s failed (%s)\n", name, err)
+			} else {
+				fmt.Fprintf(r.Command.OutOrStderr(), "%s no longer proposed for deletion\n", name)
+			}
+		default:
+			fmt.Fprintf(r.Command.ErrOrStderr(), "cannot reject %s with lifecycle '%s'\n", name, pr.Spec.Lifecycle)
 		}
 	}
 
