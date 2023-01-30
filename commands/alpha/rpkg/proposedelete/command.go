@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/porch"
 	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -39,6 +40,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:        "propose-delete PACKAGE",
 		Aliases:    []string{"propose-del"},
+		Short:   rpkgdocs.ProposeDeleteShort,
+		Long:    rpkgdocs.ProposeDeleteShort + "\n" + rpkgdocs.ProposeDeleteLong,
+		Example: rpkgdocs.ProposeDeleteExamples,
 		SuggestFor: []string{},
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,
