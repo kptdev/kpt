@@ -29,8 +29,11 @@ import (
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -40,6 +43,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyamlutils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -161,6 +165,14 @@ func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 			if target.Objects.RepoName == nil {
 				allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects must specify `repoName` field", i))
 			}
+			for j, selector := range target.Objects.Selectors {
+				if selector.APIVersion == "" {
+					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects.selectors[%d] must specify 'apiVersion'", i, j))
+				}
+				if selector.Kind == "" {
+					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects.selectors[%d] must specify 'kind'", i, j))
+				}
+			}
 			count++
 		}
 		if count != 1 {
@@ -245,7 +257,11 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 
 		case target.Objects != nil:
 			// a selector against a set of arbitrary objects
-			pkgs, err := r.objectSet(ctx, &target, upstreamPackageName)
+			selectedObjects, err := r.getSelectedObjects(ctx, target.Objects.Selectors)
+			if err != nil {
+				return nil, err
+			}
+			pkgs, err := r.objectSet(&target, upstreamPackageName, selectedObjects)
 			if err != nil {
 				return nil, fmt.Errorf("error when selecting object set: %v", err)
 			}
@@ -271,7 +287,6 @@ func (r *PackageVariantSetReconciler) repositorySet(
 	target *api.Target,
 	upstreamPackageName string,
 	repoList *configapi.RepositoryList) ([]*pkgvarapi.Downstream, error) {
-
 	var result []*pkgvarapi.Downstream
 	for _, repo := range repoList.Items {
 		repoAsRNode, err := r.convertObjectToRNode(&repo)
@@ -291,11 +306,65 @@ func (r *PackageVariantSetReconciler) repositorySet(
 	return result, nil
 }
 
-func (r *PackageVariantSetReconciler) objectSet(ctx context.Context,
-	target *api.Target,
-	upstreamPackageName string) ([]*pkgvarapi.Downstream, error) {
-	// TODO: Implement this
-	return nil, fmt.Errorf("specifying a set of objects in the target is not yet supported")
+func (r *PackageVariantSetReconciler) objectSet(target *api.Target,
+	upstreamPackageName string,
+	selectedObjects map[resid.ResId]*yaml.RNode) ([]*pkgvarapi.Downstream, error) {
+	var result []*pkgvarapi.Downstream
+	for _, obj := range selectedObjects {
+		downstreamPackageName, err := r.getDownstreamPackageName(target.PackageName,
+			upstreamPackageName, obj)
+		if err != nil {
+			return nil, err
+		}
+		repo, err := r.fetchValue(target.Objects.RepoName, obj)
+		if err != nil {
+			return nil, err
+		}
+		if repo == "" {
+			return nil, fmt.Errorf("error evaluating repo name: received empty string")
+		}
+		result = append(result, &pkgvarapi.Downstream{
+			Package: downstreamPackageName,
+			Repo:    repo,
+		})
+	}
+	return result, nil
+}
+
+func (r *PackageVariantSetReconciler) getSelectedObjects(ctx context.Context, selectors []api.Selector) (map[resid.ResId]*yaml.RNode, error) {
+	selectedObjects := make(map[resid.ResId]*yaml.RNode) // this is a map to prevent duplicates
+
+	for _, selector := range selectors {
+		uList := &unstructured.UnstructuredList{}
+		group, version := resid.ParseGroupVersion(selector.APIVersion)
+		uList.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   group,
+			Version: version,
+			Kind:    selector.Kind,
+		})
+
+		labelSelector, err := metav1.LabelSelectorAsSelector(selector.Labels)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := r.Client.List(ctx, uList,
+			client.InNamespace(selector.Namespace),
+			client.MatchingLabelsSelector{Selector: labelSelector}); err != nil {
+			return nil, fmt.Errorf("unable to list objects in cluster: %v", err)
+		}
+
+		for _, u := range uList.Items {
+			objAsRNode, err := r.convertObjectToRNode(&u)
+			if err != nil {
+				return nil, fmt.Errorf("error converting unstructured object to RNode: %v", err)
+			}
+			if fnruntime.IsMatch(objAsRNode, selector.ToKptfileSelector()) {
+				selectedObjects[resid.FromRNode(objAsRNode)] = objAsRNode
+			}
+		}
+	}
+	return selectedObjects, nil
 }
 
 func (r *PackageVariantSetReconciler) getDownstreamPackageName(targetName *api.PackageName,

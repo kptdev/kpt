@@ -15,6 +15,7 @@
 package packagevariantset
 
 import (
+	"context"
 	"testing"
 
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -22,7 +23,9 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
@@ -285,4 +288,78 @@ packageName:
 		Package: "dpn",
 	},
 	}, result)
+}
+
+func TestGetSelectedObjects(t *testing.T) {
+	selectors := []api.Selector{{
+		APIVersion: "v1",
+		Kind:       "Pod",
+		Labels:     &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+	}}
+	reconciler := &PackageVariantSetReconciler{
+		Client:     new(fakeClient),
+		serializer: json.NewSerializerWithOptions(json.DefaultMetaFactory, nil, nil, json.SerializerOptions{Yaml: true}),
+	}
+	selectedObjects, err := reconciler.getSelectedObjects(context.Background(), selectors)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(selectedObjects))
+
+	expectedResId := resid.NewResIdWithNamespace(resid.NewGvk("", "v1", "Pod"), "my-pod-1", "")
+	obj, found := selectedObjects[expectedResId]
+	require.True(t, found)
+	require.Equal(t, `apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    abc: def
+    foo: bar
+  name: my-pod-1
+`, obj.MustString())
+}
+
+func TestObjectSet(t *testing.T) {
+	selectedObjects := map[resid.ResId]*kyaml.RNode{
+		resid.NewResIdWithNamespace(resid.NewGvk("", "v1", "Pod"), "my-pod-1", ""): kyaml.MustParse(`apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    repo: my-repo
+  name: downstream
+`),
+	}
+
+	target := &api.Target{
+		PackageName: &api.PackageName{
+			Name: &api.ValueOrFromField{FromField: "metadata.name"},
+		},
+		Objects: &api.ObjectSelector{
+			RepoName: &api.ValueOrFromField{FromField: "metadata.labels.repo"},
+		},
+	}
+
+	pvs := &PackageVariantSetReconciler{}
+	objectSet, err := pvs.objectSet(target, "upstream", selectedObjects)
+	require.NoError(t, err)
+	require.Equal(t, len(objectSet), 1)
+	require.Equal(t, pkgvarapi.Downstream{
+		Repo:    "my-repo",
+		Package: "downstream",
+	}, *objectSet[0])
+}
+
+func TestEnsurePackageVariants(t *testing.T) {
+	upstream := &pkgvarapi.Upstream{Repo: "up", Package: "up", Revision: "up"}
+	downstreams := []*pkgvarapi.Downstream{
+		{Repo: "dn-1", Package: "dn-1"},
+		{Repo: "dn-3", Package: "dn-3"},
+	}
+	pvs := &api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}
+
+	fc := &fakeClient{}
+	reconciler := &PackageVariantSetReconciler{Client: fc}
+	require.NoError(t, reconciler.ensurePackageVariants(context.Background(), upstream, downstreams, pvs))
+	require.Equal(t, []string{"listing objects",
+		"deleting object: my-pv-2",
+		"creating object: my-pvs-59bfcf77a6b032a656d78b14e2d92fa8c1e978a3",
+	}, fc.output)
 }

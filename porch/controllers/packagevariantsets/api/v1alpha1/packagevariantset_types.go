@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -99,6 +100,21 @@ type Selector struct {
 	Labels *metav1.LabelSelector `yaml:"labelSelector,omitempty" json:"labelSelector,omitempty"`
 	// Annotations on the target resources
 	Annotations map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+}
+
+func (s *Selector) ToKptfileSelector() kptfilev1.Selector {
+	var labels map[string]string
+	if s.Labels != nil {
+		labels = s.Labels.MatchLabels
+	}
+	return kptfilev1.Selector{
+		APIVersion:  s.APIVersion,
+		Kind:        s.Kind,
+		Name:        s.Name,
+		Namespace:   s.Namespace,
+		Labels:      labels,
+		Annotations: s.Annotations,
+	}
 }
 
 type PackageName struct {

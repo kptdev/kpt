@@ -33,4 +33,13 @@ spec:
       packageName:
         baseName:
           value: beta
-
+    - objects:
+        selectors:
+          - apiVersion: v1
+            kind: Pod
+            name: my-pod
+        repoName:
+          value: blueprints
+      packageName:
+        baseName:
+          value: gamma
