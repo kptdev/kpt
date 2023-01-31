@@ -1,6 +1,6 @@
 ---
-title: "`del`"
-linkTitle: "del"
+title: "`propose-delete`"
+linkTitle: "propose-delete"
 type: docs
 description: >
   Propose deletion of a published package revision.
