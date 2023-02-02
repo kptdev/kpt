@@ -152,8 +152,12 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	resultStr := fmt.Sprintf("%s", result)
 	resultStr = resultStr[2 : len(resultStr)-1]
 	// Try to parse the output as yaml.
-	if _, err = yaml.Parse(resultStr); err != nil {
-		return errors.New(resultStr)
+	resourceListOutput, err := yaml.Parse(resultStr)
+	if err != nil {
+		return fmt.Errorf("error parsing output resource list %q: %w", resultStr, err)
+	}
+	if resourceListOutput.GetKind() != "ResourceList" {
+		return fmt.Errorf("invalid resource list output from wasm library; got %q", resultStr)
 	}
 	if _, err = w.Write([]byte(resultStr)); err != nil {
 		return fmt.Errorf("unable to write the output resource list: %w", err)
