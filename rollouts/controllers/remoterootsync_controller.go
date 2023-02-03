@@ -307,14 +307,13 @@ func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	if err := gitopsv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
 	}
-	// setup the clusterstore
-	r.store = &clusterstore.ClusterStore{
-		Config: mgr.GetConfig(),
-		Client: r.Client,
-	}
-	if err := r.store.Init(); err != nil {
+
+	clusterStore, err := clusterstore.NewClusterStore(r.Client, mgr.GetConfig())
+	if err != nil {
 		return err
 	}
+	r.store = clusterStore
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.RemoteRootSync{}).
 		Watches(
