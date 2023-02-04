@@ -1,0 +1,99 @@
+// Copyright 2023 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.3
+  creationTimestamp: null
+  name: healthchecks.healthcheck.cloud.google.com
+spec:
+  group: healthcheck.cloud.google.com
+  names:
+    kind: HealthCheck
+    listKind: HealthCheckList
+    plural: healthchecks
+    singular: healthcheck
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: HealthCheck is the Schema for a single health check.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'NOTE: json tags are required.  Any new fields you add must
+              have json tags for the fields to be serialized. HealthCheckSpec defines
+              the metadata of a single health check.'
+            type: object
+          status:
+            description: HealthCheckStatus defines the status of a single health check.
+            properties:
+              conditions:
+                description: Conditions represents the status of health check.
+                items:
+                  description: HealthCheckCondition represents the status of health
+                    check.
+                  properties:
+                    canonicalID:
+                      description: The unique error ID.
+                      type: string
+                    canonicalName:
+                      description: The unique error name.
+                      type: string
+                    lastTransitionTime:
+                      description: The last time the condition transitioned from one
+                        status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A human readable message indicating details about
+                        the transition.
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition.
+                      type: string
+                    status:
+                      enum:
+                      - Unknown
+                      - Healthy
+                      - Unhealthy
+                      type: string
+                    type:
+                      description: HealthCheckConditionType defines the type of health
+                        check conditions.
+                      enum:
+                      - FatalError
+                      - NonFatalError
+                      type: string
+                  type: object
+                maxItems: 1
+                type: array
+            type: object
+        type: object
+    served: true
+    storage: true
