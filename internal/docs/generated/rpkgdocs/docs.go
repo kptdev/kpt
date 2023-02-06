@@ -190,6 +190,21 @@ var ProposeExamples = `
   $ kpt alpha rpkg propose blueprint-91817620282c133138177d16c981cf35f0083cad --namespace=default
 `
 
+var ProposeDeleteShort = `Propose deletion of a published package revision.`
+var ProposeDeleteLong = `
+  kpt alpha rpkg propose-delete PACKAGE_REV_NAME... [flags]
+
+Args:
+
+  PACKAGE_REV_NAME...:
+  The name of one or more package revisions. If more than
+  one is provided, they must be space-separated.
+`
+var ProposeDeleteExamples = `
+  # Propose published package revision blueprint-e982b2196b35a4f5e81e92f49a430fe463aa9f1a for deletion.
+  $ kpt alpha rpkg propose-delete blueprint-e982b2196b35a4f5e81e92f49a430fe463aa9f1a --namespace=default
+`
+
 var PullShort = `Pull the content of the package revision.`
 var PullLong = `
   kpt alpha rpkg pull PACKAGE_REV_NAME [DIR] [flags]
@@ -227,7 +242,7 @@ var PushExamples = `
   $ kpt alpha rpkg push blueprint-f977350dff904fa677100b087a5bd989106d0456 ./package --namespace=default
 `
 
-var RejectShort = `Reject a proposal to publish a package revision.`
+var RejectShort = `Reject a proposal to publish or delete a package revision.`
 var RejectLong = `
   kpt alpha rpkg reject [PACKAGE_REV_NAME...] [flags]
 

@@ -3,14 +3,14 @@ title: "`reject`"
 linkTitle: "reject"
 type: docs
 description: >
-  Reject a proposal to publish a package revision.
+  Reject a proposal to publish or delete a package revision.
 ---
 
 <!--mdtogo:Short
-    Reject a proposal to publish a package revision.
+    Reject a proposal to publish or delete a package revision.
 -->
 
-`reject` closes a proposal for publishing a package revision.
+`reject` closes a proposal for publishing or deleting a package revision.
 
 ### Synopsis
 
