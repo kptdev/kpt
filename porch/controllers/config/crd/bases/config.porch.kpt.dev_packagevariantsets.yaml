@@ -53,8 +53,16 @@ spec:
             properties:
               adoptionPolicy:
                 type: string
+              annotations:
+                additionalProperties:
+                  type: string
+                type: object
               deletionPolicy:
                 type: string
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
               targets:
                 items:
                   properties:

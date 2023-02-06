@@ -47,6 +47,9 @@ type PackageVariantSetSpec struct {
 
 	AdoptionPolicy pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
 	DeletionPolicy pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type Upstream struct {
