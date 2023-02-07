@@ -17,8 +17,8 @@ package packageclustermatcher
 import (
 	"fmt"
 
-	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
 	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
 
 	"github.com/google/cel-go/cel"
@@ -26,16 +26,16 @@ import (
 )
 
 type PackageClusterMatcher struct {
-	clusters []gkeclusterapis.ContainerCluster
+	clusters []clusterstore.Cluster
 	packages []packagediscovery.DiscoveredPackage
 }
 
 type ClusterPackages struct {
-	Cluster  gkeclusterapis.ContainerCluster
+	Cluster  clusterstore.Cluster
 	Packages []packagediscovery.DiscoveredPackage
 }
 
-func NewPackageClusterMatcher(clusters []gkeclusterapis.ContainerCluster, packages []packagediscovery.DiscoveredPackage) *PackageClusterMatcher {
+func NewPackageClusterMatcher(clusters []clusterstore.Cluster, packages []packagediscovery.DiscoveredPackage) *PackageClusterMatcher {
 	return &PackageClusterMatcher{
 		clusters: clusters,
 		packages: packages,
@@ -56,8 +56,8 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 			matchedPackages = packages
 		case gitopsv1alpha1.CustomMatcher:
 			celCluster := map[string]interface{}{
-				"name":   cluster.ObjectMeta.Name,
-				"labels": cluster.ObjectMeta.Labels,
+				"name":   cluster.Name,
+				"labels": cluster.Labels,
 			}
 
 			for _, discoveredPackage := range packages {
