@@ -132,14 +132,8 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	cr := &remoterootsync.Spec.ClusterRef
-
-	gkeCluster, err := r.store.GetCluster(ctx, cr.Name)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	_, dynCl, err := r.store.GetClusterClient(ctx, gkeCluster)
+	clusterRef := &remoterootsync.Spec.ClusterRef
+	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -274,13 +268,8 @@ func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync) (*unstru
 }
 
 func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, remoterootsync *gitopsv1alpha1.RemoteRootSync) error {
-
-	gkeCluster, err := r.store.GetCluster(ctx, remoterootsync.Spec.ClusterRef.Name)
-	if err != nil {
-		return err
-	}
-
-	_, dynCl, err := r.store.GetClusterClient(ctx, gkeCluster)
+	clusterRef := &remoterootsync.Spec.ClusterRef
+	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return err
 	}
@@ -292,6 +281,20 @@ func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, 
 	}
 	klog.Infof("external resource %s delete Done!", remoterootsync.Name)
 	return err
+}
+
+func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Context, clusterRef *gitopsv1alpha1.ClusterRef) (dynamic.Interface, error) {
+	restConfig, err := r.store.GetRESTConfig(ctx, clusterRef.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	dynamicClient, err := dynamic.NewForConfig(restConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return dynamicClient, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
