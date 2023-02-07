@@ -67,7 +67,13 @@ type ClusterSourceType string
 
 // ClusterDiscovery represents configuration needed to discover clusters.
 type ClusterDiscovery struct {
-	SourceType ClusterSourceType `json:"sourceType"`
+	SourceType ClusterSourceType      `json:"sourceType"`
+	GCPFleet   *ClusterSourceGCPFleet `json:"gcpFleet,omitempty"`
+}
+
+// ClusterSourceGCPFleet represents configuration needed to discover gcp fleet clusters.
+type ClusterSourceGCPFleet struct {
+	ProjectIds []string `json:"projectIds"`
 }
 
 const (

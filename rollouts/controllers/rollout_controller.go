@@ -201,7 +201,7 @@ func (r *RolloutReconciler) getStrategy(ctx context.Context, rollout *gitopsv1al
 }
 
 func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy) error {
-	allClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
+	allClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
 	logger := log.FromContext(ctx)
 
-	targetClusters, err := r.store.ListClusters(ctx, rollout.Spec.Targets.Selector)
+	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
 		logger.Error(err, "failed to discover packages")
@@ -388,11 +388,12 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			continue
 		}
 		cluster := &clusterPackages[idx].Cluster
+		clusterName := cluster.Name[strings.LastIndex(cluster.Name, "/")+1:]
 		pkg := &clusterPkg.Packages[0]
 		rrs := gitopsv1alpha1.RemoteRootSync{}
 		key := client.ObjectKey{
 			Namespace: rollout.Namespace,
-			Name:      fmt.Sprintf("%s-%s", pkgID(pkg), cluster.Name),
+			Name:      fmt.Sprintf("%s-%s", pkgID(pkg), clusterName),
 		}
 		// since this RRS need to exist, remove it from the deletion list
 		delete(RRSkeysToBeDeleted, key)
@@ -694,9 +695,11 @@ func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
 // Given a package identifier and cluster, create a RemoteRootSync object.
 func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout, clusterRef gitopsv1alpha1.ClusterRef, rssSpec *gitopsv1alpha1.RootSyncSpec, pkgID string, waveName string) *gitopsv1alpha1.RemoteRootSync {
 	t := true
+	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
+
 	return &gitopsv1alpha1.RemoteRootSync{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", pkgID, clusterRef.Name),
+			Name:      fmt.Sprintf("%s-%s", pkgID, clusterName),
 			Namespace: rollout.Namespace,
 			Labels: map[string]string{
 				rolloutLabel: rollout.Name,
@@ -754,13 +757,11 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.packageDiscoveryCache = make(map[types.NamespacedName]*packagediscovery.PackageDiscovery)
 
 	// setup the clusterstore
-	r.store = &clusterstore.ClusterStore{
-		Config: mgr.GetConfig(),
-		Client: r.Client,
-	}
-	if err := r.store.Init(); err != nil {
+	clusterStore, err := clusterstore.NewClusterStore(r.Client, mgr.GetConfig())
+	if err != nil {
 		return err
 	}
+	r.store = clusterStore
 
 	var containerCluster gkeclusterapis.ContainerCluster
 	return ctrl.NewControllerManagedBy(mgr).

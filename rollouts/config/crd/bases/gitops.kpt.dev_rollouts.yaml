@@ -52,6 +52,17 @@ spec:
               clusters:
                 description: Clusters specifies the source for discovering the clusters.
                 properties:
+                  gcpFleet:
+                    description: ClusterSourceGCPFleet represents configuration needed
+                      to discover gcp fleet clusters.
+                    properties:
+                      projectIds:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - projectIds
+                    type: object
                   sourceType:
                     enum:
                     - KCC
