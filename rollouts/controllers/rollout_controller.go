@@ -219,7 +219,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 	}
 
 	for _, wave := range strategy.Spec.Waves {
-		waveClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector, wave.Targets.Selector)
+		waveClusters, err := filterClusters(allClusters, wave.Targets.Selector)
 		if err != nil {
 			return err
 		}
@@ -297,7 +297,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	allClusterStatuses := []gitopsv1alpha1.ClusterStatus{}
 	waveStatuses := []gitopsv1alpha1.WaveStatus{}
 
-	allWaveTargets, err := r.getWaveTargets(ctx, rollout, targets, strategy.Spec.Waves)
+	allWaveTargets, err := r.getWaveTargets(ctx, rollout, targets, targetClusters, strategy.Spec.Waves)
 	if err != nil {
 		return err
 	}
@@ -428,7 +428,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, allTargets *Targets,
+func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, allTargets *Targets, allClusters []clusterstore.Cluster,
 	allWaves []gitopsv1alpha1.Wave) ([]WaveTarget, error) {
 	allWaveTargets := []WaveTarget{}
 
@@ -438,7 +438,7 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 		wave := allWaves[i]
 		thisWaveTarget := WaveTarget{Wave: &wave, Targets: &Targets{}}
 
-		waveClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector, wave.Targets.Selector)
+		waveClusters, err := filterClusters(allClusters, wave.Targets.Selector)
 		if err != nil {
 			return nil, err
 		}
@@ -876,4 +876,22 @@ func rolloutIncludesCluster(rollout *gitopsv1alpha1.Rollout, clusterName string)
 	}
 
 	return false
+}
+
+func filterClusters(allClusters []clusterstore.Cluster, labelSelector *metav1.LabelSelector) ([]clusterstore.Cluster, error) {
+	clusters := []clusterstore.Cluster{}
+
+	for _, cluster := range allClusters {
+		clusterLabelSet := labels.Set(cluster.Labels)
+		selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+		if err != nil {
+			return nil, err
+		}
+
+		if selector.Matches(clusterLabelSet) {
+			clusters = append(clusters, cluster)
+		}
+	}
+
+	return clusters, nil
 }

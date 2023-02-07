@@ -52,15 +52,15 @@ func NewClusterStore(client client.Client, config *rest.Config) (*ClusterStore, 
 	return clusterStore, nil
 }
 
-func (cs *ClusterStore) ListClusters(ctx context.Context, clusterDiscovery *gitopsv1alpha1.ClusterDiscovery, selectors ...*metav1.LabelSelector) ([]Cluster, error) {
+func (cs *ClusterStore) ListClusters(ctx context.Context, clusterDiscovery *gitopsv1alpha1.ClusterDiscovery, selector *metav1.LabelSelector) ([]Cluster, error) {
 	clusterSourceType := clusterDiscovery.SourceType
 
 	switch clusterSourceType {
 	case gitopsv1alpha1.GCPFleet:
-		return cs.gcpFleetClusterStore.ListClusters(ctx, clusterDiscovery.GCPFleet, selectors...)
+		return cs.gcpFleetClusterStore.ListClusters(ctx, clusterDiscovery.GCPFleet, selector)
 
 	case gitopsv1alpha1.KCC:
-		return cs.containerClusterStore.ListClusters(ctx, selectors...)
+		return cs.containerClusterStore.ListClusters(ctx, selector)
 
 	default:
 		return nil, fmt.Errorf("%v cluster source not supported", clusterSourceType)

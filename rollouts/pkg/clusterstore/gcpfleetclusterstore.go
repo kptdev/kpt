@@ -35,7 +35,7 @@ type GCPFleetClusterStore struct {
 	projectIdToNumberCache sync.Map
 }
 
-func (cs *GCPFleetClusterStore) ListClusters(ctx context.Context, configuration *gitopsv1alpha1.ClusterSourceGCPFleet, selectors ...*metav1.LabelSelector) ([]Cluster, error) {
+func (cs *GCPFleetClusterStore) ListClusters(ctx context.Context, configuration *gitopsv1alpha1.ClusterSourceGCPFleet, labelSelector *metav1.LabelSelector) ([]Cluster, error) {
 	err := cs.validateGCPFleetConfiguration(configuration)
 	if err != nil {
 		return nil, fmt.Errorf("gcp fleet configuration error: %w", err)
@@ -56,7 +56,7 @@ func (cs *GCPFleetClusterStore) ListClusters(ctx context.Context, configuration 
 		clusterLabelSet := labels.Set(cluster.Labels)
 		shouldAdd := true
 
-		for _, labelSelector := range selectors {
+		if labelSelector != nil {
 			selector, _ := metav1.LabelSelectorAsSelector(labelSelector)
 
 			if !selector.Matches(clusterLabelSet) {
