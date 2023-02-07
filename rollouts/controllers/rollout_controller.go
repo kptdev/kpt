@@ -207,7 +207,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 	}
 
 	clusterWaveMap := make(map[string]string)
-	for _, cluster := range allClusters.Items {
+	for _, cluster := range allClusters {
 		clusterWaveMap[cluster.Name] = ""
 	}
 
@@ -224,11 +224,11 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 			return err
 		}
 
-		if len(waveClusters.Items) == 0 {
+		if len(waveClusters) == 0 {
 			return fmt.Errorf("wave %q does not target any clusters", wave.Name)
 		}
 
-		for _, cluster := range waveClusters.Items {
+		for _, cluster := range waveClusters {
 			currentClusterWave, found := clusterWaveMap[cluster.Name]
 			if !found {
 				// this should never happen
@@ -245,7 +245,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		pauseWaveNameFound = pauseWaveNameFound || pauseAfterWaveName == wave.Name
 	}
 
-	for _, cluster := range allClusters.Items {
+	for _, cluster := range allClusters {
 		wave, _ := clusterWaveMap[cluster.Name]
 		if wave == "" {
 			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Name)
@@ -283,7 +283,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	}
 	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
 
-	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters.Items, discoveredPackages)
+	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters, discoveredPackages)
 	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
 	if err != nil {
 		return err
@@ -442,7 +442,7 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 			return nil, err
 		}
 
-		for _, cluster := range waveClusters.Items {
+		for _, cluster := range waveClusters {
 			clusterNameToWaveTarget[cluster.Name] = &thisWaveTarget
 		}
 
@@ -624,7 +624,7 @@ type Targets struct {
 }
 
 type clusterPackagePair struct {
-	cluster    *gkeclusterapis.ContainerCluster
+	cluster    *clusterstore.Cluster
 	packageRef *packagediscovery.DiscoveredPackage
 }
 
