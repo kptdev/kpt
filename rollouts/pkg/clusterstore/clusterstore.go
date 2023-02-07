@@ -42,6 +42,11 @@ type ClusterStore struct {
 	WorkloadIdentityHelper
 }
 
+type Cluster struct {
+	Name   string
+	Labels map[string]string
+}
+
 func (cs *ClusterStore) Init() error {
 	if err := cs.WorkloadIdentityHelper.Init(cs.Config); err != nil {
 		return err
@@ -49,7 +54,7 @@ func (cs *ClusterStore) Init() error {
 	return nil
 }
 
-func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.LabelSelector) (*gkeclusterapis.ContainerClusterList, error) {
+func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.LabelSelector) ([]Cluster, error) {
 	gkeClusters, err := cs.listClusters(ctx, selectors[0])
 	if err != nil {
 		return nil, err
@@ -79,17 +84,14 @@ func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.L
 		return strings.Compare(gkeClusters.Items[i].Name, gkeClusters.Items[j].Name) == -1
 	})
 
-	return gkeClusters, nil
-}
+	clusters := []Cluster{}
 
-func (cs *ClusterStore) PrintClusterInfos(ctx context.Context, clusters *gkeclusterapis.ContainerClusterList) {
-	logger := log.FromContext(ctx)
-	for _, gkeCluster := range clusters.Items {
-		logger.Info("gke clusters", "namespace", gkeCluster.Namespace, "name", gkeCluster.Name)
-		for _, cond := range gkeCluster.Status.Conditions {
-			logger.Info("gke cluster", "name", gkeCluster.Name, "condition", cond)
-		}
+	for _, containerCluster := range gkeClusters.Items {
+		cluster := toCluster(&containerCluster)
+		clusters = append(clusters, cluster)
 	}
+
+	return clusters, nil
 }
 
 func (cs *ClusterStore) getCluster(ctx context.Context, name string) (*gkeclusterapis.ContainerCluster, error) {
@@ -198,4 +200,13 @@ func (cs *ClusterStore) getConfigConnectorContextTokenSource(ctx context.Context
 		Name:      "cnrm-controller-manager-" + ns,
 	}
 	return cs.WorkloadIdentityHelper.GetGcloudAccessTokenSource(ctx, kubeServiceAccount, googleServiceAccount)
+}
+
+func toCluster(containerCluster *gkeclusterapis.ContainerCluster) Cluster {
+	cluster := Cluster{
+		Name:   containerCluster.Name,
+		Labels: containerCluster.Labels,
+	}
+
+	return cluster
 }
