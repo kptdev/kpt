@@ -54,30 +54,10 @@ func (cs *ClusterStore) Init() error {
 	return nil
 }
 
-func (cs *ClusterStore) ListClusters(ctx context.Context, selectors ...*metav1.LabelSelector) ([]Cluster, error) {
-	gkeClusters, err := cs.listClusters(ctx, selectors[0])
+func (cs *ClusterStore) ListClusters(ctx context.Context, selector *metav1.LabelSelector) ([]Cluster, error) {
+	gkeClusters, err := cs.listClusters(ctx, selector)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, selector := range selectors[1:] {
-		selectorClusters, err := cs.listClusters(ctx, selector)
-		if err != nil {
-			return nil, err
-		}
-
-		intersection := []gkeclusterapis.ContainerCluster{}
-
-		for _, cluster := range gkeClusters.Items {
-			for _, selectorCluster := range selectorClusters.Items {
-				if cluster.Name == selectorCluster.Name {
-					intersection = append(intersection, cluster)
-					break
-				}
-			}
-		}
-
-		gkeClusters.Items = intersection
 	}
 
 	sort.Slice(gkeClusters.Items, func(i, j int) bool {
