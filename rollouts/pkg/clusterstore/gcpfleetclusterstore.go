@@ -31,8 +31,9 @@ import (
 )
 
 type GCPFleetClusterStore struct {
-	projectId              string
-	projectIdToNumberCache sync.Map
+	projectId                       string
+	membershipNameToConfigHostCache sync.Map
+	projectIdToNumberCache          sync.Map
 }
 
 func (cs *GCPFleetClusterStore) ListClusters(ctx context.Context, configuration *gitopsv1alpha1.ClusterSourceGCPFleet, labelSelector *metav1.LabelSelector) ([]Cluster, error) {
@@ -74,9 +75,36 @@ func (cs *GCPFleetClusterStore) ListClusters(ctx context.Context, configuration 
 }
 
 func (cs *GCPFleetClusterStore) GetRESTConfig(ctx context.Context, name string) (*rest.Config, error) {
+	accessToken, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, fmt.Errorf("unable to get access token: %w", err)
+	}
+
+	token, err := accessToken.Token()
+
+	host, err := cs.getRESTConfigHost(ctx, name)
+	if err != nil {
+		return nil, fmt.Errorf("building rest config host failed: %w", err)
+	}
+
+	restConfig := &rest.Config{}
+	restConfig.Host = host
+	restConfig.BearerToken = token.AccessToken
+
+	return restConfig, err
+}
+
+func (cs *GCPFleetClusterStore) getRESTConfigHost(ctx context.Context, name string) (string, error) {
+	restConfigHost, found := cs.membershipNameToConfigHostCache.Load(name)
+
+	if found {
+		restConfigHost := restConfigHost.(string)
+		return restConfigHost, nil
+	}
+
 	membership, err := cs.getMembership(ctx, name)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get membership: %w", err)
+		return "", fmt.Errorf("unable to get membership: %w", err)
 	}
 
 	// name format: projects/:projectId/locations/global/memberships/:membershipName
@@ -87,7 +115,7 @@ func (cs *GCPFleetClusterStore) GetRESTConfig(ctx context.Context, name string) 
 
 	projectNumber, err := cs.getProjectNumber(ctx, projectId)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get project number: %w", err)
+		return "", fmt.Errorf("unable to get project number: %w", err)
 	}
 
 	membershipUrl := "memberships"
@@ -96,23 +124,11 @@ func (cs *GCPFleetClusterStore) GetRESTConfig(ctx context.Context, name string) 
 		membershipUrl = "gkeMemberships"
 	}
 
-	accessToken, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, fmt.Errorf("unable to get access token: %w", err)
-	}
-
-	token, err := accessToken.Token()
-	if err != nil {
-		return nil, fmt.Errorf("get access token failed: %w", err)
-	}
-
 	host := fmt.Sprintf("https://connectgateway.googleapis.com/v1/projects/%d/locations/global/%s/%s", projectNumber, membershipUrl, membershipName)
 
-	restConfig := &rest.Config{}
-	restConfig.Host = host
-	restConfig.BearerToken = token.AccessToken
+	cs.membershipNameToConfigHostCache.Store(name, host)
 
-	return restConfig, err
+	return host, nil
 }
 
 func (cs *GCPFleetClusterStore) getProjectNumber(ctx context.Context, projectId string) (int64, error) {
