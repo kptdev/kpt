@@ -443,7 +443,7 @@ func (p *ociPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.
 func (p *ociPackageRevision) GetKptfile(ctx context.Context) (kptfile.KptFile, error) {
 	resources, err := LoadResources(ctx, p.parent.storage, &p.digestName)
 	if err != nil {
-		return kptfile.KptFile{}, fmt.Errorf("error loading package resources: %w", err)
+		return kptfile.KptFile{}, fmt.Errorf("error loading package resources for %v: %w", p.digestName, err)
 	}
 	kfString, found := resources.Contents[kptfile.KptFileName]
 	if !found {
