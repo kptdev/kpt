@@ -20,6 +20,14 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - container.cnrm.cloud.google.com
+  resources:
+  - containerclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - gitops.kpt.dev
   resources:
   - progressiverolloutstrategies

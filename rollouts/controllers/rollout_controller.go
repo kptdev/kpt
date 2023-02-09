@@ -81,6 +81,7 @@ type RolloutReconciler struct {
 	packageDiscoveryCache map[types.NamespacedName]*packagediscovery.PackageDiscovery
 }
 
+//+kubebuilder:rbac:groups=container.cnrm.cloud.google.com,resources=containerclusters,verbs=get;list;watch
 //+kubebuilder:rbac:groups=gitops.kpt.dev,resources=rollouts,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=gitops.kpt.dev,resources=rollouts/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=gitops.kpt.dev,resources=rollouts/finalizers,verbs=update
