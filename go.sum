@@ -79,8 +79,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24/go.mod h1:4UJr5HIiMZrwgkSPdsjy2uOQExX/WEILpIrO9UPGuXs=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33 h1:9M1bvq7hU/JTY4VVcqhCQT0eAa5HznrFaLAm2ldfe70=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
-github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230124224701-c96a71932235 h1:iU8a95nm6UYk9JhLwLGKYFfbqWaepBHyjehdJrn9s28=
-github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230124224701-c96a71932235/go.mod h1:q8E1T5TDBuhXa5+CNbooqIRNwEfho2f25mEVMGw1Z/s=
+github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230209223911-c6c49d0a0636 h1:9oUTINyozQvQ78QvKM3jTLI54oKMrq9V1VYpb4m8Asc=
+github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230209223911-c6c49d0a0636/go.mod h1:q8E1T5TDBuhXa5+CNbooqIRNwEfho2f25mEVMGw1Z/s=
 github.com/MakeNowJust/heredoc v1.0.0 h1:cXCdzVdstXyiTqTvfqk9SDHpKNjxuom+DOlyEeQ4pzQ=
 github.com/MakeNowJust/heredoc v1.0.0/go.mod h1:mG5amYoWBHf8vpLOuehzbGGw0EHxpZZ6lCpQ4fNJ8LE=
 github.com/Masterminds/goutils v1.1.0/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=

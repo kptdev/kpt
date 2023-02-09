@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33
-	github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230124224701-c96a71932235
+	github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230209223911-c6c49d0a0636
 	github.com/bytecodealliance/wasmtime-go v0.39.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.2
 	github.com/go-errors/errors v1.4.2
