@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,30 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-go.work
-go.work.sum
-.DS_Store
-.idea/
-*.iml
-coverage.out
-kpt/kpt
-*.exe
-*.gif
-bin/
-**/__debug_bin
-
-# Emacs temp files
-*~
-
-# VS Code individual configurations
-.vscode/
-
-# Firebase cache
-.firebase/
-
-# Node dependencies
-node_modules/
-package-lock.json
-
-# local tmp directory (in case you download packages here)
-tmp/
+# The following patch adds a directive for certmanager to inject CA into the CRD
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: $(CERTIFICATE_NAMESPACE)/$(CERTIFICATE_NAME)
+  name: progressiverolloutstrategies.gitops.kpt.dev

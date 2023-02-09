@@ -1,0 +1,34 @@
+domain: kpt.dev
+layout:
+- go.kubebuilder.io/v3
+projectName: rollouts
+repo: github.com/GoogleContainerTools/kpt/rollouts
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kpt.dev
+  group: gitops
+  kind: Rollout
+  path: github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kpt.dev
+  group: gitops
+  kind: RemoteRootSync
+  path: github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: kpt.dev
+  group: gitops
+  kind: ProgressiveRolloutStrategy
+  path: github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1
+  version: v1alpha1
+version: "3"

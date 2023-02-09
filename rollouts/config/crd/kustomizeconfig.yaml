@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,30 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-go.work
-go.work.sum
-.DS_Store
-.idea/
-*.iml
-coverage.out
-kpt/kpt
-*.exe
-*.gif
-bin/
-**/__debug_bin
+# This file is for teaching kustomize how to substitute name and namespace reference in CRD
+nameReference:
+- kind: Service
+  version: v1
+  fieldSpecs:
+  - kind: CustomResourceDefinition
+    version: v1
+    group: apiextensions.k8s.io
+    path: spec/conversion/webhook/clientConfig/service/name
 
-# Emacs temp files
-*~
+namespace:
+- kind: CustomResourceDefinition
+  version: v1
+  group: apiextensions.k8s.io
+  path: spec/conversion/webhook/clientConfig/service/namespace
+  create: false
 
-# VS Code individual configurations
-.vscode/
-
-# Firebase cache
-.firebase/
-
-# Node dependencies
-node_modules/
-package-lock.json
-
-# local tmp directory (in case you download packages here)
-tmp/
+varReference:
+- path: metadata/annotations

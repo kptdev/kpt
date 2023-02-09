@@ -1,4 +1,4 @@
-# Copyright 2019 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,30 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-go.work
-go.work.sum
-.DS_Store
-.idea/
-*.iml
-coverage.out
-kpt/kpt
-*.exe
-*.gif
-bin/
-**/__debug_bin
-
-# Emacs temp files
-*~
-
-# VS Code individual configurations
-.vscode/
-
-# Firebase cache
-.firebase/
-
-# Node dependencies
-node_modules/
-package-lock.json
-
-# local tmp directory (in case you download packages here)
-tmp/
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: metrics-reader
+    app.kubernetes.io/component: kube-rbac-proxy
+    app.kubernetes.io/created-by: rollouts
+    app.kubernetes.io/part-of: rollouts
+    app.kubernetes.io/managed-by: kustomize
+  name: metrics-reader
+rules:
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
