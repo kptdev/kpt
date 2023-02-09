@@ -54,6 +54,10 @@ spec:
             properties:
               adoptionPolicy:
                 type: string
+              annotations:
+                additionalProperties:
+                  type: string
+                type: object
               deletionPolicy:
                 type: string
               downstream:
@@ -62,6 +66,10 @@ spec:
                     type: string
                   repo:
                     type: string
+                type: object
+              labels:
+                additionalProperties:
+                  type: string
                 type: object
               upstream:
                 properties:
@@ -77,6 +85,7 @@ spec:
             description: PackageVariantStatus defines the observed state of PackageVariant
             properties:
               validationErrors:
+                description: 'TODO: Move this to conditions.'
                 items:
                   type: string
                 type: array

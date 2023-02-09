@@ -228,6 +228,8 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:       pv.Namespace,
 			OwnerReferences: []metav1.OwnerReference{constructOwnerReference(pv)},
+			Labels:          pv.Spec.Labels,
+			Annotations:     pv.Spec.Annotations,
 		},
 		Spec: porchapi.PackageRevisionSpec{
 			PackageName:    pv.Spec.Downstream.Package,
@@ -336,9 +338,8 @@ func (r *PackageVariantReconciler) getDownstreamPRs(ctx context.Context,
 		// this package matches, check if we need to adopt it
 		if !owned && pv.Spec.AdoptionPolicy == api.AdoptionPolicyAdoptExisting {
 			klog.Infoln(fmt.Sprintf("package variant %q is adopting package revision %q", pv.Name, pr.Name))
-			pr.ObjectMeta.OwnerReferences = append(pr.OwnerReferences, constructOwnerReference(pv))
-			if err := r.Client.Update(ctx, &pr); err != nil {
-				klog.Errorf("error adopting package revision: %v", err)
+			if err := r.adoptPackageRevision(ctx, &pr, pv); err != nil {
+				klog.Errorf("error adopting package revision: %w", err)
 			}
 		}
 
@@ -418,6 +419,27 @@ func removeOwnerRefByUID(ownerRefs []metav1.OwnerReference,
 	return result
 }
 
+// When we adopt a package revision, we need to make sure that the package revision
+// has our owner reference and also the labels/annotations specified in pv.Spec.
+func (r *PackageVariantReconciler) adoptPackageRevision(ctx context.Context,
+	pr *porchapi.PackageRevision,
+	pv *api.PackageVariant) error {
+	pr.ObjectMeta.OwnerReferences = append(pr.OwnerReferences, constructOwnerReference(pv))
+	if len(pv.Spec.Labels) > 0 && pr.ObjectMeta.Labels == nil {
+		pr.ObjectMeta.Labels = make(map[string]string)
+	}
+	for k, v := range pv.Spec.Labels {
+		pr.ObjectMeta.Labels[k] = v
+	}
+	if len(pv.Spec.Annotations) > 0 && pr.ObjectMeta.Annotations == nil {
+		pr.ObjectMeta.Annotations = make(map[string]string)
+	}
+	for k, v := range pv.Spec.Annotations {
+		pr.ObjectMeta.Annotations[k] = v
+	}
+	return r.Client.Update(ctx, pr)
+}
+
 func (r *PackageVariantReconciler) deletePackageRevision(ctx context.Context, pr *porchapi.PackageRevision) {
 	switch pr.Spec.Lifecycle {
 	case "", porchapi.PackageRevisionLifecycleDraft, porchapi.PackageRevisionLifecycleProposed:
@@ -462,6 +484,8 @@ func (r *PackageVariantReconciler) copyPublished(ctx context.Context,
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:       source.Namespace,
 			OwnerReferences: []metav1.OwnerReference{constructOwnerReference(pv)},
+			Labels:          pv.Spec.Labels,
+			Annotations:     pv.Spec.Annotations,
 		},
 		Spec: source.Spec,
 	}

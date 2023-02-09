@@ -59,6 +59,9 @@ type PackageVariantSpec struct {
 
 	AdoptionPolicy AdoptionPolicy `json:"adoptionPolicy,omitempty"`
 	DeletionPolicy DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 type Upstream struct {
