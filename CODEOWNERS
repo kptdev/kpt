@@ -2,4 +2,4 @@
 # We use the @GoogleContainerTools/kpt-reviewers group so that we can assign a single person to each PR.
 
 # Default
-/ @GoogleContainerTools/kpt-reviewers
+*     @GoogleContainerTools/kpt-reviewers
