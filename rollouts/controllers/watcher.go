@@ -40,7 +40,7 @@ type watcher struct {
 
 	cancelFunc context.CancelFunc
 
-	client dynamic.Interface
+	getDynamicClient func(ctx context.Context) (dynamic.Interface, error)
 
 	channel chan event.GenericEvent
 
@@ -67,7 +67,12 @@ loop:
 		case <-reconnect.channel():
 			var err error
 			klog.Infof("Starting watch for %s... ", clusterRefName)
-			watcher, err = w.client.Resource(rootSyncGVR).Watch(w.ctx, v1.ListOptions{})
+			dynamicClient, err := w.getDynamicClient(w.ctx)
+			if err != nil {
+				klog.Errorf("Cannot get dynamic client for %s: %v; will retry", clusterRefName, err)
+				reconnect.backoff()
+			}
+			watcher, err = dynamicClient.Resource(rootSyncGVR).Watch(w.ctx, v1.ListOptions{})
 			if err != nil {
 				klog.Errorf("Cannot start watch for %s: %v; will retry", clusterRefName, err)
 				reconnect.backoff()
