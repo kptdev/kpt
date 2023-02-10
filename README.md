@@ -38,7 +38,7 @@ to visit the [kpt website](https://kpt.dev/).
 ## Install kpt
 
 kpt installation instructions can be found on 
-[kpt.dev/installation](https://kpt.dev/installation/)
+[kpt.dev/installation](https://kpt.dev/installation/).
 
 ## kpt components
 
