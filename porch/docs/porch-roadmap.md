@@ -1,5 +1,7 @@
 # Porch Roadmap
 
+Last updated: February 9th, 2023
+
 This document outlines next steps for Porch in several areas. This is a living
 document outlining future direction and work in different Porch subsystems.
 
@@ -16,10 +18,16 @@ document outlining future direction and work in different Porch subsystems.
   new (_Draft_) `PackageRevision` resources on mutations.
 * Implement support for API-level filtering (field and label selectors) for all
   `list` operations.
-* Implement support for k8s API primitives such as `Watch`, correct use of all
-  `ObjectMeta` fields.
 * Make sure that all errors translate to the appropriate API-level HTTP status
   with clear, actionable messages.
+* Cross-namespace cloning to make it possible to better leverage Kubernetes RBAC
+  for controlling access to repositories.
+* Move long-running operations to asynchronous operations by controllers rather than
+  synchronous operations by the aggregated apiserver. This means exposing results
+  in the status object of resources rather than return errors.
+* Support non-KRM content as part of `ResourceList` to allow lossless package
+  transformations, or compensate for lack of this support in general by enabling
+  in Porch partial package revision `pull` and `push`.
 
 ## Repository Management
 
@@ -55,9 +63,6 @@ document outlining future direction and work in different Porch subsystems.
 
 ### Git
 
-* Support for additional authentication schemes (ssh keys, GCP service account),
-  as required to enable integration with additional Git providers such as
-  [Cloud Source Repositories](https://cloud.google.com/source-repositories/docs)
 * Support authentication for cloning packages from unregistered repositories.
 * Porch will need to store more information associated with a package revision,
   for example:
@@ -99,6 +104,8 @@ document outlining future direction and work in different Porch subsystems.
 * Support package contents that are not text
 * Revisit package update mutation to avoid using local file system and integrate
   better with CaD library (`updatePackageMutation.Apply`).
+* Migrate the PackageRevision resource to a CRD rather than using the
+  aggregated APIServer.
 
 ## Package Lifecycle
 
@@ -140,18 +147,11 @@ document outlining future direction and work in different Porch subsystems.
 * Accept Git test image as an argument to avoid requiring the Porch server
   image and Git test server image to share the same tag
   (see `InferGitServerImage` function and `suite.go` file)
+* Set up infrastructure for better testing of the controllers.
 
-## Broader Changes
+## Deployment and integration with syncers
+* Support bulk management of variants of packages based on deployment targets.
+* Rollout engine for progressive rollout of packages into clusters.
 
-* Support non-KRM content as part of `ResourceList` to allow lossless package
-  transformations, or compensate for lack of this support in general by enabling
-  in Porch partial package revision `pull` and `push`.
-* Make it possible for `R*Sync` resources to be created in arbitrary namespace
-* Enable `R*Sync` to sync both namespaced and non-namespaced resources
-* Improve the overall deletion flow, possibly implement it as:
-  - deleting a package means creating a new revision of the package emptied
-    of content
-  - rolling out the updated package (this will delete the deployed resources)
-  - delete the configuration package from repository completely
-* Reconcile Porch `RemoteRootSync` controller with Config Sync.
-* Create a rollout controller to drive cross-cluster deployment activity.
+
+

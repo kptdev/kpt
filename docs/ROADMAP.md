@@ -1,14 +1,12 @@
 # kpt roadmap
 
-Last updated: May 6th, 2022
+Last updated: February 9th, 2023
 
 Please follow the [installation](https://kpt.dev/installation/) guide for installing the latest version of kpt.
 
-We are planning to build a new roadmap pending user feedback on the new package orchestration capabilities.
-
 ## Latest releases
 
-Coming soon...
+https://github.com/GoogleContainerTools/kpt/releases
 
 ## Detailed release notes
 Please refer to the [release notes] page for more information about the latest features.
