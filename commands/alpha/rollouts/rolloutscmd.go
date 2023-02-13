@@ -12,26 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package rollouts
 
 import (
 	"context"
-	"os"
 
-	"github.com/GoogleContainerTools/kpt/rollouts/cli/advance"
-	"github.com/GoogleContainerTools/kpt/rollouts/cli/get"
-	"github.com/GoogleContainerTools/kpt/rollouts/cli/status"
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/advance"
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/get"
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/status"
 	"github.com/spf13/cobra"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
-func main() {
-	ctx := context.Background()
-
+func NewCommand(ctx context.Context) *cobra.Command {
 	rolloutsCmd := &cobra.Command{
-		Use:   "cli",
-		Short: "cli ",
-		Long:  "cli",
+		Use:   "rollouts",
+		Short: "rollouts",
+		Long:  "rollouts",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
@@ -49,7 +45,5 @@ func main() {
 		get.NewCommand(ctx),
 		status.NewCommand(ctx),
 	)
-	if err := rolloutsCmd.Execute(); err != nil {
-		os.Exit(-1)
-	}
+	return rolloutsCmd
 }

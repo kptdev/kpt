@@ -171,6 +171,8 @@ V2_LICENSE_DIR="vendor/github.com/cpuguy83/go-md2man"
 mv ${V2_LICENSE_DIR}/v2/LICENSE ${V2_LICENSE_DIR}
 GO_RESTFUL_LICENSE_DIR="vendor/github.com/emicklei/go-restful"
 mv ${GO_RESTFUL_LICENSE_DIR}/v3/LICENSE ${GO_RESTFUL_LICENSE_DIR}
+KLOG_LICENSE_DIR="vendor/k8s.io/klog"
+mv ${KLOG_LICENSE_DIR}/v2/LICENSE ${KLOG_LICENSE_DIR}
 
 # Loop through every vendored package
 mozilla_repos=()
