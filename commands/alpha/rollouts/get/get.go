@@ -81,7 +81,5 @@ func renderRolloutsAsTable(cmd *cobra.Command, rollouts *rolloutsapi.RolloutList
 			fmt.Sprintf("%d/%d", readyCount, len(rollout.Status.ClusterStatuses))})
 	}
 	t.AppendSeparator()
-	// t.AppendRow([]interface{}{300, "Tyrion", "Lannister", 5000})
-	// t.AppendFooter(table.Row{"", "", "Total", 10000})
 	t.Render()
 }
