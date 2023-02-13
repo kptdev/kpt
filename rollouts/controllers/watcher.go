@@ -21,6 +21,7 @@ import (
 	"github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
@@ -47,7 +48,7 @@ type watcher struct {
 	liens map[types.NamespacedName]struct{}
 }
 
-func (w watcher) watch() {
+func (w *watcher) watch() {
 	clusterRefName := w.clusterRef.Name
 	var events <-chan watch.Event
 	var watcher watch.Interface
@@ -67,12 +68,7 @@ loop:
 		case <-reconnect.channel():
 			var err error
 			klog.Infof("Starting watch for %s... ", clusterRefName)
-			dynamicClient, err := w.getDynamicClient(w.ctx)
-			if err != nil {
-				klog.Errorf("Cannot get dynamic client for %s: %v; will retry", clusterRefName, err)
-				reconnect.backoff()
-			}
-			watcher, err = dynamicClient.Resource(rootSyncGVR).Watch(w.ctx, v1.ListOptions{})
+			watcher, err = w.watchResource(w.ctx, rootSyncGVR)
 			if err != nil {
 				klog.Errorf("Cannot start watch for %s: %v; will retry", clusterRefName, err)
 				reconnect.backoff()
@@ -112,6 +108,15 @@ loop:
 			break loop
 		}
 	}
+}
+
+func (w *watcher) watchResource(ctx context.Context, gvr schema.GroupVersionResource) (watch.Interface, error) {
+	dynamicClient, err := w.getDynamicClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return dynamicClient.Resource(gvr).Watch(ctx, v1.ListOptions{})
 }
 
 // TODO: This comes from Porch. Find a place to put code that can be shared.
