@@ -132,12 +132,13 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
+	r.setupWatches(ctx, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
+
 	clusterRef := &remoterootsync.Spec.ClusterRef
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
-	r.setupWatches(ctx, dynCl, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
 
 	if err := r.patchRootSync(ctx, dynCl, req.Name, &remoterootsync); err != nil {
 		return ctrl.Result{}, err
@@ -190,7 +191,7 @@ func (r *RemoteRootSyncReconciler) patchRootSync(ctx context.Context, client dyn
 
 // setupWatches makes sure we have the necessary watches running against
 // the remote clusters we care about.
-func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, client dynamic.Interface, rrsName, ns string, clusterRef gitopsv1alpha1.ClusterRef) {
+func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns string, clusterRef gitopsv1alpha1.ClusterRef) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	nn := types.NamespacedName{
@@ -205,15 +206,19 @@ func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, client dyna
 		return
 	}
 
+	getDynamicClient := func(ctx context.Context) (dynamic.Interface, error) {
+		return r.getDynamicClientForCluster(ctx, &clusterRef)
+	}
+
 	// Since we don't currently have a watch running, create a new watcher
 	// and add it to the map of watchers.
 	watcherCtx, cancelFunc := context.WithCancel(context.Background())
 	w := &watcher{
-		clusterRef: clusterRef,
-		ctx:        watcherCtx,
-		cancelFunc: cancelFunc,
-		client:     client,
-		channel:    r.channel,
+		clusterRef:       clusterRef,
+		ctx:              watcherCtx,
+		cancelFunc:       cancelFunc,
+		getDynamicClient: getDynamicClient,
+		channel:          r.channel,
 		liens: map[types.NamespacedName]struct{}{
 			nn: {},
 		},
