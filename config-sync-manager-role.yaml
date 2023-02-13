@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: config-sync-manager
+rules:
+- apiGroups:
+  - configsync.gke.io
+  resources:
+  - rootsyncs
+  - reposyncs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
