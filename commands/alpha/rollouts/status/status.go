@@ -60,8 +60,9 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		fmt.Printf("must provide rollout name")
 		return nil
 	}
-
-	rollout, err := rlc.Get(r.ctx, args[0])
+	// TODO(droot): plumb the namespace value from the commandline args
+	ns := "default"
+	rollout, err := rlc.Get(r.ctx, ns, args[0])
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return err

@@ -65,7 +65,9 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	rolloutName := args[0]
 	waveName := args[1]
 
-	rollout, err := rlc.Get(r.ctx, rolloutName)
+	// TODO(droot): plumb the namespace value from commandline flags
+	ns := "defaut"
+	rollout, err := rlc.Get(r.ctx, ns, rolloutName)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return err

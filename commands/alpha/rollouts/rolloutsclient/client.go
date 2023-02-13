@@ -25,12 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/cli-utils/pkg/flowcontrol"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-// Client implments client for the rollouts API.
+// Client implements client for the rollouts API.
 type Client struct {
 	client client.Client
 }
@@ -67,29 +68,30 @@ func createScheme() (*runtime.Scheme, error) {
 }
 
 func (rlc *Client) List(ctx context.Context, ns string) (*rolloutsapi.RolloutList, error) {
-	if ns == "" {
-		ns = "default"
+	var opts []client.ListOption
+	if ns != "" {
+		opts = append(opts, client.InNamespace(ns))
 	}
 
 	rollouts := &rolloutsapi.RolloutList{}
-	if err := rlc.client.List(context.Background(), rollouts, client.InNamespace(ns)); err != nil {
+	if err := rlc.client.List(ctx, rollouts, opts...); err != nil {
 		return nil, err
 	}
 
 	return rollouts, nil
 }
 
-func (rlc *Client) Get(ctx context.Context, name string) (*rolloutsapi.Rollout, error) {
+func (rlc *Client) Get(ctx context.Context, ns, name string) (*rolloutsapi.Rollout, error) {
 	if name == "" {
 		return nil, fmt.Errorf("must provide rollout name")
 	}
 
 	key := types.NamespacedName{
-		Namespace: "default",
+		Namespace: ns,
 		Name:      name,
 	}
 	rollout := &rolloutsapi.Rollout{}
-	if err := rlc.client.Get(context.Background(), key, rollout); err != nil {
+	if err := rlc.client.Get(ctx, key, rollout); err != nil {
 		return nil, err
 	}
 
@@ -97,7 +99,7 @@ func (rlc *Client) Get(ctx context.Context, name string) (*rolloutsapi.Rollout, 
 }
 
 func (rlc *Client) Update(ctx context.Context, rollout *rolloutsapi.Rollout) error {
-	if err := rlc.client.Update(context.Background(), rollout); err != nil {
+	if err := rlc.client.Update(ctx, rollout); err != nil {
 		return err
 	}
 
@@ -111,7 +113,7 @@ func useServerSideThrottling(config *rest.Config) *rest.Config {
 
 	enabled, err := flowcontrol.IsEnabled(ctx, config)
 	if err != nil {
-		fmt.Printf("Failed to query apiserver to check for flow control enablement: %v\n", err)
+		klog.Infof("Couldn't gather flow control configuration from the API apiserver (assuming it is not enabled): %v\n", err)
 	}
 
 	if enabled {
