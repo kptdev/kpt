@@ -1,7 +1,7 @@
 <img src="logo/KptLogoLarge.png" width="220">
 
 
-# kpt: Automate Kubernetes Configuration Editing
+# kpt: Automate Kubernetes Configuration Editing!!!
 
 kpt is a package-centric toolchain that enables a WYSIWYG configuration 
 authoring, automation, and delivery experience, which simplifies managing
