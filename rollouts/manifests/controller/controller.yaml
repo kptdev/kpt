@@ -374,7 +374,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: gcr.io/sunilarora-sandbox/rollouts-controller:v0.0.1
+        image: gcr.io/kpt-dev/rollouts-controller:v0.0.1
         livenessProbe:
           httpGet:
             path: /healthz
