@@ -59,7 +59,7 @@ done
 DESTINATION="manifests"
 
 function validate() {
-  [ -n "${DESTINATION}"       ] || error "--destination is required"
+  [ -n "${DESTINATION}" ] || error "--destination is required"
   [ -n "${CONTROLLER_IMAGE}" ] || error "--controller-image is required"
 }
 
@@ -94,7 +94,7 @@ function set_controller_image {
     "newTag=${TAG}"
 }
 
-validate && \
-generate_crds && \
-generate_controller_manifests && \
+validate
+generate_crds
+generate_controller_manifests
 set_controller_image ${CONTROLLER_IMAGE}
