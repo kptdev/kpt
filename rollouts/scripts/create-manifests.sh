@@ -26,8 +26,8 @@ function error() {
 Error: ${1}
 Usage: ${0} [flags]
 Supported Flags:
-  --destination DIRECTORY             ... directory in which to create the Rollout deploymetn kpt pkg
-  --controller-image IMAGE           ... address of the Porch controllers image
+  --destination DIRECTORY            ... directory in which to create the Rollout deploymetn kpt pkg
+  --controller-image IMAGE           ... address of the Rollouts controllers image
 EOF
   exit 1
 }
