@@ -16,6 +16,7 @@ package porch
 
 import (
 	"bytes"
+	"context"
 	"os/exec"
 	"strings"
 	"testing"
@@ -165,11 +166,14 @@ func KubectlCreateNamespace(t *testing.T, name string) {
 }
 
 func KubectlDeleteNamespace(t *testing.T, name string) {
-	cmd := exec.Command("kubectl", "delete", "namespace", name)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "kubectl", "delete", "namespace", name)
 	t.Logf("running command %v", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Logf("Failed to delete namespace %q: %v\n%s", name, err, string(out))
+		logResourceStates(t, name, "packagerevisions", "packagerevs", "functions", "repositories")
 	}
 	t.Logf("output: %v", string(out))
 }
@@ -182,4 +186,16 @@ func RegisterRepository(t *testing.T, repoURL, namespace, name string) {
 		t.Fatalf("Failed to register repository %q: %v\n%s", repoURL, err, string(out))
 	}
 	t.Logf("output: %v", string(out))
+}
+
+func logResourceStates(t *testing.T, namespace string, types ...string) {
+	for _, typ := range append([]string{namespace}, types...) {
+		cmd := exec.Command("kubectl", "get", typ, "-n", namespace, "-oyaml")
+		t.Logf("running command %v", strings.Join(cmd.Args, " "))
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("Failed to log state of resource type %q: %v\n%s", typ, err, string(out))
+		}
+		t.Logf("output: %v", string(out))
+	}
 }
