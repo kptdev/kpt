@@ -1,0 +1,19 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: rollouts
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: Package to deploy Rollouts component.
+pipeline:
+  mutators:
+    - name: enable-workload-identity
+      image: set-annotations:v0.1.4
+      selectors:
+        - apiVersion: v1
+          kind: ServiceAccount
+          name: rollouts-controller-manager
+          namespace: rollouts-system
+      configMap: # update the PROJECT in the line below
+        iam.gke.io/gcp-service-account: rollouts-gsa@PROJECT.iam.gserviceaccount.com
