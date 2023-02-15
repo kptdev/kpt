@@ -25,19 +25,17 @@ import (
 	"strings"
 	"sync"
 
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -100,10 +98,12 @@ type RolloutReconciler struct {
 // Fetch the READY kcc clusters.
 // For each kcc cluster, fetch RootSync objects in each of the KCC clusters.
 func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+	logger := klog.NewKlogr().WithValues("controller", "rollout", "rollout", req.NamespacedName)
+	ctx = klog.NewContext(ctx, logger)
+
 	var rollout gitopsv1alpha1.Rollout
 
-	logger.Info("reconciling", "key", req.NamespacedName)
+	logger.Info("Reconciling")
 
 	if err := r.Get(ctx, req.NamespacedName, &rollout); err != nil {
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -160,7 +160,7 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 }
 
 func (r *RolloutReconciler) getStrategy(ctx context.Context, rollout *gitopsv1alpha1.Rollout) (*gitopsv1alpha1.ProgressiveRolloutStrategy, error) {
-	logger := log.FromContext(ctx)
+	logger := klog.FromContext(ctx)
 
 	progressiveStrategy := gitopsv1alpha1.ProgressiveRolloutStrategy{}
 	progressiveStrategy.Spec = gitopsv1alpha1.ProgressiveRolloutStrategySpec{Waves: []gitopsv1alpha1.Wave{}}
@@ -181,14 +181,14 @@ func (r *RolloutReconciler) getStrategy(ctx context.Context, rollout *gitopsv1al
 			Name:      rollout.Spec.Strategy.Progressive.Name,
 		}
 		if err := r.Get(ctx, strategyRef, &progressiveStrategy); err != nil {
-			logger.Error(err, "unable to fetch progressive rollout strategy", "strategyref", strategyRef)
+			logger.Error(err, "Unable to fetch progressive rollout strategy", "strategyRef", strategyRef)
 			// TODO (droot): signal this as a condition in the rollout status
 			return nil, err
 		}
 
 		err := r.validateProgressiveRolloutStrategy(ctx, rollout, &progressiveStrategy)
 		if err != nil {
-			logger.Error(err, "progressive rollout strategy failed validation", "strategyref", strategyRef)
+			logger.Error(err, "Progressive rollout strategy failed validation", "strategyRef", strategyRef)
 			// TODO (cfry): signal this as a condition in the rollout status
 			return nil, err
 		}
@@ -274,15 +274,15 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 }
 
 func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
-	logger := log.FromContext(ctx)
+	logger := klog.FromContext(ctx)
 
 	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
-		logger.Error(err, "failed to discover packages")
+		logger.Error(err, "Failed to discover packages")
 		return client.IgnoreNotFound(err)
 	}
-	logger.Info("discovered packages", "count", len(discoveredPackages), "packages", discoveredPackages)
+	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", discoveredPackages)
 
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters, discoveredPackages)
 	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
@@ -344,8 +344,8 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 }
 
 func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1alpha1.Rollout, waveStatuses []gitopsv1alpha1.WaveStatus, clusterStatuses []gitopsv1alpha1.ClusterStatus) error {
-	logger := log.FromContext(ctx)
-	logger.Info("updating the status", "cluster statuses", len(clusterStatuses))
+	logger := klog.FromContext(ctx)
+	logger.Info("Updating status", "clusterStatusesCount", len(clusterStatuses), "waveStatusesCount", len(waveStatuses))
 
 	rollout.Status.Overall = getOverallStatus(clusterStatuses)
 
@@ -367,6 +367,7 @@ For RRS, make rootSyncTemplate
 func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	rollout *gitopsv1alpha1.Rollout,
 	clusterPackages []packageclustermatcher.ClusterPackages) (*Targets, error) {
+	logger := klog.FromContext(ctx)
 
 	RRSkeysToBeDeleted := map[client.ObjectKey]*gitopsv1alpha1.RemoteRootSync{}
 	// let's take a look at existing remoterootsyncs
@@ -380,7 +381,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 		RRSkeysToBeDeleted[client.ObjectKeyFromObject(rrs)] = rrs
 	}
 
-	klog.Infof("Found remoterootsyncs: %s", toRemoteRootSyncNames(existingRRSs))
+	logger.Info("Found RemoteRootSyncs", "remoteRootSyncs", toRemoteRootSyncNames(existingRRSs))
 	targets := &Targets{}
 	// track keys of all the desired remote rootsyncs
 	for idx, clusterPkg := range clusterPackages {
@@ -490,6 +491,7 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 
 func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, wave *gitopsv1alpha1.Wave, targets *Targets, pauseWave bool) (bool, []gitopsv1alpha1.ClusterStatus, error) {
 	clusterStatuses := []gitopsv1alpha1.ClusterStatus{}
+	logger := klog.FromContext(ctx)
 
 	concurrentUpdates := 0
 	maxConcurrent := int(wave.MaxConcurrent)
@@ -517,7 +519,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rrs); err != nil {
-				klog.Warningf("Error creating RemoteRootSync %s: %v", rrs.Name, err)
+				logger.Info("Warning, error creating RemoteRootSync", "remoteRootSync", klog.KRef(rrs.Namespace, rrs.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
@@ -544,7 +546,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	for _, target := range targets.ToBeUpdated {
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Update(ctx, target); err != nil {
-				klog.Warningf("Error updating RemoteRootSync %s: %v", target.Name, err)
+				logger.Info("Warning, cannot update RemoteRootSync", "remoteRootSync", klog.KRef(target.Namespace, target.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
@@ -571,7 +573,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	for _, target := range targets.ToBeDeleted {
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Delete(ctx, target); err != nil {
-				klog.Warningf("Error deleting RemoteRootSync %s: %v", target.Name, err)
+				logger.Info("Warning, cannot delete RemoteRootSync", "remoteRootSync", klog.KRef(target.Namespace, target.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
@@ -636,17 +638,6 @@ func toRemoteRootSyncNames(rsss []*gitopsv1alpha1.RemoteRootSync) []string {
 		names = append(names, rss.Name)
 	}
 	return names
-}
-
-func (r *RolloutReconciler) testClusterClient(ctx context.Context, cl client.Client) error {
-	logger := log.FromContext(ctx)
-	podList := &v1.PodList{}
-	err := cl.List(context.Background(), podList, client.InNamespace("kube-system"))
-	if err != nil {
-		return err
-	}
-	logger.Info("found podlist", "number of pods", len(podList.Items))
-	return nil
 }
 
 func (r *RolloutReconciler) listRemoteRootSyncs(ctx context.Context, rsdName, rsdNamespace string) ([]*gitopsv1alpha1.RemoteRootSync, error) {
@@ -776,20 +767,20 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 
 func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []reconcile.Request {
-	logger := log.FromContext(context.Background())
+	logger := klog.FromContext(context.Background())
 
 	var requests []reconcile.Request
 
 	allRollouts, err := r.listAllRollouts(context.Background())
 	if err != nil {
-		logger.Error(err, "failed to list rollouts")
+		logger.Error(err, "Failed to list rollouts")
 		return []reconcile.Request{}
 	}
 
 	for _, rollout := range allRollouts {
 		selector, err := metav1.LabelSelectorAsSelector(rollout.Spec.Targets.Selector)
 		if err != nil {
-			logger.Error(err, "failed to create label selector", "rolloutName", rollout.Name)
+			logger.Error(err, "Failed to create label selector")
 			continue
 		}
 
