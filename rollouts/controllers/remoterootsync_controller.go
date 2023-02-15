@@ -29,13 +29,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -91,9 +90,10 @@ type RemoteRootSyncReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
 func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := log.FromContext(ctx)
+	logger := klog.NewKlogr().WithValues("controller", "remoterootsync", "remoteRootSync", req.NamespacedName)
+	ctx = klog.NewContext(ctx, logger)
 
-	logger.Info("reconciling", "key", req.NamespacedName)
+	logger.Info("Reconciling")
 
 	var remoterootsync gitopsv1alpha1.RemoteRootSync
 	if err := r.Get(ctx, req.NamespacedName, &remoterootsync); err != nil {
@@ -121,6 +121,7 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
 			}
 			// Make sure we stop any watches that are no longer needed.
+			logger.Info("Pruning watches")
 			r.pruneWatches(req.NamespacedName, &remoterootsync.Spec.ClusterRef)
 			// remove our finalizer from the list and update it.
 			controllerutil.RemoveFinalizer(&remoterootsync, myFinalizerName)
@@ -150,7 +151,7 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	if err := r.updateStatus(ctx, &remoterootsync, syncStatus); err != nil {
-		klog.Errorf("failed to update status: %v", err)
+		logger.Error(err, "Failed to update status")
 		return ctrl.Result{}, err
 	}
 
@@ -158,13 +159,13 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, syncStatus string) error {
-	logger := log.FromContext(ctx)
+	logger := klog.FromContext(ctx)
 
 	// Don't update if there are no changes.
 	if rrs.Status.SyncStatus == syncStatus && rrs.Generation == rrs.Status.ObservedGeneration {
 		return nil
 	}
-	logger.Info("updating the status")
+	logger.Info("Updating status")
 	rrs.Status.SyncStatus = syncStatus
 	rrs.Status.ObservedGeneration = rrs.Generation
 	return r.Client.Status().Update(ctx, rrs)
@@ -173,6 +174,8 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 // patchRootSync patches the RootSync in the remote clusters targeted by
 // the clusterRefs based on the latest revision of the template in the RemoteRootSync.
 func (r *RemoteRootSyncReconciler) patchRootSync(ctx context.Context, client dynamic.Interface, name string, rrs *gitopsv1alpha1.RemoteRootSync) error {
+	logger := klog.FromContext(ctx)
+
 	newRootSync, err := BuildObjectsToApply(rrs)
 	if err != nil {
 		return err
@@ -185,13 +188,16 @@ func (r *RemoteRootSyncReconciler) patchRootSync(ctx context.Context, client dyn
 	if err != nil {
 		return fmt.Errorf("failed to patch RootSync: %w", err)
 	}
-	klog.Infof("Create/Update resource %s as", name)
+
+	logger.Info("RootSync resource created/updated", "rootSync", klog.KRef(rootSyncNamespace, name))
 	return nil
 }
 
 // setupWatches makes sure we have the necessary watches running against
 // the remote clusters we care about.
 func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns string, clusterRef gitopsv1alpha1.ClusterRef) {
+	logger := klog.FromContext(ctx)
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	nn := types.NamespacedName{
@@ -213,6 +219,7 @@ func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns
 	// Since we don't currently have a watch running, create a new watcher
 	// and add it to the map of watchers.
 	watcherCtx, cancelFunc := context.WithCancel(context.Background())
+	watcherCtx = klog.NewContext(watcherCtx, logger.WithValues("clusterRef", clusterRef.Name))
 	w := &watcher{
 		clusterRef:       clusterRef,
 		ctx:              watcherCtx,
@@ -223,7 +230,8 @@ func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns
 			nn: {},
 		},
 	}
-	klog.Infof("Creating watcher for %v", clusterRef)
+
+	logger.Info("Creating watcher")
 	go w.watch()
 	r.watchers[clusterRef] = w
 }
@@ -234,7 +242,6 @@ func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns
 func (r *RemoteRootSyncReconciler) pruneWatches(rrsnn types.NamespacedName, clusterRef *gitopsv1alpha1.ClusterRef) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
-	klog.Infof("Pruning watches for %s which has %v clusterRef", rrsnn.String(), clusterRef)
 
 	// Look through all watchers to check if it used to be needed by the RootSyncSet
 	// but is no longer.
@@ -273,18 +280,20 @@ func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync) (*unstru
 }
 
 func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, remoterootsync *gitopsv1alpha1.RemoteRootSync) error {
+	logger := klog.FromContext(ctx)
+
 	clusterRef := &remoterootsync.Spec.ClusterRef
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return err
 	}
 
-	klog.Infof("deleting external resource %s ...", remoterootsync.Name)
+	logger.Info("Deleting external resource")
 	err = dynCl.Resource(rootSyncGVR).Namespace("config-management-system").Delete(ctx, remoterootsync.Name, metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
-	klog.Infof("external resource %s delete Done!", remoterootsync.Name)
+	logger.Info("External resource deleted")
 	return err
 }
 
@@ -324,6 +333,8 @@ func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Watches(
 			&source.Channel{Source: r.channel},
 			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
+				logger := klog.NewKlogr().WithValues("controller", "remoterootsync")
+
 				var rrsName string
 				var rrsNamespace string
 				if o.GetLabels() != nil {
@@ -333,7 +344,7 @@ func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				if rrsName == "" || rrsNamespace == "" {
 					return []reconcile.Request{}
 				}
-				klog.Infof("Resource %s contains a label for %s", o.GetName(), rrsName)
+				logger.Info("Resource contains a RemoteRootSync label", "resource", klog.KRef(o.GetNamespace(), o.GetName()), "remoteRootSync", klog.KRef(rrsNamespace, rrsName))
 				return []reconcile.Request{
 					{
 						NamespacedName: types.NamespacedName{

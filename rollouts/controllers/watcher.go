@@ -49,7 +49,7 @@ type watcher struct {
 }
 
 func (w *watcher) watch() {
-	clusterRefName := w.clusterRef.Name
+	logger := klog.FromContext(w.ctx)
 	var events <-chan watch.Event
 	var watcher watch.Interface
 	var bookmark string
@@ -67,18 +67,18 @@ loop:
 		select {
 		case <-reconnect.channel():
 			var err error
-			klog.Infof("Starting watch for %s... ", clusterRefName)
+			logger.Info("Starting watch")
 			watcher, err = w.watchResource(w.ctx, rootSyncGVR)
 			if err != nil {
-				klog.Errorf("Cannot start watch for %s: %v; will retry", clusterRefName, err)
+				logger.Error(err, "Cannot start watch; will retry", err)
 				reconnect.backoff()
 			} else {
-				klog.Infof("Watch successfully started for %s.", clusterRefName)
+				logger.Info("Watch successfully started")
 				events = watcher.ResultChan()
 			}
 		case e, ok := <-events:
 			if !ok {
-				klog.Errorf("Watch event stream closed for cluster %s. Will restart watch from bookmark %q", clusterRefName, bookmark)
+				logger.Info("Watch event stream closed; will restart watch from bookmark", "bookmark", bookmark)
 				watcher.Stop()
 				events = nil
 				watcher = nil
@@ -88,22 +88,22 @@ loop:
 			} else if obj, ok := e.Object.(*unstructured.Unstructured); ok {
 				if e.Type == watch.Bookmark {
 					bookmark = obj.GetResourceVersion()
-					klog.Infof("Watch bookmark for %s: %q", clusterRefName, bookmark)
+					logger.Info("Watch bookmark", "bookmark", bookmark)
 				} else {
 					bookmark = obj.GetResourceVersion()
-					klog.Infof("Got Watch event for %s: rv: %q", clusterRefName, bookmark)
+					logger.Info("Got watch event", "bookmark", bookmark)
 					w.channel <- event.GenericEvent{
 						Object: obj,
 					}
 				}
 			} else {
-				klog.V(5).Infof("Received unexpected watch event Object from %s: %T", e.Object, clusterRefName)
+				logger.V(5).Info("Received unexpected watch event object", "watchEventObject", e.Object)
 			}
 		case <-w.ctx.Done():
 			if w.ctx.Err() != nil {
-				klog.V(2).Infof("exiting watcher for %s, because context is done: %v", clusterRefName, w.ctx.Err())
+				logger.V(2).Info("Exiting watcher for because context is done", "err", w.ctx.Err())
 			} else {
-				klog.Infof("Watch background routine exiting for %s; context done", clusterRefName)
+				logger.Info("Watch background routine exiting; context done")
 			}
 			break loop
 		}

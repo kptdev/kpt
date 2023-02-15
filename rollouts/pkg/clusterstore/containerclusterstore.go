@@ -23,7 +23,6 @@ import (
 
 	"golang.org/x/oauth2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,7 +116,6 @@ func (cs *ContainerClusterStore) listClusters(ctx context.Context, selector *met
 }
 
 func (cs *ContainerClusterStore) getRESTConfig(ctx context.Context, cluster *gkeclusterapis.ContainerCluster) (*rest.Config, error) {
-	logger := log.FromContext(ctx)
 	restConfig := &rest.Config{}
 	clusterCaCertificate := cluster.Spec.MasterAuth.ClusterCaCertificate
 	if clusterCaCertificate == nil || *clusterCaCertificate == "" {
@@ -132,7 +130,6 @@ func (cs *ContainerClusterStore) getRESTConfig(ctx context.Context, cluster *gke
 		return nil, fmt.Errorf("cluster master endpoint field is empty")
 	}
 	restConfig.Host = "https://" + cluster.Status.Endpoint
-	logger.Info("Host endpoint is", "endpoint", restConfig.Host)
 	tokenSource, err := cs.getConfigConnectorContextTokenSource(ctx, cluster.GetNamespace())
 	if err != nil {
 		return nil, err
