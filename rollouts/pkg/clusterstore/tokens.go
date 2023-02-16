@@ -145,6 +145,8 @@ func (r *WorkloadIdentityHelper) GetGcloudAccessTokenSource(ctx context.Context,
 }
 
 func (r *WorkloadIdentityHelper) findWorkloadIdentityPool(ctx context.Context, kubeServiceAccount types.NamespacedName) (string, string, error) {
+	logger := klog.FromContext(ctx)
+
 	accessToken := ""
 
 	// First, see if we have a valid token mounted locally in our pod
@@ -154,12 +156,12 @@ func (r *WorkloadIdentityHelper) findWorkloadIdentityPool(ctx context.Context, k
 		tokenBytes, err := ioutil.ReadFile(tokenFilePath)
 		if err != nil {
 			if os.IsNotExist(err) {
-				klog.V(2).Infof("token file not found at %q", tokenFilePath)
+				logger.V(2).Info("Token file not found", "tokenFilePath", tokenFilePath)
 			} else {
-				klog.Warningf("error reading token file from %q: %v", tokenFilePath, err)
+				logger.Info("Warning, error reading token file", "tokenFilePath", tokenFilePath, "err", err)
 			}
 		} else {
-			klog.Infof("found token at %q", tokenFilePath)
+			logger.Info("Found token", "tokenFilePath", tokenFilePath)
 			accessToken = string(tokenBytes)
 		}
 	}
@@ -170,7 +172,7 @@ func (r *WorkloadIdentityHelper) findWorkloadIdentityPool(ctx context.Context, k
 
 	if accessToken == "" {
 		// We get a token for our own service account, so we can extract the issuer
-		klog.Infof("token not found at well-known path, requesting token from apiserver")
+		logger.Info("Token not found at well-known path, requesting token from apiserver")
 		impersonated := ksaimpersonationtokensource.New(r.corev1Client, kubeServiceAccount, nil /* unspecified/default audience */)
 
 		token, err := impersonated.Token()
@@ -192,7 +194,7 @@ func (r *WorkloadIdentityHelper) findWorkloadIdentityPool(ctx context.Context, k
 		for i := 0; i+1 < len(tokens); i++ {
 			if tokens[i] == "projects" {
 				workloadIdentityPool := tokens[i+1] + ".svc.id.goog"
-				klog.Infof("inferred workloadIdentityPool as %q", workloadIdentityPool)
+				logger.Info("Inferred workloadIdentityPool", "workloadIdentityPool", workloadIdentityPool)
 				return workloadIdentityPool, issuer, nil
 			}
 		}

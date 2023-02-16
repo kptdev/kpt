@@ -54,6 +54,8 @@ func (ts *gcpTokenSource) Token() (*oauth2.Token, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	logger := klog.TODO()
+
 	// use the provided token source to make the request
 	c, err := iamv1.NewIamCredentialsClient(ctx, option.WithTokenSource(ts.tokenSource))
 	if err != nil {
@@ -68,7 +70,7 @@ func (ts *gcpTokenSource) Token() (*oauth2.Token, error) {
 		return nil, fmt.Errorf("token exchange for GCP serviceaccount %q failed: %w", ts.gcpServiceAccount, err)
 	}
 
-	klog.Infof("got GCP token for %v", ts.gcpServiceAccount)
+	logger.Info("Got GCP token", "gcpServiceAccount", ts.gcpServiceAccount)
 
 	expiry, err := ptypes.Timestamp(resp.ExpireTime)
 	if err != nil {
