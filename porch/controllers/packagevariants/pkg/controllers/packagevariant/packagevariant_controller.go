@@ -15,6 +15,7 @@
 package packagevariant
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -25,6 +26,7 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -36,6 +38,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
+	"sigs.k8s.io/yaml"
 )
 
 type Options struct{}
@@ -51,6 +56,24 @@ type PackageVariantReconciler struct {
 
 const (
 	workspaceNamePrefix = "packagevariant-"
+
+	setNamespaceImage = "gcr.io/kpt-fn/set-namespace:v0.4.1"
+	pkgContextPath    = "package-context.yaml"
+	namespacePath     = "namespace.yaml"
+
+	pkgContextContent = `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kptfile.kpt.dev
+  annotations:
+    config.kubernetes.io/local-config: "true"
+data:
+  name: %s`
+
+	namespaceContent = `apiVersion: v1
+kind: Namespace
+metadata:
+ name: %s`
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariants webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -215,47 +238,46 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	if existing != nil {
-		return nil
-	}
-
-	// No downstream package created by this controller exists. Create one.
-	newPR := &porchapi.PackageRevision{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "PackageRevision",
-			APIVersion: porchapi.SchemeGroupVersion.Identifier(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace:       pv.Namespace,
-			OwnerReferences: []metav1.OwnerReference{constructOwnerReference(pv)},
-			Labels:          pv.Spec.Labels,
-			Annotations:     pv.Spec.Annotations,
-		},
-		Spec: porchapi.PackageRevisionSpec{
-			PackageName:    pv.Spec.Downstream.Package,
-			RepositoryName: pv.Spec.Downstream.Repo,
-			WorkspaceName:  newWorkspaceName(prList, pv.Spec.Downstream.Package, pv.Spec.Downstream.Repo),
-			Tasks: []porchapi.Task{
-				{
-					Type: porchapi.TaskTypeClone,
-					Clone: &porchapi.PackageCloneTaskSpec{
-						Upstream: porchapi.UpstreamPackage{
-							UpstreamRef: &porchapi.PackageRevisionRef{
-								Name: upstream.Name,
+	if existing == nil {
+		// No downstream package created by this controller exists. Create one.
+		newPR := &porchapi.PackageRevision{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "PackageRevision",
+				APIVersion: porchapi.SchemeGroupVersion.Identifier(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace:       pv.Namespace,
+				OwnerReferences: []metav1.OwnerReference{constructOwnerReference(pv)},
+				Labels:          pv.Spec.Labels,
+				Annotations:     pv.Spec.Annotations,
+			},
+			Spec: porchapi.PackageRevisionSpec{
+				PackageName:    pv.Spec.Downstream.Package,
+				RepositoryName: pv.Spec.Downstream.Repo,
+				WorkspaceName:  newWorkspaceName(prList, pv.Spec.Downstream.Package, pv.Spec.Downstream.Repo),
+				Tasks: []porchapi.Task{
+					{
+						Type: porchapi.TaskTypeClone,
+						Clone: &porchapi.PackageCloneTaskSpec{
+							Upstream: porchapi.UpstreamPackage{
+								UpstreamRef: &porchapi.PackageRevisionRef{
+									Name: upstream.Name,
+								},
 							},
 						},
 					},
 				},
 			},
-		},
+		}
+
+		klog.Infoln(fmt.Sprintf("package variant %q is creating package revision %q", pv.Name, newPR.Name))
+		if err := r.Client.Create(ctx, newPR); err != nil {
+			return err
+		}
+		existing = []*porchapi.PackageRevision{newPR}
 	}
 
-	klog.Infoln(fmt.Sprintf("package variant %q is creating package revision %q", pv.Name, newPR.Name))
-	if err := r.Client.Create(ctx, newPR); err != nil {
-		return err
-	}
-
-	return nil
+	return r.setNamespaces(ctx, existing, pv.Spec.Namespace)
 }
 
 func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Context,
@@ -556,6 +578,123 @@ func (r *PackageVariantReconciler) updateDraft(ctx context.Context,
 		return nil, err
 	}
 	return draft, nil
+}
+
+func (r *PackageVariantReconciler) setNamespaces(ctx context.Context,
+	prs []*porchapi.PackageRevision,
+	namespace *api.Namespace) error {
+	for _, packageRevision := range prs {
+		var packageRevisionResources porchapi.PackageRevisionResources
+
+		if err := r.Client.Get(ctx, types.NamespacedName{
+			Namespace: packageRevision.Namespace,
+			Name:      packageRevision.Name,
+		}, &packageRevisionResources); err != nil {
+			return fmt.Errorf("error fetching PackageRevisionResources: %w", err)
+		}
+
+		targetNamespace := packageRevision.Spec.PackageName
+		if namespace != nil && namespace.Value != "" {
+			targetNamespace = namespace.Value
+		}
+
+		if err := r.setNamespaceOnPackage(ctx,
+			&packageRevisionResources, targetNamespace, namespace.Create); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *PackageVariantReconciler) setNamespaceOnPackage(ctx context.Context,
+	resources *porchapi.PackageRevisionResources,
+	namespace string,
+	create bool) error {
+	var foundNamespaceObject bool
+	var err error
+
+	resources.Spec.Resources[kptfilev1.KptFileName], err = getNewKptfile(resources.Spec.Resources)
+	if err != nil {
+		return err
+	}
+
+	resources.Spec.Resources[pkgContextPath], err = getPkgContext(resources.Spec.Resources, namespace)
+	if err != nil {
+		return err
+	}
+
+	if create {
+		// we need to see if there is already a namespace object
+		for _, resource := range resources.Spec.Resources {
+			r := &kio.ByteReader{Reader: bytes.NewBufferString(resource), OmitReaderAnnotations: true}
+			nodes, err := r.Read()
+			if err != nil {
+				// not a valid krm resource, ignore it
+				continue
+			}
+			for _, node := range nodes {
+				if node.GetKind() == "Namespace" {
+					foundNamespaceObject = true
+				}
+			}
+		}
+		if !foundNamespaceObject {
+			resources.Spec.Resources[namespacePath] = fmt.Sprintf(namespaceContent, namespace)
+		}
+	}
+
+	if err := r.Client.Update(ctx, resources); err != nil {
+		return fmt.Errorf("error updating package revision resources: %w", err)
+	}
+
+	return nil
+}
+
+func getNewKptfile(resources map[string]string) (string, error) {
+	var kptfile kptfilev1.KptFile
+
+	r, found := resources[kptfilev1.KptFileName]
+	if !found {
+		return "", fmt.Errorf("could not find Kptfile")
+	}
+	if err := yaml.Unmarshal([]byte(r), &kptfile); err != nil {
+		return "", fmt.Errorf("error parsing Kptfile: %w", err)
+	}
+
+	kptfile.Pipeline.Mutators = append(kptfile.Pipeline.Mutators, kptfilev1.Function{
+		Image:      setNamespaceImage,
+		ConfigPath: pkgContextPath,
+	})
+
+	newKptfile, err := yaml.Marshal(kptfile)
+	if err != nil {
+		return "", fmt.Errorf("error marshalling Kptfile: %w", err)
+	}
+
+	return string(newKptfile), nil
+}
+
+func getPkgContext(resources map[string]string, namespace string) (string, error) {
+	var pkgContext *kyaml.RNode
+	var err error
+	r, found := resources[pkgContextPath]
+	if found {
+		pkgContext, err = kyaml.Parse(r)
+		if err != nil {
+			return "", fmt.Errorf("error parsing package-context.yaml")
+		}
+		// update 'data.name' of the package-context file to the target namespace value
+		_, err := pkgContext.Pipe(
+			kyaml.Lookup("data"),
+			kyaml.SetField("name", kyaml.NewScalarRNode(namespace)))
+		if err != nil {
+			return "", fmt.Errorf("error setting package-context.yaml package name: %w", err)
+		}
+	} else {
+		// a package-context.yaml doesn't exist, so we will create a default one.
+		pkgContext = kyaml.MustParse(fmt.Sprintf(pkgContextContent, namespace))
+	}
+	return pkgContext.String()
 }
 
 // SetupWithManager sets up the controller with the Manager.

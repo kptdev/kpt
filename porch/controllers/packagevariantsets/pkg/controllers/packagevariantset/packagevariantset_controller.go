@@ -409,6 +409,7 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 			DeletionPolicy: pvs.Spec.DeletionPolicy,
 			Labels:         pvs.Spec.Labels,
 			Annotations:    pvs.Spec.Annotations,
+			Namespace:      pvs.Spec.Namespace,
 		}
 		hash, err := hashFromPackageVariantSpec(&pvSpec)
 		if err != nil {

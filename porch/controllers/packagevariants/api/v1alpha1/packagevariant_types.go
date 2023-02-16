@@ -62,6 +62,7 @@ type PackageVariantSpec struct {
 
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+	Namespace   *Namespace        `json:"namespace,omitempty"`
 }
 
 type Upstream struct {
@@ -73,6 +74,17 @@ type Upstream struct {
 type Downstream struct {
 	Repo    string `json:"repo,omitempty"`
 	Package string `json:"package,omitempty"`
+}
+
+type Namespace struct {
+	// Create, if set to true, means that we will create a
+	// Namespace object in the target package revision if
+	// one does not already exist. Defaults to false.
+	Create bool `json:"create,omitempty"`
+
+	// Value is the identifies the namespace in which to deploy the
+	// package revision. This defaults to the name of the package.
+	Value string `json:"value,omitempty"`
 }
 
 // PackageVariantStatus defines the observed state of PackageVariant
