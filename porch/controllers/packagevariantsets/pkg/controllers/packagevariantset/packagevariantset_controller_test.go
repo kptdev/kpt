@@ -353,13 +353,11 @@ func TestEnsurePackageVariants(t *testing.T) {
 		{Repo: "dn-1", Package: "dn-1"},
 		{Repo: "dn-3", Package: "dn-3"},
 	}
-	pvs := &api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}
-
 	fc := &fakeClient{}
 	reconciler := &PackageVariantSetReconciler{Client: fc}
-	require.NoError(t, reconciler.ensurePackageVariants(context.Background(), upstream, downstreams, pvs))
-	require.Equal(t, []string{"listing objects",
-		"deleting object: my-pv-2",
-		"creating object: my-pvs-59bfcf77a6b032a656d78b14e2d92fa8c1e978a3",
-	}, fc.output)
+	require.NoError(t, reconciler.ensurePackageVariants(context.Background(), upstream, downstreams,
+		&api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}))
+	require.Equal(t, 2, len(fc.objects))
+	require.Equal(t, "my-pv-1", fc.objects[0].GetName())
+	require.Equal(t, "my-pvs-28ace69e71f644931cd8cc1e8e9388f4de486901", fc.objects[1].GetName())
 }

@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -80,13 +81,21 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
+	var conditions []metav1.Condition
+
 	if errs := validatePackageVariantSet(pvs); len(errs) > 0 {
-		pvs.Status.ValidationErrors = nil
 		for _, validationErr := range errs {
 			if validationErr.Error() != "" {
-				pvs.Status.ValidationErrors = append(pvs.Status.ValidationErrors, validationErr.Error())
+				conditions = append(conditions, metav1.Condition{
+					Type:               "Valid",
+					Status:             "False",
+					Reason:             "ValidationFailed",
+					Message:            validationErr.Error(),
+					LastTransitionTime: metav1.Now(),
+				})
 			}
 		}
+		pvs.Status.Conditions = conditions
 		statusUpdateErr := r.Client.Status().Update(ctx, pvs)
 		return ctrl.Result{}, statusUpdateErr
 	}
@@ -102,7 +111,20 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	downstreams, err := r.unrollDownstreamTargets(ctx, pvs,
 		upstream.Package)
 	if err != nil {
-		return ctrl.Result{}, err
+		if strings.Contains(err.Error(), "unable to list specified objects in cluster") {
+			conditions = append(conditions, metav1.Condition{
+				Type:               "ObjectsListed",
+				Status:             "False",
+				Reason:             "Error",
+				Message:            err.Error(),
+				LastTransitionTime: metav1.Now(),
+			})
+			pvs.Status.Conditions = conditions
+			statusUpdateErr := r.Client.Status().Update(ctx, pvs)
+			return ctrl.Result{}, statusUpdateErr
+		} else {
+			return ctrl.Result{}, err
+		}
 	}
 
 	if err := r.ensurePackageVariants(ctx, upstream, downstreams, pvs); err != nil {
@@ -231,7 +253,7 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 	pvs *api.PackageVariantSet,
 	upstreamPackageName string) ([]*pkgvarapi.Downstream, error) {
 	var result []*pkgvarapi.Downstream
-	for _, target := range pvs.Spec.Targets {
+	for i, target := range pvs.Spec.Targets {
 		switch {
 		case target.Package != nil:
 			// an explicit repo/package name pair
@@ -249,6 +271,9 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 				client.MatchingLabelsSelector{Selector: selector}); err != nil {
 				return nil, err
 			}
+			if len(repoList.Items) == 0 {
+				klog.Warningf("no repositories selected by spec.targets[%d]", i)
+			}
 			pkgs, err := r.repositorySet(&target, upstreamPackageName, &repoList)
 			if err != nil {
 				return nil, fmt.Errorf("error when selecting repository set: %v", err)
@@ -260,6 +285,9 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 			selectedObjects, err := r.getSelectedObjects(ctx, target.Objects.Selectors)
 			if err != nil {
 				return nil, err
+			}
+			if len(selectedObjects) == 0 {
+				klog.Warningf("no objects selected by spec.targets[%d]", i)
 			}
 			pkgs, err := r.objectSet(&target, upstreamPackageName, selectedObjects)
 			if err != nil {
@@ -343,15 +371,16 @@ func (r *PackageVariantSetReconciler) getSelectedObjects(ctx context.Context, se
 			Kind:    selector.Kind,
 		})
 
-		labelSelector, err := metav1.LabelSelectorAsSelector(selector.Labels)
-		if err != nil {
-			return nil, err
+		opts := []client.ListOption{client.InNamespace(selector.Namespace)}
+		if selector.Labels != nil {
+			labelSelector, err := metav1.LabelSelectorAsSelector(selector.Labels)
+			if err != nil {
+				return nil, err
+			}
+			opts = append(opts, client.MatchingLabelsSelector{Selector: labelSelector})
 		}
-
-		if err := r.Client.List(ctx, uList,
-			client.InNamespace(selector.Namespace),
-			client.MatchingLabelsSelector{Selector: labelSelector}); err != nil {
-			return nil, fmt.Errorf("unable to list objects in cluster: %v", err)
+		if err := r.Client.List(ctx, uList, opts...); err != nil {
+			return nil, fmt.Errorf("unable to list specified objects in cluster: %v", err)
 		}
 
 		for _, u := range uList.Items {
@@ -446,7 +475,6 @@ func (r *PackageVariantSetReconciler) fetchValue(value *api.ValueOrFromField,
 func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	upstream *pkgvarapi.Upstream, downstreams []*pkgvarapi.Downstream,
 	pvs *api.PackageVariantSet) error {
-
 	var pvList pkgvarapi.PackageVariantList
 	if err := r.Client.List(ctx, &pvList,
 		client.InNamespace(pvs.Namespace),

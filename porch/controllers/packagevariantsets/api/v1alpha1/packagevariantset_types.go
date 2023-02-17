@@ -132,8 +132,8 @@ type ValueOrFromField struct {
 
 // PackageVariantSetStatus defines the observed state of PackageVariantSet
 type PackageVariantSetStatus struct {
-	// TODO: Move this to conditions.
-	ValidationErrors []string `json:"validationErrors,omitempty"`
+	// Conditions describes the reconciliation state of the object.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

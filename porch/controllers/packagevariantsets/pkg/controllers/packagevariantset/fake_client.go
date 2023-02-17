@@ -25,24 +25,29 @@ import (
 )
 
 type fakeClient struct {
-	output []string
+	objects []client.Object
 	client.Client
 }
 
 var _ client.Client = &fakeClient{}
 
 func (f *fakeClient) Create(_ context.Context, obj client.Object, _ ...client.CreateOption) error {
-	f.output = append(f.output, fmt.Sprintf("creating object: %s", obj.GetName()))
+	f.objects = append(f.objects, obj)
 	return nil
 }
 
 func (f *fakeClient) Delete(_ context.Context, obj client.Object, _ ...client.DeleteOption) error {
-	f.output = append(f.output, fmt.Sprintf("deleting object: %s", obj.GetName()))
+	var newObjects []client.Object
+	for _, old := range f.objects {
+		if obj.GetName() != old.GetName() {
+			newObjects = append(newObjects, old)
+		}
+	}
+	f.objects = newObjects
 	return nil
 }
 
 func (f *fakeClient) List(_ context.Context, obj client.ObjectList, _ ...client.ListOption) error {
-	f.output = append(f.output, fmt.Sprintf("listing objects"))
 	podList := `apiVersion: v1
 kind: PodList
 metadata:
@@ -93,12 +98,20 @@ items:
       repo: dn-2
       package: dn-2`
 
+	var err error
 	switch v := obj.(type) {
 	case *unstructured.UnstructuredList:
-		return yaml.Unmarshal([]byte(podList), v)
+		err = yaml.Unmarshal([]byte(podList), v)
+		for _, o := range v.Items {
+			f.objects = append(f.objects, o.DeepCopy())
+		}
 	case *pkgvarapi.PackageVariantList:
-		return yaml.Unmarshal([]byte(pvList), v)
+		err = yaml.Unmarshal([]byte(pvList), v)
+		for _, o := range v.Items {
+			f.objects = append(f.objects, o.DeepCopy())
+		}
 	default:
-		return nil
+		return fmt.Errorf("unsupported type")
 	}
+	return err
 }
