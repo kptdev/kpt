@@ -205,3 +205,8 @@ TODO(johnbelamaric): Describe `PackageVariantSet`.
 
 
 ## PackageVariantSet API
+
+## Example Use Cases
+
+- describe scenarios and the PackageVariant, PackageVariantSet resources that
+  would solve the scenarios
