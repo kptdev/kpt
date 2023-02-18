@@ -102,6 +102,11 @@ allows you to control various ways of mutating the original package to create
 the variant.
 
 ### Package Context
+[Note: I believe right now we *always* produce `--for-deployment` package
+revisions out of package variant controller. We will likely need to allows some
+control over that, as we already have a use case in Nephio to use a
+PackageVariant to create a package intended as a base for fan out]
+
 Every kpt package that is designated `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Kpt (or Porch) will automatically add a
 key `name` to the ConfigMap data, with the value of the package name. This
