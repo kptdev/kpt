@@ -215,3 +215,20 @@ TODO(johnbelamaric): Describe `PackageVariantSet`.
 
 - describe scenarios and the PackageVariant, PackageVariantSet resources that
   would solve the scenarios
+
+
+## Additional Open Items
+- Probably want to say something about tag tracking - that is, using a moveable
+  tag rather than an explicit revision for the upstream. We may want to NOT
+  allow that, and have a separate tag tracking controller that can update PV and
+  PVS resources to tweak their upstream as the tag moves (see the original
+  Managing Package Revisions doc for the discussion on this use case).
+- Probably want to think about groups of packages (that is, a collection of
+  upstreams with the same set of mutation to be applied). For now, this would be
+  handled with PackageVariant / PackageVariantSet resources that differ only in
+  their upstream / downstream. Theoretically we could do that with label
+  selectors on packages but it gets really ugly really fast. I suspect just
+  making people copy the PV / PVS is better.
+- Need to understand how the `kpt pkg update` process works and explain it here in
+  some detail. We also need to think about whether we want to do anything
+  special for updates when the PVS, PV, or any injected resource changes.
