@@ -1,4 +1,5 @@
 //go:build cgo
+// +build cgo
 
 // Copyright 2022 Google LLC
 //
@@ -161,9 +162,9 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 		return fmt.Errorf("parsing output resource list with content: %q\n%w\n%s", resultStr, err, additionalErrorMessage)
 	}
 	if resourceListOutput.GetKind() != "ResourceList" {
-		additionalErrorMessage, err2 := retrieveError(f, resourceList)
-		if err2 != nil {
-			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %w", err2)
+		additionalErrorMessage, errorResultRetrievalErr := retrieveError(f, resourceList)
+		if errorResultRetrievalErr != nil {
+			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %w", errorResultRetrievalErr)
 		}
 		return fmt.Errorf("invalid resource list output from wasm library; got %q\n%s", resultStr, additionalErrorMessage)
 	}
