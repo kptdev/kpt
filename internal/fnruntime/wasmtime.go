@@ -1,5 +1,4 @@
 //go:build cgo
-// +build cgo
 
 // Copyright 2022 Google LLC
 //
@@ -157,9 +156,9 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	if err != nil {
 		additionalErrorMessage, err2 := retrieveError(f, resourceList)
 		if err2 != nil {
-			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %q", err2)
+			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %w", err2)
 		}
-		return fmt.Errorf("error parsing output resource list %q: %w\n%s", resultStr, err, additionalErrorMessage)
+		return fmt.Errorf("parsing output resource list with content: %q\n%w\n%s", resultStr, err, additionalErrorMessage)
 	}
 	if resourceListOutput.GetKind() != "ResourceList" {
 		additionalErrorMessage, err2 := retrieveError(f, resourceList)
