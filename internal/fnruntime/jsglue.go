@@ -37,7 +37,6 @@ WebAssembly.instantiate(wasmBuffer, go.importObject).then((result) => {
       } else {
         console.log(` + jsEntrypointFunction + "Errors" + `(rl));
       }
-    console.log(result)
 });`
 
 const golangWasmJSCode = `const fs = require('fs');
