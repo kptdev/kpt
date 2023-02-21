@@ -128,13 +128,16 @@ type SyncTemplate struct {
 
 // RootSyncTemplate represent the sync template for RootSync.
 type RootSyncTemplate struct {
-	SourceFormat string   `json:"sourceFormat,omitempty"`
-	Git          *GitInfo `json:"git,omitempty"`
+	SourceFormat string    `json:"sourceFormat,omitempty"`
+	Git          *GitInfo  `json:"git,omitempty"`
+	Metadata     *Metadata `json:"metadata,omitempty"`
 }
 
+// RepoSyncTemplate represent the sync template for RepoSync.
 type RepoSyncTemplate struct {
-	SourceFormat string   `json:"sourceFormat,omitempty"`
-	Git          *GitInfo `json:"git,omitempty"`
+	SourceFormat string    `json:"sourceFormat,omitempty"`
+	Git          *GitInfo  `json:"git,omitempty"`
+	Metadata     *Metadata `json:"metadata,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=AllClusters;Custom

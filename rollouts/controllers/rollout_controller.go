@@ -510,11 +510,18 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 
 	for _, target := range targets.ToBeCreated {
 		rootSyncSpec := toRootSyncSpec(target.packageRef)
+		var metadata *gitopsv1alpha1.Metadata
+
+		if rollout != nil && rollout.Spec.SyncTemplate != nil &&
+			rollout.Spec.SyncTemplate.RootSync != nil {
+			metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
+		}
 		rrs := newRemoteRootSync(rollout,
 			gitopsv1alpha1.ClusterRef{Name: target.cluster.Name},
 			rootSyncSpec,
 			pkgID(target.packageRef),
 			wave.Name,
+			metadata,
 		)
 
 		if maxConcurrent > concurrentUpdates {
@@ -685,7 +692,12 @@ func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
 }
 
 // Given a package identifier and cluster, create a RemoteRootSync object.
-func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout, clusterRef gitopsv1alpha1.ClusterRef, rssSpec *gitopsv1alpha1.RootSyncSpec, pkgID string, waveName string) *gitopsv1alpha1.RemoteRootSync {
+func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
+	clusterRef gitopsv1alpha1.ClusterRef,
+	rssSpec *gitopsv1alpha1.RootSyncSpec,
+	pkgID string,
+	waveName string,
+	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteRootSync {
 	t := true
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
@@ -711,6 +723,7 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout, clusterRef gitopsv1alpha
 			Template: &gitopsv1alpha1.RootSyncInfo{
 				Spec: rssSpec,
 			},
+			Metadata: metadata,
 		},
 	}
 }

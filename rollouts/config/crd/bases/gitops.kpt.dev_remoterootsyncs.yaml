@@ -58,6 +58,19 @@ spec:
                 required:
                 - name
                 type: object
+              metadata:
+                description: Metadata specifies labels and annotations to add to the
+                  RSync object.
+                properties:
+                  annotations:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
               template:
                 properties:
                   spec:

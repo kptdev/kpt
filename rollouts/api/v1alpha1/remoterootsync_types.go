@@ -30,6 +30,7 @@ type RemoteRootSyncSpec struct {
 
 	ClusterRef ClusterRef    `json:"clusterRef,omitempty"`
 	Template   *RootSyncInfo `json:"template,omitempty"`
+	Metadata   *Metadata     `json:"metadata,omitempty"`
 }
 
 type RootSyncInfo struct {
@@ -52,6 +53,12 @@ type GitInfo struct {
 	Proxy                  string          `json:"proxy,omitempty"`
 	SecretRef              SecretReference `json:"secretRef,omitempty"`
 	NoSSLVerify            bool            `json:"noSSLVerify,omitempty"`
+}
+
+// Metadata specifies labels and annotations to add to the RSync object.
+type Metadata struct {
+	Labels      map[string]string `json:"labels,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // RemoteRootSyncStatus defines the observed state of RemoteRootSync
