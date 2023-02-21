@@ -155,16 +155,16 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	// Try to parse the output as yaml.
 	resourceListOutput, err := yaml.Parse(resultStr)
 	if err != nil {
-		additionalErrorMessage, err2 := retrieveError(f, resourceList)
-		if err2 != nil {
-			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %w", err2)
+		additionalErrorMessage, errorResultRetrievalErr := retrieveError(f, resourceList)
+		if errorResultRetrievalErr != nil {
+			return errorResultRetrievalErr
 		}
 		return fmt.Errorf("parsing output resource list with content: %q\n%w\n%s", resultStr, err, additionalErrorMessage)
 	}
 	if resourceListOutput.GetKind() != "ResourceList" {
 		additionalErrorMessage, errorResultRetrievalErr := retrieveError(f, resourceList)
 		if errorResultRetrievalErr != nil {
-			additionalErrorMessage = fmt.Sprint("failed to retrieve more error information: %w", errorResultRetrievalErr)
+			return errorResultRetrievalErr
 		}
 		return fmt.Errorf("invalid resource list output from wasm library; got %q\n%s", resultStr, additionalErrorMessage)
 	}
