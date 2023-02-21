@@ -81,7 +81,7 @@ controller. Those are left to humans or other controllers. The exception is the
 proposal of deletion (there is no concept of a "Draft" deletion), which the
 package variant control will do, depending upon the specified deletion policy.
 
-### Package Revision Meta Data
+### Package Revision Metadata
 
 The package variant controller utilizes Porch APIs. This means that it is not
 just doing a `clone` operation, but in fact creating a Porch `PackageRevision`
@@ -92,11 +92,11 @@ Some of that metadata is necessary for the management of the PackageRevision by
 the PackageVariant controller - for example, the `ownerRef` indicating which
 `PackageVariant` created the `PackageRevision`. These are not in control of the
 user. However, the `PackageVariant` resource does make the annotations and
-lables of the `PackageRevision` available as values that may be controlled
+labels of the `PackageRevision` available as values that may be controlled
 during the creation of the `PackageRevision`. This can assist in additional
 automation workflows.
 
-## Introducting Variance
+## Introducing Variance
 Just cloning is not that interesting, so the `PackageVariant` resource also
 allows you to control various ways of mutating the original package to create
 the variant.
@@ -114,7 +114,7 @@ ConfigMap can then be used as input to functions in the Kpt function pipeline.
 
 This process holds true for package revisions created via the package variant
 controller as well. Additionally, the author of the `PackageVariant` resource
-can specify additional key/value pairs to insert into the package context [note:
+can specify additional key-value pairs to insert into the package context [note:
 this additional functionality is proposed here but not yet implemented].
 
 ### KRM Function Calls
@@ -151,14 +151,14 @@ this information. So, there is a protocol for facilitating this dance:
   they are likely just used by local functions as input. But this is not
   mandatory.
 - The package variant controller will look for any resource in the Kubernetes
-  clsuter matching the Group, Version, and Kind of the package resource, and
+  cluster matching the Group, Version, and Kind of the package resource, and
   satisfying the *injection selector*.
 - The package variant controller will copy the `spec` field from the matching
   in-cluster resource to the in-package resource.
 
 Note that because we are injecting data *from the Kubernetes cluster*, we can
 also monitor that data for changes. For each resource we inject, the package
-variant controller will establish a Kubernetse "watch" on the resource. A change
+variant controller will establish a Kubernetes "watch" on the resource. A change
 to that resource will result in a new Draft package with the updated
 configuration injected.
 
