@@ -13,7 +13,7 @@ Orchestration](07-package-orchestration.md) in particular can assist in this.
 However, they are still centered around manual, one-by-one hydration and
 configuration of a workload.
 
-This proposal introduces concepts and a set of resources that for automating the
+This proposal introduces concepts and a set of resources for automating the
 creation and lifecycle management of package variants. These are designed to
 address several different dimensions of scalability:
 - Number of different workloads for a given cluster
