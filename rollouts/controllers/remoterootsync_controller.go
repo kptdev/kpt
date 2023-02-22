@@ -271,10 +271,9 @@ func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync) (*unstru
 	u.SetName(remoterootsync.Name)
 	u.SetNamespace(rootSyncNamespace)
 
-	labels := make(map[string]string)
-	if remoterootsync.Spec.Metadata != nil {
-		u.SetAnnotations(remoterootsync.Spec.Metadata.Annotations)
-		labels = remoterootsync.Spec.Metadata.Labels
+	labels := u.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
 	}
 	labels[remoteRootSyncNameLabel] = remoterootsync.Name
 	labels[remoteRootSyncNamespaceLabel] = remoterootsync.Namespace

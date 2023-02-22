@@ -30,11 +30,11 @@ type RemoteRootSyncSpec struct {
 
 	ClusterRef ClusterRef    `json:"clusterRef,omitempty"`
 	Template   *RootSyncInfo `json:"template,omitempty"`
-	Metadata   *Metadata     `json:"metadata,omitempty"`
 }
 
 type RootSyncInfo struct {
-	Spec *RootSyncSpec `json:"spec,omitempty"`
+	Spec     *RootSyncSpec `json:"spec,omitempty"`
+	Metadata *Metadata     `json:"metadata,omitempty"`
 }
 
 type RootSyncSpec struct {
