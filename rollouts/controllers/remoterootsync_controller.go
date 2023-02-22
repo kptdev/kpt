@@ -20,9 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sync"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -58,6 +60,10 @@ var (
 
 	remoteRootSyncNameLabel      = "gitops.kpt.dev/remoterootsync-name"
 	remoteRootSyncNamespaceLabel = "gitops.kpt.dev/remoterootsync-namespace"
+)
+
+const (
+	externalSyncCreatedConditionType = "ExternalSyncCreated"
 )
 
 // RemoteRootSyncReconciler reconciles a RemoteRootSync object
@@ -115,14 +121,20 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(&remoterootsync, myFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if err := r.deleteExternalResources(ctx, &remoterootsync); err != nil {
-				// if fail to delete the external dependency here, return with error
-				// so that it can be retried
-				return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
+			if meta.IsStatusConditionTrue(remoterootsync.Status.Conditions, externalSyncCreatedConditionType) {
+				// Delete the external sync resource
+				err := r.deleteExternalResources(ctx, &remoterootsync)
+				if err != nil && !apierrors.IsNotFound(err) {
+					// if fail to delete the external dependency here, return with error
+					// so that it can be retried
+					return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
+				}
+
+				// Make sure we stop any watches that are no longer needed.
+				logger.Info("Pruning watches")
+				r.pruneWatches(req.NamespacedName, &remoterootsync.Spec.ClusterRef)
 			}
-			// Make sure we stop any watches that are no longer needed.
-			logger.Info("Pruning watches")
-			r.pruneWatches(req.NamespacedName, &remoterootsync.Spec.ClusterRef)
+
 			// remove our finalizer from the list and update it.
 			controllerutil.RemoveFinalizer(&remoterootsync, myFinalizerName)
 			if err := r.Update(ctx, &remoterootsync); err != nil {
@@ -133,8 +145,6 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	r.setupWatches(ctx, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
-
 	clusterRef := &remoterootsync.Spec.ClusterRef
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
@@ -144,6 +154,8 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if err := r.patchRootSync(ctx, dynCl, req.Name, &remoterootsync); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	r.setupWatches(ctx, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
 
 	syncStatus, err := checkSyncStatus(ctx, dynCl, req.Name)
 	if err != nil {
@@ -162,12 +174,19 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 	logger := klog.FromContext(ctx)
 
 	// Don't update if there are no changes.
-	if rrs.Status.SyncStatus == syncStatus && rrs.Generation == rrs.Status.ObservedGeneration {
-		return nil
-	}
-	logger.Info("Updating status")
+
+	rrsPrior := rrs.DeepCopy()
+
 	rrs.Status.SyncStatus = syncStatus
 	rrs.Status.ObservedGeneration = rrs.Generation
+
+	meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncCreatedConditionType, Status: metav1.ConditionTrue, Reason: "SyncCreated"})
+
+	if reflect.DeepEqual(rrs.Status, rrsPrior.Status) {
+		return nil
+	}
+
+	logger.Info("Updating status")
 	return r.Client.Status().Update(ctx, rrs)
 }
 
