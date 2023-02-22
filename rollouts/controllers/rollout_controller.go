@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -154,6 +155,18 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	err = r.reconcileRollout(ctx, &rollout, strategy, packageDiscoveryClient)
 	if err != nil {
 		return ctrl.Result{}, err
+	}
+	if rollout.Spec.Clusters.SourceType == gitopsv1alpha1.GCPFleet &&
+		rollout.Status.Overall == "Completed" {
+		// TODO (droot): The rollouts in completed state will not be reconciled
+		// whenever fleet memberships change, so scheduling a periodic reconcile
+		// until we fix https://github.com/GoogleContainerTools/kpt/issues/3835
+		// This can be safely removed once we start monitoring fleet changes.
+		// Note: we watch containercluster types, so this problem doesn't exist for the
+		// KCC clusters.
+		return ctrl.Result{
+			RequeueAfter: 30 * time.Second,
+		}, nil
 	}
 
 	return ctrl.Result{}, nil
