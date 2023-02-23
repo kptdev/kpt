@@ -29,7 +29,14 @@ const wasmBuffer = fs.readFileSync(wasmPath)
 var rl = fs.readFileSync(0, 'utf-8')
 WebAssembly.instantiate(wasmBuffer, go.importObject).then((result) => {
     go.run(result.instance);
-    console.log(` + jsEntrypointFunction + `(rl));
+    var result = ` + jsEntrypointFunction + `(rl);
+
+    // On success, output to console, on failure retrieve and output the error message
+    if (result.includes("kind: ResourceList")) {
+        console.log(result)
+      } else {
+        console.log(` + jsEntrypointFunction + "Errors" + `(rl));
+      }
 });`
 
 const golangWasmJSCode = `const fs = require('fs');

@@ -146,6 +146,7 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("unable to invoke %v: %v", jsEntrypointFunction, err)
 	}
+
 	// We expect `result` to be a *wasmexec.jsString (which is not exportable) with
 	// the following definition: type jsString struct { data string }. It will look
 	// like `&{realPayload}`
@@ -154,15 +155,31 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	// Try to parse the output as yaml.
 	resourceListOutput, err := yaml.Parse(resultStr)
 	if err != nil {
-		return fmt.Errorf("error parsing output resource list %q: %w", resultStr, err)
+		additionalErrorMessage, errorResultRetrievalErr := retrieveError(f, resourceList)
+		if errorResultRetrievalErr != nil {
+			return errorResultRetrievalErr
+		}
+		return fmt.Errorf("parsing output resource list with content: %q\n%w\n%s", resultStr, err, additionalErrorMessage)
 	}
 	if resourceListOutput.GetKind() != "ResourceList" {
-		return fmt.Errorf("invalid resource list output from wasm library; got %q", resultStr)
+		additionalErrorMessage, errorResultRetrievalErr := retrieveError(f, resourceList)
+		if errorResultRetrievalErr != nil {
+			return errorResultRetrievalErr
+		}
+		return fmt.Errorf("invalid resource list output from wasm library; got %q\n%s", resultStr, additionalErrorMessage)
 	}
 	if _, err = w.Write([]byte(resultStr)); err != nil {
 		return fmt.Errorf("unable to write the output resource list: %w", err)
 	}
 	return f.loader.cleanup()
+}
+
+func retrieveError(f *WasmtimeFn, resourceList []byte) (string, error) {
+	errResult, err := f.gomod.Call(jsEntrypointFunction+"Errors", string(resourceList))
+	if err != nil {
+		return "", fmt.Errorf("unable to retrieve additional error message from function: %w", err)
+	}
+	return fmt.Sprintf("%s", errResult), nil
 }
 
 var _ wasmexec.Instance = &WasmtimeFn{}
