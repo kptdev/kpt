@@ -63,7 +63,8 @@ var (
 )
 
 const (
-	externalSyncCreatedConditionType = "ExternalSyncCreated"
+	externalSyncCreatedConditionType  = "ExternalSyncCreated"
+	externalSyncUpToDateConditionType = "ExternalSyncUpToDate"
 )
 
 // RemoteRootSyncReconciler reconciles a RemoteRootSync object
@@ -125,6 +126,8 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 				// Delete the external sync resource
 				err := r.deleteExternalResources(ctx, &remoterootsync)
 				if err != nil && !apierrors.IsNotFound(err) {
+					r.updateStatus(ctx, &remoterootsync, "", err)
+
 					// if fail to delete the external dependency here, return with error
 					// so that it can be retried
 					return ctrl.Result{}, fmt.Errorf("have problem to delete external resource: %w", err)
@@ -145,42 +148,63 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	clusterRef := &remoterootsync.Spec.ClusterRef
-	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	syncStatus, syncError := r.syncExternalSync(ctx, &remoterootsync)
 
-	if err := r.patchRootSync(ctx, dynCl, req.Name, &remoterootsync); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	r.setupWatches(ctx, remoterootsync.Name, remoterootsync.Namespace, remoterootsync.Spec.ClusterRef)
-
-	syncStatus, err := checkSyncStatus(ctx, dynCl, req.Name)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err := r.updateStatus(ctx, &remoterootsync, syncStatus); err != nil {
+	if err := r.updateStatus(ctx, &remoterootsync, syncStatus, syncError); err != nil {
 		logger.Error(err, "Failed to update status")
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, syncError
 }
 
-func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, syncStatus string) error {
-	logger := klog.FromContext(ctx)
+func (r *RemoteRootSyncReconciler) syncExternalSync(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync) (string, error) {
+	syncName := rrs.Name
+	clusterRef := &rrs.Spec.ClusterRef
 
-	// Don't update if there are no changes.
+	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
+	if err != nil {
+		return "", fmt.Errorf("failed to create client: %w", err)
+	}
+
+	if err := r.patchRootSync(ctx, dynCl, syncName, rrs); err != nil {
+		return "", fmt.Errorf("failed to create/update sync: %w", err)
+	}
+
+	r.setupWatches(ctx, rrs.Name, rrs.Namespace, rrs.Spec.ClusterRef)
+
+	syncStatus, err := checkSyncStatus(ctx, dynCl, syncName)
+	if err != nil {
+		return "", fmt.Errorf("faild to check status: %w", err)
+	}
+
+	return syncStatus, nil
+}
+
+func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, syncStatus string, syncError error) error {
+	logger := klog.FromContext(ctx)
 
 	rrsPrior := rrs.DeepCopy()
 
-	rrs.Status.SyncStatus = syncStatus
-	rrs.Status.ObservedGeneration = rrs.Generation
+	if syncError == nil {
+		rrs.Status.SyncStatus = syncStatus
 
-	meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncCreatedConditionType, Status: metav1.ConditionTrue, Reason: "SyncCreated"})
+		meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncCreatedConditionType, Status: metav1.ConditionTrue, Reason: "SyncCreated"})
+		meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncUpToDateConditionType, Status: metav1.ConditionTrue, Reason: "SyncUpToDate"})
+	} else {
+		syncExists := meta.IsStatusConditionTrue(rrs.Status.Conditions, externalSyncCreatedConditionType)
+
+		if syncExists {
+			rrs.Status.SyncStatus = "Unknown"
+			meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncUpToDateConditionType, Status: metav1.ConditionUnknown, Reason: "Error", Message: syncError.Error()})
+		} else {
+			rrs.Status.SyncStatus = ""
+			meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncCreatedConditionType, Status: metav1.ConditionFalse, Reason: "NotCreated", Message: "External sync never created"})
+			meta.SetStatusCondition(&rrs.Status.Conditions, metav1.Condition{Type: externalSyncUpToDateConditionType, Status: metav1.ConditionFalse, Reason: "Error", Message: syncError.Error()})
+		}
+	}
+
+	rrs.Status.ObservedGeneration = rrs.Generation
 
 	if reflect.DeepEqual(rrs.Status, rrsPrior.Status) {
 		return nil
