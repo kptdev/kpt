@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -276,6 +277,14 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
 	logger := klog.FromContext(ctx)
 
+	if rollout != nil && rollout.Spec.SyncTemplate != nil {
+		if rollout.Spec.SyncTemplate.Type == gitopsv1alpha1.TemplateTypeRepoSync {
+			err := fmt.Errorf("reposync is not yet supported")
+			logger.Error(err, "")
+			return err
+		}
+	}
+
 	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
@@ -413,10 +422,9 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			}
 		} else {
 			// remoterootsync already exists
-			if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision {
-				rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
-				// revision has been updated
-				targets.ToBeUpdated = append(targets.ToBeUpdated, &rrs)
+			updated, needsUpdate := pkgNeedsUpdate(rollout, rrs, pkg)
+			if needsUpdate {
+				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
 				targets.Unchanged = append(targets.Unchanged, &rrs)
 			}
@@ -428,6 +436,18 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	}
 
 	return targets, nil
+}
+
+func pkgNeedsUpdate(rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
+	// TODO: We need to check other things here besides git.Revision and metadata
+	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
+		!reflect.DeepEqual(rollout.Spec.SyncTemplate.RootSync.Metadata,
+			rrs.Spec.Template.Metadata) {
+		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
+		rrs.Spec.Template.Metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
+		return &rrs, true
+	}
+	return nil, false
 }
 
 func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, allTargets *Targets, allClusters []clusterstore.Cluster,
@@ -508,6 +528,12 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		}
 	}
 
+	var metadata *gitopsv1alpha1.Metadata
+	if rollout != nil && rollout.Spec.SyncTemplate != nil &&
+		rollout.Spec.SyncTemplate.RootSync != nil {
+		metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
+	}
+
 	for _, target := range targets.ToBeCreated {
 		rootSyncSpec := toRootSyncSpec(target.packageRef)
 		rrs := newRemoteRootSync(rollout,
@@ -515,6 +541,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 			rootSyncSpec,
 			pkgID(target.packageRef),
 			wave.Name,
+			metadata,
 		)
 
 		if maxConcurrent > concurrentUpdates {
@@ -685,7 +712,12 @@ func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
 }
 
 // Given a package identifier and cluster, create a RemoteRootSync object.
-func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout, clusterRef gitopsv1alpha1.ClusterRef, rssSpec *gitopsv1alpha1.RootSyncSpec, pkgID string, waveName string) *gitopsv1alpha1.RemoteRootSync {
+func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
+	clusterRef gitopsv1alpha1.ClusterRef,
+	rssSpec *gitopsv1alpha1.RootSyncSpec,
+	pkgID string,
+	waveName string,
+	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteRootSync {
 	t := true
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
@@ -709,7 +741,8 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout, clusterRef gitopsv1alpha
 		Spec: gitopsv1alpha1.RemoteRootSyncSpec{
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.RootSyncInfo{
-				Spec: rssSpec,
+				Spec:     rssSpec,
+				Metadata: metadata,
 			},
 		},
 	}

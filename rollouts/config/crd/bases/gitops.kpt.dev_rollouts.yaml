@@ -184,6 +184,8 @@ spec:
                   RSync object used to syncing the packages.
                 properties:
                   repoSync:
+                    description: RepoSyncTemplate represent the sync template for
+                      RepoSync.
                     properties:
                       git:
                         properties:
@@ -216,6 +218,19 @@ spec:
                         required:
                         - auth
                         - repo
+                        type: object
+                      metadata:
+                        description: Metadata specifies labels and annotations to
+                          add to the RSync object.
+                        properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                         type: object
                       sourceFormat:
                         type: string
@@ -255,6 +270,19 @@ spec:
                         required:
                         - auth
                         - repo
+                        type: object
+                      metadata:
+                        description: Metadata specifies labels and annotations to
+                          add to the RSync object.
+                        properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                         type: object
                       sourceFormat:
                         type: string

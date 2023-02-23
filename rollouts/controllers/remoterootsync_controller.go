@@ -282,19 +282,22 @@ func (r *RemoteRootSyncReconciler) pruneWatches(rrsnn types.NamespacedName, clus
 func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync) (*unstructured.Unstructured, error) {
 	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(remoterootsync.Spec.Template)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
 	}
+
 	u := unstructured.Unstructured{Object: newRootSync}
 	u.SetGroupVersionKind(rootSyncGVK)
 	u.SetName(remoterootsync.Name)
 	u.SetNamespace(rootSyncNamespace)
-	u.SetLabels(map[string]string{
-		remoteRootSyncNameLabel:      remoterootsync.Name,
-		remoteRootSyncNamespaceLabel: remoterootsync.Namespace,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
+
+	labels := u.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
 	}
+	labels[remoteRootSyncNameLabel] = remoterootsync.Name
+	labels[remoteRootSyncNamespaceLabel] = remoterootsync.Namespace
+	u.SetLabels(labels)
+
 	return &u, nil
 }
 

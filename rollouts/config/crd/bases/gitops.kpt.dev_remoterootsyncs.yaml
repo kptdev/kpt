@@ -60,6 +60,19 @@ spec:
                 type: object
               template:
                 properties:
+                  metadata:
+                    description: Metadata specifies labels and annotations to add
+                      to the RSync object.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
                   spec:
                     properties:
                       git:
