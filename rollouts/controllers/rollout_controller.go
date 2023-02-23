@@ -422,13 +422,9 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			}
 		} else {
 			// remoterootsync already exists
-			if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
-				!reflect.DeepEqual(rollout.Spec.SyncTemplate.RootSync.Metadata,
-					rrs.Spec.Template.Metadata) {
-				rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
-				rrs.Spec.Template.Metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
-				// revision and/or metadata has been updated
-				targets.ToBeUpdated = append(targets.ToBeUpdated, &rrs)
+			updated, needsUpdate := pkgNeedsUpdate(rollout, rrs, pkg)
+			if needsUpdate {
+				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
 				targets.Unchanged = append(targets.Unchanged, &rrs)
 			}
@@ -440,6 +436,18 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	}
 
 	return targets, nil
+}
+
+func pkgNeedsUpdate(rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
+	// TODO: We need to check other things here besides git.Revision and metadata
+	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
+		!reflect.DeepEqual(rollout.Spec.SyncTemplate.RootSync.Metadata,
+			rrs.Spec.Template.Metadata) {
+		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
+		rrs.Spec.Template.Metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
+		return &rrs, true
+	}
+	return nil, false
 }
 
 func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv1alpha1.Rollout, allTargets *Targets, allClusters []clusterstore.Cluster,
