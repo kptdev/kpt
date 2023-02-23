@@ -19,9 +19,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.11.3
   creationTimestamp: null
-  name: healthchecks.healthcheck.cloud.google.com
+  name: healthchecks.config.healthcheck.kpt.dev
 spec:
-  group: healthcheck.cloud.google.com
+  group: config.healthcheck.kpt.dev
   names:
     kind: HealthCheck
     listKind: HealthCheckList

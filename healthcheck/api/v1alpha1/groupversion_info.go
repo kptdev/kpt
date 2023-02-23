@@ -14,7 +14,7 @@
 
 // Package v1alpha1 contains API Schema definitions for the healthcheck v1alpha1 API group
 // +kubebuilder:object:generate=true
-// +groupName=healthcheck.cloud.google.com
+// +groupName=config.healthcheck.kpt.dev
 package v1alpha1
 
 import (
@@ -24,7 +24,7 @@ import (
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "healthcheck.cloud.google.com", Version: "v1alpha1"}
+	GroupVersion = schema.GroupVersion{Group: "config.healthcheck.kpt.dev", Version: "v1alpha1"}
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}
 	// AddToScheme adds the types in this group-version to the given scheme.
