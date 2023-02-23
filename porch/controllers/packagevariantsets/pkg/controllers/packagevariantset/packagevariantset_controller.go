@@ -30,6 +30,7 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
 
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -81,23 +82,26 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	var conditions []metav1.Condition
+	defer func() {
+		r.Client.Status().Update(ctx, pvs)
+	}()
 
 	if errs := validatePackageVariantSet(pvs); len(errs) > 0 {
-		for _, validationErr := range errs {
-			if validationErr.Error() != "" {
-				conditions = append(conditions, metav1.Condition{
-					Type:               "Valid",
-					Status:             "False",
-					Reason:             "ValidationFailed",
-					Message:            validationErr.Error(),
-					LastTransitionTime: metav1.Now(),
-				})
-			}
-		}
-		pvs.Status.Conditions = conditions
-		statusUpdateErr := r.Client.Status().Update(ctx, pvs)
-		return ctrl.Result{}, statusUpdateErr
+		validationErr := combineErrors(errs)
+		meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+			Type:    "Valid",
+			Status:  "False",
+			Reason:  "Invalid",
+			Message: validationErr,
+		})
+		return ctrl.Result{}, fmt.Errorf(validationErr)
+	} else {
+		meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+			Type:    "Valid",
+			Status:  "True",
+			Reason:  "Valid",
+			Message: "all validation checks passed",
+		})
 	}
 
 	upstream, err := r.getUpstreamPR(pvs.Spec.Upstream)
@@ -105,33 +109,25 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 	if upstream == nil {
+		// Currently, this code will never be reached, because the upstream.Tag option
+		// is not yet implemented.
 		return ctrl.Result{}, fmt.Errorf("could not find specified upstream")
 	}
 
-	downstreams, err := r.unrollDownstreamTargets(ctx, pvs,
-		upstream.Package)
+	downstreams, err := r.unrollDownstreamTargets(ctx, pvs, upstream.Package)
 	if err != nil {
-		if strings.Contains(err.Error(), "unable to list specified objects in cluster") {
-			conditions = append(conditions, metav1.Condition{
-				Type:               "ObjectsListed",
-				Status:             "False",
-				Reason:             "Error",
-				Message:            err.Error(),
-				LastTransitionTime: metav1.Now(),
+		if meta.IsNoMatchError(err) {
+			meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+				Type:    "Valid",
+				Status:  "False",
+				Reason:  "Invalid",
+				Message: err.Error(),
 			})
-			pvs.Status.Conditions = conditions
-			statusUpdateErr := r.Client.Status().Update(ctx, pvs)
-			return ctrl.Result{}, statusUpdateErr
-		} else {
-			return ctrl.Result{}, err
 		}
-	}
-
-	if err := r.ensurePackageVariants(ctx, upstream, downstreams, pvs); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, r.ensurePackageVariants(ctx, upstream, downstreams, pvs)
 }
 
 func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request) (*api.PackageVariantSet, error) {
@@ -145,16 +141,16 @@ func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request
 func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 	var allErrs []error
 	if pvs.Spec.Upstream == nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream"), "{}", "missing required field"))
+		allErrs = append(allErrs, fmt.Errorf("spec.upstream is a required field"))
 	} else {
 		if pvs.Spec.Upstream.Package == nil {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package"), "{}", "missing required field"))
+			allErrs = append(allErrs, fmt.Errorf("spec.upstream.package is a required field"))
 		} else {
 			if pvs.Spec.Upstream.Package.Name == "" {
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package", "name"), "", "missing required field"))
+				allErrs = append(allErrs, fmt.Errorf("spec.upstream.package.name is a required field"))
 			}
 			if pvs.Spec.Upstream.Package.Repo == "" {
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package", "repo"), "", "missing required field"))
+				allErrs = append(allErrs, fmt.Errorf("spec.upstream.package.repo is a required field"))
 			}
 		}
 		if (pvs.Spec.Upstream.Tag == "" && pvs.Spec.Upstream.Revision == "") ||
@@ -221,6 +217,16 @@ func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 				pkgvarapi.DeletionPolicyOrphan, pkgvarapi.DeletionPolicyDelete)))
 	}
 	return allErrs
+}
+
+func combineErrors(errs []error) string {
+	var errMsgs []string
+	for _, e := range errs {
+		if e.Error() != "" {
+			errMsgs = append(errMsgs, e.Error())
+		}
+	}
+	return strings.Join(errMsgs, "; ")
 }
 
 func (r *PackageVariantSetReconciler) getUpstreamPR(
@@ -380,7 +386,7 @@ func (r *PackageVariantSetReconciler) getSelectedObjects(ctx context.Context, se
 			opts = append(opts, client.MatchingLabelsSelector{Selector: labelSelector})
 		}
 		if err := r.Client.List(ctx, uList, opts...); err != nil {
-			return nil, fmt.Errorf("unable to list specified objects in cluster: %v", err)
+			return nil, err
 		}
 
 		for _, u := range uList.Items {
