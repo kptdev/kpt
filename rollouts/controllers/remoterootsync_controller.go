@@ -67,7 +67,11 @@ const (
 	conditionReconciling = "Reconciling"
 	conditionStalled     = "Stalled"
 
-	reasonSyncNotCreated = "SyncNotCreated"
+	reasonSyncNotCreated       = "SyncNotCreated"
+	reasonPendingReconcilation = "PendingReconcilation"
+	reasonReady                = "Ready"
+	reasonReconciling          = "Reconciling"
+	reasonError                = "Error"
 )
 
 // RemoteRootSyncReconciler reconciles a RemoteRootSync object
@@ -197,11 +201,11 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 	if syncError == nil {
 		rrs.Status.SyncStatus = syncStatus
 
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReady, Status: metav1.ConditionTrue, Reason: "Ready"})
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReady, Status: metav1.ConditionTrue, Reason: reasonReady})
 		meta.RemoveStatusCondition(conditions, conditionReconciling)
 		meta.RemoveStatusCondition(conditions, conditionStalled)
 	} else {
-		readyReason := "PendingReconcilation"
+		readyReason := reasonPendingReconcilation
 		readyStatus := metav1.ConditionUnknown
 
 		rrs.Status.SyncStatus = "Unknown"
@@ -214,8 +218,8 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 		}
 
 		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReady, Status: readyStatus, Reason: readyReason})
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReconciling, Status: metav1.ConditionTrue, Reason: "Reconciling"})
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionStalled, Status: metav1.ConditionTrue, Reason: "Error", Message: syncError.Error()})
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReconciling, Status: metav1.ConditionTrue, Reason: reasonReconciling})
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionStalled, Status: metav1.ConditionTrue, Reason: reasonError, Message: syncError.Error()})
 	}
 
 	rrs.Status.ObservedGeneration = rrs.Generation
@@ -374,7 +378,7 @@ func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Contex
 func (r *RemoteRootSyncReconciler) isExternalSyncCreated(rrs *gitopsv1alpha1.RemoteRootSync) bool {
 	readyCondition := meta.FindStatusCondition(rrs.Status.Conditions, conditionReady)
 
-	if readyCondition == nil || (readyCondition.Status != metav1.ConditionTrue && readyCondition.Reason == "SyncNotCreated") {
+	if readyCondition == nil || (readyCondition.Status != metav1.ConditionTrue && readyCondition.Reason == reasonSyncNotCreated) {
 		return false
 	}
 
