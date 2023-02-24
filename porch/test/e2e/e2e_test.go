@@ -654,6 +654,14 @@ func (t *PorchSuite) TestFunctionRepository(ctx context.Context) {
 	// avoid flakiness.
 	t.waitUntilRepositoryReady(ctx, repo.Name, repo.Namespace)
 
+	// Wait here for the repository to be cached in porch. We wait
+	// first one minute, since Porch waits 1 minute before it syncs
+	// the repo for the first time. Then wait another minute so that
+	// the sync has (hopefully) finished.
+	// TODO(mortent): We need a better solution for this. This is only
+	// temporary to fix the current flakiness with the e2e tests.
+	<-time.NewTimer(2 * time.Minute).C
+
 	list := &porchapi.FunctionList{}
 	t.ListE(ctx, list, client.InNamespace(t.namespace))
 
