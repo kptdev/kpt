@@ -702,7 +702,7 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 	}
 
 	if krmPackage == nil {
-		klog.Warningf("Skipping %q: Kptfile not found: %w", name, err)
+		klog.Warningf("Skipping %q: Kptfile not found", name)
 		return nil, nil
 	}
 
