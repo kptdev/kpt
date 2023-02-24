@@ -63,15 +63,12 @@ var (
 )
 
 const (
-	conditionReady       = "Ready"
 	conditionReconciling = "Reconciling"
 	conditionStalled     = "Stalled"
 
-	reasonSyncNotCreated       = "SyncNotCreated"
-	reasonPendingReconcilation = "PendingReconcilation"
-	reasonReady                = "Ready"
-	reasonReconciling          = "Reconciling"
-	reasonError                = "Error"
+	reasonCreateSync = "CreateSync"
+	reasonUpdateSync = "UpdateSync"
+	reasonError      = "Error"
 )
 
 // RemoteRootSyncReconciler reconciles a RemoteRootSync object
@@ -201,24 +198,19 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 	if syncError == nil {
 		rrs.Status.SyncStatus = syncStatus
 
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReady, Status: metav1.ConditionTrue, Reason: reasonReady})
 		meta.RemoveStatusCondition(conditions, conditionReconciling)
 		meta.RemoveStatusCondition(conditions, conditionStalled)
 	} else {
-		readyReason := reasonPendingReconcilation
-		readyStatus := metav1.ConditionUnknown
+		reconcileReason := reasonUpdateSync
 
 		rrs.Status.SyncStatus = "Unknown"
 
-		if r.isExternalSyncCreated(rrs) {
-		} else {
+		if !r.isExternalSyncCreated(rrs) {
 			rrs.Status.SyncStatus = ""
-			readyReason = reasonSyncNotCreated
-			readyStatus = metav1.ConditionFalse
+			reconcileReason = reasonCreateSync
 		}
 
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReady, Status: readyStatus, Reason: readyReason})
-		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReconciling, Status: metav1.ConditionTrue, Reason: reasonReconciling})
+		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionReconciling, Status: metav1.ConditionTrue, Reason: reconcileReason})
 		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionStalled, Status: metav1.ConditionTrue, Reason: reasonError, Message: syncError.Error()})
 	}
 
@@ -376,9 +368,9 @@ func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Contex
 }
 
 func (r *RemoteRootSyncReconciler) isExternalSyncCreated(rrs *gitopsv1alpha1.RemoteRootSync) bool {
-	readyCondition := meta.FindStatusCondition(rrs.Status.Conditions, conditionReady)
+	reconcilingCondition := meta.FindStatusCondition(rrs.Status.Conditions, conditionReconciling)
 
-	if readyCondition == nil || (readyCondition.Status != metav1.ConditionTrue && readyCondition.Reason == reasonSyncNotCreated) {
+	if rrs.Status.ObservedGeneration == 0 || (reconcilingCondition != nil && reconcilingCondition.Reason == reasonCreateSync) {
 		return false
 	}
 
