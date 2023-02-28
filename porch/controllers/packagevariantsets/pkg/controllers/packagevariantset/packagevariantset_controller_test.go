@@ -42,7 +42,7 @@ metadata:
 	}{
 		"empty spec": {
 			packageVariant: packageVariantHeader,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},
@@ -52,7 +52,7 @@ spec:
   upstream:
     revision: v1
     tag: main`,
-			expectedErrs: []string{"spec.upstream.package: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream.package is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},
@@ -62,7 +62,7 @@ spec:
   upstream:
     package:
       name: foo`,
-			expectedErrs: []string{"spec.upstream.package.repo: Invalid value: \"\": missing required field",
+			expectedErrs: []string{"spec.upstream.package.repo is a required field",
 				"must have one of spec.upstream.revision and spec.upstream.tag",
 				"must specify at least one item in spec.targets",
 			},
@@ -73,7 +73,7 @@ spec:
   upstream:
     package:
       repo: foo`,
-			expectedErrs: []string{"spec.upstream.package.name: Invalid value: \"\": missing required field",
+			expectedErrs: []string{"spec.upstream.package.name is a required field",
 				"must have one of spec.upstream.revision and spec.upstream.tag",
 				"must specify at least one item in spec.targets",
 			},
@@ -98,7 +98,7 @@ spec:
       repoName:
         value: foo
       `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"spec.targets[0] cannot specify both fields `packageName` and `package`",
 				"spec.targets[0].package.repo cannot be empty when using `package`",
 				"spec.targets[1] must specify one of `package`, `repositories`, or `objects`",
@@ -112,7 +112,7 @@ spec:
   adoptionPolicy: invalid
   deletionPolicy: invalid
 `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 				"spec.adoptionPolicy: Invalid value: \"invalid\": field can only be \"adoptNone\" or \"adoptExisting\"",
 				"spec.deletionPolicy: Invalid value: \"invalid\": field can only be \"orphan\" or \"delete\"",
@@ -124,7 +124,7 @@ spec:
   adoptionPolicy: adoptExisting
   deletionPolicy: orphan
 `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},

@@ -83,7 +83,9 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	}
 
 	defer func() {
-		r.Client.Status().Update(ctx, pvs)
+		if err := r.Client.Status().Update(ctx, pvs); err != nil {
+			klog.Errorf("could not update status: %w\n", err)
+		}
 	}()
 
 	if errs := validatePackageVariantSet(pvs); len(errs) > 0 {
@@ -123,6 +125,7 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 				Reason:  "Invalid",
 				Message: err.Error(),
 			})
+			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
 	}
