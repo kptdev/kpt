@@ -15,6 +15,7 @@
 package packagevariantset
 
 import (
+	"context"
 	"testing"
 
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -22,7 +23,9 @@ import (
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/yaml"
 )
@@ -39,7 +42,7 @@ metadata:
 	}{
 		"empty spec": {
 			packageVariant: packageVariantHeader,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},
@@ -49,7 +52,7 @@ spec:
   upstream:
     revision: v1
     tag: main`,
-			expectedErrs: []string{"spec.upstream.package: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream.package is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},
@@ -59,7 +62,7 @@ spec:
   upstream:
     package:
       name: foo`,
-			expectedErrs: []string{"spec.upstream.package.repo: Invalid value: \"\": missing required field",
+			expectedErrs: []string{"spec.upstream.package.repo is a required field",
 				"must have one of spec.upstream.revision and spec.upstream.tag",
 				"must specify at least one item in spec.targets",
 			},
@@ -70,7 +73,7 @@ spec:
   upstream:
     package:
       repo: foo`,
-			expectedErrs: []string{"spec.upstream.package.name: Invalid value: \"\": missing required field",
+			expectedErrs: []string{"spec.upstream.package.name is a required field",
 				"must have one of spec.upstream.revision and spec.upstream.tag",
 				"must specify at least one item in spec.targets",
 			},
@@ -95,7 +98,7 @@ spec:
       repoName:
         value: foo
       `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"spec.targets[0] cannot specify both fields `packageName` and `package`",
 				"spec.targets[0].package.repo cannot be empty when using `package`",
 				"spec.targets[1] must specify one of `package`, `repositories`, or `objects`",
@@ -109,7 +112,7 @@ spec:
   adoptionPolicy: invalid
   deletionPolicy: invalid
 `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 				"spec.adoptionPolicy: Invalid value: \"invalid\": field can only be \"adoptNone\" or \"adoptExisting\"",
 				"spec.deletionPolicy: Invalid value: \"invalid\": field can only be \"orphan\" or \"delete\"",
@@ -121,7 +124,7 @@ spec:
   adoptionPolicy: adoptExisting
   deletionPolicy: orphan
 `,
-			expectedErrs: []string{"spec.upstream: Invalid value: \"{}\": missing required field",
+			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
 			},
 		},
@@ -285,4 +288,76 @@ packageName:
 		Package: "dpn",
 	},
 	}, result)
+}
+
+func TestGetSelectedObjects(t *testing.T) {
+	selectors := []api.Selector{{
+		APIVersion: "v1",
+		Kind:       "Pod",
+		Labels:     &metav1.LabelSelector{MatchLabels: map[string]string{"foo": "bar"}},
+	}}
+	reconciler := &PackageVariantSetReconciler{
+		Client:     new(fakeClient),
+		serializer: json.NewSerializerWithOptions(json.DefaultMetaFactory, nil, nil, json.SerializerOptions{Yaml: true}),
+	}
+	selectedObjects, err := reconciler.getSelectedObjects(context.Background(), selectors)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(selectedObjects))
+
+	expectedResId := resid.NewResIdWithNamespace(resid.NewGvk("", "v1", "Pod"), "my-pod-1", "")
+	obj, found := selectedObjects[expectedResId]
+	require.True(t, found)
+	require.Equal(t, `apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    abc: def
+    foo: bar
+  name: my-pod-1
+`, obj.MustString())
+}
+
+func TestObjectSet(t *testing.T) {
+	selectedObjects := map[resid.ResId]*kyaml.RNode{
+		resid.NewResIdWithNamespace(resid.NewGvk("", "v1", "Pod"), "my-pod-1", ""): kyaml.MustParse(`apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    repo: my-repo
+  name: downstream
+`),
+	}
+
+	target := &api.Target{
+		PackageName: &api.PackageName{
+			Name: &api.ValueOrFromField{FromField: "metadata.name"},
+		},
+		Objects: &api.ObjectSelector{
+			RepoName: &api.ValueOrFromField{FromField: "metadata.labels.repo"},
+		},
+	}
+
+	pvs := &PackageVariantSetReconciler{}
+	objectSet, err := pvs.objectSet(target, "upstream", selectedObjects)
+	require.NoError(t, err)
+	require.Equal(t, len(objectSet), 1)
+	require.Equal(t, pkgvarapi.Downstream{
+		Repo:    "my-repo",
+		Package: "downstream",
+	}, *objectSet[0])
+}
+
+func TestEnsurePackageVariants(t *testing.T) {
+	upstream := &pkgvarapi.Upstream{Repo: "up", Package: "up", Revision: "up"}
+	downstreams := []*pkgvarapi.Downstream{
+		{Repo: "dn-1", Package: "dn-1"},
+		{Repo: "dn-3", Package: "dn-3"},
+	}
+	fc := &fakeClient{}
+	reconciler := &PackageVariantSetReconciler{Client: fc}
+	require.NoError(t, reconciler.ensurePackageVariants(context.Background(), upstream, downstreams,
+		&api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}))
+	require.Equal(t, 2, len(fc.objects))
+	require.Equal(t, "my-pv-1", fc.objects[0].GetName())
+	require.Equal(t, "my-pvs-28ace69e71f644931cd8cc1e8e9388f4de486901", fc.objects[1].GetName())
 }

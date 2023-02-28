@@ -46,3 +46,6 @@ rules:
   - get
   - patch
   - update
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["list"]

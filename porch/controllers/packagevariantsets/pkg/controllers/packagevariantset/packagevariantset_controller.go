@@ -29,17 +29,23 @@ import (
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
 
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyamlutils "sigs.k8s.io/kustomize/kyaml/utils"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -76,15 +82,28 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, nil
 	}
 
-	if errs := validatePackageVariantSet(pvs); len(errs) > 0 {
-		pvs.Status.ValidationErrors = nil
-		for _, validationErr := range errs {
-			if validationErr.Error() != "" {
-				pvs.Status.ValidationErrors = append(pvs.Status.ValidationErrors, validationErr.Error())
-			}
+	defer func() {
+		if err := r.Client.Status().Update(ctx, pvs); err != nil {
+			klog.Errorf("could not update status: %w\n", err)
 		}
-		statusUpdateErr := r.Client.Status().Update(ctx, pvs)
-		return ctrl.Result{}, statusUpdateErr
+	}()
+
+	if errs := validatePackageVariantSet(pvs); len(errs) > 0 {
+		validationErr := combineErrors(errs)
+		meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+			Type:    "Valid",
+			Status:  "False",
+			Reason:  "Invalid",
+			Message: validationErr,
+		})
+		return ctrl.Result{}, fmt.Errorf(validationErr)
+	} else {
+		meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+			Type:    "Valid",
+			Status:  "True",
+			Reason:  "Valid",
+			Message: "all validation checks passed",
+		})
 	}
 
 	upstream, err := r.getUpstreamPR(pvs.Spec.Upstream)
@@ -92,20 +111,26 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 	if upstream == nil {
+		// Currently, this code will never be reached, because the upstream.Tag option
+		// is not yet implemented.
 		return ctrl.Result{}, fmt.Errorf("could not find specified upstream")
 	}
 
-	downstreams, err := r.unrollDownstreamTargets(ctx, pvs,
-		upstream.Package)
+	downstreams, err := r.unrollDownstreamTargets(ctx, pvs, upstream.Package)
 	if err != nil {
+		if meta.IsNoMatchError(err) {
+			meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+				Type:    "Valid",
+				Status:  "False",
+				Reason:  "Invalid",
+				Message: err.Error(),
+			})
+			return ctrl.Result{}, nil
+		}
 		return ctrl.Result{}, err
 	}
 
-	if err := r.ensurePackageVariants(ctx, upstream, downstreams, pvs); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
+	return ctrl.Result{}, r.ensurePackageVariants(ctx, upstream, downstreams, pvs)
 }
 
 func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request) (*api.PackageVariantSet, error) {
@@ -119,16 +144,16 @@ func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request
 func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 	var allErrs []error
 	if pvs.Spec.Upstream == nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream"), "{}", "missing required field"))
+		allErrs = append(allErrs, fmt.Errorf("spec.upstream is a required field"))
 	} else {
 		if pvs.Spec.Upstream.Package == nil {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package"), "{}", "missing required field"))
+			allErrs = append(allErrs, fmt.Errorf("spec.upstream.package is a required field"))
 		} else {
 			if pvs.Spec.Upstream.Package.Name == "" {
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package", "name"), "", "missing required field"))
+				allErrs = append(allErrs, fmt.Errorf("spec.upstream.package.name is a required field"))
 			}
 			if pvs.Spec.Upstream.Package.Repo == "" {
-				allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package", "repo"), "", "missing required field"))
+				allErrs = append(allErrs, fmt.Errorf("spec.upstream.package.repo is a required field"))
 			}
 		}
 		if (pvs.Spec.Upstream.Tag == "" && pvs.Spec.Upstream.Revision == "") ||
@@ -161,6 +186,14 @@ func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 			if target.Objects.RepoName == nil {
 				allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects must specify `repoName` field", i))
 			}
+			for j, selector := range target.Objects.Selectors {
+				if selector.APIVersion == "" {
+					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects.selectors[%d] must specify 'apiVersion'", i, j))
+				}
+				if selector.Kind == "" {
+					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objects.selectors[%d] must specify 'kind'", i, j))
+				}
+			}
 			count++
 		}
 		if count != 1 {
@@ -187,6 +220,16 @@ func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
 				pkgvarapi.DeletionPolicyOrphan, pkgvarapi.DeletionPolicyDelete)))
 	}
 	return allErrs
+}
+
+func combineErrors(errs []error) string {
+	var errMsgs []string
+	for _, e := range errs {
+		if e.Error() != "" {
+			errMsgs = append(errMsgs, e.Error())
+		}
+	}
+	return strings.Join(errMsgs, "; ")
 }
 
 func (r *PackageVariantSetReconciler) getUpstreamPR(
@@ -219,7 +262,7 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 	pvs *api.PackageVariantSet,
 	upstreamPackageName string) ([]*pkgvarapi.Downstream, error) {
 	var result []*pkgvarapi.Downstream
-	for _, target := range pvs.Spec.Targets {
+	for i, target := range pvs.Spec.Targets {
 		switch {
 		case target.Package != nil:
 			// an explicit repo/package name pair
@@ -237,6 +280,9 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 				client.MatchingLabelsSelector{Selector: selector}); err != nil {
 				return nil, err
 			}
+			if len(repoList.Items) == 0 {
+				klog.Warningf("no repositories selected by spec.targets[%d]", i)
+			}
 			pkgs, err := r.repositorySet(&target, upstreamPackageName, &repoList)
 			if err != nil {
 				return nil, fmt.Errorf("error when selecting repository set: %v", err)
@@ -245,7 +291,14 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 
 		case target.Objects != nil:
 			// a selector against a set of arbitrary objects
-			pkgs, err := r.objectSet(ctx, &target, upstreamPackageName)
+			selectedObjects, err := r.getSelectedObjects(ctx, target.Objects.Selectors)
+			if err != nil {
+				return nil, err
+			}
+			if len(selectedObjects) == 0 {
+				klog.Warningf("no objects selected by spec.targets[%d]", i)
+			}
+			pkgs, err := r.objectSet(&target, upstreamPackageName, selectedObjects)
 			if err != nil {
 				return nil, fmt.Errorf("error when selecting object set: %v", err)
 			}
@@ -271,7 +324,6 @@ func (r *PackageVariantSetReconciler) repositorySet(
 	target *api.Target,
 	upstreamPackageName string,
 	repoList *configapi.RepositoryList) ([]*pkgvarapi.Downstream, error) {
-
 	var result []*pkgvarapi.Downstream
 	for _, repo := range repoList.Items {
 		repoAsRNode, err := r.convertObjectToRNode(&repo)
@@ -291,11 +343,66 @@ func (r *PackageVariantSetReconciler) repositorySet(
 	return result, nil
 }
 
-func (r *PackageVariantSetReconciler) objectSet(ctx context.Context,
-	target *api.Target,
-	upstreamPackageName string) ([]*pkgvarapi.Downstream, error) {
-	// TODO: Implement this
-	return nil, fmt.Errorf("specifying a set of objects in the target is not yet supported")
+func (r *PackageVariantSetReconciler) objectSet(target *api.Target,
+	upstreamPackageName string,
+	selectedObjects map[resid.ResId]*yaml.RNode) ([]*pkgvarapi.Downstream, error) {
+	var result []*pkgvarapi.Downstream
+	for _, obj := range selectedObjects {
+		downstreamPackageName, err := r.getDownstreamPackageName(target.PackageName,
+			upstreamPackageName, obj)
+		if err != nil {
+			return nil, err
+		}
+		repo, err := r.fetchValue(target.Objects.RepoName, obj)
+		if err != nil {
+			return nil, err
+		}
+		if repo == "" {
+			return nil, fmt.Errorf("error evaluating repo name: received empty string")
+		}
+		result = append(result, &pkgvarapi.Downstream{
+			Package: downstreamPackageName,
+			Repo:    repo,
+		})
+	}
+	return result, nil
+}
+
+func (r *PackageVariantSetReconciler) getSelectedObjects(ctx context.Context, selectors []api.Selector) (map[resid.ResId]*yaml.RNode, error) {
+	selectedObjects := make(map[resid.ResId]*yaml.RNode) // this is a map to prevent duplicates
+
+	for _, selector := range selectors {
+		uList := &unstructured.UnstructuredList{}
+		group, version := resid.ParseGroupVersion(selector.APIVersion)
+		uList.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   group,
+			Version: version,
+			Kind:    selector.Kind,
+		})
+
+		opts := []client.ListOption{client.InNamespace(selector.Namespace)}
+		if selector.Labels != nil {
+			labelSelector, err := metav1.LabelSelectorAsSelector(selector.Labels)
+			if err != nil {
+				return nil, err
+			}
+			opts = append(opts, client.MatchingLabelsSelector{Selector: labelSelector})
+		}
+		if err := r.Client.List(ctx, uList, opts...); err != nil {
+			return nil, err
+		}
+
+		for _, u := range uList.Items {
+			objAsRNode, err := r.convertObjectToRNode(&u)
+			if err != nil {
+				return nil, fmt.Errorf("error converting unstructured object to RNode: %v", err)
+			}
+			if fnruntime.IsMatch(objAsRNode, selector.ToKptfileSelector()) {
+				selectedObjects[resid.FromRNode(objAsRNode)] = objAsRNode
+			}
+		}
+	}
+	return selectedObjects, nil
 }
 
 func (r *PackageVariantSetReconciler) getDownstreamPackageName(targetName *api.PackageName,
@@ -377,7 +484,6 @@ func (r *PackageVariantSetReconciler) fetchValue(value *api.ValueOrFromField,
 func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	upstream *pkgvarapi.Upstream, downstreams []*pkgvarapi.Downstream,
 	pvs *api.PackageVariantSet) error {
-
 	var pvList pkgvarapi.PackageVariantList
 	if err := r.Client.List(ctx, &pvList,
 		client.InNamespace(pvs.Namespace),
