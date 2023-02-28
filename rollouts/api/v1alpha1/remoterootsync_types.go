@@ -70,7 +70,11 @@ type RemoteRootSyncStatus struct {
 	// Conditions describes the reconciliation state of the object.
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 
+	// SyncStatus describes the observed state of external sync.
 	SyncStatus string `json:"syncStatus,omitempty"`
+
+	// Internal only. SyncCreated describes if the external sync has been created.
+	SyncCreated bool `json:"syncCreated"`
 }
 
 //+kubebuilder:object:root=true

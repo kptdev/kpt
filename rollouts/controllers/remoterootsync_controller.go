@@ -126,7 +126,7 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		// The object is being deleted
 		if controllerutil.ContainsFinalizer(&remoterootsync, myFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if r.isExternalSyncCreated(&remoterootsync) {
+			if remoterootsync.Status.SyncCreated {
 				// Delete the external sync resource
 				err := r.deleteExternalResources(ctx, &remoterootsync)
 				if err != nil && !apierrors.IsNotFound(err) {
@@ -197,6 +197,7 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 
 	if syncError == nil {
 		rrs.Status.SyncStatus = syncStatus
+		rrs.Status.SyncCreated = true
 
 		meta.RemoveStatusCondition(conditions, conditionReconciling)
 		meta.RemoveStatusCondition(conditions, conditionStalled)
@@ -205,7 +206,7 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 
 		rrs.Status.SyncStatus = "Unknown"
 
-		if !r.isExternalSyncCreated(rrs) {
+		if !rrs.Status.SyncCreated {
 			rrs.Status.SyncStatus = ""
 			reconcileReason = reasonCreateSync
 		}
@@ -365,16 +366,6 @@ func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Contex
 	}
 
 	return dynamicClient, nil
-}
-
-func (r *RemoteRootSyncReconciler) isExternalSyncCreated(rrs *gitopsv1alpha1.RemoteRootSync) bool {
-	reconcilingCondition := meta.FindStatusCondition(rrs.Status.Conditions, conditionReconciling)
-
-	if rrs.Status.ObservedGeneration == 0 || (reconcilingCondition != nil && reconcilingCondition.Reason == reasonCreateSync) {
-		return false
-	}
-
-	return true
 }
 
 // SetupWithManager sets up the controller with the Manager.
