@@ -191,8 +191,15 @@ spec:
                   this file'
                 format: int64
                 type: integer
+              syncCreated:
+                description: Internal only. SyncCreated describes if the external
+                  sync has been created.
+                type: boolean
               syncStatus:
+                description: SyncStatus describes the observed state of external sync.
                 type: string
+            required:
+            - syncCreated
             type: object
         type: object
     served: true
