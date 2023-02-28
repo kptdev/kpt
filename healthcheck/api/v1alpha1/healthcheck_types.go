@@ -64,11 +64,11 @@ type HealthCheckCondition struct {
 
 const (
 	// LabelComponent indicates the component to which the health check belongs.
-	LabelComponent = "healthcheck.cloud.google.com/component"
+	LabelComponent = "config.healthcheck.kpt.dev/component"
 	// LabelServiceError should be set to true if the health check is service level.
 	// LabelServiceError should be set to false if the health check is user level.
-	// Example: healthcheck.cloud.google.io/serviceError: true
-	LabelServiceError = "healthcheck.cloud.google.com/serviceError"
+	// Example: config.healthcheck.kpt.dev/serviceError: true
+	LabelServiceError = "config.healthcheck.kpt.dev/serviceError"
 )
 
 // +kubebuilder:object:root=true
