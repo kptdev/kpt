@@ -314,7 +314,7 @@ var RenderExamples = `
 
   # Render resources in current directory and write unwrapped resources to stdout
   # which can be piped to kubectl apply
-  $ kpt fn render -o unwrap | kubectl apply -f -
+  $ kpt fn render -o unwrap | kpt fn eval -i gcr.io/kpt-fn/remove-local-config-resources:v0.1.0 -o unwrap - | kubectl apply -f -
 
   # Render resources in current directory, write the wrapped resources
   # to stdout which are piped to 'set-annotations' function,
