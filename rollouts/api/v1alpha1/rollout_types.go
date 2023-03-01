@@ -78,6 +78,7 @@ type ClusterSourceGCPFleet struct {
 
 const (
 	GitHub PackageSourceType = "GitHub"
+	GitLab PackageSourceType = "GitLab"
 )
 
 // +kubebuilder:validation:Enum=GitHub
@@ -88,20 +89,41 @@ type PackagesConfig struct {
 	SourceType PackageSourceType `json:"sourceType"`
 
 	GitHub GitHubSource `json:"github"`
+	GitLab GitLabSource `json:"gitlab"`
 }
 
-// GitHubSource defines the packages source in Git.
+// GitHubSource defines the packages source in GitHub.
 type GitHubSource struct {
 	Selector GitHubSelector `json:"selector"`
 }
 
-// GitHubSelector defines the selector to apply to Git.
+// GitHubSelector defines the selector to apply to packages in GitHub.
 type GitHubSelector struct {
 	Org       string          `json:"org"`
 	Repo      string          `json:"repo"`
 	Directory string          `json:"directory,omitempty"`
 	Revision  string          `json:"revision"`
 	SecretRef SecretReference `json:"secretRef,omitempty"`
+}
+
+// GitLabSource defines the packages source in GitLab.
+type GitLabSource struct {
+	// SecretReference is the reference to a kubernetes secret
+	// that contains GitLab access token
+	SecretRef SecretReference `json:"secretRef,omitempty"`
+	// Selector defines the package selector in GitLab.
+	Selector GitLabSelector `json:"selector"`
+}
+
+// GitLabSelector defines how to select packages in GitLab.
+type GitLabSelector struct {
+	// ProjectID is the numerical identifier of the GitLab project
+	// It will not be specified if selection involves multiple projects
+	ProjectID string `json:"projectID,omitempty"`
+	// Directory refers to the subdirectory path in the project
+	Directory string `json:"directory,omitempty"`
+	// Revision refers to the branch, tag of the GitLab repo
+	Revision string `json:"revision"`
 }
 
 // SecretReference contains the reference to the secret

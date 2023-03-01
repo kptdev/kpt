@@ -26,16 +26,28 @@ import (
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v48/github"
+	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 	coreapi "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/kustomize/kyaml/sets"
 )
 
 type PackageDiscovery struct {
-	client    client.Client
-	namespace string
-	mutex     sync.Mutex
-	cache     *Cache
+	client            client.Client
+	namespace         string
+	mutex             sync.Mutex
+	cache             *Cache
+	gitLabClientMaker GitLabClientMaker
+	gitHubClientMaker GitHubClientMaker
+}
+
+type GitLabClientMaker interface {
+	NewGitLabClient(ctx context.Context, config gitopsv1alpha1.GitLabSource) (*gitlab.Client, error)
+}
+
+type GitHubClientMaker interface {
+	NewGitHubClient(ctx context.Context, config gitopsv1alpha1.GitHubSelector) (*github.Client, error)
 }
 
 type DiscoveredPackage struct {
@@ -43,6 +55,30 @@ type DiscoveredPackage struct {
 	Repo      string
 	Directory string
 	Revision  string
+	// GitLabProject contains the package info retrieved from GitLab
+	GitLabProject *gitlab.Project
+	// GithubRepo contains the package info retrieved from GitHub
+	GitHubRepo *github.Repository
+}
+
+func (dp *DiscoveredPackage) HTTPURL() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.HTTPURLToRepo
+	case dp.GitHubRepo != nil:
+		return dp.GitHubRepo.GetCloneURL()
+	}
+	return ""
+}
+
+func (dp *DiscoveredPackage) SSHURL() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.SSHURLToRepo
+	case dp.GitHubRepo != nil:
+		return dp.GitHubRepo.GetSSHURL()
+	}
+	return ""
 }
 
 type Cache struct {
@@ -58,7 +94,7 @@ func NewPackageDiscovery(client client.Client, namespace string) *PackageDiscove
 	}
 }
 
-func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
+func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) (discoveredPackages []DiscoveredPackage, err error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -66,31 +102,19 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha
 		return d.cache.packages, nil
 	}
 
-	if config.SourceType != gitopsv1alpha1.GitHub {
-		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)
-	}
-
-	gitHubSelector := config.GitHub.Selector
-
-	gitHubClient, err := d.getGitHubClient(ctx, gitHubSelector)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create github client: %w", err)
-	}
-
-	discoveredPackages := []DiscoveredPackage{}
-
-	repositoryNames, err := d.getRepositoryNames(gitHubClient, gitHubSelector, ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get repositories: %w", err)
-	}
-
-	for _, repositoryName := range repositoryNames {
-		repoPackages, err := d.getPackagesForRepository(gitHubClient, ctx, gitHubSelector, repositoryName)
+	switch config.SourceType {
+	case gitopsv1alpha1.GitHub:
+		discoveredPackages, err = d.getGitHubPackages(ctx, config)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get packages: %w", err)
+			return nil, fmt.Errorf("unable to fetch github packages: %w", err)
 		}
-
-		discoveredPackages = append(discoveredPackages, repoPackages...)
+	case gitopsv1alpha1.GitLab:
+		discoveredPackages, err = d.getGitLabPackages(ctx, config)
+		if err != nil {
+			return nil, fmt.Errorf("unable to fetch gitlab packages: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)
 	}
 
 	d.cache = &Cache{
@@ -102,39 +126,83 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha
 	return discoveredPackages, nil
 }
 
-func (d *PackageDiscovery) getRepositoryNames(gitHubClient *github.Client, selector gitopsv1alpha1.GitHubSelector, ctx context.Context) ([]string, error) {
-	repositoryNames := []string{}
+func (d *PackageDiscovery) getGitHubPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
+	discoveredPackages := []DiscoveredPackage{}
+	var ghc *github.Client
+	var err error
+	if config.SourceType != gitopsv1alpha1.GitHub {
+		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)
+	}
+
+	gitHubSelector := config.GitHub.Selector
+
+	if d.gitHubClientMaker != nil {
+		ghc, err = d.gitHubClientMaker.NewGitHubClient(ctx, gitHubSelector)
+	} else {
+		ghc, err = d.NewGitHubClient(ctx, gitHubSelector)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	repos, err := d.getRepos(ghc, gitHubSelector, ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get repositories: %w", err)
+	}
+
+	for _, repo := range repos {
+		repoPackages, err := d.getPackagesForRepo(ghc, ctx, gitHubSelector, repo)
+		if err != nil {
+			return nil, fmt.Errorf("unable to get packages: %w", err)
+		}
+		discoveredPackages = append(discoveredPackages, repoPackages...)
+	}
+	return discoveredPackages, nil
+}
+
+func (d *PackageDiscovery) getRepos(gitHubClient *github.Client, selector gitopsv1alpha1.GitHubSelector, ctx context.Context) ([]*github.Repository, error) {
+	var matchingRepos []*github.Repository
 
 	if isSelectorField(selector.Repo) {
 		// TOOD: add pagination
 		listOptions := github.RepositoryListOptions{}
 		listOptions.PerPage = 150
 
-		repositories, _, err := gitHubClient.Repositories.List(ctx, selector.Org, &listOptions)
+		repos, _, err := gitHubClient.Repositories.List(ctx, selector.Org, &listOptions)
 		if err != nil {
 			return nil, err
 		}
 
-		allRepositoryNames := []string{}
-		for _, repository := range repositories {
-			allRepositoryNames = append(allRepositoryNames, *repository.Name)
+		allRepoNames := []string{}
+		for _, repo := range repos {
+			allRepoNames = append(allRepoNames, *repo.Name)
 		}
 
-		matchRepositoryNames := filterByPattern(selector.Repo, allRepositoryNames)
+		matchingRepoNames := filterByPattern(selector.Repo, allRepoNames)
+		matchingRepoNameSet := sets.String{}
+		matchingRepoNameSet.Insert(matchingRepoNames...)
 
-		repositoryNames = append(repositoryNames, matchRepositoryNames...)
+		for _, repo := range repos {
+			if matchingRepoNameSet.Has(*repo.Name) {
+				matchingRepos = append(matchingRepos, repo)
+			}
+		}
 	} else {
-		repositoryNames = append(repositoryNames, selector.Repo)
+		repo, _, err := gitHubClient.Repositories.Get(ctx, selector.Org, selector.Repo)
+		if err != nil {
+			return nil, err
+		}
+		matchingRepos = append(matchingRepos, repo)
 	}
 
-	return repositoryNames, nil
+	return matchingRepos, nil
 }
 
-func (d *PackageDiscovery) getPackagesForRepository(gitHubClient *github.Client, ctx context.Context, selector gitopsv1alpha1.GitHubSelector, repoName string) ([]DiscoveredPackage, error) {
+func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx context.Context, selector gitopsv1alpha1.GitHubSelector, repo *github.Repository) ([]DiscoveredPackage, error) {
 	discoveredPackages := []DiscoveredPackage{}
 
 	if isSelectorField(selector.Directory) {
-		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, repoName, selector.Revision, true)
+		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, *repo.Name, repo.GetDefaultBranch(), true)
 		if err != nil {
 			return nil, err
 		}
@@ -149,11 +217,23 @@ func (d *PackageDiscovery) getPackagesForRepository(gitHubClient *github.Client,
 		directories := filterByPattern(selector.Directory, allDirectories)
 
 		for _, directory := range directories {
-			thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: directory}
+			thisDiscoveredPackage := DiscoveredPackage{
+				Org:        selector.Org,
+				Repo:       *repo.Name,
+				Revision:   selector.Revision,
+				Directory:  directory,
+				GitHubRepo: repo,
+			}
 			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 		}
 	} else {
-		thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: selector.Directory}
+		thisDiscoveredPackage := DiscoveredPackage{
+			Org:        selector.Org,
+			Repo:       *repo.Name,
+			Revision:   selector.Revision,
+			Directory:  selector.Directory,
+			GitHubRepo: repo,
+		}
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}
 
@@ -224,4 +304,171 @@ func match(pattern string, value string) bool {
 
 func isSelectorField(value string) bool {
 	return strings.Contains(value, "*")
+}
+
+func (d *PackageDiscovery) NewGitLabClient(ctx context.Context, gitlabSource gitopsv1alpha1.GitLabSource) (*gitlab.Client, error) {
+
+	// initialize a gitlab client
+	secretName := gitlabSource.SecretRef.Name
+	if secretName == "" {
+		return nil, fmt.Errorf("GitLab secret reference is missing from the config")
+	}
+	var repositorySecret coreapi.Secret
+	key := client.ObjectKey{
+		Namespace: d.namespace,
+		Name:      secretName,
+	}
+	if err := d.client.Get(ctx, key, &repositorySecret); err != nil {
+		return nil, fmt.Errorf("cannot retrieve gitlab credentials %s: %v", key, err)
+	}
+
+	accessToken := string(repositorySecret.Data["token"])
+	// TODO(droot): BaseURL should also be configurable through the API
+	baseURL := "https://gitlab.com/"
+
+	glc, err := gitlab.NewClient(accessToken, gitlab.WithBaseURL(baseURL))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gitlab client: %w", err)
+	}
+	return glc, nil
+}
+
+func (d *PackageDiscovery) NewGitHubClient(ctx context.Context, ghConfig gitopsv1alpha1.GitHubSelector) (*github.Client, error) {
+	httpClient := &http.Client{}
+
+	if secretName := ghConfig.SecretRef.Name; secretName != "" {
+		var repositorySecret coreapi.Secret
+		key := client.ObjectKey{Namespace: d.namespace, Name: secretName}
+		if err := d.client.Get(ctx, key, &repositorySecret); err != nil {
+			return nil, fmt.Errorf("cannot retrieve github credentials %s: %v", key, err)
+		}
+
+		accessToken := string(repositorySecret.Data["password"])
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: accessToken},
+		)
+
+		httpClient = oauth2.NewClient(ctx, ts)
+	}
+
+	gitHubClient := github.NewClient(httpClient)
+
+	return gitHubClient, nil
+}
+
+// getGitLabPackages looks up GitLab for packages specified by a given package selector.
+func (d *PackageDiscovery) getGitLabPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
+	var discoveredPackages []DiscoveredPackage
+	var glc *gitlab.Client
+	var err error
+
+	if d.gitLabClientMaker != nil {
+		glc, err = d.gitLabClientMaker.NewGitLabClient(ctx, config.GitLab)
+	} else {
+		glc, err = d.NewGitLabClient(ctx, config.GitLab)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gitlab client: %w", err)
+	}
+	gitlabSelector := config.GitLab.Selector
+
+	projects, err := d.getGitLabProjects(ctx, glc, gitlabSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, project := range projects {
+		repoPackages, err := d.getGitLabPackagesForProject(ctx, glc, project, gitlabSelector)
+		if err != nil {
+			return nil, err
+		}
+		discoveredPackages = append(discoveredPackages, repoPackages...)
+	}
+	return discoveredPackages, nil
+}
+
+// getGitLabPackages looks up GitLab for packages specified by a given package selector.
+func (d *PackageDiscovery) getGitLabProjects(ctx context.Context, glc *gitlab.Client, selector gitopsv1alpha1.GitLabSelector) ([]*gitlab.Project, error) {
+	var matchingProjects []*gitlab.Project
+
+	if isSelectorField(selector.ProjectID) {
+		membershipAccess := true
+		options := &gitlab.ListProjectsOptions{
+			// TODO: support pagination
+			ListOptions: gitlab.ListOptions{
+				Page:    1,
+				PerPage: 150,
+			},
+			Membership: gitlab.Bool(membershipAccess),
+		}
+		projects, _, err := glc.Projects.ListProjects(options)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch gitlab projects: %w", err)
+		}
+		allRepoNames := []string{}
+		for _, project := range projects {
+			allRepoNames = append(allRepoNames, project.Name)
+		}
+
+		matchingRepoNames := filterByPattern(selector.ProjectID, allRepoNames)
+		matchingRepoNameSet := sets.String{}
+		matchingRepoNameSet.Insert(matchingRepoNames...)
+
+		for _, project := range projects {
+			if matchingRepoNameSet.Has(project.Name) {
+				matchingProjects = append(matchingProjects, project)
+			}
+		}
+	} else {
+		project, _, err := glc.Projects.GetProject(selector.ProjectID, &gitlab.GetProjectOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch gitlab projects: %w", err)
+		}
+		matchingProjects = append(matchingProjects, project)
+	}
+	return matchingProjects, nil
+}
+
+func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc *gitlab.Client, project *gitlab.Project, selector gitopsv1alpha1.GitLabSelector) ([]DiscoveredPackage, error) {
+	discoveredPackages := []DiscoveredPackage{}
+
+	if isSelectorField(selector.Directory) {
+		options := &gitlab.ListTreeOptions{
+			Recursive: gitlab.Bool(true),
+			// Ref:       gitlab.String(ref),
+			// Path:      gitlab.String(path),
+		}
+		tree, _, err := glc.Repositories.ListTree(project.ID, options)
+		if err != nil {
+			return nil, err
+		}
+
+		allDirectories := []string{}
+		for _, item := range tree {
+			if item.Type == "tree" {
+				// Directory
+				allDirectories = append(allDirectories, item.Path)
+			}
+		}
+
+		directories := filterByPattern(selector.Directory, allDirectories)
+		for _, directory := range directories {
+			thisDiscoveredPackage := DiscoveredPackage{
+				Repo:          project.Name,
+				Revision:      selector.Revision,
+				Directory:     directory,
+				GitLabProject: project,
+			}
+			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
+		}
+	} else {
+		thisDiscoveredPackage := DiscoveredPackage{
+			Repo:          project.Name,
+			Revision:      selector.Revision,
+			Directory:     selector.Directory,
+			GitLabProject: project,
+		}
+		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
+	}
+	return discoveredPackages, nil
 }
