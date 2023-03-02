@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build github
+
 package packagediscovery
 
 import (
@@ -22,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGitHubGetPackages_SingleProject(t *testing.T) {
+func TestGitHubGetPackages_SingleRepo(t *testing.T) {
 	config := gitopsv1alpha1.PackagesConfig{
 		SourceType: gitopsv1alpha1.GitHub,
 		GitHub: gitopsv1alpha1.GitHubSource{
@@ -69,7 +71,7 @@ func TestGitHubGetPackages_MultipleDirectory(t *testing.T) {
 	}
 }
 
-func TestGitHubGetPackages_MultipleProjects(t *testing.T) {
+func TestGitHubGetPackages_MultipleRepos(t *testing.T) {
 	config := gitopsv1alpha1.PackagesConfig{
 		SourceType: gitopsv1alpha1.GitHub,
 		GitHub: gitopsv1alpha1.GitHubSource{
