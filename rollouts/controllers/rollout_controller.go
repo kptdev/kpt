@@ -756,7 +756,9 @@ func toRootSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.Ro
 	return &gitopsv1alpha1.RootSyncSpec{
 		SourceFormat: "unstructured",
 		Git: &gitopsv1alpha1.GitInfo{
-			Repo:     fmt.Sprintf("https://github.com/%s/%s.git", dpkg.Org, dpkg.Repo),
+			// TODO(droot): Repo URL can be an HTTP, GIT or SSH based URL
+			// Need to make it configurable
+			Repo:     dpkg.HTTPURL(),
 			Revision: dpkg.Revision,
 			Dir:      dpkg.Directory,
 			Branch:   "main",

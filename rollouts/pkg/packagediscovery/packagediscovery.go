@@ -81,6 +81,16 @@ func (dp *DiscoveredPackage) SSHURL() string {
 	return ""
 }
 
+func (dp *DiscoveredPackage) String() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.String()
+	case dp.GitHubRepo != nil:
+		return dp.GitHubRepo.String()
+	}
+	return ""
+}
+
 type Cache struct {
 	config     gitopsv1alpha1.PackagesConfig
 	packages   []DiscoveredPackage
