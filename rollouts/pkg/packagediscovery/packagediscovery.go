@@ -55,6 +55,7 @@ type DiscoveredPackage struct {
 	Repo      string
 	Directory string
 	Revision  string
+	Branch    string
 	// GitLabProject contains the package info retrieved from GitLab
 	GitLabProject *gitlab.Project
 	// GithubRepo contains the package info retrieved from GitHub
@@ -81,14 +82,39 @@ func (dp *DiscoveredPackage) SSHURL() string {
 	return ""
 }
 
+func (dp *DiscoveredPackage) ID() string {
+	switch {
+	case dp.GitLabProject != nil:
+		id := "gitlab" + fmt.Sprintf("-%d", dp.GitLabProject.ID)
+		if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
+			return id
+		}
+		return id + fmt.Sprintf("-%s", dp.Directory)
+	case dp.GitHubRepo != nil:
+		if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
+			return fmt.Sprintf("%s-%s", dp.Org, dp.Repo)
+		}
+		return fmt.Sprintf("%s-%s-%s", dp.Org, dp.Repo, dp.Directory)
+	}
+	return ""
+}
+
 func (dp *DiscoveredPackage) String() string {
 	switch {
 	case dp.GitLabProject != nil:
-		return dp.GitLabProject.HTTPURLToRepo
+		return dp.GitLabProject.Name
 	case dp.GitHubRepo != nil:
-		return dp.GitHubRepo.GetSSHURL()
+		return *dp.GitHubRepo.Name
 	}
 	return ""
+}
+
+func ToStr(packages []DiscoveredPackage) string {
+	pkgNames := []string{}
+	for _, pkg := range packages {
+		pkgNames = append(pkgNames, pkg.String())
+	}
+	return strings.Join(pkgNames, ",")
 }
 
 type Cache struct {
@@ -210,7 +236,10 @@ func (d *PackageDiscovery) getRepos(gitHubClient *github.Client, selector gitops
 
 func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx context.Context, selector gitopsv1alpha1.GitHubSelector, repo *github.Repository) ([]DiscoveredPackage, error) {
 	discoveredPackages := []DiscoveredPackage{}
-
+	branch := selector.Branch
+	if branch == "" {
+		branch = repo.GetDefaultBranch()
+	}
 	if isSelectorField(selector.Directory) {
 		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, *repo.Name, repo.GetDefaultBranch(), true)
 		if err != nil {
@@ -233,6 +262,7 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 				Revision:   selector.Revision,
 				Directory:  directory,
 				GitHubRepo: repo,
+				Branch:     branch,
 			}
 			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 		}
@@ -243,6 +273,7 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 			Revision:   selector.Revision,
 			Directory:  selector.Directory,
 			GitHubRepo: repo,
+			Branch:     branch,
 		}
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}
@@ -442,6 +473,10 @@ func (d *PackageDiscovery) getGitLabProjects(ctx context.Context, glc *gitlab.Cl
 func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc *gitlab.Client, project *gitlab.Project, selector gitopsv1alpha1.GitLabSelector) ([]DiscoveredPackage, error) {
 	discoveredPackages := []DiscoveredPackage{}
 
+	branch := selector.Branch
+	if branch == "" {
+		branch = project.DefaultBranch
+	}
 	if isSelectorField(selector.Directory) {
 		options := &gitlab.ListTreeOptions{
 			Recursive: gitlab.Bool(true),
@@ -468,6 +503,7 @@ func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc 
 				Revision:      selector.Revision,
 				Directory:     directory,
 				GitLabProject: project,
+				Branch:        branch,
 			}
 			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 		}
@@ -477,6 +513,7 @@ func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc 
 			Revision:      selector.Revision,
 			Directory:     selector.Directory,
 			GitLabProject: project,
+			Branch:        branch,
 		}
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}

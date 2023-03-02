@@ -301,7 +301,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 		logger.Error(err, "Failed to discover packages")
 		return client.IgnoreNotFound(err)
 	}
-	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", discoveredPackages)
+	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", packagediscovery.ToStr(discoveredPackages))
 
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters, discoveredPackages)
 	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
@@ -766,18 +766,14 @@ func toRootSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.Ro
 			Repo:     dpkg.HTTPURL(),
 			Revision: dpkg.Revision,
 			Dir:      dpkg.Directory,
-			Branch:   "main",
+			Branch:   dpkg.Branch,
 			Auth:     "none",
 		},
 	}
 }
 
 func pkgID(dpkg *packagediscovery.DiscoveredPackage) string {
-	if dpkg.Directory == "" || dpkg.Directory == "." || dpkg.Directory == "/" {
-		return fmt.Sprintf("%s-%s", dpkg.Org, dpkg.Repo)
-	}
-
-	return fmt.Sprintf("%s-%s-%s", dpkg.Org, dpkg.Repo, dpkg.Directory)
+	return dpkg.ID()
 }
 
 // SetupWithManager sets up the controller with the Manager.

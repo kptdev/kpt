@@ -81,15 +81,15 @@ const (
 	GitLab PackageSourceType = "GitLab"
 )
 
-// +kubebuilder:validation:Enum=GitHub
+// +kubebuilder:validation:Enum=GitHub;GitLab
 type PackageSourceType string
 
 // PackagesConfig defines the packages the Rollout should deploy.
 type PackagesConfig struct {
 	SourceType PackageSourceType `json:"sourceType"`
 
-	GitHub GitHubSource `json:"github"`
-	GitLab GitLabSource `json:"gitlab"`
+	GitHub GitHubSource `json:"github,omitempty"`
+	GitLab GitLabSource `json:"gitlab,omitempty"`
 }
 
 // GitHubSource defines the packages source in GitHub.
@@ -102,7 +102,8 @@ type GitHubSelector struct {
 	Org       string          `json:"org"`
 	Repo      string          `json:"repo"`
 	Directory string          `json:"directory,omitempty"`
-	Revision  string          `json:"revision"`
+	Revision  string          `json:"revision,omitempty"`
+	Branch    string          `json:"branch,omitempty"`
 	SecretRef SecretReference `json:"secretRef,omitempty"`
 }
 
@@ -123,7 +124,9 @@ type GitLabSelector struct {
 	// Directory refers to the subdirectory path in the project
 	Directory string `json:"directory,omitempty"`
 	// Revision refers to the branch, tag of the GitLab repo
-	Revision string `json:"revision"`
+	Revision string `json:"revision,omitempty"`
+	// Branch refers to the branch
+	Branch string `json:"branch,omitempty"`
 }
 
 // SecretReference contains the reference to the secret
