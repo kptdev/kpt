@@ -291,6 +291,11 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	logger := klog.FromContext(ctx)
 
 	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
+	if err != nil {
+		logger.Error(err, "Failed to list clusters")
+		return client.IgnoreNotFound(err)
+	}
+
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
 		logger.Error(err, "Failed to discover packages")

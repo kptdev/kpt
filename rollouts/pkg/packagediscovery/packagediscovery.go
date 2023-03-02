@@ -84,9 +84,9 @@ func (dp *DiscoveredPackage) SSHURL() string {
 func (dp *DiscoveredPackage) String() string {
 	switch {
 	case dp.GitLabProject != nil:
-		return dp.GitLabProject.String()
+		return dp.GitLabProject.HTTPURLToRepo
 	case dp.GitHubRepo != nil:
-		return dp.GitHubRepo.String()
+		return dp.GitHubRepo.GetSSHURL()
 	}
 	return ""
 }
