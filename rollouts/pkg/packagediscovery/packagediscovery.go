@@ -42,26 +42,35 @@ type PackageDiscovery struct {
 	gitHubClientMaker GitHubClientMaker
 }
 
+// Maker interfaces to help with injecting our own clients during testing
+
+// GitLabClientMaker knows how to make a GitLab Client.
 type GitLabClientMaker interface {
 	NewGitLabClient(ctx context.Context, config gitopsv1alpha1.GitLabSource) (*gitlab.Client, error)
 }
 
+// GitHubClientMaker knows how to make a GitHub Client.
 type GitHubClientMaker interface {
 	NewGitHubClient(ctx context.Context, config gitopsv1alpha1.GitHubSelector) (*github.Client, error)
 }
 
+// DiscoveredPackage represents a config package that will
+// be rolled out.
 type DiscoveredPackage struct {
-	Org       string
-	Repo      string
+	// User specified properties
 	Directory string
 	Revision  string
 	Branch    string
-	// GitLabProject contains the package info retrieved from GitLab
+
+	// Discovered properties of the project/repo
+
+	// GitLabProject contains the info retrieved from GitLab
 	GitLabProject *gitlab.Project
-	// GithubRepo contains the package info retrieved from GitHub
+	// GithubRepo contains the info retrieved from GitHub
 	GitHubRepo *github.Repository
 }
 
+// HTTPURL refers to the HTTP URL for the repository.
 func (dp *DiscoveredPackage) HTTPURL() string {
 	switch {
 	case dp.GitLabProject != nil:
@@ -72,6 +81,7 @@ func (dp *DiscoveredPackage) HTTPURL() string {
 	return ""
 }
 
+// SSHURL refers to the SSH(Git) URL for the repository.
 func (dp *DiscoveredPackage) SSHURL() string {
 	switch {
 	case dp.GitLabProject != nil:
@@ -82,21 +92,23 @@ func (dp *DiscoveredPackage) SSHURL() string {
 	return ""
 }
 
-func (dp *DiscoveredPackage) ID() string {
+// ID returns an identifier for the package.
+// This is currently being used to generate the unique name
+// of the RemoteSync object.
+// TODO (droot): figure out a naming scheme for the package identity.
+func (dp *DiscoveredPackage) ID() (id string) {
 	switch {
 	case dp.GitLabProject != nil:
-		id := "gitlab" + fmt.Sprintf("-%d", dp.GitLabProject.ID)
-		if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
-			return id
-		}
-		return id + fmt.Sprintf("-%s", dp.Directory)
+		id = "gitlab-" + fmt.Sprintf("%d", dp.GitLabProject.ID)
 	case dp.GitHubRepo != nil:
-		if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
-			return fmt.Sprintf("%s-%s", dp.Org, dp.Repo)
-		}
-		return fmt.Sprintf("%s-%s-%s", dp.Org, dp.Repo, dp.Directory)
+		id = "github-" + fmt.Sprintf("%d", dp.GitHubRepo.GetID())
+	default:
+		return ""
 	}
-	return ""
+	if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
+		return id
+	}
+	return id + fmt.Sprintf("-%s", dp.Directory)
 }
 
 func (dp *DiscoveredPackage) String() string {
@@ -107,14 +119,6 @@ func (dp *DiscoveredPackage) String() string {
 		return *dp.GitHubRepo.Name
 	}
 	return ""
-}
-
-func ToStr(packages []DiscoveredPackage) string {
-	pkgNames := []string{}
-	for _, pkg := range packages {
-		pkgNames = append(pkgNames, pkg.String())
-	}
-	return strings.Join(pkgNames, ",")
 }
 
 type Cache struct {
@@ -257,8 +261,6 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 
 		for _, directory := range directories {
 			thisDiscoveredPackage := DiscoveredPackage{
-				Org:        selector.Org,
-				Repo:       *repo.Name,
 				Revision:   selector.Revision,
 				Directory:  directory,
 				GitHubRepo: repo,
@@ -268,8 +270,6 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 		}
 	} else {
 		thisDiscoveredPackage := DiscoveredPackage{
-			Org:        selector.Org,
-			Repo:       *repo.Name,
 			Revision:   selector.Revision,
 			Directory:  selector.Directory,
 			GitHubRepo: repo,
@@ -281,70 +281,8 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 	return discoveredPackages, nil
 }
 
-func (d *PackageDiscovery) getGitHubClient(ctx context.Context, selector gitopsv1alpha1.GitHubSelector) (*github.Client, error) {
-	httpClient := &http.Client{}
-
-	if secretName := selector.SecretRef.Name; secretName != "" {
-		var repositorySecret coreapi.Secret
-		key := client.ObjectKey{Namespace: d.namespace, Name: secretName}
-		if err := d.client.Get(ctx, key, &repositorySecret); err != nil {
-			return nil, fmt.Errorf("cannot retrieve github credentials %s: %v", key, err)
-		}
-
-		accessToken := string(repositorySecret.Data["password"])
-
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: accessToken},
-		)
-
-		httpClient = oauth2.NewClient(ctx, ts)
-	}
-
-	gitHubClient := github.NewClient(httpClient)
-
-	return gitHubClient, nil
-}
-
 func (d *PackageDiscovery) useCache(config gitopsv1alpha1.PackagesConfig) bool {
 	return d.cache != nil && cmp.Equal(config, d.cache.config) && time.Now().Before(d.cache.expiration)
-}
-
-func filterByPattern(pattern string, list []string) []string {
-	matches := []string{}
-
-	regexPattern := getRegexPattern(pattern)
-
-	for _, value := range list {
-		if isMatch := match(regexPattern, value); isMatch {
-			matches = append(matches, value)
-		}
-	}
-
-	return matches
-}
-
-func getRegexPattern(pattern string) string {
-	var result strings.Builder
-
-	result.WriteString("^")
-	for i, literal := range strings.Split(pattern, "*") {
-		if i > 0 {
-			result.WriteString("[^/]+")
-		}
-		result.WriteString(regexp.QuoteMeta(literal))
-	}
-	result.WriteString("$")
-
-	return result.String()
-}
-
-func match(pattern string, value string) bool {
-	result, _ := regexp.MatchString(pattern, value)
-	return result
-}
-
-func isSelectorField(value string) bool {
-	return strings.Contains(value, "*")
 }
 
 func (d *PackageDiscovery) NewGitLabClient(ctx context.Context, gitlabSource gitopsv1alpha1.GitLabSource) (*gitlab.Client, error) {
@@ -499,7 +437,6 @@ func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc 
 		directories := filterByPattern(selector.Directory, allDirectories)
 		for _, directory := range directories {
 			thisDiscoveredPackage := DiscoveredPackage{
-				Repo:          project.Name,
 				Revision:      selector.Revision,
 				Directory:     directory,
 				GitLabProject: project,
@@ -509,7 +446,6 @@ func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc 
 		}
 	} else {
 		thisDiscoveredPackage := DiscoveredPackage{
-			Repo:          project.Name,
 			Revision:      selector.Revision,
 			Directory:     selector.Directory,
 			GitLabProject: project,
@@ -518,4 +454,51 @@ func (d *PackageDiscovery) getGitLabPackagesForProject(ctx context.Context, glc 
 		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
 	}
 	return discoveredPackages, nil
+}
+
+func filterByPattern(pattern string, list []string) []string {
+	matches := []string{}
+
+	regexPattern := getRegexPattern(pattern)
+
+	for _, value := range list {
+		if isMatch := match(regexPattern, value); isMatch {
+			matches = append(matches, value)
+		}
+	}
+
+	return matches
+}
+
+func getRegexPattern(pattern string) string {
+	var result strings.Builder
+
+	result.WriteString("^")
+	for i, literal := range strings.Split(pattern, "*") {
+		if i > 0 {
+			result.WriteString("[^/]+")
+		}
+		result.WriteString(regexp.QuoteMeta(literal))
+	}
+	result.WriteString("$")
+
+	return result.String()
+}
+
+func match(pattern string, value string) bool {
+	result, _ := regexp.MatchString(pattern, value)
+	return result
+}
+
+func isSelectorField(value string) bool {
+	return strings.Contains(value, "*")
+}
+
+// ToStr is convenient method to pretty print set of packages.
+func ToStr(packages []DiscoveredPackage) string {
+	pkgNames := []string{}
+	for _, pkg := range packages {
+		pkgNames = append(pkgNames, pkg.String())
+	}
+	return strings.Join(pkgNames, ",")
 }

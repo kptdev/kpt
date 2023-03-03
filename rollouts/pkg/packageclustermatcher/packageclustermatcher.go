@@ -62,8 +62,7 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 
 			for _, discoveredPackage := range packages {
 				celPackage := map[string]interface{}{
-					"org":       discoveredPackage.Org,
-					"repo":      discoveredPackage.Repo,
+					"repo":      discoveredPackage.String(),
 					"directory": discoveredPackage.Directory,
 				}
 

@@ -62,7 +62,7 @@ func TestGitLabGetPackages_SingleProject(t *testing.T) {
 	if assert.NotEmpty(t, packages) {
 		pkg := packages[0]
 		assert.Equal(t, pkg.Directory, "b")
-		assert.Equal(t, pkg.Repo, "echo-deployments")
+		assert.Equal(t, pkg.String(), "echo-deployments")
 		t.Logf("package URLs: HTTP:%s SSH:%s", pkg.HTTPURL(), pkg.SSHURL())
 	}
 }
@@ -84,11 +84,11 @@ func TestGitLabGetPackages_MultipleDirectory(t *testing.T) {
 	packages, err := pd.GetPackages(context.Background(), config)
 	assert.NoError(t, err)
 	got := []string{}
+	wants := []string{"a", "b", "c", "namespaces"}
 	for _, pkg := range packages {
 		got = append(got, pkg.Directory)
 	}
 	if assert.NotEmpty(t, packages) {
-		wants := []string{"a", "b", "c"}
 		assert.ElementsMatch(t, got, wants)
 	}
 }
@@ -111,7 +111,7 @@ func TestGitLabGetPackages_MultipleProjects(t *testing.T) {
 	assert.NoError(t, err)
 	got := []string{}
 	for _, pkg := range packages {
-		got = append(got, pkg.Repo)
+		got = append(got, pkg.String())
 	}
 	if assert.NotEmpty(t, packages) {
 		wants := []string{"echo-deployments"}

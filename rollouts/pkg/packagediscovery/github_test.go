@@ -42,7 +42,7 @@ func TestGitHubGetPackages_SingleRepo(t *testing.T) {
 	if assert.NotEmpty(t, packages) {
 		pkg := packages[0]
 		assert.Equal(t, pkg.Directory, "namespaces")
-		assert.Equal(t, pkg.Repo, "store")
+		assert.Equal(t, pkg.String(), "store")
 		t.Logf("package URLs: HTTP:%s SSH:%s", pkg.HTTPURL(), pkg.SSHURL())
 	}
 }
@@ -87,7 +87,7 @@ func TestGitHubGetPackages_MultipleRepos(t *testing.T) {
 	want := []string{"store-1", "store-2", "store-3", "store-4", "store-5"}
 	got := []string{}
 	for _, pkg := range packages {
-		got = append(got, pkg.Repo)
+		got = append(got, pkg.String())
 	}
 	if assert.NotEmpty(t, packages) {
 		assert.ElementsMatch(t, got, want)
