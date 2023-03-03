@@ -51,7 +51,7 @@ TEST_GIT_SERVER_IMAGE ?= test-git-server
 # RECONCILERS=* to enable all known reconcilers.
 ALL_RECONCILERS="rootsyncsets,remoterootsyncsets,workloadidentitybindings,rootsyncdeployments,functiondiscovery,packagevariants,packagevariantsets,rootsyncrollouts"
 ifndef RECONCILERS
-  ENABLED_RECONCILERS="rootsyncsets,remoterootsyncsets,workloadidentitybindings,functiondiscovery"
+  ENABLED_RECONCILERS="rootsyncsets,remoterootsyncsets,workloadidentitybindings,functiondiscovery,packagevariants,packagevariantsets"
 else
   ifeq ($(RECONCILERS),*)
     ENABLED_RECONCILERS=${ALL_RECONCILERS}
