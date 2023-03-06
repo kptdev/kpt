@@ -245,7 +245,7 @@ func (d *PackageDiscovery) getPackagesForRepo(gitHubClient *github.Client, ctx c
 		branch = repo.GetDefaultBranch()
 	}
 	if isSelectorField(selector.Directory) {
-		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, *repo.Name, repo.GetDefaultBranch(), true)
+		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, *repo.Name, branch, true)
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +290,7 @@ func (d *PackageDiscovery) NewGitLabClient(ctx context.Context, gitlabSource git
 	// initialize a gitlab client
 	secretName := gitlabSource.SecretRef.Name
 	if secretName == "" {
-		return nil, fmt.Errorf("GitLab secret reference is missing from the config")
+		return nil, fmt.Errorf("gitlab secret reference is missing from the config")
 	}
 	var repositorySecret coreapi.Secret
 	key := client.ObjectKey{
