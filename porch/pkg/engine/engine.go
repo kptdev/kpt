@@ -295,17 +295,17 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
 	}
 
-	// The workspaceName must be unique, because it used to generate the package revision's metadata.name.
-	revs, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{Package: obj.Spec.PackageName, WorkspaceName: obj.Spec.WorkspaceName})
+	revs, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
+		Package: obj.Spec.PackageName})
 	if err != nil {
-		return nil, fmt.Errorf("error searching through existing package revisions: %w", err)
-	}
-	if len(revs) != 0 {
-		return nil, fmt.Errorf("package revision workspaceNames must be unique; package revision with name %s in repo %s with "+
-			"workspaceName %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.WorkspaceName)
+		return nil, fmt.Errorf("error listing package revisions: %w", err)
 	}
 
-	sameOrigin, err := cad.ensureSameOrigin(ctx, obj, repo)
+	if err := ensureUniqueWorkspaceName(obj, revs); err != nil {
+		return nil, err
+	}
+
+	sameOrigin, err := ensureSameOrigin(ctx, repo, obj, revs)
 	if err != nil {
 		return nil, fmt.Errorf("error ensuring same origin: %w", err)
 	}
@@ -351,29 +351,44 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	}, nil
 }
 
-func (cad *cadEngine) ensureSameOrigin(ctx context.Context, obj *api.PackageRevision, r repository.Repository) (bool, error) {
-	revs, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
-		Package: obj.Spec.PackageName})
-	if err != nil {
-		return false, fmt.Errorf("error listing package revisions: %w", err)
+// The workspaceName must be unique, because it used to generate the package revision's metadata.name.
+func ensureUniqueWorkspaceName(obj *api.PackageRevision, existingRevs []repository.PackageRevision) error {
+	for _, r := range existingRevs {
+		k := r.Key()
+		if k.WorkspaceName == obj.Spec.WorkspaceName {
+			return fmt.Errorf("package revision workspaceNames must be unique; package revision with name %s in repo %s with "+
+				"workspaceName %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.WorkspaceName)
+		}
 	}
-	if len(revs) == 0 {
+	return nil
+}
+
+func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.PackageRevision, existingRevs []repository.PackageRevision) (bool, error) {
+	if len(existingRevs) == 0 {
 		// no prior package revisions, no need to check anything else
 		return true, nil
 	}
 
 	tasks := obj.Spec.Tasks
-	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
+	if len(tasks) == 0 || !taskTypeOneOf(tasks[0].Type, api.TaskTypeInit, api.TaskTypeClone, api.TaskTypeEdit) {
 		// If there are no tasks, or the first task is not init or clone, then this revision was not
 		// created from another package revision. That means we expect it to be the first revision
 		// for this package.
 		return false, nil
-
 	}
 
 	firstObjTask := tasks[0].DeepCopy()
-	// iterate over existing package revisions, and look for one with a matching init or clone task
-	for _, rev := range revs {
+
+	// Edit tasks is a copy of a different revision in the same package, so therefore must
+	// always be allowed.
+	if firstObjTask.Type == api.TaskTypeEdit {
+		return true, nil
+	}
+
+	// iterate over existing package revisions, and look for one with a matching init or clone task.
+	// We consider a packagerevision to have the same upstream if we find at least one existing
+	// packagerevision that matches.
+	for _, rev := range existingRevs {
 		p, err := rev.GetPackageRevision(ctx)
 		if err != nil {
 			return false, err
@@ -388,23 +403,98 @@ func (cad *cadEngine) ensureSameOrigin(ctx context.Context, obj *api.PackageRevi
 			// not a match
 			continue
 		}
+
 		if firstObjTask.Type == api.TaskTypeClone {
 			// the user is allowed to update the git upstream ref, so we exclude that from the equality check.
 			// We make the git upstream refs equal before calling reflect.DeepEqual
-			if firstRevTask.Clone != nil && firstObjTask.Clone != nil {
-				if firstRevTask.Clone.Upstream.Git != nil && firstObjTask.Clone.Upstream.Git != nil {
-					firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
-				}
-				if firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil {
-					firstRevTask.Clone.Upstream.UpstreamRef = firstObjTask.Clone.Upstream.UpstreamRef
-				}
+			if firstRevTask.Clone == nil || firstObjTask.Clone == nil {
+				continue
 			}
-		}
-		if reflect.DeepEqual(firstRevTask, firstObjTask) {
-			return true, nil
+
+			switch {
+			// If both the new and existing packagerevision has a git upstream, we consider it
+			// from the same upstream if the repo and directory are the same.
+			case firstRevTask.Clone.Upstream.Git != nil && firstObjTask.Clone.Upstream.Git != nil:
+				firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
+				if reflect.DeepEqual(firstRevTask, firstObjTask) {
+					return true, nil
+				}
+			// If both the new and existing packagerevision has an oci upstream, we consider it
+			// from the same upstream if the image path is the same. We do not care about any tag
+			// or digest.
+			case firstRevTask.Clone.Upstream.Oci != nil && firstObjTask.Clone.Upstream.Oci != nil:
+				objOciImage := getBaseImage(firstObjTask.Clone.Upstream.Oci.Image)
+				revOciImage := getBaseImage(firstRevTask.Clone.Upstream.Oci.Image)
+				if objOciImage == revOciImage {
+					firstRevTask.Clone.Upstream.Oci.Image = firstObjTask.Clone.Upstream.Oci.Image
+				}
+				if reflect.DeepEqual(firstRevTask, firstObjTask) {
+					return true, nil
+				}
+			// If both the new and existing packagerevision has a porch upstream, we dereference the
+			// upstreamRef and make sure that both reference revisions of the same package.
+			case firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil:
+				revRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstObjTask.Clone.Upstream.UpstreamRef.Name)
+				if err != nil {
+					return false, err
+				}
+				if !found {
+					continue
+				}
+
+				objRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstRevTask.Clone.Upstream.UpstreamRef.Name)
+				if err != nil {
+					return false, err
+				}
+				if !found {
+					continue
+				}
+				if revRepoPkgRev.Key().Repository == objRepoPkgRev.Key().Repository &&
+					revRepoPkgRev.Key().Package == objRepoPkgRev.Key().Package {
+					return true, nil
+				}
+
+			}
+		} else {
+			if reflect.DeepEqual(firstRevTask, firstObjTask) {
+				return true, nil
+			}
 		}
 	}
 	return false, nil
+}
+
+func getPackageRevision(ctx context.Context, repo repository.Repository, name string) (repository.PackageRevision, bool, error) {
+	repoPkgRevs, err := repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
+		KubeObjectName: name,
+	})
+	if err != nil {
+		return nil, false, err
+	}
+	if len(repoPkgRevs) == 0 {
+		return nil, false, nil
+	}
+	return repoPkgRevs[0], true, nil
+}
+
+// TODO: See if we can use a library here for parsing OCI image urls
+func getBaseImage(image string) string {
+	if s := strings.Split(image, "@sha256:"); len(s) > 1 {
+		return s[0]
+	}
+	if s := strings.Split(image, ":"); len(s) > 1 {
+		return s[0]
+	}
+	return image
+}
+
+func taskTypeOneOf(taskType api.TaskType, oneOf ...api.TaskType) bool {
+	for _, tt := range oneOf {
+		if taskType == tt {
+			return true
+		}
+	}
+	return false
 }
 
 func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDraft, repositoryObj *configapi.Repository, obj *api.PackageRevision, packageConfig *builtins.PackageConfig) error {
@@ -412,7 +502,7 @@ func (cad *cadEngine) applyTasks(ctx context.Context, draft repository.PackageDr
 
 	// Unless first task is Init or Clone, insert Init to create an empty package.
 	tasks := obj.Spec.Tasks
-	if len(tasks) == 0 || (tasks[0].Type != api.TaskTypeInit && tasks[0].Type != api.TaskTypeClone) {
+	if len(tasks) == 0 || !taskTypeOneOf(tasks[0].Type, api.TaskTypeInit, api.TaskTypeClone, api.TaskTypeEdit) {
 		mutations = append(mutations, &initPackageMutation{
 			name: obj.Spec.PackageName,
 			task: &api.Task{
@@ -500,6 +590,8 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 		return &editPackageMutation{
 			task:              task,
 			namespace:         obj.Namespace,
+			packageName:       obj.Spec.PackageName,
+			repositoryName:    obj.Spec.RepositoryName,
 			repoOpener:        cad,
 			referenceResolver: cad.referenceResolver,
 		}, nil

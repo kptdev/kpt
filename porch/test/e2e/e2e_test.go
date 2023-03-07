@@ -489,6 +489,118 @@ func (t *PorchSuite) TestCloneIntoDeploymentRepository(ctx context.Context) {
 	}
 }
 
+func (t *PorchSuite) TestEditPackageRevision(ctx context.Context) {
+	const (
+		repository       = "edit-test"
+		packageName      = "simple-package"
+		otherPackageName = "other-package"
+		workspace        = "workspace"
+		workspace2       = "workspace2"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	// Create a new package (via init)
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	// Create a new revision, but with a different package as the source.
+	// This is not allowed.
+	invalidEditPR := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    otherPackageName,
+			WorkspaceName:  workspace2,
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeEdit,
+					Edit: &porchapi.PackageEditTaskSpec{
+						Source: &porchapi.PackageRevisionRef{
+							Name: pr.Name,
+						},
+					},
+				},
+			},
+		},
+	}
+	if err := t.client.Create(ctx, invalidEditPR); err == nil {
+		t.Fatalf("Expected error for source revision being from different package")
+	}
+
+	// Create a new revision of the package with a source that is a revision
+	// of the same package.
+	editPR := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PackageRevision",
+			APIVersion: porchapi.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    packageName,
+			WorkspaceName:  workspace2,
+			RepositoryName: repository,
+			Tasks: []porchapi.Task{
+				{
+					Type: porchapi.TaskTypeEdit,
+					Edit: &porchapi.PackageEditTaskSpec{
+						Source: &porchapi.PackageRevisionRef{
+							Name: pr.Name,
+						},
+					},
+				},
+			},
+		},
+	}
+	if err := t.client.Create(ctx, editPR); err == nil {
+		t.Fatalf("Expected error for source revision not being published")
+	}
+
+	// Publish the source package to make it a valid source for edit.
+	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
+	t.UpdateF(ctx, pr)
+
+	// Approve the package
+	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+	t.UpdateApprovalF(ctx, pr, metav1.UpdateOptions{})
+
+	// Create a new revision with the edit task.
+	t.CreateF(ctx, editPR)
+
+	// Check its task list
+	var pkgRev porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      editPR.Name,
+	}, &pkgRev)
+	tasks := pkgRev.Spec.Tasks
+	for _, tsk := range tasks {
+		t.Logf("Task: %s", tsk.Type)
+	}
+	assert.Equal(t, 2, len(tasks))
+}
+
 // Test will initialize an empty package, update its resources, adding a function
 // to the Kptfile's pipeline, and then check that the package was re-rendered.
 func (t *PorchSuite) TestUpdateResources(ctx context.Context) {

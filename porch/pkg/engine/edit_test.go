@@ -28,14 +28,23 @@ import (
 )
 
 func TestEdit(t *testing.T) {
-	packageName := "foo-1234567890"
+	pkg := "pkg"
+	packageName := "repo-1234567890"
+	repositoryName := "repo"
+	revision := "v1"
 	packageRevision := &fake.PackageRevision{
 		Name: packageName,
+		PackageRevisionKey: repository.PackageRevisionKey{
+			Package:    pkg,
+			Repository: repositoryName,
+			Revision:   revision,
+		},
+		PackageLifecycle: v1alpha1.PackageRevisionLifecyclePublished,
 		Resources: &v1alpha1.PackageRevisionResources{
 			Spec: v1alpha1.PackageRevisionResourcesSpec{
-				PackageName:    packageName,
-				Revision:       "v1",
-				RepositoryName: "foo",
+				PackageName:    pkg,
+				Revision:       revision,
+				RepositoryName: repositoryName,
 				Resources: map[string]string{
 					kptfile.KptFileName: strings.TrimSpace(`
 apiVersion: kpt.dev/v1
@@ -69,7 +78,10 @@ info:
 				},
 			},
 		},
+
 		namespace:         "test-namespace",
+		packageName:       pkg,
+		repositoryName:    repositoryName,
 		referenceResolver: &fakeReferenceResolver{},
 		repoOpener:        repoOpener,
 	}
