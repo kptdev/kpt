@@ -17,7 +17,6 @@ package packagediscovery
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"regexp"
 	"strings"
 	"sync"
@@ -26,23 +25,96 @@ import (
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-github/v48/github"
-	"golang.org/x/oauth2"
-	coreapi "k8s.io/api/core/v1"
+	"github.com/xanzy/go-gitlab"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type PackageDiscovery struct {
-	client    client.Client
-	namespace string
-	mutex     sync.Mutex
-	cache     *Cache
+	client            client.Client
+	namespace         string
+	mutex             sync.Mutex
+	cache             *Cache
+	gitLabClientMaker GitLabClientMaker
+	gitHubClientMaker GitHubClientMaker
 }
 
+// Maker interfaces to help with injecting our own clients during testing
+
+// GitLabClientMaker knows how to make a GitLab Client.
+type GitLabClientMaker interface {
+	NewGitLabClient(ctx context.Context, config gitopsv1alpha1.GitLabSource) (*gitlab.Client, error)
+}
+
+// GitHubClientMaker knows how to make a GitHub Client.
+type GitHubClientMaker interface {
+	NewGitHubClient(ctx context.Context, config gitopsv1alpha1.GitHubSelector) (*github.Client, error)
+}
+
+// DiscoveredPackage represents a config package that will
+// be rolled out.
 type DiscoveredPackage struct {
-	Org       string
-	Repo      string
+	// User specified properties
 	Directory string
 	Revision  string
+	Branch    string
+
+	// Discovered properties of the project/repo
+
+	// GitLabProject contains the info retrieved from GitLab
+	GitLabProject *gitlab.Project
+	// GithubRepo contains the info retrieved from GitHub
+	GitHubRepo *github.Repository
+}
+
+// HTTPURL refers to the HTTP URL for the repository.
+func (dp *DiscoveredPackage) HTTPURL() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.HTTPURLToRepo
+	case dp.GitHubRepo != nil:
+		return dp.GitHubRepo.GetCloneURL()
+	}
+	return ""
+}
+
+// SSHURL refers to the SSH(Git) URL for the repository.
+func (dp *DiscoveredPackage) SSHURL() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.SSHURLToRepo
+	case dp.GitHubRepo != nil:
+		return dp.GitHubRepo.GetSSHURL()
+	}
+	return ""
+}
+
+// ID returns an identifier for the package.
+// This is currently being used to generate the unique name
+// of the RemoteSync object.
+// TODO (droot): figure out a naming scheme for the package identity.
+func (dp *DiscoveredPackage) ID() (id string) {
+	switch {
+	case dp.GitLabProject != nil:
+		id = "gitlab-" + fmt.Sprintf("%d", dp.GitLabProject.ID)
+	case dp.GitHubRepo != nil:
+		id = "github-" + fmt.Sprintf("%d", dp.GitHubRepo.GetID())
+	default:
+		return ""
+	}
+	if dp.Directory == "" || dp.Directory == "." || dp.Directory == "/" {
+		return id
+	}
+	return id + fmt.Sprintf("-%s", dp.Directory)
+}
+
+func (dp *DiscoveredPackage) String() string {
+	switch {
+	case dp.GitLabProject != nil:
+		return dp.GitLabProject.Name
+	case dp.GitHubRepo != nil:
+		return *dp.GitHubRepo.Name
+	}
+	return ""
 }
 
 type Cache struct {
@@ -58,7 +130,7 @@ func NewPackageDiscovery(client client.Client, namespace string) *PackageDiscove
 	}
 }
 
-func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
+func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) (discoveredPackages []DiscoveredPackage, err error) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
@@ -66,31 +138,19 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha
 		return d.cache.packages, nil
 	}
 
-	if config.SourceType != gitopsv1alpha1.GitHub {
-		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)
-	}
-
-	gitHubSelector := config.GitHub.Selector
-
-	gitHubClient, err := d.getGitHubClient(ctx, gitHubSelector)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create github client: %w", err)
-	}
-
-	discoveredPackages := []DiscoveredPackage{}
-
-	repositoryNames, err := d.getRepositoryNames(gitHubClient, gitHubSelector, ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get repositories: %w", err)
-	}
-
-	for _, repositoryName := range repositoryNames {
-		repoPackages, err := d.getPackagesForRepository(gitHubClient, ctx, gitHubSelector, repositoryName)
+	switch config.SourceType {
+	case gitopsv1alpha1.GitHub:
+		discoveredPackages, err = d.getGitHubPackages(ctx, config)
 		if err != nil {
-			return nil, fmt.Errorf("unable to get packages: %w", err)
+			return nil, fmt.Errorf("unable to fetch github packages: %w", err)
 		}
-
-		discoveredPackages = append(discoveredPackages, repoPackages...)
+	case gitopsv1alpha1.GitLab:
+		discoveredPackages, err = d.getGitLabPackages(ctx, config)
+		if err != nil {
+			return nil, fmt.Errorf("unable to fetch gitlab packages: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)
 	}
 
 	d.cache = &Cache{
@@ -100,88 +160,6 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha
 	}
 
 	return discoveredPackages, nil
-}
-
-func (d *PackageDiscovery) getRepositoryNames(gitHubClient *github.Client, selector gitopsv1alpha1.GitHubSelector, ctx context.Context) ([]string, error) {
-	repositoryNames := []string{}
-
-	if isSelectorField(selector.Repo) {
-		// TOOD: add pagination
-		listOptions := github.RepositoryListOptions{}
-		listOptions.PerPage = 150
-
-		repositories, _, err := gitHubClient.Repositories.List(ctx, selector.Org, &listOptions)
-		if err != nil {
-			return nil, err
-		}
-
-		allRepositoryNames := []string{}
-		for _, repository := range repositories {
-			allRepositoryNames = append(allRepositoryNames, *repository.Name)
-		}
-
-		matchRepositoryNames := filterByPattern(selector.Repo, allRepositoryNames)
-
-		repositoryNames = append(repositoryNames, matchRepositoryNames...)
-	} else {
-		repositoryNames = append(repositoryNames, selector.Repo)
-	}
-
-	return repositoryNames, nil
-}
-
-func (d *PackageDiscovery) getPackagesForRepository(gitHubClient *github.Client, ctx context.Context, selector gitopsv1alpha1.GitHubSelector, repoName string) ([]DiscoveredPackage, error) {
-	discoveredPackages := []DiscoveredPackage{}
-
-	if isSelectorField(selector.Directory) {
-		tree, _, err := gitHubClient.Git.GetTree(ctx, selector.Org, repoName, selector.Revision, true)
-		if err != nil {
-			return nil, err
-		}
-
-		allDirectories := []string{}
-		for _, entry := range tree.Entries {
-			if *entry.Type == "tree" {
-				allDirectories = append(allDirectories, *entry.Path)
-			}
-		}
-
-		directories := filterByPattern(selector.Directory, allDirectories)
-
-		for _, directory := range directories {
-			thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: directory}
-			discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
-		}
-	} else {
-		thisDiscoveredPackage := DiscoveredPackage{Org: selector.Org, Repo: repoName, Revision: selector.Revision, Directory: selector.Directory}
-		discoveredPackages = append(discoveredPackages, thisDiscoveredPackage)
-	}
-
-	return discoveredPackages, nil
-}
-
-func (d *PackageDiscovery) getGitHubClient(ctx context.Context, selector gitopsv1alpha1.GitHubSelector) (*github.Client, error) {
-	httpClient := &http.Client{}
-
-	if secretName := selector.SecretRef.Name; secretName != "" {
-		var repositorySecret coreapi.Secret
-		key := client.ObjectKey{Namespace: d.namespace, Name: secretName}
-		if err := d.client.Get(ctx, key, &repositorySecret); err != nil {
-			return nil, fmt.Errorf("cannot retrieve github credentials %s: %v", key, err)
-		}
-
-		accessToken := string(repositorySecret.Data["password"])
-
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: accessToken},
-		)
-
-		httpClient = oauth2.NewClient(ctx, ts)
-	}
-
-	gitHubClient := github.NewClient(httpClient)
-
-	return gitHubClient, nil
 }
 
 func (d *PackageDiscovery) useCache(config gitopsv1alpha1.PackagesConfig) bool {
@@ -224,4 +202,13 @@ func match(pattern string, value string) bool {
 
 func isSelectorField(value string) bool {
 	return strings.Contains(value, "*")
+}
+
+// ToStr is convenient method to pretty print set of packages.
+func ToStr(packages []DiscoveredPackage) string {
+	pkgNames := []string{}
+	for _, pkg := range packages {
+		pkgNames = append(pkgNames, pkg.String())
+	}
+	return strings.Join(pkgNames, ",")
 }

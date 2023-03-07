@@ -92,12 +92,14 @@ spec:
                 description: Packages source for this Rollout.
                 properties:
                   github:
-                    description: GitHubSource defines the packages source in Git.
+                    description: GitHubSource defines the packages source in GitHub.
                     properties:
                       selector:
                         description: GitHubSelector defines the selector to apply
-                          to Git.
+                          to packages in GitHub.
                         properties:
+                          branch:
+                            type: string
                           directory:
                             type: string
                           org:
@@ -117,7 +119,40 @@ spec:
                         required:
                         - org
                         - repo
-                        - revision
+                        type: object
+                    required:
+                    - selector
+                    type: object
+                  gitlab:
+                    description: GitLabSource defines the packages source in GitLab.
+                    properties:
+                      secretRef:
+                        description: SecretReference is the reference to a kubernetes
+                          secret that contains GitLab access token
+                        properties:
+                          name:
+                            description: Name represents the secret name
+                            type: string
+                        type: object
+                      selector:
+                        description: Selector defines the package selector in GitLab.
+                        properties:
+                          branch:
+                            description: Branch refers to the branch
+                            type: string
+                          directory:
+                            description: Directory refers to the subdirectory path
+                              in the project
+                            type: string
+                          projectID:
+                            description: ProjectID is the numerical identifier of
+                              the GitLab project It will not be specified if selection
+                              involves multiple projects
+                            type: string
+                          revision:
+                            description: Revision refers to the branch, tag of the
+                              GitLab repo
+                            type: string
                         type: object
                     required:
                     - selector
@@ -125,9 +160,9 @@ spec:
                   sourceType:
                     enum:
                     - GitHub
+                    - GitLab
                     type: string
                 required:
-                - github
                 - sourceType
                 type: object
               strategy:

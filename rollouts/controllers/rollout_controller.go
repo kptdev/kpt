@@ -291,12 +291,17 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 	logger := klog.FromContext(ctx)
 
 	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
+	if err != nil {
+		logger.Error(err, "Failed to list clusters")
+		return client.IgnoreNotFound(err)
+	}
+
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
 		logger.Error(err, "Failed to discover packages")
 		return client.IgnoreNotFound(err)
 	}
-	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", discoveredPackages)
+	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", packagediscovery.ToStr(discoveredPackages))
 
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters, discoveredPackages)
 	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
@@ -427,7 +432,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			}
 		} else {
 			// remoterootsync already exists
-			updated, needsUpdate := pkgNeedsUpdate(rollout, rrs, pkg)
+			updated, needsUpdate := pkgNeedsUpdate(ctx, rollout, rrs, pkg)
 			if needsUpdate {
 				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
@@ -443,13 +448,16 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func pkgNeedsUpdate(rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
+func pkgNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
 	// TODO: We need to check other things here besides git.Revision and metadata
 	metadata := getSpecMetadata(rollout)
-	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision || !reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) || rrs.Spec.Type != rollout.Spec.SyncTemplate.Type {
+	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
+		!reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) ||
+		rrs.Spec.Type != rollout.GetSyncTemplateType() {
+
 		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
 		rrs.Spec.Template.Metadata = metadata
-		rrs.Spec.Type = rollout.Spec.SyncTemplate.Type
+		rrs.Spec.Type = rollout.GetSyncTemplateType()
 		return &rrs, true
 	}
 	return nil, false
@@ -756,21 +764,19 @@ func toRootSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.Ro
 	return &gitopsv1alpha1.RootSyncSpec{
 		SourceFormat: "unstructured",
 		Git: &gitopsv1alpha1.GitInfo{
-			Repo:     fmt.Sprintf("https://github.com/%s/%s.git", dpkg.Org, dpkg.Repo),
+			// TODO(droot): Repo URL can be an HTTP, GIT or SSH based URL
+			// Need to make it configurable
+			Repo:     dpkg.HTTPURL(),
 			Revision: dpkg.Revision,
 			Dir:      dpkg.Directory,
-			Branch:   "main",
+			Branch:   dpkg.Branch,
 			Auth:     "none",
 		},
 	}
 }
 
 func pkgID(dpkg *packagediscovery.DiscoveredPackage) string {
-	if dpkg.Directory == "" || dpkg.Directory == "." || dpkg.Directory == "/" {
-		return fmt.Sprintf("%s-%s", dpkg.Org, dpkg.Repo)
-	}
-
-	return fmt.Sprintf("%s-%s-%s", dpkg.Org, dpkg.Repo, dpkg.Directory)
+	return dpkg.ID()
 }
 
 // SetupWithManager sets up the controller with the Manager.

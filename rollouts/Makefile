@@ -174,3 +174,13 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: github_test
+github_test:
+	go test -v -tags=github ./pkg/packagediscovery/...
+
+# GitLab test requires an access token, so run these tests with:
+# GITLAB_TOKEN=<YOUR_TOKEN> make gitlab_test
+.PHONY: gitlab_test
+gitlab_test:
+	go test -v -tags=gitlab ./pkg/packagediscovery/...
