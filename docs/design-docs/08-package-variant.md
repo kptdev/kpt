@@ -81,17 +81,17 @@ controller. Those are left to humans or other controllers. The exception is the
 proposal of deletion (there is no concept of a "Draft" deletion), which the
 package variant control will do, depending upon the specified deletion policy.
 
-### Package Revision Metadata
+### `PackageRevision` Metadata
 
 The package variant controller utilizes Porch APIs. This means that it is not
 just doing a `clone` operation, but in fact creating a Porch `PackageRevision`
 resource. In particular, that resource can contain Kubernetes metadata that is
 not part of the package as stored in the repository.
 
-Some of that metadata is necessary for the management of the PackageRevision by
-the PackageVariant controller - for example, the `ownerRef` indicating which
-`PackageVariant` created the `PackageRevision`. These are not in control of the
-user. However, the `PackageVariant` resource does make the annotations and
+Some of that metadata is necessary for the management of the `PackageRevision`
+by the package variant controller - for example, the `ownerRef` indicating which
+`PackageVariant` created the `PackageRevision`. These are not under the user's
+control. However, the `PackageVariant` resource does make the annotations and
 labels of the `PackageRevision` available as values that may be controlled
 during the creation of the `PackageRevision`. This can assist in additional
 automation workflows.
@@ -101,12 +101,7 @@ Just cloning is not that interesting, so the `PackageVariant` resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
-### Package Context
-[Note: I believe right now we *always* produce `--for-deployment` package
-revisions out of package variant controller. We will likely need to allows some
-control over that, as we already have a use case in Nephio to use a
-PackageVariant to create a package intended as a base for fan out]
-
+### Package Context[^notimplemented]
 Every kpt package that is designated `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Kpt (or Porch) will automatically add a
 key `name` to the ConfigMap data, with the value of the package name. This
@@ -114,20 +109,16 @@ ConfigMap can then be used as input to functions in the Kpt function pipeline.
 
 This process holds true for package revisions created via the package variant
 controller as well. Additionally, the author of the `PackageVariant` resource
-can specify additional key-value pairs to insert into the package context [note:
-this additional functionality is proposed here but not yet implemented].
+can specify additional key-value pairs to insert into the package
+context.
 
-### KRM Function Calls
-[Note: not yet implemented]
+### KRM Function Calls[^notimplemented]
 TODO(johnbelamaric): describe adding a KRM function pipeline to the
 PackageVariant to allow arbitrary mutations
 - question: should these allow adding to the package pipeline a la `--save`? Is
   that a *separate* pipeline?
 
-### Configuration Injection
-[Note: this is implemented in the Nephio `PackageDeployment` controller, but not
-yet in `PackageVariant`.]
-
+### Configuration Injection[^pdc]
 Adding values to the package context, or executing functions with their
 configuration listed in the `PackageVariant` works for values that are under
 control of the author of the `PackageVariant` resource. However, in more
@@ -166,8 +157,7 @@ configuration injected.
 in-package resource with a hash of the in-cluster resource to detect changes,
 this should be discussed].
 
-### Namespace Configuration and Injection
-[Note: not yet implemented]
+### Namespace Configuration and Injection[^notimplemented]
 Creating a namespace and/or setting the namespace for a particular package is a
 very common operation. However, since namespace provisioning in a cluster is a
 privileged operation, the deployer of a package may not have the authority to
@@ -192,6 +182,29 @@ initial creation / clone of the package
 ## Lifecycle Management
 
 ### Upstream Changes
+The package variant controller allows you to specific a specific upstream
+package revision to clone, or you can specify a floating tag[^notimplemented].
+
+If you specify a specific upstream revision, then the downstream will not be
+changed unless the PackageVariant resource itself is modified to point to a new
+revision. That is, the user must edit the PackageVariant, and change the
+upstream package reference. When that is done, the package variant controller
+will update any existing Draft package under its ownership by doing the
+equivalent of a `kpt pkg update` to rebase the downstream on the new upstream
+revision. If a Draft does not exist, then the package variant controller will
+create a new Draft based on the current published downstream, and apply the `kpt
+pkg update` to rebase that. This updated Draft must then be proposed and
+approved like any other package change.
+
+If a floating tag is used[^notimplemented], then explicit modification of the PackageVariant is
+not needed. Rather, when the floating tag is moved to a new tagged revision of
+the upstream package, the package revision controller will notice and
+automatically propose and update to that revision. For example, the upstream
+package author may designate three floating tags: stable, beta, and alpha. The
+upstream package author can move these tags to specific revisions, and any
+PackageVariant resource tracking them will propose updates to their downstream
+packages.
+
 
 ### Order of Mutation During Update
 TODO(johnbelamaric): diagram showing when each of the above stages is done, and
@@ -208,7 +221,6 @@ TODO(johnbelamaric): Describe `PackageVariantSet`.
 
 ## PackageVariant API
 
-
 ## PackageVariantSet API
 
 ## Example Use Cases
@@ -216,13 +228,33 @@ TODO(johnbelamaric): Describe `PackageVariantSet`.
 - describe scenarios and the PackageVariant, PackageVariantSet resources that
   would solve the scenarios
 
+### Automatically Organizational Customization of an External Package
+We can use a PackageVariant to provide basic changes that are needed when
+importing a package from an external repository. For example, suppose we have
+our own internal registry from which we pull all our images. When we import an
+upstream package, we want to modify any images listed in the upstream package to
+point to our registry. Additionally, we have a policy that all Pods must have a
+`chargeback-code` label, so we want to add that as a validating policy to the
+package.
+
+In a manual CLI-based workflow, we would accomplish this as follows.
+...
+
+With PackageVariant, we instead create the following resources:
+...
+
+### Creating a Namespace Per Tenant
+
+### Customizing A Workload By Region
+
+### Customizing A Workload By Cluster and Region
+
+### Customizing A Workload By Environment
 
 ## Additional Open Items
-- Probably want to say something about tag tracking - that is, using a moveable
-  tag rather than an explicit revision for the upstream. We may want to NOT
-  allow that, and have a separate tag tracking controller that can update PV and
-  PVS resources to tweak their upstream as the tag moves (see the original
-  Managing Package Revisions doc for the discussion on this use case).
+- As an alternative to the floating tag proposal, we may instead want to have
+  a separate tag tracking controller that can update PV and
+  PVS resources to tweak their upstream as the tag moves.
 - Probably want to think about groups of packages (that is, a collection of
   upstreams with the same set of mutation to be applied). For now, this would be
   handled with PackageVariant / PackageVariantSet resources that differ only in
@@ -232,3 +264,7 @@ TODO(johnbelamaric): Describe `PackageVariantSet`.
 - Need to understand how the `kpt pkg update` process works and explain it here in
   some detail. We also need to think about whether we want to do anything
   special for updates when the PVS, PV, or any injected resource changes.
+
+
+[^notimplemented]: Proposed here but not yet implemented.
+[^pdc]: Implemented in Nephio `PackageDeployment` but not yet here.
