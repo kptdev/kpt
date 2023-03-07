@@ -432,7 +432,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			}
 		} else {
 			// remoterootsync already exists
-			updated, needsUpdate := pkgNeedsUpdate(rollout, rrs, pkg)
+			updated, needsUpdate := pkgNeedsUpdate(ctx, rollout, rrs, pkg)
 			if needsUpdate {
 				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
@@ -448,13 +448,16 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func pkgNeedsUpdate(rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
+func pkgNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
 	// TODO: We need to check other things here besides git.Revision and metadata
 	metadata := getSpecMetadata(rollout)
-	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision || !reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) || rrs.Spec.Type != rollout.Spec.SyncTemplate.Type {
+	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
+		!reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) ||
+		rrs.Spec.Type != rollout.GetSyncTemplateType() {
+
 		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
 		rrs.Spec.Template.Metadata = metadata
-		rrs.Spec.Type = rollout.Spec.SyncTemplate.Type
+		rrs.Spec.Type = rollout.GetSyncTemplateType()
 		return &rrs, true
 	}
 	return nil, false

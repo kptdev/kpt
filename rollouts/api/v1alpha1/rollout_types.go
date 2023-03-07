@@ -260,6 +260,13 @@ type Rollout struct {
 	Status RolloutStatus `json:"status,omitempty"`
 }
 
+func (rollout *Rollout) GetSyncTemplateType() SyncTemplateType {
+	if rollout.Spec.SyncTemplate == nil {
+		return TemplateTypeRootSync
+	}
+	return rollout.Spec.SyncTemplate.Type
+}
+
 //+kubebuilder:object:root=true
 
 // RolloutList contains a list of Rollout
