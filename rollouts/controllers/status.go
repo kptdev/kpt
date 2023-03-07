@@ -18,28 +18,34 @@ import (
 	"context"
 	"fmt"
 
+	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/dynamic"
 )
 
-// checkSyncStatus fetches the RootSync using the provided client and computes the sync status. The rules
+// checkSyncStatus fetches the external sync using the provided client and computes the sync status. The rules
 // for computing status here mirrors the one used in the status command in the nomos cli.
-func checkSyncStatus(ctx context.Context, client dynamic.Interface, rrsName string) (string, error) {
-	// TODO: Change this to use the RootSync type instead of Unstructured.
-	rs, err := client.Resource(rootSyncGVR).Namespace(rootSyncNamespace).Get(ctx, rrsName, metav1.GetOptions{})
+func checkSyncStatus(ctx context.Context, client dynamic.Interface, rrs *gitopsv1alpha1.RemoteRootSync) (string, error) {
+	gvr, gvk, err := getGvrAndGvk(rrs.Spec.Type)
 	if err != nil {
-		return "", fmt.Errorf("failed to get RootSync: %w", err)
+		return "", err
 	}
 
+	rs, err := client.Resource(gvr).Namespace(getExternalSyncNamespace(rrs)).Get(ctx, rrs.Name, metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get %s: %w", gvk.Kind, err)
+	}
+
+	// TODO: Change this to use the RootSync type instead of Unstructured.
 	generation, _, err := unstructured.NestedInt64(rs.Object, "metadata", "generation")
 	if err != nil {
-		return "", fmt.Errorf("failed to read generation from RootSync: %w", err)
+		return "", fmt.Errorf("failed to read generation from %s: %w", gvk.Kind, err)
 	}
 
 	observedGeneration, _, err := unstructured.NestedInt64(rs.Object, "status", "observedGeneration")
 	if err != nil {
-		return "", fmt.Errorf("failed to read observedGeneration from RootSync: %w", err)
+		return "", fmt.Errorf("failed to read observedGeneration from %s: %w", gvk.Kind, err)
 	}
 
 	if generation != observedGeneration {
@@ -48,7 +54,7 @@ func checkSyncStatus(ctx context.Context, client dynamic.Interface, rrsName stri
 
 	conditions, _, err := unstructured.NestedSlice(rs.Object, "status", "conditions")
 	if err != nil {
-		return "", fmt.Errorf("failed to extract conditions from RootSync: %w", err)
+		return "", fmt.Errorf("failed to extract conditions from %s: %w", gvk.Kind, err)
 	}
 
 	val, found, err := getConditionStatus(conditions, "Stalled")

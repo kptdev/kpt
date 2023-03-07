@@ -111,6 +111,11 @@ spec:
                         type: string
                     type: object
                 type: object
+              type:
+                enum:
+                - RootSync
+                - RepoSync
+                type: string
             type: object
           status:
             description: RemoteRootSyncStatus defines the observed state of RemoteRootSync

@@ -290,14 +290,6 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
 	logger := klog.FromContext(ctx)
 
-	if rollout != nil && rollout.Spec.SyncTemplate != nil {
-		if rollout.Spec.SyncTemplate.Type == gitopsv1alpha1.TemplateTypeRepoSync {
-			err := fmt.Errorf("reposync is not yet supported")
-			logger.Error(err, "")
-			return err
-		}
-	}
-
 	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
 	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
 	if err != nil {
@@ -453,11 +445,11 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 
 func pkgNeedsUpdate(rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
 	// TODO: We need to check other things here besides git.Revision and metadata
-	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
-		!reflect.DeepEqual(rollout.Spec.SyncTemplate.RootSync.Metadata,
-			rrs.Spec.Template.Metadata) {
+	metadata := getSpecMetadata(rollout)
+	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision || !reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) || rrs.Spec.Type != rollout.Spec.SyncTemplate.Type {
 		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
-		rrs.Spec.Template.Metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
+		rrs.Spec.Template.Metadata = metadata
+		rrs.Spec.Type = rollout.Spec.SyncTemplate.Type
 		return &rrs, true
 	}
 	return nil, false
@@ -541,12 +533,6 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 		}
 	}
 
-	var metadata *gitopsv1alpha1.Metadata
-	if rollout != nil && rollout.Spec.SyncTemplate != nil &&
-		rollout.Spec.SyncTemplate.RootSync != nil {
-		metadata = rollout.Spec.SyncTemplate.RootSync.Metadata
-	}
-
 	for _, target := range targets.ToBeCreated {
 		rootSyncSpec := toRootSyncSpec(target.packageRef)
 		rrs := newRemoteRootSync(rollout,
@@ -554,7 +540,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 			rootSyncSpec,
 			pkgID(target.packageRef),
 			wave.Name,
-			metadata,
+			getSpecMetadata(rollout),
 		)
 
 		if maxConcurrent > concurrentUpdates {
@@ -734,6 +720,9 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
 	t := true
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
+	// The RemoteRootSync object is created in the same namespace as the Rollout
+	// object. The RemoteRootSync will create either a RepoSync in the same namespace,
+	// or a RootSync in the config-management-system namespace.
 	return &gitopsv1alpha1.RemoteRootSync{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", pkgID, clusterName),
@@ -751,7 +740,9 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
 				},
 			},
 		},
+
 		Spec: gitopsv1alpha1.RemoteRootSyncSpec{
+			Type:       rollout.Spec.SyncTemplate.Type,
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.RootSyncInfo{
 				Spec:     rssSpec,
@@ -932,4 +923,23 @@ func filterClusters(allClusters []clusterstore.Cluster, labelSelector *metav1.La
 	}
 
 	return clusters, nil
+}
+
+func getSpecMetadata(rollout *gitopsv1alpha1.Rollout) *gitopsv1alpha1.Metadata {
+	if rollout == nil || rollout.Spec.SyncTemplate == nil {
+		return nil
+	}
+	switch rollout.Spec.SyncTemplate.Type {
+	case gitopsv1alpha1.TemplateTypeRepoSync:
+		if rollout.Spec.SyncTemplate.RepoSync == nil {
+			return nil
+		}
+		return rollout.Spec.SyncTemplate.RepoSync.Metadata
+	case gitopsv1alpha1.TemplateTypeRootSync, "":
+		if rollout.Spec.SyncTemplate.RootSync == nil {
+			return nil
+		}
+		return rollout.Spec.SyncTemplate.RootSync.Metadata
+	}
+	return nil
 }

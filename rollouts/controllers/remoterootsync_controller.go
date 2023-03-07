@@ -46,8 +46,13 @@ import (
 )
 
 var (
+	// The RootSync object always gets put in the config-management-system namespace,
+	// while the RepoSync object will get its namespace from the RemoteRootSync object's
+	// metadata.namespace.
+	// See examples at: https://cloud.google.com/anthos-config-management/docs/how-to/multiple-repositories
 	rootSyncNamespace = "config-management-system"
-	rootSyncGVK       = schema.GroupVersionKind{
+
+	rootSyncGVK = schema.GroupVersionKind{
 		Group:   "configsync.gke.io",
 		Version: "v1beta1",
 		Kind:    "RootSync",
@@ -56,6 +61,17 @@ var (
 		Group:    "configsync.gke.io",
 		Version:  "v1beta1",
 		Resource: "rootsyncs",
+	}
+
+	repoSyncGVK = schema.GroupVersionKind{
+		Group:   "configsync.gke.io",
+		Version: "v1beta1",
+		Kind:    "RepoSync",
+	}
+	repoSyncGVR = schema.GroupVersionResource{
+		Group:    "configsync.gke.io",
+		Version:  "v1beta1",
+		Resource: "reposyncs",
 	}
 
 	remoteRootSyncNameLabel      = "gitops.kpt.dev/remoterootsync-name"
@@ -167,7 +183,6 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 }
 
 func (r *RemoteRootSyncReconciler) syncExternalSync(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync) (string, error) {
-	syncName := rrs.Name
 	clusterRef := &rrs.Spec.ClusterRef
 
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
@@ -175,15 +190,15 @@ func (r *RemoteRootSyncReconciler) syncExternalSync(ctx context.Context, rrs *gi
 		return "", fmt.Errorf("failed to create client: %w", err)
 	}
 
-	if err := r.patchRootSync(ctx, dynCl, syncName, rrs); err != nil {
+	if err := r.patchExternalSync(ctx, dynCl, rrs); err != nil {
 		return "", fmt.Errorf("failed to create/update sync: %w", err)
 	}
 
 	r.setupWatches(ctx, rrs.Name, rrs.Namespace, rrs.Spec.ClusterRef)
 
-	syncStatus, err := checkSyncStatus(ctx, dynCl, syncName)
+	syncStatus, err := checkSyncStatus(ctx, dynCl, rrs)
 	if err != nil {
-		return "", fmt.Errorf("faild to check status: %w", err)
+		return "", fmt.Errorf("failed to check status: %w", err)
 	}
 
 	return syncStatus, nil
@@ -225,25 +240,33 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 	return r.Client.Status().Update(ctx, rrs)
 }
 
-// patchRootSync patches the RootSync in the remote clusters targeted by
+// patchExternalSync patches the external sync in the remote clusters targeted by
 // the clusterRefs based on the latest revision of the template in the RemoteRootSync.
-func (r *RemoteRootSyncReconciler) patchRootSync(ctx context.Context, client dynamic.Interface, name string, rrs *gitopsv1alpha1.RemoteRootSync) error {
+func (r *RemoteRootSyncReconciler) patchExternalSync(ctx context.Context, client dynamic.Interface, rrs *gitopsv1alpha1.RemoteRootSync) error {
 	logger := klog.FromContext(ctx)
 
-	newRootSync, err := BuildObjectsToApply(rrs)
+	gvr, gvk, err := getGvrAndGvk(rrs.Spec.Type)
+	if err != nil {
+		return err
+	}
+
+	namespace := getExternalSyncNamespace(rrs)
+
+	newRootSync, err := BuildObjectsToApply(rrs, gvk, namespace)
 	if err != nil {
 		return err
 	}
 	data, err := json.Marshal(newRootSync)
 	if err != nil {
-		return fmt.Errorf("failed to encode root sync to JSON: %w", err)
-	}
-	_, err = client.Resource(rootSyncGVR).Namespace(rootSyncNamespace).Patch(ctx, name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: name})
-	if err != nil {
-		return fmt.Errorf("failed to patch RootSync: %w", err)
+		return fmt.Errorf("failed to encode %s to JSON: %w", gvk.Kind, err)
 	}
 
-	logger.Info("RootSync resource created/updated", "rootSync", klog.KRef(rootSyncNamespace, name))
+	_, err = client.Resource(gvr).Namespace(namespace).Patch(ctx, rrs.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: rrs.Name})
+	if err != nil {
+		return fmt.Errorf("failed to patch %s: %w", gvk.Kind, err)
+	}
+
+	logger.Info(fmt.Sprintf("%s resource created/updated", gvk.Kind), gvr.Resource, klog.KRef(namespace, rrs.Name))
 	return nil
 }
 
@@ -313,17 +336,20 @@ func (r *RemoteRootSyncReconciler) pruneWatches(rrsnn types.NamespacedName, clus
 	}
 }
 
-// BuildObjectsToApply config root sync
-func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync) (*unstructured.Unstructured, error) {
+// BuildObjectsToApply configures the external sync
+func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync,
+	gvk schema.GroupVersionKind,
+	namespace string) (*unstructured.Unstructured, error) {
+
 	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(remoterootsync.Spec.Template)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
 	}
 
 	u := unstructured.Unstructured{Object: newRootSync}
-	u.SetGroupVersionKind(rootSyncGVK)
+	u.SetGroupVersionKind(gvk)
 	u.SetName(remoterootsync.Name)
-	u.SetNamespace(rootSyncNamespace)
+	u.SetNamespace(namespace)
 
 	labels := u.GetLabels()
 	if labels == nil {
@@ -345,8 +371,13 @@ func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, 
 		return err
 	}
 
+	gvr, _, err := getGvrAndGvk(remoterootsync.Spec.Type)
+	if err != nil {
+		return err
+	}
+
 	logger.Info("Deleting external resource")
-	err = dynCl.Resource(rootSyncGVR).Namespace("config-management-system").Delete(ctx, remoterootsync.Name, metav1.DeleteOptions{})
+	err = dynCl.Resource(gvr).Namespace(getExternalSyncNamespace(remoterootsync)).Delete(ctx, remoterootsync.Name, metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -366,6 +397,25 @@ func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Contex
 	}
 
 	return dynamicClient, nil
+}
+
+func getGvrAndGvk(t gitopsv1alpha1.SyncTemplateType) (schema.GroupVersionResource, schema.GroupVersionKind, error) {
+	switch t {
+	case gitopsv1alpha1.TemplateTypeRootSync, "":
+		return rootSyncGVR, rootSyncGVK, nil
+	case gitopsv1alpha1.TemplateTypeRepoSync:
+		return repoSyncGVR, repoSyncGVK, nil
+	default:
+		return schema.GroupVersionResource{}, schema.GroupVersionKind{}, fmt.Errorf("invalid sync type %q", t)
+	}
+}
+
+func getExternalSyncNamespace(rrs *gitopsv1alpha1.RemoteRootSync) string {
+	if rrs.Spec.Type == gitopsv1alpha1.TemplateTypeRepoSync {
+		return rrs.Namespace
+	} else {
+		return rootSyncNamespace
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

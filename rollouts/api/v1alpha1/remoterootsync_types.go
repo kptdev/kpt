@@ -25,11 +25,10 @@ import (
 
 // RemoteRootSyncSpec defines the desired state of RemoteRootSync
 type RemoteRootSyncSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	ClusterRef ClusterRef    `json:"clusterRef,omitempty"`
-	Template   *RootSyncInfo `json:"template,omitempty"`
+	// ClusterReference contains the identify information need to refer a cluster.
+	ClusterRef ClusterRef       `json:"clusterRef,omitempty"`
+	Template   *RootSyncInfo    `json:"template,omitempty"`
+	Type       SyncTemplateType `json:"type,omitempty"`
 }
 
 type RootSyncInfo struct {
