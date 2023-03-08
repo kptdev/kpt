@@ -23,20 +23,20 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
-// RemoteRootSyncSpec defines the desired state of RemoteRootSync
-type RemoteRootSyncSpec struct {
+// RemoteSyncSpec defines the desired state of RemoteSync
+type RemoteSyncSpec struct {
 	// ClusterReference contains the identify information need to refer a cluster.
 	ClusterRef ClusterRef       `json:"clusterRef,omitempty"`
-	Template   *RootSyncInfo    `json:"template,omitempty"`
+	Template   *Template        `json:"template,omitempty"`
 	Type       SyncTemplateType `json:"type,omitempty"`
 }
 
-type RootSyncInfo struct {
-	Spec     *RootSyncSpec `json:"spec,omitempty"`
-	Metadata *Metadata     `json:"metadata,omitempty"`
+type Template struct {
+	Spec     *SyncSpec `json:"spec,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 }
 
-type RootSyncSpec struct {
+type SyncSpec struct {
 	SourceFormat string   `json:"sourceFormat,omitempty"`
 	Git          *GitInfo `json:"git,omitempty"`
 }
@@ -60,8 +60,8 @@ type Metadata struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
-// RemoteRootSyncStatus defines the observed state of RemoteRootSync
-type RemoteRootSyncStatus struct {
+// RemoteSyncStatus defines the observed state of RemoteSync
+type RemoteSyncStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
@@ -79,24 +79,24 @@ type RemoteRootSyncStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// RemoteRootSync is the Schema for the remoterootsyncs API
-type RemoteRootSync struct {
+// RemoteSync is the Schema for the remotesyncs API
+type RemoteSync struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   RemoteRootSyncSpec   `json:"spec,omitempty"`
-	Status RemoteRootSyncStatus `json:"status,omitempty"`
+	Spec   RemoteSyncSpec   `json:"spec,omitempty"`
+	Status RemoteSyncStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// RemoteRootSyncList contains a list of RemoteRootSync
-type RemoteRootSyncList struct {
+// RemoteSyncList contains a list of RemoteSync
+type RemoteSyncList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []RemoteRootSync `json:"items"`
+	Items           []RemoteSync `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&RemoteRootSync{}, &RemoteRootSyncList{})
+	SchemeBuilder.Register(&RemoteSync{}, &RemoteSyncList{})
 }

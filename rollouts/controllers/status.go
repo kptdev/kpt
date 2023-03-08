@@ -26,18 +26,18 @@ import (
 
 // checkSyncStatus fetches the external sync using the provided client and computes the sync status. The rules
 // for computing status here mirrors the one used in the status command in the nomos cli.
-func checkSyncStatus(ctx context.Context, client dynamic.Interface, rrs *gitopsv1alpha1.RemoteRootSync) (string, error) {
-	gvr, gvk, err := getGvrAndGvk(rrs.Spec.Type)
+func checkSyncStatus(ctx context.Context, client dynamic.Interface, remotesync *gitopsv1alpha1.RemoteSync) (string, error) {
+	gvr, gvk, err := getGvrAndGvk(remotesync.Spec.Type)
 	if err != nil {
 		return "", err
 	}
 
-	rs, err := client.Resource(gvr).Namespace(getExternalSyncNamespace(rrs)).Get(ctx, rrs.Name, metav1.GetOptions{})
+	rs, err := client.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Get(ctx, remotesync.Name, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get %s: %w", gvk.Kind, err)
 	}
 
-	// TODO: Change this to use the RootSync type instead of Unstructured.
+	// TODO: Change this to use the RootSync/RepoSync type instead of Unstructured.
 	generation, _, err := unstructured.NestedInt64(rs.Object, "metadata", "generation")
 	if err != nil {
 		return "", fmt.Errorf("failed to read generation from %s: %w", gvk.Kind, err)

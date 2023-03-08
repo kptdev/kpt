@@ -17,7 +17,7 @@
 # It should be run by config/default
 resources:
 - bases/gitops.kpt.dev_rollouts.yaml
-- bases/gitops.kpt.dev_remoterootsyncs.yaml
+- bases/gitops.kpt.dev_remotesyncs.yaml
 - bases/gitops.kpt.dev_progressiverolloutstrategies.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 

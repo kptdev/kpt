@@ -47,7 +47,7 @@ import (
 
 var (
 	// The RootSync object always gets put in the config-management-system namespace,
-	// while the RepoSync object will get its namespace from the RemoteRootSync object's
+	// while the RepoSync object will get its namespace from the RemoteSync object's
 	// metadata.namespace.
 	// See examples at: https://cloud.google.com/anthos-config-management/docs/how-to/multiple-repositories
 	rootSyncNamespace = "config-management-system"
@@ -74,8 +74,8 @@ var (
 		Resource: "reposyncs",
 	}
 
-	remoteRootSyncNameLabel      = "gitops.kpt.dev/remoterootsync-name"
-	remoteRootSyncNamespaceLabel = "gitops.kpt.dev/remoterootsync-namespace"
+	remoteSyncNameLabel      = "gitops.kpt.dev/remotesync-name"
+	remoteSyncNamespaceLabel = "gitops.kpt.dev/remotesync-namespace"
 )
 
 const (
@@ -87,8 +87,8 @@ const (
 	reasonError      = "Error"
 )
 
-// RemoteRootSyncReconciler reconciles a RemoteRootSync object
-type RemoteRootSyncReconciler struct {
+// RemoteSyncReconciler reconciles a RemoteSync object
+type RemoteSyncReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
@@ -103,50 +103,50 @@ type RemoteRootSyncReconciler struct {
 	watchers map[gitopsv1alpha1.ClusterRef]*watcher
 }
 
-//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remoterootsyncs,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remoterootsyncs/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remoterootsyncs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remotesyncs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remotesyncs/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=gitops.kpt.dev,resources=remotesyncs/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
 // TODO(user): Modify the Reconcile function to compare the state specified by
-// the RemoteRootSync object against the actual cluster state, and then
+// the RemoteSync object against the actual cluster state, and then
 // perform operations to make the cluster state reflect the state specified by
 // the user.
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.1/pkg/reconcile
-func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	logger := klog.NewKlogr().WithValues("controller", "remoterootsync", "remoteRootSync", req.NamespacedName)
+func (r *RemoteSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := klog.NewKlogr().WithValues("controller", "remotesync", "remoteSync", req.NamespacedName)
 	ctx = klog.NewContext(ctx, logger)
 
 	logger.Info("Reconciling")
 
-	var remoterootsync gitopsv1alpha1.RemoteRootSync
-	if err := r.Get(ctx, req.NamespacedName, &remoterootsync); err != nil {
+	var remotesync gitopsv1alpha1.RemoteSync
+	if err := r.Get(ctx, req.NamespacedName, &remotesync); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	myFinalizerName := "remoterootsync.gitops.kpt.dev/finalizer"
-	if remoterootsync.ObjectMeta.DeletionTimestamp.IsZero() {
+	myFinalizerName := "remotesync.gitops.kpt.dev/finalizer"
+	if remotesync.ObjectMeta.DeletionTimestamp.IsZero() {
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(&remoterootsync, myFinalizerName) {
-			controllerutil.AddFinalizer(&remoterootsync, myFinalizerName)
-			if err := r.Update(ctx, &remoterootsync); err != nil {
+		if !controllerutil.ContainsFinalizer(&remotesync, myFinalizerName) {
+			controllerutil.AddFinalizer(&remotesync, myFinalizerName)
+			if err := r.Update(ctx, &remotesync); err != nil {
 				return ctrl.Result{}, fmt.Errorf("error adding finalizer: %w", err)
 			}
 		}
 	} else {
 		// The object is being deleted
-		if controllerutil.ContainsFinalizer(&remoterootsync, myFinalizerName) {
+		if controllerutil.ContainsFinalizer(&remotesync, myFinalizerName) {
 			// our finalizer is present, so lets handle any external dependency
-			if remoterootsync.Status.SyncCreated {
+			if remotesync.Status.SyncCreated {
 				// Delete the external sync resource
-				err := r.deleteExternalResources(ctx, &remoterootsync)
+				err := r.deleteExternalResources(ctx, &remotesync)
 				if err != nil && !apierrors.IsNotFound(err) {
-					statusError := r.updateStatus(ctx, &remoterootsync, "", err)
+					statusError := r.updateStatus(ctx, &remotesync, "", err)
 
 					if statusError != nil {
 						logger.Error(statusError, "Failed to update status")
@@ -159,12 +159,12 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 				// Make sure we stop any watches that are no longer needed.
 				logger.Info("Pruning watches")
-				r.pruneWatches(req.NamespacedName, &remoterootsync.Spec.ClusterRef)
+				r.pruneWatches(req.NamespacedName, &remotesync.Spec.ClusterRef)
 			}
 
 			// remove our finalizer from the list and update it.
-			controllerutil.RemoveFinalizer(&remoterootsync, myFinalizerName)
-			if err := r.Update(ctx, &remoterootsync); err != nil {
+			controllerutil.RemoveFinalizer(&remotesync, myFinalizerName)
+			if err := r.Update(ctx, &remotesync); err != nil {
 				return ctrl.Result{}, fmt.Errorf("failed to update %s after delete finalizer: %w", req.Name, err)
 			}
 		}
@@ -172,9 +172,9 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 
-	syncStatus, syncError := r.syncExternalSync(ctx, &remoterootsync)
+	syncStatus, syncError := r.syncExternalSync(ctx, &remotesync)
 
-	if err := r.updateStatus(ctx, &remoterootsync, syncStatus, syncError); err != nil {
+	if err := r.updateStatus(ctx, &remotesync, syncStatus, syncError); err != nil {
 		logger.Error(err, "Failed to update status")
 		return ctrl.Result{}, err
 	}
@@ -182,21 +182,21 @@ func (r *RemoteRootSyncReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	return ctrl.Result{}, syncError
 }
 
-func (r *RemoteRootSyncReconciler) syncExternalSync(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync) (string, error) {
-	clusterRef := &rrs.Spec.ClusterRef
+func (r *RemoteSyncReconciler) syncExternalSync(ctx context.Context, rs *gitopsv1alpha1.RemoteSync) (string, error) {
+	clusterRef := &rs.Spec.ClusterRef
 
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return "", fmt.Errorf("failed to create client: %w", err)
 	}
 
-	if err := r.patchExternalSync(ctx, dynCl, rrs); err != nil {
+	if err := r.patchExternalSync(ctx, dynCl, rs); err != nil {
 		return "", fmt.Errorf("failed to create/update sync: %w", err)
 	}
 
-	r.setupWatches(ctx, rrs.Name, rrs.Namespace, rrs.Spec.ClusterRef)
+	r.setupWatches(ctx, rs.Name, rs.Namespace, rs.Spec.ClusterRef)
 
-	syncStatus, err := checkSyncStatus(ctx, dynCl, rrs)
+	syncStatus, err := checkSyncStatus(ctx, dynCl, rs)
 	if err != nil {
 		return "", fmt.Errorf("failed to check status: %w", err)
 	}
@@ -204,25 +204,25 @@ func (r *RemoteRootSyncReconciler) syncExternalSync(ctx context.Context, rrs *gi
 	return syncStatus, nil
 }
 
-func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitopsv1alpha1.RemoteRootSync, syncStatus string, syncError error) error {
+func (r *RemoteSyncReconciler) updateStatus(ctx context.Context, rs *gitopsv1alpha1.RemoteSync, syncStatus string, syncError error) error {
 	logger := klog.FromContext(ctx)
 
-	rrsPrior := rrs.DeepCopy()
-	conditions := &rrs.Status.Conditions
+	rsPrior := rs.DeepCopy()
+	conditions := &rs.Status.Conditions
 
 	if syncError == nil {
-		rrs.Status.SyncStatus = syncStatus
-		rrs.Status.SyncCreated = true
+		rs.Status.SyncStatus = syncStatus
+		rs.Status.SyncCreated = true
 
 		meta.RemoveStatusCondition(conditions, conditionReconciling)
 		meta.RemoveStatusCondition(conditions, conditionStalled)
 	} else {
 		reconcileReason := reasonUpdateSync
 
-		rrs.Status.SyncStatus = "Unknown"
+		rs.Status.SyncStatus = "Unknown"
 
-		if !rrs.Status.SyncCreated {
-			rrs.Status.SyncStatus = ""
+		if !rs.Status.SyncCreated {
+			rs.Status.SyncStatus = ""
 			reconcileReason = reasonCreateSync
 		}
 
@@ -230,29 +230,29 @@ func (r *RemoteRootSyncReconciler) updateStatus(ctx context.Context, rrs *gitops
 		meta.SetStatusCondition(conditions, metav1.Condition{Type: conditionStalled, Status: metav1.ConditionTrue, Reason: reasonError, Message: syncError.Error()})
 	}
 
-	rrs.Status.ObservedGeneration = rrs.Generation
+	rs.Status.ObservedGeneration = rs.Generation
 
-	if reflect.DeepEqual(rrs.Status, rrsPrior.Status) {
+	if reflect.DeepEqual(rs.Status, rsPrior.Status) {
 		return nil
 	}
 
 	logger.Info("Updating status")
-	return r.Client.Status().Update(ctx, rrs)
+	return r.Client.Status().Update(ctx, rs)
 }
 
 // patchExternalSync patches the external sync in the remote clusters targeted by
-// the clusterRefs based on the latest revision of the template in the RemoteRootSync.
-func (r *RemoteRootSyncReconciler) patchExternalSync(ctx context.Context, client dynamic.Interface, rrs *gitopsv1alpha1.RemoteRootSync) error {
+// the clusterRefs based on the latest revision of the template in the RemoteSync.
+func (r *RemoteSyncReconciler) patchExternalSync(ctx context.Context, client dynamic.Interface, rs *gitopsv1alpha1.RemoteSync) error {
 	logger := klog.FromContext(ctx)
 
-	gvr, gvk, err := getGvrAndGvk(rrs.Spec.Type)
+	gvr, gvk, err := getGvrAndGvk(rs.Spec.Type)
 	if err != nil {
 		return err
 	}
 
-	namespace := getExternalSyncNamespace(rrs)
+	namespace := getExternalSyncNamespace(rs)
 
-	newRootSync, err := BuildObjectsToApply(rrs, gvk, namespace)
+	newRootSync, err := BuildObjectsToApply(rs, gvk, namespace)
 	if err != nil {
 		return err
 	}
@@ -261,28 +261,28 @@ func (r *RemoteRootSyncReconciler) patchExternalSync(ctx context.Context, client
 		return fmt.Errorf("failed to encode %s to JSON: %w", gvk.Kind, err)
 	}
 
-	_, err = client.Resource(gvr).Namespace(namespace).Patch(ctx, rrs.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: rrs.Name})
+	_, err = client.Resource(gvr).Namespace(namespace).Patch(ctx, rs.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: rs.Name})
 	if err != nil {
 		return fmt.Errorf("failed to patch %s: %w", gvk.Kind, err)
 	}
 
-	logger.Info(fmt.Sprintf("%s resource created/updated", gvk.Kind), gvr.Resource, klog.KRef(namespace, rrs.Name))
+	logger.Info(fmt.Sprintf("%s resource created/updated", gvk.Kind), gvr.Resource, klog.KRef(namespace, rs.Name))
 	return nil
 }
 
 // setupWatches makes sure we have the necessary watches running against
 // the remote clusters we care about.
-func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns string, clusterRef gitopsv1alpha1.ClusterRef) {
+func (r *RemoteSyncReconciler) setupWatches(ctx context.Context, rsName, ns string, clusterRef gitopsv1alpha1.ClusterRef) {
 	logger := klog.FromContext(ctx)
 
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	nn := types.NamespacedName{
 		Namespace: ns,
-		Name:      rrsName,
+		Name:      rsName,
 	}
 
-	// If we already have a watch running, make sure we have the current RootSyncSet
+	// If we already have a watch running, make sure we have the current Sync Set
 	// listed in the liens map.
 	if w, found := r.watchers[clusterRef]; found {
 		w.liens[nn] = struct{}{}
@@ -313,23 +313,23 @@ func (r *RemoteRootSyncReconciler) setupWatches(ctx context.Context, rrsName, ns
 	r.watchers[clusterRef] = w
 }
 
-// pruneWatches removes the current RootSyncSet from the liens map of all watchers
-// that it no longer needs. If any of the watchers are no longer used by any RootSyncSets,
+// pruneWatches removes the current Sync Set from the liens map of all watchers
+// that it no longer needs. If any of the watchers are no longer used by any Sync Sets,
 // they are shut down.
-func (r *RemoteRootSyncReconciler) pruneWatches(rrsnn types.NamespacedName, clusterRef *gitopsv1alpha1.ClusterRef) {
+func (r *RemoteSyncReconciler) pruneWatches(rsnn types.NamespacedName, clusterRef *gitopsv1alpha1.ClusterRef) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	// Look through all watchers to check if it used to be needed by the RootSyncSet
+	// Look through all watchers to check if it used to be needed by the Sync Set
 	// but is no longer.
 	w, found := r.watchers[*clusterRef]
 	if !found {
 		return
 	}
 
-	// Delete the current RootSyncSet from the list of liens (it it exists)
-	delete(w.liens, rrsnn)
-	// If no other RootSyncSets need the watch, stop it and remove the watcher from the map.
+	// Delete the current Sync Set from the list of liens (it it exists)
+	delete(w.liens, rsnn)
+	// If no other Sync Sets need the watch, stop it and remove the watcher from the map.
 	if len(w.liens) == 0 {
 		w.cancelFunc()
 		delete(r.watchers, *clusterRef)
@@ -337,47 +337,47 @@ func (r *RemoteRootSyncReconciler) pruneWatches(rrsnn types.NamespacedName, clus
 }
 
 // BuildObjectsToApply configures the external sync
-func BuildObjectsToApply(remoterootsync *gitopsv1alpha1.RemoteRootSync,
+func BuildObjectsToApply(remotesync *gitopsv1alpha1.RemoteSync,
 	gvk schema.GroupVersionKind,
 	namespace string) (*unstructured.Unstructured, error) {
 
-	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(remoterootsync.Spec.Template)
+	newRootSync, err := runtime.DefaultUnstructuredConverter.ToUnstructured(remotesync.Spec.Template)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert to unstructured type: %w", err)
 	}
 
 	u := unstructured.Unstructured{Object: newRootSync}
 	u.SetGroupVersionKind(gvk)
-	u.SetName(remoterootsync.Name)
+	u.SetName(remotesync.Name)
 	u.SetNamespace(namespace)
 
 	labels := u.GetLabels()
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	labels[remoteRootSyncNameLabel] = remoterootsync.Name
-	labels[remoteRootSyncNamespaceLabel] = remoterootsync.Namespace
+	labels[remoteSyncNameLabel] = remotesync.Name
+	labels[remoteSyncNamespaceLabel] = remotesync.Namespace
 	u.SetLabels(labels)
 
 	return &u, nil
 }
 
-func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, remoterootsync *gitopsv1alpha1.RemoteRootSync) error {
+func (r *RemoteSyncReconciler) deleteExternalResources(ctx context.Context, remotesync *gitopsv1alpha1.RemoteSync) error {
 	logger := klog.FromContext(ctx)
 
-	clusterRef := &remoterootsync.Spec.ClusterRef
+	clusterRef := &remotesync.Spec.ClusterRef
 	dynCl, err := r.getDynamicClientForCluster(ctx, clusterRef)
 	if err != nil {
 		return err
 	}
 
-	gvr, _, err := getGvrAndGvk(remoterootsync.Spec.Type)
+	gvr, _, err := getGvrAndGvk(remotesync.Spec.Type)
 	if err != nil {
 		return err
 	}
 
 	logger.Info("Deleting external resource")
-	err = dynCl.Resource(gvr).Namespace(getExternalSyncNamespace(remoterootsync)).Delete(ctx, remoterootsync.Name, metav1.DeleteOptions{})
+	err = dynCl.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Delete(ctx, remotesync.Name, metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -385,7 +385,7 @@ func (r *RemoteRootSyncReconciler) deleteExternalResources(ctx context.Context, 
 	return err
 }
 
-func (r *RemoteRootSyncReconciler) getDynamicClientForCluster(ctx context.Context, clusterRef *gitopsv1alpha1.ClusterRef) (dynamic.Interface, error) {
+func (r *RemoteSyncReconciler) getDynamicClientForCluster(ctx context.Context, clusterRef *gitopsv1alpha1.ClusterRef) (dynamic.Interface, error) {
 	restConfig, err := r.store.GetRESTConfig(ctx, clusterRef.Name)
 	if err != nil {
 		return nil, err
@@ -410,16 +410,16 @@ func getGvrAndGvk(t gitopsv1alpha1.SyncTemplateType) (schema.GroupVersionResourc
 	}
 }
 
-func getExternalSyncNamespace(rrs *gitopsv1alpha1.RemoteRootSync) string {
-	if rrs.Spec.Type == gitopsv1alpha1.TemplateTypeRepoSync {
-		return rrs.Namespace
+func getExternalSyncNamespace(rs *gitopsv1alpha1.RemoteSync) string {
+	if rs.Spec.Type == gitopsv1alpha1.TemplateTypeRepoSync {
+		return rs.Namespace
 	} else {
 		return rootSyncNamespace
 	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *RemoteSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.channel = make(chan event.GenericEvent, 10)
 	r.watchers = make(map[gitopsv1alpha1.ClusterRef]*watcher)
 	r.Client = mgr.GetClient()
@@ -436,27 +436,27 @@ func (r *RemoteRootSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.store = clusterStore
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&gitopsv1alpha1.RemoteRootSync{}).
+		For(&gitopsv1alpha1.RemoteSync{}).
 		Watches(
 			&source.Channel{Source: r.channel},
 			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
-				logger := klog.NewKlogr().WithValues("controller", "remoterootsync")
+				logger := klog.NewKlogr().WithValues("controller", "remotesync")
 
-				var rrsName string
-				var rrsNamespace string
+				var rsName string
+				var rsNamespace string
 				if o.GetLabels() != nil {
-					rrsName = o.GetLabels()[remoteRootSyncNameLabel]
-					rrsNamespace = o.GetLabels()[remoteRootSyncNamespaceLabel]
+					rsName = o.GetLabels()[remoteSyncNameLabel]
+					rsNamespace = o.GetLabels()[remoteSyncNamespaceLabel]
 				}
-				if rrsName == "" || rrsNamespace == "" {
+				if rsName == "" || rsNamespace == "" {
 					return []reconcile.Request{}
 				}
-				logger.Info("Resource contains a RemoteRootSync label", "resource", klog.KRef(o.GetNamespace(), o.GetName()), "remoteRootSync", klog.KRef(rrsNamespace, rrsName))
+				logger.Info("Resource contains a RemoteSync label", "resource", klog.KRef(o.GetNamespace(), o.GetName()), "remoteSync", klog.KRef(rsNamespace, rsName))
 				return []reconcile.Request{
 					{
 						NamespacedName: types.NamespacedName{
-							Namespace: rrsNamespace,
-							Name:      rrsName,
+							Namespace: rsNamespace,
+							Name:      rsName,
 						},
 					},
 				}

@@ -19,9 +19,9 @@ func TestBuildObjectsToApply(t *testing.T) {
 	}{
 		"minimal": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     metadata: null
@@ -32,18 +32,18 @@ spec:
 kind: RootSync
 metadata:
   labels:
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
   namespace: config-management-system
 `,
 		},
 
 		"minimal, rootSync type specified": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     type: RootSync
@@ -54,18 +54,18 @@ spec:
 kind: RootSync
 metadata:
   labels:
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
   namespace: config-management-system
 `,
 		},
 
 		"minimal, repoSync type specified": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     type: RepoSync
@@ -76,16 +76,16 @@ spec:
 kind: RepoSync
 metadata:
   labels:
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
 `,
 		},
 		"with additional labels and annotations": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     metadata:
@@ -105,17 +105,17 @@ metadata:
     efg: hij
   labels:
     foo: bar
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
   namespace: config-management-system
 `,
 		},
 		"with source format": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     spec:
@@ -127,9 +127,9 @@ spec:
 kind: RootSync
 metadata:
   labels:
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
   namespace: config-management-system
 spec:
   sourceFormat: unstructured
@@ -137,9 +137,9 @@ spec:
 		},
 		"with git info": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   template:
     spec:
@@ -155,9 +155,9 @@ spec:
 kind: RootSync
 metadata:
   labels:
-    gitops.kpt.dev/remoterootsync-name: my-remote-root-sync
-    gitops.kpt.dev/remoterootsync-namespace: ""
-  name: my-remote-root-sync
+    gitops.kpt.dev/remotesync-name: my-remote-sync
+    gitops.kpt.dev/remotesync-namespace: ""
+  name: my-remote-sync
   namespace: config-management-system
 spec:
   git:
@@ -174,7 +174,7 @@ spec:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			var rrs gitopsv1alpha1.RemoteRootSync
+			var rrs gitopsv1alpha1.RemoteSync
 			require.NoError(t, yaml.Unmarshal([]byte(tc.rrsInput), &rrs))
 
 			u, err := BuildObjectsToApply(&rrs, tc.gvk, tc.syncNamespace)
@@ -195,25 +195,25 @@ func TestGetExternalSyncNamespace(t *testing.T) {
 	}{
 		"empty type": { // should default to RootSync
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync`,
+  name: my-remote-sync`,
 			expected: rootSyncNamespace,
 		},
 		"RootSync type": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
 spec:
   type: RootSync`,
 			expected: rootSyncNamespace,
 		},
 		"RepoSync type": {
 			rrsInput: `apiVersion: gitops.kpt.dev/v1alpha1
-kind: RemoteRootSync
+kind: RemoteSync
 metadata:
-  name: my-remote-root-sync
+  name: my-remote-sync
   namespace: foo
 spec:
   type: RepoSync`,
@@ -223,7 +223,7 @@ spec:
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			var rrs gitopsv1alpha1.RemoteRootSync
+			var rrs gitopsv1alpha1.RemoteSync
 			require.NoError(t, yaml.Unmarshal([]byte(tc.rrsInput), &rrs))
 			require.Equal(t, tc.expected, getExternalSyncNamespace(&rrs))
 		})
