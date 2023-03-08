@@ -56,7 +56,7 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs
+  - remotesyncs
   verbs:
   - create
   - delete
@@ -68,13 +68,13 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs/finalizers
+  - remotesyncs/finalizers
   verbs:
   - update
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs/status
+  - remotesyncs/status
   verbs:
   - get
   - patch

@@ -92,7 +92,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Rollout")
 		os.Exit(1)
 	}
-	if err = (&controllers.RemoteRootSyncReconciler{
+	if err = (&controllers.RemoteSyncReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

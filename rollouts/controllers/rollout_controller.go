@@ -98,7 +98,7 @@ type RolloutReconciler struct {
 //
 // Dumb reconciliation of Rollout API includes the following:
 // Fetch the READY kcc clusters.
-// For each kcc cluster, fetch RootSync objects in each of the KCC clusters.
+// For each kcc cluster, fetch external sync objects in each of the KCC clusters.
 func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := klog.NewKlogr().WithValues("controller", "rollout", "rollout", req.NamespacedName)
 	ctx = klog.NewContext(ctx, logger)
@@ -379,30 +379,30 @@ func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1a
 
 /*
 so we compute targets where each target consists of (cluster, package)
-compute the RRS corresponding to each (cluster, package) pair
-For RRS, name has to be function of cluster-id and package-id.
-For RRS, make rootSyncTemplate
+compute the RemoteSync corresponding to each (cluster, package) pair
+For RemoteSync, name has to be function of cluster-id and package-id.
+For RemoteSync, make rootSyncTemplate
 */
 func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	rollout *gitopsv1alpha1.Rollout,
 	clusterPackages []packageclustermatcher.ClusterPackages) (*Targets, error) {
 	logger := klog.FromContext(ctx)
 
-	RRSkeysToBeDeleted := map[client.ObjectKey]*gitopsv1alpha1.RemoteRootSync{}
-	// let's take a look at existing remoterootsyncs
-	existingRRSs, err := r.listRemoteRootSyncs(ctx, rollout.Name, rollout.Namespace)
+	RSkeysToBeDeleted := map[client.ObjectKey]*gitopsv1alpha1.RemoteSync{}
+	// let's take a look at existing remotesyncs
+	existingRSs, err := r.listRemoteSyncs(ctx, rollout.Name, rollout.Namespace)
 	if err != nil {
 		return nil, err
 	}
 
 	// initially assume all the keys to be deleted
-	for _, rrs := range existingRRSs {
-		RRSkeysToBeDeleted[client.ObjectKeyFromObject(rrs)] = rrs
+	for _, rs := range existingRSs {
+		RSkeysToBeDeleted[client.ObjectKeyFromObject(rs)] = rs
 	}
 
-	logger.Info("Found RemoteRootSyncs", "remoteRootSyncs", toRemoteRootSyncNames(existingRRSs))
+	logger.Info("Found RemoteSyncs", "remoteSyncs", toRemoteSyncNames(existingRSs))
 	targets := &Targets{}
-	// track keys of all the desired remote rootsyncs
+	// track keys of all the desired remote syncs
 	for idx, clusterPkg := range clusterPackages {
 		// TODO: figure out multiple packages per cluster story
 		if len(clusterPkg.Packages) < 1 {
@@ -411,17 +411,17 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 		cluster := &clusterPackages[idx].Cluster
 		clusterName := cluster.Name[strings.LastIndex(cluster.Name, "/")+1:]
 		pkg := &clusterPkg.Packages[0]
-		rrs := gitopsv1alpha1.RemoteRootSync{}
+		rs := gitopsv1alpha1.RemoteSync{}
 		key := client.ObjectKey{
 			Namespace: rollout.Namespace,
 			Name:      fmt.Sprintf("%s-%s", pkgID(pkg), clusterName),
 		}
-		// since this RRS need to exist, remove it from the deletion list
-		delete(RRSkeysToBeDeleted, key)
-		// check if this remoterootsync for this package exists or not ?
-		err := r.Client.Get(ctx, key, &rrs)
+		// since this RS need to exist, remove it from the deletion list
+		delete(RSkeysToBeDeleted, key)
+		// check if this remotesync for this package exists or not ?
+		err := r.Client.Get(ctx, key, &rs)
 		if err != nil {
-			if apierrors.IsNotFound(err) { // rrs is missing
+			if apierrors.IsNotFound(err) { // rs is missing
 				targets.ToBeCreated = append(targets.ToBeCreated, &clusterPackagePair{
 					cluster:    cluster,
 					packageRef: pkg,
@@ -431,34 +431,34 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 				return nil, err
 			}
 		} else {
-			// remoterootsync already exists
-			updated, needsUpdate := pkgNeedsUpdate(ctx, rollout, rrs, pkg)
+			// remotesync already exists
+			updated, needsUpdate := pkgNeedsUpdate(ctx, rollout, rs, pkg)
 			if needsUpdate {
 				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
-				targets.Unchanged = append(targets.Unchanged, &rrs)
+				targets.Unchanged = append(targets.Unchanged, &rs)
 			}
 		}
 	}
 
-	for _, rrs := range RRSkeysToBeDeleted {
-		targets.ToBeDeleted = append(targets.ToBeDeleted, rrs)
+	for _, rs := range RSkeysToBeDeleted {
+		targets.ToBeDeleted = append(targets.ToBeDeleted, rs)
 	}
 
 	return targets, nil
 }
 
-func pkgNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, rrs gitopsv1alpha1.RemoteRootSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteRootSync, bool) {
+func pkgNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, rs gitopsv1alpha1.RemoteSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteSync, bool) {
 	// TODO: We need to check other things here besides git.Revision and metadata
 	metadata := getSpecMetadata(rollout)
-	if pkg.Revision != rrs.Spec.Template.Spec.Git.Revision ||
-		!reflect.DeepEqual(metadata, rrs.Spec.Template.Metadata) ||
-		rrs.Spec.Type != rollout.GetSyncTemplateType() {
+	if pkg.Revision != rs.Spec.Template.Spec.Git.Revision ||
+		!reflect.DeepEqual(metadata, rs.Spec.Template.Metadata) ||
+		rs.Spec.Type != rollout.GetSyncTemplateType() {
 
-		rrs.Spec.Template.Spec.Git.Revision = pkg.Revision
-		rrs.Spec.Template.Metadata = metadata
-		rrs.Spec.Type = rollout.GetSyncTemplateType()
-		return &rrs, true
+		rs.Spec.Template.Spec.Git.Revision = pkg.Revision
+		rs.Spec.Template.Metadata = metadata
+		rs.Spec.Type = rollout.GetSyncTemplateType()
+		return &rs, true
 	}
 	return nil, false
 }
@@ -490,22 +490,22 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 		wavetTargets.ToBeCreated = append(wavetTargets.ToBeCreated, toCreate)
 	}
 
-	for _, rrs := range allTargets.ToBeUpdated {
-		wavetTargets := clusterNameToWaveTarget[rrs.Spec.ClusterRef.Name].Targets
-		wavetTargets.ToBeUpdated = append(wavetTargets.ToBeUpdated, rrs)
+	for _, rs := range allTargets.ToBeUpdated {
+		wavetTargets := clusterNameToWaveTarget[rs.Spec.ClusterRef.Name].Targets
+		wavetTargets.ToBeUpdated = append(wavetTargets.ToBeUpdated, rs)
 	}
 
-	for _, rrs := range allTargets.Unchanged {
-		wavetTargets := clusterNameToWaveTarget[rrs.Spec.ClusterRef.Name].Targets
-		wavetTargets.Unchanged = append(wavetTargets.Unchanged, rrs)
+	for _, rs := range allTargets.Unchanged {
+		wavetTargets := clusterNameToWaveTarget[rs.Spec.ClusterRef.Name].Targets
+		wavetTargets.Unchanged = append(wavetTargets.Unchanged, rs)
 	}
 
-	for _, rrs := range allTargets.ToBeDeleted {
-		// The remote root sync will be associated back to it's previous wave and then removed as part
-		// of that wave. If the previous wave the remote root sync cannot be determined, then the remote
-		// root sync will be removed with the last wave of the rollout.
+	for _, rs := range allTargets.ToBeDeleted {
+		// The remote sync will be associated back to it's previous wave and then removed as part
+		// of that wave. If the previous wave the remote sync cannot be determined, then the remote
+		// sync will be removed with the last wave of the rollout.
 
-		waveName, found := findWaveNameForCluster(rollout, rrs.Spec.ClusterRef.Name)
+		waveName, found := findWaveNameForCluster(rollout, rs.Spec.ClusterRef.Name)
 
 		if !found {
 			waveName = allWaveTargets[len(allWaveTargets)-1].Wave.Name
@@ -514,7 +514,7 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 		for _, waveTarget := range allWaveTargets {
 			if waveTarget.Wave.Name == waveName {
 				wavetTargets := waveTarget.Targets
-				wavetTargets.ToBeDeleted = append(wavetTargets.ToBeDeleted, rrs)
+				wavetTargets.ToBeDeleted = append(wavetTargets.ToBeDeleted, rs)
 			}
 		}
 	}
@@ -536,40 +536,40 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.Unchanged {
-		if !isRRSSynced(target) {
+		if !isRSSynced(target) {
 			concurrentUpdates++
 		}
 	}
 
 	for _, target := range targets.ToBeCreated {
-		rootSyncSpec := toRootSyncSpec(target.packageRef)
-		rrs := newRemoteRootSync(rollout,
+		syncSpec := toSyncSpec(target.packageRef)
+		rs := newRemoteSync(rollout,
 			gitopsv1alpha1.ClusterRef{Name: target.cluster.Name},
-			rootSyncSpec,
+			syncSpec,
 			pkgID(target.packageRef),
 			wave.Name,
 			getSpecMetadata(rollout),
 		)
 
 		if maxConcurrent > concurrentUpdates {
-			if err := r.Create(ctx, rrs); err != nil {
-				logger.Info("Warning, error creating RemoteRootSync", "remoteRootSync", klog.KRef(rrs.Namespace, rrs.Name), "err", err)
+			if err := r.Create(ctx, rs); err != nil {
+				logger.Info("Warning, error creating RemoteSync", "remoteSync", klog.KRef(rs.Namespace, rs.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
-				Name: rrs.Spec.ClusterRef.Name,
+				Name: rs.Spec.ClusterRef.Name,
 				PackageStatus: gitopsv1alpha1.PackageStatus{
-					PackageID:  rrs.Name,
-					SyncStatus: rrs.Status.SyncStatus,
+					PackageID:  rs.Name,
+					SyncStatus: rs.Status.SyncStatus,
 					Status:     "Progressing",
 				},
 			})
 		} else {
 			clusterStatuses = append(clusterStatuses, gitopsv1alpha1.ClusterStatus{
-				Name: rrs.Spec.ClusterRef.Name,
+				Name: rs.Spec.ClusterRef.Name,
 				PackageStatus: gitopsv1alpha1.PackageStatus{
-					PackageID:  rrs.Name,
+					PackageID:  rs.Name,
 					SyncStatus: "",
 					Status:     waiting,
 				},
@@ -580,7 +580,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	for _, target := range targets.ToBeUpdated {
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Update(ctx, target); err != nil {
-				logger.Info("Warning, cannot update RemoteRootSync", "remoteRootSync", klog.KRef(target.Namespace, target.Name), "err", err)
+				logger.Info("Warning, cannot update RemoteSync", "remoteSync", klog.KRef(target.Namespace, target.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
@@ -607,7 +607,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	for _, target := range targets.ToBeDeleted {
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Delete(ctx, target); err != nil {
-				logger.Info("Warning, cannot delete RemoteRootSync", "remoteRootSync", klog.KRef(target.Namespace, target.Name), "err", err)
+				logger.Info("Warning, cannot delete RemoteSync", "remoteSync", klog.KRef(target.Namespace, target.Name), "err", err)
 				return false, nil, err
 			}
 			concurrentUpdates++
@@ -626,9 +626,9 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	for _, target := range targets.Unchanged {
 		status := "Progressing"
 
-		if isRRSSynced(target) {
+		if isRSSynced(target) {
 			status = "Synced"
-		} else if isRRSErrored(target) {
+		} else if isRSErrored(target) {
 			status = "Stalled"
 		}
 
@@ -656,9 +656,9 @@ type WaveTarget struct {
 
 type Targets struct {
 	ToBeCreated []*clusterPackagePair
-	ToBeUpdated []*gitopsv1alpha1.RemoteRootSync
-	ToBeDeleted []*gitopsv1alpha1.RemoteRootSync
-	Unchanged   []*gitopsv1alpha1.RemoteRootSync
+	ToBeUpdated []*gitopsv1alpha1.RemoteSync
+	ToBeDeleted []*gitopsv1alpha1.RemoteSync
+	Unchanged   []*gitopsv1alpha1.RemoteSync
 }
 
 type clusterPackagePair struct {
@@ -666,7 +666,7 @@ type clusterPackagePair struct {
 	packageRef *packagediscovery.DiscoveredPackage
 }
 
-func toRemoteRootSyncNames(rsss []*gitopsv1alpha1.RemoteRootSync) []string {
+func toRemoteSyncNames(rsss []*gitopsv1alpha1.RemoteSync) []string {
 	var names []string
 	for _, rss := range rsss {
 		names = append(names, rss.Name)
@@ -674,17 +674,17 @@ func toRemoteRootSyncNames(rsss []*gitopsv1alpha1.RemoteRootSync) []string {
 	return names
 }
 
-func (r *RolloutReconciler) listRemoteRootSyncs(ctx context.Context, rsdName, rsdNamespace string) ([]*gitopsv1alpha1.RemoteRootSync, error) {
-	var list gitopsv1alpha1.RemoteRootSyncList
+func (r *RolloutReconciler) listRemoteSyncs(ctx context.Context, rsdName, rsdNamespace string) ([]*gitopsv1alpha1.RemoteSync, error) {
+	var list gitopsv1alpha1.RemoteSyncList
 	if err := r.List(ctx, &list, client.MatchingLabels{rolloutLabel: rsdName}, client.InNamespace(rsdNamespace)); err != nil {
 		return nil, err
 	}
-	var remoterootsyncs []*gitopsv1alpha1.RemoteRootSync
+	var remotesyncs []*gitopsv1alpha1.RemoteSync
 	for i := range list.Items {
 		item := &list.Items[i]
-		remoterootsyncs = append(remoterootsyncs, item)
+		remotesyncs = append(remotesyncs, item)
 	}
-	return remoterootsyncs, nil
+	return remotesyncs, nil
 }
 
 func (r *RolloutReconciler) listAllRollouts(ctx context.Context) ([]gitopsv1alpha1.Rollout, error) {
@@ -696,7 +696,7 @@ func (r *RolloutReconciler) listAllRollouts(ctx context.Context) ([]gitopsv1alph
 	return rolloutsList.Items, nil
 }
 
-func isRRSSynced(rss *gitopsv1alpha1.RemoteRootSync) bool {
+func isRSSynced(rss *gitopsv1alpha1.RemoteSync) bool {
 	if rss.Generation != rss.Status.ObservedGeneration {
 		return false
 	}
@@ -707,7 +707,7 @@ func isRRSSynced(rss *gitopsv1alpha1.RemoteRootSync) bool {
 	return false
 }
 
-func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
+func isRSErrored(rss *gitopsv1alpha1.RemoteSync) bool {
 	if rss.Generation != rss.Status.ObservedGeneration {
 		return false
 	}
@@ -718,20 +718,20 @@ func isRRSErrored(rss *gitopsv1alpha1.RemoteRootSync) bool {
 	return false
 }
 
-// Given a package identifier and cluster, create a RemoteRootSync object.
-func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
+// Given a package identifier and cluster, create a RemoteSync object.
+func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
 	clusterRef gitopsv1alpha1.ClusterRef,
-	rssSpec *gitopsv1alpha1.RootSyncSpec,
+	rssSpec *gitopsv1alpha1.SyncSpec,
 	pkgID string,
 	waveName string,
-	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteRootSync {
+	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteSync {
 	t := true
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
-	// The RemoteRootSync object is created in the same namespace as the Rollout
-	// object. The RemoteRootSync will create either a RepoSync in the same namespace,
+	// The RemoteSync object is created in the same namespace as the Rollout
+	// object. The RemoteSync will create either a RepoSync in the same namespace,
 	// or a RootSync in the config-management-system namespace.
-	return &gitopsv1alpha1.RemoteRootSync{
+	return &gitopsv1alpha1.RemoteSync{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-%s", pkgID, clusterName),
 			Namespace: rollout.Namespace,
@@ -749,10 +749,10 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
 			},
 		},
 
-		Spec: gitopsv1alpha1.RemoteRootSyncSpec{
+		Spec: gitopsv1alpha1.RemoteSyncSpec{
 			Type:       rollout.Spec.SyncTemplate.Type,
 			ClusterRef: clusterRef,
-			Template: &gitopsv1alpha1.RootSyncInfo{
+			Template: &gitopsv1alpha1.Template{
 				Spec:     rssSpec,
 				Metadata: metadata,
 			},
@@ -760,8 +760,8 @@ func newRemoteRootSync(rollout *gitopsv1alpha1.Rollout,
 	}
 }
 
-func toRootSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.RootSyncSpec {
-	return &gitopsv1alpha1.RootSyncSpec{
+func toSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.SyncSpec {
+	return &gitopsv1alpha1.SyncSpec{
 		SourceFormat: "unstructured",
 		Git: &gitopsv1alpha1.GitInfo{
 			// TODO(droot): Repo URL can be an HTTP, GIT or SSH based URL
@@ -801,7 +801,7 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	var containerCluster gkeclusterapis.ContainerCluster
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
-		Owns(&gitopsv1alpha1.RemoteRootSync{}).
+		Owns(&gitopsv1alpha1.RemoteSync{}).
 		Watches(
 			&source.Kind{Type: &containerCluster},
 			handler.EnqueueRequestsFromMapFunc(r.mapClusterUpdateToRequest),
