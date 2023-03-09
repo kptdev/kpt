@@ -128,7 +128,7 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs
+  - remotesyncs
   verbs:
   - create
   - delete
@@ -140,13 +140,13 @@ rules:
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs/finalizers
+  - remotesyncs/finalizers
   verbs:
   - update
 - apiGroups:
   - gitops.kpt.dev
   resources:
-  - remoterootsyncs/status
+  - remotesyncs/status
   verbs:
   - get
   - patch
@@ -374,7 +374,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: gcr.io/kpt-dev/rollouts-controller:v0.0.1
+        image: gcr.io/kpt-dev/rollouts-controller:v0.0.2
         livenessProbe:
           httpGet:
             path: /healthz
