@@ -119,20 +119,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
   creationTimestamp: null
-  name: remoterootsyncs.gitops.kpt.dev
+  name: remotesyncs.gitops.kpt.dev
 spec:
   group: gitops.kpt.dev
   names:
-    kind: RemoteRootSync
-    listKind: RemoteRootSyncList
-    plural: remoterootsyncs
-    singular: remoterootsync
+    kind: RemoteSync
+    listKind: RemoteSyncList
+    plural: remotesyncs
+    singular: remotesync
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: RemoteRootSync is the Schema for the remoterootsyncs API
+        description: RemoteSync is the Schema for the remotesyncs API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
@@ -143,7 +143,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: RemoteRootSyncSpec defines the desired state of RemoteRootSync
+            description: RemoteSyncSpec defines the desired state of RemoteSync
             properties:
               clusterRef:
                 description: ClusterReference contains the identify information need to refer a cluster.
@@ -155,6 +155,18 @@ spec:
                 type: object
               template:
                 properties:
+                  metadata:
+                    description: Metadata specifies labels and annotations to add to the RSync object.
+                    properties:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    type: object
                   spec:
                     properties:
                       git:
@@ -192,9 +204,14 @@ spec:
                         type: string
                     type: object
                 type: object
+              type:
+                enum:
+                - RootSync
+                - RepoSync
+                type: string
             type: object
           status:
-            description: RemoteRootSyncStatus defines the observed state of RemoteRootSync
+            description: RemoteSyncStatus defines the observed state of RemoteSync
             properties:
               conditions:
                 description: Conditions describes the reconciliation state of the object.
@@ -244,8 +261,14 @@ spec:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run "make" to regenerate code after modifying this file'
                 format: int64
                 type: integer
+              syncCreated:
+                description: Internal only. SyncCreated describes if the external sync has been created.
+                type: boolean
               syncStatus:
+                description: SyncStatus describes the observed state of external sync.
                 type: string
+            required:
+            - syncCreated
             type: object
         type: object
     served: true
@@ -326,11 +349,13 @@ spec:
                 description: Packages source for this Rollout.
                 properties:
                   github:
-                    description: GitHubSource defines the packages source in Git.
+                    description: GitHubSource defines the packages source in GitHub.
                     properties:
                       selector:
-                        description: GitHubSelector defines the selector to apply to Git.
+                        description: GitHubSelector defines the selector to apply to packages in GitHub.
                         properties:
+                          branch:
+                            type: string
                           directory:
                             type: string
                           org:
@@ -349,7 +374,35 @@ spec:
                         required:
                         - org
                         - repo
-                        - revision
+                        type: object
+                    required:
+                    - selector
+                    type: object
+                  gitlab:
+                    description: GitLabSource defines the packages source in GitLab.
+                    properties:
+                      secretRef:
+                        description: SecretReference is the reference to a kubernetes secret that contains GitLab access token
+                        properties:
+                          name:
+                            description: Name represents the secret name
+                            type: string
+                        type: object
+                      selector:
+                        description: Selector defines the package selector in GitLab.
+                        properties:
+                          branch:
+                            description: Branch refers to the branch
+                            type: string
+                          directory:
+                            description: Directory refers to the subdirectory path in the project
+                            type: string
+                          projectID:
+                            description: ProjectID is the numerical identifier of the GitLab project It will not be specified if selection involves multiple projects
+                            type: string
+                          revision:
+                            description: Revision refers to the branch, tag of the GitLab repo
+                            type: string
                         type: object
                     required:
                     - selector
@@ -357,9 +410,9 @@ spec:
                   sourceType:
                     enum:
                     - GitHub
+                    - GitLab
                     type: string
                 required:
-                - github
                 - sourceType
                 type: object
               strategy:
@@ -410,6 +463,7 @@ spec:
                 description: SyncTemplate defines the type and attributes for the RSync object used to syncing the packages.
                 properties:
                   repoSync:
+                    description: RepoSyncTemplate represent the sync template for RepoSync.
                     properties:
                       git:
                         properties:
@@ -441,6 +495,18 @@ spec:
                         required:
                         - auth
                         - repo
+                        type: object
+                      metadata:
+                        description: Metadata specifies labels and annotations to add to the RSync object.
+                        properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                         type: object
                       sourceFormat:
                         type: string
@@ -478,6 +544,18 @@ spec:
                         required:
                         - auth
                         - repo
+                        type: object
+                      metadata:
+                        description: Metadata specifies labels and annotations to add to the RSync object.
+                        properties:
+                          annotations:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          labels:
+                            additionalProperties:
+                              type: string
+                            type: object
                         type: object
                       sourceFormat:
                         type: string
