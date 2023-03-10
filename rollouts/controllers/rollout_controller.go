@@ -21,12 +21,12 @@ import (
 	"flag"
 	"fmt"
 	"math"
-	"reflect"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -432,7 +432,10 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			}
 		} else {
 			// remotesync already exists
-			updated, needsUpdate := pkgNeedsUpdate(ctx, rollout, rs, pkg)
+			updated, needsUpdate := rsNeedsUpdate(ctx, rollout, &rs, &clusterPackagePair{
+				cluster:    cluster,
+				packageRef: pkg,
+			})
 			if needsUpdate {
 				targets.ToBeUpdated = append(targets.ToBeUpdated, updated)
 			} else {
@@ -448,18 +451,17 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 	return targets, nil
 }
 
-func pkgNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, rs gitopsv1alpha1.RemoteSync, pkg *packagediscovery.DiscoveredPackage) (*gitopsv1alpha1.RemoteSync, bool) {
-	// TODO: We need to check other things here besides git.Revision and metadata
-	metadata := getSpecMetadata(rollout)
-	if pkg.Revision != rs.Spec.Template.Spec.Git.Revision ||
-		!reflect.DeepEqual(metadata, rs.Spec.Template.Metadata) ||
-		rs.Spec.Type != rollout.GetSyncTemplateType() {
+// rsNeedsUpdate checks if the underlying remotesync needs to be updated by creating a new RemoteSync object and comparing it to the existing one
+func rsNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, currentRS *gitopsv1alpha1.RemoteSync, target *clusterPackagePair) (*gitopsv1alpha1.RemoteSync, bool) {
+	desiredRS := newRemoteSync(rollout, target)
 
-		rs.Spec.Template.Spec.Git.Revision = pkg.Revision
-		rs.Spec.Template.Metadata = metadata
-		rs.Spec.Type = rollout.GetSyncTemplateType()
-		return &rs, true
+	// if the spec of the new RemoteSync object is not identical to the existing one, then an update is necessary
+	if !equality.Semantic.DeepEqual(currentRS.Spec, desiredRS.Spec) {
+		currentRS.Spec = desiredRS.Spec
+		return currentRS, true
 	}
+
+	// no update required, return nil
 	return nil, false
 }
 
@@ -542,14 +544,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.ToBeCreated {
-		syncSpec := toSyncSpec(target.packageRef)
-		rs := newRemoteSync(rollout,
-			gitopsv1alpha1.ClusterRef{Name: target.cluster.Name},
-			syncSpec,
-			pkgID(target.packageRef),
-			wave.Name,
-			getSpecMetadata(rollout),
-		)
+		rs := newRemoteSync(rollout, target)
 
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rs); err != nil {
@@ -719,13 +714,9 @@ func isRSErrored(rss *gitopsv1alpha1.RemoteSync) bool {
 }
 
 // Given a package identifier and cluster, create a RemoteSync object.
-func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
-	clusterRef gitopsv1alpha1.ClusterRef,
-	rssSpec *gitopsv1alpha1.SyncSpec,
-	pkgID string,
-	waveName string,
-	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteSync {
+func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) *gitopsv1alpha1.RemoteSync {
 	t := true
+	clusterRef := gitopsv1alpha1.ClusterRef{Name: target.cluster.Name}
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
 	// The RemoteSync object is created in the same namespace as the Rollout
@@ -733,7 +724,7 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
 	// or a RootSync in the config-management-system namespace.
 	return &gitopsv1alpha1.RemoteSync{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", pkgID, clusterName),
+			Name:      fmt.Sprintf("%s-%s", pkgID(target.packageRef), clusterName),
 			Namespace: rollout.Namespace,
 			Labels: map[string]string{
 				rolloutLabel: rollout.Name,
@@ -753,8 +744,8 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
 			Type:       rollout.Spec.SyncTemplate.Type,
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.Template{
-				Spec:     rssSpec,
-				Metadata: metadata,
+				Spec:     toSyncSpec(target.packageRef),
+				Metadata: getSpecMetadata(rollout),
 			},
 		},
 	}
