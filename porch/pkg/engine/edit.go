@@ -26,6 +26,8 @@ import (
 type editPackageMutation struct {
 	task              *api.Task
 	namespace         string
+	repositoryName    string
+	packageName       string
 	repoOpener        RepositoryOpener
 	referenceResolver ReferenceResolver
 }
@@ -38,15 +40,31 @@ func (m *editPackageMutation) Apply(ctx context.Context, resources repository.Pa
 
 	sourceRef := m.task.Edit.Source
 
-	sourceResources, err := (&PackageFetcher{
+	revision, err := (&PackageFetcher{
 		repoOpener:        m.repoOpener,
 		referenceResolver: m.referenceResolver,
-	}).FetchResources(ctx, sourceRef, m.namespace)
+	}).FetchRevision(ctx, sourceRef, m.namespace)
 	if err != nil {
-		return repository.PackageResources{}, nil, fmt.Errorf("failed to fetch resources for package %q: %w", sourceRef.Name, err)
+		return repository.PackageResources{}, nil, fmt.Errorf("failed to fetch package %q: %w", sourceRef.Name, err)
+	}
+
+	// We only allow edit to create new revision from the same package.
+	if revision.Key().Package != m.packageName ||
+		revision.Key().Repository != m.repositoryName {
+		return repository.PackageResources{}, nil, fmt.Errorf("source revision must be from same package %s/%s", m.repositoryName, m.packageName)
+	}
+
+	// We only allow edit to create new revisions from published packages.
+	if !api.LifecycleIsPublished(revision.Lifecycle()) {
+		return repository.PackageResources{}, nil, fmt.Errorf("source revision must be published")
+	}
+
+	sourceResources, err := revision.GetResources(ctx)
+	if err != nil {
+		return repository.PackageResources{}, nil, fmt.Errorf("cannot read contents of package %q: %w", sourceRef.Name, err)
 	}
 
 	return repository.PackageResources{
 		Contents: sourceResources.Spec.Resources,
-	}, &api.TaskResult{Task: &api.Task{}}, nil
+	}, &api.TaskResult{Task: m.task}, nil
 }

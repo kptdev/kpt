@@ -30,8 +30,23 @@ type Repository struct {
 
 var _ repository.Repository = &Repository{}
 
-func (r *Repository) ListPackageRevisions(context.Context, repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
-	return r.PackageRevisions, nil
+func (r *Repository) ListPackageRevisions(_ context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	var revs []repository.PackageRevision
+	for _, rev := range r.PackageRevisions {
+		if filter.KubeObjectName != "" && filter.KubeObjectName == rev.KubeObjectName() {
+			revs = append(revs, rev)
+		}
+		if filter.Package != "" && filter.Package == rev.Key().Package {
+			revs = append(revs, rev)
+		}
+		if filter.Revision != "" && filter.Revision == rev.Key().Revision {
+			revs = append(revs, rev)
+		}
+		if filter.WorkspaceName != "" && filter.WorkspaceName == rev.Key().WorkspaceName {
+			revs = append(revs, rev)
+		}
+	}
+	return revs, nil
 }
 
 func (r *Repository) CreatePackageRevision(_ context.Context, pr *v1alpha1.PackageRevision) (repository.PackageDraft, error) {
