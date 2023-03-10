@@ -452,18 +452,13 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 }
 
 // rsNeedsUpdate checks if the underlying remotesync needs to be updated by creating a new RemoteSync object and comparing it to the existing one
-func rsNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, oldRS *gitopsv1alpha1.RemoteSync, target *clusterPackagePair) (*gitopsv1alpha1.RemoteSync, bool) {
-	newRS := newRemoteSync(rollout,
-		gitopsv1alpha1.ClusterRef{Name: target.cluster.Name},
-		toSyncSpec(target.packageRef),
-		pkgID(target.packageRef),
-		getSpecMetadata(rollout),
-	)
+func rsNeedsUpdate(ctx context.Context, rollout *gitopsv1alpha1.Rollout, currentRS *gitopsv1alpha1.RemoteSync, target *clusterPackagePair) (*gitopsv1alpha1.RemoteSync, bool) {
+	desiredRS := newRemoteSync(rollout, target)
 
 	// if the spec of the new RemoteSync object is not identical to the existing one, then an update is necessary
-	if !equality.Semantic.DeepEqual(oldRS.Spec, newRS.Spec) {
-		oldRS.Spec = newRS.Spec
-		return oldRS, true
+	if !equality.Semantic.DeepEqual(currentRS.Spec, desiredRS.Spec) {
+		currentRS.Spec = desiredRS.Spec
+		return currentRS, true
 	}
 
 	// no update required, return nil
@@ -549,13 +544,7 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 	}
 
 	for _, target := range targets.ToBeCreated {
-		syncSpec := toSyncSpec(target.packageRef)
-		rs := newRemoteSync(rollout,
-			gitopsv1alpha1.ClusterRef{Name: target.cluster.Name},
-			syncSpec,
-			pkgID(target.packageRef),
-			getSpecMetadata(rollout),
-		)
+		rs := newRemoteSync(rollout, target)
 
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rs); err != nil {
@@ -725,12 +714,9 @@ func isRSErrored(rss *gitopsv1alpha1.RemoteSync) bool {
 }
 
 // Given a package identifier and cluster, create a RemoteSync object.
-func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
-	clusterRef gitopsv1alpha1.ClusterRef,
-	rssSpec *gitopsv1alpha1.SyncSpec,
-	pkgID string,
-	metadata *gitopsv1alpha1.Metadata) *gitopsv1alpha1.RemoteSync {
+func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) *gitopsv1alpha1.RemoteSync {
 	t := true
+	clusterRef := gitopsv1alpha1.ClusterRef{Name: target.cluster.Name}
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
 	// The RemoteSync object is created in the same namespace as the Rollout
@@ -738,7 +724,7 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
 	// or a RootSync in the config-management-system namespace.
 	return &gitopsv1alpha1.RemoteSync{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", pkgID, clusterName),
+			Name:      fmt.Sprintf("%s-%s", pkgID(target.packageRef), clusterName),
 			Namespace: rollout.Namespace,
 			Labels: map[string]string{
 				rolloutLabel: rollout.Name,
@@ -758,8 +744,8 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout,
 			Type:       rollout.Spec.SyncTemplate.Type,
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.Template{
-				Spec:     rssSpec,
-				Metadata: metadata,
+				Spec:     toSyncSpec(target.packageRef),
+				Metadata: getSpecMetadata(rollout),
 			},
 		},
 	}
