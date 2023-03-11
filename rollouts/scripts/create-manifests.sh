@@ -98,3 +98,7 @@ validate
 generate_crds
 generate_controller_manifests
 set_controller_image ${CONTROLLER_IMAGE}
+
+# cleanup
+make license
+kpt fn render manifests

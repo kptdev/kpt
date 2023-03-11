@@ -55,6 +55,7 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
+	make license
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
@@ -67,6 +68,14 @@ fmt: ## Run go fmt against code.
 .PHONY: vet
 vet: ## Run go vet against code.
 	go vet ./...
+
+.PHONY: tidy
+tidy: ## Run go mod tidy against code.
+	go mod tidy
+
+.PHONY: license
+license: ## Add licenses.
+	../scripts/update-license.sh
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
