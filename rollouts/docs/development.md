@@ -9,7 +9,8 @@ make generate
 make manifests
 ```
 
-Remove old CRDs and apply the new CRDs to your cluster by running:
+Remove current Rollout and RemoteSync objects from your cluster. Then, remove old CRDs and apply the 
+new CRDs to your cluster by running:
 
 ```sh
 make uninstall
@@ -22,6 +23,7 @@ Rollouts comprises of several software components:
 
 * [api](../api): Definition of the KRM API supported by the rollouts controllers.
 * [config](../config): The generated rollouts manifests.
+* [controllers](../controllers): The controllers and related code for the Rollout CRDs. 
 * [manifests](../manifests): The generated rollouts manifests in kpt package format.
 * [clusterstore](../pkg/clusterstore): Represents a store of kubernetes clusters.
 * [packageclustermatcher](../pkg/packageclustermatcher): Matches discovered packages to known clusters.
@@ -51,7 +53,7 @@ make docker-push
 # IMG     - image name and tag
 
 # Example:
-IMG=gcr.io/kpt-dev/rollouts-controller:v0.0.2 make docker-push
+gcr.io/<your-project>/rollouts-controller:v0.0.x make docker-push
 ```
 
 ## Running Locally

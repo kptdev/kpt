@@ -15,8 +15,13 @@ To run Rollouts locally, you will need:
 
 ### Creating a management cluster with KCC running
 First, you must create a config-controller cluster. You can follow the instructions on the 
-[config-controller-setup guide](https://cloud.google.com/anthos-config-management/docs/how-to/config-controller-setup) to create a config-controller cluster. Make sure your kubeconfig is 
-connected to this cluster.
+[config-controller-setup guide](https://cloud.google.com/anthos-config-management/docs/how-to/config-controller-setup) to create a config-controller cluster. 
+
+Make sure your kubeconfig is connected to this cluster:
+
+```sh
+KUBECONFIG=~/.kube/admin-cluster gcloud container clusters get-credentials <your cluster> --region <your region> --project <your project>
+```
 
 ### Provisioning child clusters
 The next step will be to provision new child clusters. This example names the child cluster `gke-n`;
@@ -31,8 +36,8 @@ kpt fn render
 
 # assuming your kubectl is configured to talk to a management cluster with KCC running (the previous step).
 # provision the cluster using following commands
-kpt live init gke-n
-kpt live apply gke-n
+KUBECONFIG=~/.kube/admin-cluster kpt live init gke-n
+KUBECONFIG=~/.kube/admin-cluster kpt live apply gke-n
 ```
 
 You can repeat the above steps to create as many child clusters as you want.
@@ -43,23 +48,38 @@ Next, we will configure kubeconfig to be able to talk to each cluster individual
 ```sh
 # once kpt live status is showing current for a cluster package
 # run the following
-KUBECONFIG=~/.kube/gke-n gcloud container clusters get-credentials gke-n --region us-west1
+KUBECONFIG=~/.kube/gke-n gcloud container clusters get-credentials gke-n --region us-west1 --project <your project>
 
 # now ~/.kube/gke-n file has been updated with the credentials for gke-n cluster
 # verify if this is working
-
 KUBECONFIG=~/.kube/gke-n kubectl get pods -n kube-system
 ```
 
 ### Set up Config Sync
 Rollouts requires a git syncer installed on child clusters. Currently, only Config Sync is supported. 
-To install Config Sync on your child clusters:
+To install Config Sync on your child clusters, follow these steps.
+
+First, set the release version of Config Sync that you would like to install:
 
 ```sh
-kpt pkg get git@github.com:droot/kpt-packages.git/config-sync@main config-sync
-cd config-sync/
-KUBECONFIG=~/.kube/gke-n kubectl apply -f manifests.yaml
+export CS_VERSION=vX.Y.Z
 ```
+
+Then, apply the core Config Sync manifests to your cluster:
+
+```sh
+KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"
+```
+
+Then, for kubernetes version v1.25 and newer, optionally apply the asm.yaml manifest:
+
+```sh
+KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/acm-psp.yaml"
+```
+
+If you wish to install Config Sync from source instead of using a released version, you can follow
+the [Config Sync installation guide](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/installation.md).
+
 
 ## Running Rollouts locally
 
@@ -85,13 +105,13 @@ Assuming your kubeconfig is configured to talk to the management cluster with KC
 in the above steps), apply the manifests:
 
 ```sh
-make install
+KUBECONFIG=~/.kube/admin-cluster make install
 ```
 
 Confirm the CRDs are installed:
 
 ```sh
-kubectl api-resources | grep gitops.kpt.dev
+KUBECONFIG=~/.kube/admin-cluster kubectl api-resources | grep gitops.kpt.dev
 
 progressiverolloutstrategies  gitops.kpt.dev/v1alpha1  true  ProgressiveRolloutStrategy
 remotesyncs                   gitops.kpt.dev/v1alpha1  true  RemoteSync
@@ -101,7 +121,7 @@ rollouts                      gitops.kpt.dev/v1alpha1  true  Rollout
 Now you are ready to run the controller locally:
 
 ```sh
-go run main.go
+KUBECONFIG=~/.kube/admin-cluster go run main.go
 ```
 
 ## Creating a Rollout object
@@ -143,10 +163,10 @@ Apply this to your management cluster with `kubectl apply -f`. View the created 
 
 ```sh
 # see the rollouts object
-kubectl get rollouts sample
+KUBECONFIG=~/.kube/admin-cluster kubectl get rollouts sample
 
 # see the remotesync objects that the rollouts controller created
-kubectl get remotesyncs
+KUBECONFIG=~/.kube/admin-cluster kubectl get remotesyncs
 
 # see the rootsync object that the remotesync controller created
 KUBECONFIG=~/.kube/gke-n kubectl get rootsyncs -nconfig-management-system
