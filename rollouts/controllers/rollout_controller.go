@@ -719,6 +719,11 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) 
 	clusterRef := gitopsv1alpha1.ClusterRef{Name: target.cluster.Name}
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
+	templateType := gitopsv1alpha1.TemplateTypeRootSync
+	if rollout != nil && rollout.Spec.SyncTemplate != nil {
+		templateType = rollout.Spec.SyncTemplate.Type
+	}
+
 	// The RemoteSync object is created in the same namespace as the Rollout
 	// object. The RemoteSync will create either a RepoSync in the same namespace,
 	// or a RootSync in the config-management-system namespace.
@@ -741,7 +746,7 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) 
 		},
 
 		Spec: gitopsv1alpha1.RemoteSyncSpec{
-			Type:       rollout.Spec.SyncTemplate.Type,
+			Type:       templateType,
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.Template{
 				Spec:     toSyncSpec(target.packageRef),
