@@ -77,9 +77,10 @@ tidy: ## Run go mod tidy against code.
 license: ## Add licenses.
 	../scripts/update-license.sh
 
+# set KUBEBUILDER_ATTACH_CONTROL_PLANE_OUTPUT=true for controlplane logs
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test -v ./... -coverprofile cover.out
 
 .PHONY: run-in-kind
 run-in-kind: manifests kustomize ## Run the rollouts-controller-manager in a kind cluster named rollouts-management-cluster
