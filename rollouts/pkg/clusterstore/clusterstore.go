@@ -90,10 +90,8 @@ func (cs *ClusterStore) GetRESTConfig(ctx context.Context, clusterRef *gitopsv1a
 	// expand it to use the other properties (seems like an overkill for now).
 	switch clusterKind := clusterRef.Kind; clusterKind {
 	case GKEFleetMembershipGVK.Kind:
-		// strings.Contains(name, "memberships") || strings.Contains(name, "gkeMemberships"):
 		return cs.gcpFleetClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
 	case KindClusterGVK.Kind:
-		//strings.HasPrefix(name, "kind-"):
 		return cs.kindClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
 	case KCCClusterGVK.Kind:
 		return cs.containerClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
