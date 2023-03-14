@@ -53,10 +53,19 @@ spec:
                 description: ClusterReference contains the identify information need
                   to refer a cluster.
                 properties:
+                  apiVersion:
+                    type: string
+                  kind:
+                    type: string
                   name:
                     type: string
+                  namespace:
+                    type: string
                 required:
+                - apiVersion
+                - kind
                 - name
+                - namespace
                 type: object
               template:
                 properties:

@@ -223,7 +223,7 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 
 	clusterWaveMap := make(map[string]string)
 	for _, cluster := range allClusters {
-		clusterWaveMap[cluster.Name] = ""
+		clusterWaveMap[cluster.Ref.Name] = ""
 	}
 
 	pauseAfterWaveName := ""
@@ -244,26 +244,26 @@ func (r *RolloutReconciler) validateProgressiveRolloutStrategy(ctx context.Conte
 		}
 
 		for _, cluster := range waveClusters {
-			currentClusterWave, found := clusterWaveMap[cluster.Name]
+			currentClusterWave, found := clusterWaveMap[cluster.Ref.Name]
 			if !found {
 				// this should never happen
-				return fmt.Errorf("wave %q references cluster %s not selected by the rollout", wave.Name, cluster.Name)
+				return fmt.Errorf("wave %q references cluster %s not selected by the rollout", wave.Name, cluster.Ref.Name)
 			}
 
 			if currentClusterWave != "" {
-				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %q and %q", cluster.Name, currentClusterWave, wave.Name)
+				return fmt.Errorf("a cluster cannot be selected by more than one wave - cluster %s is selected by waves %q and %q", cluster.Ref.Name, currentClusterWave, wave.Name)
 			}
 
-			clusterWaveMap[cluster.Name] = wave.Name
+			clusterWaveMap[cluster.Ref.Name] = wave.Name
 		}
 
 		pauseWaveNameFound = pauseWaveNameFound || pauseAfterWaveName == wave.Name
 	}
 
 	for _, cluster := range allClusters {
-		wave, _ := clusterWaveMap[cluster.Name]
+		wave, _ := clusterWaveMap[cluster.Ref.Name]
 		if wave == "" {
-			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Name)
+			return fmt.Errorf("waves should cover all clusters selected by the rollout - cluster %s is not covered by any waves", cluster.Ref.Name)
 		}
 	}
 
@@ -409,7 +409,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 			continue
 		}
 		cluster := &clusterPackages[idx].Cluster
-		clusterName := cluster.Name[strings.LastIndex(cluster.Name, "/")+1:]
+		clusterName := cluster.Ref.Name[strings.LastIndex(cluster.Ref.Name, "/")+1:]
 		pkg := &clusterPkg.Packages[0]
 		rs := gitopsv1alpha1.RemoteSync{}
 		key := client.ObjectKey{
@@ -481,14 +481,14 @@ func (r *RolloutReconciler) getWaveTargets(ctx context.Context, rollout *gitopsv
 		}
 
 		for _, cluster := range waveClusters {
-			clusterNameToWaveTarget[cluster.Name] = &thisWaveTarget
+			clusterNameToWaveTarget[cluster.Ref.Name] = &thisWaveTarget
 		}
 
 		allWaveTargets = append(allWaveTargets, thisWaveTarget)
 	}
 
 	for _, toCreate := range allTargets.ToBeCreated {
-		wavetTargets := clusterNameToWaveTarget[toCreate.cluster.Name].Targets
+		wavetTargets := clusterNameToWaveTarget[toCreate.cluster.Ref.Name].Targets
 		wavetTargets.ToBeCreated = append(wavetTargets.ToBeCreated, toCreate)
 	}
 
@@ -545,7 +545,6 @@ func (r *RolloutReconciler) rolloutTargets(ctx context.Context, rollout *gitopsv
 
 	for _, target := range targets.ToBeCreated {
 		rs := newRemoteSync(rollout, target)
-
 		if maxConcurrent > concurrentUpdates {
 			if err := r.Create(ctx, rs); err != nil {
 				logger.Info("Warning, error creating RemoteSync", "remoteSync", klog.KRef(rs.Namespace, rs.Name), "err", err)
@@ -716,7 +715,7 @@ func isRSErrored(rss *gitopsv1alpha1.RemoteSync) bool {
 // Given a package identifier and cluster, create a RemoteSync object.
 func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) *gitopsv1alpha1.RemoteSync {
 	t := true
-	clusterRef := gitopsv1alpha1.ClusterRef{Name: target.cluster.Name}
+	clusterRef := target.cluster.Ref
 	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
 
 	templateType := gitopsv1alpha1.TemplateTypeRootSync

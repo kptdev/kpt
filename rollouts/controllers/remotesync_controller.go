@@ -386,7 +386,7 @@ func (r *RemoteSyncReconciler) deleteExternalResources(ctx context.Context, remo
 }
 
 func (r *RemoteSyncReconciler) getDynamicClientForCluster(ctx context.Context, clusterRef *gitopsv1alpha1.ClusterRef) (dynamic.Interface, error) {
-	restConfig, err := r.store.GetRESTConfig(ctx, clusterRef.Name)
+	restConfig, err := r.store.GetRESTConfig(ctx, clusterRef)
 	if err != nil {
 		return nil, err
 	}

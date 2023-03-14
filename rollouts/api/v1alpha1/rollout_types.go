@@ -53,27 +53,55 @@ type ClusterTargetSelector struct {
 // ClusterReference contains the identify information
 // need to refer a cluster.
 type ClusterRef struct {
-	Name string `json:"name"`
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Namespace  string `json:"namespace"`
+	Name       string `json:"name"`
+}
+
+func (r *ClusterRef) GetKind() string {
+	return r.Kind
+}
+
+func (r *ClusterRef) GetName() string {
+	return r.Name
+}
+
+func (r *ClusterRef) GetNamespace() string {
+	return r.Namespace
+}
+
+func (r *ClusterRef) GetAPIVersion() string {
+	return r.APIVersion
 }
 
 // different types of cluster sources
 const (
-	KCC      ClusterSourceType = "KCC"
-	GCPFleet ClusterSourceType = "GCPFleet"
+	KCC         ClusterSourceType = "KCC"
+	GCPFleet    ClusterSourceType = "GCPFleet"
+	KindCluster ClusterSourceType = "Kind"
 )
 
-// +kubebuilder:validation:Enum=KCC;GCPFleet
+// +kubebuilder:validation:Enum=KCC;GCPFleet;Kind
 type ClusterSourceType string
 
 // ClusterDiscovery represents configuration needed to discover clusters.
 type ClusterDiscovery struct {
 	SourceType ClusterSourceType      `json:"sourceType"`
 	GCPFleet   *ClusterSourceGCPFleet `json:"gcpFleet,omitempty"`
+	Kind       *ClusterSourceKind     `json:"kind,omitempty"`
 }
 
 // ClusterSourceGCPFleet represents configuration needed to discover gcp fleet clusters.
 type ClusterSourceGCPFleet struct {
 	ProjectIds []string `json:"projectIds"`
+}
+
+// ClusterSourceKind contains configuration needed to discover kind clusters.
+type ClusterSourceKind struct {
+	// Namespace where configmaps corresponding to kind clusters live
+	// defaults to `kind-clusters`
+	Namespace string `json:"namespace,omitempty"`
 }
 
 const (

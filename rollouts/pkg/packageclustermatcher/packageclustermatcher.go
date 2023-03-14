@@ -56,7 +56,8 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 			matchedPackages = packages
 		case gitopsv1alpha1.CustomMatcher:
 			celCluster := map[string]interface{}{
-				"name":   cluster.Name,
+				// TODO(droot): plumb the entire clusterRef
+				"name":   cluster.Ref.Name,
 				"labels": cluster.Labels,
 			}
 
@@ -80,7 +81,7 @@ func (m *PackageClusterMatcher) GetClusterPackages(matcher gitopsv1alpha1.Packag
 		}
 
 		if len(matchedPackages) > 1 {
-			return nil, fmt.Errorf("more than one package rollout is not supported yet. Found %d packages for cluster %s", len(matchedPackages), cluster.Name)
+			return nil, fmt.Errorf("more than one package rollout is not supported yet. Found %d packages for cluster %s", len(matchedPackages), cluster.Ref.Name)
 		}
 
 		clusterPackages := ClusterPackages{

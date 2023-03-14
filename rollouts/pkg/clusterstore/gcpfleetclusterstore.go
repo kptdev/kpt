@@ -198,7 +198,11 @@ func (cs *GCPFleetClusterStore) listMemberships(ctx context.Context, projectId s
 
 func (cs *GCPFleetClusterStore) toCluster(membership *gkehubv1.Membership) Cluster {
 	cluster := Cluster{
-		Name:   membership.Name,
+		Ref: gitopsv1alpha1.ClusterRef{
+			APIVersion: GKEFleetMembershipGVK.GroupVersion().String(),
+			Kind:       GKEFleetMembershipGVK.Kind,
+			Name:       membership.Name,
+		},
 		Labels: membership.Labels,
 	}
 

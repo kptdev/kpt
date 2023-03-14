@@ -17,21 +17,36 @@ package clusterstore
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
+	gkehubapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/gkehub/v1beta1"
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+)
+
+var (
+	KCCClusterGVK         = gkeclusterapis.ContainerClusterGVK
+	GKEFleetMembershipGVK = gkehubapis.GKEHubMembershipGVK
+	KindClusterGVK        = schema.GroupVersionKind{
+		Group:   "clusters.gitops.kpt.dev",
+		Version: "v1",
+		Kind:    "KindCluster",
+	}
 )
 
 type ClusterStore struct {
 	containerClusterStore *ContainerClusterStore
 	gcpFleetClusterStore  *GCPFleetClusterStore
+	kindClusterStore      *KindClusterStore
 }
+
 type Cluster struct {
-	Name   string
+	// Ref is the reference to the target cluster
+	Ref    gitopsv1alpha1.ClusterRef
 	Labels map[string]string
 }
 
@@ -47,6 +62,7 @@ func NewClusterStore(client client.Client, config *rest.Config) (*ClusterStore, 
 	clusterStore := &ClusterStore{
 		containerClusterStore: containerClusterStore,
 		gcpFleetClusterStore:  &GCPFleetClusterStore{},
+		kindClusterStore:      &KindClusterStore{Client: client},
 	}
 
 	return clusterStore, nil
@@ -62,17 +78,24 @@ func (cs *ClusterStore) ListClusters(ctx context.Context, clusterDiscovery *gito
 	case gitopsv1alpha1.KCC:
 		return cs.containerClusterStore.ListClusters(ctx, selector)
 
+	case gitopsv1alpha1.KindCluster:
+		return cs.kindClusterStore.ListClusters(ctx, selector)
 	default:
 		return nil, fmt.Errorf("%v cluster source not supported", clusterSourceType)
 	}
 }
 
-func (cs *ClusterStore) GetRESTConfig(ctx context.Context, name string) (*rest.Config, error) {
-	switch {
-	case strings.Contains(name, "memberships") || strings.Contains(name, "gkeMemberships"):
-		return cs.gcpFleetClusterStore.GetRESTConfig(ctx, name)
-
+func (cs *ClusterStore) GetRESTConfig(ctx context.Context, clusterRef *gitopsv1alpha1.ClusterRef) (*rest.Config, error) {
+	// TODO (droot): Using kind property of the clusterRef for now but in the future
+	// expand it to use the other properties (seems like an overkill for now).
+	switch clusterKind := clusterRef.Kind; clusterKind {
+	case GKEFleetMembershipGVK.Kind:
+		return cs.gcpFleetClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
+	case KindClusterGVK.Kind:
+		return cs.kindClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
+	case KCCClusterGVK.Kind:
+		return cs.containerClusterStore.GetRESTConfig(ctx, clusterRef.GetName())
 	default:
-		return cs.containerClusterStore.GetRESTConfig(ctx, name)
+		return nil, fmt.Errorf("unknown cluster kind %s", clusterKind)
 	}
 }
