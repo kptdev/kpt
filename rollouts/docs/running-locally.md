@@ -9,9 +9,144 @@ To run Rollouts locally, you will need:
   confirmed to work on Linux)
 * [go 1.19](https://go.dev/dl/) or newer
 * `make`
-* Access to GKE clusters.
+* Either access to GKE clusters, or Kind.
 
-## Cluster Setup
+This doc will go through:
+
+- [Running in kind](#running-in-kind): How to run the controller and child clusters as Kind clusters.
+- [Running locally with a KCC Cluster](#running-the-controller-locally-with-a-kcc-management-cluster): How to run the controller locally while connected to a KCC management cluster and child clusters.
+
+There are also sample Rollout objects for each.
+
+---
+
+## Running in Kind
+
+### Creating a management cluster 
+To spin up a Kind cluster with the rollouts controller, run:
+
+```sh
+make run-in-kind`
+```
+
+This will create a new kind cluster for you called `rollouts-management-cluster` with the rollouts
+controller manager running and relevant CRDs installed. It will also overwrite your kubeconfig
+to point to the newly created kind cluster.
+
+Verify the CRDs are installed:
+
+```sh
+$ kubectl api-resources | grep gitops
+progressiverolloutstrategies                                                 gitops.kpt.dev/v1alpha1                   true         ProgressiveRolloutStrategy
+remotesyncs                                                                  gitops.kpt.dev/v1alpha1                   true         RemoteSync
+rollouts                                                                     gitops.kpt.dev/v1alpha1                   true         Rollout
+```
+
+Verify the controller is running:
+
+```sh
+$ kubectl get pods -nrollouts-system
+NAME                                           READY   STATUS    RESTARTS   AGE
+rollouts-controller-manager-7f556b8667-6kzbl   2/2     Running   0          20s
+```
+
+### Creating the child clusters
+
+To create a Kind child cluster, run:
+
+```sh
+make run-child-in-kind
+```
+
+This will spin up a new Kind cluster and install Config Sync to it. It will also create
+a ConfigMap representation of the Kind cluster in the `kind-clusters` namespace, and the ConfigMap will have 
+a sample label `location: example` as well as the kubeconfig for the new Kind cluster. It will also store the new Kind
+cluster's kubeconfig in `~/.kubeconfig/$NAME`.
+
+The default name for the cluster `rollouts-child`, and default Config Sync version installed is `v1.14.2`.
+
+Verify that the child cluster has been created correctly with your kubeconfig setup:
+
+```sh
+KUBECONFIG=~/.kube/rollouts-child kubectl get nodes
+NAME                           STATUS   ROLES           AGE   VERSION
+rollouts-child-control-plane   Ready    control-plane   24m   v1.25.3
+```
+
+Verify that Config Sync was installed:
+
+```sh
+KUBECONFIG=~/.kube/rollouts-child kubectl api-resources | grep configsync
+reposyncs                                      configsync.gke.io/v1beta1              true         RepoSync
+rootsyncs                                      configsync.gke.io/v1beta1              true         RootSync
+```
+
+You can optionally specify a name for the child cluster, and a version of Config Sync that you want installed:
+```sh
+NAME=child CS_VERSION=vX.Y.Z make run-child-in-kind
+```
+
+### Creating a Rollout object
+
+Here is an example of a simple `Rollout` object which uses Kind clusters:
+
+```yaml
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: Rollout
+metadata:
+  name: sample
+spec:
+  description: sample
+  clusters:
+    sourceType: Kind
+    kind:
+      namespace: kind-clusters
+  packages:
+    sourceType: GitHub
+    github:
+      selector:
+        org: droot
+        repo: store
+        directory: namespaces
+        revision: main
+  targets:
+    selector:
+      matchLabels:
+        location: example
+  syncTemplate:
+    type: RootSync
+  packageToTargetMatcher:
+    type: AllClusters
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxConcurrent: 2
+```
+
+Apply this to your management cluster with `kubectl apply -f`. View the created Rollout, RemoteSyncs, and RootSync objects to verify that the controller is running properly:
+
+```sh
+# see the rollouts object
+kubectl get rollouts sample
+
+# see the remotesync objects that the rollouts controller created
+kubectl get remotesyncs
+
+# see the rootsync object that the remotesync controller created
+KUBECONFIG=~/.kube/rollouts-child kubectl get rootsyncs -nconfig-management-system
+```
+
+Deleting the Rollout object should likewise delete the associated RemoteSync and Rootsync objects. You can 
+look at the controller logs to verify that the various Remotesync/Rootsync objects are being created, updated,
+or deleted.
+
+### Restarting the management controller
+
+If you make code changes, all you have to do is rerun `make run-in-kind`. 
+
+---
+
+## Running the controller locally with a KCC Management cluster.
 
 ### Creating a management cluster with KCC running
 First, you must create a config-controller cluster. You can follow the instructions on the 
@@ -81,7 +216,7 @@ If you wish to install Config Sync from source instead of using a released versi
 the [Config Sync installation guide](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/installation.md).
 
 
-## Running Rollouts locally
+### Running Rollouts controller locally
 
 Clone this repository into `${GOPATH}/src/github.com/GoogleContainerTools/kpt`.
 
@@ -124,9 +259,9 @@ Now you are ready to run the controller locally:
 KUBECONFIG=~/.kube/admin-cluster go run main.go
 ```
 
-## Creating a Rollout object
+### Creating a Rollout object
 
-Here is an example of a simple `Rollout` object:
+Here is an example of a simple `Rollout` object which uses KCC:
 
 ```yaml
 apiVersion: gitops.kpt.dev/v1alpha1
@@ -176,7 +311,7 @@ Deleting the Rollout object should likewise delete the associated RemoteSync and
 look at the controller logs to verify that the various Remotesync/Rootsync objects are being created, updated,
 or deleted.
 
-## Restarting Rollouts
+### Restarting the local controller
 
 If you make code changes, all you have to do is stop the controller (ctrl+C in the terminal where it is running),
 and rerun `go run main.go`.

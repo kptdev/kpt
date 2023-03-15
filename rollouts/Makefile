@@ -81,6 +81,22 @@ license: ## Add licenses.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
+.PHONY: run-in-kind
+run-in-kind: manifests kustomize ## Run the rollouts-controller-manager in a kind cluster named rollouts-management-cluster
+	kind delete cluster --name=rollouts-management-cluster
+	kind create cluster --name=rollouts-management-cluster
+	make install
+	kubectl apply -f ./manifests/crds/containercluster.yaml
+	IMG=${IMG} make docker-build
+	kind load docker-image ${IMG} --name=rollouts-management-cluster
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | sed --expression='s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g' | kubectl apply -f -
+	kubectl rollout status deployment rollouts-controller-manager --namespace rollouts-system
+
+.PHONY: run-child-in-kind ## Create a child kind cluster with CS installed
+run-child-in-kind: 
+	./scripts/run-child-in-kind.sh
+
 ##@ Build
 
 .PHONY: build
@@ -139,7 +155,7 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: dry-run 
-dry-run: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+dry-run: manifests kustomize ## Build the manifests that would be deployed to the k8s cluster without applying them.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > bin/all.yaml
 
