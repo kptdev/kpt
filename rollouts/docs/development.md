@@ -53,7 +53,7 @@ make docker-push
 # IMG     - image name and tag
 
 # Example:
-gcr.io/<your-project>/rollouts-controller:v0.0.x make docker-push
+IMG=gcr.io/<your-project>/rollouts-controller:v0.0.x make docker-push
 ```
 
 ## Running Locally
