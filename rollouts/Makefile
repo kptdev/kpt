@@ -83,19 +83,11 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 .PHONY: run-in-kind
 run-in-kind: manifests kustomize ## Run the rollouts-controller-manager in a kind cluster named rollouts-management-cluster
-	kind delete cluster --name=rollouts-management-cluster
-	kind create cluster --name=rollouts-management-cluster
-	make install
-	kubectl apply -f ./manifests/crds/containercluster.yaml
-	IMG=${IMG} make docker-build
-	kind load docker-image ${IMG} --name=rollouts-management-cluster
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | sed --expression='s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g' | kubectl apply -f -
-	kubectl rollout status deployment rollouts-controller-manager --namespace rollouts-system
+	IMG=${IMG} KUSTOMIZE=${KUSTOMIZE} ./scripts/run-in-kind.sh
 
-.PHONY: run-child-in-kind ## Create a child kind cluster with CS installed
-run-child-in-kind: 
-	./scripts/run-child-in-kind.sh
+.PHONY: run-target-in-kind ## Create a target kind cluster with CS installed
+run-target-in-kind:
+	./scripts/run-target-in-kind.sh
 
 ##@ Build
 

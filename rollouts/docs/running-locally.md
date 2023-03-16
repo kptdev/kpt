@@ -13,8 +13,8 @@ To run Rollouts locally, you will need:
 
 This doc will go through:
 
-- [Running in kind](#running-in-kind): How to run the controller and child clusters as Kind clusters.
-- [Running locally with a KCC Cluster](#running-the-controller-locally-with-a-kcc-management-cluster): How to run the controller locally while connected to a KCC management cluster and child clusters.
+- [Running in kind](#running-in-kind): How to run the controller and target clusters as Kind clusters.
+- [Running locally with a KCC Cluster](#running-the-controller-locally-with-a-kcc-management-cluster): How to run the controller locally while connected to a KCC management cluster and target clusters.
 
 There are also sample Rollout objects for each.
 
@@ -23,20 +23,28 @@ There are also sample Rollout objects for each.
 ## Running in Kind
 
 ### Creating a management cluster 
-To spin up a Kind cluster with the rollouts controller, run:
+To spin up a admin Kind cluster with the rollouts controller, run:
 
 ```sh
 make run-in-kind`
 ```
 
 This will create a new kind cluster for you called `rollouts-management-cluster` with the rollouts
-controller manager running and relevant CRDs installed. It will also overwrite your kubeconfig
-to point to the newly created kind cluster.
+controller manager running and relevant CRDs installed. It will store the kubeconfig for the
+new kind cluster in `~/.kube/admin-cluster`.
+
+Verify that the admin cluster has been created correctly with your kubeconfig setup:
+
+```sh
+KUBECONFIG=~/.kube/admin-cluster kubectl get nodes
+NAME                                        STATUS   ROLES           AGE   VERSION
+rollouts-management-cluster-control-plane   Ready    control-plane   57s   v1.25.3
+```
 
 Verify the CRDs are installed:
 
 ```sh
-$ kubectl api-resources | grep gitops
+$ KUBECONFIG=~/.kube/admin-cluster kubectl api-resources | grep gitops
 progressiverolloutstrategies                                                 gitops.kpt.dev/v1alpha1                   true         ProgressiveRolloutStrategy
 remotesyncs                                                                  gitops.kpt.dev/v1alpha1                   true         RemoteSync
 rollouts                                                                     gitops.kpt.dev/v1alpha1                   true         Rollout
@@ -45,45 +53,49 @@ rollouts                                                                     git
 Verify the controller is running:
 
 ```sh
-$ kubectl get pods -nrollouts-system
+$ KUBECONFIG=~/.kube/admin-cluster kubectl get pods -nrollouts-system
 NAME                                           READY   STATUS    RESTARTS   AGE
 rollouts-controller-manager-7f556b8667-6kzbl   2/2     Running   0          20s
 ```
 
-### Creating the child clusters
+### Restarting the management controller
 
-To create a Kind child cluster, run:
+If you make code changes, all you have to do is rerun `make run-in-kind`.
+
+### Creating the target clusters
+
+To create a Kind target cluster, run:
 
 ```sh
-make run-child-in-kind
+make run-target-in-kind
 ```
 
 This will spin up a new Kind cluster and install Config Sync to it. It will also create
 a ConfigMap representation of the Kind cluster in the `kind-clusters` namespace, and the ConfigMap will have 
 a sample label `location: example` as well as the kubeconfig for the new Kind cluster. It will also store the new Kind
-cluster's kubeconfig in `~/.kubeconfig/$NAME`.
+cluster's kubeconfig in `~/.kube/$NAME`.
 
-The default name for the cluster `rollouts-child`, and default Config Sync version installed is `v1.14.2`.
+The default name for the cluster `rollouts-target`, and default Config Sync version installed is `v1.14.2`.
 
-Verify that the child cluster has been created correctly with your kubeconfig setup:
+Verify that the target cluster has been created correctly with your kubeconfig setup:
 
 ```sh
-KUBECONFIG=~/.kube/rollouts-child kubectl get nodes
+KUBECONFIG=~/.kube/rollouts-target kubectl get nodes
 NAME                           STATUS   ROLES           AGE   VERSION
-rollouts-child-control-plane   Ready    control-plane   24m   v1.25.3
+rollouts-target-control-plane   Ready    control-plane   24m   v1.25.3
 ```
 
 Verify that Config Sync was installed:
 
 ```sh
-KUBECONFIG=~/.kube/rollouts-child kubectl api-resources | grep configsync
+KUBECONFIG=~/.kube/rollouts-target kubectl api-resources | grep configsync
 reposyncs                                      configsync.gke.io/v1beta1              true         RepoSync
 rootsyncs                                      configsync.gke.io/v1beta1              true         RootSync
 ```
 
-You can optionally specify a name for the child cluster, and a version of Config Sync that you want installed:
+You can optionally specify a name for the target cluster, and a version of Config Sync that you want installed:
 ```sh
-NAME=child CS_VERSION=vX.Y.Z make run-child-in-kind
+NAME=target CS_VERSION=vX.Y.Z make run-target-in-kind
 ```
 
 ### Creating a Rollout object
@@ -127,22 +139,18 @@ Apply this to your management cluster with `kubectl apply -f`. View the created 
 
 ```sh
 # see the rollouts object
-kubectl get rollouts sample
+KUBECONFIG=~/.kube/admin-cluster kubectl get rollouts sample
 
 # see the remotesync objects that the rollouts controller created
-kubectl get remotesyncs
+KUBECONFIG=~/.kube/admin-cluster kubectl get remotesyncs
 
 # see the rootsync object that the remotesync controller created
-KUBECONFIG=~/.kube/rollouts-child kubectl get rootsyncs -nconfig-management-system
+KUBECONFIG=~/.kube/rollouts-target kubectl get rootsyncs -nconfig-management-system
 ```
 
 Deleting the Rollout object should likewise delete the associated RemoteSync and Rootsync objects. You can 
 look at the controller logs to verify that the various Remotesync/Rootsync objects are being created, updated,
 or deleted.
-
-### Restarting the management controller
-
-If you make code changes, all you have to do is rerun `make run-in-kind`. 
 
 ---
 
@@ -158,9 +166,9 @@ Make sure your kubeconfig is connected to this cluster:
 KUBECONFIG=~/.kube/admin-cluster gcloud container clusters get-credentials <your cluster> --region <your region> --project <your project>
 ```
 
-### Provisioning child clusters
-The next step will be to provision new child clusters. This example names the child cluster `gke-n`;
-you can replace `gke-n` with whatever name you want for your child cluster. 
+### Provisioning target clusters
+The next step will be to provision new target clusters. This example names the target cluster `gke-n`;
+you can replace `gke-n` with whatever name you want for your target cluster. 
 
 ```sh
 # first step is to create a deployable instance of the package
@@ -175,7 +183,7 @@ KUBECONFIG=~/.kube/admin-cluster kpt live init gke-n
 KUBECONFIG=~/.kube/admin-cluster kpt live apply gke-n
 ```
 
-You can repeat the above steps to create as many child clusters as you want.
+You can repeat the above steps to create as many target clusters as you want.
 
 ### Setting up kubeconfig
 Next, we will configure kubeconfig to be able to talk to each cluster individually.
@@ -191,8 +199,8 @@ KUBECONFIG=~/.kube/gke-n kubectl get pods -n kube-system
 ```
 
 ### Set up Config Sync
-Rollouts requires a git syncer installed on child clusters. Currently, only Config Sync is supported. 
-To install Config Sync on your child clusters, follow these steps.
+Rollouts requires a git syncer installed on target clusters. Currently, only Config Sync is supported. 
+To install Config Sync on your target clusters, follow these steps.
 
 First, set the release version of Config Sync that you would like to install:
 

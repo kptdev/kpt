@@ -15,13 +15,15 @@
 
 KUBECONFIG=/tmp/kubeconfig.yaml
 KIND_CONFIG=/tmp/kind-cluster.yaml
+MGMTKUBECONFIG=~/.kube/admin-cluster
 
-DEFAULT_NAME=rollouts-child
+DEFAULT_NAME=rollouts-target
 DEFAULT_NAMESPACE=kind-clusters
 
 # TODO: fetch the latest version of config sync instead of hardcoding it here
 DEFAULT_CS_VERSION="v1.14.2"
 
+# set default values
 if [ -z "$NAME" ]
 then
   NAME=$DEFAULT_NAME
@@ -37,6 +39,7 @@ then
   CS_VERSION=$DEFAULT_CS_VERSION
 fi
 
+# create the kind cluster and store the kubeconfig
 cat <<EOF > $KIND_CONFIG
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
@@ -47,12 +50,13 @@ EOF
 kind create cluster --config $KIND_CONFIG --kubeconfig $KUBECONFIG --name $NAME
 kind get kubeconfig --name $NAME > $KUBECONFIG
 
-kubectl create namespace $NAMESPACE
-
-kubectl create configmap $NAME -n $NAMESPACE --from-file=kubeconfig.yaml=$KUBECONFIG
-kubectl label configmap $NAME -n $NAMESPACE location=example
+# create the kind-clusters namespace and put the ConfigMap in it
+KUBECONFIG=$MGMTKUBECONFIG kubectl create namespace $NAMESPACE
+KUBECONFIG=$MGMTKUBECONFIG kubectl create configmap $NAME -n $NAMESPACE --from-file=kubeconfig.yaml=$KUBECONFIG
+KUBECONFIG=$MGMTKUBECONFIG kubectl label configmap $NAME -n $NAMESPACE location=example
 
 mkdir -p ~/.kube
 cp $KUBECONFIG ~/.kube/$NAME
 
+# install config sync 
 KUBECONFIG=~/.kube/$NAME kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"
