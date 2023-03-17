@@ -20,6 +20,7 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -33,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	e2eclusters "github.com/GoogleContainerTools/kpt/rollouts/e2e/clusters"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -42,10 +44,12 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var targetClusterSetup e2eclusters.ClusterSetup
+var tt *testing.T
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
-
+	tt = t
 	RunSpecs(t, "Controller Suite")
 }
 
@@ -72,6 +76,31 @@ var _ = BeforeSuite(func() {
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
+
+	// setup target clusters
+	targets := []e2eclusters.Config{
+		{
+			Prefix: "e2e-sjc-",
+			Count:  1,
+			Labels: map[string]string{
+				"city": "sjc",
+			},
+		},
+		/* We can add clusters for second wave here
+		{
+			Prefix: "e2e-sfo-",
+			Count:  1,
+			Labels: map[string]string{
+				"city": "sfo",
+			},
+		}, */
+	}
+
+	targetClusterSetup, err = e2eclusters.GetClusterSetup(tt, k8sClient, targets...)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = targetClusterSetup.PrepareAndWait(context.TODO(), 5*time.Minute)
+	Expect(err).NotTo(HaveOccurred())
 
 	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme: scheme.Scheme,
@@ -105,6 +134,8 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	By("tearing down the target clusters")
+	_ = targetClusterSetup.Cleanup(context.TODO())
 	By("tearing down the test environment")
 	_ = testEnv.Stop()
 	// Expect(err).NotTo(HaveOccurred())

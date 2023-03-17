@@ -39,7 +39,7 @@ var _ = Describe("Rollout controller", func() {
 
 	// TODO(droot): Improve the textual description
 	Context("When creating Rollout", func() {
-		It("Should succeed", func() {
+		It("Should complete", func() {
 			By("By creating a new Rollout")
 			ctx := context.Background()
 			rollout := &gitopsv1alpha1.Rollout{
@@ -57,19 +57,20 @@ var _ = Describe("Rollout controller", func() {
 						SourceType: gitopsv1alpha1.GitHub,
 						GitHub: gitopsv1alpha1.GitHubSource{
 							Selector: gitopsv1alpha1.GitHubSelector{
-								Org:      "droot",
-								Repo:     "oahu",
-								Revision: "main",
+								Org:       "droot",
+								Repo:      "store",
+								Directory: "namespaces",
+								Revision:  "v3",
 							},
 						},
 					},
 					Clusters: gitopsv1alpha1.ClusterDiscovery{
-						SourceType: gitopsv1alpha1.KCC,
+						SourceType: gitopsv1alpha1.KindCluster,
 					},
 					Targets: gitopsv1alpha1.ClusterTargetSelector{
 						Selector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{
-								"env": "dev",
+								"city": "sjc",
 							},
 						},
 					},
@@ -103,6 +104,23 @@ var _ = Describe("Rollout controller", func() {
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
 			Expect(createdRollout.Spec.Description).Should(Equal("Test Rollout"))
+
+			remoteSyncKey := types.NamespacedName{Name: "github-589324850-namespaces-e2e-sjc-0", Namespace: RolloutNamespace}
+			remoteSync := &gitopsv1alpha1.RemoteSync{}
+
+			// We should eventually have a remotesync object created corresponding to a target cluster
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, remoteSyncKey, remoteSync)
+				return err == nil
+			}, timeout, interval).Should(BeTrue())
+			Expect(remoteSync.Spec.Template.Spec.Git.Repo).Should(Equal("https://github.com/droot/store.git"))
+			Expect(remoteSync.Spec.Template.Spec.Git.Revision).Should(Equal("v3"))
+
+			// We should eventually have the rollout completed
+			Eventually(func() bool {
+				_ = k8sClient.Get(ctx, rolloutLookupKey, createdRollout)
+				return createdRollout.Status.Overall == "Completed"
+			}, 1*time.Minute, interval).Should(BeTrue())
 		})
 	})
 })
