@@ -304,7 +304,7 @@ var _ = Describe("Rollout", func() {
 							Name:      RolloutStrategyName,
 							Namespace: RolloutNamespace,
 							PauseAfterWave: gitopsv1alpha1.PauseAfterWave{
-								WaveName: "sfo-stores",
+								WaveName: "sjc-stores", // pause at the first wave
 							},
 						},
 					},
@@ -333,7 +333,17 @@ var _ = Describe("Rollout", func() {
 			Expect(remoteSync.Spec.Template.Spec.Git.Repo).To(Equal("https://github.com/droot/store.git"))
 			Expect(remoteSync.Spec.Template.Spec.Git.Revision).To(Equal("v3"))
 
-			// We should eventually have the rollout completed
+			// expect rollout to be in waiting state after completion of the first wave
+			Eventually(func() bool {
+				_ = k8sClient.Get(ctx, rolloutLookupKey, createdRollout)
+				return createdRollout.Status.Overall == "Waiting"
+			}, 2*time.Minute, interval).Should(BeTrue())
+
+			// advance the rollout to next wave
+			createdRollout.Spec.Strategy.Progressive.PauseAfterWave.WaveName = "sfo-stores"
+			Expect(k8sClient.Update(ctx, createdRollout)).To(Succeed())
+
+			// expect rollout to be in completed now
 			Eventually(func() bool {
 				_ = k8sClient.Get(ctx, rolloutLookupKey, createdRollout)
 				return createdRollout.Status.Overall == "Completed"
