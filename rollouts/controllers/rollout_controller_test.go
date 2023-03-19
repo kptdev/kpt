@@ -63,14 +63,14 @@ var _ = Describe("Rollout", func() {
 			targetClusterSetup, err = e2eclusters.GetClusterSetup(tt, k8sClient, targets...)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = targetClusterSetup.PrepareAndWait(context.TODO(), 5*time.Minute)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(targetClusterSetup.PrepareAndWait(context.TODO(), 5*time.Minute)).To(Succeed())
 		})
 
 		AfterEach(func() {
 			By("tearing down the target clusters")
-			_ = targetClusterSetup.Cleanup(context.TODO())
+			Expect(targetClusterSetup.Cleanup(context.TODO())).To(Succeed())
 		})
+
 		It("Should deploy package to only matched target clusters", func() {
 			By("By creating a new Rollout")
 			ctx := context.Background()
@@ -117,7 +117,7 @@ var _ = Describe("Rollout", func() {
 					},
 				},
 			}
-			Expect(k8sClient.Create(ctx, rollout)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, rollout)).To(Succeed())
 			/*
 				After creating this Rollout, let's check that the Rollout's Spec fields match what we passed in.
 				Note that, because the k8s apiserver may not have finished creating a Rollout after our `Create()` call from earlier, we will use Gomega’s Eventually() testing function instead of Expect() to give the apiserver an opportunity to finish creating our CronJob.
@@ -145,8 +145,8 @@ var _ = Describe("Rollout", func() {
 				err := k8sClient.Get(ctx, remoteSyncKey, remoteSync)
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
-			Expect(remoteSync.Spec.Template.Spec.Git.Repo).Should(Equal("https://github.com/droot/store.git"))
-			Expect(remoteSync.Spec.Template.Spec.Git.Revision).Should(Equal("v3"))
+			Expect(remoteSync.Spec.Template.Spec.Git.Repo).To(Equal("https://github.com/droot/store.git"))
+			Expect(remoteSync.Spec.Template.Spec.Git.Revision).To(Equal("v3"))
 
 			// We should eventually have the rollout completed
 			Eventually(func() bool {
@@ -154,8 +154,8 @@ var _ = Describe("Rollout", func() {
 				return createdRollout.Status.Overall == "Completed"
 			}, 1*time.Minute, interval).Should(BeTrue())
 
-			Expect(createdRollout.Status.ClusterStatuses).Should(HaveLen(1))
-			Expect(createdRollout.Status.ClusterStatuses).Should(ContainElement(gitopsv1alpha1.ClusterStatus{
+			Expect(createdRollout.Status.ClusterStatuses).To(HaveLen(1))
+			Expect(createdRollout.Status.ClusterStatuses).To(ContainElement(gitopsv1alpha1.ClusterStatus{
 				Name: "e2e-sjc-0",
 				PackageStatus: gitopsv1alpha1.PackageStatus{
 					PackageID:  "github-589324850-namespaces-e2e-sjc-0",
@@ -164,7 +164,7 @@ var _ = Describe("Rollout", func() {
 				},
 			}))
 			forground := metav1.DeletePropagationForeground
-			Expect(k8sClient.Delete(context.TODO(), createdRollout, &client.DeleteOptions{PropagationPolicy: &forground})).NotTo(HaveOccurred())
+			Expect(k8sClient.Delete(context.TODO(), createdRollout, &client.DeleteOptions{PropagationPolicy: &forground})).To(Succeed())
 			// We should wait for the rollout to be deleted
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, rolloutLookupKey, createdRollout)
@@ -196,13 +196,12 @@ var _ = Describe("Rollout", func() {
 			targetClusterSetup, err = e2eclusters.GetClusterSetup(tt, k8sClient, targets...)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = targetClusterSetup.PrepareAndWait(context.TODO(), 5*time.Minute)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(targetClusterSetup.PrepareAndWait(context.TODO(), 5*time.Minute)).To(Succeed())
 		})
 
 		AfterEach(func() {
 			By("tearing down the target clusters")
-			_ = targetClusterSetup.Cleanup(context.TODO())
+			Expect(targetClusterSetup.Cleanup(context.TODO())).To(Succeed())
 		})
 
 		It("Should deploy package to matched target clusters", func() {
@@ -210,32 +209,6 @@ var _ = Describe("Rollout", func() {
 			ctx := context.Background()
 			RolloutName = "test-city-rollout"
 
-			/*
-							apiVersion: gitops.kpt.dev/v1alpha1
-				kind: ProgressiveRolloutStrategy
-				metadata:
-				  name: stores-rollout-strategy
-				spec:
-				  waves:
-				    - name: GA-stores
-				      targets:
-				        selector:
-				          matchLabels:
-				            state: ga
-				      maxConcurrent: 1
-				    - name: NY-stores
-				      targets:
-				        selector:
-				          matchLabels:
-				            state: ny
-				      maxConcurrent: 1
-				    - name: CA-stores
-				      targets:
-				        selector:
-				          matchLabels:
-				            state: ca
-				      maxConcurrent: 2
-			*/
 			RolloutStrategyName := "city-wide-rollout"
 			progressiveRolloutStrategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{
 				TypeMeta: metav1.TypeMeta{
@@ -274,7 +247,7 @@ var _ = Describe("Rollout", func() {
 				},
 			}
 
-			Expect(k8sClient.Create(ctx, progressiveRolloutStrategy)).Should(Succeed())
+			Expect(k8sClient.Create(ctx, progressiveRolloutStrategy)).To(Succeed())
 			strategyLookupKey := types.NamespacedName{Name: RolloutStrategyName, Namespace: RolloutNamespace}
 			createdRolloutStrategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{}
 
@@ -337,15 +310,7 @@ var _ = Describe("Rollout", func() {
 					},
 				},
 			}
-			Expect(k8sClient.Create(ctx, rollout)).Should(Succeed())
-			/*
-				After creating this Rollout, let's check that the Rollout's Spec fields match what we passed in.
-				Note that, because the k8s apiserver may not have finished creating a Rollout after our `Create()` call from earlier, we will use Gomega’s Eventually() testing function instead of Expect() to give the apiserver an opportunity to finish creating our CronJob.
-				`Eventually()` will repeatedly run the function provided as an argument every interval seconds until
-				(a) the function’s output matches what’s expected in the subsequent `Should()` call, or
-				(b) the number of attempts * interval period exceed the provided timeout value.
-				In the examples below, timeout and interval are Go Duration values of our choosing.
-			*/
+			Expect(k8sClient.Create(ctx, rollout)).To(Succeed())
 
 			rolloutLookupKey := types.NamespacedName{Name: RolloutName, Namespace: RolloutNamespace}
 			createdRollout := &gitopsv1alpha1.Rollout{}
@@ -355,7 +320,7 @@ var _ = Describe("Rollout", func() {
 				err := k8sClient.Get(ctx, rolloutLookupKey, createdRollout)
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
-			Expect(createdRollout.Spec.Description).Should(Equal("Test Rollout"))
+			Expect(createdRollout.Spec.Description).To(Equal("Test Rollout"))
 
 			remoteSyncKey := types.NamespacedName{Name: "github-589324850-namespaces-e2e-sjcc-0", Namespace: RolloutNamespace}
 			remoteSync := &gitopsv1alpha1.RemoteSync{}
@@ -365,8 +330,8 @@ var _ = Describe("Rollout", func() {
 				err := k8sClient.Get(ctx, remoteSyncKey, remoteSync)
 				return err == nil
 			}, timeout, interval).Should(BeTrue())
-			Expect(remoteSync.Spec.Template.Spec.Git.Repo).Should(Equal("https://github.com/droot/store.git"))
-			Expect(remoteSync.Spec.Template.Spec.Git.Revision).Should(Equal("v3"))
+			Expect(remoteSync.Spec.Template.Spec.Git.Repo).To(Equal("https://github.com/droot/store.git"))
+			Expect(remoteSync.Spec.Template.Spec.Git.Revision).To(Equal("v3"))
 
 			// We should eventually have the rollout completed
 			Eventually(func() bool {
@@ -374,23 +339,25 @@ var _ = Describe("Rollout", func() {
 				return createdRollout.Status.Overall == "Completed"
 			}, 2*time.Minute, interval).Should(BeTrue())
 
-			Expect(createdRollout.Status.ClusterStatuses).Should(HaveLen(2))
-			Expect(createdRollout.Status.ClusterStatuses).Should(ContainElement(gitopsv1alpha1.ClusterStatus{
-				Name: "e2e-sjcc-0",
-				PackageStatus: gitopsv1alpha1.PackageStatus{
-					PackageID:  "github-589324850-namespaces-e2e-sjcc-0",
-					Status:     "Synced",
-					SyncStatus: "Synced",
-				},
-			}))
-			Expect(createdRollout.Status.ClusterStatuses).Should(ContainElement(gitopsv1alpha1.ClusterStatus{
-				Name: "e2e-sfoo-0",
-				PackageStatus: gitopsv1alpha1.PackageStatus{
-					PackageID:  "github-589324850-namespaces-e2e-sfoo-0",
-					Status:     "Synced",
-					SyncStatus: "Synced",
-				},
-			}))
+			Expect(createdRollout.Status.ClusterStatuses).To(HaveLen(2))
+			Expect(createdRollout.Status.ClusterStatuses).To(
+				ContainElements(
+					gitopsv1alpha1.ClusterStatus{
+						Name: "e2e-sjcc-0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-589324850-namespaces-e2e-sjcc-0",
+							Status:     "Synced",
+							SyncStatus: "Synced",
+						},
+					},
+					gitopsv1alpha1.ClusterStatus{
+						Name: "e2e-sfoo-0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-589324850-namespaces-e2e-sfoo-0",
+							Status:     "Synced",
+							SyncStatus: "Synced",
+						},
+					}))
 		})
 	})
 })

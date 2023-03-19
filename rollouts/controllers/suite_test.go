@@ -55,7 +55,11 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "config", "crd", "bases"),
+			// use the container cluster yaml from the manifests
+			filepath.Join("..", "manifests", "crds", "containercluster.yaml"),
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -65,8 +69,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = gitopsv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(gitopsv1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
 
 	//+kubebuilder:scaffold:scheme
 
@@ -79,29 +82,25 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	err = (&RolloutReconciler{
+	Expect((&RolloutReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
+	}).SetupWithManager(k8sManager)).To(Succeed())
 
-	err = (&RemoteSyncReconciler{
+	Expect((&RemoteSyncReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
+	}).SetupWithManager(k8sManager)).To(Succeed())
 
-	err = (&ProgressiveRolloutStrategyReconciler{
+	Expect((&ProgressiveRolloutStrategyReconciler{
 		Client: k8sManager.GetClient(),
 		Scheme: k8sManager.GetScheme(),
-	}).SetupWithManager(k8sManager)
-	Expect(err).ToNot(HaveOccurred())
+	}).SetupWithManager(k8sManager)).To(Succeed())
 
 	ctx := context.Background()
 	go func() {
 		defer GinkgoRecover()
-		err = k8sManager.Start(ctx)
-		Expect(err).ToNot(HaveOccurred(), "failed to run manager")
+		Expect(k8sManager.Start(ctx)).To(Succeed())
 	}()
 })
 
