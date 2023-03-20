@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ import (
 
 type gitPackageRevision struct {
 	repo          *gitRepository // repo is repo containing the package
-	path          string
+	path          string         // the path to the package from the repo root
 	revision      string
 	workspaceName v1alpha1.WorkspaceName
 	updated       time.Time
@@ -80,9 +81,20 @@ func (p *gitPackageRevision) UID() types.UID {
 }
 
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
+	// if the repository has been registered with a directory, then the
+	// package name is the package path relative to the registered directory
+	packageName := p.path
+	if p.repo.directory != "" {
+		pn, err := filepath.Rel(p.repo.directory, packageName)
+		if err != nil {
+			klog.Errorf("error computing package name relative to registered directory: %w", err)
+		}
+		packageName = strings.TrimLeft(pn, "./")
+	}
+
 	return repository.PackageRevisionKey{
 		Repository:    p.repo.name,
-		Package:       p.path,
+		Package:       packageName,
 		Revision:      p.revision,
 		WorkspaceName: p.workspaceName,
 	}

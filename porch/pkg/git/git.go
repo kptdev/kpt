@@ -277,10 +277,6 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 	ctx, span := tracer.Start(ctx, "gitRepository::CreatePackageRevision", trace.WithAttributes())
 	defer span.End()
 
-	if !packageInDirectory(obj.Spec.PackageName, r.directory) {
-		return nil, fmt.Errorf("cannot create %s outside of repository directory %q", obj.Spec.PackageName, r.directory)
-	}
-
 	var base plumbing.Hash
 	refName := r.branch.RefInLocal()
 	switch main, err := r.repo.Reference(refName, true); {
@@ -296,15 +292,16 @@ func (r *gitRepository) CreatePackageRevision(ctx context.Context, obj *v1alpha1
 		return nil, fmt.Errorf("failed to create packagerevision: %w", err)
 	}
 
-	// TODO use git branches to leverage uniqueness
+	packagePath := filepath.Join(r.directory, obj.Spec.PackageName)
 
-	draft := createDraftName(obj.Spec.PackageName, obj.Spec.WorkspaceName)
+	// TODO use git branches to leverage uniqueness
+	draft := createDraftName(packagePath, obj.Spec.WorkspaceName)
 
 	// TODO: This should also create a new 'Package' resource if one does not already exist
 
 	return &gitPackageDraft{
 		parent:        r,
-		path:          obj.Spec.PackageName,
+		path:          packagePath,
 		workspaceName: obj.Spec.WorkspaceName,
 		lifecycle:     v1alpha1.PackageRevisionLifecycleDraft,
 		updated:       time.Now(),

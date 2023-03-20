@@ -1131,7 +1131,7 @@ func (g GitSuite) TestNestedDirectories(t *testing.T) {
 	}{
 		{
 			directory: "sample",
-			packages:  []string{"sample/v1", "sample/v2", "sample/" + g.branch},
+			packages:  []string{"/v1", "/v2", "/" + g.branch},
 		},
 		{
 			directory: "nonexistent",
@@ -1140,11 +1140,11 @@ func (g GitSuite) TestNestedDirectories(t *testing.T) {
 		{
 			directory: "catalog/gcp",
 			packages: []string{
-				"catalog/gcp/cloud-sql/v1",
-				"catalog/gcp/spanner/v1",
-				"catalog/gcp/bucket/v2",
-				"catalog/gcp/bucket/v1",
-				"catalog/gcp/bucket/" + g.branch,
+				"cloud-sql/v1",
+				"spanner/v1",
+				"bucket/v2",
+				"bucket/v1",
+				"bucket/" + g.branch,
 			},
 		},
 	} {
