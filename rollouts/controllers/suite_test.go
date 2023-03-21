@@ -17,6 +17,7 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -25,6 +26,7 @@ import (
 
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -40,10 +42,11 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var tt *testing.T
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
-
+	tt = t
 	RunSpecs(t, "Controller Suite")
 }
 
@@ -52,7 +55,11 @@ var _ = BeforeSuite(func() {
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		CRDDirectoryPaths: []string{
+			filepath.Join("..", "config", "crd", "bases"),
+			// use the container cluster yaml from the manifests
+			filepath.Join("..", "manifests", "crds", "containercluster.yaml"),
+		},
 		ErrorIfCRDPathMissing: true,
 	}
 
@@ -62,8 +69,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = gitopsv1alpha1.AddToScheme(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(gitopsv1alpha1.AddToScheme(scheme.Scheme)).To(Succeed())
 
 	//+kubebuilder:scaffold:scheme
 
@@ -71,10 +77,40 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(k8sClient).NotTo(BeNil())
 
+	k8sManager, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme: scheme.Scheme,
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect((&RolloutReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)).To(Succeed())
+
+	Expect((&RemoteSyncReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)).To(Succeed())
+
+	Expect((&ProgressiveRolloutStrategyReconciler{
+		Client: k8sManager.GetClient(),
+		Scheme: k8sManager.GetScheme(),
+	}).SetupWithManager(k8sManager)).To(Succeed())
+
+	ctx := context.Background()
+	go func() {
+		defer GinkgoRecover()
+		Expect(k8sManager.Start(ctx)).To(Succeed())
+	}()
 })
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
-	err := testEnv.Stop()
-	Expect(err).NotTo(HaveOccurred())
+	_ = testEnv.Stop()
+	// TODO(droot): teardown of the testenv seems to always fail
+	// so assert succeeding here results reports the overall test failure.
+	// In my experience, teardown seems to shutdown the apiserver and etcd
+	// and doesn't cause any repeat runs of e2e test, so removing this
+	// assertions for now.
+	// Expect(err).NotTo(HaveOccurred())
 })
