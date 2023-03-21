@@ -21,11 +21,13 @@ import (
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/rolloutsclient"
 	"github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/spf13/cobra"
+	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
 
-func newRunner(ctx context.Context) *runner {
+func newRunner(ctx context.Context, f k8scmdutil.Factory) *runner {
 	r := &runner{
-		ctx: ctx,
+		ctx:     ctx,
+		factory: f,
 	}
 	c := &cobra.Command{
 		Use:     "advance rollout-name wave-name",
@@ -38,13 +40,14 @@ func newRunner(ctx context.Context) *runner {
 	return r
 }
 
-func NewCommand(ctx context.Context) *cobra.Command {
-	return newRunner(ctx).Command
+func NewCommand(ctx context.Context, f k8scmdutil.Factory) *cobra.Command {
+	return newRunner(ctx, f).Command
 }
 
 type runner struct {
 	ctx     context.Context
 	Command *cobra.Command
+	factory k8scmdutil.Factory
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
@@ -65,9 +68,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 	rolloutName := args[0]
 	waveName := args[1]
 
-	// TODO(droot): plumb the namespace value from commandline flags
-	ns := "default"
-	rollout, err := rlc.Get(r.ctx, ns, rolloutName)
+	namespace, _, err := r.factory.ToRawKubeConfigLoader().Namespace()
+	if err != nil {
+		return err
+	}
+	rollout, err := rlc.Get(r.ctx, namespace, rolloutName)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return err

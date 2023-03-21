@@ -20,10 +20,11 @@ import (
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/advance"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/get"
 	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/status"
+	"github.com/GoogleContainerTools/kpt/commands/util"
 	"github.com/spf13/cobra"
 )
 
-func NewCommand(ctx context.Context) *cobra.Command {
+func NewCommand(ctx context.Context, version string) *cobra.Command {
 	rolloutsCmd := &cobra.Command{
 		Use:   "rollouts",
 		Short: "rollouts",
@@ -40,10 +41,12 @@ func NewCommand(ctx context.Context) *cobra.Command {
 		},
 	}
 
+	f := util.NewFactory(rolloutsCmd, version)
+
 	rolloutsCmd.AddCommand(
-		advance.NewCommand(ctx),
-		get.NewCommand(ctx),
-		status.NewCommand(ctx),
+		advance.NewCommand(ctx, f),
+		get.NewCommand(ctx, f),
+		status.NewCommand(ctx, f),
 	)
 	return rolloutsCmd
 }

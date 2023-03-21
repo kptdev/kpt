@@ -55,7 +55,7 @@ func GetCommand(ctx context.Context, name, version string) *cobra.Command {
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
 		license.NewCommand(ctx, version),
-		rollouts.NewCommand(ctx),
+		rollouts.NewCommand(ctx, version),
 	)
 
 	return alpha

@@ -22,15 +22,17 @@ import (
 	rolloutsapi "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
+	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 )
 
-func NewCommand(ctx context.Context) *cobra.Command {
-	return newRunner(ctx).Command
+func NewCommand(ctx context.Context, f k8scmdutil.Factory) *cobra.Command {
+	return newRunner(ctx, f).Command
 }
 
-func newRunner(ctx context.Context) *runner {
+func newRunner(ctx context.Context, f k8scmdutil.Factory) *runner {
 	r := &runner{
-		ctx: ctx,
+		ctx:     ctx,
+		factory: f,
 	}
 	c := &cobra.Command{
 		Use:     "get",
@@ -46,6 +48,7 @@ func newRunner(ctx context.Context) *runner {
 type runner struct {
 	ctx     context.Context
 	Command *cobra.Command
+	factory k8scmdutil.Factory
 }
 
 func (r *runner) runE(cmd *cobra.Command, args []string) error {
@@ -55,7 +58,11 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	rollouts, err := rlc.List(r.ctx, "")
+	namespace, _, err := r.factory.ToRawKubeConfigLoader().Namespace()
+	if err != nil {
+		return err
+	}
+	rollouts, err := rlc.List(r.ctx, namespace)
 	if err != nil {
 		fmt.Printf("%s\n", err)
 		return err
