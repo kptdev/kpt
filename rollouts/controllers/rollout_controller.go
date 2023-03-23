@@ -154,10 +154,29 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 	packageDiscoveryClient := r.getPackageDiscoveryClient(req.NamespacedName)
 
-	err = r.reconcileRollout(ctx, &rollout, strategy, packageDiscoveryClient)
+	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
+	if err != nil {
+		logger.Error(err, "Failed to list clusters")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
+	if err != nil {
+		logger.Error(err, "Failed to discover packages")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", packagediscovery.ToStr(discoveredPackages))
+
+	allClusterStatuses, waveStatuses, err := r.reconcileRollout(ctx, &rollout, strategy, targetClusters, discoveredPackages)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
+
+	sortClusterStatuses(allClusterStatuses)
+	if err := r.updateStatus(ctx, &rollout, waveStatuses, allClusterStatuses); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	if rollout.Spec.Clusters.SourceType == gitopsv1alpha1.GCPFleet &&
 		(rollout.Status.Overall == "Completed" || rollout.Status.Overall == "Stalled") {
 		// TODO (droot): The rollouts in completed/stalled state will not be reconciled
@@ -288,31 +307,18 @@ func (r *RolloutReconciler) getPackageDiscoveryClient(rolloutNamespacedName type
 	return client
 }
 
-func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, packageDiscoveryClient *packagediscovery.PackageDiscovery) error {
-	logger := klog.FromContext(ctx)
-
-	targetClusters, err := r.store.ListClusters(ctx, &rollout.Spec.Clusters, rollout.Spec.Targets.Selector)
-	if err != nil {
-		logger.Error(err, "Failed to list clusters")
-		return client.IgnoreNotFound(err)
-	}
-
-	discoveredPackages, err := packageDiscoveryClient.GetPackages(ctx, rollout.Spec.Packages)
-	if err != nil {
-		logger.Error(err, "Failed to discover packages")
-		return client.IgnoreNotFound(err)
-	}
-	logger.Info("Discovered packages", "packagesCount", len(discoveredPackages), "packages", packagediscovery.ToStr(discoveredPackages))
+func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitopsv1alpha1.Rollout, strategy *gitopsv1alpha1.ProgressiveRolloutStrategy, targetClusters []clusterstore.Cluster,
+	discoveredPackages []packagediscovery.DiscoveredPackage) ([]gitopsv1alpha1.ClusterStatus, []gitopsv1alpha1.WaveStatus, error) {
 
 	packageClusterMatcherClient := packageclustermatcher.NewPackageClusterMatcher(targetClusters, discoveredPackages)
 	clusterPackages, err := packageClusterMatcherClient.GetClusterPackages(rollout.Spec.PackageToTargetMatcher)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	targets, err := r.computeTargets(ctx, rollout, clusterPackages)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	allClusterStatuses := []gitopsv1alpha1.ClusterStatus{}
@@ -320,7 +326,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 
 	allWaveTargets, err := r.getWaveTargets(ctx, rollout, targets, targetClusters, strategy.Spec.Waves)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
 	pauseFutureWaves := false
@@ -338,7 +344,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 
 		thisWaveInProgress, clusterStatuses, err := r.rolloutTargets(ctx, rollout, wave, waveTargets, pauseFutureWaves)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 
 		if thisWaveInProgress {
@@ -355,12 +361,7 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 		}
 	}
 
-	sortClusterStatuses(allClusterStatuses)
-
-	if err := r.updateStatus(ctx, rollout, waveStatuses, allClusterStatuses); err != nil {
-		return err
-	}
-	return nil
+	return allClusterStatuses, waveStatuses, nil
 }
 
 func (r *RolloutReconciler) updateStatus(ctx context.Context, rollout *gitopsv1alpha1.Rollout, waveStatuses []gitopsv1alpha1.WaveStatus, clusterStatuses []gitopsv1alpha1.ClusterStatus) error {
