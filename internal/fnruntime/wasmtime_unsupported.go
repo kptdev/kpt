@@ -25,13 +25,17 @@ import (
 	"io"
 )
 
+const (
+	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/GoogleContainerTools/kpt"
+)
+
 type WasmtimeFn struct {
 }
 
 func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
-	return nil, fmt.Errorf("wasmtime support is not compiled into binary (check cgo settings)")
+	return nil, fmt.Errorf(msg)
 }
 
 func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
-	return fmt.Errorf("wasmtime support is not compiled into binary (check cgo settings)")
+	return fmt.Errorf(msg)
 }
