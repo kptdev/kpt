@@ -27,83 +27,82 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ client.Client = &fakeRolloutsClient{}
+var _ client.Client = &fakeRemoteSyncClient{}
 
-type fakeRolloutsClient struct {
+type fakeRemoteSyncClient struct {
 	client.Client
 
-	remotesyncs []gitopsv1alpha1.RemoteSync
+	remotesyncs map[types.NamespacedName]gitopsv1alpha1.RemoteSync
 	actions     []string
 }
 
-func (fc *fakeRolloutsClient) Create(ctx context.Context, obj client.Object, _ ...client.CreateOption) error {
+func newFakeRemoteSyncClient() *fakeRemoteSyncClient {
+	return &fakeRemoteSyncClient{
+		remotesyncs: make(map[types.NamespacedName]gitopsv1alpha1.RemoteSync),
+	}
+}
+
+func (fc *fakeRemoteSyncClient) Create(ctx context.Context, obj client.Object, _ ...client.CreateOption) error {
 	fc.actions = append(fc.actions, fmt.Sprintf("creating object named %q", obj.GetName()))
 
-	if err := fc.Get(ctx, types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}, obj); err == nil {
-		// object already exists
+	namespacedName := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
+	if err := fc.Get(ctx, namespacedName, obj); err == nil {
 		return fmt.Errorf("object %q already exists", obj.GetName())
 	}
-	fc.remotesyncs = append(fc.remotesyncs, *obj.(*gitopsv1alpha1.RemoteSync))
+	fc.remotesyncs[namespacedName] = *obj.(*gitopsv1alpha1.RemoteSync)
 
 	return nil
 }
 
-func (fc *fakeRolloutsClient) Delete(_ context.Context, obj client.Object, _ ...client.DeleteOption) error {
+func (fc *fakeRemoteSyncClient) Delete(_ context.Context, obj client.Object, _ ...client.DeleteOption) error {
 	fc.actions = append(fc.actions, fmt.Sprintf("deleting object named %q", obj.GetName()))
 
-	var newRemoteSyncs []gitopsv1alpha1.RemoteSync
-	for _, rs := range fc.remotesyncs {
-		if obj.GetName() == rs.GetName() && obj.GetNamespace() == rs.GetNamespace() {
-			continue
-		}
-		newRemoteSyncs = append(newRemoteSyncs, rs)
-	}
-	fc.remotesyncs = newRemoteSyncs
+	namespacedName := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
+	delete(fc.remotesyncs, namespacedName)
 
 	return nil
 }
 
-func (fc *fakeRolloutsClient) Update(_ context.Context, obj client.Object, _ ...client.UpdateOption) error {
+func (fc *fakeRemoteSyncClient) Update(_ context.Context, obj client.Object, _ ...client.UpdateOption) error {
 	fc.actions = append(fc.actions, fmt.Sprintf("updating object named %q", obj.GetName()))
 
-	for i, rs := range fc.remotesyncs {
-		if obj.GetName() == rs.GetName() && obj.GetNamespace() == rs.GetNamespace() {
-			continue
-		}
-		fc.remotesyncs[i] = *obj.(*gitopsv1alpha1.RemoteSync)
-	}
+	namespacedName := types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
+	fc.remotesyncs[namespacedName] = *obj.(*gitopsv1alpha1.RemoteSync)
 
 	return nil
 }
 
-func (fc *fakeRolloutsClient) List(_ context.Context, obj client.ObjectList, _ ...client.ListOption) error {
+func (fc *fakeRemoteSyncClient) List(_ context.Context, obj client.ObjectList, _ ...client.ListOption) error {
 	fc.actions = append(fc.actions, fmt.Sprintf("listing objects"))
 
-	*obj.(*gitopsv1alpha1.RemoteSyncList) = gitopsv1alpha1.RemoteSyncList{Items: fc.remotesyncs}
+	var remoteSyncList []gitopsv1alpha1.RemoteSync
+	for _, rs := range fc.remotesyncs {
+		remoteSyncList = append(remoteSyncList, rs)
+	}
+	*obj.(*gitopsv1alpha1.RemoteSyncList) = gitopsv1alpha1.RemoteSyncList{Items: remoteSyncList}
 
 	return nil
 }
 
-func (fc *fakeRolloutsClient) Get(_ context.Context, namespacedname types.NamespacedName, obj client.Object, _ ...client.GetOption) error {
-	fc.actions = append(fc.actions, fmt.Sprintf("getting object of name %q", namespacedname.Name))
+func (fc *fakeRemoteSyncClient) Get(_ context.Context, namespacedName types.NamespacedName, obj client.Object, _ ...client.GetOption) error {
+	fc.actions = append(fc.actions, fmt.Sprintf("getting object named %q", namespacedName.Name))
 
-	for _, rs := range fc.remotesyncs {
-		if rs.GetName() == namespacedname.Name && namespacedname.Namespace == rs.GetNamespace() {
-			*obj.(*gitopsv1alpha1.RemoteSync) = rs
-			return nil
-		}
+	rs, found := fc.remotesyncs[namespacedName]
+	if found {
+		*obj.(*gitopsv1alpha1.RemoteSync) = rs
+		return nil
 	}
 
 	return &errors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
 }
 
-func (fc *fakeRolloutsClient) setSyncStatus(name string, namespace string, syncStatus string) error {
-	for i, rs := range fc.remotesyncs {
-		if rs.GetName() == name && namespace == rs.GetNamespace() {
-			rs.Status.SyncStatus = syncStatus
-			fc.remotesyncs[i] = rs
-			return nil
-		}
+func (fc *fakeRemoteSyncClient) setSyncStatus(namespacedName types.NamespacedName, syncStatus string) error {
+	rs, found := fc.remotesyncs[namespacedName]
+	if found {
+		rs.Status.SyncStatus = syncStatus
+		fc.remotesyncs[namespacedName] = rs
+		return nil
 	}
+
 	return &errors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
 }

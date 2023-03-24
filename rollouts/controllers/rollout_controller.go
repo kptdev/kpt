@@ -172,7 +172,6 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return ctrl.Result{}, err
 	}
 
-	sortClusterStatuses(allClusterStatuses)
 	if err := r.updateStatus(ctx, &rollout, waveStatuses, allClusterStatuses); err != nil {
 		return ctrl.Result{}, err
 	}
@@ -360,6 +359,8 @@ func (r *RolloutReconciler) reconcileRollout(ctx context.Context, rollout *gitop
 			afterPauseAfterWave = true
 		}
 	}
+
+	sortClusterStatuses(allClusterStatuses)
 
 	return allClusterStatuses, waveStatuses, nil
 }

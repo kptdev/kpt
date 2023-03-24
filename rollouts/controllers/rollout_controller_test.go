@@ -434,7 +434,7 @@ func TestReconcileRollout(t *testing.T) {
 			},
 		}
 
-		fc := &fakeRolloutsClient{}
+		fc := newFakeRemoteSyncClient()
 		reconciler := (&RolloutReconciler{Client: fc})
 
 		strategy, err := reconciler.getStrategy(context.Background(), rollout)
@@ -448,13 +448,14 @@ func TestReconcileRollout(t *testing.T) {
 			targetClusters,
 			[]packagediscovery.DiscoveredPackage{discoveredPackage},
 		)
+
 		require.NoError(t, err)
 		require.Equal(t, []string{
 			"listing objects",
-			"getting object of name \"github-0-dir-0\"",
-			"getting object of name \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
 			"creating object named \"github-0-dir-0\"",
-			"getting object of name \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-0\"",
 		}, fc.actions)
 		require.Equal(t, 1, len(fc.remotesyncs))
 		require.Equal(t, []gitopsv1alpha1.WaveStatus{
@@ -485,7 +486,7 @@ func TestReconcileRollout(t *testing.T) {
 
 		// reset actions and set sync status of remote sync to "synced"
 		fc.actions = nil
-		fc.setSyncStatus("github-0-dir-0", "", "Synced")
+		require.NoError(t, fc.setSyncStatus(types.NamespacedName{Name: "github-0-dir-0", Namespace: ""}, "Synced"))
 
 		// second call to reconcileRollout - the second cluster should now progress
 		_, waveStatus, err = reconciler.reconcileRollout(
@@ -499,10 +500,10 @@ func TestReconcileRollout(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, []string{
 			"listing objects",
-			"getting object of name \"github-0-dir-0\"",
-			"getting object of name \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
 			"creating object named \"github-0-dir-1\"",
-			"getting object of name \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-1\"",
 		}, fc.actions)
 		require.Equal(t, 2, len(fc.remotesyncs))
 		require.Equal(t, []gitopsv1alpha1.WaveStatus{
