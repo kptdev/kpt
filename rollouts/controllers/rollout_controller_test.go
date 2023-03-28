@@ -379,14 +379,396 @@ var _ = Describe("Rollout", func() {
 })
 
 func TestReconcileRollout(t *testing.T) {
-	t.Run("maxconcurrent", func(t *testing.T) {
-		// This tests that if "maxConcurrent" is set to 1, only one cluster is synced at
-		// a time. This test calls `reconcileRollout` twice. After the first call,
-		// we check that only the first cluster starts progressing while the second is
-		// waiting. Then, we manually update the sync status of the first remotesync
-		// to "Synced", call `reconcileRollout` again, and verify that the second cluster
-		// starts progressing.
+	// create an arbitrary package
+	testURL := "https://test.com/git"
+	discoveredPackage := packagediscovery.DiscoveredPackage{
+		Directory: "dir",
+		Revision:  "v0",
+		Branch:    "main",
+		GitHubRepo: &github.Repository{
+			CloneURL: &testURL,
+		},
+	}
 
+	t.Run("StrategyAllAtOnce", func(t *testing.T) {
+		// This tests that if the strategy is AllAtOnce, all clusters are synced
+		// at the same time.
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type: "AllClusters",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "AllAtOnce",
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+			},
+		}
+
+		// create 3 target clusters with arbitrary names
+		targetClusters := make([]clusterstore.Cluster, 3)
+		for i := 0; i < 3; i++ {
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
+				Labels: map[string]string{"foo": "bar"},
+			}
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy, err := reconciler.getStrategy(context.Background(), rollout)
+		require.NoError(t, err)
+
+		_, waveStatus, err := reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-2\"",
+			"creating object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-0\"",
+			"creating object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-1\"",
+			"creating object named \"github-0-dir-2\"",
+			"getting object named \"github-0-dir-2\"",
+		}, fc.actions)
+		require.Equal(t, 3, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/2",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-2",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+	})
+
+	t.Run("UpdateAndDeleteRemoteSyncs", func(t *testing.T) {
+		// This tests that if there are existing RemoteSyncs that need to be updated
+		// or deleted, reconcileRollout updates/deletes them as needed.
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type: "AllClusters",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "AllAtOnce",
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+			},
+		}
+
+		// create 2 target clusters with arbitrary names
+		targetClusters := make([]clusterstore.Cluster, 2)
+		for i := 0; i < 2; i++ {
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
+				Labels: map[string]string{"foo": "bar"},
+			}
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy, err := reconciler.getStrategy(context.Background(), rollout)
+		require.NoError(t, err)
+
+		// create two existing remotesyncs, one that will need to be updated and another
+		// that will need to be deleted
+		fc.remotesyncs[types.NamespacedName{Name: "to-be-deleted"}] = gitopsv1alpha1.RemoteSync{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "to-be-deleted",
+			},
+		}
+		fc.remotesyncs[types.NamespacedName{Name: "github-0-dir-0"}] = gitopsv1alpha1.RemoteSync{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "github-0-dir-0",
+			},
+			Spec: gitopsv1alpha1.RemoteSyncSpec{
+				ClusterRef: gitopsv1alpha1.ClusterRef{Name: "clusterRef"},
+			},
+		}
+
+		_, _, err = reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"creating object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-1\"",
+			"updating object named \"github-0-dir-0\"",
+			"deleting object named \"to-be-deleted\"",
+		}, fc.actions)
+		require.Equal(t, 2, len(fc.remotesyncs))
+	})
+
+	t.Run("RootSyncLabelsAndAnnotations", func(t *testing.T) {
+		// Tests the labels/annotations object metadata get properly propagated
+		// to the remotesync objects.
+		labels := map[string]string{"labelKey": "labelValue"}
+		annotations := map[string]string{"annoKey": "annoValue"}
+
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type: "AllClusters",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "AllAtOnce",
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+				SyncTemplate: &gitopsv1alpha1.SyncTemplate{
+					Type: gitopsv1alpha1.TemplateTypeRootSync,
+					RootSync: &gitopsv1alpha1.RootSyncTemplate{
+						Metadata: &gitopsv1alpha1.Metadata{
+							Labels:      labels,
+							Annotations: annotations,
+						},
+					},
+				},
+			},
+		}
+
+		// create 3 target clusters with arbitrary names
+		targetClusters := make([]clusterstore.Cluster, 3)
+		for i := 0; i < 3; i++ {
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
+				Labels: map[string]string{"foo": "bar"},
+			}
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy, err := reconciler.getStrategy(context.Background(), rollout)
+		require.NoError(t, err)
+
+		_, _, err = reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, 3, len(fc.remotesyncs))
+		for _, rs := range fc.remotesyncs {
+			require.Equal(t, rs.Spec.Template.Metadata.Labels, labels)
+			require.Equal(t, rs.Spec.Template.Metadata.Annotations, annotations)
+		}
+	})
+
+	t.Run("CELMatcher", func(t *testing.T) {
+		// tests the CEL expression matcher
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type:            "Custom",
+					MatchExpression: "cluster.name == rolloutPackage.directory",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "AllAtOnce",
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+			},
+		}
+
+		// create 3 target clusters and 3 rollouts packages with arbitrary names
+		targetClusters := make([]clusterstore.Cluster, 3)
+		discoveredPackages := make([]packagediscovery.DiscoveredPackage, 3)
+		for i := 0; i < 3; i++ {
+			clusterName := fmt.Sprintf("foo/%d", i)
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: clusterName},
+				Labels: map[string]string{"foo": "bar"},
+			}
+			discoveredPackages[i] = packagediscovery.DiscoveredPackage{
+				Directory: clusterName,
+				Revision:  "v0",
+				Branch:    "main",
+				GitHubRepo: &github.Repository{
+					CloneURL: &testURL,
+					Name:     &testURL,
+				},
+			}
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy, err := reconciler.getStrategy(context.Background(), rollout)
+		require.NoError(t, err)
+
+		_, waveStatus, err := reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			discoveredPackages,
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-foo/0-0\"",
+			"getting object named \"github-0-foo/1-1\"",
+			"getting object named \"github-0-foo/2-2\"",
+			"creating object named \"github-0-foo/0-0\"",
+			"getting object named \"github-0-foo/0-0\"",
+			"creating object named \"github-0-foo/1-1\"",
+			"getting object named \"github-0-foo/1-1\"",
+			"creating object named \"github-0-foo/2-2\"",
+			"getting object named \"github-0-foo/2-2\"",
+		}, fc.actions)
+
+		// ensure that each cluster got the correct package according to the CEL expression
+		require.Equal(t, 3, len(fc.remotesyncs))
+		for _, rs := range fc.remotesyncs {
+			require.Equal(t, rs.Spec.ClusterRef.Name, rs.Spec.Template.Spec.Git.Dir)
+		}
+
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-foo/0-0",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-foo/1-1",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/2",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-foo/2-2",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+	})
+
+	t.Run("StrategyRollingUpdate", func(t *testing.T) {
+		// This tests that if "maxConcurrent" is set to 1 with RollingUpdate strategy,
+		// only one cluster is synced at  a time. This test calls `reconcileRollout` twice.
+		// After the first call, we check that only the first cluster starts progressing while
+		// the second is  waiting. Then, we manually update the sync status of the first
+		// remotesync to "Synced", call `reconcileRollout` again, and verify that the second
+		// cluster starts progressing.
 		rollout := &gitopsv1alpha1.Rollout{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "Rollout",
@@ -421,17 +803,6 @@ func TestReconcileRollout(t *testing.T) {
 				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
 				Labels: map[string]string{"foo": "bar"},
 			}
-		}
-
-		// create an arbitrary package
-		testURL := "https://test.com/git"
-		discoveredPackage := packagediscovery.DiscoveredPackage{
-			Directory: "dir",
-			Revision:  "v0",
-			Branch:    "main",
-			GitHubRepo: &github.Repository{
-				CloneURL: &testURL,
-			},
 		}
 
 		fc := newFakeRemoteSyncClient()
@@ -524,6 +895,443 @@ func TestReconcileRollout(t *testing.T) {
 						Name: "foo/1",
 						PackageStatus: gitopsv1alpha1.PackageStatus{
 							PackageID:  "github-0-dir-1",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+	})
+
+	t.Run("StrategyProgressiveWithMaxConcurrent", func(t *testing.T) {
+		// This test is identical to the above `StrategyRollingUpdate`, except that it
+		// sets maxConcurrent to 1 in a ProgressiveRolloutStrategy.
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type: "AllClusters",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "Progressive",
+					Progressive: &gitopsv1alpha1.StrategyProgressive{
+						Name: "sample",
+					},
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+			},
+		}
+
+		// create 2 target clusters with arbitrary names
+		targetClusters := make([]clusterstore.Cluster, 2)
+		for i := 0; i < 2; i++ {
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
+				Labels: map[string]string{"foo": "bar"},
+			}
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ProgressiveRolloutStrategy",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.ProgressiveRolloutStrategySpec{
+				Waves: []gitopsv1alpha1.Wave{
+					{
+						Name:          "wave-1",
+						MaxConcurrent: 1,
+
+						// selects all clusters
+						Targets: gitopsv1alpha1.ClusterTargetSelector{
+							Selector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"foo": "bar"},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// first call to reconcileRollout - only one cluster should start progressing
+		_, waveStatus, err := reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"creating object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-0\"",
+		}, fc.actions)
+		require.Equal(t, 1, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "wave-1",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "",
+							Status:     "Waiting",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+
+		// reset actions and set sync status of remote sync to "synced"
+		fc.actions = nil
+		require.NoError(t, fc.setSyncStatus(types.NamespacedName{Name: "github-0-dir-0", Namespace: ""}, "Synced"))
+
+		// second call to reconcileRollout - the second cluster should now progress
+		_, waveStatus, err = reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"creating object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-1\"",
+		}, fc.actions)
+		require.Equal(t, 2, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "wave-1",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "Synced",
+							Status:     "Synced",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+	})
+
+	t.Run("StrategyProgressiveWithWaves", func(t *testing.T) {
+		// This test checks the functionality of pauseAfterWave for the ProgressiveRolloutStrategy.
+		// It calls reconcileRollout for the first wave, verifying that only those
+		// clusters in the first wave are being synced. Then we manually the sync status of the
+		// remotesyncs from the first wave to "synced", and call reconcileRollout again to ensure
+		// that the second wave is still paused. Then we update the PauseAfterWave value in the
+		// Rollout object (equivalent to running `kpt alpha rollouts advance`), and call
+		// reconcileRollout again, verifying that the clusters in the second wave start syncing.
+		rollout := &gitopsv1alpha1.Rollout{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Rollout",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.RolloutSpec{
+				PackageToTargetMatcher: gitopsv1alpha1.PackageToClusterMatcher{
+					Type: "AllClusters",
+				},
+				Strategy: gitopsv1alpha1.RolloutStrategy{
+					Type: "Progressive",
+					Progressive: &gitopsv1alpha1.StrategyProgressive{
+						Name:           "sample",
+						PauseAfterWave: gitopsv1alpha1.PauseAfterWave{WaveName: "wave-1"},
+					},
+				},
+				Targets: gitopsv1alpha1.ClusterTargetSelector{
+					Selector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"foo": "bar"},
+					},
+				},
+			},
+		}
+
+		// create 3 target clusters with arbitrary names, two for the first wave
+		// and one for the second.
+		targetClusters := make([]clusterstore.Cluster, 3)
+		for i := 0; i < 2; i++ {
+			targetClusters[i] = clusterstore.Cluster{
+				Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", i)},
+				Labels: map[string]string{"wave": "one"},
+			}
+		}
+		targetClusters[2] = clusterstore.Cluster{
+			Ref:    gitopsv1alpha1.ClusterRef{Name: fmt.Sprintf("foo/%d", 2)},
+			Labels: map[string]string{"wave": "two"},
+		}
+
+		fc := newFakeRemoteSyncClient()
+		reconciler := (&RolloutReconciler{Client: fc})
+
+		strategy := &gitopsv1alpha1.ProgressiveRolloutStrategy{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ProgressiveRolloutStrategy",
+				APIVersion: "gitops.kpt.dev/v1alpha1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "sample",
+			},
+
+			Spec: gitopsv1alpha1.ProgressiveRolloutStrategySpec{
+				Waves: []gitopsv1alpha1.Wave{
+					{
+						Name:          "wave-1",
+						MaxConcurrent: 3,
+						Targets: gitopsv1alpha1.ClusterTargetSelector{
+							Selector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"wave": "one"},
+							},
+						},
+					},
+					{
+						Name:          "wave-2",
+						MaxConcurrent: 3,
+						Targets: gitopsv1alpha1.ClusterTargetSelector{
+							Selector: &metav1.LabelSelector{
+								MatchLabels: map[string]string{"wave": "two"},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		// first call to reconcileRollout - only two clusters (first wave) should start progressing
+		_, waveStatus, err := reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-2\"",
+			"creating object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-0\"",
+			"creating object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-1\"",
+		}, fc.actions)
+		require.Equal(t, 2, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "wave-1",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "",
+							Status:     "Progressing",
+						},
+					},
+				},
+			},
+			{
+				Name:   "wave-2",
+				Status: "Waiting",
+				Paused: true,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/2",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-2",
+							SyncStatus: "",
+							Status:     "Waiting (Upcoming Wave)",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+
+		// reset actions and set sync status of remote syncs to "synced"
+		fc.actions = nil
+		require.NoError(t, fc.setSyncStatus(types.NamespacedName{Name: "github-0-dir-0", Namespace: ""}, "Synced"))
+		require.NoError(t, fc.setSyncStatus(types.NamespacedName{Name: "github-0-dir-1", Namespace: ""}, "Synced"))
+
+		// second call to reconcileRollout - the first wave should be completed and the second wave should still be paused
+		_, waveStatus, err = reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-2\"",
+		}, fc.actions)
+		require.Equal(t, 2, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "wave-1",
+				Status: "Completed",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "Synced",
+							Status:     "Synced",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "Synced",
+							Status:     "Synced",
+						},
+					},
+				},
+			},
+			{
+				Name:   "wave-2",
+				Status: "Waiting",
+				Paused: true,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/2",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-2",
+							SyncStatus: "",
+							Status:     "Waiting (Upcoming Wave)",
+						},
+					},
+				},
+			},
+		}, waveStatus)
+
+		// reset actions and advance to the second wave
+		fc.actions = nil
+		rollout.Spec.Strategy.Progressive.PauseAfterWave = gitopsv1alpha1.PauseAfterWave{WaveName: "wave-2"}
+
+		// third call to reconcileRollout - the third cluster (second wave) should now progress
+		_, waveStatus, err = reconciler.reconcileRollout(
+			context.Background(),
+			rollout,
+			strategy,
+			targetClusters,
+			[]packagediscovery.DiscoveredPackage{discoveredPackage},
+		)
+
+		require.NoError(t, err)
+		require.Equal(t, []string{
+			"listing objects",
+			"getting object named \"github-0-dir-0\"",
+			"getting object named \"github-0-dir-1\"",
+			"getting object named \"github-0-dir-2\"",
+			"creating object named \"github-0-dir-2\"",
+			"getting object named \"github-0-dir-2\"",
+		}, fc.actions)
+		require.Equal(t, 3, len(fc.remotesyncs))
+		require.Equal(t, []gitopsv1alpha1.WaveStatus{
+			{
+				Name:   "wave-1",
+				Status: "Completed",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/0",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-0",
+							SyncStatus: "Synced",
+							Status:     "Synced",
+						},
+					},
+					{
+						Name: "foo/1",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-1",
+							SyncStatus: "Synced",
+							Status:     "Synced",
+						},
+					},
+				},
+			},
+			{
+				Name:   "wave-2",
+				Status: "Progressing",
+				Paused: false,
+				ClusterStatuses: []gitopsv1alpha1.ClusterStatus{
+					{
+						Name: "foo/2",
+						PackageStatus: gitopsv1alpha1.PackageStatus{
+							PackageID:  "github-0-dir-2",
 							SyncStatus: "",
 							Status:     "Progressing",
 						},
