@@ -37,7 +37,7 @@ metadata:
 	}{
 		"empty spec": {
 			packageVariant: packageVariantHeader,
-			expectedErr:    "[spec.upstream: Invalid value: \"{}\": missing required field, spec.downstream: Invalid value: \"{}\": missing required field]",
+			expectedErr:    "missing required field spec.upstream; missing required field spec.downstream",
 		},
 
 		"missing package names": {
@@ -49,7 +49,7 @@ spec:
   downstream:
     repo: deployments
 `,
-			expectedErr: "[spec.upstream.package: Invalid value: \"\": missing required field, spec.downstream.package: Invalid value: \"\": missing required field]",
+			expectedErr: "missing required field spec.upstream.package; missing required field spec.downstream.package",
 		},
 
 		"empty adoption and deletion policies": {
@@ -78,7 +78,7 @@ spec:
   adoptionPolicy: invalid
   deletionPolicy: invalid
 `,
-			expectedErr: "[spec.adoptionPolicy: Invalid value: \"invalid\": field can only be \"adoptNone\" or \"adoptExisting\", spec.deletionPolicy: Invalid value: \"invalid\": field can only be \"orphan\" or \"delete\"]",
+			expectedErr: "spec.adoptionPolicy field can only be \"adoptNone\" or \"adoptExisting\"; spec.deletionPolicy can only be \"orphan\" or \"delete\"",
 		},
 
 		"valid adoption and deletion policies": {
@@ -189,12 +189,8 @@ spec:
 		t.Run(tn, func(t *testing.T) {
 			var pv api.PackageVariant
 			require.NoError(t, yaml.Unmarshal([]byte(tc.packageVariant), &pv))
-			actualErr := validatePackageVariant(&pv).ToAggregate()
-			if tc.expectedErr == "" {
-				require.NoError(t, actualErr)
-			} else {
-				require.EqualError(t, actualErr, tc.expectedErr)
-			}
+			actualErr := combineErrors(validatePackageVariant(&pv))
+			require.Equal(t, tc.expectedErr, actualErr)
 		})
 	}
 }

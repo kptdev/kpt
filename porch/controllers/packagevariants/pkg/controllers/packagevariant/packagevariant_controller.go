@@ -28,6 +28,7 @@ import (
 	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 
 	"golang.org/x/mod/semver"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/validation/field"
@@ -53,6 +54,9 @@ type PackageVariantReconciler struct {
 
 const (
 	workspaceNamePrefix = "packagevariant-"
+
+	ConditionTypeValid             = "Valid"
+	ConditionTypeDownstreamEnsured = "DownstreamEnsured"
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariants webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -72,6 +76,12 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		// maybe the pv was deleted
 		return ctrl.Result{}, nil
 	}
+
+	defer func() {
+		if err := r.Client.Status().Update(ctx, pv); err != nil {
+			klog.Errorf("could not update status: %s\n", err.Error())
+		}
+	}()
 
 	if !pv.ObjectMeta.DeletionTimestamp.IsZero() {
 		// This object is being deleted, so we need to make sure the packagerevisions owned by this object
@@ -105,24 +115,23 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	if errs := validatePackageVariant(pv); len(errs) > 0 {
-		pv.Status.ValidationErrors = nil
-		for _, validationErr := range errs {
-			if validationErr.Error() != "" {
-				pv.Status.ValidationErrors = append(pv.Status.ValidationErrors, validationErr.Error())
-			}
-		}
-		statusUpdateErr := r.Client.Status().Update(ctx, pv)
-		return ctrl.Result{}, statusUpdateErr
+		setValidationConditionsToFalse(pv, combineErrors(errs))
+		return ctrl.Result{}, nil
 	}
+	upstream, err := r.getUpstreamPR(pv.Spec.Upstream, prList)
+	if err != nil {
+		setValidationConditionsToFalse(pv, err.Error())
+		return ctrl.Result{}, nil
+	}
+	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeValid,
+		Status:  "True",
+		Reason:  "Valid",
+		Message: "all validation checks passed",
+	})
 
-	upstream := r.getUpstreamPR(pv.Spec.Upstream, prList)
-	if upstream == nil {
-		return ctrl.Result{}, fmt.Errorf("could not find upstream package revision")
-	}
-
-	if err := r.ensurePackageVariant(ctx, pv, upstream, prList); err != nil {
-		return ctrl.Result{}, err
-	}
+	targets, err := r.ensurePackageVariant(ctx, pv, upstream, prList)
+	setTargetStatusConditions(pv, targets, err)
 
 	return ctrl.Result{}, nil
 }
@@ -142,29 +151,29 @@ func (r *PackageVariantReconciler) init(ctx context.Context,
 	return &pv, &prList, nil
 }
 
-func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
-	allErrs := field.ErrorList{}
+func validatePackageVariant(pv *api.PackageVariant) []string {
+	var allErrs []string
 	if pv.Spec.Upstream == nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream"), "{}", "missing required field"))
+		allErrs = append(allErrs, "missing required field spec.upstream")
 	} else {
 		if pv.Spec.Upstream.Repo == "" {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "repo"), pv.Spec.Upstream.Repo, "missing required field"))
+			allErrs = append(allErrs, "missing required field spec.upstream.repo")
 		}
 		if pv.Spec.Upstream.Package == "" {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "package"), pv.Spec.Upstream.Package, "missing required field"))
+			allErrs = append(allErrs, "missing required field spec.upstream.package")
 		}
 		if pv.Spec.Upstream.Revision == "" {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "upstream", "revision"), pv.Spec.Upstream.Revision, "missing required field"))
+			allErrs = append(allErrs, "missing required field spec.upstream.revision")
 		}
 	}
 	if pv.Spec.Downstream == nil {
-		allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "downstream"), "{}", "missing required field"))
+		allErrs = append(allErrs, "missing required field spec.downstream")
 	} else {
 		if pv.Spec.Downstream.Repo == "" {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "downstream", "repo"), pv.Spec.Downstream.Repo, "missing required field"))
+			allErrs = append(allErrs, "missing required field spec.downstream.repo")
 		}
 		if pv.Spec.Downstream.Package == "" {
-			allErrs = append(allErrs, field.Invalid(field.NewPath("spec", "downstream", "package"), pv.Spec.Downstream.Package, "missing required field"))
+			allErrs = append(allErrs, "missing required field spec.downstream.package")
 		}
 	}
 	if pv.Spec.AdoptionPolicy == "" {
@@ -174,16 +183,12 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 		pv.Spec.DeletionPolicy = api.DeletionPolicyDelete
 	}
 	if pv.Spec.AdoptionPolicy != api.AdoptionPolicyAdoptNone && pv.Spec.AdoptionPolicy != api.AdoptionPolicyAdoptExisting {
-		allErrs = append(allErrs, field.Invalid(
-			field.NewPath("spec", "adoptionPolicy"), pv.Spec.AdoptionPolicy,
-			fmt.Sprintf("field can only be %q or %q",
-				api.AdoptionPolicyAdoptNone, api.AdoptionPolicyAdoptExisting)))
+		allErrs = append(allErrs, fmt.Sprintf("spec.adoptionPolicy field can only be %q or %q",
+			api.AdoptionPolicyAdoptNone, api.AdoptionPolicyAdoptExisting))
 	}
 	if pv.Spec.DeletionPolicy != api.DeletionPolicyOrphan && pv.Spec.DeletionPolicy != api.DeletionPolicyDelete {
-		allErrs = append(allErrs, field.Invalid(
-			field.NewPath("spec", "deletionPolicy"), pv.Spec.DeletionPolicy,
-			fmt.Sprintf("field can only be %q or %q",
-				api.DeletionPolicyOrphan, api.DeletionPolicyDelete)))
+		allErrs = append(allErrs, fmt.Sprintf("spec.deletionPolicy can only be %q or %q",
+			api.DeletionPolicyOrphan, api.DeletionPolicyDelete))
 	}
 	if pc := pv.Spec.PackageContext; pc != nil {
 		invalidKeys := []string{"name", "package-path"}
@@ -193,7 +198,7 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 					allErrs = append(allErrs, field.Invalid(
 						field.NewPath("spec", "packageContext", "data"),
 						pv.Spec.PackageContext.Data,
-						fmt.Sprintf("must not contain the key %q", invalid)))
+						fmt.Sprintf("must not contain the key %q", invalid)).Error())
 				}
 			}
 			if len(pc.RemoveKeys) > 0 {
@@ -202,7 +207,7 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 						allErrs = append(allErrs, field.Invalid(
 							field.NewPath("spec", "packageContext", "removeKeys"),
 							pv.Spec.PackageContext.RemoveKeys,
-							fmt.Sprintf("must not contain the key %q", invalid)))
+							fmt.Sprintf("must not contain the key %q", invalid)).Error())
 					}
 				}
 			}
@@ -211,16 +216,42 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 	return allErrs
 }
 
+func combineErrors(errs []string) string {
+	var errMsgs []string
+	for _, e := range errs {
+		if e != "" {
+			errMsgs = append(errMsgs, e)
+		}
+	}
+	return strings.Join(errMsgs, "; ")
+}
+
 func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
-	prList *porchapi.PackageRevisionList) *porchapi.PackageRevision {
+	prList *porchapi.PackageRevisionList) (*porchapi.PackageRevision, error) {
 	for _, pr := range prList.Items {
 		if pr.Spec.RepositoryName == upstream.Repo &&
 			pr.Spec.PackageName == upstream.Package &&
 			pr.Spec.Revision == upstream.Revision {
-			return &pr
+			return &pr, nil
 		}
 	}
-	return nil
+	return nil, fmt.Errorf("could not find upstream package revision '%s/%s' in repo '%s'",
+		upstream.Package, upstream.Revision, upstream.Repo)
+}
+
+func setValidationConditionsToFalse(pv *api.PackageVariant, message string) {
+	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeValid,
+		Status:  "False",
+		Reason:  "Invalid",
+		Message: message,
+	})
+	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeDownstreamEnsured,
+		Status:  "False",
+		Reason:  "Error",
+		Message: "invalid packagevariant object",
+	})
 }
 
 // ensurePackageVariant needs to:
@@ -236,13 +267,13 @@ func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
 func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 	pv *api.PackageVariant,
 	upstream *porchapi.PackageRevision,
-	prList *porchapi.PackageRevisionList) error {
+	prList *porchapi.PackageRevisionList) ([]*porchapi.PackageRevision, error) {
 	existing, err := r.findAndUpdateExistingRevisions(ctx, pv, upstream, prList)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if existing != nil {
-		return nil
+		return existing, nil
 	}
 
 	// No downstream package created by this controller exists. Create one.
@@ -277,14 +308,14 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 	}
 
 	if err := r.Client.Create(ctx, newPR); err != nil {
-		return err
+		return nil, err
 	}
 	klog.Infoln(fmt.Sprintf("package variant %q created package revision %q", pv.Name, newPR.Name))
 
 	if err := r.applyMutations(ctx, pv, newPR); err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return []*porchapi.PackageRevision{newPR}, nil
 }
 
 func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Context,
@@ -589,6 +620,31 @@ func (r *PackageVariantReconciler) updateDraft(ctx context.Context,
 		return nil, err
 	}
 	return draft, nil
+}
+
+func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.PackageRevision, err error) {
+	pv.Status.DownstreamTargets = nil
+	if err != nil {
+		meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+			Type:    ConditionTypeDownstreamEnsured,
+			Status:  "False",
+			Reason:  "Error",
+			Message: err.Error(),
+		})
+		return
+	}
+	for _, t := range targets {
+		pv.Status.DownstreamTargets = append(pv.Status.DownstreamTargets, api.DownstreamTarget{
+			Name:      t.GetName(),
+			Lifecycle: string(t.Spec.Lifecycle),
+		})
+	}
+	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeDownstreamEnsured,
+		Status:  "True",
+		Reason:  "NoErrors",
+		Message: "successfully ensured downstream package variant",
+	})
 }
 
 // SetupWithManager sets up the controller with the Manager.
