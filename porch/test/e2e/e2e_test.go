@@ -169,11 +169,17 @@ func (t *PorchSuite) TestGitRepository(ctx context.Context) {
 	}
 }
 
-func (t *PorchSuite) TestGitRepositoryWithReleaseTags(ctx context.Context) {
+func (t *PorchSuite) TestGitRepositoryWithReleaseTagsAndDirectory(ctx context.Context) {
 	t.registerGitRepositoryF(ctx, kptRepo, "kpt-repo", "package-examples")
 
 	var list porchapi.PackageRevisionList
 	t.ListF(ctx, &list, client.InNamespace(t.namespace))
+
+	for _, pr := range list.Items {
+		if strings.HasPrefix(pr.Spec.PackageName, "package-examples") {
+			t.Errorf("package name %q should not include repo directory %q as prefix", pr.Spec.PackageName, "package-examples")
+		}
+	}
 }
 
 func (t *PorchSuite) TestCloneFromUpstream(ctx context.Context) {

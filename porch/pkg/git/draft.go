@@ -33,8 +33,8 @@ import (
 )
 
 type gitPackageDraft struct {
-	parent        *gitRepository
-	path          string
+	parent        *gitRepository // repo is repo containing the package
+	path          string         // the path to the package from the repo root
 	revision      string
 	workspaceName v1alpha1.WorkspaceName
 	updated       time.Time
