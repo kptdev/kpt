@@ -53,7 +53,7 @@ type packageListEntry struct {
 
 // buildGitPackageRevision creates a gitPackageRevision for the packageListEntry
 // TODO: Can packageListEntry just _be_ a gitPackageRevision?
-func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision string, workspace v1alpha1.WorkspaceName, ref *plumbing.Reference) (*gitPackageRevision, error) {
+func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, workspace v1alpha1.WorkspaceName, ref *plumbing.Reference) (*gitPackageRevision, error) {
 	repo := p.parent.parent
 	tasks, err := repo.loadTasks(ctx, p.parent.commit, p.path, workspace)
 	if err != nil {
@@ -89,6 +89,27 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 		// operation.
 	}
 
+	packagePath := p.path
+
+	var revision string
+
+	lastPathComponent := path.Base(p.path)
+	if isSemver(lastPathComponent) {
+		packagePath = path.Dir(packagePath)
+		revision = lastPathComponent
+	} else {
+		if rev, ok := getBranchNameInLocalRepo(ref.Name()); ok {
+			revision = rev
+		} else if tagName, ok := getTagNameInLocalRepo(ref.Name()); ok {
+			revision = path.Base(tagName)
+		} else if _, _, err := parseDraftName(ref); err == nil {
+			revision = ""
+		} else {
+			// TODO: ignore the ref instead?
+			return nil, fmt.Errorf("cannot determine revision from ref: %q", rev)
+		}
+	}
+
 	// for backwards compatibility with packages that existed before porch supported
 	// workspaceNames, we populate the workspaceName as the revision number if it is empty
 	if workspace == "" {
@@ -97,7 +118,7 @@ func (p *packageListEntry) buildGitPackageRevision(ctx context.Context, revision
 
 	return &gitPackageRevision{
 		repo:          repo,
-		path:          p.path,
+		path:          packagePath,
 		workspaceName: workspace,
 		revision:      revision,
 		updated:       updated,
