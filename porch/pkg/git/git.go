@@ -146,6 +146,24 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 	return repository, nil
 }
 
+// type GoGitRepository interface {
+// 	References() (storer.ReferenceIter, error)
+// 	Reference(name plumbing.ReferenceName, resolved bool) (*plumbing.Reference, error)
+// 	ResolveRevision(rev plumbing.Revision) (*plumbing.Hash, error)
+// 	Remote(name string) (*git.Remote, error)
+// 	CommitObject(h plumbing.Hash) (*object.Commit, error)
+// 	Branches() (storer.ReferenceIter, error)
+// 	Fetch(o *git.FetchOptions) error
+// 	GetStorer() storage.Storer
+// 	Push(o *git.PushOptions) error
+// 	Log(o *git.LogOptions) (object.CommitIter, error)
+// 	TreeObject(h plumbing.Hash) (*object.Tree, error)
+// 	BlobObject(h plumbing.Hash) (*object.Blob, error)
+// }
+
+// type goGitRepository struct {
+// }
+
 type gitRepository struct {
 	name               string     // Repository resource name
 	namespace          string     // Repository resource namespace
@@ -432,8 +450,6 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 	ctx, span := tracer.Start(ctx, "gitRepository::GetPackageRevision", trace.WithAttributes())
 	defer span.End()
 
-	gitRepo := r.repo
-
 	var hash plumbing.Hash
 
 	// Trim leading and trailing slashes
@@ -456,7 +472,7 @@ func (r *gitRepository) GetPackageRevision(ctx context.Context, version, path st
 	refNames = append(refNames, "refs/remotes/origin/"+version)
 
 	for _, ref := range refNames {
-		if resolved, err := gitRepo.ResolveRevision(plumbing.Revision(ref)); err != nil {
+		if resolved, err := r.repo.ResolveRevision(plumbing.Revision(ref)); err != nil {
 			if errors.Is(err, plumbing.ErrReferenceNotFound) {
 				continue
 			}
@@ -484,9 +500,7 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot find package %s@%s; package is not under the Repository.spec.directory", path, version)
 	}
 
-	git := r.repo
-
-	origin, err := git.Remote("origin")
+	origin, err := r.repo.Remote("origin")
 	if err != nil {
 		return nil, kptfilev1.GitLock{}, fmt.Errorf("cannot determine repository origin: %w", err)
 	}
@@ -497,7 +511,7 @@ func (r *gitRepository) loadPackageRevision(ctx context.Context, version, path s
 		Ref:       version,
 	}
 
-	commit, err := git.CommitObject(hash)
+	commit, err := r.repo.CommitObject(hash)
 	if err != nil {
 		return nil, lock, fmt.Errorf("cannot resolve git reference %s (hash: %s) to commit: %w", version, hash, err)
 	}
@@ -545,8 +559,7 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 	ctx, span := tracer.Start(ctx, "gitRepository::discoverFinalizedPackages", trace.WithAttributes())
 	defer span.End()
 
-	git := r.repo
-	commit, err := git.CommitObject(ref.Hash())
+	commit, err := r.repo.CommitObject(ref.Hash())
 	if err != nil {
 		return nil, err
 	}
@@ -841,7 +854,7 @@ const (
 // createBranch creates the provided branch by creating a commit containing
 // a README.md file on the root of the repo and then pushing it to the branch.
 func (r *gitRepository) createBranch(ctx context.Context, branch BranchName) error {
-	fileHash, err := storeBlob(r.repo.Storer, fileContent)
+	fileHash, err := r.storeBlob(fileContent)
 	if err != nil {
 		return err
 	}
@@ -878,7 +891,7 @@ func (r *gitRepository) createBranch(ctx context.Context, branch BranchName) err
 		Message:  commitMessage,
 		TreeHash: treeHash,
 	}
-	commitHash, err := storeCommit(r.repo.Storer, commit)
+	commitHash, err := r.storeCommit(commit)
 	if err != nil {
 		return err
 	}
@@ -888,11 +901,22 @@ func (r *gitRepository) createBranch(ctx context.Context, branch BranchName) err
 	return r.pushAndCleanup(ctx, refSpecs)
 }
 
+func (r *gitRepository) getCommit(h plumbing.Hash) (*object.Commit, error) {
+	return object.GetCommit(r.repo.Storer, h)
+}
+
+func (r *gitRepository) storeCommit(commit *object.Commit) (plumbing.Hash, error) {
+	eo := r.repo.Storer.NewEncodedObject()
+	if err := commit.Encode(eo); err != nil {
+		return plumbing.Hash{}, err
+	}
+	return r.repo.Storer.SetEncodedObject(eo)
+}
+
 // Creates a commit which deletes the package from the branch, and returns its commit hash.
 // If the branch doesn't exist, will return zero hash and no error.
 func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch plumbing.ReferenceName, pkg *gitPackageRevision) (plumbing.Hash, error) {
 	var zero plumbing.Hash
-	repo := r.repo
 
 	local, err := refInRemoteFromRefInLocal(branch)
 	if err != nil {
@@ -901,7 +925,7 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 	// Fetch the branch
 	// TODO: Fetch only as part of conflict resolution & Retry
 	switch err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
-		return repo.Fetch(&git.FetchOptions{
+		return r.repo.Fetch(&git.FetchOptions{
 			RemoteName: OriginName,
 			RefSpecs:   []config.RefSpec{config.RefSpec(fmt.Sprintf("+%s:%s", local, branch))},
 			Auth:       auth,
@@ -915,13 +939,13 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 	}
 
 	// find the branch
-	ref, err := repo.Reference(branch, true)
+	ref, err := r.repo.Reference(branch, true)
 	if err != nil {
 		// branch doesn't exist, and therefore package doesn't exist either.
 		klog.Infof("Branch %q no longer exist, deleting a package from it is unnecessary", branch)
 		return zero, nil
 	}
-	commit, err := repo.CommitObject(ref.Hash())
+	commit, err := r.repo.CommitObject(ref.Hash())
 	if err != nil {
 		return zero, fmt.Errorf("failed to resolve main branch to commit: %w", err)
 	}
@@ -945,7 +969,7 @@ func (r *gitRepository) createPackageDeleteCommit(ctx context.Context, branch pl
 
 	// Create commit helper. Use zero hash for the initial package tree. Commit helper will initialize trees
 	// without TreeEntry for this package present - the package is deleted.
-	ch, err := newCommitHelper(repo, r.userInfoProvider, commit.Hash, packagePath, zero)
+	ch, err := newCommitHelper(r, r.userInfoProvider, commit.Hash, packagePath, zero)
 	if err != nil {
 		return zero, fmt.Errorf("failed to initialize commit of package %q to %q: %w", packagePath, ref, err)
 	}
@@ -1165,6 +1189,51 @@ func (r *gitRepository) traverseHistory(startCommit *object.Commit, cb commitCal
 	}
 
 	return nil
+}
+
+func (r *gitRepository) blobObject(h plumbing.Hash) (*object.Blob, error) {
+	return r.repo.BlobObject(h)
+}
+
+// storeBlob is a helper method to write a blob to the git store.
+func (r *gitRepository) storeBlob(value string) (plumbing.Hash, error) {
+	data := []byte(value)
+	eo := r.repo.Storer.NewEncodedObject()
+	eo.SetType(plumbing.BlobObject)
+	eo.SetSize(int64(len(data)))
+
+	w, err := eo.Writer()
+	if err != nil {
+		return plumbing.Hash{}, err
+	}
+
+	if _, err := w.Write(data); err != nil {
+		w.Close()
+		return plumbing.Hash{}, err
+	}
+
+	if err := w.Close(); err != nil {
+		return plumbing.Hash{}, err
+	}
+
+	return r.repo.Storer.SetEncodedObject(eo)
+}
+
+func (r *gitRepository) getTree(h plumbing.Hash) (*object.Tree, error) {
+	return object.GetTree(r.repo.Storer, h)
+}
+
+func (r *gitRepository) storeTree(tree *object.Tree) (plumbing.Hash, error) {
+	eo := r.repo.Storer.NewEncodedObject()
+	if err := tree.Encode(eo); err != nil {
+		return plumbing.Hash{}, err
+	}
+
+	treeHash, err := r.repo.Storer.SetEncodedObject(eo)
+	if err != nil {
+		return plumbing.Hash{}, err
+	}
+	return treeHash, nil
 }
 
 // See https://eli.thegreenplace.net/2021/generic-functions-on-slices-with-go-type-parameters/

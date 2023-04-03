@@ -29,7 +29,10 @@ import (
 
 func TestPackageCommitEmptyRepo(t *testing.T) {
 	tempdir := t.TempDir()
-	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "empty-repository.tar"), tempdir)
+	gitRepo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "empty-repository.tar"), tempdir)
+	repo := &gitRepository{
+		repo: gitRepo,
+	}
 
 	ctx := context.Background()
 
@@ -60,7 +63,7 @@ func TestPackageCommitEmptyRepo(t *testing.T) {
 		t.Errorf("Commit returned zero package tree hash")
 	}
 
-	commit := getCommitObject(t, repo, commitHash)
+	commit := getCommitObject(t, gitRepo, commitHash)
 	if got, want := commit.Message, message; got != want {
 		t.Errorf("Commit message: got %q, want %q", got, want)
 	}
@@ -84,7 +87,10 @@ func TestPackageCommitEmptyRepo(t *testing.T) {
 
 func TestPackageCommitToMain(t *testing.T) {
 	tempdir := t.TempDir()
-	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "drafts-repository.tar"), tempdir)
+	gitRepo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "drafts-repository.tar"), tempdir)
+	repo := &gitRepository{
+		repo: gitRepo,
+	}
 
 	ctx := context.Background()
 
@@ -92,19 +98,19 @@ func TestPackageCommitToMain(t *testing.T) {
 
 	// Commit `bucket`` package from drafts/bucket/v1 into main
 
-	main := resolveReference(t, repo, DefaultMainReferenceName)
+	main := resolveReference(t, gitRepo, DefaultMainReferenceName)
 	packagePath := "bucket"
 
 	// Confirm no 'bucket' package in main
-	mainRoot := getCommitTree(t, repo, main.Hash())
+	mainRoot := getCommitTree(t, gitRepo, main.Hash())
 	{
 		entry, err := mainRoot.FindEntry(packagePath)
 		if entry != nil || err != object.ErrEntryNotFound {
 			t.Fatalf("Unexpectedly found %q package in main branch: %v, %v", packagePath, entry, err)
 		}
 	}
-	draft := resolveReference(t, repo, plumbing.NewBranchReferenceName("drafts/bucket/v1"))
-	draftTree := getCommitTree(t, repo, draft.Hash())
+	draft := resolveReference(t, gitRepo, plumbing.NewBranchReferenceName("drafts/bucket/v1"))
+	draftTree := getCommitTree(t, gitRepo, draft.Hash())
 	bucketEntry := findTreeEntry(t, draftTree, packagePath)
 	bucketTree := bucketEntry.Hash
 	ch, err := newCommitHelper(repo, userInfoProvider, main.Hash(), packagePath, bucketTree)
@@ -123,7 +129,7 @@ func TestPackageCommitToMain(t *testing.T) {
 		t.Errorf("Commit returned zero package tree hash")
 	}
 
-	commitTree := getCommitTree(t, repo, commitHash)
+	commitTree := getCommitTree(t, gitRepo, commitHash)
 	packageEntry := findTreeEntry(t, commitTree, packagePath)
 	if got, want := packageEntry.Hash, bucketTree; got != want {
 		t.Errorf("Package copied into main branch with unexpected tree hash; got %s, want %s", got, want)
@@ -140,10 +146,13 @@ func (p *testUserInfoProvider) GetUserInfo(ctx context.Context) *repository.User
 
 func TestCommitWithUser(t *testing.T) {
 	tempdir := t.TempDir()
-	repo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "trivial-repository.tar"), tempdir)
+	gitRepo := OpenGitRepositoryFromArchive(t, filepath.Join("testdata", "trivial-repository.tar"), tempdir)
+	repo := &gitRepository{
+		repo: gitRepo,
+	}
 
 	ctx := context.Background()
-	main := resolveReference(t, repo, DefaultMainReferenceName)
+	main := resolveReference(t, gitRepo, DefaultMainReferenceName)
 
 	{
 		const testEmail = "porch-test@porch-domain.com"
@@ -175,7 +184,7 @@ func TestCommitWithUser(t *testing.T) {
 			t.Fatalf("commit failed: %v", err)
 		}
 
-		commit := getCommitObject(t, repo, commitHash)
+		commit := getCommitObject(t, gitRepo, commitHash)
 
 		if got, want := commit.Author.Email, testEmail; got != want {
 			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)
@@ -218,7 +227,7 @@ func TestCommitWithUser(t *testing.T) {
 			t.Fatalf("commit failed: %v", err)
 		}
 
-		commit := getCommitObject(t, repo, commitHash)
+		commit := getCommitObject(t, gitRepo, commitHash)
 
 		if got, want := commit.Author.Email, porchSignatureEmail; got != want {
 			t.Errorf("Commit.Author.Email: got %q, want %q", got, want)

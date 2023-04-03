@@ -62,7 +62,7 @@ func (d *gitPackageDraft) UpdateResources(ctx context.Context, new *v1alpha1.Pac
 	ctx, span := tracer.Start(ctx, "gitPackageDraft::UpdateResources", trace.WithAttributes())
 	defer span.End()
 
-	ch, err := newCommitHelper(d.parent.repo, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
+	ch, err := newCommitHelper(d.parent, d.parent.userInfoProvider, d.commit, d.path, plumbing.ZeroHash)
 	if err != nil {
 		return fmt.Errorf("failed to commit package: %w", err)
 	}
@@ -249,11 +249,9 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 
 	var zero plumbing.Hash
 
-	repo := r.repo
-
 	// Fetch main
 	switch err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
-		return repo.Fetch(&git.FetchOptions{
+		return r.repo.Fetch(&git.FetchOptions{
 			RemoteName: OriginName,
 			RefSpecs:   []config.RefSpec{branch.ForceFetchSpec()},
 			Auth:       auth,
@@ -266,12 +264,12 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 	}
 
 	// Find localTarget branch
-	localTarget, err := repo.Reference(localRef, false)
+	localTarget, err := r.repo.Reference(localRef, false)
 	if err != nil {
 		// TODO: handle empty repositories - NotFound error
 		return zero, zero, nil, fmt.Errorf("failed to find 'main' branch: %w", err)
 	}
-	headCommit, err := repo.CommitObject(localTarget.Hash())
+	headCommit, err := r.repo.CommitObject(localTarget.Hash())
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to resolve main branch to commit: %w", err)
 	}
@@ -279,7 +277,7 @@ func (r *gitRepository) commitPackageToMain(ctx context.Context, d *gitPackageDr
 
 	// TODO: Check for out-of-band update of the package in main branch
 	// (compare package tree in target branch and common base)
-	ch, err := newCommitHelper(repo, r.userInfoProvider, headCommit.Hash, packagePath, d.tree)
+	ch, err := newCommitHelper(r, r.userInfoProvider, headCommit.Hash, packagePath, d.tree)
 	if err != nil {
 		return zero, zero, nil, fmt.Errorf("failed to initialize commit of package %s to %s", packagePath, localRef)
 	}
