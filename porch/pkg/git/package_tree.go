@@ -119,54 +119,6 @@ type DiscoverPackagesOptions struct {
 	Recurse bool
 }
 
-// FindPackage finds the packages in the git repository, under commit, if it is exists at path.
-// If no package is found at that path, returns nil, nil
-func (r *gitRepository) FindPackage(commit *object.Commit, packagePath string) (*packageListEntry, error) {
-	t, err := r.DiscoverPackagesInTree(commit, DiscoverPackagesOptions{FilterPrefix: packagePath, Recurse: false})
-	if err != nil {
-		return nil, err
-	}
-	return t.packages[packagePath], nil
-}
-
-// DiscoverPackagesInTree finds the packages in the git repository, under commit.
-// If filterPrefix is non-empty, only packages with the specified prefix will be returned.
-// It is not an error if filterPrefix matches no packages or even is not a real directory name;
-// we will simply return an empty list of packages.
-func (r *gitRepository) DiscoverPackagesInTree(commit *object.Commit, opt DiscoverPackagesOptions) (*packageList, error) {
-	t := &packageList{
-		parent:   r,
-		commit:   commit,
-		packages: make(map[string]*packageListEntry),
-	}
-
-	rootTree, err := commit.Tree()
-	if err != nil {
-		return nil, fmt.Errorf("cannot resolve commit %v to tree (corrupted repository?): %w", commit.Hash, err)
-	}
-
-	if opt.FilterPrefix != "" {
-		tree, err := rootTree.Tree(opt.FilterPrefix)
-		if err != nil {
-			if err == object.ErrDirectoryNotFound {
-				// We treat the filter prefix as a filter, the path doesn't have to exist
-				klog.Warningf("could not find filterPrefix %q in commit %v; returning no packages", opt.FilterPrefix, commit.Hash)
-				return t, nil
-			} else {
-				return nil, fmt.Errorf("error getting tree %s: %w", opt.FilterPrefix, err)
-			}
-		}
-		rootTree = tree
-	}
-
-	if err := t.discoverPackages(rootTree, opt.FilterPrefix, opt.Recurse); err != nil {
-		return nil, err
-	}
-
-	klog.V(2).Infof("discovered packages @%v with prefix %q: %#v", commit.Hash, opt.FilterPrefix, t.packages)
-	return t, nil
-}
-
 // discoverPackages is the recursive function we use to traverse the tree and find packages.
 // tree is the git-tree we are search, treePath is the repo-relative-path to tree.
 func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recurse bool) error {
@@ -194,6 +146,7 @@ func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recur
 				continue
 			}
 
+			// This is safe because this function is only called holding the mutex in gitRepository
 			dirTree, err := t.parent.repo.TreeObject(e.Hash)
 			if err != nil {
 				return fmt.Errorf("error getting git tree %v: %w", e.Hash, err)

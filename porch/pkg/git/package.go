@@ -176,7 +176,7 @@ func (p *gitPackageRevision) GetPackageRevision(ctx context.Context) (*v1alpha1.
 }
 
 func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {
-	resources, err := p.repo.getResources(p.tree)
+	resources, err := p.repo.GetResources(p.tree)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load package resources: %w", err)
 	}
@@ -210,7 +210,7 @@ func (p *gitPackageRevision) GetResources(ctx context.Context) (*v1alpha1.Packag
 }
 
 func (p *gitPackageRevision) GetKptfile(ctx context.Context) (kptfile.KptFile, error) {
-	resources, err := p.repo.getResources(p.tree)
+	resources, err := p.repo.GetResources(p.tree)
 	if err != nil {
 		return kptfile.KptFile{}, fmt.Errorf("error loading package resources: %w", err)
 	}
@@ -243,7 +243,7 @@ func (p *gitPackageRevision) GetUpstreamLock(ctx context.Context) (kptfile.Upstr
 // that represent the package revision of this package. Please note that it uses Upstream types
 // to represent this information but it has no connection with the associated upstream package (if any).
 func (p *gitPackageRevision) GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error) {
-	repo, err := p.repo.getRepo()
+	repo, err := p.repo.GetRepo()
 	if err != nil {
 		return kptfile.Upstream{}, kptfile.UpstreamLock{}, fmt.Errorf("cannot determine package lock: %w", err)
 	}
@@ -333,7 +333,7 @@ func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.P
 		refSpecs.AddRefToDelete(ref)
 	}
 
-	if err := p.repo.pushAndCleanup(ctx, refSpecs); err != nil {
+	if err := p.repo.PushAndCleanup(ctx, refSpecs); err != nil {
 		if !errors.Is(err, git.NoErrAlreadyUpToDate) {
 			return err
 		}

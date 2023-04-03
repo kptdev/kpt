@@ -135,7 +135,7 @@ tidy:
 
 .PHONY: test
 test:
-	@for f in $(MODULES); do (cd $$f; echo "Testing $$f"; go test -race --count=1 ./...) || exit 1; done
+	@for f in $(MODULES); do (cd $$f; echo "Testing $$f"; E2E=1 go test -race --count=1 ./...) || exit 1; done
 
 .PHONY: vet
 vet:

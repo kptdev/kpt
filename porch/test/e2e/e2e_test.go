@@ -60,6 +60,7 @@ func TestE2E(t *testing.T) {
 	if e2e == "" {
 		t.Skip("set E2E to run this test")
 	}
+
 	Run(&PorchSuite{}, t)
 }
 
