@@ -344,11 +344,18 @@ The annotations, along with the GVK of the annotated resource, allow a package
 to "advertise" the injections it can accept and understand. These injection
 points effectively form a configuration API for the package, and the injection
 selectors provide a way for the `PackageVariant` author to specify the inputs
-for those APIs from the possible values in the management cluster. For example,
-consider a package with a resource with a custom GVK we have defined, named
-"service-endpoints", and containing endpoint addresses for services the package
-needs. Those endpoints may vary by region, so in our Porch cluster we maybe have
-one of these for each region: "useast1-service-endpoints",
+for those APIs from the possible values in the management cluster. If we define
+those APIs carefully, they can be used across many packages; since they are
+KRM resources, we can apply versioning and schema validation to them as well.
+This creates a more maintainable, automatable set of APIs for package
+customization than simple key/value pairs.
+
+As an example, we may define a GVK that contains service endpoints that many of
+applications use. In each application package, we would then include an instance
+of that resource, say called "service-endpoints", and configure a function to
+propagate the values from that resource to others within our package. As those
+endpoints may vary by region, in our Porch cluster we can create an instance of
+this GVK for each region: "useast1-service-endpoints",
 "useast2-service-endpoints", "uswest1-service-endpoints", etc. When we
 instantiate the PackageVariant for a cluster, we want to inject the resource
 corresponding to the region in which the cluster exists. Thus, for each cluster
