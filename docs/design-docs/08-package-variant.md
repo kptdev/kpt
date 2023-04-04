@@ -42,11 +42,12 @@ general concept, being an arbitrary bundle of resources, and therefore is
 sufficient to solve the originally stated problem.
 
 The basic idea here is to introduce a PackageVariant resource that manages the
-derivation of variant of a package from the original source package, and to
+derivation of a variant of a package from the original source package, and to
 manage the evolution of that variant over time. This effectively automates the
 human-centered process for variant creation one might use with `kpt`:
-1. Clone and upstream package locally
-1. Make changes to the local package, including executing KRM functions
+1. Clone an upstream package locally
+1. Make changes to the local package, setting values in resources and
+   executing KRM functions
 1. Push the package to a new repository and tag it as a new version
 
 Similarly, PackageVariant can manage the process of updating a package when a
@@ -67,10 +68,13 @@ along those dimensions of scalability. For example, one piece of information may
 vary by region, another by individual site, another by cloud provider, and yet
 another based on whether we are deploying to development, staging, or production.
 By utilizing resources in the Porch cluster as our input model, we can represent
-this complexity in a manageable model, rather than scattered in templates or
-key/value pairs without any structure. By using configurable KRM functions to
-interpret the resources within the package, we enable re-use of those input
-resources across many packages.
+this complexity in a manageable model that is reused across many packages,
+rather than scattered in package-specific templates or key/value pairs without
+any structure. KRM functions, also reused across packages but configured as
+needed for the specific package, are used to interpret the resources within the
+package. This decouples authoring of the packages, creation of the input model,
+and deploy-time use of that input model within the packages, allowing those
+activities to be performed by different teams or organizations.
 
 We refer to the mechanism described above as *configuration injection*. It
 enables dynamic, context-aware creation of variants. Another way to think about
@@ -81,11 +85,11 @@ package `D`. When a new version of `C` is created by updates to in-cluster
 resources, we get a new revision of `D`, customized based upon the updated
 context. Similarly, the user (or an automation) can monitor for new versions of
 `P`; when one arrives, the PackageVariant can be updated to point to that new
-version, resulting in a newly proposed Draft of `P`. This will be explained in
-more detail below.
+version, resulting in a newly proposed Draft of `D`, updated to reflect the
+upstream changes. This will be explained in more detail below.
 
 This proposal also introduces a way to "fan-out", or create multiple
-PackageVariant resources declaratively based upon a list or selector with the
+PackageVariant resources declaratively based upon a list or selector, with the
 PackageVariantSet resource. This is combined with the injection mechanism to
 enable generation of large sets of variants that are specialized to a particular
 target repository, cluster, or other resource.
