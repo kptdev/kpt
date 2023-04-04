@@ -18,9 +18,8 @@ creation and lifecycle management of package variants. These are designed to
 address several different dimensions of scalability:
 - Number of different workloads for a given cluster
 - Number of clusters across which those workloads are deployed
-- Complexity of the organizations deploying those workloads (NOTE: actually this
-  is more the `conditions` stuff, will probably move this out of here and create
-  a separate proposal for that)
+- Different types or characteristics of those clusters
+- Complexity of the organizations deploying those workloads
 - Changes to those workloads over time
 
 ## See Also
@@ -42,7 +41,7 @@ For this solution, "workloads" are represented by packages. "Package" is a more
 general concept, being an arbitrary bundle of resources, and therefore is
 sufficient to solve the originally stated problem.
 
-The basic idea here is to introduce a `PackageVariant` resource that manages the
+The basic idea here is to introduce a PackageVariant resource that manages the
 derivation of variant of a package from the original source package, and to
 manage the evolution of that variant over time. This effectively automates the
 human-centered process for variant creation one might use with `kpt`:
@@ -50,10 +49,10 @@ human-centered process for variant creation one might use with `kpt`:
 1. Make changes to the local package, including executing KRM functions
 1. Push the package to a new repository and tag it as a new version
 
-Similarly, `PackageVariant` can manage the process of updating a package when a
+Similarly, PackageVariant can manage the process of updating a package when a
 new version of the upstream package is published. In the human-centered
 workflow, a user would use `kpt pkg update` to pull in changes to their
-derivative package. When using a `PackageVariant` resource, the change would be
+derivative package. When using a PackageVariant resource, the change would be
 made to the upstream specification in the resource, and the controller would
 propose a new Draft package reflecting the outcome of `kpt pkg update`.
 
@@ -81,19 +80,19 @@ collection of many independent resources), with the output being the derived
 package `D`. When a new version of `C` is created by updates to in-cluster
 resources, we get a new revision of `D`, customized based upon the updated
 context. Similarly, the user (or an automation) can monitor for new versions of
-`P`; when one arrives, the `PackageVariant` can be updated to point to that new
+`P`; when one arrives, the PackageVariant can be updated to point to that new
 version, resulting in a newly proposed Draft of `P`. This will be explained in
 more detail below.
 
 This proposal also introduces a way to "fan-out", or create multiple
-`PackageVariant` resources declaratively based upon a list or selector with the
-`PackageVariantSet` resource. This is combined with the injection mechanism to
+PackageVariant resources declaratively based upon a list or selector with the
+PackageVariantSet resource. This is combined with the injection mechanism to
 enable generation of large sets of variants that are specialized to a particular
 target repository, cluster, or other resource.
 
 ## Basic Package Cloning
 
-The `PackageVariant` resource controls the creation and lifecycle of a variant
+The PackageVariant resource controls the creation and lifecycle of a variant
 of a package. That is, it defines the original (upstream) package, the new
 (downstream) package, and the changes (mutations) that need to be made to
 transform the upstream into the downstream. It also allows the user to specify
@@ -107,23 +106,23 @@ controller. Those are left to humans or other controllers. The exception is the
 proposal of deletion (there is no concept of a "Draft" deletion), which the
 package variant control will do, depending upon the specified deletion policy.
 
-### `PackageRevision` Metadata
+### PackageRevision Metadata
 
 The package variant controller utilizes Porch APIs. This means that it is not
-just doing a `clone` operation, but in fact creating a Porch `PackageRevision`
+just doing a `clone` operation, but in fact creating a Porch PackageRevision
 resource. In particular, that resource can contain Kubernetes metadata that is
 not part of the package as stored in the repository.
 
-Some of that metadata is necessary for the management of the `PackageRevision`
-by the package variant controller - for example, the `ownerRef` indicating which
-`PackageVariant` created the `PackageRevision`. These are not under the user's
-control. However, the `PackageVariant` resource does make the annotations and
-labels of the `PackageRevision` available as values that may be controlled
-during the creation of the `PackageRevision`. This can assist in additional
+Some of that metadata is necessary for the management of the PackageRevision
+by the package variant controller - for example, the owner reference indicating
+which PackageVariant created the PackageRevision. These are not under the user's
+control. However, the PackageVariant resource does make the annotations and
+labels of the PackageRevision available as values that may be controlled
+during the creation of the PackageRevision. This can assist in additional
 automation workflows.
 
 ## Introducing Variance
-Just cloning is not that interesting, so the `PackageVariant` resource also
+Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
@@ -134,7 +133,7 @@ key `name` to the ConfigMap data, with the value of the package name. This
 ConfigMap can then be used as input to functions in the Kpt function pipeline.
 
 This process holds true for package revisions created via the package variant
-controller as well. Additionally, the author of the `PackageVariant` resource
+controller as well. Additionally, the author of the PackageVariant resource
 can specify additional key-value pairs to insert into the package
 context.
 
@@ -145,7 +144,7 @@ schema, rather than simple key/value pairs.
 
 ### KRM Function Pipeline[^notimplemented]
 In the manual workflow, one of the ways we edit packages is by running KRM
-functions imperatively. `PackageVariant` offers a similar capability, by
+functions imperatively. PackageVariant offers a similar capability, by
 allowing the user to list a KRM function pipeline similar to the `Kptfile`
 mutators pipeline. By default, these KRM functions are not added to the
 `Kptfile` pipeline, but there is an option to do so.
@@ -162,8 +161,8 @@ pipeline allows it.[^setns]
 
 ### Configuration Injection[^pdc]
 Adding values to the package context, or executing functions with their
-configuration listed in the `PackageVariant`, works for values that are under
-control of the author of the `PackageVariant` resource. However, in more
+configuration listed in the PackageVariant, works for values that are under
+control of the author of the PackageVariant resource. However, in more
 advanced use cases, we may need to specialize the package based upon other
 contextual information. This particularly comes into play when the user
 deploying the workload does not have direct control over the context in which
@@ -205,8 +204,8 @@ The package variant controller allows you to specific a specific upstream
 package revision to clone, or you can specify a floating tag[^notimplemented].
 
 If you specify a specific upstream revision, then the downstream will not be
-changed unless the `PackageVariant` resource itself is modified to point to a new
-revision. That is, the user must edit the `PackageVariant`, and change the
+changed unless the PackageVariant resource itself is modified to point to a new
+revision. That is, the user must edit the PackageVariant, and change the
 upstream package reference. When that is done, the package variant controller
 will update any existing Draft package under its ownership by doing the
 equivalent of a `kpt pkg update` to rebase the downstream on the new upstream
@@ -215,7 +214,7 @@ create a new Draft based on the current published downstream, and apply the `kpt
 pkg update` to rebase that. This updated Draft must then be proposed and
 approved like any other package change.
 
-If a floating tag is used[^notimplemented], then explicit modification of the `PackageVariant` is
+If a floating tag is used[^notimplemented], then explicit modification of the PackageVariant is
 not needed. Rather, when the floating tag is moved to a new tagged revision of
 the upstream package, the package revision controller will notice and
 automatically propose and update to that revision. For example, the upstream
@@ -225,12 +224,12 @@ PackageVariant resource tracking them will propose updates to their downstream
 packages.
 
 ### Adoption and Deletion Policies
-When a `PackageVariant` resource is created, it will have a particular
+When a PackageVariant resource is created, it will have a particular
 repository and package name as the downstream. The adoption policy controls
 whether the package variant controller takes over an existing package with that
 name, in that repository.
 
-Analogously, when a `PackageVariant` resource is deleted, a decision must be
+Analogously, when a PackageVariant resource is deleted, a decision must be
 made about whether or not to delete the downstream package. This is controlled
 by the deletion policy.
 
@@ -243,11 +242,11 @@ automating common, systematic changes made when bringing an external package
 into an organization, or an organizational package into a team repository.
 
 That is useful, but not extremely compelling by itself. More interesting is when
-we use `PackageVariant` as a primitive for automations that act on other
-dimensions of scale. That means writing controllers that emit `PackageVariant`
+we use PackageVariant as a primitive for automations that act on other
+dimensions of scale. That means writing controllers that emit PackageVariant
 resources. For example, we can create a controller that instantiates a
-`PackageVariant`s for each developer in our organization, or we can create
-a controller to manage `PackageVariant`s across environments. The ability to not
+PackageVariants for each developer in our organization, or we can create
+a controller to manage PackageVariants across environments. The ability to not
 only clone a package, but make systematic changes to that package enables
 flexible automation.
 
@@ -257,7 +256,7 @@ Ultimately, all of these result in Pods; however, the decisions about what Pods
 to create, how to schedule them across Nodes, how to configure those Pods, and
 how to manage those Pods as changes happen are very different with each workload
 controller. Similarly, we can build different controllers to handle different
-ways in which we want to generate `PackageRevision`s. The `PackageVariant`
+ways in which we want to generate PackageRevisions. The PackageVariant
 resource provides a convenient primitive for all of those controllers, allowing
 a them to leverage a range of well-defined operations to mutate the packages as
 needed.
@@ -269,11 +268,11 @@ instantiating the same package, with slight configuration changes, across a
 fleet of clusters; or instantiating some package per customer.
 
 The package variant set controller is designed to fill this common need. This
-controller consumes `PackageVariantSet` resources, and outputs `PackageVariant`
-resources. The `PackageVariantSet` defines:
+controller consumes PackageVariantSet resources, and outputs PackageVariant
+resources. The PackageVariantSet defines:
 - the upstream package
 - a list of targets
-- rules for generating one `PackageVariant` per target
+- rules for generating one PackageVariant per target
 
 Three types of targeting are supported:
 - An explicit list of repository and package names
@@ -282,17 +281,17 @@ Three types of targeting are supported:
 - An arbitrary object selector, along with ways to generate repository and
   package names from those objects
 
-Rules for generating `PackageVariant` resources can also access the fields of
+Rules for generating PackageVariant resources can also access the fields of
 the target objects, allowing the package context values, injection selectors,
 and function inputs to vary based upon the target.
 
 ## Example Use Cases
 
-- describe scenarios and the `PackageVariant`, `PackageVariantSet` resources that
+- describe scenarios and the PackageVariant, PackageVariantSet resources that
   would solve the scenarios
 
 ### Automatically Organizational Customization of an External Package
-We can use a `PackageVariant` to provide basic changes that are needed when
+We can use a PackageVariant to provide basic changes that are needed when
 importing a package from an external repository. For example, suppose we have
 our own internal registry from which we pull all our images. When we import an
 upstream package, we want to modify any images listed in the upstream package to
@@ -303,7 +302,7 @@ package.
 In a manual CLI-based workflow, we would accomplish this as follows.
 ...
 
-With `PackageVariant`, we instead create the following resources:
+With PackageVariant, we instead create the following resources:
 ...
 
 ### Creating a Namespace Per Tenant
@@ -316,7 +315,7 @@ With `PackageVariant`, we instead create the following resources:
 
 ## Detailed Design
 
-### `PackageVariant` API
+### PackageVariant API
 
 #### Basic API
 
@@ -337,13 +336,13 @@ with annotations, and *injection selectors* defined on the PackageVariant
 resource.
 
 Injection selectors are defined in the `spec.injectionSelectors` field of the
-`PackageVariant`. This field is an ordered array of structs containing group,
+PackageVariant. This field is an ordered array of structs containing group,
 version, kind, and name. Only the name is required.
 
 The annotations, along with the GVK of the annotated resource, allow a package
 to "advertise" the injections it can accept and understand. These injection
 points effectively form a configuration API for the package, and the injection
-selectors provide a way for the `PackageVariant` author to specify the inputs
+selectors provide a way for the PackageVariant author to specify the inputs
 for those APIs from the possible values in the management cluster. If we define
 those APIs carefully, they can be used across many packages; since they are
 KRM resources, we can apply versioning and schema validation to them as well.
@@ -359,26 +358,26 @@ this GVK for each region: "useast1-service-endpoints",
 "useast2-service-endpoints", "uswest1-service-endpoints", etc. When we
 instantiate the PackageVariant for a cluster, we want to inject the resource
 corresponding to the region in which the cluster exists. Thus, for each cluster
-we will create a `PackageVariant` resource pointing to the upstream package, but
+we will create a PackageVariant resource pointing to the upstream package, but
 with injection selector values that are specific to the region for that cluster.
 
 It is important to realize that the name of the in-package resource and the in-
 cluster resource need not match. In fact, it would be an unusual coincidence if
-they did match. The names in the package are the same across `PackageVariant`s
+they did match. The names in the package are the same across PackageVariants
 using that upstream, but we want to inject different resources for each one such
-`PackageVariant`. We also do not want to change the name in the package, because
+PackageVariant. We also do not want to change the name in the package, because
 it likely has meaning within the package and will be used by functions in the
 package. Also, different roles controlling the names of the in-package and in-
 cluster resources. The names in the package are in the control of the package
 author. The names in the cluster are in the control of whoever populates the
 cluster (for example, some infrastructure team). The selector is the glue
-between them, and is in control of the `PackageVariant` resource creator.
+between them, and is in control of the PackageVariant resource creator.
 
 The GVK on the other hand, has to be the same for the in-package resource and
 the in-cluster resource, because it tells us the API schema for the resource.
 Also, the namespace of the in-cluster object needs to be the same as the
-`PackageVariant` resource, or we could leak resources from namespaces to which
-our `PackageVariant` user does not have access.
+PackageVariant resource, or we could leak resources from namespaces to which
+our PackageVariant user does not have access.
 
 With that understanding, the injection process works as follows:
 
@@ -394,12 +393,12 @@ With that understanding, the injection process works as follows:
    "injection point ConditionType".
 1. For each required injection point, the injection point ConditionType will be
    added to the PackageRevision `readinessGates`. Optional injection points'
-   ConditionTypes must not be added to the readinessGates by the PackageVariant
-   controller, but humans or other actors may do so at a later date, and the
-   PackageVariant controller should not remove them on subsequent
-   reconciliations. Also, this relies upon `readinessGates` preventing
-   publishing to a *deployment* repository, but should not blueprint
-   repositories.
+   ConditionTypes must not be added to the `readinessGates` by the
+   PackageVariant controller, but humans or other actors may do so at a later
+   date, and the package variant controller should not remove them on subsequent
+   reconciliations. Also, this relies upon `readinessGates` gating publishing
+   the package to a *deployment* repository, but not gating publishing to a
+   blueprint repository.
 1. The injection processing will proceed as follows. For each injection point:
    - If the resource schema of the injection point is not available in the
      cluster, then the injection point ConditionType will be set to `False`,
@@ -497,7 +496,7 @@ each of these cases.
   in-package resource with a hash of the in-cluster resource to detect changes,
   this should be discussed.
 
-### `PackageVariantSet` API
+### PackageVariantSet API
 
 PVS will add a "nameFrom" or something similar, that will resolve to the explicitly "name" fields in the selectors during fan out. This allows the PVS to, for example, set the injector name based upon the target name or another target field, or even an annotation or label defined on the target.
 
@@ -517,7 +516,7 @@ in other contexts.
   tweak their upstream as the tag moves.
 - Probably want to think about groups of packages (that is, a collection of
   upstreams with the same set of mutation to be applied). For now, this would be
-  handled with `PackageVariant` / `PackageVariantSet` resources that differ only
+  handled with PackageVariant / PackageVariantSet resources that differ only
   in their upstream / downstream. Theoretically we could do that with label
   selectors on packages but it gets really ugly really fast. I suspect just
   making people copy the PV / PVS is better.
@@ -527,7 +526,7 @@ in other contexts.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
-    users. Another option is to build this into `PackageVariant`, though at this
+    users. Another option is to build this into PackageVariant, though at this
     time we do not plan to do so.
-[^pdc]: A prototype version of this was implemented in Nephio `PackageDeployment`,
-    but this has not been implemented in `PackageVariant` as of Porch v0.0.16.
+[^pdc]: A prototype version of this was implemented in Nephio PackageDeployment,
+    but this has not been implemented in PackageVariant as of Porch v0.0.16.
