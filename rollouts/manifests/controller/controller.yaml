@@ -92,6 +92,22 @@ metadata:
   name: rollouts-manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - container.cnrm.cloud.google.com
   resources:
   - containerclusters
@@ -375,6 +391,7 @@ spec:
         command:
         - /manager
         image: gcr.io/kpt-dev/rollouts-controller:v0.0.2
+        imagePullPolicy: Always
         livenessProbe:
           httpGet:
             path: /healthz

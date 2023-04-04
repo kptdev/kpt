@@ -28,6 +28,14 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - container.cnrm.cloud.google.com
   resources:
   - containerclusters

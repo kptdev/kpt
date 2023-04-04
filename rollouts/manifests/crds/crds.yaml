@@ -148,10 +148,19 @@ spec:
               clusterRef:
                 description: ClusterReference contains the identify information need to refer a cluster.
                 properties:
+                  apiVersion:
+                    type: string
+                  kind:
+                    type: string
                   name:
                     type: string
+                  namespace:
+                    type: string
                 required:
+                - apiVersion
+                - kind
                 - name
+                - namespace
                 type: object
               template:
                 properties:
@@ -321,10 +330,18 @@ spec:
                     required:
                     - projectIds
                     type: object
+                  kind:
+                    description: ClusterSourceKind contains configuration needed to discover kind clusters.
+                    properties:
+                      namespace:
+                        description: Namespace where configmaps corresponding to kind clusters live defaults to `kind-clusters`
+                        type: string
+                    type: object
                   sourceType:
                     enum:
                     - KCC
                     - GCPFleet
+                    - Kind
                     type: string
                 required:
                 - sourceType
