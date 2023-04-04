@@ -224,8 +224,6 @@ upstream package author can move these tags to specific revisions, and any
 PackageVariant resource tracking them will propose updates to their downstream
 packages.
 
-
-
 ### Adoption and Deletion Policies
 When a `PackageVariant` resource is created, it will have a particular
 repository and package name as the downstream. The adoption policy controls
@@ -236,11 +234,57 @@ Analogously, when a `PackageVariant` resource is deleted, a decision must be
 made about whether or not to delete the downstream package. This is controlled
 by the deletion policy.
 
-### Deletion Policy
-
 ## Fan Out of Variant Generation
 
-TODO(johnbelamaric): Describe `PackageVariantSet`.
+When used with a single package, the package variant controller mostly helps us
+handle the time dimension - producing new versions of a package as the upstream
+changes, or as injected resources are updated. It can also be useful for
+automating common, systematic changes made when bringing an external package
+into an organization, or an organizational package into a team repository.
+
+That is useful, but not extremely compelling by itself. More interesting is when
+we use `PackageVariant` as a primitive for automations that act on other
+dimensions of scale. That means writing controllers that emit `PackageVariant`
+resources. For example, we can create a controller that instantiates a
+`PackageVariant`s for each developer in our organization, or we can create
+a controller to manage `PackageVariant`s across environments. The ability to not
+only clone a package, but make systematic changes to that package enables
+flexible automation.
+
+Workload controllers in Kubernetes are a useful analogy. In Kubernetes, we have
+different workload controllers such as Deployment, StatefulSet, and DaemonSet.
+Ultimately, all of these result in Pods; however, the decisions about what Pods
+to create, how to schedule them across Nodes, how to configure those Pods, and
+how to manage those Pods as changes happen are very different with each workload
+controller. Similarly, we can build different controllers to handle different
+ways in which we want to generate `PackageRevision`s. The `PackageVariant`
+resource provides a convenient primitive for all of those controllers, allowing
+a them to leverage a range of well-defined operations to mutate the packages as
+needed.
+
+A common need is the ability to generate many variants of a package based on
+a simple list of some entity. Some examples include generating package variants
+to spin up development environments for each developer in an organization;
+instantiating the same package, with slight configuration changes, across a
+fleet of clusters; or instantiating some package per customer.
+
+The package variant set controller is designed to fill this common need. This
+controller consumes `PackageVariantSet` resources, and outputs `PackageVariant`
+resources. The `PackageVariantSet` defines:
+- the upstream package
+- a list of targets
+- rules for generating one `PackageVariant` per target
+
+Three types of targeting are supported:
+- An explicit list of repository and package names
+- A label selector for Repository objects along with a way to generate package
+  names from those objects
+- An arbitrary object selector, along with ways to generate repository and
+  package names from those objects
+
+Rules for generating `PackageVariant` resources can also access the fields of
+the target objects, allowing the package context values, injection selectors,
+and function inputs to vary based upon the target.
 
 ## Example Use Cases
 
@@ -296,7 +340,40 @@ Injection selectors are defined in the `spec.injectionSelectors` field of the
 `PackageVariant`. This field is an ordered array of structs containing group,
 version, kind, and name. Only the name is required.
 
-The injection process works as follows:
+The annotations, along with the GVK of the annotated resource, allow a package
+to "advertise" the injections it can accept and understand. These injection
+points effectively form a configuration API for the package, and the injection
+selectors provide a way for the `PackageVariant` author to specify the inputs
+for those APIs from the possible values in the management cluster. For example,
+consider a package with a resource with a custom GVK we have defined, named
+"service-endpoints", and containing endpoint addresses for services the package
+needs. Those endpoints may vary by region, so in our Porch cluster we maybe have
+one of these for each region: "useast1-service-endpoints",
+"useast2-service-endpoints", "uswest1-service-endpoints", etc. When we
+instantiate the PackageVariant for a cluster, we want to inject the resource
+corresponding to the region in which the cluster exists. Thus, for each cluster
+we will create a `PackageVariant` resource pointing to the upstream package, but
+with injection selector values that are specific to the region for that cluster.
+
+It is important to realize that the name of the in-package resource and the in-
+cluster resource need not match. In fact, it would be an unusual coincidence if
+they did match. The names in the package are the same across `PackageVariant`s
+using that upstream, but we want to inject different resources for each one such
+`PackageVariant`. We also do not want to change the name in the package, because
+it likely has meaning within the package and will be used by functions in the
+package. Also, different roles controlling the names of the in-package and in-
+cluster resources. The names in the package are in the control of the package
+author. The names in the cluster are in the control of whoever populates the
+cluster (for example, some infrastructure team). The selector is the glue
+between them, and is in control of the `PackageVariant` resource creator.
+
+The GVK on the other hand, has to be the same for the in-package resource and
+the in-cluster resource, because it tells us the API schema for the resource.
+Also, the namespace of the in-cluster object needs to be the same as the
+`PackageVariant` resource, or we could leak resources from namespaces to which
+our `PackageVariant` user does not have access.
+
+With that understanding, the injection process works as follows:
 
 1. The controller will examine all in-package resources, looking for those with
    an annotation named `kpt.dev/config-injection`, with one of the following
@@ -381,13 +458,12 @@ convenient.
 
 #### Order of Mutation During Creation
 Note that the KRM function pipeline defined in the Kptfile runs every time Porch
-saves the package. Thus, the Draft package will undergo mutations in this order
-during creation:
+saves the package. The package variant controller will save the Draft package
+after performing all the requested mutations. Thus, the Draft package will
+undergo mutations in this order during creation:
 
 1. Package Context Injections
-1. Kptfile KRM Function Pipeline
 1. PackageVariant KRM Function Pipeline
-1. Kptfile KRM Function Pipeline
 1. Config Injection
 1. Kptfile KRM Function Pipeline
 
@@ -406,16 +482,6 @@ reasons:
 TODO(johnbelamaric): Figure out and document how the mutation process works in
 each of these cases.
 
-#### Other Considerations
-It would appear convenient to automatically inject the PackageVariantSet
-targeting resource. However, it is better to require the package advertise
-the ways it accepts injections (i.e., the GVKs it understands), and only inject
-those. This keeps the separation of concerns cleaner; the package does not
-build in an awareness of the context in which it expects to be deployed. For
-example, a package should not accept a Porch Repository resource just because
-that happens to be the targeting mechanism. That would make the package unusable
-in other contexts.
-
 #### Open Questions
 - Need to understand how the `kpt pkg update` process works and explain it here
   in some detail. We also need to think about whether we want to do anything
@@ -427,6 +493,16 @@ in other contexts.
 ### `PackageVariantSet` API
 
 PVS will add a "nameFrom" or something similar, that will resolve to the explicitly "name" fields in the selectors during fan out. This allows the PVS to, for example, set the injector name based upon the target name or another target field, or even an annotation or label defined on the target.
+
+#### Other Considerations
+It would appear convenient to automatically inject the PackageVariantSet
+targeting resource. However, it is better to require the package advertise
+the ways it accepts injections (i.e., the GVKs it understands), and only inject
+those. This keeps the separation of concerns cleaner; the package does not
+build in an awareness of the context in which it expects to be deployed. For
+example, a package should not accept a Porch Repository resource just because
+that happens to be the targeting mechanism. That would make the package unusable
+in other contexts.
 
 ## Future Considerations
 - As an alternative to the floating tag proposal, we may instead want to have
@@ -440,11 +516,11 @@ PVS will add a "nameFrom" or something similar, that will resolve to the explici
   making people copy the PV / PVS is better.
 
 ## Footnotes
-[^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.15.
-[^pdc]: A prototype version of this was implemented in Nephio `PackageDeployment`,
-    but this has not been implemented in `PackageVariant` as of Porch v0.0.15.
+[^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.16.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
     users. Another option is to build this into `PackageVariant`, though at this
     time we do not plan to do so.
+[^pdc]: A prototype version of this was implemented in Nephio `PackageDeployment`,
+    but this has not been implemented in `PackageVariant` as of Porch v0.0.16.
