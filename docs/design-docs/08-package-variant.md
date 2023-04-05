@@ -103,7 +103,10 @@ transform the upstream into the downstream. It also allows the user to specify
 policies around adoption, deletion, and update of package revisions that are
 under the control of the package variant controller.
 
-![Basic Package Variant](PackageVariant%20-%201.png)
+The simple clone operation is shown in *Figure 1* (also see the
+[legend](#figure-legend)).
+
+![Figure 1: Basic Package Cloning](packagevariant-clone.png)
 
 Note that *proposal* and *approval* are not handled by the package variant
 controller. Those are left to humans or other controllers. The exception is the
@@ -139,7 +142,9 @@ ConfigMap can then be used as input to functions in the Kpt function pipeline.
 This process holds true for package revisions created via the package variant
 controller as well. Additionally, the author of the PackageVariant resource
 can specify additional key-value pairs to insert into the package
-context.
+context, as shown in *Figure 2*.
+
+![Figure 2: Package Context](packagevariant-context.png)
 
 While this is convenient, it can be easily abused, leading to
 over-parameterization. The preferred approach is configuration injection, as
@@ -161,7 +166,9 @@ include `Namespace` resources if they want to be truly reusable.
 
 The KRM function pipeline provides an easy mechanism for the deployer to set the
 namespace, or even to create one if their downstream package application
-pipeline allows it.[^setns]
+pipeline allows it, as seen in *Figure 3*.[^setns]
+
+![Figure 3: KRM Function](packagevariant-function.png)
 
 ### Configuration Injection[^pdc]
 Adding values to the package context, or executing functions with their
@@ -534,3 +541,8 @@ in other contexts.
     time we do not plan to do so.
 [^pdc]: A prototype version of this was implemented in Nephio PackageDeployment,
     but this has not been implemented in PackageVariant as of Porch v0.0.16.
+
+## Figure Legend
+
+![Figure Legend](packagevariant-legend.png)
+
