@@ -32,7 +32,7 @@ index 737526e..0000000
 --- a/deployment.yaml
 +++ /dev/null
 @@ -1,24 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ index 6590f6c..0000000
 --- a/resources.yaml
 +++ /dev/null
 @@ -1,19 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.

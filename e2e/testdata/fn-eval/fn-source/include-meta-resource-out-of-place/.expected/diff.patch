@@ -19,7 +19,7 @@ index 0000000..f3a8b49
 --- /dev/null
 +++ b/out/labelconfig.yaml
 @@ -0,0 +1,20 @@
-+# Copyright 2021 Google LLC
++# Copyright 2021 The kpt Authors
 +#
 +# Licensed under the Apache License, Version 2.0 (the "License");
 +# you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ index 0000000..254b9cd
 --- /dev/null
 +++ b/out/resources.yaml
 @@ -0,0 +1,28 @@
-+# Copyright 2021 Google LLC
++# Copyright 2021 The kpt Authors
 +#
 +# Licensed under the Apache License, Version 2.0 (the "License");
 +# you may not use this file except in compliance with the License.

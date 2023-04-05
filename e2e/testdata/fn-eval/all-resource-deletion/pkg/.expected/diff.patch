@@ -4,7 +4,7 @@ index 7a494c9..0000000
 --- a/resources.yaml
 +++ /dev/null
 @@ -1,26 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.

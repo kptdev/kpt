@@ -1,7 +1,7 @@
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
-# Copyright 2022 Google LLC
+# Copyright 2022 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ items:
     mutators:
     - image: gcr.io/kpt-fn/apply-setters:v0.2.0
       configPath: setters.yaml
-# Copyright 2022 Google LLC
+# Copyright 2022 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ items:
     uniformBucketLevelAccess: true
     versioning:
       enabled: false
-# Copyright 2022 Google LLC
+# Copyright 2022 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2020 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) erro
 
 // kyamlNodeToUnstructured take a resource represented as a kyaml RNode and
 // turns it into an Unstructured object.
+//
 //nolint:interfacer
 func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
 	b, err := n.MarshalJSON()

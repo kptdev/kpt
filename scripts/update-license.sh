@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2019 Google LLC
+# Copyright 2019 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ set -o pipefail
 
 # TODO: switch to google/addlicense once we have https://github.com/google/addlicense/pull/104
 go run github.com/justinsb/addlicense@v1.0.1 \
-  -c "Google LLC" -l apache \
+  -c "The kpt Authors" -l apache \
   --ignore ".build/**" \
   --ignore "site/**" \
   --ignore "docs/**" \
