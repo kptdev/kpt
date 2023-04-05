@@ -222,13 +222,13 @@ changed unless the PackageVariant resource itself is modified to point to a new
 revision. That is, the user must edit the PackageVariant, and change the
 upstream package reference. When that is done, the package variant controller
 will update any existing Draft package under its ownership by doing the
-equivalent of a `kpt pkg update` to rebase the downstream on the new upstream
-revision. If a Draft does not exist, then the package variant controller will
-create a new Draft based on the current published downstream, and apply the `kpt
-pkg update` to rebase that. This updated Draft must then be proposed and
+equivalent of a `kpt pkg update` to update the downstream to be based upon
+the new upstream revision. If a Draft does not exist, then the package variant
+controller will create a new Draft based on the current published downstream,
+and apply the `kpt pkg update`. This updated Draft must then be proposed and
 approved like any other package change.
 
-If a floating tag is used[^notimplemented], then explicit modification of the PackageVariant is
+If a floating tag is used, then explicit modification of the PackageVariant is
 not needed. Rather, when the floating tag is moved to a new tagged revision of
 the upstream package, the package revision controller will notice and
 automatically propose and update to that revision. For example, the upstream
@@ -259,7 +259,7 @@ That is useful, but not extremely compelling by itself. More interesting is when
 we use PackageVariant as a primitive for automations that act on other
 dimensions of scale. That means writing controllers that emit PackageVariant
 resources. For example, we can create a controller that instantiates a
-PackageVariants for each developer in our organization, or we can create
+PackageVariant for each developer in our organization, or we can create
 a controller to manage PackageVariants across environments. The ability to not
 only clone a package, but make systematic changes to that package enables
 flexible automation.
@@ -301,9 +301,6 @@ and function inputs to vary based upon the target.
 
 ## Example Use Cases
 
-- describe scenarios and the PackageVariant, PackageVariantSet resources that
-  would solve the scenarios
-
 ### Automatically Organizational Customization of an External Package
 We can use a PackageVariant to provide basic changes that are needed when
 importing a package from an external repository. For example, suppose we have
@@ -343,15 +340,25 @@ With PackageVariant, we instead create the following resources:
 
 #### KRM Function Pipeline
 
-#### Configuration Injection
+#### Configuration Injection Details
+
+As described [above](#configuration-injection), configuration injection is a
+process whereby in-package resources are matched to in-cluster resources, and
+the `spec` of the in-cluster resources is copied to the in-package resource.
 
 Configuration injection is controlled by a combination of in-package resources
-with annotations, and *injection selectors* defined on the PackageVariant
-resource.
-
-Injection selectors are defined in the `spec.injectionSelectors` field of the
-PackageVariant. This field is an ordered array of structs containing group,
-version, kind, and name. Only the name is required.
+with annotations, and *injectors* (also known as *injection selectors*) defined
+on the PackageVariant resource. Package authors control the injection points
+they allow in their packages, by flagging specific resources as *injection
+points* with an annotation. Creators of the PackageVariant resource specify how
+to map in-cluster resources to those injection points using the injection
+selectors. Injection selectors are defined in the `spec.injectors` field of the
+PackageVariant. This field is an ordered array of structs containing a GVK
+(group, version, kind) tuple as separate fields, and name. Only the name is
+required. To identify a match, all fields present must match the in-cluster
+object, and all *GVK* fields present must match the in-package resource. In
+general the name will not match the in-package resource; this is discussed in
+more detail below.
 
 The annotations, along with the GVK of the annotated resource, allow a package
 to "advertise" the injections it can accept and understand. These injection
@@ -363,7 +370,7 @@ KRM resources, we can apply versioning and schema validation to them as well.
 This creates a more maintainable, automatable set of APIs for package
 customization than simple key/value pairs.
 
-As an example, we may define a GVK that contains service endpoints that many of
+As an example, we may define a GVK that contains service endpoints that many
 applications use. In each application package, we would then include an instance
 of that resource, say called "service-endpoints", and configure a function to
 propagate the values from that resource to others within our package. As those
@@ -373,7 +380,8 @@ this GVK for each region: "useast1-service-endpoints",
 instantiate the PackageVariant for a cluster, we want to inject the resource
 corresponding to the region in which the cluster exists. Thus, for each cluster
 we will create a PackageVariant resource pointing to the upstream package, but
-with injection selector values that are specific to the region for that cluster.
+with injection selector name values that are specific to the region for that
+cluster.
 
 It is important to realize that the name of the in-package resource and the in-
 cluster resource need not match. In fact, it would be an unusual coincidence if
@@ -381,7 +389,7 @@ they did match. The names in the package are the same across PackageVariants
 using that upstream, but we want to inject different resources for each one such
 PackageVariant. We also do not want to change the name in the package, because
 it likely has meaning within the package and will be used by functions in the
-package. Also, different roles controlling the names of the in-package and in-
+package. Also, different owners control the names of the in-package and in-
 cluster resources. The names in the package are in the control of the package
 author. The names in the cluster are in the control of whoever populates the
 cluster (for example, some infrastructure team). The selector is the glue
@@ -397,7 +405,10 @@ With that understanding, the injection process works as follows:
 
 1. The controller will examine all in-package resources, looking for those with
    an annotation named `kpt.dev/config-injection`, with one of the following
-   values: `required` or `optional`. We will call these "injection points".
+   values: `required` or `optional`. We will call these "injection points". It
+   is the responsibility of the package author to define these injection points,
+   and to specify which are required and which are optional. Optional injection
+   points are a way of specifying default values.
 1. For each injection point, a condition will be created in the
    downstream PackageRevision, with ConditionType set to the dot-delimited
    concatenation of `config.injection`, with the in-package resource kind and
@@ -405,14 +416,14 @@ With that understanding, the injection process works as follows:
    controls the name of the resource, kind and name are sufficient to
    disambiguate the injection point. We will call this ConditionType the
    "injection point ConditionType".
-1. For each required injection point, the injection point ConditionType will be
-   added to the PackageRevision `readinessGates`. Optional injection points'
-   ConditionTypes must not be added to the `readinessGates` by the
-   PackageVariant controller, but humans or other actors may do so at a later
-   date, and the package variant controller should not remove them on subsequent
-   reconciliations. Also, this relies upon `readinessGates` gating publishing
-   the package to a *deployment* repository, but not gating publishing to a
-   blueprint repository.
+1. For each required injection point, the injection point ConditionType will
+   be added to the PackageRevision `readinessGates` by the package variant
+   controller. Optional injection points' ConditionTypes must not be added to
+   the `readinessGates` by the package variant controller, but humans or other
+   actors may do so at a later date, and the package variant controller should
+   not remove them on subsequent reconciliations. Also, this relies upon
+   `readinessGates` gating publishing the package to a *deployment* repository,
+   but not gating publishing to a blueprint repository.
 1. The injection processing will proceed as follows. For each injection point:
    - If the resource schema of the injection point is not available in the
      cluster, then the injection point ConditionType will be set to `False`,
@@ -429,9 +440,12 @@ With that understanding, the injection process works as follows:
    - The controller will look through the list of injection selectors in
      order and checking if any of the in-cluster objects match the selector. If
      so, that in-cluster object is selected, and processing of the list of
-     injection selectors stops. Note that in the initial version, the selectors
-     are only by name; thus, at most one match is possible for any given
-     selector.
+     injection selectors stops. Note that the namespace is set based upon the
+     PackageVariant resource, the GVK is set based upon the in-package resource,
+     and all selectors require name. Thus, at most one match is possible for any
+     given selector. Also note that *all fields present in the selector* must
+     match the in-cluster resource, and only the *GVK fields present in the
+     selector* must match the in-package resoruce.
    - If no in-cluster object is selected, the injection point ConditionType will
      be set to `False` with a message that no matching in-cluster resource was
      found, and processing proceeds to the next injection point.
@@ -442,13 +456,15 @@ With that understanding, the injection process works as follows:
      - An annotation with name `kpt.dev/injected-resource-name` and value set to
        the name of the in-cluster resource is added (or overwritten) in the
        in-package resource.
-1. The PackageVariant resource must have a condition of type `ConfigInjected`.
+1. The package variant controller will add or set a condition of type
+   `ConfigInjected` in the PackageVariant resource status.
    This will be set to `True` if and only if:
    - All configuration injection processing is complete.
    - There is no resource annotated as an injection point but having an invalid
      annotation value (i.e., other than `required` or `optional`).
    - Matching in-cluster resources were successfully injected for all `required`
-     injection points (all required injection point ConditionTypes are `True`).
+     injection points (i.e., all required injection point ConditionTypes are
+     `True`).
    - There are no ambiguous condition types due to conflicting GVK and name
      values. These must be disambiguated in the upstream package, if so.
 
@@ -474,7 +490,8 @@ by using GVK, we can accomplish this with a list of selectors like:
 
 That said, often name will be sufficiently unique when combined with the
 in-package resource GVK, and so making the selector GVK optional is more
-convenient.
+convenient. This allows a single injector to apply to multiple injection points
+with different GVKs.
 
 #### Order of Mutation During Creation
 Note that the KRM function pipeline defined in the Kptfile runs every time Porch
