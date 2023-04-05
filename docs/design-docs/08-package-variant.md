@@ -199,6 +199,9 @@ this information. So, there is a protocol for facilitating this dance:
 - The package variant controller will copy the `spec` field from the matching
   in-cluster resource to the in-package resource.
 
+![Figure 4: Configuration Injection](packagevariant-config-injection.png)
+
+
 Note that because we are injecting data *from the Kubernetes cluster*, we can
 also monitor that data for changes. For each resource we inject, the package
 variant controller will establish a Kubernetes "watch" on the resource (or
