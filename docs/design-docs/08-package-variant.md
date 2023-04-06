@@ -400,17 +400,65 @@ in the condition `DownstreamEnsured` being set to `False`.
 
 #### KRM Function Pipeline
 
-PackageVariant resource creators may specify a list of KRM functions to execute
-on package creation and update. These functions are listed in the field
-`spec.mutators`, which is a slice of [`Function`](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283) structs, just as in the Kptfile.
+PackageVariant resource creators may specify a list of KRM functions to add to
+the beginning of the Kptfile's pipeline. These functions are listed in the field
+`spec.pipeline`, which is a
+[Pipeline](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L236),
+just as in the Kptfile. The user can therefore prepend both `validators` and
+`mutators`.
 
-Note that there is no equivalent to the Kptfile `validators` list, as those
-should live within the Kptfile itself if they are needed. The PackageVariant
-function list is intended to act in a manner similar to a human executing
-functions imperatively while customizing a package. Nonetheless, these functions
-will be called whenever the PackageVariant resource, the upstream
-package, or one of the injected configuration objects are updated, so they
-should be idempotent, just as in other uses of KRM functions.
+Functions added in this way are always added to the *beginning* of the Kptfile
+pipeline. In order to enable management of the list on subsequent
+reconcilations, functions added by the package variant controller will use the
+`Name` field of the
+[Function](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283).
+In the Kptfile, each function will be named as the dot-delimited concatenation
+of `PackageVariant`, the name of the PackageVariant resource, the function name
+as specified in the pipeline of the PackageVariant resource (if present), and
+the positional location of the function in the array.
+
+For example, if the PackageVariant resource contains:
+
+```
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: my-pv
+spec:
+  ...
+  pipeline:
+    mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1
+      configMap:
+        namespace: my-ns
+      name: my-func
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: foo
+```
+
+Then the resulting Kptfile will have these two entries prepended to its
+`mutators` list:
+
+```
+  pipeline:
+    mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.1
+      configMap:
+        namespace: my-ns
+      name: PackageVariant.my-pv.my-func.0
+    - image: gcr.io/kpt-fn/set-labels:v0.1
+      configMap:
+        app: foo
+      name: PackageVariant.my-pv.1
+```
+
+During subsequent reconciliations, this allows the controller to identify the
+functions within its control, remove them all, and re-add them based on its
+updated content. By including the PackageVariant name, we enable chains of
+PackageVariants to add functions, so long as the user is careful about their
+choice of resource names and avoids conflicts.
 
 #### Configuration Injection Details
 
