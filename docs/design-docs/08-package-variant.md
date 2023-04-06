@@ -1,6 +1,7 @@
 # Package Variant Controller
 
 * Author(s): @johnbelamaric, @natasha41575
+* Status: Work-in-Progress
 * Approver: @mortent
 
 ## Why
@@ -156,35 +157,39 @@ schema, rather than simple key/value pairs.
 ### KRM Function Pipeline[^notimplemented]
 In the manual workflow, one of the ways we edit packages is by running KRM
 functions imperatively. PackageVariant offers a similar capability, by
-allowing the user to list a KRM function pipeline similar to the `Kptfile`
-mutators pipeline. By default, these KRM functions are not added to the
-`Kptfile` pipeline, but there is an option to do so.
+allowing the user to add functions to the beginning of the downstream package
+`Kptfile` mutators pipeline. These functions will then execute before the
+functions present in the upstream pipeline. It is not exactly the same as
+running functions imperatively, because they will also be run in every
+subsequent execution of the downstream package function pipeline. But it can
+achieve the same goals.
 
-Creating a namespace and/or setting the namespace for a particular package is a
-very common operation. However, since namespace provisioning in a cluster is a
-privileged operation, the deployer of a package may not have the authority to
-provision a namespace. For this reason, upstream packages should not directly
-include `Namespace` resources if they want to be truly reusable.
+For example, consider an upstream package that includes a Namespace resource.
+In many organizations, the deployer of the workload may not have the permissions
+to provision cluster-scoped resources like Namespaces. This means that they
+would not be able to use this upstream package without removing the Namespace
+resource (assuming that they only have access to a pipeline that deploys with
+constrained permissions). By adding a function that removes Namespace resources,
+and a call to `set-namespace`, they can take advantage of the upstream package.
 
-The KRM function pipeline provides an easy mechanism for the deployer to set the
-namespace, or even to create one if their downstream package application
+Similarly, the KRM function pipeline feature provides an easy mechanism for the
+deployer to create and set the namespace if their downstream package application
 pipeline allows it, as seen in *Figure 3*.[^setns]
 
 ![Figure 3: KRM Function](packagevariant-function.png)
 
 ### Configuration Injection[^pdc]
-Adding values to the package context, or executing functions with their
-configuration listed in the PackageVariant, works for values that are under
-control of the author of the PackageVariant resource. However, in more
-advanced use cases, we may need to specialize the package based upon other
-contextual information. This particularly comes into play when the user
-deploying the workload does not have direct control over the context in which
-it is being deployed. For example, one part of the organization may manage the
-infrastructure - that is, the cluster in which we are deploying the workload -
-and another part the actual workload. We would like to be able to pull in inputs
-specified by the infrastructure team automatically, based the cluster to which
-we are deploying the workload, or perhaps the region in which that cluster is
-deployed.
+Adding values to the package context or functions to the pipeline works
+for configuration that is under the control of the creator of the PackageVariant
+resource. However, in more advanced use cases, we may need to specialize the
+package based upon other contextual information. This particularly comes into
+play when the user deploying the workload does not have direct control over the
+context in which it is being deployed. For example, one part of the organization
+may manage the infrastructure - that is, the cluster in which we are deploying
+the workload - and another part the actual workload. We would like to be able to
+pull in inputs specified by the infrastructure team automatically, based the
+cluster to which we are deploying the workload, or perhaps the region in which
+that cluster is deployed.
 
 To facilitate this, the package variant controller can "inject" configuration
 directly into the package. This means it will use information specific to this
@@ -296,6 +301,11 @@ Three types of targeting are supported:
   names from those objects
 - An arbitrary object selector, along with ways to generate repository and
   package names from those objects
+
+*Figure 5* shows an example of creating PackageVariant resources based upon the
+explicity list of repository and package names.
+
+![Figure 5: List of Targets](packagevariantset-target-package.png)
 
 Rules for generating PackageVariant resources can also access the fields of
 the target objects, allowing the package context values, injection selectors,
@@ -557,39 +567,40 @@ in-package resource GVK, and so making the selector GVK optional is more
 convenient. This allows a single injector to apply to multiple injection points
 with different GVKs.
 
-#### Order of Mutation During Creation
-Note that the KRM function pipeline defined in the Kptfile runs every time Porch
-saves the package. The package variant controller will save the Draft package
-after performing all the requested mutations. Thus, the Draft package will
-undergo mutations in this order during creation:
+#### Order of Mutations
 
-1. Package Context Injections
-1. PackageVariant KRM Function Pipeline
-1. Config Injection
-1. Kptfile KRM Function Pipeline
+During creation, the first thing the controller does is clone the upstream
+package to create the downstream package.
 
-#### Order of Mutation During Updates
+For update, first note that changes to the downstream PackageRevision can be
+triggered for several different reasons:
 
-Updates to the downstream PackageRevision can happen for several different
-reasons:
-
-1. An injected in-cluster object is updated.
 1. The PackageVariant resource is updated, which could change any of the options
    for introducing variance, or could also change the upstream package revision
    referenced.
 1. A new revision of the upstream package has been selected due to a floating
    tag change, or due to a force retagging of the upstream.
+1. An injected in-cluster object is updated.
 
-TODO(johnbelamaric): Figure out and document how the mutation process works in
-each of these cases.
+The downstream PackageRevision may have been updated by humans or other
+automation actors since creation, so we cannot simply recreate the downstream
+PackageRevision from scratch when one of these changes happens. Instead, the
+controller must maintain the later edits by doing the equivalent of a `kpt pkg
+update`, in the case of changes to the upstream for any reason. Any other
+changes require reapplication of the PackageVariant functionality. With that
+understanding, we can see that the controller will perform mutations on the
+downstream package in this order, for both creation and update:
 
-#### Open Questions
-- Need to understand how the `kpt pkg update` process works and explain it here
-  in some detail. We also need to think about whether we want to do anything
-  special for updates when the PVS, PV, or any injected resource changes.
-- It may be necessary for the package variant controller to annotate the
-  in-package resource with a hash of the in-cluster resource to detect changes,
-  this should be discussed.
+1. Create (via Clone) or Update (via `kpt pkg update` equivalent)
+1. Package Context Injections
+1. Kptfile KRM Function Pipeline Additions/Changes
+1. Config Injection
+1. Kptfile KRM Function Pipeline Execution
+
+Since the middle three of these just edit resources (including the Kptfile) in
+the package, their ordering does not matter; they cannot affect one another.
+The execution of the KRM function pipeline depends on the others, but there are
+no direct dependencies otherwise.
 
 ### PackageVariantSet API
 
