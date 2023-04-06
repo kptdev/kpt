@@ -303,7 +303,7 @@ Three types of targeting are supported:
   package names from those objects
 
 *Figure 5* shows an example of creating PackageVariant resources based upon the
-explicity list of repository and package names.
+explicitly list of repository and package names.
 
 ![Figure 5: List of Targets](packagevariantset-target-package.png)
 
@@ -409,7 +409,7 @@ just as in the Kptfile. The user can therefore prepend both `validators` and
 
 Functions added in this way are always added to the *beginning* of the Kptfile
 pipeline. In order to enable management of the list on subsequent
-reconcilations, functions added by the package variant controller will use the
+reconciliations, functions added by the package variant controller will use the
 `Name` field of the
 [Function](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283).
 In the Kptfile, each function will be named as the dot-delimited concatenation
@@ -565,7 +565,7 @@ With that understanding, the injection process works as follows:
      and all selectors require name. Thus, at most one match is possible for any
      given selector. Also note that *all fields present in the selector* must
      match the in-cluster resource, and only the *GVK fields present in the
-     selector* must match the in-package resoruce.
+     selector* must match the in-package resource.
    - If no in-cluster object is selected, the injection point ConditionType will
      be set to `False` with a message that no matching in-cluster resource was
      found, and processing proceeds to the next injection point.
