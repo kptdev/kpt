@@ -390,18 +390,17 @@ in the condition `DownstreamEnsured` being set to `False`.
 
 #### KRM Function Pipeline
 
-PackageVariant resource creators may specify a list of KRM functions to either
-execute on package creation and update, add to the package Kptfile, or both. The
-list of functions to execute as part of package creation or update is listed in
-`spec.execPipeline`, whereas the list of functions to ensure exist in the
-downstream Kptfile pipeline are listed in `spec.prefixPipeline` and
-`spec.suffixPipeline`. These use the Kptfile
-[Pipeline](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L236).
+PackageVariant resource creators may specify a list of KRM functions to execute
+on package creation and update. These functions are listed in the field
+`spec.mutators`, which is a slice of [`Function`](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283) structs, just as in the Kptfile.
 
-The prefix and suffix lists are used to modify the Kptfile (creating functions
-that are run before and after the upstream pipeline, respectively), but are not
-executed by the PackageVariant controller itself. When the controller saves the
-package, Porch will of course run those pipelines at that time.
+Note that there is no equivalent to the Kptfile `validators` list, as those
+should live within the Kptfile itself if they are needed. The PackageVariant
+function list is intended to act in a manner similar to a human executing
+functions imperatively while customizing a package. Nonetheless, these functions
+will be called whenever the PackageVariant resource, the upstream
+package, or one of the injected configuration objects are updated, so they
+should be idempotent, just as in other uses of KRM functions.
 
 #### Configuration Injection Details
 
