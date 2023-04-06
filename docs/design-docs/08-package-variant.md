@@ -134,10 +134,12 @@ allows you to control various ways of mutating the original package to create
 the variant.
 
 ### Package Context[^notimplemented]
-Every kpt package that is designated `--for-deployment` will contain a
-ConfigMap called `kptfile.kpt.dev`. Kpt (or Porch) will automatically add a
-key `name` to the ConfigMap data, with the value of the package name. This
-ConfigMap can then be used as input to functions in the Kpt function pipeline.
+Every kpt package that is fetched with `--for-deployment` will contain a
+ConfigMap called `kptfile.kpt.dev`. Analogously, when Porch creates a package
+in a deployment repository, it will create this ConfigMap, if it does not
+already exist. Kpt (or Porch) will automatically add a key `name` to the
+ConfigMap data, with the value of the package name. This ConfigMap can then
+be used as input to functions in the Kpt function pipeline.
 
 This process holds true for package revisions created via the package variant
 controller as well. Additionally, the author of the PackageVariant resource
@@ -335,10 +337,71 @@ With PackageVariant, we instead create the following resources:
 - Annotations
 - Labels
 - Adoption and Deletion Policy
+- Status
+  - `Valid` Condition Type
+  - `DownstreamEnsured` Condition Type (`Ready`?)
+  - `DraftExists` Condition Type (?)
 
 #### Package Context Injection
 
+PackageVariant resource authors may specify key-value pairs in the
+`spec.packageContext.data` field of the resource. These key-value pairs will be
+automatically added to the `data` of the `kptfile.kpt.dev` ConfigMap, if it
+exists.
+
+Specifying the key `name` is invalid and must fail validation of the
+PackageVariant. This key is reserved for kpt or Porch to set to the package
+name.
+
+The `spec.packageContext.removeKeys` field can also be used to specify a list of
+keys that the package variant controller should remove from the `data` field of
+the `kptfile.kpt.dev` ConfigMap.
+
+When creating or updating a package, the package variant controller will ensure
+that:
+- The `kptfile.kpt.dev` ConfigMap exists (creating it if not)
+- All of the key-value pairs in `spec.packageContext.data` exist in the `data`
+  field of the ConfigMap.
+- None of the keys listed in `spec.packageContext.removeKeys` exist in the
+  ConfigMap.
+
+Note that if a user adds a key via PackageVariant, then changes the
+PackageVariant to no longer add that key, it will NOT be removed automatically,
+unless the user also lists the key in the `removeKeys` list. This avoids the
+need to track which keys were added by PackageVariant.
+
+Similarly, if a user manually adds a key in the downstream that is also listed
+in the `removeKeys` field, the package variant controller will remove that key
+the next time it needs to update the downstream package. There will be no
+attempt to coordinate "ownership" of these keys.
+
+The package variant controller will add or set a condition of type
+`ContextInjected` in the PackageVariant resource status. This will be set to
+`True` if and only if:
+- The user specified `spec.packageContext` (either or both fields).
+- The `kptfile.kpt.dev` ConfigMap exists.
+- The controller successfully modified it as specified.
+
+Otherwise, the condition should be set to `False`.
+
+If the controller is unable to modify the ConfigMap for some reason, this is
+considered an error and should prevent generation of the Draft. This will result
+in the condition `DownstreamEnsured` being set to `False`.
+
 #### KRM Function Pipeline
+
+PackageVariant resource creators may specify a list of KRM functions to either
+execute on package creation and update, add to the package Kptfile, or both. The
+list of functions to execute as part of package creation or update is listed in
+`spec.execPipeline`, whereas the list of functions to ensure exist in the
+downstream Kptfile pipeline are listed in `spec.prefixPipeline` and
+`spec.suffixPipeline`. These use the Kptfile
+[Pipeline](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L236).
+
+The prefix and suffix lists are used to modify the Kptfile (creating functions
+that are run before and after the upstream pipeline, respectively), but are not
+executed by the PackageVariant controller itself. When the controller saves the
+package, Porch will of course run those pipelines at that time.
 
 #### Configuration Injection Details
 
@@ -467,6 +530,8 @@ With that understanding, the injection process works as follows:
      `True`).
    - There are no ambiguous condition types due to conflicting GVK and name
      values. These must be disambiguated in the upstream package, if so.
+
+If `ConfigInjected` is `False`, then `DownstreamEnsured` must also be `False`.
 
 Note that by allowing the use of GVK, not just name, in the selector, more
 precision in selection is enabled. This is a way to constrain the injections
