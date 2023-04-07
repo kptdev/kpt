@@ -104,10 +104,12 @@ transform the upstream into the downstream. It also allows the user to specify
 policies around adoption, deletion, and update of package revisions that are
 under the control of the package variant controller.
 
-The simple clone operation is shown in *Figure 1* (also see the
-[legend](#figure-legend)).
+The simple clone operation is shown in *Figure 1*.
 
-![Figure 1: Basic Package Cloning](packagevariant-clone.png)
+| ![Figure 1: Basic Package Cloning](packagevariant-clone.png) | ![Legend](packagevariant-legend.png) |
+| :---: | :---: |
+| *Figure 1: Basic Package Cloning* | *Legend* |
+
 
 Note that *proposal* and *approval* are not handled by the package variant
 controller. Those are left to humans or other controllers. The exception is the
@@ -129,7 +131,7 @@ labels of the PackageRevision available as values that may be controlled
 during the creation of the PackageRevision. This can assist in additional
 automation workflows.
 
-## Introducing Variance
+## Introducing Variance[^notimplemented]
 Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
@@ -147,14 +149,16 @@ controller as well. Additionally, the author of the PackageVariant resource
 can specify additional key-value pairs to insert into the package
 context, as shown in *Figure 2*.
 
-![Figure 2: Package Context](packagevariant-context.png)
+| ![Figure 2: Package Context](packagevariant-context.png) |
+| :---: |
+| *Figure 2: Basic Package Cloning* |
 
 While this is convenient, it can be easily abused, leading to
 over-parameterization. The preferred approach is configuration injection, as
 described below, since it allows inputs to adhere to a well-defined, reusable
 schema, rather than simple key/value pairs.
 
-### KRM Function Pipeline[^notimplemented]
+### Kptfile Function Pipeline Editing
 In the manual workflow, one of the ways we edit packages is by running KRM
 functions imperatively. PackageVariant offers a similar capability, by
 allowing the user to add functions to the beginning of the downstream package
@@ -166,19 +170,21 @@ achieve the same goals.
 
 For example, consider an upstream package that includes a Namespace resource.
 In many organizations, the deployer of the workload may not have the permissions
-to provision cluster-scoped resources like Namespaces. This means that they
+to provision cluster-scoped resources like namespaces. This means that they
 would not be able to use this upstream package without removing the Namespace
 resource (assuming that they only have access to a pipeline that deploys with
 constrained permissions). By adding a function that removes Namespace resources,
 and a call to `set-namespace`, they can take advantage of the upstream package.
 
-Similarly, the KRM function pipeline feature provides an easy mechanism for the
-deployer to create and set the namespace if their downstream package application
-pipeline allows it, as seen in *Figure 3*.[^setns]
+Similarly, the Kptfile pipeline editing feature provides an easy mechanism for
+the deployer to create and set the namespace if their downstream package
+application pipeline allows it, as seen in *Figure 3*.[^setns]
 
-![Figure 3: KRM Function](packagevariant-function.png)
+| ![Figure 3: KRM Function](packagevariant-function.png) |
+| :---: |
+| *Figure 3: Kptfile Function Pipeline Editing * |
 
-### Configuration Injection[^pdc]
+### Configuration Injection
 Adding values to the package context or functions to the pipeline works
 for configuration that is under the control of the creator of the PackageVariant
 resource. However, in more advanced use cases, we may need to specialize the
@@ -206,7 +212,9 @@ this information. So, there is a protocol for facilitating this dance:
 - The package variant controller will copy the `spec` field from the matching
   in-cluster resource to the in-package resource.
 
-![Figure 4: Configuration Injection](packagevariant-config-injection.png)
+| ![Figure 4: Configuration Injection](packagevariant-config-injection.png) |
+| :---: |
+| *Figure 4: Configuration Injection* |
 
 
 Note that because we are injecting data *from the Kubernetes cluster*, we can
@@ -305,7 +313,9 @@ Three types of targeting are supported:
 *Figure 5* shows an example of creating PackageVariant resources based upon the
 explicitly list of repository and package names.
 
-![Figure 5: List of Targets](packagevariantset-target-package.png)
+| ![Figure 5: PackageVariantSet with List of Targets](packagevariantset-target-package.png) |
+| :---: |
+| *Figure 5: PackageVariantSet with List of Targets* |
 
 Rules for generating PackageVariant resources can also access the fields of
 the target objects, allowing the package context values, injection selectors,
@@ -680,12 +690,4 @@ in other contexts.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
-    users. Another option is to build this into PackageVariant, though at this
-    time we do not plan to do so.
-[^pdc]: A prototype version of this was implemented in Nephio PackageDeployment,
-    but this has not been implemented in PackageVariant as of Porch v0.0.16.
-
-## Figure Legend
-
-![Figure Legend](packagevariant-legend.png)
-
+    users.
