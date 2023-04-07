@@ -1,5 +1,5 @@
 diff --git a/resources.yaml b/resources.yaml
-index ac634f3..ef2a1b1 100644
+index eed43d6..e76b00d 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,24 @@ apiVersion: apps/v1

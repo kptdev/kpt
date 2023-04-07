@@ -17,7 +17,7 @@ index 4a1e2fa..b20f8f5 100644
 +      configMap:
 +        namespace: newNs
 diff --git a/resources.yaml b/resources.yaml
-index ac634f3..80e1b9e 100644
+index eed43d6..0b0d2ce 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,6 +15,7 @@ apiVersion: apps/v1

@@ -21,7 +21,7 @@ index 1c0e1cc..e278c20 100644
  info:
    description: sample description
 diff --git a/pkg-a/pkg-a/resources.yaml b/pkg-a/pkg-a/resources.yaml
-index 7a494c9..ba72b74 100644
+index f2eec52..c4e4abb 100644
 --- a/pkg-a/pkg-a/resources.yaml
 +++ b/pkg-a/pkg-a/resources.yaml
 @@ -15,6 +15,7 @@ apiVersion: apps/v1

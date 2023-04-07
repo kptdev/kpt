@@ -12,7 +12,7 @@ index af4d9f8..12d5e3d 100644
    mutators:
      - image: set-labels:v0.1
 diff --git a/kustomization.yaml b/kustomization.yaml
-index f91c46a..94769e0 100644
+index f3f0207..6c517af 100644
 --- a/kustomization.yaml
 +++ b/kustomization.yaml
 @@ -11,7 +11,9 @@
@@ -27,7 +27,7 @@ index f91c46a..94769e0 100644
 +  labels:
 +    tier: backend
 diff --git a/resources.yaml b/resources.yaml
-index f6f4685..b11c929 100644
+index 40a033d..eb585ba 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,23 @@ apiVersion: apps/v1

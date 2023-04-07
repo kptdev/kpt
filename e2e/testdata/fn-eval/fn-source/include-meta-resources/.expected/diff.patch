@@ -15,7 +15,7 @@ index 0000000..4fad916
 +      configPath: labelconfig.yaml
 diff --git a/out/labelconfig.yaml b/out/labelconfig.yaml
 new file mode 100644
-index 0000000..f3a8b49
+index 0000000..37baaa2
 --- /dev/null
 +++ b/out/labelconfig.yaml
 @@ -0,0 +1,20 @@
@@ -41,7 +41,7 @@ index 0000000..f3a8b49
 +  tier: app
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
-index 0000000..254b9cd
+index 0000000..b66c419
 --- /dev/null
 +++ b/out/resources.yaml
 @@ -0,0 +1,28 @@

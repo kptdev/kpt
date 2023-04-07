@@ -59,7 +59,7 @@ index 0000000..ffdf484
 +      app: backend
 +      tier: db
 diff --git a/db/resources.yaml b/db/resources.yaml
-index ac1fd96..49fa8df 100644
+index dabe43c..e9be40c 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -15,5 +15,18 @@ apiVersion: apps/v1
@@ -82,7 +82,7 @@ index ac1fd96..49fa8df 100644
 +        app: backend
 +        tier: db
 diff --git a/db/starlark-httpbin.yaml b/db/starlark-httpbin.yaml
-index 5c7eea7..d5252a4 100644
+index e52e48f..d21601e 100644
 --- a/db/starlark-httpbin.yaml
 +++ b/db/starlark-httpbin.yaml
 @@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
@@ -97,7 +97,7 @@ index 5c7eea7..d5252a4 100644
    httpbin_deployment = {
       "apiVersion": "apps/v1",
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..ac4edf8 100644
+index f2eec52..8b2113d 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,25 @@ apiVersion: apps/v1

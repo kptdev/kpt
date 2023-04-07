@@ -21,7 +21,7 @@ index 0000000..c237afd
 +        tier: backend
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
-index 0000000..a9dd224
+index 0000000..84cfb26
 --- /dev/null
 +++ b/out/resources.yaml
 @@ -0,0 +1,39 @@

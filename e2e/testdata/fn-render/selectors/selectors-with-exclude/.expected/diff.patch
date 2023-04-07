@@ -12,7 +12,7 @@ index a47bd49..a402119 100644
    mutators:
      - image: gcr.io/kpt-fn/set-namespace:v0.1.3
 diff --git a/resources.yaml b/resources.yaml
-index e7eda6a..f50b306 100644
+index d3ed04c..f66e542 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -17,8 +17,17 @@ metadata:

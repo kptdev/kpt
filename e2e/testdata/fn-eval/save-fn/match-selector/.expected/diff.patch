@@ -14,7 +14,7 @@ index d9e2f05..eb232bb 100644
 +      selectors:
 +        - kind: Deployment
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..9d82bd6 100644
+index f2eec52..f169ab0 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,6 +15,7 @@ apiVersion: apps/v1

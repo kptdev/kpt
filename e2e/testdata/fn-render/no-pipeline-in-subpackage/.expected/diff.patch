@@ -24,7 +24,7 @@ index 79b7a5a..15f086b 100644
 +  labels:
 +    tier: backend
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 7a494c9..a9dd224 100644
+index f2eec52..84cfb26 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -15,12 +15,25 @@ apiVersion: apps/v1

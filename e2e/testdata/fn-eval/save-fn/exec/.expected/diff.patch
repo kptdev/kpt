@@ -11,7 +11,7 @@ index d9e2f05..daff2a6 100644
 +    - exec: ./function.sh
 +      configPath: fn-config.yaml
 diff --git a/resources.yaml b/resources.yaml
-index 9e9c98f..9adc2f7 100644
+index 384908c..8514fdb 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,7 +15,7 @@ apiVersion: apps/v1

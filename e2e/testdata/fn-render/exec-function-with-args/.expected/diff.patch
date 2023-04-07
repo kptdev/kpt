@@ -9,7 +9,7 @@ index 0d98dbb..23bd061 100644
 -    - exec: "sed -e 's/foo/bar/'"
 +    - exec: "sed -e 's/bar/bar/'"
 diff --git a/resources.yaml b/resources.yaml
-index e8ae6bb..297b99f 100644
+index 0f69886..ff4bde7 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,7 +15,7 @@ apiVersion: apps/v1
