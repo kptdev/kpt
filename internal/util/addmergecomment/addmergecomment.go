@@ -21,6 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/util/merge"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
@@ -141,7 +142,7 @@ func ProcessWithCleanup(path string) (string, func(), error) {
 	if err != nil {
 		return "", nil, err
 	}
-	err = copyutil.CopyDir(path, expected)
+	err = copyutil.CopyDir(filesys.MakeFsOnDisk(), path, expected)
 	if err != nil {
 		return "", nil, err
 	}
