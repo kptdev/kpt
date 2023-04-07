@@ -138,11 +138,11 @@ func (r *RemoteClientGetter) getCCRESTConfig(ctx context.Context, cluster *unstr
 func (r *RemoteClientGetter) getConfigConnectorTokenSource(ctx context.Context, ns string) (oauth2.TokenSource, error) {
 	if os.Getenv("USE_DEV_AUTH") != "" {
 		klog.Warningf("using default authentication, intended for local development only")
-		accessToken, err := GetDefaultAccessToken(ctx)
+		accessTokenSource, err := GetDefaultAccessTokenSource(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return oauth2.StaticTokenSource(accessToken), nil
+		return accessTokenSource, nil
 	}
 
 	gvr := schema.GroupVersionResource{
@@ -422,21 +422,17 @@ func (r *RemoteClientGetter) getHubMembershipRESTConfig(ctx context.Context, clu
 	return restConfig, nil
 }
 
-func GetDefaultAccessToken(ctx context.Context) (*oauth2.Token, error) {
+// GetDefaultAccessTokenSource gets the default gcloud access token,
+// assuming the user has logged in with gcloud (the application-default context).
+// This is intended for local development.
+func GetDefaultAccessTokenSource(ctx context.Context) (oauth2.TokenSource, error) {
 	// Note: Not all tools support specifying the access token, so
 	// the user still needs to log in with ADC.  e.g. terraform
 	// https://github.com/hashicorp/terraform/issues/21680
 
-	accessToken, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	defaultTokenSource, err := google.DefaultTokenSource(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get default access-token from gcloud: %w", err)
 	}
-	token, err := accessToken.Token()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get token from token source: %w", err)
-	}
-
-	return &oauth2.Token{
-		AccessToken: token.AccessToken,
-	}, nil
+	return defaultTokenSource, nil
 }
