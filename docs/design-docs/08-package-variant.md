@@ -301,15 +301,14 @@ controller consumes PackageVariantSet resources, and outputs PackageVariant
 resources. The PackageVariantSet defines:
 - the upstream package
 - targeting criteria
-- rules for generating one PackageVariant per target
+- a template for generating one PackageVariant per target
 
 Three types of targeting are supported:
-- An explicit list of repositories
+- An explicit list of repositories and package names
 - A label selector for Repository objects
-- An arbitrary object selector, along with ways to generate repository names
-  from those objects
+- An arbitrary object selector
 
-The rules for generating a PackageVariant are associated with a list of targets
+Rules for generating a PackageVariant are associated with a list of targets
 using a template. That template can have explicit values for various
 PackageVariant fields, or it can use [Common Expression Language
 (CEL)](https://github.com/google/cel-go) expressions to specify the field
@@ -325,14 +324,27 @@ to change the downstream package name to `bar`.
 | :---: |
 | *Figure 5: PackageVariantSet with List* |
 
-*Figure 6* shows an that combines a repository label selector, with
+It is also possible to target the same package to a repository more than once,
+using different names. This is useful, for example, if the package is used to
+provision namespaces and you would like to provision many namespaces in the same
+cluster. It is also useful if a repository is shared across multiple clusters.
+In *Figure 6*, two PackageVariant resources for creating the `foo` package in
+the repository `cluster-01` are generated, one for each listed package name.
+Since no `packageNames` field is listed for `cluster-02`, only one instance is
+created for that repository.
+
+| ![Figure 6: PackageVariantSet with Package List](packagevariantset-target-list-with-packages.png) |
+| :---: |
+| *Figure 6: PackageVariantSet with Package List* |
+
+*Figure 7* shows an example that combines a repository label selector with
 configuration injection that various based upon the target. The template for the
 PackageVariant includes a CEL expression for the one of the injectors, so that
 the injection varies systematically based upon attributes of the target.
 
-| ![Figure 6: PackageVariantSet with Repository Selector](packagevariantset-target-repository-selector.png) |
+| ![Figure 7: PackageVariantSet with Repository Selector](packagevariantset-target-repository-selector.png) |
 | :---: |
-| *Figure 6: PackageVariantSet with Repository Selector* |
+| *Figure 7: PackageVariantSet with Repository Selector* |
 
 ## Example Use Cases
 
