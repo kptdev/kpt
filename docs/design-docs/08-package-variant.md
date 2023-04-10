@@ -375,17 +375,77 @@ With PackageVariant, we instead create the following resources:
 
 ### PackageVariant API
 
-#### Basic API
+The Go types below defines the `PackageVariantSpec`.
 
-- Upstream
-- Downstream
-- Annotations
-- Labels
-- Adoption and Deletion Policy
-- Status
-  - `Valid` Condition Type
-  - `DownstreamEnsured` Condition Type (`Ready`?)
-  - `DraftExists` Condition Type (?)
+```go
+type PackageVariantSpec struct {
+        Upstream   *Upstream   `json:"upstream,omitempty"`
+        Downstream *Downstream `json:"downstream,omitempty"`
+
+        AdoptionPolicy AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+        DeletionPolicy DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+        Labels      map[string]string `json:"labels,omitempty"`
+        Annotations map[string]string `json:"annotations,omitempty"`
+
+        PackageContext *PackageContext     `json:"packageContext,omitempty"`
+        Pipeline       *kptfile.Pipeline   `json:"pipeline,omitempty"`
+        Injectors      []InjectionSelector `json:"injectors,omitempty"`
+}
+
+type Upstream struct {
+        Repo     string `json:"repo,omitempty"`
+        Package  string `json:"package,omitempty"`
+        Revision string `json:"revision,omitempty"`
+}
+
+type Downstream struct {
+        Repo    string `json:"repo,omitempty"`
+        Package string `json:"package,omitempty"`
+}
+
+type PackageContext struct {
+        Data       map[string]string `json:"data,omitempty"`
+        RemoveKeys []string          `json:"removeKeys,omitempty"`
+}
+
+type InjectionSelector struct {
+        Group   *string `json:"group,omitempty"`
+        Version *string `json:"version,omitempty"`
+        Kind    *string `json:"kind,omitempty"`
+        Name    string  `json:"name"`
+}
+
+```
+
+#### Basic Spec Fields
+
+The `Upstream` and `Downstream` fields specify the source package and
+destination repository and package name. The `Repo` fields refer to the names
+Porch Repository resources in the same namespace as the PackageVariant resource.
+The `Downstream` does not contain a revision, because the package variant
+controller will only create Draft packages. The `Revision` of the eventual
+PackageRevision resource will be determined by Porch at the time of approval.
+
+The `Labels` and `Annotations` fields list metadata to include on the created
+PackageRevision. These values are set *only* at the time a Draft package is
+created. They are ignored for subsequent operations, even if the PackageRevision
+itself has been modified.
+
+`AdoptionPolicy` controls how the package variant controller behaves if it finds
+an existing PackageRevision Draft matching the `Downstream`. If the
+`AdoptionPolicy` is `adoptExisting`, then the package variant controller will
+take ownership of the Draft, associating it with this PackageVariant. This means
+that it will begin to reconcile the Draft, just as if it had created it in the
+first place. An `AdoptionPolicy` of `adoptNone` (the default) will simply ignore
+any matching Drafts that were not created by the controller.
+
+`DeletionPolicy` controls how the package variant controller behaves with
+respect to PackageRevisions that it has created when the PackageVariant resource
+itself is deleted. A value of `delete` (the default) will delete the
+PackageRevision (potentially removing it from a running cluster, if the
+downstream package has been deployed). A value of `orphan` will remove the owner
+references and leave the PackageRevisions in place.
 
 #### Package Context Injection
 
@@ -433,7 +493,7 @@ If the controller is unable to modify the ConfigMap for some reason, this is
 considered an error and should prevent generation of the Draft. This will result
 in the condition `DownstreamEnsured` being set to `False`.
 
-#### KRM Function Pipeline
+#### Kptfile Function Pipeline Editing
 
 PackageVariant resource creators may specify a list of KRM functions to add to
 the beginning of the Kptfile's pipeline. These functions are listed in the field
@@ -684,6 +744,18 @@ Since the middle three of these just edit resources (including the Kptfile) in
 the package, their ordering does not matter; they cannot affect one another.
 The execution of the KRM function pipeline depends on the others, but there are
 no direct dependencies otherwise.
+
+#### PackageVariant Status
+
+TODO(johnbelamaric): Update according to:
+ - https://github.com/GoogleContainerTools/kpt/pull/3898
+ - https://github.com/GoogleContainerTools/kpt/issues/3872
+ - https://github.com/GoogleContainerTools/kpt/issues/3891
+
+- Status
+  - `Valid` Condition Type
+  - `DownstreamEnsured` Condition Type (`Ready`?)
+  - `DraftExists` Condition Type (?)
 
 ### PackageVariantSet API
 
