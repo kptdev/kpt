@@ -55,8 +55,8 @@ type PackageVariantReconciler struct {
 const (
 	workspaceNamePrefix = "packagevariant-"
 
-	ConditionTypeValid             = "Valid"
-	ConditionTypeDownstreamEnsured = "DownstreamEnsured"
+	ConditionTypeValid = "Valid" // whether or not the packagevariant object passed all the validation checks
+	ConditionTypeReady = "Ready" // whether or notthe reconciliation succeded
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariants webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -247,7 +247,7 @@ func setValidationConditionsToFalse(pv *api.PackageVariant, message string) {
 		Message: message,
 	})
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-		Type:    ConditionTypeDownstreamEnsured,
+		Type:    ConditionTypeReady,
 		Status:  "False",
 		Reason:  "Error",
 		Message: "invalid packagevariant object",
@@ -626,7 +626,7 @@ func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.Packa
 	pv.Status.DownstreamTargets = nil
 	if err != nil {
 		meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-			Type:    ConditionTypeDownstreamEnsured,
+			Type:    ConditionTypeReady,
 			Status:  "False",
 			Reason:  "Error",
 			Message: err.Error(),
@@ -640,7 +640,7 @@ func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.Packa
 		})
 	}
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-		Type:    ConditionTypeDownstreamEnsured,
+		Type:    ConditionTypeReady,
 		Status:  "True",
 		Reason:  "NoErrors",
 		Message: "successfully ensured downstream package variant",
