@@ -149,9 +149,9 @@ controller as well. Additionally, the author of the PackageVariant resource
 can specify additional key-value pairs to insert into the package
 context, as shown in *Figure 2*.
 
-| ![Figure 2: Package Context](packagevariant-context.png) |
+| ![Figure 2: Package Context Mutation](packagevariant-context.png) |
 | :---: |
-| *Figure 2: Basic Package Cloning* |
+| *Figure 2: Package Context Mutation * |
 
 While this is convenient, it can be easily abused, leading to
 over-parameterization. The preferred approach is configuration injection, as
@@ -180,7 +180,7 @@ Similarly, the Kptfile pipeline editing feature provides an easy mechanism for
 the deployer to create and set the namespace if their downstream package
 application pipeline allows it, as seen in *Figure 3*.[^setns]
 
-| ![Figure 3: KRM Function](packagevariant-function.png) |
+| ![Figure 3: KRM Function Pipeline Editing](packagevariant-function.png) |
 | :---: |
 | *Figure 3: Kptfile Function Pipeline Editing * |
 
@@ -320,9 +320,9 @@ explicitly list of repositories. In this example, for the `cluster-01` and
 it simply takes the defaults. However, for `cluster-03`, a template is defined
 to change the downstream package name to `bar`.
 
-| ![Figure 5: PackageVariantSet with List](packagevariantset-target-list.png) |
+| ![Figure 5: PackageVariantSet with Repository List](packagevariantset-target-list.png) |
 | :---: |
-| *Figure 5: PackageVariantSet with List* |
+| *Figure 5: PackageVariantSet with Repository List* |
 
 It is also possible to target the same package to a repository more than once,
 using different names. This is useful, for example, if the package is used to
@@ -389,7 +389,7 @@ type PackageVariantSpec struct {
         Annotations map[string]string `json:"annotations,omitempty"`
 
         PackageContext *PackageContext     `json:"packageContext,omitempty"`
-        Pipeline       *kptfile.Pipeline   `json:"pipeline,omitempty"`
+        Pipeline       *kptfilev1.Pipeline `json:"pipeline,omitempty"`
         Injectors      []InjectionSelector `json:"injectors,omitempty"`
 }
 
