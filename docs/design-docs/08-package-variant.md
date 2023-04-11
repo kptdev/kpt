@@ -1245,7 +1245,10 @@ processing flow for the template evaluation:
    1. The downstream Repository is added to the CEL environment.
    1. All other CEL expressions are evaluated.
 1. Note that if any of the resources (e.g., the upstream PackageRevision, or the
-   downstream Repository), processing stops and a failure condition is raised.
+   downstream Repository) are not found our otherwise fail to load, processing
+   stops and a failure condition is raised. Similarly, if a CEL expression
+   cannot be properly evaluated due to syntax or other reasons, processing stops
+   and a failure condition is raised.
 
 #### Other Considerations
 It would appear convenient to automatically inject the PackageVariantSet
@@ -1256,6 +1259,11 @@ build in an awareness of the context in which it expects to be deployed. For
 example, a package should not accept a Porch Repository resource just because
 that happens to be the targeting mechanism. That would make the package unusable
 in other contexts.
+
+#### PackageVariantSet Status
+
+TODO(johnbelamaric): determine and document Condition types for
+PackagetVariantSet, aligned with what we decided for PackageVariant.
 
 ## Future Considerations
 - As an alternative to the floating tag proposal, we may instead want to have
