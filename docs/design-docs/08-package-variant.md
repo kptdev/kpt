@@ -514,7 +514,7 @@ the positional location of the function in the array.
 
 For example, if the PackageVariant resource contains:
 
-```
+```yaml
 apiVersion: config.porch.kpt.dev/v1alpha1
 kind: PackageVariant
 metadata:
@@ -536,7 +536,7 @@ spec:
 Then the resulting Kptfile will have these two entries prepended to its
 `mutators` list:
 
-```
+```yaml
   pipeline:
     mutators:
     - image: gcr.io/kpt-fn/set-namespace:v0.1
@@ -759,7 +759,492 @@ TODO(johnbelamaric): Update according to:
 
 ### PackageVariantSet API
 
-PVS will add a "nameFrom" or something similar, that will resolve to the explicitly "name" fields in the selectors during fan out. This allows the PVS to, for example, set the injector name based upon the target name or another target field, or even an annotation or label defined on the target.
+The Go types below defines the `PackageVariantSetSpec`.
+
+```go
+// PackageVariantSetSpec defines the desired state of PackageVariantSet
+type PackageVariantSetSpec struct {
+        Upstream *pkgvarapi.Upstream `json:"upstream,omitempty"`
+        Targets  []Target            `json:"targets,omitempty"`
+}
+
+type Target struct {
+        // Exactly one of Repositories, RepositorySeletor, and ObjectSelector must be
+        // populated
+        // option 1: an explicit repositories and package names
+        Repositories []RepositoryTarget `json:"repositories,omitempty"`
+
+        // option 2: a label selector against a set of repositories
+        RepositorySelector *metav1.LabelSelector `json:"repositorySelector,omitempty"`
+
+        // option 3: a selector against a set of arbitrary objects
+        ObjectSelector *ObjectSelector `json:"objectSelector,omitempty"`
+
+        // Template specifies how to generate a PackageVariant from a target
+        Template *PackageVariantTemplate `json:"template,omitempty"`
+}
+```
+
+At the highest level, a PackageVariantSet is just an upstream, and a list of
+targets. For each target, there is a set of criteria for generating a list, and
+a set of rules (a template) for creating a PackageVariant from each list entry.
+
+Since `template` is optional, lets start with describing the different types of
+targets, and how the criteria in each is used to generate a list that seeds the
+PackageVariant resources.
+
+The `Target` structure must include exactly one of three different ways of
+generating the list. The first is a simple list of repositories and package
+names for each of those repositories[^repo-pkg-expr]. The package name list is
+needed for uses cases in which you want to repeatedly instantiate the same
+package in a single repository. For example, if a repository represents the
+contents of a cluster, you may want to instantiate a namespace package once for
+each namespace, with a name matching the namespace.
+
+This example shows using the `repositories` field:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+    - name: cluster-02
+    - name: cluster-03
+      packageNames:
+      - foo-a
+      - foo-b
+      - foo-c
+    - name: cluster-04
+      packageNames:
+      - foo-a
+      - foo-b
+```
+
+In this case, PackageVariant resources are created for each of these pairs of
+downstream repositories and packages names:
+
+| Repository | Package Name |
+| ---------- | ------------ |
+| cluster-01 | foo          |
+| cluster-02 | foo          |
+| cluster-03 | foo-a        |
+| cluster-03 | foo-b        |
+| cluster-03 | foo-c        |
+| cluster-04 | foo-a        |
+| cluster-04 | foo-b        |
+
+All of those PackageVariants have the same upstream.
+
+The second criteria targeting is via a label selector against Porch Repository
+objects, along with a list of package names. Those packages will be instantiated
+in each matching repository. Just like in the first example, not listing a
+package name defaults to one package, with the same name as the upstream
+package. Suppose, for example, we have these four repositories defined in our
+Porch cluster:
+
+| Repository | Labels                                |
+| ---------- | ------------------------------------- |
+| cluster-01 | region=useast1, env=prod, org=hr      |
+| cluster-02 | region=uswest1, env=prod, org=finance |
+| cluster-03 | region=useast2, env=prod, org=hr      |
+| cluster-04 | region=uswest1, env=prod, org=hr      |
+
+If we create a PackageVariantSet with the following `spec`:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositorySelector:
+      matchLabels:
+        env: prod
+        org: hr
+  - repositorySelector:
+      matchLabels:
+        region: uswest1
+      packageNames:
+      - foo-a
+      - foo-b
+      - foo-c
+```
+
+then PackageVariant resources will be created with these repository and package
+names:
+
+| Repository | Package Name |
+| ---------- | ------------ |
+| cluster-01 | foo          |
+| cluster-03 | foo          |
+| cluster-04 | foo          |
+| cluster-02 | foo-a        |
+| cluster-02 | foo-b        |
+| cluster-02 | foo-c        |
+| cluster-04 | foo-a        |
+| cluster-04 | foo-b        |
+| cluster-04 | foo-c        |
+
+Finally, the third possibility allows the use of *arbitrary* resources in the
+Porch cluster as targeting criteria. The `objectSelector` looks like this:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - objectSelector:
+      apiVersion: krm-platform.bigco.com/v1
+      kind: Team
+      matchLabels:
+        org: hr
+        role: dev
+```
+
+It works exactly like the repository selector - in fact the repository selector
+is equivalent to the object selector with the `apiVersion` and `kind` values set
+to point to Porch Repository resources. That is, the repository name comes from
+the object name, and the package names come from the listed package names. In
+the description of the template, we will see how to derive different repository
+names from the objects.
+
+#### PackageVariant Template
+
+As previously discussed, the list entries generated by the target criteria
+result in PackageVariant entries. If no template is specified, then
+PackageVariant default are used, along with the downstream repository name and
+package name as described in the previous section. The template allows the user
+to have control over all of the values in the resulting PackageVariant. The
+template API is shown below.
+
+```yaml
+type PackageVariantTemplate struct {
+        Downstream      *pkgvarapi.Downstream `json:"downstream,omitempty"`
+        DownstreamExprs *DownstreamExprs      `json:"downstreamExprs,omitempty"`
+
+        AdoptionPolicy *pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+        DeletionPolicy *pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+        Labels     map[string]string `json:"labels,omitempty"`
+        LabelExprs []MapExpr         `json:"labelExprs,omitemtpy"`
+
+        Annotations     map[string]string `json:"annotations,omitempty"`
+        AnnotationExprs []MapExpr         `json:"annotationExprs,omitempty"`
+
+        PackageContext      map[string]string    `json:"packageContext,omitempty"`
+        PackageContextExprs *PackageContextExprs `json:"packageContextExprs,omitempty"`
+
+        Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+
+        Injectors     []pkgvarapi.InjectionSelector `json:"injectors,omitempty"`
+        InjectorExprs []InjectionSelectorExprs      `json:"injectorExprs,omitempty"`
+}
+
+type DownstreamExprs struct {
+        RepoExpr    *string `json:"repoExpr,omitempty"`
+        PackageExpr *string `json:"packageExpr,omitempty"`
+}
+
+type PackageContextExprs struct {
+        DataExprs      []MapExpr `json:"dataExprs,omitempty"`
+        RemoveKeyExprs []string  `json:"removeKeyExprs,omitempty"`
+}
+
+type InjectionSelectorExprs struct {
+        GroupExpr   *string `json:"groupExpr,omitempty"`
+        VersionExpr *string `json:"versionExpr,omitempty"`
+        KindExpr    *string `json:"kindExpr,omitempty"`
+        NameExpr    string  `json:"nameExpr"`
+}
+
+type MapExpr struct {
+        KeyExpr   *string `json:"keyExpr,omitempty"`
+        ValueExpr *string `json:"valueExpr,omitempty"`
+}
+```
+
+This is a pretty complicated structure. To make it more understandable, the
+first thing to notice is that many fields have a plain version, and an `Expr`
+version. Only one of these should be used for any given field. For example, you
+can use either `downstream` or `downstreamExpr`, but not both. The plain
+version is used when the value is static across all the PackageVariants; the
+`Expr` version is used when the value needs to vary across PackageVariants.
+
+Let's consider a simple example. Suppose we have a package for provisioning
+namespaces called "base-ns". We want to instantiate this several times in the
+`cluster-01` repository. We could do this with this PackageVariantSet:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+      packageNames:
+      - ns-1
+      - ns-2
+      - ns-3
+```
+
+That will produce three PackageVariant resources with the same upstream, all
+with the same downstream repo, and each with a different downstream package
+name. If we also want to set some labels identically across the packages, we can
+do that with the `template.labels` field:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+      packageNames:
+      - ns-1
+      - ns-2
+      - ns-3
+    template:
+      labels:
+        package-type: namespace
+        org: hr
+```
+
+The resulting PackageVariant resources will include `labels` in their `spec`,
+and will be identical other than their names and the `downstream.package`:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaaa
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-1
+  labels:
+    package-type: namespace
+    org: hr
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaab
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-2
+  labels:
+    package-type: namespace
+    org: hr
+---
+
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaac
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-3
+  labels:
+    package-type: namespace
+    org: hr
+```
+
+When using other targeting means, the use of the `Expr` fields becomes more
+likely, because we have more possible sources for different field values. The
+`Expr` values are all [Common Expression Language (CEL)](https://github.com/google/cel-go)
+expressions, rather than static values. This allows the user to construct values
+based upon various fields of the targets. Consider again the
+`repositorySelector` example, where we have these repositories in the cluster.
+
+| Repository | Labels                                |
+| ---------- | ------------------------------------- |
+| cluster-01 | region=useast1, env=prod, org=hr      |
+| cluster-02 | region=uswest1, env=prod, org=finance |
+| cluster-03 | region=useast2, env=prod, org=hr      |
+| cluster-04 | region=uswest1, env=prod, org=hr      |
+
+If we create a PackageVariantSet with the following `spec`, we can use the
+`Expr` fields to add labels to the PackageVariantSpecs (and thus to the
+resulting PackageRevisions later) that vary based on cluster. We can also use
+this to vary the `injectors` defined for each PackageVariant, resulting in each
+PackageRevision having different resources injected. This `spec`:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositorySelector:
+      matchLabels:
+        env: prod
+        org: hr
+    template:
+      labelExprs:
+        keyExpr: "'org'"
+        valueExpr: "repository.labels['org']"
+      injectorExprs:
+        - nameExpr: "repository.labels['region'] + '-endpoints'"
+```
+
+will result in three PackageVariant resources, one for each Repository with the
+labels env=prod and org=hr. The `labels` and `injectors` fields of the
+PackageVariantSpec will be different for each of these PackageVariants, as
+determined by the use of the `Expr` fields in the template, as shown here:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaaa
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: useast1-endpoints
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaab
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-03
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: useast2-endpoints
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaac
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-04
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: uswest1-endpoints
+```
+
+Since the injectors are different for each PackageVariant, the resulting
+PackageRevisions will each have different resources injected.
+
+When CEL expressions are evaluated, they have an environment associated with
+them. That is, there are certain objects that are accessible within the CEL
+expression. For CEL expressions used in the PackageVariantSet `template` field,
+the following variables are available:
+
+| CEL Variable | Variable Contents                                            |
+| -------------| ------------------------------------------------------------ |
+| repo         | The default repository name based on the targeting criteria. |
+| package      | The default package name based on the targeting criteria.    |
+| upstream     | The upstream PackageRevision.                                |
+| repository   | The downstream Repository.                                   |
+
+There is one expression that is an exception to the table above. Since the
+`repository` value corresponds to the Repository of the downstream, we must
+first evaluate the `downstreamExpr.repoExpr` expression to *find* that
+repository.  Thus, for that expression only, `repository` is not a valid
+variable.
+
+There is one more variable available across all CEL expressions: the `target`
+variable. This variable has a meaning that varies depending on the type of
+target, as follows:
+
+| Target Type         | `target` Variable Contents |
+| ------------------- | -------------------------- |
+| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repo` and `package` values. |
+| Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstreamExprs.repoExpr`. |
+| Object Selector     | The Object selected by the selector. |
+
+Given the slight quirk with the `repoExpr`, it may be helpful to state the
+processing flow for the template evaluation:
+
+1. The upstream PackageRevision is loaded. It must be in the same namespace as
+   the PackageVariantSet[^multi-ns-reg].
+1. The targets are determined.
+1. For each target:
+  1. The CEL environment is prepared with `repo`, `package`, `upstream`, and
+     `target` variables.
+  1. The downstream repository is determined and loaded, as follows:
+    - If present, `downstreamExprs.repoExpr` is evaluated using the CEL
+      environment, and the result used as the downstream repository name.
+    - Otherwise, if `downstream.repo` is set, that is used as the downstream
+     repository name.
+    - If neither is present, the default repository name based on the target is
+      used (i.e., the same value as the `repo` variable).
+    - The resulting downstream repository name is used to load the corresponding
+      Repository object in the same namespace as the PackageVariantSet.
+  1. The downstream Repository is added to the CEL environment.
+  1. All other CEL expressions are evaluated.
+1. Note that if any of the resources (e.g., the upstream PackageRevision, or the
+   downstream Repository), processing stops and a failure condition is raised.
 
 #### Other Considerations
 It would appear convenient to automatically inject the PackageVariantSet
@@ -788,3 +1273,13 @@ in other contexts.
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
     users.
+[^repo-pkg-expr]: This is not exactly correct. As we will see later in the
+    `template` discussion, this the repository and package names listed actually
+    are just defaults for the template; they can be further manipulated in the
+    template to reference different downstream repositories and package names.
+    The same is true for the repositories selected via the `repositorySelector`
+    option. However, this can be ignored for now.
+[^multi-ns-reg]: Note that the same upstream repository can be registered in
+    multiple namespaces without a problem. This simplifies access controls,
+    avoiding the need for cross-namespace relationships between Repositories and
+    other Porch resources.
