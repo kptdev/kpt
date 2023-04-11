@@ -1231,19 +1231,19 @@ processing flow for the template evaluation:
    the PackageVariantSet[^multi-ns-reg].
 1. The targets are determined.
 1. For each target:
-  1. The CEL environment is prepared with `repo`, `package`, `upstream`, and
-     `target` variables.
-  1. The downstream repository is determined and loaded, as follows:
-    - If present, `downstreamExprs.repoExpr` is evaluated using the CEL
-      environment, and the result used as the downstream repository name.
-    - Otherwise, if `downstream.repo` is set, that is used as the downstream
-     repository name.
-    - If neither is present, the default repository name based on the target is
-      used (i.e., the same value as the `repo` variable).
-    - The resulting downstream repository name is used to load the corresponding
-      Repository object in the same namespace as the PackageVariantSet.
-  1. The downstream Repository is added to the CEL environment.
-  1. All other CEL expressions are evaluated.
+   1. The CEL environment is prepared with `repo`, `package`, `upstream`, and
+      `target` variables.
+   1. The downstream repository is determined and loaded, as follows:
+      - If present, `downstreamExprs.repoExpr` is evaluated using the CEL
+        environment, and the result used as the downstream repository name.
+      - Otherwise, if `downstream.repo` is set, that is used as the downstream
+       repository name.
+      - If neither is present, the default repository name based on the target is
+        used (i.e., the same value as the `repo` variable).
+      - The resulting downstream repository name is used to load the corresponding
+        Repository object in the same namespace as the PackageVariantSet.
+   1. The downstream Repository is added to the CEL environment.
+   1. All other CEL expressions are evaluated.
 1. Note that if any of the resources (e.g., the upstream PackageRevision, or the
    downstream Repository), processing stops and a failure condition is raised.
 
