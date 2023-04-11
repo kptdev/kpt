@@ -342,7 +342,7 @@ configuration injection that various based upon the target. The template for the
 PackageVariant includes a CEL expression for the one of the injectors, so that
 the injection varies systematically based upon attributes of the target.
 
-| ![Figure 7: PackageVariantSet with Repository Selector](packagevariantset-target-repository-selector.png) |
+| ![Figure 7: PackageVariantSet with Repository Selector](packagevariantset-target-repo-selector.png) |
 | :---: |
 | *Figure 7: PackageVariantSet with Repository Selector* |
 
@@ -429,8 +429,9 @@ PackageRevision resource will be determined by Porch at the time of approval.
 
 The `Labels` and `Annotations` fields list metadata to include on the created
 PackageRevision. These values are set *only* at the time a Draft package is
-created. They are ignored for subsequent operations, even if the PackageRevision
-itself has been modified.
+created. They are ignored for subsequent operations, even if the PackageVariant
+itself has been modified. This means users are free to change these values on
+the PackageRevision; the package variant controller will not touch them again.
 
 `AdoptionPolicy` controls how the package variant controller behaves if it finds
 an existing PackageRevision Draft matching the `Downstream`. If the
