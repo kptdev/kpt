@@ -67,6 +67,17 @@ spec:
                   repo:
                     type: string
                 type: object
+              packageContext:
+                properties:
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: string
+                  removeKeys:
+                    type: array
+                    items:
+                      type: string
+                type: object
               labels:
                 additionalProperties:
                   type: string
