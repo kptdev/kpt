@@ -134,7 +134,7 @@ Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
-### Package Context[^notimplemented]
+### Package Context
 Every kpt package that is fetched with `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Analogously, when Porch creates a package
 in a deployment repository, it will create this ConfigMap, if it does not
@@ -369,7 +369,7 @@ the `kptfile.kpt.dev` ConfigMap.
 
 When creating or updating a package, the package variant controller will ensure
 that:
-- The `kptfile.kpt.dev` ConfigMap exists (creating it if not)
+- The `kptfile.kpt.dev` ConfigMap exists, failing if not
 - All of the key-value pairs in `spec.packageContext.data` exist in the `data`
   field of the ConfigMap.
 - None of the keys listed in `spec.packageContext.removeKeys` exist in the
