@@ -16,7 +16,7 @@ require (
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/apply-setters v0.2.0
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/set-namespace v0.4.1
 	github.com/GoogleContainerTools/kpt-functions-catalog/functions/go/starlark v0.4.3
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20230302070146-e8e9cb3c3ae2
+	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33
 	github.com/bluekeyes/go-gitdiff v0.6.1
 	github.com/go-git/go-billy/v5 v5.3.1
@@ -70,7 +70,6 @@ require (
 	github.com/Azure/go-autorest/autorest/date v0.3.0 // indirect
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/api v0.0.0-20220720212527-133180134b93 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect

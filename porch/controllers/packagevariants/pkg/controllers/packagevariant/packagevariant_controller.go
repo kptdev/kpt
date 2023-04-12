@@ -655,7 +655,7 @@ func ensurePackageContext(pv *api.PackageVariant,
 	}
 
 	if _, ok := prr.Spec.Resources["package-context.yaml"]; !ok {
-		return fmt.Errorf("kptfile.kpt.dev ConfigMap not found in package-context.yaml of PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+		return fmt.Errorf("package-context.yaml not found in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
 	}
 
 	cm, err := fn.ParseKubeObject([]byte(prr.Spec.Resources["package-context.yaml"]))
@@ -663,8 +663,13 @@ func ensurePackageContext(pv *api.PackageVariant,
 		return fmt.Errorf("failed to parse package-context.yaml of PackageRevisionResources %s/%s: %w", prr.Namespace, prr.Name, err)
 	}
 
+	if cm.GetKind() != "ConfigMap" || cm.GetName() != "kptfile.kpt.dev" {
+		return fmt.Errorf("package-context.yaml does not contain ConfigMap kptfile.kpt.dev in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
 	// Set the data fields
-	data, ok, err := cm.NestedStringMap("data")
+	var data map[string]string
+	ok, err := cm.Get(&data, "data")
 	if err != nil {
 		return fmt.Errorf("PackageRevisionResources %s/%s PackageContext invalid data field: %w", prr.Namespace, prr.Name, err)
 	}
@@ -683,7 +688,7 @@ func ensurePackageContext(pv *api.PackageVariant,
 		delete(data, k)
 	}
 
-	err = cm.SetNestedStringMap(data, "data")
+	err = cm.SetNestedField(data, "data")
 	if err != nil {
 		return fmt.Errorf("could not set package conext data: %w", err)
 	}
