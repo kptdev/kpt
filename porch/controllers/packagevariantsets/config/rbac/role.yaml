@@ -23,7 +23,6 @@ rules:
   - config.porch.kpt.dev
   resources:
   - packagevariantsets
-  - packagevariants
   verbs:
   - create
   - delete
@@ -46,6 +45,3 @@ rules:
   - get
   - patch
   - update
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["list"]

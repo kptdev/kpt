@@ -1267,7 +1267,8 @@ func schema_porch_api_porch_v1alpha1_PackageRevisionSpec(ref common.ReferenceCal
 					},
 					"tasks": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
+							Description: "The task slice holds zero or more tasks that describe the operations performed on the packagerevision. The are essentially a replayable history of the packagerevision,\n\nPackagerevisions that were not created in Porch may have an empty task list.\n\nPackagerevisions created and managed through Porch will always have either an Init, Edit, or a Clone task as the first entry in their task list. This represent packagerevisions created from scratch, based a copy of a different revision in the same package, or a packagerevision cloned from another package. Each change to the packagerevision will result in a correspondig task being added to the list of tasks. It will describe the operation performed and will have a corresponding entry (commit or layer) in git or oci. The task slice describes the history of the packagerevision, so it is an append only list (We might introduce some kind of compaction in the future to keep the number of tasks at a reasonable number).",
+							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
