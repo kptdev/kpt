@@ -866,3 +866,151 @@ items:
 		})
 	}
 }
+
+func TestEnsurePackageContext(t *testing.T) {
+
+	pvBase := `apiVersion: config.porch.kpt.dev
+kind: PackageVariant
+metadata:
+  name: my-pv
+  uid: pv-uid
+spec:
+  upstream:
+    repo: blueprints
+    package: foo
+    revision: v1
+  downstream:
+    repo: deployments
+    package: bar
+`
+
+	prrBase := `apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevisionResources
+metadata:
+  name: prr
+  namespace: default
+spec:
+  packageName: nephio-system
+  repository: nephio-packages
+  resources:
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        description: Example
+    package-context.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kptfile.kpt.dev
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      data:
+        name: example
+`
+
+	testCases := map[string]struct {
+		spec        string
+		initialData string
+		expectedErr string
+		expectedPRR string
+	}{
+		"empty package context": {
+			spec:        ``,
+			initialData: ``,
+			expectedErr: "",
+			expectedPRR: prrBase,
+		},
+		"add one entry": {
+			spec: `  packageContext:
+    data:
+      foo: bar
+`,
+			initialData: ``,
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n",
+		},
+		"add two entries": {
+			spec: `  packageContext:
+    data:
+      foo: bar
+      foobar: barfoo
+`,
+			initialData: ``,
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n        foobar: barfoo\n",
+		},
+		"add one with existing": {
+			spec: `  packageContext:
+    data:
+      foo: bar
+`,
+			initialData: "        hello: there\n",
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n        hello: there\n",
+		},
+		"change existing": {
+			spec: `  packageContext:
+    data:
+      foo: bar
+`,
+			initialData: "        foo: there\n",
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n",
+		},
+		"remove one entry": {
+			spec: `  packageContext:
+    removeKeys:
+    - hello
+`,
+			initialData: "        hello: there\n",
+			expectedErr: "",
+			expectedPRR: prrBase,
+		},
+		"remove entry, leave existing": {
+			spec: `  packageContext:
+    removeKeys:
+    - hello
+`,
+			initialData: "        hello: there\n        foo: bar\n",
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n",
+		},
+		"remove and add entries": {
+			spec: `  packageContext:
+    data:
+      foobar: barfoo
+      there: hello
+    removeKeys:
+    - hello
+`,
+			initialData: "        hello: there\n        foo: bar\n",
+			expectedErr: "",
+			expectedPRR: prrBase + "        foo: bar\n        foobar: barfoo\n        there: hello\n",
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			var pv api.PackageVariant
+			require.NoError(t, yaml.Unmarshal([]byte(pvBase+tc.spec), &pv))
+			var prr porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(prrBase+tc.initialData), &prr))
+
+			actualErr := ensurePackageContext(&pv, &prr)
+			if tc.expectedErr == "" {
+				require.NoError(t, actualErr)
+			} else {
+				require.EqualError(t, actualErr, tc.expectedErr)
+			}
+
+			var expectedPRR porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(tc.expectedPRR), &expectedPRR))
+
+			require.Equal(t, expectedPRR, prr)
+		})
+	}
+}
