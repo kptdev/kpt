@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2022 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,11 +59,11 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 }
 
 type runner struct {
-	ctx     context.Context
-	cfg     *genericclioptions.ConfigFlags
-	client  rest.Interface
+	ctx         context.Context
+	cfg         *genericclioptions.ConfigFlags
+	client      rest.Interface
 	porchClient client.Client
-	Command *cobra.Command
+	Command     *cobra.Command
 
 	// Flags
 }

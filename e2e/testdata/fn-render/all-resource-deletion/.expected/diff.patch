@@ -13,7 +13,7 @@ index fd49fcf..f9ae49b 100644
    mutators:
      - image: gcr.io/kpt-fn/starlark:v0.2.1
 diff --git a/delete-all.yaml b/delete-all.yaml
-index 724d0cf..c2e665d 100644
+index 3c86d8b..6754b0a 100644
 --- a/delete-all.yaml
 +++ b/delete-all.yaml
 @@ -17,6 +17,9 @@ metadata:
@@ -28,11 +28,11 @@ index 724d0cf..c2e665d 100644
    ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
-index 737526e..0000000
+index 990ca9b..0000000
 --- a/deployment.yaml
 +++ /dev/null
 @@ -1,24 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.
@@ -58,11 +58,11 @@ index 737526e..0000000
 -          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
-index 6590f6c..0000000
+index 239f0d6..0000000
 --- a/resources.yaml
 +++ /dev/null
 @@ -1,19 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.

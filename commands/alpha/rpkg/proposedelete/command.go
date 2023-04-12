@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2022 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,9 +40,9 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 	c := &cobra.Command{
 		Use:        "propose-delete PACKAGE",
 		Aliases:    []string{"propose-del"},
-		Short:   rpkgdocs.ProposeDeleteShort,
-		Long:    rpkgdocs.ProposeDeleteShort + "\n" + rpkgdocs.ProposeDeleteLong,
-		Example: rpkgdocs.ProposeDeleteExamples,
+		Short:      rpkgdocs.ProposeDeleteShort,
+		Long:       rpkgdocs.ProposeDeleteShort + "\n" + rpkgdocs.ProposeDeleteLong,
+		Example:    rpkgdocs.ProposeDeleteExamples,
 		SuggestFor: []string{},
 		PreRunE:    r.preRunE,
 		RunE:       r.runE,

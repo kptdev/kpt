@@ -12,7 +12,7 @@ index 122778a..b9df335 100644
    mutators:
      - image: gcr.io/kpt-fn/set-labels:v0.1
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
-index aabf495..6883bc2 100644
+index 22d2de2..19e0746 100644
 --- a/db/labelconfig.yaml
 +++ b/db/labelconfig.yaml
 @@ -15,5 +15,7 @@ apiVersion: v1
@@ -24,7 +24,7 @@ index aabf495..6883bc2 100644
  data:
    tier: db
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..d22aec8 100644
+index f2eec52..022e175 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,23 @@ apiVersion: apps/v1

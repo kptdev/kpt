@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2020 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -158,8 +158,9 @@ func (e *InvInfoInvalid) Error() string {
 	return "the provided ResourceGroup is not valid"
 }
 
-//nolint:lll
 // warnInvInKptfile is the warning message when the inventory information is present within the Kptfile.
+//
+//nolint:lll
 const warnInvInKptfile = "[WARN] The resourcegroup file was not found... Using Kptfile to gather inventory information. We recommend migrating to a resourcegroup file for inventories. Please migrate with `kpt live migrate`."
 
 // Pkg represents a kpt package with a one-to-one mapping to a directory on the local filesystem.

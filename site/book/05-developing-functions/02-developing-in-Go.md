@@ -43,7 +43,7 @@ go mod tidy
 Take a look at the `main.go` (as below) and complete the `Run` function.
 
 ```go
-// Copyright 2022 Google LLC
+// Copyright 2022 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

@@ -3,7 +3,7 @@ similarity index 100%
 rename from deployment.yaml
 rename to newfilename.yaml
 diff --git a/starlark-fn.yaml b/starlark-fn.yaml
-index 1e78651..dae32d9 100644
+index 247c2ae..0ef906e 100644
 --- a/starlark-fn.yaml
 +++ b/starlark-fn.yaml
 @@ -11,7 +11,6 @@

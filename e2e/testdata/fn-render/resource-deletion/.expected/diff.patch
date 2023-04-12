@@ -14,11 +14,11 @@ index 6d53889..b36c49f 100644
      - image: gcr.io/kpt-fn/starlark:v0.2.1
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
-index 44bfc6b..0000000
+index 49d4f6e..0000000
 --- a/deployment_httpbin.yaml
 +++ /dev/null
 @@ -1,36 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ index 44bfc6b..0000000
 -        - name: httpbin
 -          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
-index 7a494c9..a9dd224 100644
+index f2eec52..84cfb26 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,25 @@ apiVersion: apps/v1
@@ -85,7 +85,7 @@ index 7a494c9..a9dd224 100644
  spec:
    image: nginx:1.2.3
 diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
-index 3de07cf..0d96dee 100644
+index fd90109..e437ba7 100644
 --- a/starlark-httpbin.yaml
 +++ b/starlark-httpbin.yaml
 @@ -15,6 +15,9 @@ apiVersion: fn.kpt.dev/v1alpha1

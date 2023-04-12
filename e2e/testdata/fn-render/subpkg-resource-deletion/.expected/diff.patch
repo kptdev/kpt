@@ -28,11 +28,11 @@ index 6dc9479..0aedfe5 100644
    mutators:
      - image: gcr.io/kpt-fn/starlark:v0.2.1
 diff --git a/db/resources.yaml b/db/resources.yaml
-index 2270171..9dabb18 100644
+index f983597..9dabb18 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ -1,26 +1,10 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ index 2270171..9dabb18 100644
  spec:
    image: nginx:1.2.3
 diff --git a/db/statefulset-filter.yaml b/db/statefulset-filter.yaml
-index 7d006a8..155b19f 100644
+index e1f7b67..ac69c02 100644
 --- a/db/statefulset-filter.yaml
 +++ b/db/statefulset-filter.yaml
 @@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
@@ -79,11 +79,11 @@ index 7d006a8..155b19f 100644
    def isStatefulSet(r):
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
-index 44bfc6b..0000000
+index 49d4f6e..0000000
 --- a/deployment_httpbin.yaml
 +++ /dev/null
 @@ -1,36 +0,0 @@
--# Copyright 2021 Google LLC
+-# Copyright 2021 The kpt Authors
 -#
 -# Licensed under the Apache License, Version 2.0 (the "License");
 -# you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ index 44bfc6b..0000000
 -        - name: httpbin
 -          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
-index 6590f6c..b5b54e0 100644
+index 239f0d6..9ca3271 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,5 +15,15 @@ apiVersion: apps/v1
@@ -140,7 +140,7 @@ index 6590f6c..b5b54e0 100644
 +      labels:
 +        tier: backend
 diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
-index 3de07cf..0d96dee 100644
+index fd90109..e437ba7 100644
 --- a/starlark-httpbin.yaml
 +++ b/starlark-httpbin.yaml
 @@ -15,6 +15,9 @@ apiVersion: fn.kpt.dev/v1alpha1

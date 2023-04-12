@@ -13,7 +13,7 @@ index 08afd4c..9a0803a 100644
 +      configMap:
 +        namespace: staging
 diff --git a/resources.yaml b/resources.yaml
-index ac634f3..0e09da8 100644
+index eed43d6..81473ca 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,6 +15,7 @@ apiVersion: apps/v1

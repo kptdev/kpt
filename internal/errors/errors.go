@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2021 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -252,7 +252,7 @@ func UnwrapKioError(err error) error {
 // UnwrapErrors unwraps any *Error errors in the chain and returns
 // the first error it finds that is of a different type. If no such error
 // can be found, the last return value will be false.
-//nolint
+// nolint
 func UnwrapErrors(err error) (error, bool) {
 	for {
 		if err == nil {

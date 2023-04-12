@@ -26,7 +26,7 @@ index 78ee518..cda1359 100644
    mutators:
      - image: gcr.io/kpt-fn/set-annotations:v0.1.3
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index 173c2e1..11cfcb0 100644
+index 519cfd3..4e39a5c 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
 @@ -18,8 +18,10 @@ metadata:
@@ -79,7 +79,7 @@ index 173c2e1..11cfcb0 100644
        containers:
          - name: mysql
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index f7bdc2a..f555993 100644
+index fed2c74..c8a9784 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
 @@ -16,8 +16,9 @@ metadata:
