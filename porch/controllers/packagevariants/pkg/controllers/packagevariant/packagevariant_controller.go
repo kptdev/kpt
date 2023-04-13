@@ -185,7 +185,7 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 				api.DeletionPolicyOrphan, api.DeletionPolicyDelete)))
 	}
 	if pc := pv.Spec.PackageContext; pc != nil {
-		invalidKeys := []string{"name"}
+		invalidKeys := []string{"name", "package-path"}
 		for _, invalid := range invalidKeys {
 			if len(pc.Data) > 0 {
 				if _, ok := pc.Data[invalid]; ok {

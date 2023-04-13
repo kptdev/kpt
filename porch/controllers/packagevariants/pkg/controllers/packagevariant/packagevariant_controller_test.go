@@ -150,6 +150,41 @@ spec:
 			expectedErr: "spec.packageContext.removeKeys: Invalid value: []string{\"name\"}: must not contain the key \"name\"",
 		},
 
+		"package-path in package context data": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  packageContext:
+    data:
+      package-path: test
+`,
+			expectedErr: "spec.packageContext.data: Invalid value: map[string]string{\"package-path\":\"test\"}: must not contain the key \"package-path\"",
+		},
+
+		"package-path in package context removeKeys": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  packageContext:
+    removeKeys:
+    - package-path
+`,
+			expectedErr: "spec.packageContext.removeKeys: Invalid value: []string{\"package-path\"}: must not contain the key \"package-path\"",
+		},
+
+
 	}
 
 	for tn, tc := range testCases {
