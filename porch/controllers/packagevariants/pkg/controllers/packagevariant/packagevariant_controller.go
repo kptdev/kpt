@@ -184,6 +184,29 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 			fmt.Sprintf("field can only be %q or %q",
 				api.DeletionPolicyOrphan, api.DeletionPolicyDelete)))
 	}
+	if pc := pv.Spec.PackageContext; pc != nil {
+		invalidKeys := []string{"name"}
+		for _, invalid := range invalidKeys {
+			if len(pc.Data) > 0 {
+				if _, ok := pc.Data[invalid]; ok {
+					allErrs = append(allErrs, field.Invalid(
+						field.NewPath("spec", "packageContext", "data"),
+						pv.Spec.PackageContext.Data,
+						fmt.Sprintf("must not contain the key %q", invalid)))
+				}
+			}
+			if len(pc.RemoveKeys) > 0 {
+				for _, k := range pc.RemoveKeys {
+					if k == invalid {
+						allErrs = append(allErrs, field.Invalid(
+							field.NewPath("spec", "packageContext", "removeKeys"),
+							pv.Spec.PackageContext.RemoveKeys,
+							fmt.Sprintf("must not contain the key %q", invalid)))
+					}
+				}
+			}
+		}
+	}
 	return allErrs
 }
 
@@ -616,22 +639,16 @@ func (r *PackageVariantReconciler) applyMutations(ctx context.Context,
 	var prr porchapi.PackageRevisionResources
 	prrKey := types.NamespacedName{Name: draft.GetName(), Namespace: draft.GetNamespace()}
 	if err := r.Client.Get(ctx, prrKey, &prr); err != nil {
-		// TODO: Set appropriate condition / fire event
-		klog.Errorf("ERROR %w", err)
 		return err
 	}
 
 	// Apply our mutations
 	if err := ensurePackageContext(pv, &prr); err != nil {
-		// TODO: Set appropriate condition / fire event
-		klog.Errorf("ERROR %w", err)
 		return err
 	}
 
 	// Save the updated PackageRevisionResources
 	if err := r.Update(ctx, &prr); err != nil {
-		// TODO: Set appropriate condition / fire event
-		klog.Errorf("ERROR %w", err)
 		return err
 	}
 

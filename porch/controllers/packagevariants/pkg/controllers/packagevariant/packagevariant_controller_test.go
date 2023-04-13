@@ -95,6 +95,61 @@ spec:
   deletionPolicy: orphan
 `,
 		},
+
+		"validate package context": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  packageContext:
+    data:
+      foo: bar
+      hello: there
+    removeKeys:
+    - bar
+    - foobar
+`,
+		},
+
+		"name in package context data": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  packageContext:
+    data:
+      name: test
+`,
+			expectedErr: "spec.packageContext.data: Invalid value: map[string]string{\"name\":\"test\"}: must not contain the key \"name\"",
+		},
+
+		"name in package context removeKeys": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  packageContext:
+    removeKeys:
+    - name
+`,
+			expectedErr: "spec.packageContext.removeKeys: Invalid value: []string{\"name\"}: must not contain the key \"name\"",
+		},
+
 	}
 
 	for tn, tc := range testCases {
