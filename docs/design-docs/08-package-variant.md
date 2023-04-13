@@ -481,18 +481,9 @@ in the `removeKeys` field, the package variant controller will remove that key
 the next time it needs to update the downstream package. There will be no
 attempt to coordinate "ownership" of these keys.
 
-The package variant controller will add or set a condition of type
-`ContextInjected` in the PackageVariant resource status. This will be set to
-`True` if and only if:
-- The user specified `spec.packageContext` (either or both fields).
-- The `kptfile.kpt.dev` ConfigMap exists.
-- The controller successfully modified it as specified.
-
-Otherwise, the condition should be set to `False`.
-
 If the controller is unable to modify the ConfigMap for some reason, this is
 considered an error and should prevent generation of the Draft. This will result
-in the condition `DownstreamEnsured` being set to `False`.
+in the condition `Ready` being set to `False`.
 
 #### Kptfile Function Pipeline Editing
 
@@ -555,6 +546,10 @@ functions within its control, remove them all, and re-add them based on its
 updated content. By including the PackageVariant name, we enable chains of
 PackageVariants to add functions, so long as the user is careful about their
 choice of resource names and avoids conflicts.
+
+If the controller is unable to modify the Pipeline for some reason, this is
+considered an error and should prevent generation of the Draft. This will result
+in the condition `Ready` being set to `False`.
 
 #### Configuration Injection Details
 
@@ -625,8 +620,8 @@ With that understanding, the injection process works as follows:
    is the responsibility of the package author to define these injection points,
    and to specify which are required and which are optional. Optional injection
    points are a way of specifying default values.
-1. For each injection point, a condition will be created in the
-   downstream PackageRevision, with ConditionType set to the dot-delimited
+1. For each injection point, a condition will be created *in the
+   downstream PackageRevision*, with ConditionType set to the dot-delimited
    concatenation of `config.injection`, with the in-package resource kind and
    name, and the value set to `False`. Note that since the package author
    controls the name of the resource, kind and name are sufficient to
@@ -672,19 +667,21 @@ With that understanding, the injection process works as follows:
      - An annotation with name `kpt.dev/injected-resource-name` and value set to
        the name of the in-cluster resource is added (or overwritten) in the
        in-package resource.
-1. The package variant controller will add or set a condition of type
-   `ConfigInjected` in the PackageVariant resource status.
-   This will be set to `True` if and only if:
-   - All configuration injection processing is complete.
-   - There is no resource annotated as an injection point but having an invalid
+
+If the injection cannot be completed for some reason, or if any of the below
+problems exist in the upstream package, it is considered an error and should
+prevent generation of the Draft:
+   - There is a resource annotated as an injection point but having an invalid
      annotation value (i.e., other than `required` or `optional`).
-   - Matching in-cluster resources were successfully injected for all `required`
-     injection points (i.e., all required injection point ConditionTypes are
-     `True`).
-   - There are no ambiguous condition types due to conflicting GVK and name
+   - There are ambiguous condition types due to conflicting GVK and name
      values. These must be disambiguated in the upstream package, if so.
 
-If `ConfigInjected` is `False`, then `DownstreamEnsured` must also be `False`.
+This will result in the condition `Ready` being set to `False`.
+
+Note that whether or not all `required` injection points are fulfilled does not
+affect the *PackageVariant* conditions, only the *PackageRevision* conditions.
+
+**A Further Note on Selectors**
 
 Note that by allowing the use of GVK, not just name, in the selector, more
 precision in selection is enabled. This is a way to constrain the injections
@@ -736,15 +733,23 @@ understanding, we can see that the controller will perform mutations on the
 downstream package in this order, for both creation and update:
 
 1. Create (via Clone) or Update (via `kpt pkg update` equivalent)
-1. Package Context Injections
-1. Kptfile KRM Function Pipeline Additions/Changes
-1. Config Injection
-1. Kptfile KRM Function Pipeline Execution
+   - This is done by the Porch server, not by the package variant controller
+     directly.
+   - This means that Porch will run the Kptfile pipeline after clone or
+     update.
+1. Package variant controller applies configured mutations
+   - Package Context Injections
+   - Kptfile KRM Function Pipeline Additions/Changes
+   - Config Injection
+1. Package variant controller saves the PackageRevision and
+   PackageRevisionResources.
+   - Porch server executes the Kptfile pipeline
 
-Since the middle three of these just edit resources (including the Kptfile) in
-the package, their ordering does not matter; they cannot affect one another.
-The execution of the KRM function pipeline depends on the others, but there are
-no direct dependencies otherwise.
+The package variant controller mutations edit resources (including the Kptfile),
+based on the contents of the PackageVariant and the injected in-cluster
+resources, but cannot affect one another. The results of those mutations
+throughout the rest of the package is materialized by the execution of the
+Kptfile pipeline during the save operation.
 
 #### PackageVariant Status
 
@@ -755,7 +760,7 @@ TODO(johnbelamaric): Update according to:
 
 - Status
   - `Valid` Condition Type
-  - `DownstreamEnsured` Condition Type (`Ready`?)
+  - `Ready` Condition Type
   - `DraftExists` Condition Type (?)
 
 ### PackageVariantSet API
@@ -1263,7 +1268,7 @@ in other contexts.
 #### PackageVariantSet Status
 
 TODO(johnbelamaric): determine and document Condition types for
-PackagetVariantSet, aligned with what we decided for PackageVariant.
+PackageVariantSet, aligned with what we decided for PackageVariant.
 
 ## Future Considerations
 - As an alternative to the floating tag proposal, we may instead want to have
