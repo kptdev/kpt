@@ -346,31 +346,6 @@ the injection varies systematically based upon attributes of the target.
 | :---: |
 | *Figure 7: PackageVariantSet with Repository Selector* |
 
-## Example Use Cases
-
-### Automatically Organizational Customization of an External Package
-We can use a PackageVariant to provide basic changes that are needed when
-importing a package from an external repository. For example, suppose we have
-our own internal registry from which we pull all our images. When we import an
-upstream package, we want to modify any images listed in the upstream package to
-point to our registry. Additionally, we have a policy that all Pods must have a
-`chargeback-code` label, so we want to add that as a validating policy to the
-package.
-
-In a manual CLI-based workflow, we would accomplish this as follows.
-...
-
-With PackageVariant, we instead create the following resources:
-...
-
-### Creating a Namespace Per Tenant
-
-### Customizing A Workload By Region
-
-### Customizing A Workload By Cluster and Region
-
-### Customizing A Workload By Environment
-
 ## Detailed Design
 
 ### PackageVariant API
@@ -1280,12 +1255,20 @@ The PackageVariantSet status uses these conditions:
 - As an alternative to the floating tag proposal, we may instead want to have
   a separate tag tracking controller that can update PV and PVS resources to
   tweak their upstream as the tag moves.
-- Probably want to think about groups of packages (that is, a collection of
-  upstreams with the same set of mutation to be applied). For now, this would be
-  handled with PackageVariant / PackageVariantSet resources that differ only
-  in their upstream / downstream. Theoretically we could do that with label
-  selectors on packages but it gets really ugly really fast. I suspect just
-  making people copy the PV / PVS is better.
+- Installing a collection of packages across a set of clusters, or performing
+  the same mutations to each package in a collection, is only supported by
+  creating multiple PackageVariant / PackageVariantSet resources. Options to
+  consider for these use cases:
+  - `upstreams` listing multiple packages.
+  - Label selector against PackageRevisions. This does not seem that useful, as
+    PackageRevisions are highly re-usable and would likely be composed in many
+    different ways.
+  - A PackageRevisionSet resource that simply contained a list of Upstream
+    structures and could be used as an Upstream. This is functionally equivalent
+    to the `upstreams` option, but that list is reusable across resources.
+  - Listing multiple PackageRevisionSets in the upstream would be nice as well.
+  - Any or all of these could be implemented in PackageVariant,
+    PackageVariantSet, or both.
 
 ## Footnotes
 [^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.16.
