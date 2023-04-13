@@ -55,8 +55,8 @@ type PackageVariantReconciler struct {
 const (
 	workspaceNamePrefix = "packagevariant-"
 
-	ConditionTypeValid = "Valid" // whether or not the packagevariant object passed all the validation checks
-	ConditionTypeReady = "Ready" // whether or notthe reconciliation succeded
+	ConditionTypeStalled = "Stalled" // whether or not the packagevariant object is making progress or not
+	ConditionTypeReady   = "Ready"   // whether or notthe reconciliation succeded
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariants webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -124,8 +124,8 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		return ctrl.Result{}, nil
 	}
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-		Type:    ConditionTypeValid,
-		Status:  "True",
+		Type:    ConditionTypeStalled,
+		Status:  "False",
 		Reason:  "Valid",
 		Message: "all validation checks passed",
 	})
@@ -241,9 +241,9 @@ func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
 
 func setValidationConditionsToFalse(pv *api.PackageVariant, message string) {
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-		Type:    ConditionTypeValid,
-		Status:  "False",
-		Reason:  "Invalid",
+		Type:    ConditionTypeStalled,
+		Status:  "True",
+		Reason:  "ValidationError",
 		Message: message,
 	})
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
