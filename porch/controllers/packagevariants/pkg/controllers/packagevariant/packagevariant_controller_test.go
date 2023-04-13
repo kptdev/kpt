@@ -183,8 +183,6 @@ spec:
 `,
 			expectedErr: "spec.packageContext.removeKeys: Invalid value: []string{\"package-path\"}: must not contain the key \"package-path\"",
 		},
-
-
 	}
 
 	for tn, tc := range testCases {
