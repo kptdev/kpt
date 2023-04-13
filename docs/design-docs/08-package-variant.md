@@ -457,7 +457,7 @@ exists.
 
 Specifying the key `name` is invalid and must fail validation of the
 PackageVariant. This key is reserved for kpt or Porch to set to the package
-name.
+name. Similarly, `package-path` is reserved adn will result in an error.
 
 The `spec.packageContext.removeKeys` field can also be used to specify a list of
 keys that the package variant controller should remove from the `data` field of
