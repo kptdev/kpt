@@ -70,6 +70,7 @@ const PackageVariantSetOwnerLabel = "config.porch.kpt.dev/packagevariantset"
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=packagevariantsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=packagevariantsets/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=packagevariantsets/finalizers,verbs=update
+//+kubebuilder:rbac:groups=*,resources=*,verbs=list
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

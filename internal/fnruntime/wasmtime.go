@@ -1,5 +1,4 @@
 //go:build cgo
-// +build cgo
 
 // Copyright 2022 The kpt Authors
 //

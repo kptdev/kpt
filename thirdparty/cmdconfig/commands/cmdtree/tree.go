@@ -128,6 +128,7 @@ func (p TreeWriter) Write(nodes []*yaml.RNode) error {
 }
 
 // node wraps a tree node, and any children nodes
+//
 //nolint:unused
 type node struct {
 	p TreeWriter
@@ -147,6 +148,7 @@ func (a node) Less(i, j int) bool {
 }
 
 // Tree adds this node to the root
+//
 //nolint:unused
 func (a node) Tree(root treeprint.Tree) error {
 	sort.Sort(a)
