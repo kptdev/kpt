@@ -131,12 +131,12 @@ labels of the PackageRevision available as values that may be controlled
 during the creation of the PackageRevision. This can assist in additional
 automation workflows.
 
-## Introducing Variance[^notimplemented]
+## Introducing Variance
 Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
-### Package Context
+### Package Context[^notimplemented]
 Every kpt package that is fetched with `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Analogously, when Porch creates a package
 in a deployment repository, it will create this ConfigMap, if it does not
@@ -158,7 +158,7 @@ over-parameterization. The preferred approach is configuration injection, as
 described below, since it allows inputs to adhere to a well-defined, reusable
 schema, rather than simple key/value pairs.
 
-### Kptfile Function Pipeline Editing
+### Kptfile Function Pipeline Editing[^notimplemented]
 In the manual workflow, one of the ways we edit packages is by running KRM
 functions imperatively. PackageVariant offers a similar capability, by
 allowing the user to add functions to the beginning of the downstream package
@@ -184,7 +184,7 @@ application pipeline allows it, as seen in *Figure 3*.[^setns]
 | :---: |
 | *Figure 3: Kptfile Function Pipeline Editing * |
 
-### Configuration Injection
+### Configuration Injection[^notimplemented]
 Adding values to the package context or functions to the pipeline works
 for configuration that is under the control of the creator of the PackageVariant
 resource. However, in more advanced use cases, we may need to specialize the
@@ -457,7 +457,7 @@ exists.
 
 Specifying the key `name` is invalid and must fail validation of the
 PackageVariant. This key is reserved for kpt or Porch to set to the package
-name. Similarly, `package-path` is reserved adn will result in an error.
+name. Similarly, `package-path` is reserved and will result in an error.
 
 The `spec.packageContext.removeKeys` field can also be used to specify a list of
 keys that the package variant controller should remove from the `data` field of
@@ -753,15 +753,18 @@ Kptfile pipeline during the save operation.
 
 #### PackageVariant Status
 
-TODO(johnbelamaric): Update according to:
- - https://github.com/GoogleContainerTools/kpt/pull/3898
- - https://github.com/GoogleContainerTools/kpt/issues/3872
- - https://github.com/GoogleContainerTools/kpt/issues/3891
+PackageVariant sets the following status conditions:
+ - `Stalled` is set to True if there has been a failure that most likely
+   requires user intervention.
+ - `Ready` is set to True if the last reconciliation successfully produced an
+   up-to-date Draft.
 
-- Status
-  - `Valid` Condition Type
-  - `Ready` Condition Type
-  - `DraftExists` Condition Type (?)
+The PackageVariant resource will also contain a `DownstreamTargets` field,
+containing a list of downstream `Draft` and `Proposed` PackageRevisions owned by
+this PackageVariant resource, or the latest `Published` PackageRevision if there
+are none in `Draft` or `Proposed` state. Typically, there is only a single
+Draft, but use of the `adopt` value for `AdoptionPolicy` could result in
+multiple Drafts being owned by the same PackageVariant.
 
 ### PackageVariantSet API
 
@@ -1267,8 +1270,11 @@ in other contexts.
 
 #### PackageVariantSet Status
 
-TODO(johnbelamaric): determine and document Condition types for
-PackageVariantSet, aligned with what we decided for PackageVariant.
+The PackageVariantSet status uses these conditions:
+ - `Stalled` is set to True if there has been a failure that most likely
+   requires user intervention.
+ - `Ready` is set to True if the last reconciliation successfully reconciled
+   all targeted PackageVariant resources.
 
 ## Future Considerations
 - As an alternative to the floating tag proposal, we may instead want to have
