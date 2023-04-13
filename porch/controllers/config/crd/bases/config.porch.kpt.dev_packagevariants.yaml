@@ -67,20 +67,22 @@ spec:
                   repo:
                     type: string
                 type: object
-              packageContext:
-                properties:
-                  data:
-                    type: object
-                    additionalProperties:
-                      type: string
-                  removeKeys:
-                    type: array
-                    items:
-                      type: string
-                type: object
               labels:
                 additionalProperties:
                   type: string
+                type: object
+              packageContext:
+                description: PackageContext defines the data to be added or removed
+                  from the kptfile.kpt.dev ConfigMap during reconciliation.
+                properties:
+                  data:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  removeKeys:
+                    items:
+                      type: string
+                    type: array
                 type: object
               upstream:
                 properties:
