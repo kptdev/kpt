@@ -135,7 +135,7 @@ Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
-### Package Context[^notimplemented]
+### Package Context[^porch17]
 Every kpt package that is fetched with `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Analogously, when Porch creates a package
 in a deployment repository, it will create this ConfigMap, if it does not
@@ -1270,6 +1270,7 @@ The PackageVariantSet status uses these conditions:
     PackageVariantSet, or both.
 
 ## Footnotes
+[^porch17]: Implemented and coming in Porch v0.0.17.
 [^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.16.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
