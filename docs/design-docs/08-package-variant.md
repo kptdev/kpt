@@ -1,7 +1,6 @@
 # Package Variant Controller
 
 * Author(s): @johnbelamaric, @natasha41575
-* Status: Work-in-Progress
 * Approver: @mortent
 
 ## Why
@@ -262,7 +261,7 @@ Analogously, when a PackageVariant resource is deleted, a decision must be
 made about whether or not to delete the downstream package. This is controlled
 by the deletion policy.
 
-## Fan Out of Variant Generation
+## Fan Out of Variant Generation[^pvsimpl]
 
 When used with a single package, the package variant controller mostly helps us
 handle the time dimension - producing new versions of a package as the upstream
@@ -741,7 +740,7 @@ are none in `Draft` or `Proposed` state. Typically, there is only a single
 Draft, but use of the `adopt` value for `AdoptionPolicy` could result in
 multiple Drafts being owned by the same PackageVariant.
 
-### PackageVariantSet API
+### PackageVariantSet API[^pvsimpl]
 
 The Go types below defines the `PackageVariantSetSpec`.
 
@@ -788,7 +787,7 @@ each namespace, with a name matching the namespace.
 This example shows using the `repositories` field:
 
 ```yaml
-apiVersion: config.porch.kpt.dev/v1alpha1
+apiVersion: config.porch.kpt.dev/v1alpha2
 kind: PackageVariantSet
 metadata:
   namespace: default
@@ -971,7 +970,7 @@ namespaces called "base-ns". We want to instantiate this several times in the
 `cluster-01` repository. We could do this with this PackageVariantSet:
 
 ```yaml
-apiVersion: config.porch.kpt.dev/v1alpha1
+apiVersion: config.porch.kpt.dev/v1alpha2
 kind: PackageVariantSet
 metadata:
   namespace: default
@@ -996,7 +995,7 @@ name. If we also want to set some labels identically across the packages, we can
 do that with the `template.labels` field:
 
 ```yaml
-apiVersion: config.porch.kpt.dev/v1alpha1
+apiVersion: config.porch.kpt.dev/v1alpha2
 kind: PackageVariantSet
 metadata:
   namespace: default
@@ -1276,6 +1275,12 @@ The PackageVariantSet status uses these conditions:
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
     users.
+[^pvsimpl]: This document describes PackageVariantSet `v1alpha2`, which has not
+    been implemented as of Porch v0.0.16. In Porch v0.0.16, the `v1alpha1`
+    implementation is available, but it is a somewhat different API, without
+    support for CEL or any injection. It is focused only on fan out targeting,
+    and uses a [slightly different targeting
+    API](https://github.com/GoogleContainerTools/kpt/blob/main/porch/controllers/packagevariantsets/api/v1alpha1/packagevariantset_types.go).
 [^repo-pkg-expr]: This is not exactly correct. As we will see later in the
     `template` discussion, this the repository and package names listed actually
     are just defaults for the template; they can be further manipulated in the
