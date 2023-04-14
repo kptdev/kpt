@@ -95,8 +95,7 @@ type PackageVariantStatus struct {
 }
 
 type DownstreamTarget struct {
-	Name      string `json:"name,omitempty"`
-	Lifecycle string `json:"lifecycle,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 //+kubebuilder:object:root=true

@@ -635,8 +635,7 @@ func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.Packa
 	}
 	for _, t := range targets {
 		pv.Status.DownstreamTargets = append(pv.Status.DownstreamTargets, api.DownstreamTarget{
-			Name:      t.GetName(),
-			Lifecycle: string(t.Spec.Lifecycle),
+			Name: t.GetName(),
 		})
 	}
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
