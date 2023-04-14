@@ -62,6 +62,8 @@ type PackageVariantSpec struct {
 
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
+
+	PackageContext *PackageContext `json:"packageContext,omitempty"`
 }
 
 type Upstream struct {
@@ -73,6 +75,13 @@ type Upstream struct {
 type Downstream struct {
 	Repo    string `json:"repo,omitempty"`
 	Package string `json:"package,omitempty"`
+}
+
+// PackageContext defines the data to be added or removed from the
+// kptfile.kpt.dev ConfigMap during reconciliation.
+type PackageContext struct {
+	Data       map[string]string `json:"data,omitempty"`
+	RemoveKeys []string          `json:"removeKeys,omitempty"`
 }
 
 // PackageVariantStatus defines the observed state of PackageVariant

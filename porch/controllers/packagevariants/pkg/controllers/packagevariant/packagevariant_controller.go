@@ -25,6 +25,8 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+
 	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -183,6 +185,29 @@ func validatePackageVariant(pv *api.PackageVariant) field.ErrorList {
 			fmt.Sprintf("field can only be %q or %q",
 				api.DeletionPolicyOrphan, api.DeletionPolicyDelete)))
 	}
+	if pc := pv.Spec.PackageContext; pc != nil {
+		invalidKeys := []string{"name", "package-path"}
+		for _, invalid := range invalidKeys {
+			if len(pc.Data) > 0 {
+				if _, ok := pc.Data[invalid]; ok {
+					allErrs = append(allErrs, field.Invalid(
+						field.NewPath("spec", "packageContext", "data"),
+						pv.Spec.PackageContext.Data,
+						fmt.Sprintf("must not contain the key %q", invalid)))
+				}
+			}
+			if len(pc.RemoveKeys) > 0 {
+				for _, k := range pc.RemoveKeys {
+					if k == invalid {
+						allErrs = append(allErrs, field.Invalid(
+							field.NewPath("spec", "packageContext", "removeKeys"),
+							pv.Spec.PackageContext.RemoveKeys,
+							fmt.Sprintf("must not contain the key %q", invalid)))
+					}
+				}
+			}
+		}
+	}
 	return allErrs
 }
 
@@ -251,11 +276,14 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 		},
 	}
 
-	klog.Infoln(fmt.Sprintf("package variant %q is creating package revision %q", pv.Name, newPR.Name))
 	if err := r.Client.Create(ctx, newPR); err != nil {
 		return err
 	}
+	klog.Infoln(fmt.Sprintf("package variant %q created package revision %q", pv.Name, newPR.Name))
 
+	if err := r.applyMutations(ctx, pv, newPR); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -293,6 +321,10 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 		if err != nil {
 			return nil, err
 		}
+		if err := r.applyMutations(ctx, pv, downstreams[i]); err != nil {
+			return nil, err
+		}
+
 	}
 	return downstreams, nil
 }
@@ -598,4 +630,86 @@ func (r *PackageVariantReconciler) mapObjectsToRequests(obj client.Object) []rec
 		}
 	}
 	return requests
+}
+
+func (r *PackageVariantReconciler) applyMutations(ctx context.Context,
+	pv *api.PackageVariant,
+	draft *porchapi.PackageRevision) error {
+
+	// Load the PackageRevisionResources
+	var prr porchapi.PackageRevisionResources
+	prrKey := types.NamespacedName{Name: draft.GetName(), Namespace: draft.GetNamespace()}
+	if err := r.Client.Get(ctx, prrKey, &prr); err != nil {
+		return err
+	}
+
+	// Apply our mutations
+	if err := ensurePackageContext(pv, &prr); err != nil {
+		return err
+	}
+
+	// Save the updated PackageRevisionResources
+	if err := r.Update(ctx, &prr); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ensurePackageContext(pv *api.PackageVariant,
+	prr *porchapi.PackageRevisionResources) error {
+
+	if pv.Spec.PackageContext == nil {
+		return nil
+	}
+
+	if len(pv.Spec.PackageContext.Data) == 0 && len(pv.Spec.PackageContext.RemoveKeys) == 0 {
+		return nil
+	}
+
+	// find the kptfile.kpt.dev ConfigMap, it must be in package-context.yaml
+	if prr.Spec.Resources == nil {
+		return fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	if _, ok := prr.Spec.Resources["package-context.yaml"]; !ok {
+		return fmt.Errorf("package-context.yaml not found in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	cm, err := fn.ParseKubeObject([]byte(prr.Spec.Resources["package-context.yaml"]))
+	if err != nil {
+		return fmt.Errorf("failed to parse package-context.yaml of PackageRevisionResources %s/%s: %w", prr.Namespace, prr.Name, err)
+	}
+
+	if cm.GetKind() != "ConfigMap" || cm.GetName() != "kptfile.kpt.dev" {
+		return fmt.Errorf("package-context.yaml does not contain ConfigMap kptfile.kpt.dev in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	// Set the data fields
+	var data map[string]string
+	ok, err := cm.Get(&data, "data")
+	if err != nil {
+		return fmt.Errorf("PackageRevisionResources %s/%s PackageContext invalid data field: %w", prr.Namespace, prr.Name, err)
+	}
+
+	if !ok {
+		return fmt.Errorf("PackageRevisionResources %s/%s PackageContext no data field found", prr.Namespace, prr.Name)
+	}
+
+	// set or add keys that should be there
+	for k, v := range pv.Spec.PackageContext.Data {
+		data[k] = v
+	}
+
+	// remove any keys that should go
+	for _, k := range pv.Spec.PackageContext.RemoveKeys {
+		delete(data, k)
+	}
+
+	err = cm.SetNestedField(data, "data")
+	if err != nil {
+		return fmt.Errorf("could not set package conext data: %w", err)
+	}
+	prr.Spec.Resources["package-context.yaml"] = cm.String()
+	return nil
 }
