@@ -11,6 +11,31 @@
   },
   "paths": {},
   "definitions": {
+    "Condition": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        },
+        "reason": {
+          "type": "string",
+          "x-go-name": "Reason"
+        },
+        "status": {
+          "$ref": "#/definitions/ConditionStatus"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "ConditionStatus": {
+      "type": "string",
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
     "Function": {
       "type": "object",
       "title": "Function specifies a KRM function.",
@@ -28,10 +53,28 @@
           "type": "string",
           "x-go-name": "ConfigPath"
         },
+        "exclude": {
+          "description": "`Exclude` are used to specify resources on which the function should NOT be executed.\nIf not specified, all resources selected by `Selectors` are selected.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Selector"
+          },
+          "x-go-name": "Exclusions"
+        },
+        "exec": {
+          "description": "Exec specifies the function binary executable.\nThe executable can be fully qualified or it must exists in the $PATH e.g:\n\nexec: set-namespace\nexec: /usr/local/bin/my-custom-fn",
+          "type": "string",
+          "x-go-name": "Exec"
+        },
         "image": {
           "description": "`Image` specifies the function container image.\nIt can either be fully qualified, e.g.:\n\nimage: gcr.io/kpt-fn/set-labels\n\nOptionally, kpt can be configured to use a image\nregistry host-path that will be used to resolve the image path in case\nthe image path is missing (Defaults to gcr.io/kpt-fn).\ne.g. The following resolves to gcr.io/kpt-fn/set-labels:\n\nimage: set-labels",
           "type": "string",
           "x-go-name": "Image"
+        },
+        "name": {
+          "description": "`Name` is used to uniquely identify the function declaration\nthis is primarily used for merging function declaration with upstream counterparts",
+          "type": "string",
+          "x-go-name": "Name"
         },
         "selectors": {
           "description": "`Selectors` are used to specify resources on which the function should be executed\nif not specified, all resources are selected",
@@ -226,6 +269,13 @@
           "type": "string",
           "x-go-name": "Man"
         },
+        "readinessGates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ReadinessGate"
+          },
+          "x-go-name": "ReadinessGates"
+        },
         "site": {
           "description": "Site is the URL for package web page.",
           "type": "string",
@@ -253,6 +303,16 @@
             "$ref": "#/definitions/Function"
           },
           "x-go-name": "Validators"
+        }
+      },
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "ReadinessGate": {
+      "type": "object",
+      "properties": {
+        "conditionType": {
+          "type": "string",
+          "x-go-name": "ConditionType"
         }
       },
       "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -304,6 +364,14 @@
       "description": "Selector specifies the selection criteria\nplease update IsEmpty method if more properties are added",
       "type": "object",
       "properties": {
+        "annotations": {
+          "description": "Annotations on the target resources",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Annotations"
+        },
         "apiVersion": {
           "description": "APIVersion of the target resources",
           "type": "string",
@@ -314,6 +382,14 @@
           "type": "string",
           "x-go-name": "Kind"
         },
+        "labels": {
+          "description": "Labels on the target resources",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Labels"
+        },
         "name": {
           "description": "Name of the target resources",
           "type": "string",
@@ -323,6 +399,19 @@
           "description": "Namespace of the target resources",
           "type": "string",
           "x-go-name": "Namespace"
+        }
+      },
+      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+    },
+    "Status": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          },
+          "x-go-name": "Conditions"
         }
       },
       "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -426,6 +515,9 @@
         },
         "pipeline": {
           "$ref": "#/definitions/Pipeline"
+        },
+        "status": {
+          "$ref": "#/definitions/Status"
         },
         "upstream": {
           "$ref": "#/definitions/Upstream"
