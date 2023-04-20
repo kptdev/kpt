@@ -115,13 +115,13 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	}
 
 	if errs := validatePackageVariant(pv); len(errs) > 0 {
-		setValidationConditionsToFalse(pv, combineErrors(errs))
+		setStalledConditionsToTrue(pv, combineErrors(errs))
 		return ctrl.Result{}, nil
 	}
 	upstream, err := r.getUpstreamPR(pv.Spec.Upstream, prList)
 	if err != nil {
-		setValidationConditionsToFalse(pv, err.Error())
-		return ctrl.Result{}, nil
+		setStalledConditionsToTrue(pv, err.Error())
+		return ctrl.Result{}, err
 	}
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
 		Type:    ConditionTypeStalled,
@@ -239,7 +239,7 @@ func (r *PackageVariantReconciler) getUpstreamPR(upstream *api.Upstream,
 		upstream.Package, upstream.Revision, upstream.Repo)
 }
 
-func setValidationConditionsToFalse(pv *api.PackageVariant, message string) {
+func setStalledConditionsToTrue(pv *api.PackageVariant, message string) {
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
 		Type:    ConditionTypeStalled,
 		Status:  "True",
