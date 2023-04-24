@@ -86,8 +86,16 @@ type PackageContext struct {
 
 // PackageVariantStatus defines the observed state of PackageVariant
 type PackageVariantStatus struct {
-	// TODO: Move this to conditions.
-	ValidationErrors []string `json:"validationErrors,omitempty"`
+	// Conditions describes the reconciliation state of the object.
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
+
+	// DownstreamTargets contains the downstream targets that the PackageVariant
+	// either created or adopted.
+	DownstreamTargets []DownstreamTarget `json:"downstreamTargets,omitempty"`
+}
+
+type DownstreamTarget struct {
+	Name string `json:"name,omitempty"`
 }
 
 //+kubebuilder:object:root=true
