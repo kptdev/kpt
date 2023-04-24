@@ -7,7 +7,7 @@ To run Rollouts locally, you will need:
 * Linux machine (technically it is possible to run Rollouts locally on a Mac but
   due to differences in Docker between Linux and Mac, the Rollouts scripts are
   confirmed to work on Linux)
-* [go 1.19](https://go.dev/dl/) or newer
+* [go 1.20](https://go.dev/dl/) or newer
 * `make`
 * Either access to GKE clusters, or Kind.
 
