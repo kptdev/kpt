@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM golang:1.19-bullseye as builder
+FROM golang:1.20-bullseye as builder
 
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 

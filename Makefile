@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GOLANG_VERSION         := 1.19.5
+GOLANG_VERSION         := 1.20.3
 GORELEASER_CONFIG      = release/tag/goreleaser.yaml
 GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
@@ -59,7 +59,7 @@ install-kind:
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.46.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
 
 .PHONY: install-go-licenses
 install-go-licenses:

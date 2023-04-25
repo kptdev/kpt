@@ -47,7 +47,7 @@ type runner struct {
 	Command *cobra.Command
 }
 
-func (r *runner) runE(cmd *cobra.Command, args []string) error {
+func (r *runner) runE(_ *cobra.Command, _ []string) error {
 	fmt.Println(licenses.AllOSSLicense)
 	return nil
 }

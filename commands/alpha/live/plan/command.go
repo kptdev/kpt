@@ -86,7 +86,7 @@ type Runner struct {
 	output                string
 }
 
-func (r *Runner) PreRunE(c *cobra.Command, args []string) error {
+func (r *Runner) PreRunE(_ *cobra.Command, _ []string) error {
 	return r.validateOutputFormat()
 }
 

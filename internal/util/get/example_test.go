@@ -15,6 +15,7 @@
 package get_test
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/GoogleContainerTools/kpt/internal/util/get"
@@ -28,7 +29,7 @@ func ExampleCommand() {
 		Ref:  "v1.0",
 	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }
 
@@ -38,7 +39,7 @@ func ExampleCommand_branch() {
 		Ref:  "refs/heads/v1.0",
 	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }
 
@@ -48,7 +49,7 @@ func ExampleCommand_tag() {
 		Ref:  "refs/tags/v1.0",
 	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }
 
@@ -58,7 +59,7 @@ func ExampleCommand_commit() {
 		Ref:  "8186bef8e5c0621bf80fa8106bd595aae8b62884",
 	}}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }
 
@@ -71,7 +72,7 @@ func ExampleCommand_subdir() {
 		},
 	}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }
 
@@ -83,6 +84,6 @@ func ExampleCommand_destination() {
 		},
 		Destination: "destination-dir"}.Run(fake.CtxWithDefaultPrinter())
 	if err != nil {
-		// handle error
+		fmt.Print(err.Error())
 	}
 }

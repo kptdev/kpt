@@ -1,6 +1,6 @@
 module github.com/GoogleContainerTools/kpt/healthcheck
 
-go 1.19
+go 1.20
 
 require (
 	k8s.io/apimachinery v0.26.1

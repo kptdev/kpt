@@ -35,7 +35,7 @@ func main() {
 	}
 }
 
-func run(ctx context.Context) error {
+func run(_ context.Context) error {
 	if len(os.Args) < 2 {
 		return fmt.Errorf("must specify new version")
 	}

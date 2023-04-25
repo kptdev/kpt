@@ -286,7 +286,7 @@ type NoOpFailRunE struct {
 	t *testing.T
 }
 
-func (t NoOpFailRunE) runE(cmd *cobra.Command, args []string) error {
+func (t NoOpFailRunE) runE(_ *cobra.Command, _ []string) error {
 	assert.Fail(t.t, "run should not be called")
 	return nil
 }

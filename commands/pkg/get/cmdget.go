@@ -114,7 +114,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, _ []string) error {
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdget.runE"
 	if err := r.Get.Run(r.ctx); err != nil {
 		return errors.E(op, types.UniquePath(r.Get.Destination), err)

@@ -51,7 +51,7 @@ type runner struct {
 	factory k8scmdutil.Factory
 }
 
-func (r *runner) runE(cmd *cobra.Command, args []string) error {
+func (r *runner) runE(cmd *cobra.Command, _ []string) error {
 	rlc, err := rolloutsclient.New()
 	if err != nil {
 		fmt.Printf("%s\n", err)

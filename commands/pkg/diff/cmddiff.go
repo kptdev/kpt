@@ -117,6 +117,6 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	return r.Validate()
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	return r.Run(r.ctx)
 }

@@ -62,7 +62,7 @@ type Runner struct {
 	Ctx         context.Context
 }
 
-func (r *Runner) runE(c *cobra.Command, args []string) error {
+func (r *Runner) runE(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		args = append(args, pkg.CurDir)
 	}

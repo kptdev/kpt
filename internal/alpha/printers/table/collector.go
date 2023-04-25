@@ -21,7 +21,7 @@ import (
 
 const InvalidStatus status.Status = "Invalid"
 
-func newResourceStateCollector(resourceGroups []event.ActionGroup, out io.Writer) *resourceStateCollector {
+func newResourceStateCollector(resourceGroups []event.ActionGroup, _ io.Writer) *resourceStateCollector {
 	resourceInfos := make(map[object.ObjMetadata]*resourceInfo)
 	for _, group := range resourceGroups {
 		action := group.Action

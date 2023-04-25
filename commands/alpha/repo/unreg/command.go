@@ -69,7 +69,7 @@ type runner struct {
 	keepSecret bool
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = command + ".preRunE"
 	client, err := porch.CreateClientWithFlags(r.cfg)
 	if err != nil {
@@ -79,7 +79,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *runner) runE(cmd *cobra.Command, args []string) error {
+func (r *runner) runE(_ *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {

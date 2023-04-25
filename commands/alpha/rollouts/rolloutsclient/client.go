@@ -99,11 +99,7 @@ func (rlc *Client) Get(ctx context.Context, ns, name string) (*rolloutsapi.Rollo
 }
 
 func (rlc *Client) Update(ctx context.Context, rollout *rolloutsapi.Rollout) error {
-	if err := rlc.client.Update(ctx, rollout); err != nil {
-		return err
-	}
-
-	return nil
+	return rlc.client.Update(ctx, rollout)
 }
 
 func useServerSideThrottling(config *rest.Config) *rest.Config {

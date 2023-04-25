@@ -63,7 +63,7 @@ func (r *Storage) CachedConfigFile(ctx context.Context, imageName imageName) (*v
 
 // CachedManifest fetches Manifest making use of the cache
 // TODO: This should be incorporated into the go-containerregistry, along with replacing a fetcher
-func (r *Storage) CachedManifest(ctx context.Context, image v1.Image) (*v1.Manifest, error) {
+func (r *Storage) CachedManifest(_ context.Context, image v1.Image) (*v1.Manifest, error) {
 	digest, err := image.Digest()
 	if err != nil {
 		return nil, fmt.Errorf("cannot get image manifest: %w", err)
