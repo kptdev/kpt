@@ -912,7 +912,7 @@ package name as described in the previous section. The template allows the user
 to have control over all of the values in the resulting PackageVariant. The
 template API is shown below.
 
-```yaml
+```go
 type PackageVariantTemplate struct {
         Downstream      *pkgvarapi.Downstream `json:"downstream,omitempty"`
         DownstreamExprs *DownstreamExprs      `json:"downstreamExprs,omitempty"`
