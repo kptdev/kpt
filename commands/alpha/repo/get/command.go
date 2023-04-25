@@ -72,7 +72,7 @@ type runner struct {
 	requestTable bool
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(cmd *cobra.Command, _ []string) error {
 	outputOption := cmd.Flags().Lookup("output").Value.String()
 	if strings.Contains(outputOption, "custom-columns") || outputOption == "yaml" || strings.Contains(outputOption, "json") {
 		r.requestTable = false

@@ -41,9 +41,7 @@ func (r *MultiRuntime) GetRunner(ctx context.Context, fn *v1.Function) (Function
 		runner, err := runtime.GetRunner(ctx, fn)
 		if err != nil {
 			var notFoundError *NotFoundError
-			if errors.As(err, &notFoundError) {
-				// maybe another runtime
-			} else {
+			if !errors.As(err, &notFoundError) {
 				return nil, err
 			}
 		} else {

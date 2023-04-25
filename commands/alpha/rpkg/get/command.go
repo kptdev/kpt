@@ -88,7 +88,7 @@ type runner struct {
 	requestTable bool
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(cmd *cobra.Command, _ []string) error {
 	// Print the namespace if we're spanning namespaces
 	if r.getFlags.AllNamespaces {
 		r.printFlags.HumanReadableFlags.WithNamespace = true

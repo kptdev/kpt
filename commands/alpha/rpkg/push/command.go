@@ -77,7 +77,7 @@ type runner struct {
 	printer printer.Printer
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = command + ".preRunE"
 	config, err := r.cfg.ToRESTConfig()
 	if err != nil {

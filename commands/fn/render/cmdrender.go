@@ -85,7 +85,7 @@ func (r *Runner) InitDefaults() {
 	r.RunnerOptions.InitDefaults()
 }
 
-func (r *Runner) preRunE(c *cobra.Command, args []string) error {
+func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		// no pkg path specified, default to current working dir
 		wd, err := os.Getwd()
@@ -116,7 +116,7 @@ func (r *Runner) preRunE(c *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, _ []string) error {
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	var output io.Writer
 	outContent := bytes.Buffer{}
 	if r.dest != "" {

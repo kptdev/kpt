@@ -71,7 +71,7 @@ type runner struct {
 	printFlags *get.PrintFlags
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = command + ".preRunE"
 	client, err := porch.CreateDynamicClient(r.cfg)
 	if err != nil {

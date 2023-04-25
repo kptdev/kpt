@@ -30,7 +30,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func GetCommand(ctx context.Context, name, version string) *cobra.Command {
+func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 	alpha := &cobra.Command{
 		Use:   "alpha",
 		Short: alphadocs.AlphaShort,

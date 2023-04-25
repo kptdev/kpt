@@ -68,7 +68,7 @@ type runner struct {
 	// Flags
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(_ *cobra.Command, args []string) error {
 	const op errors.Op = command + ".preRunE"
 
 	if len(args) < 1 {
@@ -89,7 +89,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *runner) runE(cmd *cobra.Command, args []string) error {
+func (r *runner) runE(_ *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 	var messages []string
 

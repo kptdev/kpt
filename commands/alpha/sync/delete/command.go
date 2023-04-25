@@ -91,7 +91,7 @@ type runner struct {
 	timeout    time.Duration
 }
 
-func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
+func (r *runner) preRunE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = command + ".preRunE"
 	client, err := porch.CreateDynamicClient(r.cfg)
 	if err != nil {
@@ -101,7 +101,7 @@ func (r *runner) preRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *runner) runE(cmd *cobra.Command, args []string) error {
+func (r *runner) runE(_ *cobra.Command, args []string) error {
 	const op errors.Op = command + ".runE"
 
 	if len(args) == 0 {
@@ -151,10 +151,7 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		}
 
 		fmt.Println("Waiting for deleted resources to be removed..")
-		if err := r.waitForResourceGroup(ctx, name, namespace); err != nil {
-			return err
-		}
-		return nil
+		return r.waitForResourceGroup(ctx, name, namespace)
 	}(); err != nil {
 		// TODO: See if we can expose more information here about what might have prevented a package
 		// from being deleted.

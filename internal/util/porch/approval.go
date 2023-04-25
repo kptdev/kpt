@@ -58,7 +58,7 @@ func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, k
 
 	opts := metav1.UpdateOptions{}
 	result := &v1alpha1.PackageRevision{}
-	if err := client.Put().
+	return client.Put().
 		Namespace(pr.Namespace).
 		Resource("packagerevisions").
 		Name(pr.Name).
@@ -66,8 +66,5 @@ func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, k
 		VersionedParams(&opts, codec).
 		Body(&pr).
 		Do(ctx).
-		Into(result); err != nil {
-		return err
-	}
-	return nil
+		Into(result)
 }

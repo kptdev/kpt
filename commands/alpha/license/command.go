@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCommand(ctx context.Context, version string) *cobra.Command {
+func NewCommand(ctx context.Context, _ string) *cobra.Command {
 	licenseCmd := &cobra.Command{
 		Use:   "license",
 		Short: "[Alpha] " + licensedocs.LicenseShort,

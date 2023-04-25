@@ -122,7 +122,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func (r *Runner) runE(c *cobra.Command, _ []string) error {
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	const op errors.Op = "cmdupdate.runE"
 	if err := r.Update.Run(r.ctx); err != nil {
 		return errors.E(op, r.Update.Pkg.UniquePath, err)
