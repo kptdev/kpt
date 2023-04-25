@@ -21,8 +21,9 @@ import (
 )
 
 //+kubebuilder:object:root=true
+//+kubebuilder:storageversion
 //+kubebuilder:subresource:status
-
+//
 // PackageVariantSet represents an upstream package revision and a way to
 // target specific downstream repositories where a variant of the upstream
 // package should be created.
@@ -76,7 +77,7 @@ type RepositoryTarget struct {
 }
 
 type ObjectSelector struct {
-	metav1.LabelSelector
+	metav1.LabelSelector `json:",inline"`
 
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
