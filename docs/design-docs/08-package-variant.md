@@ -1,7 +1,6 @@
 # Package Variant Controller
 
 * Author(s): @johnbelamaric, @natasha41575
-* Status: Work-in-Progress
 * Approver: @mortent
 
 ## Why
@@ -104,10 +103,12 @@ transform the upstream into the downstream. It also allows the user to specify
 policies around adoption, deletion, and update of package revisions that are
 under the control of the package variant controller.
 
-The simple clone operation is shown in *Figure 1* (also see the
-[legend](#figure-legend)).
+The simple clone operation is shown in *Figure 1*.
 
-![Figure 1: Basic Package Cloning](packagevariant-clone.png)
+| ![Figure 1: Basic Package Cloning](packagevariant-clone.png) | ![Legend](packagevariant-legend.png) |
+| :---: | :---: |
+| *Figure 1: Basic Package Cloning* | *Legend* |
+
 
 Note that *proposal* and *approval* are not handled by the package variant
 controller. Those are left to humans or other controllers. The exception is the
@@ -134,7 +135,7 @@ Just cloning is not that interesting, so the PackageVariant resource also
 allows you to control various ways of mutating the original package to create
 the variant.
 
-### Package Context
+### Package Context[^porch17]
 Every kpt package that is fetched with `--for-deployment` will contain a
 ConfigMap called `kptfile.kpt.dev`. Analogously, when Porch creates a package
 in a deployment repository, it will create this ConfigMap, if it does not
@@ -147,14 +148,16 @@ controller as well. Additionally, the author of the PackageVariant resource
 can specify additional key-value pairs to insert into the package
 context, as shown in *Figure 2*.
 
-![Figure 2: Package Context](packagevariant-context.png)
+| ![Figure 2: Package Context Mutation](packagevariant-context.png) |
+| :---: |
+| *Figure 2: Package Context Mutation * |
 
 While this is convenient, it can be easily abused, leading to
 over-parameterization. The preferred approach is configuration injection, as
 described below, since it allows inputs to adhere to a well-defined, reusable
 schema, rather than simple key/value pairs.
 
-### KRM Function Pipeline[^notimplemented]
+### Kptfile Function Pipeline Editing[^notimplemented]
 In the manual workflow, one of the ways we edit packages is by running KRM
 functions imperatively. PackageVariant offers a similar capability, by
 allowing the user to add functions to the beginning of the downstream package
@@ -166,19 +169,21 @@ achieve the same goals.
 
 For example, consider an upstream package that includes a Namespace resource.
 In many organizations, the deployer of the workload may not have the permissions
-to provision cluster-scoped resources like Namespaces. This means that they
+to provision cluster-scoped resources like namespaces. This means that they
 would not be able to use this upstream package without removing the Namespace
 resource (assuming that they only have access to a pipeline that deploys with
 constrained permissions). By adding a function that removes Namespace resources,
 and a call to `set-namespace`, they can take advantage of the upstream package.
 
-Similarly, the KRM function pipeline feature provides an easy mechanism for the
-deployer to create and set the namespace if their downstream package application
-pipeline allows it, as seen in *Figure 3*.[^setns]
+Similarly, the Kptfile pipeline editing feature provides an easy mechanism for
+the deployer to create and set the namespace if their downstream package
+application pipeline allows it, as seen in *Figure 3*.[^setns]
 
-![Figure 3: KRM Function](packagevariant-function.png)
+| ![Figure 3: KRM Function Pipeline Editing](packagevariant-function.png) |
+| :---: |
+| *Figure 3: Kptfile Function Pipeline Editing * |
 
-### Configuration Injection[^pdc]
+### Configuration Injection[^notimplemented]
 Adding values to the package context or functions to the pipeline works
 for configuration that is under the control of the creator of the PackageVariant
 resource. However, in more advanced use cases, we may need to specialize the
@@ -206,7 +211,9 @@ this information. So, there is a protocol for facilitating this dance:
 - The package variant controller will copy the `spec` field from the matching
   in-cluster resource to the in-package resource.
 
-![Figure 4: Configuration Injection](packagevariant-config-injection.png)
+| ![Figure 4: Configuration Injection](packagevariant-config-injection.png) |
+| :---: |
+| *Figure 4: Configuration Injection* |
 
 
 Note that because we are injecting data *from the Kubernetes cluster*, we can
@@ -254,7 +261,7 @@ Analogously, when a PackageVariant resource is deleted, a decision must be
 made about whether or not to delete the downstream package. This is controlled
 by the deletion policy.
 
-## Fan Out of Variant Generation
+## Fan Out of Variant Generation[^pvsimpl]
 
 When used with a single package, the package variant controller mostly helps us
 handle the time dimension - producing new versions of a package as the upstream
@@ -292,65 +299,128 @@ The package variant set controller is designed to fill this common need. This
 controller consumes PackageVariantSet resources, and outputs PackageVariant
 resources. The PackageVariantSet defines:
 - the upstream package
-- a list of targets
-- rules for generating one PackageVariant per target
+- targeting criteria
+- a template for generating one PackageVariant per target
 
 Three types of targeting are supported:
-- An explicit list of repository and package names
-- A label selector for Repository objects along with a way to generate package
-  names from those objects
-- An arbitrary object selector, along with ways to generate repository and
-  package names from those objects
+- An explicit list of repositories and package names
+- A label selector for Repository objects
+- An arbitrary object selector
+
+Rules for generating a PackageVariant are associated with a list of targets
+using a template. That template can have explicit values for various
+PackageVariant fields, or it can use [Common Expression Language
+(CEL)](https://github.com/google/cel-go) expressions to specify the field
+values.
 
 *Figure 5* shows an example of creating PackageVariant resources based upon the
-explicitly list of repository and package names.
+explicitly list of repositories. In this example, for the `cluster-01` and
+`cluster-02` repositories, no template is defined the resulting PackageVariants;
+it simply takes the defaults. However, for `cluster-03`, a template is defined
+to change the downstream package name to `bar`.
 
-![Figure 5: List of Targets](packagevariantset-target-package.png)
+| ![Figure 5: PackageVariantSet with Repository List](packagevariantset-target-list.png) |
+| :---: |
+| *Figure 5: PackageVariantSet with Repository List* |
 
-Rules for generating PackageVariant resources can also access the fields of
-the target objects, allowing the package context values, injection selectors,
-and function inputs to vary based upon the target.
+It is also possible to target the same package to a repository more than once,
+using different names. This is useful, for example, if the package is used to
+provision namespaces and you would like to provision many namespaces in the same
+cluster. It is also useful if a repository is shared across multiple clusters.
+In *Figure 6*, two PackageVariant resources for creating the `foo` package in
+the repository `cluster-01` are generated, one for each listed package name.
+Since no `packageNames` field is listed for `cluster-02`, only one instance is
+created for that repository.
 
-## Example Use Cases
+| ![Figure 6: PackageVariantSet with Package List](packagevariantset-target-list-with-packages.png) |
+| :---: |
+| *Figure 6: PackageVariantSet with Package List* |
 
-### Automatically Organizational Customization of an External Package
-We can use a PackageVariant to provide basic changes that are needed when
-importing a package from an external repository. For example, suppose we have
-our own internal registry from which we pull all our images. When we import an
-upstream package, we want to modify any images listed in the upstream package to
-point to our registry. Additionally, we have a policy that all Pods must have a
-`chargeback-code` label, so we want to add that as a validating policy to the
-package.
+*Figure 7* shows an example that combines a repository label selector with
+configuration injection that various based upon the target. The template for the
+PackageVariant includes a CEL expression for the one of the injectors, so that
+the injection varies systematically based upon attributes of the target.
 
-In a manual CLI-based workflow, we would accomplish this as follows.
-...
-
-With PackageVariant, we instead create the following resources:
-...
-
-### Creating a Namespace Per Tenant
-
-### Customizing A Workload By Region
-
-### Customizing A Workload By Cluster and Region
-
-### Customizing A Workload By Environment
+| ![Figure 7: PackageVariantSet with Repository Selector](packagevariantset-target-repo-selector.png) |
+| :---: |
+| *Figure 7: PackageVariantSet with Repository Selector* |
 
 ## Detailed Design
 
 ### PackageVariant API
 
-#### Basic API
+The Go types below defines the `PackageVariantSpec`.
 
-- Upstream
-- Downstream
-- Annotations
-- Labels
-- Adoption and Deletion Policy
-- Status
-  - `Valid` Condition Type
-  - `DownstreamEnsured` Condition Type (`Ready`?)
-  - `DraftExists` Condition Type (?)
+```go
+type PackageVariantSpec struct {
+        Upstream   *Upstream   `json:"upstream,omitempty"`
+        Downstream *Downstream `json:"downstream,omitempty"`
+
+        AdoptionPolicy AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+        DeletionPolicy DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+        Labels      map[string]string `json:"labels,omitempty"`
+        Annotations map[string]string `json:"annotations,omitempty"`
+
+        PackageContext *PackageContext     `json:"packageContext,omitempty"`
+        Pipeline       *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+        Injectors      []InjectionSelector `json:"injectors,omitempty"`
+}
+
+type Upstream struct {
+        Repo     string `json:"repo,omitempty"`
+        Package  string `json:"package,omitempty"`
+        Revision string `json:"revision,omitempty"`
+}
+
+type Downstream struct {
+        Repo    string `json:"repo,omitempty"`
+        Package string `json:"package,omitempty"`
+}
+
+type PackageContext struct {
+        Data       map[string]string `json:"data,omitempty"`
+        RemoveKeys []string          `json:"removeKeys,omitempty"`
+}
+
+type InjectionSelector struct {
+        Group   *string `json:"group,omitempty"`
+        Version *string `json:"version,omitempty"`
+        Kind    *string `json:"kind,omitempty"`
+        Name    string  `json:"name"`
+}
+
+```
+
+#### Basic Spec Fields
+
+The `Upstream` and `Downstream` fields specify the source package and
+destination repository and package name. The `Repo` fields refer to the names
+Porch Repository resources in the same namespace as the PackageVariant resource.
+The `Downstream` does not contain a revision, because the package variant
+controller will only create Draft packages. The `Revision` of the eventual
+PackageRevision resource will be determined by Porch at the time of approval.
+
+The `Labels` and `Annotations` fields list metadata to include on the created
+PackageRevision. These values are set *only* at the time a Draft package is
+created. They are ignored for subsequent operations, even if the PackageVariant
+itself has been modified. This means users are free to change these values on
+the PackageRevision; the package variant controller will not touch them again.
+
+`AdoptionPolicy` controls how the package variant controller behaves if it finds
+an existing PackageRevision Draft matching the `Downstream`. If the
+`AdoptionPolicy` is `adoptExisting`, then the package variant controller will
+take ownership of the Draft, associating it with this PackageVariant. This means
+that it will begin to reconcile the Draft, just as if it had created it in the
+first place. An `AdoptionPolicy` of `adoptNone` (the default) will simply ignore
+any matching Drafts that were not created by the controller.
+
+`DeletionPolicy` controls how the package variant controller behaves with
+respect to PackageRevisions that it has created when the PackageVariant resource
+itself is deleted. A value of `delete` (the default) will delete the
+PackageRevision (potentially removing it from a running cluster, if the
+downstream package has been deployed). A value of `orphan` will remove the owner
+references and leave the PackageRevisions in place.
 
 #### Package Context Injection
 
@@ -361,7 +431,7 @@ exists.
 
 Specifying the key `name` is invalid and must fail validation of the
 PackageVariant. This key is reserved for kpt or Porch to set to the package
-name.
+name. Similarly, `package-path` is reserved and will result in an error.
 
 The `spec.packageContext.removeKeys` field can also be used to specify a list of
 keys that the package variant controller should remove from the `data` field of
@@ -385,20 +455,11 @@ in the `removeKeys` field, the package variant controller will remove that key
 the next time it needs to update the downstream package. There will be no
 attempt to coordinate "ownership" of these keys.
 
-The package variant controller will add or set a condition of type
-`ContextInjected` in the PackageVariant resource status. This will be set to
-`True` if and only if:
-- The user specified `spec.packageContext` (either or both fields).
-- The `kptfile.kpt.dev` ConfigMap exists.
-- The controller successfully modified it as specified.
-
-Otherwise, the condition should be set to `False`.
-
 If the controller is unable to modify the ConfigMap for some reason, this is
 considered an error and should prevent generation of the Draft. This will result
-in the condition `DownstreamEnsured` being set to `False`.
+in the condition `Ready` being set to `False`.
 
-#### KRM Function Pipeline
+#### Kptfile Function Pipeline Editing
 
 PackageVariant resource creators may specify a list of KRM functions to add to
 the beginning of the Kptfile's pipeline. These functions are listed in the field
@@ -419,7 +480,7 @@ the positional location of the function in the array.
 
 For example, if the PackageVariant resource contains:
 
-```
+```yaml
 apiVersion: config.porch.kpt.dev/v1alpha1
 kind: PackageVariant
 metadata:
@@ -441,7 +502,7 @@ spec:
 Then the resulting Kptfile will have these two entries prepended to its
 `mutators` list:
 
-```
+```yaml
   pipeline:
     mutators:
     - image: gcr.io/kpt-fn/set-namespace:v0.1
@@ -459,6 +520,10 @@ functions within its control, remove them all, and re-add them based on its
 updated content. By including the PackageVariant name, we enable chains of
 PackageVariants to add functions, so long as the user is careful about their
 choice of resource names and avoids conflicts.
+
+If the controller is unable to modify the Pipeline for some reason, this is
+considered an error and should prevent generation of the Draft. This will result
+in the condition `Ready` being set to `False`.
 
 #### Configuration Injection Details
 
@@ -529,8 +594,8 @@ With that understanding, the injection process works as follows:
    is the responsibility of the package author to define these injection points,
    and to specify which are required and which are optional. Optional injection
    points are a way of specifying default values.
-1. For each injection point, a condition will be created in the
-   downstream PackageRevision, with ConditionType set to the dot-delimited
+1. For each injection point, a condition will be created *in the
+   downstream PackageRevision*, with ConditionType set to the dot-delimited
    concatenation of `config.injection`, with the in-package resource kind and
    name, and the value set to `False`. Note that since the package author
    controls the name of the resource, kind and name are sufficient to
@@ -576,19 +641,21 @@ With that understanding, the injection process works as follows:
      - An annotation with name `kpt.dev/injected-resource-name` and value set to
        the name of the in-cluster resource is added (or overwritten) in the
        in-package resource.
-1. The package variant controller will add or set a condition of type
-   `ConfigInjected` in the PackageVariant resource status.
-   This will be set to `True` if and only if:
-   - All configuration injection processing is complete.
-   - There is no resource annotated as an injection point but having an invalid
+
+If the injection cannot be completed for some reason, or if any of the below
+problems exist in the upstream package, it is considered an error and should
+prevent generation of the Draft:
+   - There is a resource annotated as an injection point but having an invalid
      annotation value (i.e., other than `required` or `optional`).
-   - Matching in-cluster resources were successfully injected for all `required`
-     injection points (i.e., all required injection point ConditionTypes are
-     `True`).
-   - There are no ambiguous condition types due to conflicting GVK and name
+   - There are ambiguous condition types due to conflicting GVK and name
      values. These must be disambiguated in the upstream package, if so.
 
-If `ConfigInjected` is `False`, then `DownstreamEnsured` must also be `False`.
+This will result in the condition `Ready` being set to `False`.
+
+Note that whether or not all `required` injection points are fulfilled does not
+affect the *PackageVariant* conditions, only the *PackageRevision* conditions.
+
+**A Further Note on Selectors**
 
 Note that by allowing the use of GVK, not just name, in the selector, more
 precision in selection is enabled. This is a way to constrain the injections
@@ -640,19 +707,530 @@ understanding, we can see that the controller will perform mutations on the
 downstream package in this order, for both creation and update:
 
 1. Create (via Clone) or Update (via `kpt pkg update` equivalent)
-1. Package Context Injections
-1. Kptfile KRM Function Pipeline Additions/Changes
-1. Config Injection
-1. Kptfile KRM Function Pipeline Execution
+   - This is done by the Porch server, not by the package variant controller
+     directly.
+   - This means that Porch will run the Kptfile pipeline after clone or
+     update.
+1. Package variant controller applies configured mutations
+   - Package Context Injections
+   - Kptfile KRM Function Pipeline Additions/Changes
+   - Config Injection
+1. Package variant controller saves the PackageRevision and
+   PackageRevisionResources.
+   - Porch server executes the Kptfile pipeline
 
-Since the middle three of these just edit resources (including the Kptfile) in
-the package, their ordering does not matter; they cannot affect one another.
-The execution of the KRM function pipeline depends on the others, but there are
-no direct dependencies otherwise.
+The package variant controller mutations edit resources (including the Kptfile),
+based on the contents of the PackageVariant and the injected in-cluster
+resources, but cannot affect one another. The results of those mutations
+throughout the rest of the package is materialized by the execution of the
+Kptfile pipeline during the save operation.
 
-### PackageVariantSet API
+#### PackageVariant Status
 
-PVS will add a "nameFrom" or something similar, that will resolve to the explicitly "name" fields in the selectors during fan out. This allows the PVS to, for example, set the injector name based upon the target name or another target field, or even an annotation or label defined on the target.
+PackageVariant sets the following status conditions:
+ - `Stalled` is set to True if there has been a failure that most likely
+   requires user intervention.
+ - `Ready` is set to True if the last reconciliation successfully produced an
+   up-to-date Draft.
+
+The PackageVariant resource will also contain a `DownstreamTargets` field,
+containing a list of downstream `Draft` and `Proposed` PackageRevisions owned by
+this PackageVariant resource, or the latest `Published` PackageRevision if there
+are none in `Draft` or `Proposed` state. Typically, there is only a single
+Draft, but use of the `adopt` value for `AdoptionPolicy` could result in
+multiple Drafts being owned by the same PackageVariant.
+
+### PackageVariantSet API[^pvsimpl]
+
+The Go types below defines the `PackageVariantSetSpec`.
+
+```go
+// PackageVariantSetSpec defines the desired state of PackageVariantSet
+type PackageVariantSetSpec struct {
+        Upstream *pkgvarapi.Upstream `json:"upstream,omitempty"`
+        Targets  []Target            `json:"targets,omitempty"`
+}
+
+type Target struct {
+        // Exactly one of Repositories, RepositorySeletor, and ObjectSelector must be
+        // populated
+        // option 1: an explicit repositories and package names
+        Repositories []RepositoryTarget `json:"repositories,omitempty"`
+
+        // option 2: a label selector against a set of repositories
+        RepositorySelector *metav1.LabelSelector `json:"repositorySelector,omitempty"`
+
+        // option 3: a selector against a set of arbitrary objects
+        ObjectSelector *ObjectSelector `json:"objectSelector,omitempty"`
+
+        // Template specifies how to generate a PackageVariant from a target
+        Template *PackageVariantTemplate `json:"template,omitempty"`
+}
+```
+
+At the highest level, a PackageVariantSet is just an upstream, and a list of
+targets. For each target, there is a set of criteria for generating a list, and
+a set of rules (a template) for creating a PackageVariant from each list entry.
+
+Since `template` is optional, lets start with describing the different types of
+targets, and how the criteria in each is used to generate a list that seeds the
+PackageVariant resources.
+
+The `Target` structure must include exactly one of three different ways of
+generating the list. The first is a simple list of repositories and package
+names for each of those repositories[^repo-pkg-expr]. The package name list is
+needed for uses cases in which you want to repeatedly instantiate the same
+package in a single repository. For example, if a repository represents the
+contents of a cluster, you may want to instantiate a namespace package once for
+each namespace, with a name matching the namespace.
+
+This example shows using the `repositories` field:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha2
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+    - name: cluster-02
+    - name: cluster-03
+      packageNames:
+      - foo-a
+      - foo-b
+      - foo-c
+    - name: cluster-04
+      packageNames:
+      - foo-a
+      - foo-b
+```
+
+In this case, PackageVariant resources are created for each of these pairs of
+downstream repositories and packages names:
+
+| Repository | Package Name |
+| ---------- | ------------ |
+| cluster-01 | foo          |
+| cluster-02 | foo          |
+| cluster-03 | foo-a        |
+| cluster-03 | foo-b        |
+| cluster-03 | foo-c        |
+| cluster-04 | foo-a        |
+| cluster-04 | foo-b        |
+
+All of those PackageVariants have the same upstream.
+
+The second criteria targeting is via a label selector against Porch Repository
+objects, along with a list of package names. Those packages will be instantiated
+in each matching repository. Just like in the first example, not listing a
+package name defaults to one package, with the same name as the upstream
+package. Suppose, for example, we have these four repositories defined in our
+Porch cluster:
+
+| Repository | Labels                                |
+| ---------- | ------------------------------------- |
+| cluster-01 | region=useast1, env=prod, org=hr      |
+| cluster-02 | region=uswest1, env=prod, org=finance |
+| cluster-03 | region=useast2, env=prod, org=hr      |
+| cluster-04 | region=uswest1, env=prod, org=hr      |
+
+If we create a PackageVariantSet with the following `spec`:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositorySelector:
+      matchLabels:
+        env: prod
+        org: hr
+  - repositorySelector:
+      matchLabels:
+        region: uswest1
+      packageNames:
+      - foo-a
+      - foo-b
+      - foo-c
+```
+
+then PackageVariant resources will be created with these repository and package
+names:
+
+| Repository | Package Name |
+| ---------- | ------------ |
+| cluster-01 | foo          |
+| cluster-03 | foo          |
+| cluster-04 | foo          |
+| cluster-02 | foo-a        |
+| cluster-02 | foo-b        |
+| cluster-02 | foo-c        |
+| cluster-04 | foo-a        |
+| cluster-04 | foo-b        |
+| cluster-04 | foo-c        |
+
+Finally, the third possibility allows the use of *arbitrary* resources in the
+Porch cluster as targeting criteria. The `objectSelector` looks like this:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - objectSelector:
+      apiVersion: krm-platform.bigco.com/v1
+      kind: Team
+      matchLabels:
+        org: hr
+        role: dev
+```
+
+It works exactly like the repository selector - in fact the repository selector
+is equivalent to the object selector with the `apiVersion` and `kind` values set
+to point to Porch Repository resources. That is, the repository name comes from
+the object name, and the package names come from the listed package names. In
+the description of the template, we will see how to derive different repository
+names from the objects.
+
+#### PackageVariant Template
+
+As previously discussed, the list entries generated by the target criteria
+result in PackageVariant entries. If no template is specified, then
+PackageVariant default are used, along with the downstream repository name and
+package name as described in the previous section. The template allows the user
+to have control over all of the values in the resulting PackageVariant. The
+template API is shown below.
+
+```go
+type PackageVariantTemplate struct {
+        Downstream      *pkgvarapi.Downstream `json:"downstream,omitempty"`
+        DownstreamExprs *DownstreamExprs      `json:"downstreamExprs,omitempty"`
+
+        AdoptionPolicy *pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+        DeletionPolicy *pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
+
+        Labels     map[string]string `json:"labels,omitempty"`
+        LabelExprs []MapExpr         `json:"labelExprs,omitemtpy"`
+
+        Annotations     map[string]string `json:"annotations,omitempty"`
+        AnnotationExprs []MapExpr         `json:"annotationExprs,omitempty"`
+
+        PackageContext      map[string]string    `json:"packageContext,omitempty"`
+        PackageContextExprs *PackageContextExprs `json:"packageContextExprs,omitempty"`
+
+        Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+
+        Injectors     []pkgvarapi.InjectionSelector `json:"injectors,omitempty"`
+        InjectorExprs []InjectionSelectorExprs      `json:"injectorExprs,omitempty"`
+}
+
+type DownstreamExprs struct {
+        RepoExpr    *string `json:"repoExpr,omitempty"`
+        PackageExpr *string `json:"packageExpr,omitempty"`
+}
+
+type PackageContextExprs struct {
+        DataExprs      []MapExpr `json:"dataExprs,omitempty"`
+        RemoveKeyExprs []string  `json:"removeKeyExprs,omitempty"`
+}
+
+type InjectionSelectorExprs struct {
+        GroupExpr   *string `json:"groupExpr,omitempty"`
+        VersionExpr *string `json:"versionExpr,omitempty"`
+        KindExpr    *string `json:"kindExpr,omitempty"`
+        NameExpr    string  `json:"nameExpr"`
+}
+
+type MapExpr struct {
+        KeyExpr   *string `json:"keyExpr,omitempty"`
+        ValueExpr *string `json:"valueExpr,omitempty"`
+}
+```
+
+This is a pretty complicated structure. To make it more understandable, the
+first thing to notice is that many fields have a plain version, and an `Expr`
+version. Only one of these should be used for any given field. For example, you
+can use either `downstream` or `downstreamExpr`, but not both. The plain
+version is used when the value is static across all the PackageVariants; the
+`Expr` version is used when the value needs to vary across PackageVariants.
+
+Let's consider a simple example. Suppose we have a package for provisioning
+namespaces called "base-ns". We want to instantiate this several times in the
+`cluster-01` repository. We could do this with this PackageVariantSet:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha2
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+      packageNames:
+      - ns-1
+      - ns-2
+      - ns-3
+```
+
+That will produce three PackageVariant resources with the same upstream, all
+with the same downstream repo, and each with a different downstream package
+name. If we also want to set some labels identically across the packages, we can
+do that with the `template.labels` field:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha2
+kind: PackageVariantSet
+metadata:
+  namespace: default
+  name: example
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  targets:
+  - repositories:
+    - name: cluster-01
+      packageNames:
+      - ns-1
+      - ns-2
+      - ns-3
+    template:
+      labels:
+        package-type: namespace
+        org: hr
+```
+
+The resulting PackageVariant resources will include `labels` in their `spec`,
+and will be identical other than their names and the `downstream.package`:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaaa
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-1
+  labels:
+    package-type: namespace
+    org: hr
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaab
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-2
+  labels:
+    package-type: namespace
+    org: hr
+---
+
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaac
+spec:
+  upstream:
+    repo: platform-catalog
+    package: base-ns
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: ns-3
+  labels:
+    package-type: namespace
+    org: hr
+```
+
+When using other targeting means, the use of the `Expr` fields becomes more
+likely, because we have more possible sources for different field values. The
+`Expr` values are all [Common Expression Language (CEL)](https://github.com/google/cel-go)
+expressions, rather than static values. This allows the user to construct values
+based upon various fields of the targets. Consider again the
+`repositorySelector` example, where we have these repositories in the cluster.
+
+| Repository | Labels                                |
+| ---------- | ------------------------------------- |
+| cluster-01 | region=useast1, env=prod, org=hr      |
+| cluster-02 | region=uswest1, env=prod, org=finance |
+| cluster-03 | region=useast2, env=prod, org=hr      |
+| cluster-04 | region=uswest1, env=prod, org=hr      |
+
+If we create a PackageVariantSet with the following `spec`, we can use the
+`Expr` fields to add labels to the PackageVariantSpecs (and thus to the
+resulting PackageRevisions later) that vary based on cluster. We can also use
+this to vary the `injectors` defined for each PackageVariant, resulting in each
+PackageRevision having different resources injected. This `spec`:
+
+```yaml
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  targets:
+  - repositorySelector:
+      matchLabels:
+        env: prod
+        org: hr
+    template:
+      labelExprs:
+        keyExpr: "'org'"
+        valueExpr: "repository.labels['org']"
+      injectorExprs:
+        - nameExpr: "repository.labels['region'] + '-endpoints'"
+```
+
+will result in three PackageVariant resources, one for each Repository with the
+labels env=prod and org=hr. The `labels` and `injectors` fields of the
+PackageVariantSpec will be different for each of these PackageVariants, as
+determined by the use of the `Expr` fields in the template, as shown here:
+
+```yaml
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaaa
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-01
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: useast1-endpoints
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaab
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-03
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: useast2-endpoints
+---
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: PackageVariant
+metadata:
+  namespace: default
+  name: example-aaac
+spec:
+  upstream:
+    repo: example-repo
+    package: foo
+    revision: v1
+  downstream:
+    repo: cluster-04
+    package: foo
+  labels:
+    org: hr
+  injectors:
+    name: uswest1-endpoints
+```
+
+Since the injectors are different for each PackageVariant, the resulting
+PackageRevisions will each have different resources injected.
+
+When CEL expressions are evaluated, they have an environment associated with
+them. That is, there are certain objects that are accessible within the CEL
+expression. For CEL expressions used in the PackageVariantSet `template` field,
+the following variables are available:
+
+| CEL Variable | Variable Contents                                            |
+| -------------| ------------------------------------------------------------ |
+| repo         | The default repository name based on the targeting criteria. |
+| package      | The default package name based on the targeting criteria.    |
+| upstream     | The upstream PackageRevision.                                |
+| repository   | The downstream Repository.                                   |
+
+There is one expression that is an exception to the table above. Since the
+`repository` value corresponds to the Repository of the downstream, we must
+first evaluate the `downstreamExpr.repoExpr` expression to *find* that
+repository.  Thus, for that expression only, `repository` is not a valid
+variable.
+
+There is one more variable available across all CEL expressions: the `target`
+variable. This variable has a meaning that varies depending on the type of
+target, as follows:
+
+| Target Type         | `target` Variable Contents |
+| ------------------- | -------------------------- |
+| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repo` and `package` values. |
+| Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstreamExprs.repoExpr`. |
+| Object Selector     | The Object selected by the selector. |
+
+Given the slight quirk with the `repoExpr`, it may be helpful to state the
+processing flow for the template evaluation:
+
+1. The upstream PackageRevision is loaded. It must be in the same namespace as
+   the PackageVariantSet[^multi-ns-reg].
+1. The targets are determined.
+1. For each target:
+   1. The CEL environment is prepared with `repo`, `package`, `upstream`, and
+      `target` variables.
+   1. The downstream repository is determined and loaded, as follows:
+      - If present, `downstreamExprs.repoExpr` is evaluated using the CEL
+        environment, and the result used as the downstream repository name.
+      - Otherwise, if `downstream.repo` is set, that is used as the downstream
+       repository name.
+      - If neither is present, the default repository name based on the target is
+        used (i.e., the same value as the `repo` variable).
+      - The resulting downstream repository name is used to load the corresponding
+        Repository object in the same namespace as the PackageVariantSet.
+   1. The downstream Repository is added to the CEL environment.
+   1. All other CEL expressions are evaluated.
+1. Note that if any of the resources (e.g., the upstream PackageRevision, or the
+   downstream Repository) are not found our otherwise fail to load, processing
+   stops and a failure condition is raised. Similarly, if a CEL expression
+   cannot be properly evaluated due to syntax or other reasons, processing stops
+   and a failure condition is raised.
 
 #### Other Considerations
 It would appear convenient to automatically inject the PackageVariantSet
@@ -664,28 +1242,53 @@ example, a package should not accept a Porch Repository resource just because
 that happens to be the targeting mechanism. That would make the package unusable
 in other contexts.
 
+#### PackageVariantSet Status
+
+The PackageVariantSet status uses these conditions:
+ - `Stalled` is set to True if there has been a failure that most likely
+   requires user intervention.
+ - `Ready` is set to True if the last reconciliation successfully reconciled
+   all targeted PackageVariant resources.
+
 ## Future Considerations
 - As an alternative to the floating tag proposal, we may instead want to have
   a separate tag tracking controller that can update PV and PVS resources to
   tweak their upstream as the tag moves.
-- Probably want to think about groups of packages (that is, a collection of
-  upstreams with the same set of mutation to be applied). For now, this would be
-  handled with PackageVariant / PackageVariantSet resources that differ only
-  in their upstream / downstream. Theoretically we could do that with label
-  selectors on packages but it gets really ugly really fast. I suspect just
-  making people copy the PV / PVS is better.
+- Installing a collection of packages across a set of clusters, or performing
+  the same mutations to each package in a collection, is only supported by
+  creating multiple PackageVariant / PackageVariantSet resources. Options to
+  consider for these use cases:
+  - `upstreams` listing multiple packages.
+  - Label selector against PackageRevisions. This does not seem that useful, as
+    PackageRevisions are highly re-usable and would likely be composed in many
+    different ways.
+  - A PackageRevisionSet resource that simply contained a list of Upstream
+    structures and could be used as an Upstream. This is functionally equivalent
+    to the `upstreams` option, but that list is reusable across resources.
+  - Listing multiple PackageRevisionSets in the upstream would be nice as well.
+  - Any or all of these could be implemented in PackageVariant,
+    PackageVariantSet, or both.
 
 ## Footnotes
+[^porch17]: Implemented and coming in Porch v0.0.17.
 [^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.16.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
-    users. Another option is to build this into PackageVariant, though at this
-    time we do not plan to do so.
-[^pdc]: A prototype version of this was implemented in Nephio PackageDeployment,
-    but this has not been implemented in PackageVariant as of Porch v0.0.16.
-
-## Figure Legend
-
-![Figure Legend](packagevariant-legend.png)
-
+    users.
+[^pvsimpl]: This document describes PackageVariantSet `v1alpha2`, which has not
+    been implemented as of Porch v0.0.16. In Porch v0.0.16, the `v1alpha1`
+    implementation is available, but it is a somewhat different API, without
+    support for CEL or any injection. It is focused only on fan out targeting,
+    and uses a [slightly different targeting
+    API](https://github.com/GoogleContainerTools/kpt/blob/main/porch/controllers/packagevariantsets/api/v1alpha1/packagevariantset_types.go).
+[^repo-pkg-expr]: This is not exactly correct. As we will see later in the
+    `template` discussion, this the repository and package names listed actually
+    are just defaults for the template; they can be further manipulated in the
+    template to reference different downstream repositories and package names.
+    The same is true for the repositories selected via the `repositorySelector`
+    option. However, this can be ignored for now.
+[^multi-ns-reg]: Note that the same upstream repository can be registered in
+    multiple namespaces without a problem. This simplifies access controls,
+    avoiding the need for cross-namespace relationships between Repositories and
+    other Porch resources.
