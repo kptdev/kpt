@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha2
+package v1alpha1
 
 import (
 	"testing"
@@ -20,59 +20,22 @@ import (
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	v1alpha1 "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha1"
+	v1alpha2 "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha2"
 )
 
-func TestValidateConvertTo(t *testing.T) {
+func TestValidateConvertV1alpha2ToV1alpha1(t *testing.T) {
 	testCases := map[string]struct {
-		from        PackageVariantSet
-		to          v1alpha1.PackageVariantSet
-		expectedErr string
-	}{
-		"empty": {
-			from:        PackageVariantSet{},
-			to:          v1alpha1.PackageVariantSet{},
-			expectedErr: "",
-		},
-		"empty spec": {
-			from: PackageVariantSet{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "foo",
-				},
-			},
-			to: v1alpha1.PackageVariantSet{
-				ObjectMeta: metav1.ObjectMeta{
-					Namespace: "default",
-					Name:      "foo",
-				},
-			},
-			expectedErr: "",
-		},
-	}
-	for tn, tc := range testCases {
-		t.Run(tn, func(t *testing.T) {
-			var to v1alpha1.PackageVariantSet
-			err := tc.from.ConvertTo(&to)
-			require.NoError(t, err)
-			require.Equal(t, tc.to, to)
-		})
-	}
-}
-
-func TestValidateConvertFrom(t *testing.T) {
-	testCases := map[string]struct {
-		from        v1alpha1.PackageVariantSet
+		from        v1alpha2.PackageVariantSet
 		to          PackageVariantSet
 		expectedErr string
 	}{
 		"empty": {
-			from:        v1alpha1.PackageVariantSet{},
+			from:        v1alpha2.PackageVariantSet{},
 			to:          PackageVariantSet{},
 			expectedErr: "",
 		},
 		"empty spec": {
-			from: v1alpha1.PackageVariantSet{
+			from: v1alpha2.PackageVariantSet{
 				ObjectMeta: metav1.ObjectMeta{
 					Namespace: "default",
 					Name:      "foo",
@@ -90,7 +53,44 @@ func TestValidateConvertFrom(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			var to PackageVariantSet
-			err := to.ConvertFrom(&tc.from)
+			err := ConvertV1alpha2ToV1alpha1(&tc.from, &to)
+			require.NoError(t, err)
+			require.Equal(t, tc.to, to)
+		})
+	}
+}
+
+func TestValidateConvertV1alpha1ToV1alpha2(t *testing.T) {
+	testCases := map[string]struct {
+		from        PackageVariantSet
+		to          v1alpha2.PackageVariantSet
+		expectedErr string
+	}{
+		"empty": {
+			from:        PackageVariantSet{},
+			to:          v1alpha2.PackageVariantSet{},
+			expectedErr: "",
+		},
+		"empty spec": {
+			from: PackageVariantSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "foo",
+				},
+			},
+			to: v1alpha2.PackageVariantSet{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: "default",
+					Name:      "foo",
+				},
+			},
+			expectedErr: "",
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			var to v1alpha2.PackageVariantSet
+			err := ConvertV1alpha1ToV1alpha2(&tc.from, &to)
 			require.NoError(t, err)
 			require.Equal(t, tc.to, to)
 		})
