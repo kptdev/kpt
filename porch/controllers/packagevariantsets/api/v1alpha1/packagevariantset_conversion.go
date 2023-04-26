@@ -35,7 +35,6 @@ func (dst *PackageVariantSet) ConvertFrom(srcRaw conversion.Hub) error {
 	return ConvertV1alpha2ToV1alpha1(src, dst)
 }
 
-
 func ConvertV1alpha2ToV1alpha1(src *v1alpha2.PackageVariantSet, dst *PackageVariantSet) error {
 	dst.ObjectMeta = src.ObjectMeta
 
