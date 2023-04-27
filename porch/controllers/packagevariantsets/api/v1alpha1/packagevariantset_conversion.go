@@ -75,7 +75,9 @@ func ConvertV1alpha2ToV1alpha1(src *v1alpha2.PackageVariantSet, dst *PackageVari
 		}
 
 		// RepositorySelector maps directly
-		dst.Spec.Targets = append(dst.Spec.Targets, Target{Repositories: t.RepositorySelector})
+		if t.RepositorySelector != nil {
+			dst.Spec.Targets = append(dst.Spec.Targets, Target{Repositories: t.RepositorySelector})
+		}
 
 		// TODO: support this conversion
 		// just fail object selectors for now
@@ -90,6 +92,8 @@ func ConvertV1alpha2ToV1alpha1(src *v1alpha2.PackageVariantSet, dst *PackageVari
 		}
 	}
 
+	dst.Status.Conditions = src.Status.Conditions
+
 	return nil
 }
 
@@ -103,6 +107,64 @@ func ConvertV1alpha1ToV1alpha2(src *PackageVariantSet, dst *v1alpha2.PackageVari
 			Revision: src.Spec.Upstream.Revision,
 		}
 	}
+
+	// see if we need a PackageVariantTemplate
+	var baseTemplate *v1alpha2.PackageVariantTemplate
+	if src.Spec.AdoptionPolicy != "" || src.Spec.DeletionPolicy != "" ||
+		src.Spec.Labels != nil || src.Spec.Annotations != nil {
+		baseTemplate = &v1alpha2.PackageVariantTemplate{}
+		if src.Spec.AdoptionPolicy != "" {
+			baseTemplate.AdoptionPolicy = &src.Spec.AdoptionPolicy
+		}
+		if src.Spec.DeletionPolicy != "" {
+			baseTemplate.DeletionPolicy = &src.Spec.DeletionPolicy
+		}
+		baseTemplate.Labels = src.Spec.Labels
+		baseTemplate.Annotations = src.Spec.Annotations
+	}
+	// convert all the targets
+	repos := make(map[string][]string)
+	for _, t := range src.Spec.Targets {
+		t2 := v1alpha2.Target{}
+		if t.Package != nil {
+			repos[t.Package.Repo] = append(repos[t.Package.Repo], t.Package.Name)
+			continue
+		}
+
+		t2.RepositorySelector = t.Repositories
+
+		// TODO: support object selector conversion
+		if t.Objects != nil {
+			return fmt.Errorf("conversion of object selector targets is not supported")
+		}
+
+		var template *v1alpha2.PackageVariantTemplate
+		if baseTemplate != nil {
+			ttt := *baseTemplate
+			template = &ttt
+		}
+
+		if t.PackageName != nil {
+			return fmt.Errorf("conversion of package name in targets is not supported")
+		}
+		t2.Template = template
+
+		dst.Spec.Targets = append(dst.Spec.Targets, t2)
+	}
+
+	for r, pn := range repos {
+		dst.Spec.Targets = append(dst.Spec.Targets, v1alpha2.Target{
+			Repositories: []v1alpha2.RepositoryTarget{
+				{
+					Name:         r,
+					PackageNames: pn,
+				},
+			},
+			Template: baseTemplate,
+		})
+	}
+
+	dst.Status.Conditions = src.Status.Conditions
 
 	return nil
 }
