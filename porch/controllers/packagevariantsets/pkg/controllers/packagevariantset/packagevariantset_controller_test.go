@@ -169,6 +169,108 @@ status: {}
 	})
 }
 
+func TestRenderPackageVariantSpec(t *testing.T) {
+	var repoList configapi.RepositoryList
+	require.NoError(t, yaml.Unmarshal([]byte(`
+apiVersion: config.porch.kpt.dev/v1alpha1
+kind: RepositoryList
+metadata:
+  name: my-repo-list
+items:
+- apiVersion: config.porch.kpt.dev/v1alpha1
+  kind: Repository
+  metadata:
+    name: my-repo-1
+    labels:
+      foo: bar
+      abc: def
+- apiVersion: config.porch.kpt.dev/v1alpha1
+  kind: Repository
+  metadata:
+    name: my-repo-2
+    labels:
+      foo: bar
+      abc: def
+      efg: hij
+`), &repoList))
+
+	pvs := api.PackageVariantSet{
+		ObjectMeta: metav1.ObjectMeta{Name: "my-pvs",
+			Namespace: "default",
+		},
+		Spec: api.PackageVariantSetSpec{
+			Upstream: &pkgvarapi.Upstream{Repo: "up-repo", Package: "up-pkg", Revision: "v2"},
+		},
+	}
+	upstreamPR := porchapi.PackageRevision{}
+	testCases := map[string]struct {
+		downstream   pvContext
+		expectedSpec pkgvarapi.PackageVariantSpec
+		expectedErrs []string
+	}{
+		"no template": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "r",
+					Package: "p",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template downstream.repo": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+				template: &api.PackageVariantTemplate{
+					Downstream: &pkgvarapi.Downstream{
+						Repo: "new-r",
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "new-r",
+					Package: "p",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template downstream.package": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+				template: &api.PackageVariantTemplate{
+					Downstream: &pkgvarapi.Downstream{
+						Package: "new-p",
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "r",
+					Package: "new-p",
+				},
+			},
+			expectedErrs: nil,
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			pvSpec, err := renderPackageVariantSpec(context.Background(), &pvs, &repoList, &upstreamPR, tc.downstream)
+			require.NoError(t, err)
+			require.Equal(t, &tc.expectedSpec, pvSpec)
+		})
+	}
+}
+
 func TestEnsurePackageVariants(t *testing.T) {
 	downstreams := []pvContext{
 		{repo: "dn-1", packageName: "dn-1"},
