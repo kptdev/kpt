@@ -76,8 +76,8 @@ TARGET_PACKAGE_NAME:
 
 ```shell
 # clone the blueprint-e982b2196b35a4f5e81e92f49a430fe463aa9f1a package and create a new package revision called
-# foo in the blueprint repository and set it at revision v1.
-$ kpt alpha rpkg clone blueprint-e982b2196b35a4f5e81e92f49a430fe463aa9f1a foo --repository blueprint --revision v1
+# foo in the blueprint repository with a custom workspaceName.
+$ kpt alpha rpkg clone blueprint-e982b2196b35a4f5e81e92f49a430fe463aa9f1a foo --repository blueprint --workspace=first-draft
 ```
 
 ```shell
