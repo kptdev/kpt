@@ -18,8 +18,8 @@ import (
 	"context"
 	"testing"
 
-	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha2"
 	"github.com/stretchr/testify/require"
