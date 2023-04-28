@@ -15,15 +15,16 @@
 package packagevariantset
 
 import (
-	//"context"
+	"context"
 	"testing"
 
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	//pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
+	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha2"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"sigs.k8s.io/yaml"
 )
@@ -167,19 +168,25 @@ status: {}
 		require.Equal(t, input, n.MustString())
 	})
 }
-/*
+
 func TestEnsurePackageVariants(t *testing.T) {
-	upstream := &pkgvarapi.Upstream{Repo: "up", Package: "up", Revision: "up"}
-	downstreams := []*pkgvarapi.Downstream{
-		{Repo: "dn-1", Package: "dn-1"},
-		{Repo: "dn-3", Package: "dn-3"},
+	downstreams := []pvContext{
+		{repo: "dn-1", packageName: "dn-1"},
+		{repo: "dn-3", packageName: "dn-3"},
 	}
 	fc := &fakeClient{}
 	reconciler := &PackageVariantSetReconciler{Client: fc}
-	require.NoError(t, reconciler.ensurePackageVariants(context.Background(), upstream, downstreams,
-		&api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}))
+	require.NoError(t, reconciler.ensurePackageVariants(context.Background(),
+		&api.PackageVariantSet{
+			ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"},
+			Spec: api.PackageVariantSetSpec{
+				Upstream: &pkgvarapi.Upstream{Repo: "up", Package: "up", Revision: "up"},
+			},
+		},
+		&configapi.RepositoryList{},
+		&porchapi.PackageRevision{},
+		downstreams))
 	require.Equal(t, 2, len(fc.objects))
 	require.Equal(t, "my-pv-1", fc.objects[0].GetName())
 	require.Equal(t, "my-pvs-8680372821ea923a2c068ad9fa32ffd876e9fb80", fc.objects[1].GetName())
 }
-*/

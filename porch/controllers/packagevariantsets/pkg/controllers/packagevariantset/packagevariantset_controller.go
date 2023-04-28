@@ -306,8 +306,8 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 
 			objSel = &api.ObjectSelector{
 				LabelSelector: *target.RepositorySelector,
-				APIVersion:    porchapi.GroupName + "/v1alpha1",
-				Kind:          "Repository",
+				APIVersion:    configapi.TypeRepository.APIVersion(),
+				Kind:          configapi.TypeRepository.Kind,
 			}
 		}
 		// a selector against a set of arbitrary objects
