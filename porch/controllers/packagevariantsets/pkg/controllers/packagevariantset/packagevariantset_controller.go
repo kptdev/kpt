@@ -101,13 +101,6 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
-		Type:    "Stalled",
-		Status:  "False",
-		Reason:  "Valid",
-		Message: "all validation checks passed",
-	})
-
 	downstreams, err := r.unrollDownstreamTargets(ctx, pvs)
 	if err != nil {
 		if meta.IsNoMatchError(err) {
@@ -117,7 +110,26 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
+	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeStalled,
+		Status:  "False",
+		Reason:  "Valid",
+		Message: "all validation checks passed",
+	})
+
+	err = r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
+	if err != nil {
+		return ctrl.Result{}, r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
+	}
+
+	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
+		Type:    ConditionTypeReady,
+		Status:  "True",
+		Reason:  "Reconciled",
+		Message: "package variants successfully reconciled",
+	})
+
+	return ctrl.Result{}, nil
 }
 
 func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request) (*api.PackageVariantSet,
