@@ -21,7 +21,6 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"strings"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -150,138 +149,6 @@ func (r *PackageVariantSetReconciler) init(ctx context.Context, req ctrl.Request
 	}
 
 	return &pvs, &prList, &repoList, nil
-}
-
-func validatePackageVariantSet(pvs *api.PackageVariantSet) []error {
-	var allErrs []error
-	if pvs.Spec.Upstream == nil {
-		allErrs = append(allErrs, fmt.Errorf("spec.upstream is a required field"))
-	} else {
-		if pvs.Spec.Upstream.Package == "" {
-			allErrs = append(allErrs, fmt.Errorf("spec.upstream.package is a required field"))
-		}
-		if pvs.Spec.Upstream.Repo == "" {
-			allErrs = append(allErrs, fmt.Errorf("spec.upstream.repo is a required field"))
-		}
-		if pvs.Spec.Upstream.Revision == "" {
-			allErrs = append(allErrs, fmt.Errorf("spec.upstream.revision is a required field"))
-		}
-	}
-
-	if len(pvs.Spec.Targets) == 0 {
-		allErrs = append(allErrs, fmt.Errorf("must specify at least one item in spec.targets"))
-	}
-	for i, target := range pvs.Spec.Targets {
-		allErrs = append(allErrs, validateTarget(i, target)...)
-	}
-
-	return allErrs
-}
-
-func validateTarget(i int, target api.Target) []error {
-	var allErrs []error
-	count := 0
-	if target.Repositories != nil {
-		count++
-
-		if len(target.Repositories) == 0 {
-			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].repositories must not be an empty list if specified", i))
-		}
-
-		for j, rt := range target.Repositories {
-			if rt.Name == "" {
-				allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].repositories[%d].name cannot be empty", i, j))
-			}
-
-			for k, pn := range rt.PackageNames {
-				if pn == "" {
-					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].repositories[%d].packageNames[%d] cannot be empty", i, j, k))
-				}
-			}
-		}
-	}
-
-	if target.RepositorySelector != nil {
-		count++
-	}
-
-	if target.ObjectSelector != nil {
-		count++
-		if target.ObjectSelector.APIVersion == "" {
-			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objectselector.apiVersion cannot be empty", i))
-		}
-		if target.ObjectSelector.Kind == "" {
-			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].objectselector.kind cannot be empty", i))
-		}
-	}
-
-	if count != 1 {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d] must specify one of `repositories`, `repositorySelector`, or `objectSelector`", i))
-	}
-
-	if target.Template == nil {
-		return allErrs
-	}
-
-	template := target.Template
-	if template.AdoptionPolicy != nil && *template.AdoptionPolicy != pkgvarapi.AdoptionPolicyAdoptNone &&
-		*template.AdoptionPolicy != pkgvarapi.AdoptionPolicyAdoptExisting {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template.adoptionPolicy can only be %q or %q",
-			i, pkgvarapi.AdoptionPolicyAdoptNone, pkgvarapi.AdoptionPolicyAdoptExisting))
-	}
-
-	if template.DeletionPolicy != nil && *template.DeletionPolicy != pkgvarapi.DeletionPolicyOrphan &&
-		*template.DeletionPolicy != pkgvarapi.DeletionPolicyDelete {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template.deletionPolicy can only be %q or %q",
-			i, pkgvarapi.DeletionPolicyOrphan, pkgvarapi.DeletionPolicyDelete))
-	}
-
-	if template.Downstream != nil {
-		if template.Downstream.Repo != nil && template.Downstream.RepoExpr != nil {
-			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream.repo` and `downstream.repoExpr`", i))
-		}
-		if template.Downstream.Package != nil && template.Downstream.PackageExpr != nil {
-			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream.package` and `downstream.packageExpr`", i))
-		}
-	}
-
-	if template.LabelExprs != nil {
-		allErrs = append(allErrs, validateMapExpr(template.LabelExprs, fmt.Sprintf("spec.targets[%d].template.labelExprs", i))...)
-	}
-
-	if template.AnnotationExprs != nil {
-		allErrs = append(allErrs, validateMapExpr(template.AnnotationExprs, fmt.Sprintf("spec.targets[%d].template.annotationExprs", i))...)
-	}
-
-	if template.PackageContext != nil && template.PackageContext.DataExprs != nil {
-		allErrs = append(allErrs, validateMapExpr(template.PackageContext.DataExprs, fmt.Sprintf("spec.targets[%d].template.packageContext.dataExprs", i))...)
-	}
-
-	return allErrs
-}
-
-func validateMapExpr(m []api.MapExpr, fieldName string) []error {
-	var allErrs []error
-	for j, me := range m {
-		if me.Key != nil && me.KeyExpr != nil {
-			allErrs = append(allErrs, fmt.Errorf("%s[%d] may specify only one of `key` and `keyExpr`", fieldName, j))
-		}
-		if me.Value != nil && me.ValueExpr != nil {
-			allErrs = append(allErrs, fmt.Errorf("%s[%d] may specify only one of `value` and `valueExpr`", fieldName, j))
-		}
-	}
-
-	return allErrs
-}
-
-func combineErrors(errs []error) string {
-	var errMsgs []string
-	for _, e := range errs {
-		if e.Error() != "" {
-			errMsgs = append(errMsgs, e.Error())
-		}
-	}
-	return strings.Join(errMsgs, "; ")
 }
 
 func (r *PackageVariantSetReconciler) getUpstreamPR(upstream *pkgvarapi.Upstream,
@@ -481,52 +348,6 @@ func hashFromPackageVariantSpec(spec *pkgvarapi.PackageVariantSpec) (string, err
 	}
 	hash := sha1.Sum(b)
 	return hex.EncodeToString(hash[:]), nil
-}
-
-func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, repoList *configapi.RepositoryList,
-	upstreamPR *porchapi.PackageRevision, downstream pvContext) (*pkgvarapi.PackageVariantSpec, error) {
-
-	spec := &pkgvarapi.PackageVariantSpec{
-		Upstream: pvs.Spec.Upstream,
-		Downstream: &pkgvarapi.Downstream{
-			Repo:    downstream.repo,
-			Package: downstream.packageName,
-		},
-	}
-
-	pvt := downstream.template
-	if pvt == nil {
-		return spec, nil
-	}
-
-	if pvt.Downstream != nil {
-		if pvt.Downstream.Repo != nil && *pvt.Downstream.Repo != "" {
-			spec.Downstream.Repo = *pvt.Downstream.Repo
-		}
-		if pvt.Downstream.Package != nil && *pvt.Downstream.Package != "" {
-			spec.Downstream.Package = *pvt.Downstream.Package
-		}
-	}
-
-	if pvt.AdoptionPolicy != nil {
-		spec.AdoptionPolicy = *pvt.AdoptionPolicy
-	}
-
-	if pvt.DeletionPolicy != nil {
-		spec.DeletionPolicy = *pvt.DeletionPolicy
-	}
-
-	spec.Labels = pvt.Labels
-	spec.Annotations = pvt.Annotations
-
-	if pvt.PackageContext != nil {
-		spec.PackageContext = &pkgvarapi.PackageContext{
-			Data:       pvt.PackageContext.Data,
-			RemoveKeys: pvt.PackageContext.RemoveKeys,
-		}
-	}
-
-	return spec, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
