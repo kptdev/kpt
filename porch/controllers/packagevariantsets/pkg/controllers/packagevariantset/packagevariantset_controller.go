@@ -236,20 +236,13 @@ func validateTarget(i int, target api.Target) []error {
 			i, pkgvarapi.DeletionPolicyOrphan, pkgvarapi.DeletionPolicyDelete))
 	}
 
-	if template.Downstream != nil && template.DownstreamExprs != nil {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream` and `downstreamExprs`", i))
-	}
-
-	if template.Labels != nil && template.LabelExprs != nil {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `labels` and `labelExprs`", i))
-	}
-
-	if template.Annotations != nil && template.AnnotationExprs != nil {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `annotations` and `annotationExprs`", i))
-	}
-
-	if template.PackageContext != nil && template.PackageContextExprs != nil {
-		allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `packageContext` and `packageContextExprs`", i))
+	if template.Downstream != nil {
+		if template.Downstream.Repo != nil && template.Downstream.RepoExpr != nil {
+			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream.repo` and `downstream.repoExpr`", i))
+		}
+		if template.Downstream.Package != nil && template.Downstream.PackageExpr != nil {
+			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream.package` and `downstream.packageExpr`", i))
+		}
 	}
 
 	return allErrs
@@ -481,11 +474,11 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 	}
 
 	if pvt.Downstream != nil {
-		if pvt.Downstream.Repo != "" {
-			spec.Downstream.Repo = pvt.Downstream.Repo
+		if pvt.Downstream.Repo != nil && *pvt.Downstream.Repo != "" {
+			spec.Downstream.Repo = *pvt.Downstream.Repo
 		}
-		if pvt.Downstream.Package != "" {
-			spec.Downstream.Package = pvt.Downstream.Package
+		if pvt.Downstream.Package != nil && *pvt.Downstream.Package != "" {
+			spec.Downstream.Package = *pvt.Downstream.Package
 		}
 	}
 

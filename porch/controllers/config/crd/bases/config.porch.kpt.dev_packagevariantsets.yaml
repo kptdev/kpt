@@ -476,10 +476,16 @@ spec:
                         annotationExprs:
                           description: AnnotationsExprs allows specifying the spec.Annotations
                             field of the generated PackageVariant using CEL to dynamically
-                            create the keys and values.
+                            create the keys and values. Entries in this field take
+                            precedent over those with the same keys that are present
+                            in Annotations.
                           items:
                             properties:
+                              key:
+                                type: string
                               keyExpr:
+                                type: string
+                              value:
                                 type: string
                               valueExpr:
                                 type: string
@@ -501,15 +507,9 @@ spec:
                           properties:
                             package:
                               type: string
-                            repo:
-                              type: string
-                          type: object
-                        downstreamExprs:
-                          description: DownstreamExprs allows overriding the default
-                            downstream package and repository name using CEL to dynamically
-                            create the repo and package names.
-                          properties:
                             packageExpr:
+                              type: string
+                            repo:
                               type: string
                             repoExpr:
                               type: string
@@ -517,10 +517,16 @@ spec:
                         labelExprs:
                           description: LabelsExprs allows specifying the spec.Labels
                             field of the generated PackageVariant using CEL to dynamically
-                            create the keys and values.
+                            create the keys and values. Entries in this field take
+                            precedent over those with the same keys that are present
+                            in Labels.
                           items:
                             properties:
+                              key:
+                                type: string
                               keyExpr:
+                                type: string
+                              value:
                                 type: string
                               valueExpr:
                                 type: string
@@ -533,26 +539,31 @@ spec:
                             of the generated PackageVariant
                           type: object
                         packageContext:
-                          additionalProperties:
-                            type: string
                           description: PackageContext allows specifying the spec.PackageContext
                             field of the generated PackageVariant
-                          type: object
-                        packageContextExprs:
-                          description: PackageContextExprs allows specifying the spec.PackageContext
-                            field of the generated PackageVariant using CEL to dynamically
-                            create the keys and values.
                           properties:
+                            data:
+                              additionalProperties:
+                                type: string
+                              type: object
                             dataExprs:
                               items:
                                 properties:
+                                  key:
+                                    type: string
                                   keyExpr:
+                                    type: string
+                                  value:
                                     type: string
                                   valueExpr:
                                     type: string
                                 type: object
                               type: array
                             removeKeyExprs:
+                              items:
+                                type: string
+                              type: array
+                            removeKeys:
                               items:
                                 type: string
                               type: array

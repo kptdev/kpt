@@ -96,12 +96,7 @@ type ObjectSelector struct {
 type PackageVariantTemplate struct {
 	// Downstream allows overriding the default downstream package and repository name
 	// +optional
-	Downstream *pkgvarapi.Downstream `json:"downstream,omitempty"`
-
-	// DownstreamExprs allows overriding the default downstream package and repository name
-	// using CEL to dynamically create the repo and package names.
-	// +optional
-	DownstreamExprs *DownstreamExprs `json:"downstreamExprs,omitempty"`
+	Downstream *DownstreamTemplate `json:"downstream,omitempty"`
 
 	// AdoptionPolicy allows overriding the PackageVariant adoption policy
 	// +optional
@@ -116,7 +111,8 @@ type PackageVariantTemplate struct {
 	Labels map[string]string `json:"labels,omitempty"`
 
 	// LabelsExprs allows specifying the spec.Labels field of the generated PackageVariant
-	// using CEL to dynamically create the keys and values.
+	// using CEL to dynamically create the keys and values. Entries in this field take precedent over
+	// those with the same keys that are present in Labels.
 	// +optional
 	LabelExprs []MapExpr `json:"labelExprs,omitemtpy"`
 
@@ -125,18 +121,14 @@ type PackageVariantTemplate struct {
 	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// AnnotationsExprs allows specifying the spec.Annotations field of the generated PackageVariant
-	// using CEL to dynamically create the keys and values.
+	// using CEL to dynamically create the keys and values. Entries in this field take precedent over
+	// those with the same keys that are present in Annotations.
 	// +optional
 	AnnotationExprs []MapExpr `json:"annotationExprs,omitempty"`
 
 	// PackageContext allows specifying the spec.PackageContext field of the generated PackageVariant
 	// +optional
-	PackageContext map[string]string `json:"packageContext,omitempty"`
-
-	// PackageContextExprs allows specifying the spec.PackageContext field of the generated PackageVariant
-	// using CEL to dynamically create the keys and values.
-	// +optional
-	PackageContextExprs *PackageContextExprs `json:"packageContextExprs,omitempty"`
+	PackageContext *PackageContextTemplate `json:"packageContext,omitempty"`
 
 	// Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
 	// +optional
@@ -144,32 +136,38 @@ type PackageVariantTemplate struct {
 
 	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
 	// +optional
-	//Injectors     []pkgvarapi.InjectionSelector `json:"injectors,omitempty"`
-
-	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
-	// using CEL to dynamically create the selectors.
-	// +optional
-	//InjectorExprs []InjectionSelectorExprs      `json:"injectorExprs,omitempty"`
+	//Injectors     *InfectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
-type DownstreamExprs struct {
+type DownstreamTemplate struct {
+	Repo        *string `json:"repo,omitempty"`
+	Package     *string `json:"package,omitempty"`
 	RepoExpr    *string `json:"repoExpr,omitempty"`
 	PackageExpr *string `json:"packageExpr,omitempty"`
 }
 
-type PackageContextExprs struct {
-	DataExprs      []MapExpr `json:"dataExprs,omitempty"`
-	RemoveKeyExprs []string  `json:"removeKeyExprs,omitempty"`
+type PackageContextTemplate struct {
+	Data           map[string]string `json:"data,omitempty"`
+	RemoveKeys     []string          `json:"removeKeys,omitempty"`
+	DataExprs      []MapExpr         `json:"dataExprs,omitempty"`
+	RemoveKeyExprs []string          `json:"removeKeyExprs,omitempty"`
 }
 
-type InjectionSelectorExprs struct {
+type InjectionSelectorTemplate struct {
+	Group   *string `json:"group,omitempty"`
+	Version *string `json:"version,omitempty"`
+	Kind    *string `json:"kind,omitempty"`
+	Name    *string `json:"name,omitempty"`
+
 	GroupExpr   *string `json:"groupExpr,omitempty"`
 	VersionExpr *string `json:"versionExpr,omitempty"`
 	KindExpr    *string `json:"kindExpr,omitempty"`
-	NameExpr    string  `json:"nameExpr"`
+	NameExpr    *string `json:"nameExpr,omitempty"`
 }
 
 type MapExpr struct {
+	Key       *string `json:"key,omitempty"`
+	Value     *string `json:"value,omitempty"`
 	KeyExpr   *string `json:"keyExpr,omitempty"`
 	ValueExpr *string `json:"valueExpr,omitempty"`
 }

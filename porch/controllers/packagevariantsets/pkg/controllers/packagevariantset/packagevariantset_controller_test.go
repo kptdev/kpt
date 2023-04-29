@@ -26,6 +26,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/yaml"
 )
 
@@ -227,8 +228,8 @@ items:
 				repo:        "r",
 				packageName: "p",
 				template: &api.PackageVariantTemplate{
-					Downstream: &pkgvarapi.Downstream{
-						Repo: "new-r",
+					Downstream: &api.DownstreamTemplate{
+						Repo: pointer.String("new-r"),
 					},
 				},
 			},
@@ -246,8 +247,8 @@ items:
 				repo:        "r",
 				packageName: "p",
 				template: &api.PackageVariantTemplate{
-					Downstream: &pkgvarapi.Downstream{
-						Package: "new-p",
+					Downstream: &api.DownstreamTemplate{
+						Package: pointer.String("new-p"),
 					},
 				},
 			},
