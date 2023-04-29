@@ -86,10 +86,16 @@ spec:
     - name: bar
     repositorySelector:
       foo: bar
+  - repositories:
+    - name: bar
+      packageNames:
+      - ""
+      - foo
       `,
 			expectedErrs: []string{"spec.upstream is a required field",
 				"spec.targets[0].repositories[0].name cannot be empty",
 				"spec.targets[1] must specify one of `repositories`, `repositorySelector`, or `objectSelector`",
+				"spec.targets[2].repositories[0].packageNames[0] cannot be empty",
 			},
 		},
 		"invalid adoption and deletion policies": {
@@ -114,6 +120,61 @@ spec:
 `,
 			expectedErrs: []string{"spec.upstream is a required field",
 				"must specify at least one item in spec.targets",
+			},
+		},
+		"downstream values and expressions do not mix": {
+			packageVariant: packageVariantHeader + `
+spec:
+  targets:
+  - template:
+      downstream:
+        repo: "foo"
+        repoExpr: "'bar'"
+        package: "p"
+        packageExpr: "'p'"
+`,
+			expectedErrs: []string{"spec.upstream is a required field",
+				"spec.targets[0] must specify one of `repositories`, `repositorySelector`, or `objectSelector`",
+				"spec.targets[0].template may specify only one of `downstream.repo` and `downstream.repoExpr`",
+				"spec.targets[0].template may specify only one of `downstream.package` and `downstream.packageExpr`",
+			},
+		},
+		"MapExprs do not allow both expr-and non-expr for same field": {
+			packageVariant: packageVariantHeader + `
+spec:
+  targets:
+  - template:
+      labelExprs:
+      - key: "foo"
+        keyExpr: "'bar'"
+        value: "bar"
+      - key: "foo"
+        value: "bar"
+        valueExpr: "'bar'"
+      annotationExprs:
+      - key: "foo"
+        keyExpr: "'bar'"
+        value: "bar"
+      - key: "foo"
+        value: "bar"
+        valueExpr: "'bar'"
+      packageContext:
+        dataExprs:
+          - key: "foo"
+            keyExpr: "'bar'"
+            value: "bar"
+          - key: "foo"
+            value: "bar"
+            valueExpr: "'bar'"
+`,
+			expectedErrs: []string{"spec.upstream is a required field",
+				"spec.targets[0] must specify one of `repositories`, `repositorySelector`, or `objectSelector`",
+				"spec.targets[0].template.labelExprs[0] may specify only one of `key` and `keyExpr`",
+				"spec.targets[0].template.labelExprs[1] may specify only one of `value` and `valueExpr`",
+				"spec.targets[0].template.annotationExprs[0] may specify only one of `key` and `keyExpr`",
+				"spec.targets[0].template.annotationExprs[1] may specify only one of `value` and `valueExpr`",
+				"spec.targets[0].template.packageContext.dataExprs[0] may specify only one of `key` and `keyExpr`",
+				"spec.targets[0].template.packageContext.dataExprs[1] may specify only one of `value` and `valueExpr`",
 			},
 		},
 	}

@@ -195,7 +195,7 @@ func validateTarget(i int, target api.Target) []error {
 
 			for k, pn := range rt.PackageNames {
 				if pn == "" {
-					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].repositories[%d].packageNames[%d] cannot be empty`", i, j, k))
+					allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].repositories[%d].packageNames[%d] cannot be empty", i, j, k))
 				}
 			}
 		}
@@ -242,6 +242,32 @@ func validateTarget(i int, target api.Target) []error {
 		}
 		if template.Downstream.Package != nil && template.Downstream.PackageExpr != nil {
 			allErrs = append(allErrs, fmt.Errorf("spec.targets[%d].template may specify only one of `downstream.package` and `downstream.packageExpr`", i))
+		}
+	}
+
+	if template.LabelExprs != nil {
+		allErrs = append(allErrs, validateMapExpr(template.LabelExprs, fmt.Sprintf("spec.targets[%d].template.labelExprs", i))...)
+	}
+
+	if template.AnnotationExprs != nil {
+		allErrs = append(allErrs, validateMapExpr(template.AnnotationExprs, fmt.Sprintf("spec.targets[%d].template.annotationExprs", i))...)
+	}
+
+	if template.PackageContext != nil && template.PackageContext.DataExprs != nil {
+		allErrs = append(allErrs, validateMapExpr(template.PackageContext.DataExprs, fmt.Sprintf("spec.targets[%d].template.packageContext.dataExprs", i))...)
+	}
+
+	return allErrs
+}
+
+func validateMapExpr(m []api.MapExpr, fieldName string) []error {
+	var allErrs []error
+	for j, me := range m {
+		if me.Key != nil && me.KeyExpr != nil {
+			allErrs = append(allErrs, fmt.Errorf("%s[%d] may specify only one of `key` and `keyExpr`", fieldName, j))
+		}
+		if me.Value != nil && me.ValueExpr != nil {
+			allErrs = append(allErrs, fmt.Errorf("%s[%d] may specify only one of `value` and `valueExpr`", fieldName, j))
 		}
 	}
 
