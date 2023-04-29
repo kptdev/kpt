@@ -119,7 +119,7 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	err = r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
 	if err != nil {
-		return ctrl.Result{}, r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
+		return ctrl.Result{}, err
 	}
 
 	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
@@ -505,6 +505,24 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		}
 		if pvt.Downstream.Package != nil && *pvt.Downstream.Package != "" {
 			spec.Downstream.Package = *pvt.Downstream.Package
+		}
+	}
+
+	if pvt.AdoptionPolicy != nil {
+		spec.AdoptionPolicy = *pvt.AdoptionPolicy
+	}
+
+	if pvt.DeletionPolicy != nil {
+		spec.DeletionPolicy = *pvt.DeletionPolicy
+	}
+
+	spec.Labels = pvt.Labels
+	spec.Annotations = pvt.Annotations
+
+	if pvt.PackageContext != nil {
+		spec.PackageContext = &pkgvarapi.PackageContext{
+			Data:       pvt.PackageContext.Data,
+			RemoveKeys: pvt.PackageContext.RemoveKeys,
 		}
 	}
 

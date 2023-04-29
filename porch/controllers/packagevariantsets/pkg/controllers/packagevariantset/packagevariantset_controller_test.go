@@ -256,6 +256,8 @@ items:
       efg: hij
 `), &repoList))
 
+	adoptExisting := pkgvarapi.AdoptionPolicyAdoptExisting
+	deletionPolicyDelete := pkgvarapi.DeletionPolicyDelete
 	pvs := api.PackageVariantSet{
 		ObjectMeta: metav1.ObjectMeta{Name: "my-pvs",
 			Namespace: "default",
@@ -318,6 +320,86 @@ items:
 				Downstream: &pkgvarapi.Downstream{
 					Repo:    "r",
 					Package: "new-p",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template adoption and deletion": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+				template: &api.PackageVariantTemplate{
+					AdoptionPolicy: &adoptExisting,
+					DeletionPolicy: &deletionPolicyDelete,
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "r",
+					Package: "p",
+				},
+				AdoptionPolicy: "adoptExisting",
+				DeletionPolicy: "delete",
+			},
+			expectedErrs: nil,
+		},
+		"template static labels and annotations": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+				template: &api.PackageVariantTemplate{
+					Labels: map[string]string{
+						"foo":   "bar",
+						"hello": "there",
+					},
+					Annotations: map[string]string{
+						"foobar": "barfoo",
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "r",
+					Package: "p",
+				},
+				Labels: map[string]string{
+					"foo":   "bar",
+					"hello": "there",
+				},
+				Annotations: map[string]string{
+					"foobar": "barfoo",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template static packageContext": {
+			downstream: pvContext{
+				repo:        "r",
+				packageName: "p",
+				template: &api.PackageVariantTemplate{
+					PackageContext: &api.PackageContextTemplate{
+						Data: map[string]string{
+							"foo":   "bar",
+							"hello": "there",
+						},
+						RemoveKeys: []string{"foobar", "barfoo"},
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "r",
+					Package: "p",
+				},
+				PackageContext: &pkgvarapi.PackageContext{
+					Data: map[string]string{
+						"foo":   "bar",
+						"hello": "there",
+					},
+					RemoveKeys: []string{"foobar", "barfoo"},
 				},
 			},
 			expectedErrs: nil,
