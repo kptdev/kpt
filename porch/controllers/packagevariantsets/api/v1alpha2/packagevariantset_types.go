@@ -139,6 +139,9 @@ type PackageVariantTemplate struct {
 	//Injectors     *InfectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
+// DownstreamTemplate is used to calculate the downstream field of the resulting
+// package variants. Only one of Repo and RepoExpr may be specified;
+// similarly only one of Package and PackageExpr may be specified.
 type DownstreamTemplate struct {
 	Repo        *string `json:"repo,omitempty"`
 	Package     *string `json:"package,omitempty"`
@@ -146,6 +149,9 @@ type DownstreamTemplate struct {
 	PackageExpr *string `json:"packageExpr,omitempty"`
 }
 
+// PackageContextTemplate is used to calculate the packageContext field of the
+// resulting package variants. The plain fields and Exprs fields will be
+// merged, with the Exprs fields taking precedence.
 type PackageContextTemplate struct {
 	Data           map[string]string `json:"data,omitempty"`
 	RemoveKeys     []string          `json:"removeKeys,omitempty"`
@@ -153,6 +159,9 @@ type PackageContextTemplate struct {
 	RemoveKeyExprs []string          `json:"removeKeyExprs,omitempty"`
 }
 
+// InjectionSelectorTemplate is used to calculate the injectors field of the
+// resulting package variants. For each field, only one of the plain and Expr
+// entries may be specified.
 type InjectionSelectorTemplate struct {
 	Group   *string `json:"group,omitempty"`
 	Version *string `json:"version,omitempty"`
@@ -165,6 +174,9 @@ type InjectionSelectorTemplate struct {
 	NameExpr    *string `json:"nameExpr,omitempty"`
 }
 
+// MapExpr is used for various fields to calculate map entries. Only one of
+// Key and KeyExpr may be specified; similarly only on of Value and ValueExpr
+// may be specified.
 type MapExpr struct {
 	Key       *string `json:"key,omitempty"`
 	Value     *string `json:"value,omitempty"`
