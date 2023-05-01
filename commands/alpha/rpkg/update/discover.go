@@ -64,7 +64,10 @@ func (r *runner) discoverUpdates(cmd *cobra.Command, args []string) error {
 func (r *runner) findUpstreamUpdates(prs []porchapi.PackageRevision, repositories *configapi.RepositoryList, w io.Writer) error {
 	var upstreamUpdates [][]string
 	for _, pr := range prs {
-		availableUpdates, upstreamName, _ := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		availableUpdates, upstreamName, _, err := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		if err != nil {
+			return fmt.Errorf("could not parse upstreamLock in Kptfile of package %q: %s", pr.Name, err.Error())
+		}
 		if len(availableUpdates) == 0 {
 			upstreamUpdates = append(upstreamUpdates, []string{pr.Name, upstreamName, "No update available"})
 		} else {
@@ -84,7 +87,10 @@ func (r *runner) findDownstreamUpdates(prs []porchapi.PackageRevision, repositor
 	downstreamUpdatesMap := make(map[string][]porchapi.PackageRevision)
 
 	for _, pr := range prs {
-		availableUpdates, _, draftName := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		availableUpdates, _, draftName, err := r.availableUpdates(pr.Status.UpstreamLock, repositories)
+		if err != nil {
+			return fmt.Errorf("could not parse upstreamLock in Kptfile of package %q: %s", pr.Name, err.Error())
+		}
 		for _, update := range availableUpdates {
 			key := fmt.Sprintf("%s:%s:%s", update.Name, update.Spec.Revision, draftName)
 			downstreamUpdatesMap[key] = append(downstreamUpdatesMap[key], pr)
@@ -93,18 +99,22 @@ func (r *runner) findDownstreamUpdates(prs []porchapi.PackageRevision, repositor
 	return printDownstreamUpdates(downstreamUpdatesMap, args, w)
 }
 
-func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]porchapi.PackageRevision, string, string) {
+func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositories *configapi.RepositoryList) ([]porchapi.PackageRevision, string, string, error) {
 	var availableUpdates []porchapi.PackageRevision
 	var upstream string
 
 	if upstreamLock == nil || upstreamLock.Git == nil {
-		return nil, "", ""
+		return nil, "", "", nil
 	}
 	var currentUpstreamRevision string
 	var draftName string
 
 	// separate the revision number from the package name
 	lastIndex := strings.LastIndex(upstreamLock.Git.Ref, "/")
+	if lastIndex < 0 {
+		// "/" not found - upstreamLock.Git.Ref is not in the expected format
+		return nil, "", "", fmt.Errorf("malformed upstreamLock.Git.Ref %q", upstreamLock.Git.Ref)
+	}
 
 	if strings.HasPrefix(upstreamLock.Git.Ref, "drafts") {
 		// The upstream is not a published package, so doesn't have a revision number.
@@ -149,7 +159,7 @@ func (r *runner) availableUpdates(upstreamLock *porchapi.UpstreamLock, repositor
 		}
 	}
 
-	return availableUpdates, upstream, draftName
+	return availableUpdates, upstream, draftName, nil
 }
 
 // fetches all registered repositories
