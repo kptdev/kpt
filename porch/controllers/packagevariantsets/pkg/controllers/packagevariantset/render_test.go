@@ -58,14 +58,28 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 	adoptExisting := pkgvarapi.AdoptionPolicyAdoptExisting
 	deletionPolicyDelete := pkgvarapi.DeletionPolicyDelete
 	pvs := api.PackageVariantSet{
-		ObjectMeta: metav1.ObjectMeta{Name: "my-pvs",
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-pvs",
 			Namespace: "default",
 		},
 		Spec: api.PackageVariantSetSpec{
 			Upstream: &pkgvarapi.Upstream{Repo: "up-repo", Package: "up-pkg", Revision: "v2"},
 		},
 	}
-	upstreamPR := porchapi.PackageRevision{}
+	upstreamPR := porchapi.PackageRevision{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "p",
+			Namespace: "default",
+			Labels: map[string]string{
+				"vendor":  "bigco.com",
+				"product": "snazzy",
+				"version": "1.6.8",
+			},
+			Annotations: map[string]string{
+				"bigco.com/team": "us-platform",
+			},
+		},
+	}
 	testCases := map[string]struct {
 		downstream   pvContext
 		expectedSpec pkgvarapi.PackageVariantSpec
@@ -198,7 +212,7 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 						"foo":   "bar",
 						"hello": "there",
 					},
-					RemoveKeys: []string{"foobar", "barfoo"},
+					RemoveKeys: []string{"barfoo", "foobar"},
 				},
 			},
 			expectedErrs: nil,
@@ -219,6 +233,115 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 				Downstream: &pkgvarapi.Downstream{
 					Repo:    "my-repo-2",
 					Package: "my-repo-1-p",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template labels and annotations with expressions": {
+			downstream: pvContext{
+				repoDefault:    "my-repo-1",
+				packageDefault: "p",
+				template: &api.PackageVariantTemplate{
+					Downstream: &api.DownstreamTemplate{
+						RepoExpr:    pointer.String("'my-repo-2'"),
+						PackageExpr: pointer.String("repoDefault + '-' + packageDefault"),
+					},
+					Labels: map[string]string{
+						"foo":   "bar",
+						"hello": "there",
+					},
+					LabelExprs: []api.MapExpr{
+						{
+							Key:       pointer.String("foo"),
+							ValueExpr: pointer.String("repoDefault"),
+						},
+						{
+							KeyExpr:   pointer.String("repository.labels['efg']"),
+							ValueExpr: pointer.String("packageDefault + '-' + repository.name"),
+						},
+						{
+							Key:   pointer.String("hello"),
+							Value: pointer.String("goodbye"),
+						},
+					},
+					Annotations: map[string]string{
+						"bigco.com/sample-annotation": "some-annotation",
+						"foo.org/id":                  "123456",
+					},
+					AnnotationExprs: []api.MapExpr{
+						{
+							Key:   pointer.String("foo.org/id"),
+							Value: pointer.String("54321"),
+						},
+						{
+							Key:       pointer.String("bigco.com/team"),
+							ValueExpr: pointer.String("upstream.annotations['bigco.com/team']"),
+						},
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "my-repo-2",
+					Package: "my-repo-1-p",
+				},
+				Labels: map[string]string{
+					"foo":   "my-repo-1",
+					"hello": "goodbye",
+					"hij":   "p-my-repo-2",
+				},
+				Annotations: map[string]string{
+					"bigco.com/sample-annotation": "some-annotation",
+					"foo.org/id":                  "54321",
+					"bigco.com/team":              "us-platform",
+				},
+			},
+			expectedErrs: nil,
+		},
+		"template with packageContext with expressions": {
+			downstream: pvContext{
+				repoDefault:    "my-repo-1",
+				packageDefault: "p",
+				template: &api.PackageVariantTemplate{
+					PackageContext: &api.PackageContextTemplate{
+						Data: map[string]string{
+							"foo":   "bar",
+							"hello": "there",
+						},
+						DataExprs: []api.MapExpr{
+							{
+								Key:       pointer.String("foo"),
+								ValueExpr: pointer.String("upstream.name"),
+							},
+							{
+								KeyExpr:   pointer.String("upstream.namespace"),
+								ValueExpr: pointer.String("upstream.name"),
+							},
+							{
+								KeyExpr: pointer.String("upstream.name"),
+								Value:   pointer.String("foo"),
+							},
+						},
+						RemoveKeys:     []string{"foobar", "barfoo"},
+						RemoveKeyExprs: []string{"repository.labels['abc']"},
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "my-repo-1",
+					Package: "p",
+				},
+				PackageContext: &pkgvarapi.PackageContext{
+					Data: map[string]string{
+						"foo":     "p",
+						"hello":   "there",
+						"default": "p",
+						"p":       "foo",
+					},
+					RemoveKeys: []string{"barfoo", "def", "foobar"},
 				},
 			},
 			expectedErrs: nil,
@@ -319,7 +442,7 @@ func TestEvalExpr(t *testing.T) {
 	}
 }
 
-func TestOverlayMapExpr(t *testing.T) {
+func TestCopyAndOverlayMapExpr(t *testing.T) {
 	baseInputs := map[string]interface{}{
 		"repoDefault":    "foo-repo",
 		"packageDefault": "bar-package",
@@ -397,10 +520,10 @@ func TestOverlayMapExpr(t *testing.T) {
 	}
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			err := overlayMapExpr(tc.inMap, tc.mapExprs, baseInputs)
+			outMap, err := copyAndOverlayMapExpr("f", tc.inMap, tc.mapExprs, baseInputs)
 			if tc.expectedErr == "" {
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedResult, tc.inMap)
+				require.Equal(t, tc.expectedResult, outMap)
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}

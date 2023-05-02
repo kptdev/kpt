@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 
 	"github.com/google/cel-go/cel"
 
@@ -73,7 +74,7 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		if pvt.Downstream.RepoExpr != nil && *pvt.Downstream.RepoExpr != "" {
 			repo, err = evalExpr(*pvt.Downstream.RepoExpr, inputs)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("spec.downstream.repoExpr: %s", err.Error())
 			}
 		}
 
@@ -87,6 +88,7 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 				return nil, err
 			}
 			inputs[RepositoryVarName] = repoInput
+			break
 		}
 	}
 
@@ -102,7 +104,7 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		if pvt.Downstream.PackageExpr != nil && *pvt.Downstream.PackageExpr != "" {
 			spec.Downstream.Package, err = evalExpr(*pvt.Downstream.PackageExpr, inputs)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("spec.downstream.packageExpr: %s", err.Error())
 			}
 		}
 	}
@@ -114,17 +116,32 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 	if pvt.DeletionPolicy != nil {
 		spec.DeletionPolicy = *pvt.DeletionPolicy
 	}
-
-	spec.Labels = pvt.Labels
-	spec.Annotations = pvt.Annotations
-
-	if pvt.PackageContext != nil {
-		spec.PackageContext = &pkgvarapi.PackageContext{
-			Data:       pvt.PackageContext.Data,
-			RemoveKeys: pvt.PackageContext.RemoveKeys,
-		}
+	spec.Labels, err = copyAndOverlayMapExpr("spec.labelExprs", pvt.Labels, pvt.LabelExprs, inputs)
+	if err != nil {
+		return nil, err
 	}
 
+	spec.Annotations, err = copyAndOverlayMapExpr("spec.annotationExprs", pvt.Annotations, pvt.AnnotationExprs, inputs)
+	if err != nil {
+		return nil, err
+	}
+
+	if pvt.PackageContext != nil {
+		data, err := copyAndOverlayMapExpr("spec.packageContext.dataExprs", pvt.PackageContext.Data, pvt.PackageContext.DataExprs, inputs)
+		if err != nil {
+			return nil, err
+		}
+
+		removeKeys, err := copyAndOverlayStringSlice("spec.packageContext.removeKeyExprs", pvt.PackageContext.RemoveKeys,
+			pvt.PackageContext.RemoveKeyExprs, inputs)
+		if err != nil {
+			return nil, err
+		}
+		spec.PackageContext = &pkgvarapi.PackageContext{
+			Data:       data,
+			RemoveKeys: removeKeys,
+		}
+	}
 	return spec, nil
 }
 
@@ -168,7 +185,6 @@ func objectToInput(obj interface{}) (map[string]interface{}, error) {
 
 	//TODO: allow an administrator-configurable allow list of fields,
 	// on a per-GVK basis
-	//
 	result["name"] = u.GetName()
 	result["namespace"] = u.GetNamespace()
 	result["labels"] = u.GetLabels()
@@ -177,9 +193,14 @@ func objectToInput(obj interface{}) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func overlayMapExpr(inMap map[string]string, mapExprs []api.MapExpr, inputs map[string]interface{}) error {
+func copyAndOverlayMapExpr(fieldName string, inMap map[string]string, mapExprs []api.MapExpr, inputs map[string]interface{}) (map[string]string, error) {
+	outMap := make(map[string]string, len(inMap))
+	for k, v := range inMap {
+		outMap[k] = v
+	}
+
 	var err error
-	for _, me := range mapExprs {
+	for i, me := range mapExprs {
 		var k, v string
 		if me.Key != nil {
 			k = *me.Key
@@ -187,7 +208,7 @@ func overlayMapExpr(inMap map[string]string, mapExprs []api.MapExpr, inputs map[
 		if me.KeyExpr != nil {
 			k, err = evalExpr(*me.KeyExpr, inputs)
 			if err != nil {
-				return err
+				return nil, fmt.Errorf("%s[%d].keyExpr: %s", fieldName, i, err.Error())
 			}
 		}
 		if me.Value != nil {
@@ -196,13 +217,43 @@ func overlayMapExpr(inMap map[string]string, mapExprs []api.MapExpr, inputs map[
 		if me.ValueExpr != nil {
 			v, err = evalExpr(*me.ValueExpr, inputs)
 			if err != nil {
-				return err
+				return nil, fmt.Errorf("%s[%d].valueExpr: %s", fieldName, i, err.Error())
 			}
 		}
-		inMap[k] = v
+		outMap[k] = v
 	}
 
-	return nil
+	if len(outMap) == 0 {
+		return nil, nil
+	}
+
+	return outMap, nil
+}
+
+func copyAndOverlayStringSlice(fieldName string, in, exprs []string, inputs map[string]interface{}) ([]string, error) {
+	outMap := make(map[string]bool, len(in)+len(exprs))
+
+	for _, v := range in {
+		outMap[v] = true
+	}
+	for i, e := range exprs {
+		v, err := evalExpr(e, inputs)
+		if err != nil {
+			return nil, fmt.Errorf("%s[%d]: %s", fieldName, i, err.Error())
+		}
+		outMap[v] = true
+	}
+
+	if len(outMap) == 0 {
+		return nil, nil
+	}
+
+	var out []string
+	for k := range outMap {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out, nil
 }
 
 func evalExpr(expr string, inputs map[string]interface{}) (string, error) {
@@ -250,10 +301,6 @@ func compileExpr(expr string) (cel.Program, error) {
 	ast, issues := env.Compile(expr)
 	if issues != nil {
 		return nil, issues.Err()
-	}
-
-	if ast.OutputType() != cel.StringType {
-		return nil, fmt.Errorf("the expression must evaluate to string")
 	}
 
 	_, err = cel.AstToCheckedExpr(ast)
