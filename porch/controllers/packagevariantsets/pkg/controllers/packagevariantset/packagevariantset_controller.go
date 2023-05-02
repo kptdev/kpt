@@ -166,10 +166,10 @@ func (r *PackageVariantSetReconciler) getUpstreamPR(upstream *pkgvarapi.Upstream
 }
 
 type pvContext struct {
-	template    *api.PackageVariantTemplate
-	repo        string
-	packageName string
-	object      *unstructured.Unstructured
+	template       *api.PackageVariantTemplate
+	repoDefault    string
+	packageDefault string
+	object         *unstructured.Unstructured
 }
 
 func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Context,
@@ -188,9 +188,9 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 
 				for _, pn := range pns {
 					result = append(result, pvContext{
-						template:    target.Template,
-						repo:        rt.Name,
-						packageName: pn,
+						template:       target.Template,
+						repoDefault:    rt.Name,
+						packageDefault: pn,
 					})
 				}
 			}
@@ -234,10 +234,10 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 		}
 		for _, u := range uList.Items {
 			result = append(result, pvContext{
-				template:    target.Template,
-				repo:        u.GetName(),
-				packageName: upstreamPackageName,
-				object:      &u,
+				template:       target.Template,
+				repoDefault:    u.GetName(),
+				packageDefault: upstreamPackageName,
+				object:         &u,
 			})
 
 		}

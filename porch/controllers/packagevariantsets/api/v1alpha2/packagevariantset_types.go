@@ -160,18 +160,15 @@ type PackageContextTemplate struct {
 }
 
 // InjectionSelectorTemplate is used to calculate the injectors field of the
-// resulting package variants. For each field, only one of the plain and Expr
-// entries may be specified.
+// resulting package variants. Only one of the Name and NameExpr fields may be
+// specified.
 type InjectionSelectorTemplate struct {
 	Group   *string `json:"group,omitempty"`
 	Version *string `json:"version,omitempty"`
 	Kind    *string `json:"kind,omitempty"`
 	Name    *string `json:"name,omitempty"`
 
-	GroupExpr   *string `json:"groupExpr,omitempty"`
-	VersionExpr *string `json:"versionExpr,omitempty"`
-	KindExpr    *string `json:"kindExpr,omitempty"`
-	NameExpr    *string `json:"nameExpr,omitempty"`
+	NameExpr *string `json:"nameExpr,omitempty"`
 }
 
 // MapExpr is used for various fields to calculate map entries. Only one of

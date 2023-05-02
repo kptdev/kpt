@@ -69,8 +69,8 @@ status: {}
 
 func TestEnsurePackageVariants(t *testing.T) {
 	downstreams := []pvContext{
-		{repo: "dn-1", packageName: "dn-1"},
-		{repo: "dn-3", packageName: "dn-3"},
+		{repoDefault: "dn-1", packageDefault: "dn-1"},
+		{repoDefault: "dn-3", packageDefault: "dn-3"},
 	}
 	fc := &fakeClient{}
 	reconciler := &PackageVariantSetReconciler{Client: fc}

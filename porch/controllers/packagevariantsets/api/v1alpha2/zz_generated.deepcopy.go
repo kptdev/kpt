@@ -83,21 +83,6 @@ func (in *InjectionSelectorTemplate) DeepCopyInto(out *InjectionSelectorTemplate
 		*out = new(string)
 		**out = **in
 	}
-	if in.GroupExpr != nil {
-		in, out := &in.GroupExpr, &out.GroupExpr
-		*out = new(string)
-		**out = **in
-	}
-	if in.VersionExpr != nil {
-		in, out := &in.VersionExpr, &out.VersionExpr
-		*out = new(string)
-		**out = **in
-	}
-	if in.KindExpr != nil {
-		in, out := &in.KindExpr, &out.KindExpr
-		*out = new(string)
-		**out = **in
-	}
 	if in.NameExpr != nil {
 		in, out := &in.NameExpr, &out.NameExpr
 		*out = new(string)

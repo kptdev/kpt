@@ -16,11 +16,30 @@ package packagevariantset
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+
+	"github.com/google/cel-go/cel"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha2"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	// TODO: including this requires many dependency updates, at some point
+	// we should do that so the CEL evaluation here is consistent with
+	// K8s. There are a few other lines to uncomment in that case.
+	//"k8s.io/apiserver/pkg/cel/library"
+)
+
+const (
+	RepoDefaultVarName    = "repoDefault"
+	PackageDefaultVarName = "packageDefault"
+	UpstreamVarName       = "upstream"
+	RepositoryVarName     = "repository"
+	TargetVarName         = "target"
 )
 
 func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, repoList *configapi.RepositoryList,
@@ -29,8 +48,8 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 	spec := &pkgvarapi.PackageVariantSpec{
 		Upstream: pvs.Spec.Upstream,
 		Downstream: &pkgvarapi.Downstream{
-			Repo:    downstream.repo,
-			Package: downstream.packageName,
+			Repo:    downstream.repoDefault,
+			Package: downstream.packageDefault,
 		},
 	}
 
@@ -39,12 +58,52 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		return spec, nil
 	}
 
+	inputs, err := buildBaseInputs(upstreamPR, downstream)
+	if err != nil {
+		return nil, err
+	}
+
+	repo := downstream.repoDefault
+
 	if pvt.Downstream != nil {
 		if pvt.Downstream.Repo != nil && *pvt.Downstream.Repo != "" {
-			spec.Downstream.Repo = *pvt.Downstream.Repo
+			repo = *pvt.Downstream.Repo
 		}
+
+		if pvt.Downstream.RepoExpr != nil && *pvt.Downstream.RepoExpr != "" {
+			repo, err = evalExpr(*pvt.Downstream.RepoExpr, inputs)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		spec.Downstream.Repo = repo
+	}
+
+	for _, r := range repoList.Items {
+		if r.Name == repo {
+			repoInput, err := objectToInput(&r)
+			if err != nil {
+				return nil, err
+			}
+			inputs[RepositoryVarName] = repoInput
+		}
+	}
+
+	if _, ok := inputs[RepositoryVarName]; !ok {
+		return nil, fmt.Errorf("repository %q could not be loaded", repo)
+	}
+
+	if pvt.Downstream != nil {
 		if pvt.Downstream.Package != nil && *pvt.Downstream.Package != "" {
 			spec.Downstream.Package = *pvt.Downstream.Package
+		}
+
+		if pvt.Downstream.PackageExpr != nil && *pvt.Downstream.PackageExpr != "" {
+			spec.Downstream.Package, err = evalExpr(*pvt.Downstream.PackageExpr, inputs)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -67,4 +126,143 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 	}
 
 	return spec, nil
+}
+
+func buildBaseInputs(upstreamPR *porchapi.PackageRevision, downstream pvContext) (map[string]interface{}, error) {
+	inputs := make(map[string]interface{}, 5)
+	inputs[RepoDefaultVarName] = downstream.repoDefault
+	inputs[PackageDefaultVarName] = downstream.packageDefault
+
+	upstreamInput, err := objectToInput(upstreamPR)
+	if err != nil {
+		return nil, err
+	}
+	inputs[UpstreamVarName] = upstreamInput
+
+	if downstream.object != nil {
+		targetInput, err := objectToInput(downstream.object)
+		if err != nil {
+			return nil, err
+		}
+		inputs[TargetVarName] = targetInput
+	} else {
+		inputs[TargetVarName] = map[string]string{
+			"repo":    downstream.repoDefault,
+			"package": downstream.packageDefault,
+		}
+	}
+
+	return inputs, nil
+}
+
+func objectToInput(obj interface{}) (map[string]interface{}, error) {
+
+	result := make(map[string]interface{})
+
+	uo, err := runtime.DefaultUnstructuredConverter.ToUnstructured(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	u := unstructured.Unstructured{Object: uo}
+
+	//TODO: allow an administrator-configurable allow list of fields,
+	// on a per-GVK basis
+	//
+	result["name"] = u.GetName()
+	result["namespace"] = u.GetNamespace()
+	result["labels"] = u.GetLabels()
+	result["annotations"] = u.GetAnnotations()
+
+	return result, nil
+}
+
+func overlayMapExpr(inMap map[string]string, mapExprs []api.MapExpr, inputs map[string]interface{}) error {
+	var err error
+	for _, me := range mapExprs {
+		var k, v string
+		if me.Key != nil {
+			k = *me.Key
+		}
+		if me.KeyExpr != nil {
+			k, err = evalExpr(*me.KeyExpr, inputs)
+			if err != nil {
+				return err
+			}
+		}
+		if me.Value != nil {
+			v = *me.Value
+		}
+		if me.ValueExpr != nil {
+			v, err = evalExpr(*me.ValueExpr, inputs)
+			if err != nil {
+				return err
+			}
+		}
+		inMap[k] = v
+	}
+
+	return nil
+}
+
+func evalExpr(expr string, inputs map[string]interface{}) (string, error) {
+	prog, err := compileExpr(expr)
+	if err != nil {
+		return "", err
+	}
+
+	val, _, err := prog.Eval(inputs)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := val.ConvertToNative(reflect.TypeOf(""))
+	if err != nil {
+		return "", err
+	}
+
+	s, ok := result.(string)
+	if !ok {
+		return "", fmt.Errorf("expression returned non-string value: %v", result)
+	}
+
+	return s, nil
+}
+
+// compileExpr returns a compiled CEL expression.
+func compileExpr(expr string) (cel.Program, error) {
+	var opts []cel.EnvOption
+	opts = append(opts, cel.HomogeneousAggregateLiterals())
+	opts = append(opts, cel.EagerlyValidateDeclarations(true), cel.DefaultUTCTimeZone(true))
+	// TODO: uncomment after updating to latest k8s
+	//opts = append(opts, library.ExtensionLibs...)
+	opts = append(opts, cel.Variable(RepoDefaultVarName, cel.StringType))
+	opts = append(opts, cel.Variable(PackageDefaultVarName, cel.StringType))
+	opts = append(opts, cel.Variable(UpstreamVarName, cel.DynType))
+	opts = append(opts, cel.Variable(TargetVarName, cel.DynType))
+	opts = append(opts, cel.Variable(RepositoryVarName, cel.DynType))
+
+	env, err := cel.NewEnv(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	ast, issues := env.Compile(expr)
+	if issues != nil {
+		return nil, issues.Err()
+	}
+
+	if ast.OutputType() != cel.StringType {
+		return nil, fmt.Errorf("the expression must evaluate to string")
+	}
+
+	_, err = cel.AstToCheckedExpr(ast)
+	if err != nil {
+		return nil, err
+	}
+	return env.Program(ast,
+		cel.EvalOptions(cel.OptOptimize),
+		// TODO: uncomment after updating to latest k8s
+		//cel.OptimizeRegex(library.ExtensionLibRegexOptimizations...),
+	)
 }
