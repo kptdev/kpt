@@ -213,6 +213,13 @@ func validatePackageVariant(pv *api.PackageVariant) []string {
 			}
 		}
 	}
+	if len(pv.Spec.Injectors) > 0 {
+		for i, injector := range pv.Spec.Injectors {
+			if injector.Name == "" {
+				allErrs = append(allErrs, fmt.Sprintf("spec.injectors[%d].name must not be empty", i))
+			}
+		}
+	}
 	return allErrs
 }
 
