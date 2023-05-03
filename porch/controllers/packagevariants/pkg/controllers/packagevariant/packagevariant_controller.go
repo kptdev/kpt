@@ -710,6 +710,10 @@ func (r *PackageVariantReconciler) applyMutations(ctx context.Context,
 		return err
 	}
 
+	if err := ensureConfigInjection(r.Client, pv, &prr); err != nil {
+		return err
+	}
+
 	// Save the updated PackageRevisionResources
 	if err := r.Update(ctx, &prr); err != nil {
 		return err
