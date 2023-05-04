@@ -96,8 +96,10 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	upstreamPR, err := r.getUpstreamPR(pvs.Spec.Upstream, prList)
 	if err != nil {
-		setStalledConditionsToTrue(pvs, "ValidationError", err.Error())
-		return ctrl.Result{}, err
+		setStalledConditionsToTrue(pvs, "UpstreamNotFound", err.Error())
+		// Currently we watch all PackageRevisions, so no need to requeue
+		// here, as we will get triggered if a new upstream appears
+		return ctrl.Result{}, nil
 	}
 
 	downstreams, err := r.unrollDownstreamTargets(ctx, pvs)
