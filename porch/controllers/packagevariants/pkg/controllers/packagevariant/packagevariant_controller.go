@@ -722,27 +722,13 @@ func ensurePackageContext(pv *api.PackageVariant,
 		return nil
 	}
 
-	// find the kptfile.kpt.dev ConfigMap, it must be in package-context.yaml
-	if prr.Spec.Resources == nil {
-		return fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
-	}
-
-	if _, ok := prr.Spec.Resources["package-context.yaml"]; !ok {
-		return fmt.Errorf("package-context.yaml not found in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
-	}
-
-	cm, err := fn.ParseKubeObject([]byte(prr.Spec.Resources["package-context.yaml"]))
+	cm, err := getFileKubeObject(prr, "package-context.yaml", "ConfigMap", "kptfile.kpt.dev")
 	if err != nil {
-		return fmt.Errorf("failed to parse package-context.yaml of PackageRevisionResources %s/%s: %w", prr.Namespace, prr.Name, err)
-	}
-
-	if cm.GetKind() != "ConfigMap" || cm.GetName() != "kptfile.kpt.dev" {
-		return fmt.Errorf("package-context.yaml does not contain ConfigMap kptfile.kpt.dev in PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+		return err
 	}
 
 	// Set the data fields
-	var data map[string]string
-	ok, err := cm.Get(&data, "data")
+	data, ok, err := cm.NestedStringMap("data")
 	if err != nil {
 		return fmt.Errorf("PackageRevisionResources %s/%s PackageContext invalid data field: %w", prr.Namespace, prr.Name, err)
 	}
@@ -767,4 +753,27 @@ func ensurePackageContext(pv *api.PackageVariant,
 	}
 	prr.Spec.Resources["package-context.yaml"] = cm.String()
 	return nil
+}
+
+func getFileKubeObject(prr *porchapi.PackageRevisionResources, file, kind, name string) (*fn.KubeObject, error) {
+	if prr.Spec.Resources == nil {
+		return nil, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	if _, ok := prr.Spec.Resources[file]; !ok {
+		return nil, fmt.Errorf("%q not found in PackageRevisionResources '%s/%s'", file, prr.Namespace, prr.Name)
+	}
+
+	ko, err := fn.ParseKubeObject([]byte(prr.Spec.Resources[file]))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %q of PackageRevisionResources %s/%s: %w", file, prr.Namespace, prr.Name, err)
+	}
+	if kind != "" && ko.GetKind() != kind {
+		return nil, fmt.Errorf("%q does not contain kind %q in PackageRevisionResources '%s/%s'", file, kind, prr.Namespace, prr.Name)
+	}
+	if name != "" && ko.GetName() != name {
+		return nil, fmt.Errorf("%q does not contain resource named %q in PackageRevisionResources '%s/%s'", file, name, prr.Namespace, prr.Name)
+	}
+
+	return ko, nil
 }

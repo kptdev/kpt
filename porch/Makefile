@@ -25,6 +25,7 @@ MODULES = \
  examples/apps/hello-server \
  api \
  . \
+ controllers \
 
 # GCP project to use for development
 export GCP_PROJECT_ID ?= $(shell gcloud config get-value project)

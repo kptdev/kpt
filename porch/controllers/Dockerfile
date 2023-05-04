@@ -25,13 +25,11 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -v \
   k8s.io/klog/v2 \
   k8s.io/klog/v2/klogr \
-  k8s.io/client-go/plugin/pkg/client/auth \
   sigs.k8s.io/controller-runtime \
   sigs.k8s.io/controller-runtime/pkg/client \
   sigs.k8s.io/controller-runtime/pkg/controller/controllerutil \
   k8s.io/client-go/kubernetes \
   go.opentelemetry.io/otel \
-  cloud.google.com/go/container/apiv1 \
   github.com/google/go-containerregistry/pkg/gcrane \
   github.com/google/go-containerregistry/pkg/v1 \
   github.com/google/go-containerregistry/pkg/v1/cache \
