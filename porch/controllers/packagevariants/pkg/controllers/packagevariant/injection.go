@@ -27,8 +27,8 @@ import (
 	//"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	//"k8s.io/klog/v2"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -99,7 +99,7 @@ func ensureConfigInjection(client client.Client,
 		return err
 	}
 
-	setInjectionPointConditionsAndGate(kptfile, injectionPoints)
+	setInjectionPointConditionsAndGates(kptfile, injectionPoints)
 
 	if len(pv.Spec.Injectors) == 0 {
 		return nil
@@ -153,7 +153,7 @@ func injectResources(client client.Client, injectors []api.InjectionSelector, in
 	return nil
 }
 
-func setInjectionPointConditionsAndGate(kptfileKubeObject *fn.KubeObject, injectionPoints []*injectionPoint) error {
+func setInjectionPointConditionsAndGates(kptfileKubeObject *fn.KubeObject, injectionPoints []*injectionPoint) error {
 	var kptfile kptfilev1.KptFile
 	err := kptfileKubeObject.As(&kptfile)
 	if err != nil {
@@ -170,7 +170,11 @@ func setInjectionPointConditionsAndGate(kptfileKubeObject *fn.KubeObject, inject
 		gateMap[gate.ConditionType] = true
 	}
 
-	conditions := convertConditionsToMeta(kptfile.Status.Conditions)
+	status := kptfile.Status
+	if status == nil {
+		status = &kptfilev1.Status{}
+	}
+	conditions := convertConditionsToMeta(status.Conditions)
 	// set a condition for each injection point
 	for _, ip := range injectionPoints {
 		if ip.required {
@@ -179,7 +183,7 @@ func setInjectionPointConditionsAndGate(kptfileKubeObject *fn.KubeObject, inject
 		var condStatus metav1.ConditionStatus
 		condStatus = "False"
 		condReason := "NoResourceSelected"
-		condMessage := "no resource matched any injection selector"
+		condMessage := "no resource matched any injection selector for this injection point"
 		if ip.injected {
 			condStatus = "True"
 			condReason = "ConfigInjected"
@@ -204,20 +208,21 @@ func setInjectionPointConditionsAndGate(kptfileKubeObject *fn.KubeObject, inject
 	sort.Slice(gates, func(i, j int) bool { return gates[i].ConditionType < gates[j].ConditionType })
 
 	if gates != nil {
-		if kptfile.Info == nil {
-			err = kptfileKubeObject.SetNestedField(info, "info")
-		} else {
-			err = kptfileKubeObject.SetNestedField(gates, "info.readinessGates")
-		}
+		info.ReadinessGates = gates
+		err = kptfileKubeObject.SetNestedField(info, "info")
 		if err != nil {
 			return err
 		}
 	}
 
 	// update the status conditions
-	err = kptfileKubeObject.SetNestedField(convertConditionsFromMetaToKptfile(conditions), "status.conditions")
-	if err != nil {
-		return err
+	if conditions != nil {
+		sort.Slice(conditions, func(i, j int) bool { return conditions[i].Type < conditions[j].Type })
+		status.Conditions = convertConditionsFromMetaToKptfile(conditions)
+		err = kptfileKubeObject.SetNestedField(status, "status")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

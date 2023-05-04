@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2023 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	//api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	"github.com/stretchr/testify/require"
@@ -333,6 +335,284 @@ func TestValidateInjectionPoints(t *testing.T) {
 		t.Run(tn, func(t *testing.T) {
 			allErrs := validateInjectionPoints(tc.injectionPoints)
 			require.Equal(t, tc.expected, allErrs)
+		})
+	}
+}
+
+func TestSetInjectionPointConditionsAndGates(t *testing.T) {
+	kptfileWithGates := &kptfilev1.KptFile{
+		Info: &kptfilev1.PackageInfo{
+			ReadinessGates: []kptfilev1.ReadinessGate{
+				{
+					ConditionType: "test",
+				},
+				{
+					ConditionType: "test3",
+				},
+			},
+		},
+		Status: &kptfilev1.Status{
+			Conditions: []kptfilev1.Condition{
+				{
+					Type:    "test",
+					Status:  "False",
+					Reason:  "test",
+					Message: "test",
+				},
+				{
+					Type:    "test2",
+					Status:  "True",
+					Reason:  "test2",
+					Message: "test2",
+				},
+				{
+					Type:    "test3",
+					Status:  "True",
+					Reason:  "test3",
+					Message: "test3",
+				},
+			},
+		},
+	}
+
+	testCases := map[string]struct {
+		initialKptfile  *kptfilev1.KptFile
+		injectionPoints []*injectionPoint
+		expectedKptfile *kptfilev1.KptFile
+		expectedErr     string
+	}{
+		"no injection points": {
+			initialKptfile:  &kptfilev1.KptFile{},
+			injectionPoints: nil,
+			expectedKptfile: &kptfilev1.KptFile{},
+		},
+		"no injection points, existing gates and conditions": {
+			initialKptfile:  kptfileWithGates,
+			injectionPoints: nil,
+			expectedKptfile: kptfileWithGates,
+		},
+		"optional, not injected": {
+			initialKptfile: &kptfilev1.KptFile{},
+			injectionPoints: []*injectionPoint{
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.ConfigMap.foo",
+				},
+			},
+			expectedKptfile: &kptfilev1.KptFile{
+				Status: &kptfilev1.Status{
+					Conditions: []kptfilev1.Condition{
+						{
+							Type:    "config.injection.ConfigMap.foo",
+							Status:  "False",
+							Reason:  "NoResourceSelected",
+							Message: "no resource matched any injection selector for this injection point",
+						},
+					},
+				},
+			},
+		},
+		"required, not injected": {
+			initialKptfile: &kptfilev1.KptFile{},
+			injectionPoints: []*injectionPoint{
+				{
+					file:          "file.yaml",
+					required:      true,
+					conditionType: "config.injection.ConfigMap.foo",
+				},
+			},
+			expectedKptfile: &kptfilev1.KptFile{
+				Info: &kptfilev1.PackageInfo{
+					ReadinessGates: []kptfilev1.ReadinessGate{
+						{
+							ConditionType: "config.injection.ConfigMap.foo",
+						},
+					},
+				},
+				Status: &kptfilev1.Status{
+					Conditions: []kptfilev1.Condition{
+						{
+							Type:    "config.injection.ConfigMap.foo",
+							Status:  "False",
+							Reason:  "NoResourceSelected",
+							Message: "no resource matched any injection selector for this injection point",
+						},
+					},
+				},
+			},
+		},
+		"optional, injected": {
+			initialKptfile: &kptfilev1.KptFile{},
+			injectionPoints: []*injectionPoint{
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.ConfigMap.foo",
+					injected:      true,
+					injectedName:  "my-injected-resource",
+				},
+			},
+			expectedKptfile: &kptfilev1.KptFile{
+				Status: &kptfilev1.Status{
+					Conditions: []kptfilev1.Condition{
+						{
+							Type:    "config.injection.ConfigMap.foo",
+							Status:  "True",
+							Reason:  "ConfigInjected",
+							Message: "injected resource \"my-injected-resource\" from cluster",
+						},
+					},
+				},
+			},
+		},
+		"multiple optional": {
+			initialKptfile: &kptfilev1.KptFile{},
+			injectionPoints: []*injectionPoint{
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.ConfigMap.foo",
+					injected:      true,
+					injectedName:  "my-injected-resource",
+				},
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.SomeResource.foo",
+					injected:      true,
+					injectedName:  "some-injected-resource",
+				},
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.AnotherResource.foo",
+					injected:      false,
+					injectedName:  "another-injected-resource",
+				},
+			},
+			expectedKptfile: &kptfilev1.KptFile{
+				Status: &kptfilev1.Status{
+					Conditions: []kptfilev1.Condition{
+						{
+							Type:    "config.injection.AnotherResource.foo",
+							Status:  "False",
+							Reason:  "NoResourceSelected",
+							Message: "no resource matched any injection selector for this injection point",
+						},
+						{
+							Type:    "config.injection.ConfigMap.foo",
+							Status:  "True",
+							Reason:  "ConfigInjected",
+							Message: "injected resource \"my-injected-resource\" from cluster",
+						},
+						{
+							Type:    "config.injection.SomeResource.foo",
+							Status:  "True",
+							Reason:  "ConfigInjected",
+							Message: "injected resource \"some-injected-resource\" from cluster",
+						},
+					},
+				},
+			},
+		},
+		"mixed existing, optional, required": {
+			initialKptfile: kptfileWithGates,
+			injectionPoints: []*injectionPoint{
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.ConfigMap.foo",
+					injected:      true,
+					injectedName:  "my-injected-resource",
+				},
+				{
+					file:          "file.yaml",
+					required:      true,
+					conditionType: "config.injection.SomeResource.foo",
+					injected:      true,
+					injectedName:  "some-injected-resource",
+				},
+				{
+					file:          "file.yaml",
+					required:      false,
+					conditionType: "config.injection.AnotherResource.foo",
+					injected:      false,
+					injectedName:  "another-injected-resource",
+				},
+			},
+			expectedKptfile: &kptfilev1.KptFile{
+				Info: &kptfilev1.PackageInfo{
+					ReadinessGates: []kptfilev1.ReadinessGate{
+						{
+							ConditionType: "config.injection.SomeResource.foo",
+						},
+						{
+							ConditionType: "test",
+						},
+						{
+							ConditionType: "test3",
+						},
+					},
+				},
+				Status: &kptfilev1.Status{
+					Conditions: []kptfilev1.Condition{
+						{
+							Type:    "config.injection.AnotherResource.foo",
+							Status:  "False",
+							Reason:  "NoResourceSelected",
+							Message: "no resource matched any injection selector for this injection point",
+						},
+						{
+							Type:    "config.injection.ConfigMap.foo",
+							Status:  "True",
+							Reason:  "ConfigInjected",
+							Message: "injected resource \"my-injected-resource\" from cluster",
+						},
+						{
+							Type:    "config.injection.SomeResource.foo",
+							Status:  "True",
+							Reason:  "ConfigInjected",
+							Message: "injected resource \"some-injected-resource\" from cluster",
+						},
+						{
+							Type:    "test",
+							Status:  "False",
+							Reason:  "test",
+							Message: "test",
+						},
+						{
+							Type:    "test2",
+							Status:  "True",
+							Reason:  "test2",
+							Message: "test2",
+						},
+						{
+							Type:    "test3",
+							Status:  "True",
+							Reason:  "test3",
+							Message: "test3",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			ko, err := fn.NewFromTypedObject(tc.initialKptfile)
+			require.NoError(t, err)
+			err = setInjectionPointConditionsAndGates(ko, tc.injectionPoints)
+			if tc.expectedErr == "" {
+				require.NoError(t, err)
+				var actualKptfile kptfilev1.KptFile
+				err = ko.As(&actualKptfile)
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedKptfile, &actualKptfile)
+			} else {
+				require.EqualError(t, err, tc.expectedErr)
+			}
 		})
 	}
 }
