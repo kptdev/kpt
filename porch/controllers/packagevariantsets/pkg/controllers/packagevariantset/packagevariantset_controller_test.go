@@ -359,5 +359,5 @@ func TestEnsurePackageVariants(t *testing.T) {
 		&api.PackageVariantSet{ObjectMeta: metav1.ObjectMeta{Name: "my-pvs"}}))
 	require.Equal(t, 2, len(fc.objects))
 	require.Equal(t, "my-pv-1", fc.objects[0].GetName())
-	require.Equal(t, "my-pvs-8680372821ea923a2c068ad9fa32ffd876e9fb80", fc.objects[1].GetName())
+	require.Equal(t, "my-pvs-3048996f91b83df6bb62e497c3839acc367a2e79", fc.objects[1].GetName())
 }
