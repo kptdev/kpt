@@ -65,9 +65,9 @@ spec:
 		expected    []*injectionPoint
 	}{
 		"parse error": {
-			resources: `    junk: |
+			resources: `    junk.yaml: |
       baddata`,
-			expectedErr: "junk: failed to extract objects: unhandled node kind 8",
+			expectedErr: "junk.yaml: failed to extract objects: unhandled node kind 8",
 		},
 		"no injection points": {
 			resources: ``,
@@ -223,13 +223,14 @@ spec:
 			var prr porchapi.PackageRevisionResources
 			require.NoError(t, yaml.Unmarshal([]byte(prrBase+tc.resources), &prr))
 
-			actualInjectionPoints, actualErr := findInjectionPoints(&prr)
+			actualFiles, actualErr := parseFiles(&prr)
 			if tc.expectedErr == "" {
 				require.NoError(t, actualErr)
 			} else {
 				require.EqualError(t, actualErr, tc.expectedErr)
 			}
 
+			actualInjectionPoints := findInjectionPoints(actualFiles)
 			require.Equal(t, len(tc.expected), len(actualInjectionPoints))
 
 			// ensure a stable ordering
