@@ -284,6 +284,9 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	tr := true
 	for _, downstream := range downstreams {
 		pvSpec, err := renderPackageVariantSpec(ctx, pvs, repoList, upstreamPR, downstream)
+		if err != nil {
+			return err
+		}
 		hash, err := hashFromPackageVariantSpec(pvSpec)
 		if err != nil {
 			return err
