@@ -14,6 +14,14 @@
 		{
 			"name": "kpt",
 			"path": ".."
+		},
+		{
+			"name": "controllers",
+			"path": "controllers"
+		},
+		{
+			"name": "rollouts",
+			"path": "../rollouts"
 		}
 	]
 }
