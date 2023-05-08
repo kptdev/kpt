@@ -22,17 +22,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	//configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
-	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
-	//"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -95,8 +92,6 @@ func ensureConfigInjection(ctx context.Context,
 	pv *api.PackageVariant,
 	prr *porchapi.PackageRevisionResources) error {
 
-	klog.Infoln(fmt.Sprintf("package variant %q ensuringConfigInjection for %q", pv.Name, prr.Name))
-
 	if prr.Spec.Resources == nil {
 		return fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
 	}
@@ -107,8 +102,6 @@ func ensureConfigInjection(ctx context.Context,
 	}
 
 	injectionPoints := findInjectionPoints(files)
-
-	klog.Infoln(fmt.Sprintf("package variant %q found %d injection points for %q", pv.Name, len(injectionPoints), prr.Name))
 
 	err = validateInjectionPoints(injectionPoints)
 	if err != nil {
@@ -132,8 +125,6 @@ func ensureConfigInjection(ctx context.Context,
 
 	setInjectionPointConditionsAndGates(kptfile, injectionPoints)
 
-	klog.Infoln(fmt.Sprintf("package variant %q injection complete for %q", pv.Name, prr.Name))
-
 	prr.Spec.Resources["Kptfile"] = kptfile.String()
 
 	return nil
@@ -144,7 +135,7 @@ func kubeobjectsToYaml(kos fn.KubeObjects) string {
 	for _, ko := range kos {
 		yamls = append(yamls, ko.String())
 	}
-	return strings.Join(yamls, "\n---\n")
+	return strings.Join(yamls, "---\n")
 }
 
 func parseFiles(prr *porchapi.PackageRevisionResources) (map[string]fn.KubeObjects, error) {
@@ -224,8 +215,6 @@ func (ip *injectionPoint) inject(injectors []api.InjectionSelector) {
 		if u == nil {
 			continue
 		}
-
-		klog.Infoln(fmt.Sprintf("found %q injection complete for %s.%s", u.GetName(), ip.object.GetAPIVersion(), ip.object.GetKind()))
 
 		ip.injectResource(u)
 		break
@@ -429,7 +418,7 @@ func (ip *injectionPoint) loadInClusterResources(ctx context.Context, c client.C
 	}
 
 	for _, u := range uList.Items {
-		ip.inClusterResources = append(ip.inClusterResources, &u)
+		ip.inClusterResources = append(ip.inClusterResources, u.DeepCopy())
 	}
 
 	return nil

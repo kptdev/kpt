@@ -15,7 +15,7 @@
 package packagevariant
 
 import (
-	//"context"
+	"context"
 	"fmt"
 	"sort"
 	"testing"
@@ -23,7 +23,7 @@ import (
 	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
-	//api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
+	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 )
@@ -81,7 +81,7 @@ spec:
         name: foo
         annotations:
           config.kubernetes.io/local-config: "true"
-          kpt.dev/config-injection: "optional"
+          kpt.dev/config-injection: optional
       data:
         foo: bar
 `,
@@ -101,7 +101,7 @@ spec:
         name: foo
         annotations:
           config.kubernetes.io/local-config: "true"
-          kpt.dev/config-injection: "invalid"
+          kpt.dev/config-injection: invalid
       data:
         foo: bar
 `,
@@ -121,7 +121,7 @@ spec:
       metadata:
         name: foo
         annotations:
-          kpt.dev/config-injection: "required"
+          kpt.dev/config-injection: required
       data:
         foo: bar
 `,
@@ -140,7 +140,7 @@ spec:
       metadata:
         name: foo
         annotations:
-          kpt.dev/config-injection: "required"
+          kpt.dev/config-injection: required
       data:
         foo: bar
       ---
@@ -149,7 +149,7 @@ spec:
       metadata:
         name: foo
         annotations:
-          kpt.dev/config-injection: "optional"
+          kpt.dev/config-injection: optional
       spec:
         foo: bar
         bar: foofoo
@@ -174,7 +174,7 @@ spec:
       metadata:
         name: foo
         annotations:
-          kpt.dev/config-injection: "required"
+          kpt.dev/config-injection: required
       data:
         foo: bar
       ---
@@ -183,7 +183,7 @@ spec:
       metadata:
         name: foo
         annotations:
-          kpt.dev/config-injection: "optional"
+          kpt.dev/config-injection: optional
       spec:
         foo: bar
         bar: foofoo
@@ -193,7 +193,7 @@ spec:
       metadata:
         name: foo2
         annotations:
-          kpt.dev/config-injection: "required"
+          kpt.dev/config-injection: required
       spec:
         foo: bar
         bar: foofoo
@@ -614,6 +614,252 @@ func TestSetInjectionPointConditionsAndGates(t *testing.T) {
 			} else {
 				require.EqualError(t, err, tc.expectedErr)
 			}
+		})
+	}
+}
+func TestEnsureConfigInjection(t *testing.T) {
+
+	pvBase := `apiVersion: config.porch.kpt.dev
+kind: PackageVariant
+metadata:
+  name: my-pv
+  uid: pv-uid
+spec:
+  upstream:
+    repo: blueprints
+    package: foo
+    revision: v1
+  downstream:
+    repo: deployments
+    package: bar
+`
+
+	prrBase := `apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevisionResources
+metadata:
+  name: prr
+  namespace: default
+spec:
+  packageName: nephio-system
+  repository: nephio-packages
+  resources:
+    package-context.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kptfile.kpt.dev
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      data:
+        name: example`
+
+	baseKptfile := `
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        description: Example
+`
+
+	testCases := map[string]struct {
+		injectors       string
+		injectionPoints string
+		expectedErr     string
+		expectedPRR     string
+	}{
+		"empty injectors": {
+			injectors:       ``,
+			injectionPoints: ``,
+			expectedErr:     "",
+			expectedPRR:     prrBase + baseKptfile,
+		},
+		"one ConfigMap injection point": {
+			injectors: `  injectors:
+  - name: us-east1-endpoints
+`,
+			injectionPoints: `    configmap.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: regional-endpoints
+        annotations:
+          kpt.dev/config-injection: required
+      data:
+        db: example
+`,
+			expectedErr: "",
+			expectedPRR: prrBase + `
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        readinessGates:
+        - conditionType: config.injection.ConfigMap.regional-endpoints
+        description: Example
+      status:
+        conditions:
+        - type: config.injection.ConfigMap.regional-endpoints
+          status: "True"
+          message: injected resource "us-east1-endpoints" from cluster
+          reason: ConfigInjected
+    configmap.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: regional-endpoints
+        annotations:
+          kpt.dev/config-injection: required
+          kpt.dev/injected-resource: us-east1-endpoints
+      data:
+        db: db.us-east1.example.com
+`,
+		},
+		"one non-ConfigMap injection point": {
+			injectors: `  injectors:
+  - name: dev-team-beta
+    group: hr.example.com
+    kind: Team
+`,
+			injectionPoints: `    team.yaml: |
+      apiVersion: hr.example.com/v1alpha1
+      kind: Team
+      metadata:
+        name: team
+        annotations:
+          kpt.dev/config-injection: required
+      spec:
+        chargeCode: example
+`,
+			expectedErr: "",
+			expectedPRR: prrBase + `
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        readinessGates:
+        - conditionType: config.injection.Team.team
+        description: Example
+      status:
+        conditions:
+        - type: config.injection.Team.team
+          status: "True"
+          message: injected resource "dev-team-beta" from cluster
+          reason: ConfigInjected
+    team.yaml: |
+      apiVersion: hr.example.com/v1alpha1
+      kind: Team
+      metadata:
+        name: team
+        annotations:
+          kpt.dev/config-injection: required
+          kpt.dev/injected-resource: dev-team-beta
+      spec:
+        chargeCode: cd
+`,
+		},
+		"mixed injection points": {
+			injectors: `  injectors:
+  - name: us-east2-endpoints
+  - name: dev-team-beta
+    group: hr.example.com
+    kind: Team
+`,
+			injectionPoints: `    more.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: my-cm
+        annotations:
+          kpt.dev/config-injection: optional
+      data:
+        db: db.example.com
+      ---
+      apiVersion: hr.example.com/v1alpha1
+      kind: Team
+      metadata:
+        name: team
+        annotations:
+          kpt.dev/config-injection: required
+      spec:
+        chargeCode: example
+`,
+			expectedErr: "",
+			expectedPRR: prrBase + `
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        readinessGates:
+        - conditionType: config.injection.Team.team
+        description: Example
+      status:
+        conditions:
+        - type: config.injection.ConfigMap.my-cm
+          status: "True"
+          message: injected resource "us-east2-endpoints" from cluster
+          reason: ConfigInjected
+        - type: config.injection.Team.team
+          status: "True"
+          message: injected resource "dev-team-beta" from cluster
+          reason: ConfigInjected
+    more.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: my-cm
+        annotations:
+          kpt.dev/config-injection: optional
+          kpt.dev/injected-resource: us-east2-endpoints
+      data:
+        db: db.us-east2.example.com
+      ---
+      apiVersion: hr.example.com/v1alpha1
+      kind: Team
+      metadata:
+        name: team
+        annotations:
+          kpt.dev/config-injection: required
+          kpt.dev/injected-resource: dev-team-beta
+      spec:
+        chargeCode: cd
+`,
+		},
+	}
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			var pv api.PackageVariant
+			require.NoError(t, yaml.Unmarshal([]byte(pvBase+tc.injectors), &pv))
+			var prr porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(prrBase+baseKptfile+tc.injectionPoints), &prr))
+
+			c := &fakeClient{}
+			actualErr := ensureConfigInjection(context.Background(), c, &pv, &prr)
+			if tc.expectedErr == "" {
+				require.NoError(t, actualErr)
+			} else {
+				require.EqualError(t, actualErr, tc.expectedErr)
+			}
+
+			var expectedPRR porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(tc.expectedPRR), &expectedPRR))
+
+			require.Equal(t, expectedPRR, prr)
 		})
 	}
 }
