@@ -24,6 +24,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 object object:headerFile="../../../../porch/scripts/boilerplate.go.txt"
+
 const (
 	KptFileName = "Kptfile"
 
@@ -280,6 +282,7 @@ func (p *Pipeline) IsEmpty() bool {
 }
 
 // Function specifies a KRM function.
+// +kubebuilder:object:generate=true
 type Function struct {
 	// `Image` specifies the function container image.
 	// It can either be fully qualified, e.g.:
@@ -325,6 +328,7 @@ type Function struct {
 
 // Selector specifies the selection criteria
 // please update IsEmpty method if more properties are added
+// +kubebuilder:object:generate=true
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
