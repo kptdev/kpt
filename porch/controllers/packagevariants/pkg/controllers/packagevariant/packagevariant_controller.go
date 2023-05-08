@@ -754,6 +754,11 @@ func (r *PackageVariantReconciler) calculateDraftResources(ctx context.Context,
 		return nil, false, err
 	}
 
+	// Check if it's a valid PRR
+	if prr.Spec.Resources == nil {
+		return nil, false, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
 	// Calculate a hash of the resources
 	beforeHash, err := hashFromPackageRevisionResources(&prr)
 	if err != nil {

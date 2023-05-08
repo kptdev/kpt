@@ -92,10 +92,6 @@ func ensureConfigInjection(ctx context.Context,
 	pv *api.PackageVariant,
 	prr *porchapi.PackageRevisionResources) error {
 
-	if prr.Spec.Resources == nil {
-		return fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
-	}
-
 	files, err := parseFiles(prr)
 	if err != nil {
 		return err
@@ -391,6 +387,8 @@ func convertConditionsToMeta(conditions []kptfilev1.Condition) []metav1.Conditio
 
 var matchResourceContents = append(kio.MatchAll, kptfilev1.KptFileName)
 
+// TODO: Move to a utility function
+// includeFile checks if the file should be parsed for resources
 func includeFile(path string) bool {
 	for _, m := range matchResourceContents {
 		// Only use the filename for the check for whether we should
