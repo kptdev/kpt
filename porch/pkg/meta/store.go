@@ -25,6 +25,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -134,6 +135,7 @@ func (c *crdMetadataStore) Create(ctx context.Context, pkgRevMeta PackageRevisio
 			OwnerReferences: ownerReferences,
 		},
 	}
+	klog.Infof("Creating packagerev %s/%s", internalPkgRev.Namespace, internalPkgRev.Name)
 	if err := c.coreClient.Create(ctx, &internalPkgRev); err != nil {
 		if apierrors.IsAlreadyExists(err) {
 			return c.Update(ctx, pkgRevMeta)
@@ -180,6 +182,7 @@ func (c *crdMetadataStore) Update(ctx context.Context, pkgRevMeta PackageRevisio
 	internalPkgRev.OwnerReferences = ownerReferences
 	internalPkgRev.Finalizers = append(pkgRevMeta.Finalizers, PkgRevisionFinalizer)
 
+	klog.Infof("Updating packagerev %s/%s", internalPkgRev.Namespace, internalPkgRev.Name)
 	if err := c.coreClient.Update(ctx, &internalPkgRev); err != nil {
 		return PackageRevisionMeta{}, err
 	}
@@ -203,6 +206,7 @@ func (c *crdMetadataStore) Delete(ctx context.Context, namespacedName types.Name
 		}
 	}
 
+	klog.Infof("Deleting packagerev %s/%s", internalPkgRev.Namespace, internalPkgRev.Name)
 	if err := c.coreClient.Delete(ctx, &internalPkgRev); err != nil {
 		return PackageRevisionMeta{}, err
 	}
