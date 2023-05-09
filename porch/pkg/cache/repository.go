@@ -319,6 +319,7 @@ func (r *cachedRepository) Close() error {
 		// There isn't really any correct way to handle finalizers here. We are removing
 		// the repository, so we have to just delete the PackageRevision regardless of any
 		// finalizers.
+		klog.Infof("Deleting packagerev %s/%s because repository is closed", nn.Namespace, nn.Name)
 		pkgRevMeta, err := r.metadataStore.Delete(context.TODO(), nn, true)
 		if err != nil {
 			// There isn't much use in returning an error here, so we just log it
@@ -442,6 +443,8 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// PackageRevision. The ones that doesn't is removed.
 	for _, prm := range existingPkgRevCRs {
 		if _, found := newPackageRevisionNames[prm.Name]; !found {
+			klog.Infof("Deleting PackageRev %s/%s because parent PackageRevision was not found",
+				prm.Namespace, prm.Name)
 			if _, err := r.metadataStore.Delete(ctx, types.NamespacedName{
 				Name:      prm.Name,
 				Namespace: prm.Namespace,
@@ -489,12 +492,15 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		}
 	}
 
+	// Send notifications for packages that was deleted in the SoT
 	for k, oldPackage := range oldPackageRevisions {
 		if newPackageRevisionMap[k] == nil {
 			nn := types.NamespacedName{
 				Name:      oldPackage.KubeObjectName(),
 				Namespace: oldPackage.KubeObjectNamespace(),
 			}
+			klog.Infof("Deleting PackageRev %s/%s because PackageRevision was removed from SoT",
+				nn.Namespace, nn.Name)
 			metaPackage, err := r.metadataStore.Delete(ctx, nn, true)
 			if err != nil {
 				klog.Warningf("Error deleting PkgRevMeta %s: %v")
