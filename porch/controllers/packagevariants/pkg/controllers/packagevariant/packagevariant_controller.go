@@ -716,6 +716,8 @@ func (r *PackageVariantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	r.Client = mgr.GetClient()
 
+	//TODO: establish watches on resource types injected in all the Package Revisions
+	//      we own, and use those to generate requests
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.PackageVariant{}).
 		Watches(&source.Kind{Type: &porchapi.PackageRevision{}},

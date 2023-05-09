@@ -44,6 +44,7 @@ func (f *fakeClient) Update(_ context.Context, obj client.Object, _ ...client.Up
 	f.output = append(f.output, fmt.Sprintf("updating object: %s", obj.GetName()))
 	return nil
 }
+
 func (f *fakeClient) List(_ context.Context, obj client.ObjectList, _ ...client.ListOption) error {
 	cmList := `apiVersion: v1
 kind: ConfigMapList
