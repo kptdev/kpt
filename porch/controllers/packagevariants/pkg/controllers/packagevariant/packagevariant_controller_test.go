@@ -1136,7 +1136,6 @@ spec:
 	}
 }
 
-// TODO no pipeline
 func TestEnsureKRMFunctions(t *testing.T) {
 	pvBase := `
 apiVersion: config.porch.kpt.dev
