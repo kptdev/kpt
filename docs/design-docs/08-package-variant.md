@@ -914,45 +914,89 @@ template API is shown below.
 
 ```go
 type PackageVariantTemplate struct {
-        Downstream      *pkgvarapi.Downstream `json:"downstream,omitempty"`
-        DownstreamExprs *DownstreamExprs      `json:"downstreamExprs,omitempty"`
+        // Downstream allows overriding the default downstream package and repository name
+        // +optional
+        Downstream *DownstreamTemplate `json:"downstream,omitempty"`
 
+        // AdoptionPolicy allows overriding the PackageVariant adoption policy
+        // +optional
         AdoptionPolicy *pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+
+        // DeletionPolicy allows overriding the PackageVariant deletion policy
+        // +optional
         DeletionPolicy *pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
 
-        Labels     map[string]string `json:"labels,omitempty"`
-        LabelExprs []MapExpr         `json:"labelExprs,omitemtpy"`
+        // Labels allows specifying the spec.Labels field of the generated PackageVariant
+        // +optional
+        Labels map[string]string `json:"labels,omitempty"`
 
-        Annotations     map[string]string `json:"annotations,omitempty"`
-        AnnotationExprs []MapExpr         `json:"annotationExprs,omitempty"`
+        // LabelsExprs allows specifying the spec.Labels field of the generated PackageVariant
+        // using CEL to dynamically create the keys and values. Entries in this field take precedent over
+        // those with the same keys that are present in Labels.
+        // +optional
+        LabelExprs []MapExpr `json:"labelExprs,omitemtpy"`
 
-        PackageContext      map[string]string    `json:"packageContext,omitempty"`
-        PackageContextExprs *PackageContextExprs `json:"packageContextExprs,omitempty"`
+        // Annotations allows specifying the spec.Annotations field of the generated PackageVariant
+        // +optional
+        Annotations map[string]string `json:"annotations,omitempty"`
 
+        // AnnotationsExprs allows specifying the spec.Annotations field of the generated PackageVariant
+        // using CEL to dynamically create the keys and values. Entries in this field take precedent over
+        // those with the same keys that are present in Annotations.
+        // +optional
+        AnnotationExprs []MapExpr `json:"annotationExprs,omitempty"`
+
+        // PackageContext allows specifying the spec.PackageContext field of the generated PackageVariant
+        // +optional
+        PackageContext *PackageContextTemplate `json:"packageContext,omitempty"`
+
+        // Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
+        // +optional
         Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
 
-        Injectors     []pkgvarapi.InjectionSelector `json:"injectors,omitempty"`
-        InjectorExprs []InjectionSelectorExprs      `json:"injectorExprs,omitempty"`
+        // Injectors allows specifying the spec.Injectors field of the generated PackageVariant
+        // +optional
+        Injectors     *InfectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
-type DownstreamExprs struct {
+// DownstreamTemplate is used to calculate the downstream field of the resulting
+// package variants. Only one of Repo and RepoExpr may be specified;
+// similarly only one of Package and PackageExpr may be specified.
+type DownstreamTemplate struct {
+        Repo        *string `json:"repo,omitempty"`
+        Package     *string `json:"package,omitempty"`
         RepoExpr    *string `json:"repoExpr,omitempty"`
         PackageExpr *string `json:"packageExpr,omitempty"`
 }
 
-type PackageContextExprs struct {
-        DataExprs      []MapExpr `json:"dataExprs,omitempty"`
-        RemoveKeyExprs []string  `json:"removeKeyExprs,omitempty"`
+// PackageContextTemplate is used to calculate the packageContext field of the
+// resulting package variants. The plain fields and Exprs fields will be
+// merged, with the Exprs fields taking precedence.
+type PackageContextTemplate struct {
+        Data           map[string]string `json:"data,omitempty"`
+        RemoveKeys     []string          `json:"removeKeys,omitempty"`
+        DataExprs      []MapExpr         `json:"dataExprs,omitempty"`
+        RemoveKeyExprs []string          `json:"removeKeyExprs,omitempty"`
 }
 
-type InjectionSelectorExprs struct {
-        GroupExpr   *string `json:"groupExpr,omitempty"`
-        VersionExpr *string `json:"versionExpr,omitempty"`
-        KindExpr    *string `json:"kindExpr,omitempty"`
-        NameExpr    string  `json:"nameExpr"`
+// InjectionSelectorTemplate is used to calculate the injectors field of the
+// resulting package variants. Only one of the Name and NameExpr fields may be
+// specified.
+type InjectionSelectorTemplate struct {
+        Group   *string `json:"group,omitempty"`
+        Version *string `json:"version,omitempty"`
+        Kind    *string `json:"kind,omitempty"`
+        Name    *string `json:"name,omitempty"`
+
+        NameExpr    *string `json:"nameExpr,omitempty"`
 }
 
+// MapExpr is used for various fields to calculate map entries. Only one of
+// Key and KeyExpr may be specified; similarly only on of Value and ValueExpr
+// may be specified.
 type MapExpr struct {
+        Key       *string `json:"key,omitempty"`
+        Value     *string `json:"value,omitempty"`
         KeyExpr   *string `json:"keyExpr,omitempty"`
         ValueExpr *string `json:"valueExpr,omitempty"`
 }
@@ -960,10 +1004,9 @@ type MapExpr struct {
 
 This is a pretty complicated structure. To make it more understandable, the
 first thing to notice is that many fields have a plain version, and an `Expr`
-version. Only one of these should be used for any given field. For example, you
-can use either `downstream` or `downstreamExpr`, but not both. The plain
-version is used when the value is static across all the PackageVariants; the
-`Expr` version is used when the value needs to vary across PackageVariants.
+version. The plain version is used when the value is static across all the
+PackageVariants; the `Expr` version is used when the value needs to vary across
+PackageVariants.
 
 Let's consider a simple example. Suppose we have a package for provisioning
 namespaces called "base-ns". We want to instantiate this several times in the
@@ -1108,7 +1151,7 @@ spec:
         org: hr
     template:
       labelExprs:
-        keyExpr: "'org'"
+        key: org
         valueExpr: "repository.labels['org']"
       injectorExprs:
         - nameExpr: "repository.labels['region'] + '-endpoints'"
@@ -1183,16 +1226,16 @@ them. That is, there are certain objects that are accessible within the CEL
 expression. For CEL expressions used in the PackageVariantSet `template` field,
 the following variables are available:
 
-| CEL Variable | Variable Contents                                            |
-| -------------| ------------------------------------------------------------ |
-| repo         | The default repository name based on the targeting criteria. |
-| package      | The default package name based on the targeting criteria.    |
-| upstream     | The upstream PackageRevision.                                |
-| repository   | The downstream Repository.                                   |
+| CEL Variable   | Variable Contents                                            |
+| -------------- | ------------------------------------------------------------ |
+| repoDefault    | The default repository name based on the targeting criteria. |
+| packageDefault | The default package name based on the targeting criteria.    |
+| upstream       | The upstream PackageRevision.                                |
+| repository     | The downstream Repository.                                   |
 
 There is one expression that is an exception to the table above. Since the
 `repository` value corresponds to the Repository of the downstream, we must
-first evaluate the `downstreamExpr.repoExpr` expression to *find* that
+first evaluate the `downstream.repoExpr` expression to *find* that
 repository.  Thus, for that expression only, `repository` is not a valid
 variable.
 
@@ -1202,9 +1245,15 @@ target, as follows:
 
 | Target Type         | `target` Variable Contents |
 | ------------------- | -------------------------- |
-| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repo` and `package` values. |
-| Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstreamExprs.repoExpr`. |
+| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repoDefault` and `packageDefault` values. |
+| Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstream.repoExpr`. |
 | Object Selector     | The Object selected by the selector. |
+
+For the various resource variables - `upstream`, `repository`, and `target` -
+arbitrary access to all fields of the object could lead to security concerns.
+Therefore, only a subset of the data is available for use in CEL exressions.
+Specifically, the following fields: `name`, `namespace`, `labels`, and
+`annotations`.
 
 Given the slight quirk with the `repoExpr`, it may be helpful to state the
 processing flow for the template evaluation:
@@ -1213,15 +1262,15 @@ processing flow for the template evaluation:
    the PackageVariantSet[^multi-ns-reg].
 1. The targets are determined.
 1. For each target:
-   1. The CEL environment is prepared with `repo`, `package`, `upstream`, and
-      `target` variables.
+   1. The CEL environment is prepared with `repoDefault`, `packageDefault`,
+      `upstream`, and `target` variables.
    1. The downstream repository is determined and loaded, as follows:
-      - If present, `downstreamExprs.repoExpr` is evaluated using the CEL
+      - If present, `downstream.repoExpr` is evaluated using the CEL
         environment, and the result used as the downstream repository name.
       - Otherwise, if `downstream.repo` is set, that is used as the downstream
        repository name.
       - If neither is present, the default repository name based on the target is
-        used (i.e., the same value as the `repo` variable).
+        used (i.e., the same value as the `repoDefault` variable).
       - The resulting downstream repository name is used to load the corresponding
         Repository object in the same namespace as the PackageVariantSet.
    1. The downstream Repository is added to the CEL environment.
