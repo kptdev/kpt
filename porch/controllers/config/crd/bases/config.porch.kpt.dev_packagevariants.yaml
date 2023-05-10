@@ -67,6 +67,23 @@ spec:
                   repo:
                     type: string
                 type: object
+              injectors:
+                items:
+                  description: InjectionSelector specifies how to select in-cluster
+                    objects for resolving injection points.
+                  properties:
+                    group:
+                      type: string
+                    kind:
+                      type: string
+                    name:
+                      type: string
+                    version:
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
               labels:
                 additionalProperties:
                   type: string

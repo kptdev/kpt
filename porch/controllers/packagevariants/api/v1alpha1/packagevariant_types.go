@@ -63,7 +63,8 @@ type PackageVariantSpec struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	PackageContext *PackageContext `json:"packageContext,omitempty"`
+	PackageContext *PackageContext     `json:"packageContext,omitempty"`
+	Injectors      []InjectionSelector `json:"injectors,omitempty"`
 }
 
 type Upstream struct {
@@ -82,6 +83,15 @@ type Downstream struct {
 type PackageContext struct {
 	Data       map[string]string `json:"data,omitempty"`
 	RemoveKeys []string          `json:"removeKeys,omitempty"`
+}
+
+// InjectionSelector specifies how to select in-cluster objects for
+// resolving injection points.
+type InjectionSelector struct {
+	Group   *string `json:"group,omitempty"`
+	Version *string `json:"version,omitempty"`
+	Kind    *string `json:"kind,omitempty"`
+	Name    string  `json:"name"`
 }
 
 // PackageVariantStatus defines the observed state of PackageVariant
