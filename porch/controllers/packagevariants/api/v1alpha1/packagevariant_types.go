@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -63,7 +64,8 @@ type PackageVariantSpec struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	PackageContext *PackageContext     `json:"packageContext,omitempty"`
+	PackageContext *PackageContext         `json:"packageContext,omitempty"`
+	Pipeline       *kptfilev1.Pipeline `json:"pipeline,omitempty"`
 	Injectors      []InjectionSelector `json:"injectors,omitempty"`
 }
 

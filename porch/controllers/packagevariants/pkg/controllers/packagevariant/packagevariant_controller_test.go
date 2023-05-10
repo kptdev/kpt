@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	"github.com/stretchr/testify/require"
@@ -1131,6 +1132,407 @@ spec:
 			require.NoError(t, yaml.Unmarshal([]byte(tc.expectedPRR), &expectedPRR))
 
 			require.Equal(t, expectedPRR, prr)
+		})
+	}
+}
+
+// TODO no pipeline
+func TestEnsureKRMFunctions(t *testing.T) {
+	pvBase := `
+apiVersion: config.porch.kpt.dev
+kind: PackageVariant
+metadata:
+  name: my-pv
+  uid: pv-uid
+spec:
+  upstream:
+    repo: blueprints
+    package: foo
+    revision: v1
+  downstream:
+    repo: deployments
+    package: bar
+  pipeline:
+`[1:]
+
+	prrBase := `
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevisionResources
+metadata:
+  name: prr
+  namespace: default
+spec:
+  packageName: nephio-system
+  repository: nephio-packages
+  resources:
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: prr
+        annotations:
+          config.kubernetes.io/local-config: "true"
+      info:
+        description: Example
+`[1:]
+
+	testCases := map[string]struct {
+		initialPipeline string
+		pvPipeline      string
+		expectedErr     string
+		expectedPrr     string
+	}{
+		"add one mutator with existing mutators": {
+			initialPipeline: `
+        mutators:
+          - image: gcr.io/kpt-fn/set-labels:v0.1
+            name: set-labels
+            configMap:
+              app: foo
+          - image: gcr.io/kpt-fn/set-annotations:v0.1
+            name: set-annotations`[1:],
+			pvPipeline: `
+    mutators:
+      - image: gcr.io/kpt-fn/set-namespace:v0.1
+        name: set-namespace
+        configMap:
+          namespace: my-ns`[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        mutators:
+        - name: PackageVariant.my-pv.set-namespace.0
+          image: gcr.io/kpt-fn/set-namespace:v0.1
+          configMap:
+            namespace: my-ns
+        - image: gcr.io/kpt-fn/set-labels:v0.1
+          name: set-labels
+          configMap:
+            app: foo
+        - image: gcr.io/kpt-fn/set-annotations:v0.1
+          name: set-annotations
+`[1:],
+		},
+		"add two mutators with existing": {
+			initialPipeline: `
+        mutators:
+          - image: gcr.io/kpt-fn/set-labels:v0.1
+            name: set-labels
+            configMap:
+              app: foo
+          - image: gcr.io/kpt-fn/set-annotations:v0.1
+            name: set-annotations`[1:],
+			pvPipeline: `
+    mutators:
+      - image: gcr.io/kpt-fn/set-namespace:v0.1
+        name: set-namespace
+        configMap:
+          namespace: my-ns
+      - image: gcr.io/kpt-fn/format:unstable
+        name: format`[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        mutators:
+        - name: PackageVariant.my-pv.set-namespace.0
+          image: gcr.io/kpt-fn/set-namespace:v0.1
+          configMap:
+            namespace: my-ns
+        - name: PackageVariant.my-pv.format.1
+          image: gcr.io/kpt-fn/format:unstable
+        - image: gcr.io/kpt-fn/set-labels:v0.1
+          name: set-labels
+          configMap:
+            app: foo
+        - image: gcr.io/kpt-fn/set-annotations:v0.1
+          name: set-annotations
+`[1:],
+		},
+		"add one mutator with none existing": {
+			initialPipeline: "",
+			pvPipeline: `
+    mutators:
+      - image: gcr.io/kpt-fn/set-namespace:v0.1
+        name: set-namespace
+        configMap:
+          namespace: my-ns`[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        mutators:
+        - name: PackageVariant.my-pv.set-namespace.0
+          image: gcr.io/kpt-fn/set-namespace:v0.1
+          configMap:
+            namespace: my-ns
+`[1:],
+		},
+		"add none with existing mutators": {
+			initialPipeline: `
+        mutators:
+          - image: gcr.io/kpt-fn/set-labels:v0.1
+            name: set-labels
+            configMap:
+              app: foo
+          - image: gcr.io/kpt-fn/set-annotations:v0.1
+            name: set-annotations`[1:],
+			pvPipeline:  "",
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        mutators:
+          - image: gcr.io/kpt-fn/set-labels:v0.1
+            name: set-labels
+            configMap:
+              app: foo
+          - image: gcr.io/kpt-fn/set-annotations:v0.1
+            name: set-annotations`[1:],
+		},
+		"add one mutator with existing with comments": {
+			initialPipeline: `
+        mutators:
+          - image: gcr.io/kpt-fn/set-labels:v0.1
+            # this is a comment
+            name: set-labels
+            configMap:
+              app: foo
+          - image: gcr.io/kpt-fn/set-annotations:v0.1
+            name: set-annotations`[1:],
+			pvPipeline: `
+    mutators:
+      - image: gcr.io/kpt-fn/set-namespace:v0.1
+        name: set-namespace
+        configMap:
+          namespace: my-ns`[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        mutators:
+        - name: PackageVariant.my-pv.set-namespace.0
+          image: gcr.io/kpt-fn/set-namespace:v0.1
+          configMap:
+            namespace: my-ns
+        - image: gcr.io/kpt-fn/set-labels:v0.1
+          # this is a comment
+          name: set-labels
+          configMap:
+            app: foo
+        - image: gcr.io/kpt-fn/set-annotations:v0.1
+          name: set-annotations
+`[1:],
+		},
+		"add one validator with existing validators": {
+			initialPipeline: `
+        validators:
+          - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+            name: gatekeeper-validate`[1:],
+			pvPipeline: `
+    validators:
+      - image: gcr.io/kpt-fn/validate-name:undefined
+        name: validate-name `[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        validators:
+        - name: PackageVariant.my-pv.validate-name.0
+          image: gcr.io/kpt-fn/validate-name:undefined
+        - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+          name: gatekeeper-validate
+`[1:],
+		},
+		"add two validators with existing validators": {
+			initialPipeline: `
+        validators:
+          - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+            name: gatekeeper-validate`[1:],
+			pvPipeline: `
+    validators:
+      - image: gcr.io/kpt-fn/validate-name:undefined
+        name: validate-name `[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        validators:
+        - name: PackageVariant.my-pv.validate-name.0
+          image: gcr.io/kpt-fn/validate-name:undefined
+        - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+          name: gatekeeper-validate
+`[1:],
+		},
+		"add none with existing validator": {
+			initialPipeline: `
+        validators:
+          - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+            name: gatekeeper-validate`[1:],
+			pvPipeline:  "",
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        validators:
+          - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+            name: gatekeeper-validate`[1:],
+		},
+		"add validator and mutator with existing": {
+			initialPipeline: `
+        validators:
+          - image: gcr.io/val1
+            name: val1
+          - image: gcr.io/val2
+            name: val2
+        mutators:
+          - image: gcr.io/mut1
+            name: mut1
+          - image: gcr.io/mut2
+            name: mut2`[1:],
+			pvPipeline: `
+    validators:
+    - image: gcr.io/val3
+      name: val3
+    - image: gcr.io/val4
+      name: val4
+    mutators:
+    - image: gcr.io/mut3
+      name: mut3
+    - image: gcr.io/mut4
+      name: mut4
+`[1:],
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        validators:
+        - name: PackageVariant.my-pv.val3.0
+          image: gcr.io/val3
+        - name: PackageVariant.my-pv.val4.1
+          image: gcr.io/val4
+        - image: gcr.io/val1
+          name: val1
+        - image: gcr.io/val2
+          name: val2
+        mutators:
+        - name: PackageVariant.my-pv.mut3.0
+          image: gcr.io/mut3
+        - name: PackageVariant.my-pv.mut4.1
+          image: gcr.io/mut4
+        - image: gcr.io/mut1
+          name: mut1
+        - image: gcr.io/mut2
+          name: mut2
+`[1:],
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			locPrrBase := prrBase
+			if tc.initialPipeline != "" {
+				locPrrBase += "      pipeline:\n"
+			}
+			var prr porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(locPrrBase+tc.initialPipeline), &prr))
+			var pv api.PackageVariant
+			require.NoError(t, yaml.Unmarshal([]byte(pvBase+tc.pvPipeline), &pv))
+
+			actualErr := ensureKRMFunctions(&pv, &prr)
+			if tc.expectedErr == "" {
+				require.NoError(t, actualErr)
+			} else {
+				require.EqualError(t, actualErr, tc.expectedErr)
+			}
+			var expectedPRR porchapi.PackageRevisionResources
+			require.NoError(t, yaml.Unmarshal([]byte(tc.expectedPrr), &expectedPRR))
+
+			require.Equal(t, expectedPRR, prr)
+
+			// test idempotence
+			idemErr := ensureKRMFunctions(&pv, &prr)
+			if tc.expectedErr == "" {
+				require.NoError(t, idemErr)
+			} else {
+				require.EqualError(t, idemErr, tc.expectedErr)
+			}
+			require.Equal(t, expectedPRR, prr) // check that prr still matches expected
+		})
+	}
+}
+
+func TestGeneratePVFuncName(t *testing.T) {
+	tt := map[string]struct {
+		funcName     string
+		pvName       string
+		pos          int
+		expectedName string
+	}{
+		"regular func": {
+			funcName:     "my-func",
+			pvName:       "my-pv",
+			pos:          3,
+			expectedName: "PackageVariant.my-pv.my-func.3",
+		},
+	}
+
+	for name, tc := range tt {
+		t.Run(name, func(t *testing.T) {
+			res := generatePVFuncName(tc.funcName, tc.pvName, tc.pos)
+
+			require.Equal(t, tc.expectedName, res)
+		})
+	}
+}
+
+func TestIsPackageVariantFunc(t *testing.T) {
+	tt := map[string]struct {
+		funcyaml    string
+		pvName      string
+		expectedRes bool
+	}{
+		"valid func name": {
+			funcyaml:    "name: PackageVariant.my-pv.my-func.0",
+			pvName:      "my-pv",
+			expectedRes: true,
+		},
+		"field name is missing": {
+			funcyaml:    "otherkey: PackageVariant.my-pv.my-func.0",
+			pvName:      "my-pv",
+			expectedRes: false,
+		},
+		"additional dots": {
+			funcyaml:    "name: PackageVariant.too.many.dots.0",
+			pvName:      "too",
+			expectedRes: false,
+		},
+		"not enough dots": {
+			funcyaml:    "name: PackageVariant.not-enough.dots",
+			pvName:      "not-enough",
+			expectedRes: false,
+		},
+		"no PackageVariantPrefix": {
+			funcyaml:    "name: noprefix.my-pv.my-func.0",
+			pvName:      "my-pv",
+			expectedRes: false,
+		},
+		"pv-name mismatch": {
+			funcyaml:    "name: PackageVariant.my-pv.my-func.0",
+			pvName:      "actually-a-different-pv",
+			expectedRes: false,
+		},
+		"empty func name": {
+			funcyaml:    "name: PackageVariant.my-pv..0",
+			pvName:      "my-pv",
+			expectedRes: false,
+		},
+		"positional location is not an int": {
+			funcyaml:    "name: PackageVariant.my-pv.my-func.str",
+			pvName:      "my-pv",
+			expectedRes: false,
+		},
+	}
+
+	for name, tc := range tt {
+		t.Run(name, func(t *testing.T) {
+			o, err := fn.ParseKubeObject([]byte(tc.funcyaml))
+			require.NoError(t, err)
+			res, _ := isPackageVariantFunc(&o.SubObject, tc.pvName)
+
+			require.Equal(t, tc.expectedRes, res)
 		})
 	}
 }

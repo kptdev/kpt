@@ -27,6 +27,7 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 
+	kptfilev1 "github.com/GoogleContainerTools/kpt-functions-sdk/go/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 
 	"golang.org/x/mod/semver"
@@ -772,6 +773,10 @@ func (r *PackageVariantReconciler) calculateDraftResources(ctx context.Context,
 		return nil, false, err
 	}
 
+	if err := ensureKRMFunctions(pv, &prr); err != nil {
+		return nil, false, err
+	}
+
 	if err := ensureConfigInjection(ctx, r.Client, pv, &prr); err != nil {
 		return nil, false, err
 	}
@@ -849,6 +854,161 @@ func getFileKubeObject(prr *porchapi.PackageRevisionResources, file, kind, name 
 	}
 
 	return ko, nil
+}
+
+// TODO known issues:
+// - will move the newly generated name to the top of the mutator sequence
+// - does not preserve indent style. Instead will format if there are mutators/validators in pv, but will preserve if there are none.
+// - will not throw an error if the initial kptfile contains empty pipeline key
+func ensureKRMFunctions(pv *api.PackageVariant,
+	prr *porchapi.PackageRevisionResources) error {
+
+	if pv.Spec.Pipeline.IsEmpty() {
+		return nil
+	}
+
+	// parse kptfile
+	if _, ok := prr.Spec.Resources[kptfilev1.KptFileName]; !ok {
+		return fmt.Errorf("%s not found in PackageRevisionResources '%s/%s'", kptfilev1.KptFileName, prr.Namespace, prr.Name)
+	}
+	kptfile, err := fn.ParseKubeObject([]byte(prr.Spec.Resources[kptfilev1.KptFileName]))
+	if err != nil {
+		return fmt.Errorf("failed to parse %s of PackageRevisionResources '%s/%s'", kptfilev1.KptFileName, prr.Namespace, prr.Name)
+	}
+
+	pipeline := kptfile.UpsertMap("pipeline")
+
+	// generate new mutators
+	var newMutators = fn.SliceSubObjects{}
+
+	existingmutators, ok, err := pipeline.NestedSlice("mutators")
+	if err != nil {
+		return err
+	}
+	if !ok || existingmutators == nil {
+		existingmutators = fn.SliceSubObjects{}
+	}
+
+	for _, mutator := range existingmutators {
+		ok, err := isPackageVariantFunc(mutator, pv.ObjectMeta.Name)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			newMutators = append(newMutators, mutator)
+		}
+	}
+
+	var newPVMutators = fn.SliceSubObjects{}
+	for i, mutator := range pv.Spec.Pipeline.Mutators {
+		newMutator := mutator.DeepCopy()
+		newMutator.Name = generatePVFuncName(mutator.Name, pv.ObjectMeta.Name, i)
+		mut, err := fn.NewFromTypedObject(newMutator)
+		if err != nil {
+			return err
+		}
+		newPVMutators = append(newPVMutators, &mut.SubObject)
+	}
+
+	newMutators = append(newPVMutators, newMutators...)
+
+	// generate new validators
+	var newValidators = fn.SliceSubObjects{}
+
+	existingvalidators, ok, err := pipeline.NestedSlice("validators")
+	if err != nil {
+		return err
+	}
+	if !ok || existingvalidators == nil {
+		existingvalidators = fn.SliceSubObjects{}
+	}
+
+	for _, validator := range existingvalidators {
+		ok, err := isPackageVariantFunc(validator, pv.ObjectMeta.Name)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			newValidators = append(newValidators, validator)
+		}
+	}
+
+	var newPVValidators = fn.SliceSubObjects{}
+	for i, validator := range pv.Spec.Pipeline.Validators {
+		newValidator := validator.DeepCopy()
+		newValidator.Name = generatePVFuncName(validator.Name, pv.ObjectMeta.Name, i)
+		val, err := fn.NewFromTypedObject(newValidator)
+		if err != nil {
+			return err
+		}
+		newPVValidators = append(newPVValidators, &val.SubObject)
+	}
+
+	newValidators = append(newPVValidators, newValidators...)
+
+	// update kptfile
+	if len(newMutators) > 0 {
+		if err := pipeline.SetSlice(newMutators, "mutators"); err != nil {
+			return err
+		}
+	}
+
+	if len(newValidators) > 0 {
+		if err := pipeline.SetSlice(newValidators, "validators"); err != nil {
+			return err
+		}
+	}
+
+	prr.Spec.Resources[kptfilev1.KptFileName] = kptfile.String()
+
+	return nil
+}
+
+const PackageVariantFuncPrefix = "PackageVariant"
+
+// isPackageVariantFunc returns true if a function has been created via a PackageVariant.
+// It uses the name of the func to determine its origin and compares it with the supplied pvName.
+func isPackageVariantFunc(fn *fn.SubObject, pvName string) (bool, error) {
+	origname, ok, err := fn.NestedString("name")
+	if err != nil {
+		return false, fmt.Errorf("could not retrieve field name: %w", err)
+	}
+	if !ok {
+		return false, fmt.Errorf("could not find field name in supplied func")
+	}
+
+	name := strings.Split(origname, ".")
+
+	// if more or less than 3 dots have been used, return false
+	if len(name) != 4 {
+		return false, nil
+	}
+
+	// if PackageVariantFuncPrefix has not been used, return false
+	if name[0] != PackageVariantFuncPrefix {
+		return false, nil
+	}
+
+	// if pv-names don't match, return false
+	if name[1] != pvName {
+		return false, nil
+	}
+
+	// make sure func name is not empty
+	if name[2] == "" {
+		return false, nil
+	}
+
+	// if the last segment is not an integer, return false
+	if _, err := strconv.Atoi(name[3]); err != nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func generatePVFuncName(funcName, pvName string, pos int) string {
+	return fmt.Sprintf("%s.%s.%s.%d", PackageVariantFuncPrefix, pvName, funcName, pos)
 }
 
 func hashFromPackageRevisionResources(prr *porchapi.PackageRevisionResources) (string, error) {
