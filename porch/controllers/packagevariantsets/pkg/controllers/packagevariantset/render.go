@@ -74,7 +74,7 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		if pvt.Downstream.RepoExpr != nil && *pvt.Downstream.RepoExpr != "" {
 			repo, err = evalExpr(*pvt.Downstream.RepoExpr, inputs)
 			if err != nil {
-				return nil, fmt.Errorf("spec.downstream.repoExpr: %s", err.Error())
+				return nil, fmt.Errorf("template.downstream.repoExpr: %s", err.Error())
 			}
 		}
 
@@ -104,7 +104,7 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		if pvt.Downstream.PackageExpr != nil && *pvt.Downstream.PackageExpr != "" {
 			spec.Downstream.Package, err = evalExpr(*pvt.Downstream.PackageExpr, inputs)
 			if err != nil {
-				return nil, fmt.Errorf("spec.downstream.packageExpr: %s", err.Error())
+				return nil, fmt.Errorf("template.downstream.packageExpr: %s", err.Error())
 			}
 		}
 	}
@@ -116,23 +116,23 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 	if pvt.DeletionPolicy != nil {
 		spec.DeletionPolicy = *pvt.DeletionPolicy
 	}
-	spec.Labels, err = copyAndOverlayMapExpr("spec.labelExprs", pvt.Labels, pvt.LabelExprs, inputs)
+	spec.Labels, err = copyAndOverlayMapExpr("template.labelExprs", pvt.Labels, pvt.LabelExprs, inputs)
 	if err != nil {
 		return nil, err
 	}
 
-	spec.Annotations, err = copyAndOverlayMapExpr("spec.annotationExprs", pvt.Annotations, pvt.AnnotationExprs, inputs)
+	spec.Annotations, err = copyAndOverlayMapExpr("template.annotationExprs", pvt.Annotations, pvt.AnnotationExprs, inputs)
 	if err != nil {
 		return nil, err
 	}
 
 	if pvt.PackageContext != nil {
-		data, err := copyAndOverlayMapExpr("spec.packageContext.dataExprs", pvt.PackageContext.Data, pvt.PackageContext.DataExprs, inputs)
+		data, err := copyAndOverlayMapExpr("template.packageContext.dataExprs", pvt.PackageContext.Data, pvt.PackageContext.DataExprs, inputs)
 		if err != nil {
 			return nil, err
 		}
 
-		removeKeys, err := copyAndOverlayStringSlice("spec.packageContext.removeKeyExprs", pvt.PackageContext.RemoveKeys,
+		removeKeys, err := copyAndOverlayStringSlice("template.packageContext.removeKeyExprs", pvt.PackageContext.RemoveKeys,
 			pvt.PackageContext.RemoveKeyExprs, inputs)
 		if err != nil {
 			return nil, err
@@ -142,6 +142,27 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 			RemoveKeys: removeKeys,
 		}
 	}
+
+	for i, injTemplate := range pvt.Injectors {
+		injector := pkgvarapi.InjectionSelector{
+			Group:   injTemplate.Group,
+			Version: injTemplate.Version,
+			Kind:    injTemplate.Kind,
+		}
+		if injTemplate.Name != nil && *injTemplate.Name != "" {
+			injector.Name = *injTemplate.Name
+		}
+
+		if injTemplate.NameExpr != nil && *injTemplate.NameExpr != "" {
+			injector.Name, err = evalExpr(*injTemplate.NameExpr, inputs)
+			if err != nil {
+				return nil, fmt.Errorf("template.injectors[%d].nameExpr: %s", i, err.Error())
+			}
+		}
+
+		spec.Injectors = append(spec.Injectors, injector)
+	}
+
 	return spec, nil
 }
 

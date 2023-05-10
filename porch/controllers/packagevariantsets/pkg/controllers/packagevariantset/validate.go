@@ -131,6 +131,15 @@ func validateTemplate(template *api.PackageVariantTemplate, field string) []erro
 		allErrs = append(allErrs, validateMapExpr(template.PackageContext.DataExprs, fmt.Sprintf("%s.packageContext.dataExprs", field))...)
 	}
 
+	for i, injector := range template.Injectors {
+		if injector.Name != nil && injector.NameExpr != nil {
+			allErrs = append(allErrs, fmt.Errorf("%s.injectors[%d] may specify only one of `name` and `nameExpr`", field, i))
+		}
+
+		if injector.Name == nil && injector.NameExpr == nil {
+			allErrs = append(allErrs, fmt.Errorf("%s.injectors[%d] must specify either `name` or `nameExpr`", field, i))
+		}
+	}
 	return allErrs
 }
 
