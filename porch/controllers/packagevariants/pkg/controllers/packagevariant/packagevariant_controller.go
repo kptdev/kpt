@@ -1003,11 +1003,6 @@ func isPackageVariantFunc(fn *fn.SubObject, pvName string) (bool, error) {
 		return false, nil
 	}
 
-	// make sure func name is not empty
-	if name[2] == "" {
-		return false, nil
-	}
-
 	// if the last segment is not an integer, return false
 	if _, err := strconv.Atoi(name[3]); err != nil {
 		return false, nil

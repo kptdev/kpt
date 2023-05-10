@@ -1466,6 +1466,12 @@ func TestGeneratePVFuncName(t *testing.T) {
 			pos:          3,
 			expectedName: "PackageVariant.my-pv.my-func.3",
 		},
+		"empty func name": {
+			funcName:     "",
+			pvName:       "my-pv",
+			pos:          0,
+			expectedName: "PackageVariant.my-pv..0",
+		},
 	}
 
 	for name, tc := range tt {
@@ -1516,7 +1522,7 @@ func TestIsPackageVariantFunc(t *testing.T) {
 		"empty func name": {
 			funcyaml:    "name: PackageVariant.my-pv..0",
 			pvName:      "my-pv",
-			expectedRes: false,
+			expectedRes: true,
 		},
 		"positional location is not an int": {
 			funcyaml:    "name: PackageVariant.my-pv.my-func.str",
