@@ -947,14 +947,23 @@ func ensureKRMFunctions(pv *api.PackageVariant,
 	newValidators = append(newPVValidators, newValidators...)
 
 	// update kptfile
+	// if there are new mutators, set them. Otherwise delete the field. This avoids ugly dangling `mutators: []` fields in the final kptfile
 	if len(newMutators) > 0 {
 		if err := pipeline.SetSlice(newMutators, "mutators"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := pipeline.RemoveNestedField("mutators"); err != nil {
 			return err
 		}
 	}
 
 	if len(newValidators) > 0 {
 		if err := pipeline.SetSlice(newValidators, "validators"); err != nil {
+			return err
+		}
+	} else {
+		if _, err := pipeline.RemoveNestedField("vaidators"); err != nil {
 			return err
 		}
 	}
