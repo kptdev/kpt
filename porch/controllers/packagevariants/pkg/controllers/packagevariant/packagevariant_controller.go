@@ -868,12 +868,9 @@ func ensureKRMFunctions(pv *api.PackageVariant,
 	}
 
 	// parse kptfile
-	if _, ok := prr.Spec.Resources[kptfilev1.KptFileName]; !ok {
-		return fmt.Errorf("%s not found in PackageRevisionResources '%s/%s'", kptfilev1.KptFileName, prr.Namespace, prr.Name)
-	}
-	kptfile, err := fn.ParseKubeObject([]byte(prr.Spec.Resources[kptfilev1.KptFileName]))
+	kptfile, err := getFileKubeObject(prr, kptfilev1.KptFileName, "", "")
 	if err != nil {
-		return fmt.Errorf("failed to parse %s of PackageRevisionResources '%s/%s'", kptfilev1.KptFileName, prr.Namespace, prr.Name)
+		return err
 	}
 
 	pipeline := kptfile.UpsertMap("pipeline")
