@@ -136,7 +136,7 @@ type PackageVariantTemplate struct {
 
 	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
 	// +optional
-	//Injectors     *InfectionSelectorTemplate `json:"injectors,omitempty"`
+	Injectors []InjectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
 // DownstreamTemplate is used to calculate the downstream field of the resulting
@@ -160,8 +160,8 @@ type PackageContextTemplate struct {
 }
 
 // InjectionSelectorTemplate is used to calculate the injectors field of the
-// resulting package variants. Only one of the Name and NameExpr fields may be
-// specified.
+// resulting package variants. Exactly one of the Name and NameExpr fields must
+// be specified. The other fields are optional.
 type InjectionSelectorTemplate struct {
 	Group   *string `json:"group,omitempty"`
 	Version *string `json:"version,omitempty"`
