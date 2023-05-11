@@ -27,8 +27,8 @@ import (
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 
-	kptfilev1 "github.com/GoogleContainerTools/kpt-functions-sdk/go/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 
 	"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -875,96 +875,57 @@ func ensureKRMFunctions(pv *api.PackageVariant,
 
 	pipeline := kptfile.UpsertMap("pipeline")
 
-	// generate new mutators
-	var newMutators = fn.SliceSubObjects{}
-
-	existingmutators, ok, err := pipeline.NestedSlice("mutators")
-	if err != nil {
-		return err
+	fieldlist := map[string][]kptfilev1.Function{
+		"validators": pv.Spec.Pipeline.Validators,
+		"mutators":   pv.Spec.Pipeline.Mutators,
 	}
-	if !ok || existingmutators == nil {
-		existingmutators = fn.SliceSubObjects{}
-	}
+	for fieldname, field := range fieldlist {
+		var newFieldVal = fn.SliceSubObjects{}
 
-	for _, mutator := range existingmutators {
-		ok, err := isPackageVariantFunc(mutator, pv.ObjectMeta.Name)
+		existingFields, ok, err := pipeline.NestedSlice(fieldname)
 		if err != nil {
 			return err
 		}
-		if !ok {
-			newMutators = append(newMutators, mutator)
+		if !ok || existingFields == nil {
+			existingFields = fn.SliceSubObjects{}
+		}
+
+		for _, existingField := range existingFields {
+			ok, err := isPackageVariantFunc(existingField, pv.ObjectMeta.Name)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				newFieldVal = append(newFieldVal, existingField)
+			}
+		}
+
+		var newPVFieldVal = fn.SliceSubObjects{}
+		for i, newFields := range field {
+			newFieldVal := newFields.DeepCopy()
+			newFieldVal.Name = generatePVFuncName(newFields.Name, pv.ObjectMeta.Name, i)
+			f, err := fn.NewFromTypedObject(newFieldVal)
+			if err != nil {
+				return err
+			}
+			newPVFieldVal = append(newPVFieldVal, &f.SubObject)
+		}
+
+		newFieldVal = append(newPVFieldVal, newFieldVal...)
+
+		// if there are new mutators/validators, set them. Otherwise delete the field. This avoids ugly dangling `mutators: []` fields in the final kptfile
+		if len(newFieldVal) > 0 {
+			if err := pipeline.SetSlice(newFieldVal, fieldname); err != nil {
+				return err
+			}
+		} else {
+			if _, err := pipeline.RemoveNestedField(fieldname); err != nil {
+				return err
+			}
 		}
 	}
-
-	var newPVMutators = fn.SliceSubObjects{}
-	for i, mutator := range pv.Spec.Pipeline.Mutators {
-		newMutator := mutator.DeepCopy()
-		newMutator.Name = generatePVFuncName(mutator.Name, pv.ObjectMeta.Name, i)
-		mut, err := fn.NewFromTypedObject(newMutator)
-		if err != nil {
-			return err
-		}
-		newPVMutators = append(newPVMutators, &mut.SubObject)
-	}
-
-	newMutators = append(newPVMutators, newMutators...)
-
-	// generate new validators
-	var newValidators = fn.SliceSubObjects{}
-
-	existingvalidators, ok, err := pipeline.NestedSlice("validators")
-	if err != nil {
-		return err
-	}
-	if !ok || existingvalidators == nil {
-		existingvalidators = fn.SliceSubObjects{}
-	}
-
-	for _, validator := range existingvalidators {
-		ok, err := isPackageVariantFunc(validator, pv.ObjectMeta.Name)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			newValidators = append(newValidators, validator)
-		}
-	}
-
-	var newPVValidators = fn.SliceSubObjects{}
-	for i, validator := range pv.Spec.Pipeline.Validators {
-		newValidator := validator.DeepCopy()
-		newValidator.Name = generatePVFuncName(validator.Name, pv.ObjectMeta.Name, i)
-		val, err := fn.NewFromTypedObject(newValidator)
-		if err != nil {
-			return err
-		}
-		newPVValidators = append(newPVValidators, &val.SubObject)
-	}
-
-	newValidators = append(newPVValidators, newValidators...)
 
 	// update kptfile
-	// if there are new mutators, set them. Otherwise delete the field. This avoids ugly dangling `mutators: []` fields in the final kptfile
-	if len(newMutators) > 0 {
-		if err := pipeline.SetSlice(newMutators, "mutators"); err != nil {
-			return err
-		}
-	} else {
-		if _, err := pipeline.RemoveNestedField("mutators"); err != nil {
-			return err
-		}
-	}
-
-	if len(newValidators) > 0 {
-		if err := pipeline.SetSlice(newValidators, "validators"); err != nil {
-			return err
-		}
-	} else {
-		if _, err := pipeline.RemoveNestedField("vaidators"); err != nil {
-			return err
-		}
-	}
-
 	prr.Spec.Resources[kptfilev1.KptFileName] = kptfile.String()
 
 	return nil
