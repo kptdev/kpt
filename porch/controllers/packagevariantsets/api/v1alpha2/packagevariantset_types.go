@@ -15,7 +15,7 @@
 package v1alpha2
 
 import (
-	//kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -132,7 +132,7 @@ type PackageVariantTemplate struct {
 
 	// Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
 	// +optional
-	//Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+	Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
 
 	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
 	// +optional
