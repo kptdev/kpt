@@ -316,7 +316,7 @@ spec:
                 type: array
             type: object
         type: object
-    served: false
+    served: true
     storage: false
     subresources:
       status: {}
@@ -480,6 +480,9 @@ spec:
                             precedent over those with the same keys that are present
                             in Annotations.
                           items:
+                            description: MapExpr is used for various fields to calculate
+                              map entries. Only one of Key and KeyExpr may be specified;
+                              similarly only on of Value and ValueExpr may be specified.
                             properties:
                               key:
                                 type: string
@@ -514,6 +517,27 @@ spec:
                             repoExpr:
                               type: string
                           type: object
+                        injectors:
+                          description: Injectors allows specifying the spec.Injectors
+                            field of the generated PackageVariant
+                          items:
+                            description: InjectionSelectorTemplate is used to calculate
+                              the injectors field of the resulting package variants.
+                              Exactly one of the Name and NameExpr fields must be
+                              specified. The other fields are optional.
+                            properties:
+                              group:
+                                type: string
+                              kind:
+                                type: string
+                              name:
+                                type: string
+                              nameExpr:
+                                type: string
+                              version:
+                                type: string
+                            type: object
+                          type: array
                         labelExprs:
                           description: LabelsExprs allows specifying the spec.Labels
                             field of the generated PackageVariant using CEL to dynamically
@@ -521,6 +545,9 @@ spec:
                             precedent over those with the same keys that are present
                             in Labels.
                           items:
+                            description: MapExpr is used for various fields to calculate
+                              map entries. Only one of Key and KeyExpr may be specified;
+                              similarly only on of Value and ValueExpr may be specified.
                             properties:
                               key:
                                 type: string
@@ -548,6 +575,10 @@ spec:
                               type: object
                             dataExprs:
                               items:
+                                description: MapExpr is used for various fields to
+                                  calculate map entries. Only one of Key and KeyExpr
+                                  may be specified; similarly only on of Value and
+                                  ValueExpr may be specified.
                                 properties:
                                   key:
                                     type: string
