@@ -430,6 +430,19 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 								},
 							},
 						},
+						Mutators: []api.FunctionTemplate{
+							{
+								Function: kptfilev1.Function{
+									Image: "mutates",
+								},
+								ConfigMapExprs: []api.MapExpr{
+									{
+										Key:   pointer.String("k1"),
+										Value: pointer.String("yo"),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -451,6 +464,14 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 								"k1": "my-repo-1",
 								"k2": "v2",
 								"k3": "bar",
+							},
+						},
+					},
+					Mutators: []kptfilev1.Function{
+						{
+							Image: "mutates",
+							ConfigMap: map[string]string{
+								"k1": "yo",
 							},
 						},
 					},
