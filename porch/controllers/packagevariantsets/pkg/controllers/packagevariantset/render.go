@@ -187,7 +187,7 @@ func renderFunctionTemplateList(field string, templateList []api.FunctionTemplat
 	for i, ft := range templateList {
 		var err error
 		f := ft.Function
-		f.ConfigMap, err = copyAndOverlayMapExpr(fmt.Sprintf("%s[%d].configMap", field, i), ft.ConfigMap, ft.ConfigMapExprs, inputs)
+		f.ConfigMap, err = copyAndOverlayMapExpr(fmt.Sprintf("%s[%d].configMapExprs", field, i), ft.ConfigMap, ft.ConfigMapExprs, inputs)
 		if err != nil {
 			return nil, err
 		}
