@@ -132,7 +132,7 @@ type PackageVariantTemplate struct {
 
 	// Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
 	// +optional
-	Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+	Pipeline *PipelineTemplate `json:"pipeline,omitempty"`
 
 	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
 	// +optional
@@ -179,6 +179,32 @@ type MapExpr struct {
 	Value     *string `json:"value,omitempty"`
 	KeyExpr   *string `json:"keyExpr,omitempty"`
 	ValueExpr *string `json:"valueExpr,omitempty"`
+}
+
+// PipelineTemplate is used to calculate the pipeline field of the resulting
+// package variants.
+type PipelineTemplate struct {
+	// Validators is used to caculate the pipeline.validators field of the
+	// resulting package variants.
+	// +optional
+	Validators []FunctionTemplate `json:"validators,omitempty"`
+
+	// Mutators is used to caculate the pipeline.mutators field of the
+	// resulting package variants.
+	// +optional
+	Mutators []FunctionTemplate `json:"mutators,omitempty"`
+}
+
+// FunctionTemplate is used in generating KRM function pipeline entries; that
+// is, it is used to generate Kptfile Function objects.
+type FunctionTemplate struct {
+	kptfilev1.Function `json:",inline"`
+
+	// ConfigMapExprs allows use of CEL to dynamically create the keys and values in the
+	// function config ConfigMap. Entries in this field take precedent over those with
+	// the same keys that are present in ConfigMap.
+	// +optional
+	ConfigMapExprs []MapExpr `json:"configMapExprs,omitemtpy"`
 }
 
 // PackageVariantSetStatus defines the observed state of PackageVariantSet

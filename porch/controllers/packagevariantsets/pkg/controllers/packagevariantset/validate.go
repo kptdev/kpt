@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
 	api "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariantsets/api/v1alpha2"
 )
@@ -144,10 +143,10 @@ func validateTemplate(template *api.PackageVariantTemplate, field string) []erro
 
 	if template.Pipeline != nil {
 		for i, f := range template.Pipeline.Validators {
-			allErrs = append(allErrs, validateFunction(f, fmt.Sprintf("%s.pipeline.validators[%d]", field, i))...)
+			allErrs = append(allErrs, validateFunction(&f, fmt.Sprintf("%s.pipeline.validators[%d]", field, i))...)
 		}
 		for i, f := range template.Pipeline.Mutators {
-			allErrs = append(allErrs, validateFunction(f, fmt.Sprintf("%s.pipeline.mutators[%d]", field, i))...)
+			allErrs = append(allErrs, validateFunction(&f, fmt.Sprintf("%s.pipeline.mutators[%d]", field, i))...)
 		}
 	}
 
@@ -168,7 +167,7 @@ func validateMapExpr(m []api.MapExpr, fieldName string) []error {
 	return allErrs
 }
 
-func validateFunction(f kptfilev1.Function, field string) []error {
+func validateFunction(f *api.FunctionTemplate, field string) []error {
 	var allErrs []error
 	if f.Image == "" {
 		allErrs = append(allErrs, fmt.Errorf("%s.image must not be empty", field))

@@ -18,6 +18,7 @@ import (
 	"context"
 	"testing"
 
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
@@ -391,6 +392,67 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 					},
 					{
 						Name: "my-repo-1-test",
+					},
+				},
+			},
+			expectedErrs: nil,
+		},
+		"pipeline injectors": {
+			downstream: pvContext{
+				repoDefault:    "my-repo-1",
+				packageDefault: "p",
+				template: &api.PackageVariantTemplate{
+					Pipeline: &api.PipelineTemplate{
+						Validators: []api.FunctionTemplate{
+							{
+								Function: kptfilev1.Function{
+									Image: "foo:bar",
+									Name:  "hey",
+								},
+							},
+							{
+								Function: kptfilev1.Function{
+									Image: "foo:bar",
+									ConfigMap: map[string]string{
+										"k1": "v1",
+										"k2": "v2",
+									},
+								},
+								ConfigMapExprs: []api.MapExpr{
+									{
+										Key:       pointer.String("k1"),
+										ValueExpr: pointer.String("repository.name"),
+									},
+									{
+										KeyExpr: pointer.String("'k3'"),
+										Value:   pointer.String("bar"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "my-repo-1",
+					Package: "p",
+				},
+				Pipeline: &kptfilev1.Pipeline{
+					Validators: []kptfilev1.Function{
+						{
+							Image: "foo:bar",
+							Name:  "hey",
+						},
+						{
+							Image: "foo:bar",
+							ConfigMap: map[string]string{
+								"k1": "my-repo-1",
+								"k2": "v2",
+								"k3": "bar",
+							},
+						},
 					},
 				},
 			},

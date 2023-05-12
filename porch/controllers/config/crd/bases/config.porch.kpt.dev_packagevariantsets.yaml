@@ -604,10 +604,12 @@ spec:
                             field of the generated PackageVariant
                           properties:
                             mutators:
-                              description: Mutators defines a list of of KRM functions
-                                that mutate resources.
+                              description: Mutators is used to caculate the pipeline.mutators
+                                field of the resulting package variants.
                               items:
-                                description: Function specifies a KRM function.
+                                description: FunctionTemplate is used in generating
+                                  KRM function pipeline entries; that is, it is used
+                                  to generate Kptfile Function objects.
                                 properties:
                                   configMap:
                                     additionalProperties:
@@ -615,6 +617,28 @@ spec:
                                     description: '`ConfigMap` is a convenient way
                                       to specify a function config of kind ConfigMap.'
                                     type: object
+                                  configMapExprs:
+                                    description: ConfigMapExprs allows use of CEL
+                                      to dynamically create the keys and values in
+                                      the function config ConfigMap. Entries in this
+                                      field take precedent over those with the same
+                                      keys that are present in ConfigMap.
+                                    items:
+                                      description: MapExpr is used for various fields
+                                        to calculate map entries. Only one of Key
+                                        and KeyExpr may be specified; similarly only
+                                        on of Value and ValueExpr may be specified.
+                                      properties:
+                                        key:
+                                          type: string
+                                        keyExpr:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueExpr:
+                                          type: string
+                                      type: object
+                                    type: array
                                   configPath:
                                     description: '`ConfigPath` specifies a slash-delimited
                                       relative path to a file in the current directory
@@ -715,11 +739,12 @@ spec:
                                 type: object
                               type: array
                             validators:
-                              description: Validators defines a list of KRM functions
-                                that validate resources. Validators are not permitted
-                                to mutate resources.
+                              description: Validators is used to caculate the pipeline.validators
+                                field of the resulting package variants.
                               items:
-                                description: Function specifies a KRM function.
+                                description: FunctionTemplate is used in generating
+                                  KRM function pipeline entries; that is, it is used
+                                  to generate Kptfile Function objects.
                                 properties:
                                   configMap:
                                     additionalProperties:
@@ -727,6 +752,28 @@ spec:
                                     description: '`ConfigMap` is a convenient way
                                       to specify a function config of kind ConfigMap.'
                                     type: object
+                                  configMapExprs:
+                                    description: ConfigMapExprs allows use of CEL
+                                      to dynamically create the keys and values in
+                                      the function config ConfigMap. Entries in this
+                                      field take precedent over those with the same
+                                      keys that are present in ConfigMap.
+                                    items:
+                                      description: MapExpr is used for various fields
+                                        to calculate map entries. Only one of Key
+                                        and KeyExpr may be specified; similarly only
+                                        on of Value and ValueExpr may be specified.
+                                      properties:
+                                        key:
+                                          type: string
+                                        keyExpr:
+                                          type: string
+                                        value:
+                                          type: string
+                                        valueExpr:
+                                          type: string
+                                      type: object
+                                    type: array
                                   configPath:
                                     description: '`ConfigPath` specifies a slash-delimited
                                       relative path to a file in the current directory
