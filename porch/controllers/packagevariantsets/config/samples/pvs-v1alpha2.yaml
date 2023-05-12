@@ -31,7 +31,7 @@ spec:
       name: cluster-02
     template:
       downstream:
-        packageExpr: "target.packageName + '-' + repository.labels['env']"
+        packageExpr: "target.package + '-' + repository.labels['env']"
   - repositorySelector:
       matchLabels:
         env: prod

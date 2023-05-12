@@ -1246,7 +1246,7 @@ target, as follows:
 
 | Target Type         | `target` Variable Contents |
 | ------------------- | -------------------------- |
-| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repoDefault` and `packageDefault` values. |
+| Repo/Package List   | A struct with two fields: `repo` and `package`, the same as the `repoDefault` and `packageDefault` values. |
 | Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstream.repoExpr`. |
 | Object Selector     | The Object selected by the selector. |
 
