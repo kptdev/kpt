@@ -64,7 +64,7 @@ type PackageVariantSpec struct {
 	Labels      map[string]string `json:"labels,omitempty"`
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	PackageContext *PackageContext         `json:"packageContext,omitempty"`
+	PackageContext *PackageContext     `json:"packageContext,omitempty"`
 	Pipeline       *kptfilev1.Pipeline `json:"pipeline,omitempty"`
 	Injectors      []InjectionSelector `json:"injectors,omitempty"`
 }
