@@ -856,10 +856,9 @@ func getFileKubeObject(prr *porchapi.PackageRevisionResources, file, kind, name 
 	return ko, nil
 }
 
-// TODO known issues:
-// - will move the newly generated name to the top of the mutator sequence
-// - does not preserve indent style. Instead will format if there are mutators/validators in pv, but will preserve if there are none.
-// - will not throw an error if the initial kptfile contains empty pipeline key
+// ensureKRMFunctions adds mutators and validators specified in the PackageVariant to the kptfile inside the PackageRevisionResources.
+// It generates a unique name that identifies the func (see func generatePVFuncname) and moves it to the top of the mutator sequence.
+// It will preserve indent-style if there are no new mutators/validators.
 func ensureKRMFunctions(pv *api.PackageVariant,
 	prr *porchapi.PackageRevisionResources) error {
 
