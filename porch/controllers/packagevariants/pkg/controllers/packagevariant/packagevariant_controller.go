@@ -858,26 +858,27 @@ func getFileKubeObject(prr *porchapi.PackageRevisionResources, file, kind, name 
 
 // ensureKRMFunctions adds mutators and validators specified in the PackageVariant to the kptfile inside the PackageRevisionResources.
 // It generates a unique name that identifies the func (see func generatePVFuncname) and moves it to the top of the mutator sequence.
-// It will preserve indent-style if there are no new mutators/validators.
+// It does not preserve yaml indent-style.
 func ensureKRMFunctions(pv *api.PackageVariant,
 	prr *porchapi.PackageRevisionResources) error {
-
-	if pv.Spec.Pipeline.IsEmpty() {
-		return nil
-	}
 
 	// parse kptfile
 	kptfile, err := getFileKubeObject(prr, kptfilev1.KptFileName, "", "")
 	if err != nil {
 		return err
 	}
-
 	pipeline := kptfile.UpsertMap("pipeline")
 
 	fieldlist := map[string][]kptfilev1.Function{
-		"validators": pv.Spec.Pipeline.Validators,
-		"mutators":   pv.Spec.Pipeline.Mutators,
+		"validators": nil,
+		"mutators":   nil,
 	}
+	// retrieve fields if pipeline is not nil, to avoid nilpointer exception
+	if pv.Spec.Pipeline != nil {
+		fieldlist["validators"] = pv.Spec.Pipeline.Validators
+		fieldlist["mutators"] = pv.Spec.Pipeline.Mutators
+	}
+
 	for fieldname, field := range fieldlist {
 		var newFieldVal = fn.SliceSubObjects{}
 
@@ -921,6 +922,13 @@ func ensureKRMFunctions(pv *api.PackageVariant,
 			if _, err := pipeline.RemoveNestedField(fieldname); err != nil {
 				return err
 			}
+		}
+	}
+
+	// if there are no mutators and no validators, remove the dangling pipeline field
+	if pipeline.GetMap("mutators") == nil && pipeline.GetMap("validators") == nil {
+		if _, err := kptfile.RemoveNestedField("pipeline"); err != nil {
+			return err
 		}
 	}
 

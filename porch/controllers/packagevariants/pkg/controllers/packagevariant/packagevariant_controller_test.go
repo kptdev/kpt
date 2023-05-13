@@ -1279,12 +1279,13 @@ spec:
 			expectedPrr: prrBase + `
       pipeline:
         mutators:
-          - image: gcr.io/kpt-fn/set-labels:v0.1
-            name: set-labels
-            configMap:
-              app: foo
-          - image: gcr.io/kpt-fn/set-annotations:v0.1
-            name: set-annotations`[1:],
+        - image: gcr.io/kpt-fn/set-labels:v0.1
+          name: set-labels
+          configMap:
+            app: foo
+        - image: gcr.io/kpt-fn/set-annotations:v0.1
+          name: set-annotations
+`[1:],
 		},
 		"add one mutator with existing with comments": {
 			initialPipeline: `
@@ -1367,8 +1368,9 @@ spec:
 			expectedPrr: prrBase + `
       pipeline:
         validators:
-          - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
-            name: gatekeeper-validate`[1:],
+        - image: gcr.io/kpt-fn/gatekeeper-validate:v0.1
+          name: gatekeeper-validate
+`[1:],
 		},
 		"add validator and mutator with existing": {
 			initialPipeline: `
@@ -1415,6 +1417,40 @@ spec:
           name: mut1
         - image: gcr.io/mut2
           name: mut2
+`[1:],
+		},
+		"remove pv mutator": {
+			initialPipeline: `
+        mutators:
+        - image: gcr.io/mut:v1
+          name: PackageVariant.my-pv.mut.0`[1:],
+			pvPipeline:  "",
+			expectedErr: "",
+			expectedPrr: prrBase + "\n",
+		},
+		"remove pv validator": {
+			initialPipeline: `
+        validators:
+        - image: gcr.io/val:v1
+          name: PackageVariant.my-pv.val.0`[1:],
+			pvPipeline:  "",
+			expectedErr: "",
+			expectedPrr: prrBase + "\n",
+		},
+		"remove pv validator, keep prr one": {
+			initialPipeline: `
+        validators:
+        - image: gcr.io/val:v1
+          name: PackageVariant.my-pv.val.0
+        - image: gcr.io/val:v1
+          name: non-pv-val`[1:],
+			pvPipeline:  "",
+			expectedErr: "",
+			expectedPrr: prrBase + `
+      pipeline:
+        validators:
+        - image: gcr.io/val:v1
+          name: non-pv-val
 `[1:],
 		},
 	}
