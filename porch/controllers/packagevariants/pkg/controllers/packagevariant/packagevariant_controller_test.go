@@ -166,7 +166,6 @@ spec:
 `,
 			expectedErr: "spec.packageContext.data: Invalid value: map[string]string{\"package-path\":\"test\"}: must not contain the key \"package-path\"",
 		},
-
 		"package-path in package context removeKeys": {
 			packageVariant: packageVariantHeader + `
 spec:
@@ -182,6 +181,43 @@ spec:
     - package-path
 `,
 			expectedErr: "spec.packageContext.removeKeys: Invalid value: []string{\"package-path\"}: must not contain the key \"package-path\"",
+		},
+		"valid injectors": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  injectors:
+  - group: porch.kpt.dev
+    version: v1alpha1
+    kind: Repository
+    name: foo
+  - name: bar
+`,
+		},
+		"invalid injectors": {
+			packageVariant: packageVariantHeader + `
+spec:
+  upstream:
+    package: foo
+    revision: v1
+    repo: blueprints
+  downstream:
+    package: foo
+    repo: deployments
+  injectors:
+  - group: porch.kpt.dev
+    version: v1alpha1
+    kind: Repository
+    name: foo
+  - name: ""
+`,
+			expectedErr: "spec.injectors[1].name must not be empty",
 		},
 	}
 

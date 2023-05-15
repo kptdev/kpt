@@ -184,6 +184,7 @@ application pipeline allows it, as seen in *Figure 3*.[^setns]
 | *Figure 3: Kptfile Function Pipeline Editing * |
 
 ### Configuration Injection[^porch18]
+
 Adding values to the package context or functions to the pipeline works
 for configuration that is under the control of the creator of the PackageVariant
 resource. However, in more advanced use cases, we may need to specialize the
@@ -202,14 +203,15 @@ instance of the package to lookup a resource in the Porch cluster, and copy that
 information into the package. Of course, the package has to be ready to receive
 this information. So, there is a protocol for facilitating this dance:
 - Packages may contain resources annotated with `kpt.dev/config-injection`
-- Usually, these will also be `config.kubernetes.io/local-config` resources, as
+- Often, these will also be `config.kubernetes.io/local-config` resources, as
   they are likely just used by local functions as input. But this is not
   mandatory.
 - The package variant controller will look for any resource in the Kubernetes
   cluster matching the Group, Version, and Kind of the package resource, and
   satisfying the *injection selector*.
 - The package variant controller will copy the `spec` field from the matching
-  in-cluster resource to the in-package resource.
+  in-cluster resource to the in-package resource, or the `data` field in the
+  case of a ConfigMap.
 
 | ![Figure 4: Configuration Injection](packagevariant-config-injection.png) |
 | :---: |
@@ -610,18 +612,14 @@ With that understanding, the injection process works as follows:
    `readinessGates` gating publishing the package to a *deployment* repository,
    but not gating publishing to a blueprint repository.
 1. The injection processing will proceed as follows. For each injection point:
-   - If the resource schema of the injection point is not available in the
-     cluster, then the injection point ConditionType will be set to `False`,
-     with a message indicating that the schema is missing, and processing should
-     proceed to the next injection point. Note that for `optional` injection
-     points, not having the schema may be intentional and not an error.
-   - If the resource schema of the injection point does not contain a `spec`
-     field, then the injection point ConditionType will be set to `False`, with
-     a message explaining the error, and processing should proceed to the next
-     injection point.
-   - The controller will now identify all in-cluster objects in the same
+   - The controller will identify all in-cluster objects in the same
      namespace as the PackageVariant resource, with GVK matching the injection
-     point (the in-package resource).
+     point (the in-package resource). If the controller is unable to load this
+     objects (e.g., there are none and the CRD is not installed), the injection
+     point ConditionType will be set to `False`, with a message indicating that
+     the error, and processing proceeds to the next injection point. Note that
+     for `optional` injection this may be an acceptable outcome, so it does not
+     interfere with overall generation of the Draft.
    - The controller will look through the list of injection selectors in
      order and checking if any of the in-cluster objects match the selector. If
      so, that in-cluster object is selected, and processing of the list of
@@ -636,15 +634,19 @@ With that understanding, the injection process works as follows:
      found, and processing proceeds to the next injection point.
    - If a matching in-cluster object is selected, then it is injected as
      follows:
-     - The `spec` field from the in-cluster resource is copied to the `spec`
-       field of the in-package resource (the injection point), overwriting it.
+     - For ConfigMap resources, the `data` field from the in-cluster resource is
+       copied to the `data` field of the in-package resource (the injection
+       point), overwriting it.
+     - For other resource types, the `spec` field from the in-cluster resource
+       is copied to the `spec` field of the in-package resource (the injection
+       point), overwriting it.
      - An annotation with name `kpt.dev/injected-resource-name` and value set to
        the name of the in-cluster resource is added (or overwritten) in the
        in-package resource.
 
-If the injection cannot be completed for some reason, or if any of the below
-problems exist in the upstream package, it is considered an error and should
-prevent generation of the Draft:
+If the the overall injection cannot be completed for some reason, or if any of
+the below problems exist in the upstream package, it is considered an error and
+should prevent generation of the Draft:
    - There is a resource annotated as an injection point but having an invalid
      annotation value (i.e., other than `required` or `optional`).
    - There are ambiguous condition types due to conflicting GVK and name
@@ -956,7 +958,7 @@ type PackageVariantTemplate struct {
 
         // Injectors allows specifying the spec.Injectors field of the generated PackageVariant
         // +optional
-        Injectors     *InfectionSelectorTemplate `json:"injectors,omitempty"`
+        Injectors     []InjectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
 // DownstreamTemplate is used to calculate the downstream field of the resulting

@@ -16,6 +16,8 @@ package packagevariant
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"strconv"
@@ -39,6 +41,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type Options struct{}
@@ -213,6 +216,13 @@ func validatePackageVariant(pv *api.PackageVariant) []string {
 			}
 		}
 	}
+	if len(pv.Spec.Injectors) > 0 {
+		for i, injector := range pv.Spec.Injectors {
+			if injector.Name == "" {
+				allErrs = append(allErrs, fmt.Sprintf("spec.injectors[%d].name must not be empty", i))
+			}
+		}
+	}
 	return allErrs
 }
 
@@ -268,6 +278,7 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 	pv *api.PackageVariant,
 	upstream *porchapi.PackageRevision,
 	prList *porchapi.PackageRevisionList) ([]*porchapi.PackageRevision, error) {
+
 	existing, err := r.findAndUpdateExistingRevisions(ctx, pv, upstream, prList)
 	if err != nil {
 		return nil, err
@@ -307,14 +318,23 @@ func (r *PackageVariantReconciler) ensurePackageVariant(ctx context.Context,
 		},
 	}
 
-	if err := r.Client.Create(ctx, newPR); err != nil {
+	if err = r.Client.Create(ctx, newPR); err != nil {
 		return nil, err
 	}
 	klog.Infoln(fmt.Sprintf("package variant %q created package revision %q", pv.Name, newPR.Name))
 
-	if err := r.applyMutations(ctx, pv, newPR); err != nil {
+	prr, changed, err := r.calculateDraftResources(ctx, pv, newPR)
+	if err != nil {
 		return nil, err
 	}
+	if changed {
+		// Save the updated PackageRevisionResources
+		if err = r.Update(ctx, prr); err != nil {
+			return nil, err
+		}
+		klog.Infoln(fmt.Sprintf("package variant %q applied mutations to package revision %q", pv.Name, newPR.Name))
+	}
+
 	return []*porchapi.PackageRevision{newPR}, nil
 }
 
@@ -328,32 +348,66 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 		// caller will create one.
 		return nil, nil
 	}
+
 	var err error
 	for i, downstream := range downstreams {
-		if r.isUpToDate(pv, downstream) {
-			if downstream.Spec.Lifecycle == porchapi.PackageRevisionLifecycleDeletionProposed {
-				// We proposed this package revision for deletion in the past, but now it
-				// matches our target, so we no longer want it to be deleted.
-				downstream.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
-				if err := r.Client.Update(ctx, downstream); err != nil {
-					klog.Errorf("error updating package revision lifecycle: %v", err)
-				}
-			}
-			continue
-		}
-		if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
-			downstream, err = r.copyPublished(ctx, downstream, pv, prList)
-			if err != nil {
+		if downstream.Spec.Lifecycle == porchapi.PackageRevisionLifecycleDeletionProposed {
+			// We proposed this package revision for deletion in the past, but now it
+			// matches our target, so we no longer want it to be deleted.
+			downstream.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+			// We update this now, because later we may use a Porch call to clone or update
+			// and we want to make sure the server is in sync with us
+			if err := r.Client.Update(ctx, downstream); err != nil {
+				klog.Errorf("error updating package revision lifecycle: %v", err)
 				return nil, err
 			}
 		}
-		klog.Infoln(fmt.Sprintf("package variant %q is doing a pkg update on package revision %q", pv.Name, downstream.Name))
-		downstreams[i], err = r.updateDraft(ctx, downstream, upstream)
+
+		// see if the package needs updating due to an upstream change
+		if !r.isUpToDate(pv, downstream) {
+			// we need to copy a published package to a new draft before updating
+			if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
+				klog.Infoln(fmt.Sprintf("package variant %q needs to update package revision %q for new upstream revision, creating new draft", pv.Name, downstream.Name))
+				downstream, err = r.copyPublished(ctx, downstream, pv, prList)
+				if err != nil {
+					return nil, err
+				}
+			}
+			downstreams[i], err = r.updateDraft(ctx, downstream, upstream)
+			if err != nil {
+				return nil, err
+			}
+			klog.Infoln(fmt.Sprintf("package variant %q updated package revision %q to upstream revision %s", pv.Name, downstream.Name, upstream.Spec.Revision))
+		}
+
+		// finally, see if any other changes are needed to the resources
+		prr, changed, err := r.calculateDraftResources(ctx, pv, downstreams[i])
 		if err != nil {
 			return nil, err
 		}
-		if err := r.applyMutations(ctx, pv, downstreams[i]); err != nil {
-			return nil, err
+
+		// if there are changes, save them
+		if changed {
+			// if no pkg update was needed, we may still be a published package
+			// so, clone to a new Draft if that's the case
+			if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
+				klog.Infoln(fmt.Sprintf("package variant %q needs to mutate to package revision %q, creating new draft", pv.Name, downstream.Name))
+				downstream, err = r.copyPublished(ctx, downstream, pv, prList)
+				if err != nil {
+					return nil, err
+				}
+				downstreams[i] = downstream
+			}
+			// recalculate from the new Draft
+			prr, _, err = r.calculateDraftResources(ctx, pv, downstreams[i])
+			if err != nil {
+				return nil, err
+			}
+			// Save the updated PackageRevisionResources
+			if err := r.Update(ctx, prr); err != nil {
+				return nil, err
+			}
+			klog.Infoln(fmt.Sprintf("package variant %q updated package revision %q for new mutations", pv.Name, downstream.Name))
 		}
 
 	}
@@ -625,12 +679,14 @@ func (r *PackageVariantReconciler) updateDraft(ctx context.Context,
 func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.PackageRevision, err error) {
 	pv.Status.DownstreamTargets = nil
 	if err != nil {
+		klog.Infoln(fmt.Sprintf("setting status to error: %s", err.Error()))
 		meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
 			Type:    ConditionTypeReady,
 			Status:  "False",
 			Reason:  "Error",
 			Message: err.Error(),
 		})
+		klog.Infoln(fmt.Sprintf("Conditions: %v", pv.Status.Conditions))
 		return
 	}
 	for _, t := range targets {
@@ -660,6 +716,8 @@ func (r *PackageVariantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	r.Client = mgr.GetClient()
 
+	//TODO: establish watches on resource types injected in all the Package Revisions
+	//      we own, and use those to generate requests
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.PackageVariant{}).
 		Watches(&source.Kind{Type: &porchapi.PackageRevision{}},
@@ -687,28 +745,43 @@ func (r *PackageVariantReconciler) mapObjectsToRequests(obj client.Object) []rec
 	return requests
 }
 
-func (r *PackageVariantReconciler) applyMutations(ctx context.Context,
+func (r *PackageVariantReconciler) calculateDraftResources(ctx context.Context,
 	pv *api.PackageVariant,
-	draft *porchapi.PackageRevision) error {
+	draft *porchapi.PackageRevision) (*porchapi.PackageRevisionResources, bool, error) {
 
 	// Load the PackageRevisionResources
 	var prr porchapi.PackageRevisionResources
 	prrKey := types.NamespacedName{Name: draft.GetName(), Namespace: draft.GetNamespace()}
 	if err := r.Client.Get(ctx, prrKey, &prr); err != nil {
-		return err
+		return nil, false, err
+	}
+
+	// Check if it's a valid PRR
+	if prr.Spec.Resources == nil {
+		return nil, false, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	// Calculate a hash of the resources
+	beforeHash, err := hashFromPackageRevisionResources(&prr)
+	if err != nil {
+		return nil, false, err
 	}
 
 	// Apply our mutations
 	if err := ensurePackageContext(pv, &prr); err != nil {
-		return err
+		return nil, false, err
 	}
 
-	// Save the updated PackageRevisionResources
-	if err := r.Update(ctx, &prr); err != nil {
-		return err
+	if err := ensureConfigInjection(ctx, r.Client, pv, &prr); err != nil {
+		return nil, false, err
 	}
 
-	return nil
+	afterHash, err := hashFromPackageRevisionResources(&prr)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &prr, beforeHash != afterHash, nil
 }
 
 func ensurePackageContext(pv *api.PackageVariant,
@@ -776,4 +849,13 @@ func getFileKubeObject(prr *porchapi.PackageRevisionResources, file, kind, name 
 	}
 
 	return ko, nil
+}
+
+func hashFromPackageRevisionResources(prr *porchapi.PackageRevisionResources) (string, error) {
+	b, err := yaml.Marshal(prr.Spec.Resources)
+	if err != nil {
+		return "", err
+	}
+	hash := sha1.Sum(b)
+	return hex.EncodeToString(hash[:]), nil
 }

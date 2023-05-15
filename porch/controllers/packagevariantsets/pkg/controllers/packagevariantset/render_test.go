@@ -346,6 +346,56 @@ func TestRenderPackageVariantSpec(t *testing.T) {
 			},
 			expectedErrs: nil,
 		},
+		"template injectors": {
+			downstream: pvContext{
+				repoDefault:    "my-repo-1",
+				packageDefault: "p",
+				template: &api.PackageVariantTemplate{
+					Injectors: []api.InjectionSelectorTemplate{
+						{
+							Group:   pointer.String("kpt.dev"),
+							Version: pointer.String("v1alpha1"),
+							Kind:    pointer.String("Foo"),
+							Name:    pointer.String("bar"),
+						},
+						{
+							Group:    pointer.String("kpt.dev"),
+							Version:  pointer.String("v1alpha1"),
+							Kind:     pointer.String("Foo"),
+							NameExpr: pointer.String("repository.labels['abc']"),
+						},
+						{
+							NameExpr: pointer.String("repository.name + '-test'"),
+						},
+					},
+				},
+			},
+			expectedSpec: pkgvarapi.PackageVariantSpec{
+				Upstream: pvs.Spec.Upstream,
+				Downstream: &pkgvarapi.Downstream{
+					Repo:    "my-repo-1",
+					Package: "p",
+				},
+				Injectors: []pkgvarapi.InjectionSelector{
+					{
+						Group:   pointer.String("kpt.dev"),
+						Version: pointer.String("v1alpha1"),
+						Kind:    pointer.String("Foo"),
+						Name:    "bar",
+					},
+					{
+						Group:   pointer.String("kpt.dev"),
+						Version: pointer.String("v1alpha1"),
+						Kind:    pointer.String("Foo"),
+						Name:    "def",
+					},
+					{
+						Name: "my-repo-1-test",
+					},
+				},
+			},
+			expectedErrs: nil,
+		},
 	}
 
 	for tn, tc := range testCases {

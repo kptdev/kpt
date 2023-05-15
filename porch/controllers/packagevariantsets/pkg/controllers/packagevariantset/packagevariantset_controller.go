@@ -108,7 +108,8 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 			setStalledConditionsToTrue(pvs, "NoMatchingTargets", err.Error())
 			return ctrl.Result{}, nil
 		}
-		return ctrl.Result{}, err
+		setStalledConditionsToTrue(pvs, "UnexpectedError", err.Error())
+		return ctrl.Result{}, nil
 	}
 
 	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{
@@ -120,7 +121,8 @@ func (r *PackageVariantSetReconciler) Reconcile(ctx context.Context, req ctrl.Re
 
 	err = r.ensurePackageVariants(ctx, pvs, repoList, upstreamPR, downstreams)
 	if err != nil {
-		return ctrl.Result{}, err
+		setStalledConditionsToTrue(pvs, "UnexpectedError", err.Error())
+		return ctrl.Result{}, nil
 	}
 
 	meta.SetStatusCondition(&pvs.Status.Conditions, metav1.Condition{

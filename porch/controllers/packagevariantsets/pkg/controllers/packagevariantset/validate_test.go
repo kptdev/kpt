@@ -169,6 +169,23 @@ spec:
 				"spec.targets[0].template.packageContext.dataExprs[1] may specify only one of `value` and `valueExpr`",
 			},
 		},
+		"injectors must specify exactly one of name or nameexpr": {
+			packageVariant: packageVariantHeader + `
+spec:
+  targets:
+  - repositories:
+    - name: bar
+    template:
+      injectors:
+      - name: foo
+        nameExpr: bar
+      - group: foo
+`,
+			expectedErrs: []string{"spec.upstream is a required field",
+				"spec.targets[0].template.injectors[0] may specify only one of `name` and `nameExpr`",
+				"spec.targets[0].template.injectors[1] must specify either `name` or `nameExpr`",
+			},
+		},
 	}
 
 	for tn, tc := range testCases {

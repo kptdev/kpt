@@ -103,7 +103,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.30 version
+$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.32 version
 ```
 
 ### `kpt-gcloud`
@@ -111,12 +111,12 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.30 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.30 version
+$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.32 version
 ```
 
 ## Source
 
-Install by compiling the source. This requires having Go version 1.19+:
+Install by compiling the source. This requires having Go version 1.20+:
 
 ```shell
 $ go install -v github.com/GoogleContainerTools/kpt@main
@@ -134,12 +134,12 @@ $ kpt version
   https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.30/kpt_linux_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.32/kpt_linux_amd64
 [linux-arm64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.30/kpt_linux_arm64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.32/kpt_linux_arm64
 [darwin-amd64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.30/kpt_darwin_amd64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.32/kpt_darwin_amd64
 [darwin-arm64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.30/kpt_darwin_arm64
+  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.32/kpt_darwin_arm64
 [migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation
