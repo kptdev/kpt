@@ -157,7 +157,7 @@ over-parameterization. The preferred approach is configuration injection, as
 described below, since it allows inputs to adhere to a well-defined, reusable
 schema, rather than simple key/value pairs.
 
-### Kptfile Function Pipeline Editing[^notimplemented]
+### Kptfile Function Pipeline Editing[^porch18]
 In the manual workflow, one of the ways we edit packages is by running KRM
 functions imperatively. PackageVariant offers a similar capability, by
 allowing the user to add functions to the beginning of the downstream package
@@ -183,7 +183,8 @@ application pipeline allows it, as seen in *Figure 3*.[^setns]
 | :---: |
 | *Figure 3: Kptfile Function Pipeline Editing * |
 
-### Configuration Injection
+### Configuration Injection[^porch18]
+
 Adding values to the package context or functions to the pipeline works
 for configuration that is under the control of the creator of the PackageVariant
 resource. However, in more advanced use cases, we may need to specialize the
@@ -1233,6 +1234,7 @@ the following variables are available:
 | packageDefault | The default package name based on the targeting criteria.    |
 | upstream       | The upstream PackageRevision.                                |
 | repository     | The downstream Repository.                                   |
+| target         | The target object (details vary; see below).                 |
 
 There is one expression that is an exception to the table above. Since the
 `repository` value corresponds to the Repository of the downstream, we must
@@ -1246,13 +1248,13 @@ target, as follows:
 
 | Target Type         | `target` Variable Contents |
 | ------------------- | -------------------------- |
-| Repo/Package List   | A struct with two fields: `name` and `packageName`, the same as the `repoDefault` and `packageDefault` values. |
+| Repo/Package List   | A struct with two fields: `repo` and `package`, the same as the `repoDefault` and `packageDefault` values. |
 | Repository Selector | The Repository selected by the selector. Although not recommended, this could be different than the `repository` value, which can be altered with `downstream.repo` or `downstream.repoExpr`. |
 | Object Selector     | The Object selected by the selector. |
 
 For the various resource variables - `upstream`, `repository`, and `target` -
 arbitrary access to all fields of the object could lead to security concerns.
-Therefore, only a subset of the data is available for use in CEL exressions.
+Therefore, only a subset of the data is available for use in CEL expressions.
 Specifically, the following fields: `name`, `namespace`, `labels`, and
 `annotations`.
 
@@ -1320,14 +1322,15 @@ The PackageVariantSet status uses these conditions:
     PackageVariantSet, or both.
 
 ## Footnotes
-[^porch17]: Implemented and coming in Porch v0.0.17.
-[^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.16.
+[^porch17]: Implemented in Porch v0.0.17.
+[^porch18]: Coming in Porch v0.0.18.
+[^notimplemented]: Proposed here but not yet implemented as of Porch v0.0.18.
 [^setns]: As of this writing, the `set-namespace` function does not have a
     `create` option. This should be added to avoid the user needing to also use
     the `upsert-resource` function. Such common operation should be simple for
     users.
-[^pvsimpl]: This document describes PackageVariantSet `v1alpha2`, which has not
-    been implemented as of Porch v0.0.16. In Porch v0.0.16, the `v1alpha1`
+[^pvsimpl]: This document describes PackageVariantSet `v1alpha2`, which will be
+    available starting with Porch v0.0.18. In Porch v0.0.16 and 17, the `v1alpha1`
     implementation is available, but it is a somewhat different API, without
     support for CEL or any injection. It is focused only on fan out targeting,
     and uses a [slightly different targeting
