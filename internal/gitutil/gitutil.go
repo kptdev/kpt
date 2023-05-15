@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/base32"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -323,10 +323,11 @@ func (gur *GitUpstreamRepo) ResolveRef(ref string) (string, bool) {
 }
 
 // getRepoDir returns the cache directory name for a remote repo
-// This takes the md5 hash of the repo uri and then base32 encodes it to make
+// This takes the md5 hash of the repo uri and then hex encodes it to make
 // sure it doesn't contain characters that isn't legal in directory names.
 func (gur *GitUpstreamRepo) getRepoDir(uri string) string {
-	return strings.ToLower(base32.StdEncoding.EncodeToString(md5.New().Sum([]byte(uri))))
+	var hash = md5.Sum([]byte(uri))
+	return strings.ToLower(hex.EncodeToString(hash[:]))
 }
 
 // getRepoCacheDir
