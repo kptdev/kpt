@@ -28,6 +28,18 @@ rules:
 - apiGroups:
   - config.porch.kpt.dev
   resources:
+  - packagevariants
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
   - packagevariantsets
   verbs:
   - create

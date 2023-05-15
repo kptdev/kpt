@@ -68,6 +68,7 @@ const (
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=packagevariants/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=packagevariants/finalizers,verbs=update
 //+kubebuilder:rbac:groups=porch.kpt.dev,resources=packagerevisions,verbs=create;delete;get;list;patch;update;watch
+//+kubebuilder:rbac:groups=porch.kpt.dev,resources=packagerevisionresources,verbs=create;delete;get;list;patch;update;watch
 
 // Reconcile implements the main kubernetes reconciliation loop.
 func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
