@@ -514,7 +514,7 @@ Then the resulting Kptfile will have these two entries prepended to its
     - image: gcr.io/kpt-fn/set-labels:v0.1
       configMap:
         app: foo
-      name: PackageVariant.my-pv.1
+      name: PackageVariant.my-pv..1
 ```
 
 During subsequent reconciliations, this allows the controller to identify the
