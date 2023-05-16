@@ -86,5 +86,5 @@ func TestEnsurePackageVariants(t *testing.T) {
 		downstreams))
 	require.Equal(t, 2, len(fc.objects))
 	require.Equal(t, "my-pv-1", fc.objects[0].GetName())
-	require.Equal(t, "my-pvs-3048996f91b83df6bb62e497c3839acc367a2e79", fc.objects[1].GetName())
+	require.Equal(t, "my-pvs-9c07e0818b755a2067903d10aecf91e19dcb9a82", fc.objects[1].GetName())
 }
