@@ -916,91 +916,117 @@ template API is shown below.
 
 ```go
 type PackageVariantTemplate struct {
-        // Downstream allows overriding the default downstream package and repository name
-        // +optional
-        Downstream *DownstreamTemplate `json:"downstream,omitempty"`
+	// Downstream allows overriding the default downstream package and repository name
+	// +optional
+	Downstream *DownstreamTemplate `json:"downstream,omitempty"`
 
-        // AdoptionPolicy allows overriding the PackageVariant adoption policy
-        // +optional
-        AdoptionPolicy *pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
+	// AdoptionPolicy allows overriding the PackageVariant adoption policy
+	// +optional
+	AdoptionPolicy *pkgvarapi.AdoptionPolicy `json:"adoptionPolicy,omitempty"`
 
-        // DeletionPolicy allows overriding the PackageVariant deletion policy
-        // +optional
-        DeletionPolicy *pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
+	// DeletionPolicy allows overriding the PackageVariant deletion policy
+	// +optional
+	DeletionPolicy *pkgvarapi.DeletionPolicy `json:"deletionPolicy,omitempty"`
 
-        // Labels allows specifying the spec.Labels field of the generated PackageVariant
-        // +optional
-        Labels map[string]string `json:"labels,omitempty"`
+	// Labels allows specifying the spec.Labels field of the generated PackageVariant
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
 
-        // LabelsExprs allows specifying the spec.Labels field of the generated PackageVariant
-        // using CEL to dynamically create the keys and values. Entries in this field take precedent over
-        // those with the same keys that are present in Labels.
-        // +optional
-        LabelExprs []MapExpr `json:"labelExprs,omitemtpy"`
+	// LabelsExprs allows specifying the spec.Labels field of the generated PackageVariant
+	// using CEL to dynamically create the keys and values. Entries in this field take precedent over
+	// those with the same keys that are present in Labels.
+	// +optional
+	LabelExprs []MapExpr `json:"labelExprs,omitemtpy"`
 
-        // Annotations allows specifying the spec.Annotations field of the generated PackageVariant
-        // +optional
-        Annotations map[string]string `json:"annotations,omitempty"`
+	// Annotations allows specifying the spec.Annotations field of the generated PackageVariant
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 
-        // AnnotationsExprs allows specifying the spec.Annotations field of the generated PackageVariant
-        // using CEL to dynamically create the keys and values. Entries in this field take precedent over
-        // those with the same keys that are present in Annotations.
-        // +optional
-        AnnotationExprs []MapExpr `json:"annotationExprs,omitempty"`
+	// AnnotationsExprs allows specifying the spec.Annotations field of the generated PackageVariant
+	// using CEL to dynamically create the keys and values. Entries in this field take precedent over
+	// those with the same keys that are present in Annotations.
+	// +optional
+	AnnotationExprs []MapExpr `json:"annotationExprs,omitempty"`
 
-        // PackageContext allows specifying the spec.PackageContext field of the generated PackageVariant
-        // +optional
-        PackageContext *PackageContextTemplate `json:"packageContext,omitempty"`
+	// PackageContext allows specifying the spec.PackageContext field of the generated PackageVariant
+	// +optional
+	PackageContext *PackageContextTemplate `json:"packageContext,omitempty"`
 
-        // Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
-        // +optional
-        Pipeline *kptfilev1.Pipeline `json:"pipeline,omitempty"`
+	// Pipeline allows specifying the spec.Pipeline field of the generated PackageVariant
+	// +optional
+	Pipeline *PipelineTemplate `json:"pipeline,omitempty"`
 
-        // Injectors allows specifying the spec.Injectors field of the generated PackageVariant
-        // +optional
-        Injectors     []InjectionSelectorTemplate `json:"injectors,omitempty"`
+	// Injectors allows specifying the spec.Injectors field of the generated PackageVariant
+	// +optional
+	Injectors []InjectionSelectorTemplate `json:"injectors,omitempty"`
 }
 
 // DownstreamTemplate is used to calculate the downstream field of the resulting
 // package variants. Only one of Repo and RepoExpr may be specified;
 // similarly only one of Package and PackageExpr may be specified.
 type DownstreamTemplate struct {
-        Repo        *string `json:"repo,omitempty"`
-        Package     *string `json:"package,omitempty"`
-        RepoExpr    *string `json:"repoExpr,omitempty"`
-        PackageExpr *string `json:"packageExpr,omitempty"`
+	Repo        *string `json:"repo,omitempty"`
+	Package     *string `json:"package,omitempty"`
+	RepoExpr    *string `json:"repoExpr,omitempty"`
+	PackageExpr *string `json:"packageExpr,omitempty"`
 }
 
 // PackageContextTemplate is used to calculate the packageContext field of the
 // resulting package variants. The plain fields and Exprs fields will be
 // merged, with the Exprs fields taking precedence.
 type PackageContextTemplate struct {
-        Data           map[string]string `json:"data,omitempty"`
-        RemoveKeys     []string          `json:"removeKeys,omitempty"`
-        DataExprs      []MapExpr         `json:"dataExprs,omitempty"`
-        RemoveKeyExprs []string          `json:"removeKeyExprs,omitempty"`
+	Data           map[string]string `json:"data,omitempty"`
+	RemoveKeys     []string          `json:"removeKeys,omitempty"`
+	DataExprs      []MapExpr         `json:"dataExprs,omitempty"`
+	RemoveKeyExprs []string          `json:"removeKeyExprs,omitempty"`
 }
 
 // InjectionSelectorTemplate is used to calculate the injectors field of the
-// resulting package variants. Only one of the Name and NameExpr fields may be
-// specified.
+// resulting package variants. Exactly one of the Name and NameExpr fields must
+// be specified. The other fields are optional.
 type InjectionSelectorTemplate struct {
-        Group   *string `json:"group,omitempty"`
-        Version *string `json:"version,omitempty"`
-        Kind    *string `json:"kind,omitempty"`
-        Name    *string `json:"name,omitempty"`
+	Group   *string `json:"group,omitempty"`
+	Version *string `json:"version,omitempty"`
+	Kind    *string `json:"kind,omitempty"`
+	Name    *string `json:"name,omitempty"`
 
-        NameExpr    *string `json:"nameExpr,omitempty"`
+	NameExpr *string `json:"nameExpr,omitempty"`
 }
 
 // MapExpr is used for various fields to calculate map entries. Only one of
 // Key and KeyExpr may be specified; similarly only on of Value and ValueExpr
 // may be specified.
 type MapExpr struct {
-        Key       *string `json:"key,omitempty"`
-        Value     *string `json:"value,omitempty"`
-        KeyExpr   *string `json:"keyExpr,omitempty"`
-        ValueExpr *string `json:"valueExpr,omitempty"`
+	Key       *string `json:"key,omitempty"`
+	Value     *string `json:"value,omitempty"`
+	KeyExpr   *string `json:"keyExpr,omitempty"`
+	ValueExpr *string `json:"valueExpr,omitempty"`
+}
+
+// PipelineTemplate is used to calculate the pipeline field of the resulting
+// package variants.
+type PipelineTemplate struct {
+	// Validators is used to caculate the pipeline.validators field of the
+	// resulting package variants.
+	// +optional
+	Validators []FunctionTemplate `json:"validators,omitempty"`
+
+	// Mutators is used to caculate the pipeline.mutators field of the
+	// resulting package variants.
+	// +optional
+	Mutators []FunctionTemplate `json:"mutators,omitempty"`
+}
+
+// FunctionTemplate is used in generating KRM function pipeline entries; that
+// is, it is used to generate Kptfile Function objects.
+type FunctionTemplate struct {
+	kptfilev1.Function `json:",inline"`
+
+	// ConfigMapExprs allows use of CEL to dynamically create the keys and values in the
+	// function config ConfigMap. Entries in this field take precedent over those with
+	// the same keys that are present in ConfigMap.
+	// +optional
+	ConfigMapExprs []MapExpr `json:"configMapExprs,omitemtpy"`
 }
 ```
 
