@@ -879,8 +879,6 @@ func ensureKRMFunctions(pv *api.PackageVariant,
 		fieldlist["validators"] = pv.Spec.Pipeline.Validators
 		fieldlist["mutators"] = pv.Spec.Pipeline.Mutators
 	}
-	for fieldname, field := range fieldlist {
-		var newFieldVal = fn.SliceSubObjects{}
 
 	for fieldname, field := range fieldlist {
 		var newFieldVal = fn.SliceSubObjects{}
