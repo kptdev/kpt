@@ -114,7 +114,7 @@ type PackageVariantTemplate struct {
 	// using CEL to dynamically create the keys and values. Entries in this field take precedent over
 	// those with the same keys that are present in Labels.
 	// +optional
-	LabelExprs []MapExpr `json:"labelExprs,omitemtpy"`
+	LabelExprs []MapExpr `json:"labelExprs,omitempty"`
 
 	// Annotations allows specifying the spec.Annotations field of the generated PackageVariant
 	// +optional
@@ -204,7 +204,7 @@ type FunctionTemplate struct {
 	// function config ConfigMap. Entries in this field take precedent over those with
 	// the same keys that are present in ConfigMap.
 	// +optional
-	ConfigMapExprs []MapExpr `json:"configMapExprs,omitemtpy"`
+	ConfigMapExprs []MapExpr `json:"configMapExprs,omitempty"`
 }
 
 // PackageVariantSetStatus defines the observed state of PackageVariantSet
