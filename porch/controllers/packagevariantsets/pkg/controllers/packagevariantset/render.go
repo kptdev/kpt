@@ -22,6 +22,7 @@ import (
 
 	"github.com/google/cel-go/cel"
 
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
 	pkgvarapi "github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/api/v1alpha1"
@@ -163,7 +164,37 @@ func renderPackageVariantSpec(ctx context.Context, pvs *api.PackageVariantSet, r
 		spec.Injectors = append(spec.Injectors, injector)
 	}
 
+	if pvt.Pipeline != nil {
+		pipeline := kptfilev1.Pipeline{}
+		pipeline.Validators, err = renderFunctionTemplateList("template.pipeline.validators", pvt.Pipeline.Validators, inputs)
+		if err != nil {
+			return nil, err
+		}
+		pipeline.Mutators, err = renderFunctionTemplateList("template.pipeline.mutators", pvt.Pipeline.Mutators, inputs)
+		if err != nil {
+			return nil, err
+		}
+		if len(pipeline.Validators) > 0 || len(pipeline.Mutators) > 0 {
+			spec.Pipeline = &pipeline
+		}
+	}
+
 	return spec, nil
+}
+
+func renderFunctionTemplateList(field string, templateList []api.FunctionTemplate, inputs map[string]interface{}) ([]kptfilev1.Function, error) {
+	var results []kptfilev1.Function
+	for i, ft := range templateList {
+		var err error
+		f := ft.Function
+		f.ConfigMap, err = copyAndOverlayMapExpr(fmt.Sprintf("%s[%d].configMapExprs", field, i), ft.ConfigMap, ft.ConfigMapExprs, inputs)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, f)
+	}
+	return results, nil
 }
 
 func buildBaseInputs(upstreamPR *porchapi.PackageRevision, downstream pvContext) (map[string]interface{}, error) {

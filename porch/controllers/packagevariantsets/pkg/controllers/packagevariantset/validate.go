@@ -140,6 +140,16 @@ func validateTemplate(template *api.PackageVariantTemplate, field string) []erro
 			allErrs = append(allErrs, fmt.Errorf("%s.injectors[%d] must specify either `name` or `nameExpr`", field, i))
 		}
 	}
+
+	if template.Pipeline != nil {
+		for i, f := range template.Pipeline.Validators {
+			allErrs = append(allErrs, validateFunction(&f, fmt.Sprintf("%s.pipeline.validators[%d]", field, i))...)
+		}
+		for i, f := range template.Pipeline.Mutators {
+			allErrs = append(allErrs, validateFunction(&f, fmt.Sprintf("%s.pipeline.mutators[%d]", field, i))...)
+		}
+	}
+
 	return allErrs
 }
 
@@ -154,6 +164,17 @@ func validateMapExpr(m []api.MapExpr, fieldName string) []error {
 		}
 	}
 
+	return allErrs
+}
+
+func validateFunction(f *api.FunctionTemplate, field string) []error {
+	var allErrs []error
+	if f.Image == "" {
+		allErrs = append(allErrs, fmt.Errorf("%s.image must not be empty", field))
+	}
+	if strings.Contains(f.Name, ".") {
+		allErrs = append(allErrs, fmt.Errorf("%s.name must not contain '.'", field))
+	}
 	return allErrs
 }
 

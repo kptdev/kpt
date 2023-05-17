@@ -186,6 +186,27 @@ spec:
 				"spec.targets[0].template.injectors[1] must specify either `name` or `nameExpr`",
 			},
 		},
+		"pipeline function must be valid": {
+			packageVariant: packageVariantHeader + `
+spec:
+  targets:
+  - repositories:
+    - name: bar
+    template:
+      pipeline:
+        validators:
+        - name: foo
+        - image: foo
+          name: bar
+        mutators:
+        - name: foo.bar
+          image: bar
+`,
+			expectedErrs: []string{"spec.upstream is a required field",
+				"spec.targets[0].template.pipeline.validators[0].image must not be empty",
+				"spec.targets[0].template.pipeline.mutators[0].name must not contain '.'",
+			},
+		},
 	}
 
 	for tn, tc := range testCases {
