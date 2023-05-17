@@ -949,7 +949,7 @@ func isPackageVariantFunc(fn *fn.SubObject, pvName string) (bool, error) {
 		return false, fmt.Errorf("could not retrieve field name: %w", err)
 	}
 	if !ok {
-		return false, fmt.Errorf("could not find field name in supplied func")
+		return false, nil
 	}
 
 	name := strings.Split(origname, ".")
