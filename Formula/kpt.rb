@@ -15,8 +15,8 @@
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
   homepage "https://googlecontainertools.github.io/kpt"
-  url "https://github.com/GoogleContainerTools/kpt/archive/v1.0.0-beta.32.tar.gz"
-  sha256 "1df3498287a339442c63edadc4b0e7e58e3de5b7bd92376efdaf37aa88160f3f"
+  url "https://github.com/GoogleContainerTools/kpt/archive/v1.0.0-beta.33.tar.gz"
+  sha256 "09eda658350c13f0cb11bf2b0d812d9fdecea693a2f24c257862b7a07b1e778f"
 
   depends_on "go" => :build
 
