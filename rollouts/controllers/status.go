@@ -32,7 +32,7 @@ func checkSyncStatus(ctx context.Context, client dynamic.Interface, remotesync *
 		return "", err
 	}
 
-	rs, err := client.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Get(ctx, remotesync.Name, metav1.GetOptions{})
+	rs, err := client.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Get(ctx, externalSyncName(remotesync), metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to get %s: %w", gvk.Kind, err)
 	}

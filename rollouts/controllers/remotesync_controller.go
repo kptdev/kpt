@@ -194,7 +194,7 @@ func (r *RemoteSyncReconciler) syncExternalSync(ctx context.Context, rs *gitopsv
 		return "", fmt.Errorf("failed to create/update sync: %w", err)
 	}
 
-	r.setupWatches(ctx, rs.Name, rs.Namespace, rs.Spec.ClusterRef)
+	r.setupWatches(ctx, externalSyncName(rs), rs.Namespace, rs.Spec.ClusterRef)
 
 	syncStatus, err := checkSyncStatus(ctx, dynCl, rs)
 	if err != nil {
@@ -261,7 +261,7 @@ func (r *RemoteSyncReconciler) patchExternalSync(ctx context.Context, client dyn
 		return fmt.Errorf("failed to encode %s to JSON: %w", gvk.Kind, err)
 	}
 
-	_, err = client.Resource(gvr).Namespace(namespace).Patch(ctx, rs.Name, types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: rs.Name})
+	_, err = client.Resource(gvr).Namespace(namespace).Patch(ctx, newRootSync.GetName(), types.ApplyPatchType, data, metav1.PatchOptions{FieldManager: rs.Name})
 	if err != nil {
 		return fmt.Errorf("failed to patch %s: %w", gvk.Kind, err)
 	}
@@ -348,7 +348,7 @@ func BuildObjectsToApply(remotesync *gitopsv1alpha1.RemoteSync,
 
 	u := unstructured.Unstructured{Object: newRootSync}
 	u.SetGroupVersionKind(gvk)
-	u.SetName(remotesync.Name)
+	u.SetName(externalSyncName(remotesync))
 	u.SetNamespace(namespace)
 
 	labels := u.GetLabels()

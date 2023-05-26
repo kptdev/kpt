@@ -64,6 +64,12 @@ type DiscoveredPackage struct {
 	GitLabProject *gitlab.Project
 	// GithubRepo contains the info retrieved from GitHub
 	GitHubRepo *github.Repository
+
+	OciRepo *OCIArtifact
+}
+
+type OCIArtifact struct {
+	Image string
 }
 
 // HTTPURL refers to the HTTP URL for the repository.
@@ -113,6 +119,8 @@ func (dp *DiscoveredPackage) String() string {
 		return dp.GitLabProject.Name
 	case dp.GitHubRepo != nil:
 		return *dp.GitHubRepo.Name
+	case dp.OciRepo != nil:
+		return dp.OciRepo.Image
 	}
 	return ""
 }
@@ -148,6 +156,11 @@ func (d *PackageDiscovery) GetPackages(ctx context.Context, config gitopsv1alpha
 		discoveredPackages, err = d.getGitLabPackages(ctx, config)
 		if err != nil {
 			return nil, fmt.Errorf("unable to fetch gitlab packages: %w", err)
+		}
+	case gitopsv1alpha1.OCI:
+		discoveredPackages, err = d.getOCIPackages(ctx, config)
+		if err != nil {
+			return nil, fmt.Errorf("unable to fetch OCI packages: %w", err)
 		}
 	default:
 		return nil, fmt.Errorf("%v source type not supported yet", config.SourceType)

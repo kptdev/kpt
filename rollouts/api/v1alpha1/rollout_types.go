@@ -107,17 +107,19 @@ type ClusterSourceKind struct {
 const (
 	GitHub PackageSourceType = "GitHub"
 	GitLab PackageSourceType = "GitLab"
+	OCI    PackageSourceType = "OCI"
 )
 
-// +kubebuilder:validation:Enum=GitHub;GitLab
+// +kubebuilder:validation:Enum=GitHub;GitLab;OCI
 type PackageSourceType string
 
 // PackagesConfig defines the packages the Rollout should deploy.
 type PackagesConfig struct {
 	SourceType PackageSourceType `json:"sourceType"`
 
-	GitHub GitHubSource `json:"github,omitempty"`
-	GitLab GitLabSource `json:"gitlab,omitempty"`
+	GitHub    GitHubSource `json:"github,omitempty"`
+	GitLab    GitLabSource `json:"gitlab,omitempty"`
+	OciSource *OCISource   `json:"oci,omitempty"`
 }
 
 // GitHubSource defines the packages source in GitHub.
@@ -157,6 +159,22 @@ type GitLabSelector struct {
 	Branch string `json:"branch,omitempty"`
 }
 
+type OCISource struct {
+	// image is the OCI image repository URL for the package to sync from.
+	// e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
+	// The image can be pulled by TAG or by DIGEST if it is specified in PACKAGE_NAME.
+	// - Pull by tag: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME:TAG`.
+	// - Pull by digest: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME@sha256:DIGEST`.
+	// If neither TAG nor DIGEST is specified, it pulls with the `latest` tag by default.
+	// Required
+	Image string `json:"image"`
+
+	// dir is the absolute path of the directory that contains
+	// the local resources.  Default: the root directory of the image.
+	// +optional
+	Dir string `json:"dir,omitempty"`
+}
+
 // SecretReference contains the reference to the secret
 type SecretReference struct {
 	// Name represents the secret name
@@ -183,6 +201,7 @@ type SyncTemplate struct {
 type RootSyncTemplate struct {
 	SourceFormat string    `json:"sourceFormat,omitempty"`
 	Git          *GitInfo  `json:"git,omitempty"`
+	Oci          *OciInfo  `json:"oci,omitempty"`
 	Metadata     *Metadata `json:"metadata,omitempty"`
 }
 
@@ -190,6 +209,7 @@ type RootSyncTemplate struct {
 type RepoSyncTemplate struct {
 	SourceFormat string    `json:"sourceFormat,omitempty"`
 	Git          *GitInfo  `json:"git,omitempty"`
+	Oci          *OciInfo  `json:"oci,omitempty"`
 	Metadata     *Metadata `json:"metadata,omitempty"`
 }
 

@@ -1,0 +1,34 @@
+apiVersion: gitops.kpt.dev/v1alpha1
+kind: Rollout
+metadata:
+  name: test-ns-rollout
+spec:
+  description: namespace rollout
+  clusters:
+    sourceType: GCPFleet
+    gcpFleet:
+      projectIds:
+      - sunilarora-sandbox
+  packages:
+    sourceType: OCI
+    oci:
+      image: us-west1-docker.pkg.dev/sunilarora-sandbox/rollouts-samples/test-namespace:v1
+      dir: .
+  packageToTargetMatcher:
+    type: AllClusters
+  targets:
+    selector:
+      matchExpressions:
+        - {key: state, operator: In, values: [ga, ny]}
+  syncTemplate:
+    type: RootSync
+    rootSync:
+      sourceFormat: unstructured
+      oci:
+        image: something
+        auth: gcpserviceaccount
+        gcpServiceAccountEmail: rollouts-samples-reader@sunilarora-sandbox.iam.gserviceaccount.com
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxConcurrent: 2
