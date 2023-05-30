@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -194,7 +195,7 @@ func (r *RemoteSyncReconciler) syncExternalSync(ctx context.Context, rs *gitopsv
 		return "", fmt.Errorf("failed to create/update sync: %w", err)
 	}
 
-	r.setupWatches(ctx, externalSyncName(rs), rs.Namespace, rs.Spec.ClusterRef)
+	r.setupWatches(ctx, getExternalSyncName(rs), rs.Namespace, rs.Spec.ClusterRef)
 
 	syncStatus, err := checkSyncStatus(ctx, dynCl, rs)
 	if err != nil {
@@ -348,7 +349,7 @@ func BuildObjectsToApply(remotesync *gitopsv1alpha1.RemoteSync,
 
 	u := unstructured.Unstructured{Object: newRootSync}
 	u.SetGroupVersionKind(gvk)
-	u.SetName(externalSyncName(remotesync))
+	u.SetName(getExternalSyncName(remotesync))
 	u.SetNamespace(namespace)
 
 	labels := u.GetLabels()
@@ -416,6 +417,23 @@ func getExternalSyncNamespace(rs *gitopsv1alpha1.RemoteSync) string {
 	} else {
 		return rootSyncNamespace
 	}
+}
+
+// makeRemoteSyncName constructs the name of the RemoteSync object
+// by prefixing rolloutName with clusterName.
+// For example, RemoteSync object's name for a rollout `app-rollout` and
+// target cluster `gke-1` will be `gke-1-app-rollout`.
+func makeRemoteSyncName(clusterName, rolloutName string) string {
+	return fmt.Sprintf("%s-%s", clusterName, rolloutName)
+}
+
+// getExternalSyncName returns the name of the RSync object's name.
+// It is derived by stripping away the cluster-name prefix
+// from the RemoteSync object's name. We use rollout-name as RSync object's name.
+func getExternalSyncName(rrs *gitopsv1alpha1.RemoteSync) string {
+	clusterRef := rrs.Spec.ClusterRef
+	clusterName := clusterRef.Name[strings.LastIndex(clusterRef.Name, "/")+1:]
+	return strings.TrimPrefix(rrs.GetName(), fmt.Sprintf("%s-", clusterName))
 }
 
 // SetupWithManager sets up the controller with the Manager.

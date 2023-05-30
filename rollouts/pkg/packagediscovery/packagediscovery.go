@@ -64,11 +64,11 @@ type DiscoveredPackage struct {
 	GitLabProject *gitlab.Project
 	// GithubRepo contains the info retrieved from GitHub
 	GitHubRepo *github.Repository
-
-	OciRepo *OCIArtifact
+	// OciRepo contains info retrieved from the OCI registry
+	OciRepo *OCIRepo
 }
 
-type OCIArtifact struct {
+type OCIRepo struct {
 	Image string
 }
 

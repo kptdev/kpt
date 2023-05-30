@@ -117,6 +117,8 @@ type PackageSourceType string
 type PackagesConfig struct {
 	SourceType PackageSourceType `json:"sourceType"`
 
+	// TODO(droot): Change Github and Gitlab to pointers because
+	// One of the the following will be non-nil to follow OneOf semantics.
 	GitHub    GitHubSource `json:"github,omitempty"`
 	GitLab    GitLabSource `json:"gitlab,omitempty"`
 	OciSource *OCISource   `json:"oci,omitempty"`
@@ -159,6 +161,7 @@ type GitLabSelector struct {
 	Branch string `json:"branch,omitempty"`
 }
 
+// OCISource defines configuration to discover OCI packages.
 type OCISource struct {
 	// image is the OCI image repository URL for the package to sync from.
 	// e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
@@ -171,6 +174,7 @@ type OCISource struct {
 
 	// dir is the absolute path of the directory that contains
 	// the local resources.  Default: the root directory of the image.
+	// Note (droot): We will extend `Dir` to express variants of a package at some point.
 	// +optional
 	Dir string `json:"dir,omitempty"`
 }

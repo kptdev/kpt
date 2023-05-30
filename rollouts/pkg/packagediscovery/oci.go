@@ -21,6 +21,7 @@ import (
 )
 
 // getOCIPackages discovers OCI packages for OCI config.
+// TODO(droot): Support variants discovery in the future.
 func (d *PackageDiscovery) getOCIPackages(ctx context.Context, config gitopsv1alpha1.PackagesConfig) ([]DiscoveredPackage, error) {
 	var discoveredPackages []DiscoveredPackage
 
@@ -28,7 +29,7 @@ func (d *PackageDiscovery) getOCIPackages(ctx context.Context, config gitopsv1al
 
 	discoveredPackages = append(discoveredPackages, DiscoveredPackage{
 		Directory: oci.Dir,
-		OciRepo: &OCIArtifact{
+		OciRepo: &OCIRepo{
 			Image: oci.Image,
 		},
 	})

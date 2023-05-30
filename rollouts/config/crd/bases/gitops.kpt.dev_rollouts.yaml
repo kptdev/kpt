@@ -102,7 +102,9 @@ spec:
                 description: Packages source for this Rollout.
                 properties:
                   github:
-                    description: GitHubSource defines the packages source in GitHub.
+                    description: 'TODO(droot): Change Github and Gitlab to pointers
+                      because One of the the following will be non-nil to follow OneOf
+                      semantics.'
                     properties:
                       selector:
                         description: GitHubSelector defines the selector to apply
@@ -168,11 +170,13 @@ spec:
                     - selector
                     type: object
                   oci:
+                    description: OCISource defines configuration to discover OCI packages.
                     properties:
                       dir:
                         description: 'dir is the absolute path of the directory that
                           contains the local resources.  Default: the root directory
-                          of the image.'
+                          of the image. Note (droot): We will extend `Dir` to express
+                          variants of a package at some point.'
                         type: string
                       image:
                         description: 'image is the OCI image repository URL for the
@@ -299,7 +303,8 @@ spec:
                         type: object
                       oci:
                         description: Oci contains configuration specific to importing
-                          resources from an OCI package.
+                          resources from an OCI package. This definition is copied
+                          from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
                         properties:
                           auth:
                             description: auth is the type of secret configured for
@@ -396,7 +401,8 @@ spec:
                         type: object
                       oci:
                         description: Oci contains configuration specific to importing
-                          resources from an OCI package.
+                          resources from an OCI package. This definition is copied
+                          from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
                         properties:
                           auth:
                             description: auth is the type of secret configured for
