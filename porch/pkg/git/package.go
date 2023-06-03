@@ -290,15 +290,13 @@ func (p *gitPackageRevision) Lifecycle() v1alpha1.PackageRevisionLifecycle {
 }
 
 func (p *gitPackageRevision) checkPublishedLifecycle() v1alpha1.PackageRevisionLifecycle {
-	if p.repo.deletionProposedCache == nil {
-		if err := p.repo.UpdateDeletionProposedCache(); err != nil {
-			klog.Errorf("failed to update deletionProposed cache: %v", err)
-			return v1alpha1.PackageRevisionLifecyclePublished
-		}
+	if err := p.repo.UpdateDeletionProposedCache(false); err != nil {
+		klog.Errorf("failed to update deletionProposed cache: %v", err)
+		return v1alpha1.PackageRevisionLifecyclePublished
 	}
 
 	branchName := createDeletionProposedName(p.path, p.revision)
-	if _, found := p.repo.deletionProposedCache[branchName]; found {
+	if found := p.repo.IsProposedDelete(branchName); found {
 		return v1alpha1.PackageRevisionLifecycleDeletionProposed
 	}
 
@@ -319,7 +317,7 @@ func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.P
 		}
 
 		// Push the package revision into a deletionProposed branch.
-		p.repo.deletionProposedCache[deletionProposedBranch] = true
+		p.repo.SetProposedDelete(deletionProposedBranch)
 		refSpecs.AddRefToPush(p.commit, deletionProposedBranch.RefInLocal())
 	}
 	if old == v1alpha1.PackageRevisionLifecycleDeletionProposed {
@@ -328,7 +326,7 @@ func (p *gitPackageRevision) UpdateLifecycle(ctx context.Context, new v1alpha1.P
 		}
 
 		// Delete the deletionProposed branch
-		delete(p.repo.deletionProposedCache, deletionProposedBranch)
+		p.repo.RemoveProposedDelete(deletionProposedBranch)
 		ref := plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), p.commit)
 		refSpecs.AddRefToDelete(ref)
 	}

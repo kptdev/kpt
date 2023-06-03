@@ -52,7 +52,7 @@ const (
 type GitRepository interface {
 	repository.Repository
 	GetPackageRevision(ctx context.Context, ref, path string) (repository.PackageRevision, kptfilev1.GitLock, error)
-	UpdateDeletionProposedCache() error
+	UpdateDeletionProposedCache(bool) error
 }
 
 //go:generate go run golang.org/x/tools/cmd/stringer -type=MainBranchStrategy -linecomment
@@ -630,9 +630,16 @@ func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) 
 	return packageRevision, nil
 }
 
-func (r *gitRepository) UpdateDeletionProposedCache() error {
+func (r *gitRepository) UpdateDeletionProposedCache(force bool) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
+
+	// If the cache already exists and it is not a force refresh, just
+	// return early.
+	if r.deletionProposedCache != nil && !force {
+		return nil
+	}
+
 	r.deletionProposedCache = make(map[BranchName]bool)
 
 	err := r.fetchRemoteRepository(context.Background())
@@ -1533,6 +1540,28 @@ func (r *gitRepository) discoverPackagesInTree(commit *object.Commit, opt Discov
 
 	klog.V(2).Infof("discovered packages @%v with prefix %q: %#v", commit.Hash, opt.FilterPrefix, t.packages)
 	return t, nil
+}
+
+func (r *gitRepository) IsProposedDelete(branchName BranchName) bool {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	_, found := r.deletionProposedCache[branchName]
+	return found
+}
+
+func (r *gitRepository) SetProposedDelete(branchName BranchName) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	r.deletionProposedCache[branchName] = true
+}
+
+func (r *gitRepository) RemoveProposedDelete(branchName BranchName) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	delete(r.deletionProposedCache, branchName)
 }
 
 // See https://eli.thegreenplace.net/2021/generic-functions-on-slices-with-go-type-parameters/
