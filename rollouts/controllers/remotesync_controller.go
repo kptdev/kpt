@@ -378,7 +378,7 @@ func (r *RemoteSyncReconciler) deleteExternalResources(ctx context.Context, remo
 	}
 
 	logger.Info("Deleting external resource")
-	err = dynCl.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Delete(ctx, remotesync.Name, metav1.DeleteOptions{})
+	err = dynCl.Resource(gvr).Namespace(getExternalSyncNamespace(remotesync)).Delete(ctx, getExternalSyncName(remotesync), metav1.DeleteOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
