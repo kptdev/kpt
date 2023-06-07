@@ -317,11 +317,9 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 
 	for existingPvId, existingPV := range existingPackageVariantMap {
 		if _, found := desiredPackageVariantMap[existingPvId]; found {
-			fmt.Println("Found existing in desired", existingPvId)
 			// this PackageVariant exists in both the desired PackageVariant set and the
 			// existing PackageVariant set, so we don't need to do anything.
 		} else {
-			fmt.Println("Did not find existing in desired", existingPvId)
 			// this PackageVariant exists in the existing PackageVariant set, but not
 			// the desired PackageVariant set, so we need to delete it.
 			err := r.Client.Delete(ctx, existingPV)
@@ -333,7 +331,6 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 
 	for desiredPvId, desiredPv := range desiredPackageVariantMap {
 		if existingPv, found := existingPackageVariantMap[desiredPvId]; found {
-			fmt.Println("Found desired in existing", desiredPvId)
 			// this PackageVariant exists in both the desired PackageVariant set and the
 			// existing PackageVariant set, so we update it
 			// we only change the spec
@@ -343,7 +340,6 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 				return err
 			}
 		} else {
-			fmt.Println("Did not find desired in existing", desiredPvId)
 			// this PackageVariant exists in the desired PackageVariant set, but not
 			// the existing PackageVariant set, so we need to create it.
 			err := r.Client.Create(ctx, desiredPv)
