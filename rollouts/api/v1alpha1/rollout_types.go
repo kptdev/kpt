@@ -163,6 +163,12 @@ type GitLabSelector struct {
 
 // OCISource defines configuration to discover OCI packages.
 type OCISource struct {
+	// Selector contains config to select OCI packages
+	Selector OCISelector `json:"selector"`
+}
+
+// Selector represent info on how to select OCI packages.
+type OCISelector struct {
 	// image is the OCI image repository URL for the package to sync from.
 	// e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
 	// The image can be pulled by TAG or by DIGEST if it is specified in PACKAGE_NAME.

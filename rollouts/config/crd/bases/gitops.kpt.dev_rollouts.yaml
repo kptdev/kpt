@@ -172,23 +172,29 @@ spec:
                   oci:
                     description: OCISource defines configuration to discover OCI packages.
                     properties:
-                      dir:
-                        description: 'dir is the absolute path of the directory that
-                          contains the local resources.  Default: the root directory
-                          of the image. Note (droot): We will extend `Dir` to express
-                          variants of a package at some point.'
-                        type: string
-                      image:
-                        description: 'image is the OCI image repository URL for the
-                          package to sync from. e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
-                          The image can be pulled by TAG or by DIGEST if it is specified
-                          in PACKAGE_NAME. - Pull by tag: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME:TAG`.
-                          - Pull by digest: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME@sha256:DIGEST`.
-                          If neither TAG nor DIGEST is specified, it pulls with the
-                          `latest` tag by default. Required'
-                        type: string
+                      selector:
+                        description: Selector contains config to select OCI packages
+                        properties:
+                          dir:
+                            description: 'dir is the absolute path of the directory
+                              that contains the local resources.  Default: the root
+                              directory of the image. Note (droot): We will extend
+                              `Dir` to express variants of a package at some point.'
+                            type: string
+                          image:
+                            description: 'image is the OCI image repository URL for
+                              the package to sync from. e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
+                              The image can be pulled by TAG or by DIGEST if it is
+                              specified in PACKAGE_NAME. - Pull by tag: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME:TAG`.
+                              - Pull by digest: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME@sha256:DIGEST`.
+                              If neither TAG nor DIGEST is specified, it pulls with
+                              the `latest` tag by default. Required'
+                            type: string
+                        required:
+                        - image
+                        type: object
                     required:
-                    - image
+                    - selector
                     type: object
                   sourceType:
                     enum:

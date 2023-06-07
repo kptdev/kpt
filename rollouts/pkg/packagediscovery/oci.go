@@ -28,9 +28,9 @@ func (d *PackageDiscovery) getOCIPackages(ctx context.Context, config gitopsv1al
 	oci := config.OciSource
 
 	discoveredPackages = append(discoveredPackages, DiscoveredPackage{
-		Directory: oci.Dir,
+		Directory: oci.Selector.Dir,
 		OciRepo: &OCIRepo{
-			Image: oci.Image,
+			Image: oci.Selector.Image,
 		},
 	})
 	return discoveredPackages, nil
