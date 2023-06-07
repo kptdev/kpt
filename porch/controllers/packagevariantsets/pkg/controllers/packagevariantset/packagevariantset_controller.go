@@ -332,11 +332,13 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	}
 
 	for desiredPvId, desiredPv := range desiredPackageVariantMap {
-		if _, found := existingPackageVariantMap[desiredPvId]; found {
+		if existingPv, found := existingPackageVariantMap[desiredPvId]; found {
 			fmt.Println("Found desired in existing", desiredPvId)
 			// this PackageVariant exists in both the desired PackageVariant set and the
 			// existing PackageVariant set, so we update it
-			err := r.Client.Update(ctx, desiredPv)
+			// we only change the spec
+			existingPv.Spec = desiredPv.Spec
+			err := r.Client.Update(ctx, existingPv)
 			if err != nil {
 				return err
 			}
