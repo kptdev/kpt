@@ -63,6 +63,9 @@ const (
 
 	ConditionTypeStalled = "Stalled" // whether or not the resource reconciliation is making progress or not
 	ConditionTypeReady   = "Ready"   // whether or not the reconciliation succeeded
+
+	PackageVariantNameMaxLength  = 63
+	PackageVariantNameHashLength = 8
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariantsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -242,7 +245,7 @@ func (r *PackageVariantSetReconciler) unrollDownstreamTargets(ctx context.Contex
 				template:       target.Template,
 				repoDefault:    u.GetName(),
 				packageDefault: upstreamPackageName,
-				object:         &u,
+				object:         u.DeepCopy(),
 			})
 
 		}
@@ -277,11 +280,8 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	desiredPackageVariantMap := make(map[string]*pkgvarapi.PackageVariant, len(downstreams))
 
 	for _, pv := range pvList.Items {
-		hash, err := hashFromPackageVariantSpec(&pv.Spec)
-		if err != nil {
-			return err
-		}
-		existingPackageVariantMap[hash] = &pv
+		pvId := packageVariantIdentifier(pvs.Name, &pv.Spec)
+		existingPackageVariantMap[pvId] = pv.DeepCopy()
 	}
 
 	tr := true
@@ -290,17 +290,14 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 		if err != nil {
 			return err
 		}
-		hash, err := hashFromPackageVariantSpec(pvSpec)
-		if err != nil {
-			return err
-		}
+		pvId := packageVariantIdentifier(pvs.Name, pvSpec)
 		pv := pkgvarapi.PackageVariant{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "PackageVariant",
 				APIVersion: "config.porch.kpt.dev",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:       fmt.Sprintf("%s-%s", pvs.Name, hash),
+				Name:       packageVariantName(pvId),
 				Namespace:  pvs.Namespace,
 				Finalizers: []string{pkgvarapi.Finalizer},
 				Labels:     map[string]string{PackageVariantSetOwnerLabel: string(pvs.UID)},
@@ -315,14 +312,16 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 			},
 			Spec: *pvSpec,
 		}
-		desiredPackageVariantMap[hash] = &pv
+		desiredPackageVariantMap[pvId] = &pv
 	}
 
-	for existingPvHash, existingPV := range existingPackageVariantMap {
-		if _, found := desiredPackageVariantMap[existingPvHash]; found {
+	for existingPvId, existingPV := range existingPackageVariantMap {
+		if _, found := desiredPackageVariantMap[existingPvId]; found {
+			fmt.Println("Found existing in desired", existingPvId)
 			// this PackageVariant exists in both the desired PackageVariant set and the
 			// existing PackageVariant set, so we don't need to do anything.
 		} else {
+			fmt.Println("Did not find existing in desired", existingPvId)
 			// this PackageVariant exists in the existing PackageVariant set, but not
 			// the desired PackageVariant set, so we need to delete it.
 			err := r.Client.Delete(ctx, existingPV)
@@ -332,11 +331,17 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 		}
 	}
 
-	for desiredPvHash, desiredPv := range desiredPackageVariantMap {
-		if _, found := existingPackageVariantMap[desiredPvHash]; found {
+	for desiredPvId, desiredPv := range desiredPackageVariantMap {
+		if _, found := existingPackageVariantMap[desiredPvId]; found {
+			fmt.Println("Found desired in existing", desiredPvId)
 			// this PackageVariant exists in both the desired PackageVariant set and the
-			// existing PackageVariant set, so we don't need to do anything.
+			// existing PackageVariant set, so we update it
+			err := r.Client.Update(ctx, desiredPv)
+			if err != nil {
+				return err
+			}
 		} else {
+			fmt.Println("Did not find desired in existing", desiredPvId)
 			// this PackageVariant exists in the desired PackageVariant set, but not
 			// the existing PackageVariant set, so we need to create it.
 			err := r.Client.Create(ctx, desiredPv)
@@ -349,13 +354,18 @@ func (r *PackageVariantSetReconciler) ensurePackageVariants(ctx context.Context,
 	return nil
 }
 
-func hashFromPackageVariantSpec(spec *pkgvarapi.PackageVariantSpec) (string, error) {
-	b, err := yaml.Marshal(spec)
-	if err != nil {
-		return "", err
+func packageVariantIdentifier(pvsName string, spec *pkgvarapi.PackageVariantSpec) string {
+	return pvsName + "-" + spec.Downstream.Repo + "-" + spec.Downstream.Package
+}
+
+func packageVariantName(pvId string) string {
+	if len(pvId) <= PackageVariantNameMaxLength {
+		return pvId
 	}
-	hash := sha1.Sum(b)
-	return hex.EncodeToString(hash[:]), nil
+
+	hash := sha1.Sum([]byte(pvId))
+	stubIdx := PackageVariantNameMaxLength - PackageVariantNameHashLength - 1
+	return fmt.Sprintf("%s-%s", pvId[:stubIdx], hex.EncodeToString(hash[:])[:PackageVariantNameHashLength])
 }
 
 // SetupWithManager sets up the controller with the Manager.

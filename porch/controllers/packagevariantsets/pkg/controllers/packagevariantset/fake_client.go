@@ -26,24 +26,29 @@ import (
 
 type fakeClient struct {
 	objects []client.Object
+	created []client.Object
+	updated []client.Object
+	deleted []client.Object
 	client.Client
 }
 
 var _ client.Client = &fakeClient{}
 
 func (f *fakeClient) Create(_ context.Context, obj client.Object, _ ...client.CreateOption) error {
-	f.objects = append(f.objects, obj)
+	fmt.Println("Creating", obj.GetName())
+	f.created = append(f.created, obj)
 	return nil
 }
 
 func (f *fakeClient) Delete(_ context.Context, obj client.Object, _ ...client.DeleteOption) error {
-	var newObjects []client.Object
-	for _, old := range f.objects {
-		if obj.GetName() != old.GetName() {
-			newObjects = append(newObjects, old)
-		}
-	}
-	f.objects = newObjects
+	fmt.Println("Deleting", obj.GetName())
+	f.deleted = append(f.deleted, obj)
+	return nil
+}
+
+func (f *fakeClient) Update(_ context.Context, obj client.Object, _ ...client.UpdateOption) error {
+	fmt.Println("Updating", obj.GetName())
+	f.updated = append(f.updated, obj)
 	return nil
 }
 
@@ -76,27 +81,27 @@ items:
 - apiVersion: config.porch.kpt.dev
   kind: PackageVariant
   metadata:
-    name: my-pv-1
+    name: my-pvs-dnrepo1-dnpkg1
   spec:
     upstream:
       repo: up
       package: up
       revision: up
     downstream:
-      repo: dn-1
-      package: dn-1
+      repo: dnrepo1
+      package: dnpkg1
 - apiVersion: config.porch.kpt.dev
   kind: PackageVariant
   metadata:
-    name: my-pv-2
+    name: my-pvs-dnrepo2-dnpkg2
   spec:
     upstream:
       repo: up
       package: up
       revision: up
     downstream:
-      repo: dn-2
-      package: dn-2`
+      repo: dnrepo2
+      package: dnpkg2`
 
 	var err error
 	switch v := obj.(type) {
