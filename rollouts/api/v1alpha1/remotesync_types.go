@@ -37,8 +37,10 @@ type Template struct {
 }
 
 type SyncSpec struct {
+	SourceType   string   `json:"sourceType,omitempty"`
 	SourceFormat string   `json:"sourceFormat,omitempty"`
 	Git          *GitInfo `json:"git,omitempty"`
+	Oci          *OciInfo `json:"oci,omitempty"`
 }
 
 type GitInfo struct {
@@ -52,6 +54,44 @@ type GitInfo struct {
 	Proxy                  string          `json:"proxy,omitempty"`
 	SecretRef              SecretReference `json:"secretRef,omitempty"`
 	NoSSLVerify            bool            `json:"noSSLVerify,omitempty"`
+}
+
+// Oci contains configuration specific to importing resources from an OCI package.
+// This definition is copied from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
+type OciInfo struct {
+	// image is the OCI image repository URL for the package to sync from.
+	// e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
+	// The image can be pulled by TAG or by DIGEST if it is specified in PACKAGE_NAME.
+	// - Pull by tag: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME:TAG`.
+	// - Pull by digest: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME@sha256:DIGEST`.
+	// If neither TAG nor DIGEST is specified, it pulls with the `latest` tag by default.
+	Image string `json:"image,omitempty"`
+
+	// dir is the absolute path of the directory that contains
+	// the local resources.  Default: the root directory of the image.
+	// +optional
+	Dir string `json:"dir,omitempty"`
+
+	// period is the time duration between consecutive syncs. Default: 15s.
+	// Note to developers that customers specify this value using
+	// string (https://golang.org/pkg/time/#Duration.String) like "3s"
+	// in their Custom Resource YAML. However, time.Duration is at a nanosecond
+	// granularity, and it is easy to introduce a bug where it looks like the
+	// code is dealing with seconds but its actually nanoseconds (or vice versa).
+	// +optional
+	Period metav1.Duration `json:"period,omitempty"`
+
+	// auth is the type of secret configured for access to the OCI package.
+	// Must be one of gcenode, gcpserviceaccount, or none.
+	// The validation of this is case-sensitive. Required.
+	//
+	// +kubebuilder:validation:Enum=gcenode;gcpserviceaccount;none
+	Auth string `json:"auth"`
+
+	// gcpServiceAccountEmail specifies the GCP service account used to annotate
+	// the RootSync/RepoSync controller Kubernetes Service Account.
+	// Note: The field is used when secretType: gcpServiceAccount.
+	GCPServiceAccountEmail string `json:"gcpServiceAccountEmail,omitempty"`
 }
 
 // Metadata specifies labels and annotations to add to the RSync object.

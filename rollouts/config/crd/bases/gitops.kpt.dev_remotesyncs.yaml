@@ -116,7 +116,55 @@ spec:
                         - auth
                         - repo
                         type: object
+                      oci:
+                        description: Oci contains configuration specific to importing
+                          resources from an OCI package. This definition is copied
+                          from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
+                        properties:
+                          auth:
+                            description: auth is the type of secret configured for
+                              access to the OCI package. Must be one of gcenode, gcpserviceaccount,
+                              or none. The validation of this is case-sensitive. Required.
+                            enum:
+                            - gcenode
+                            - gcpserviceaccount
+                            - none
+                            type: string
+                          dir:
+                            description: 'dir is the absolute path of the directory
+                              that contains the local resources.  Default: the root
+                              directory of the image.'
+                            type: string
+                          gcpServiceAccountEmail:
+                            description: 'gcpServiceAccountEmail specifies the GCP
+                              service account used to annotate the RootSync/RepoSync
+                              controller Kubernetes Service Account. Note: The field
+                              is used when secretType: gcpServiceAccount.'
+                            type: string
+                          image:
+                            description: 'image is the OCI image repository URL for
+                              the package to sync from. e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.
+                              The image can be pulled by TAG or by DIGEST if it is
+                              specified in PACKAGE_NAME. - Pull by tag: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME:TAG`.
+                              - Pull by digest: `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME@sha256:DIGEST`.
+                              If neither TAG nor DIGEST is specified, it pulls with
+                              the `latest` tag by default.'
+                            type: string
+                          period:
+                            description: 'period is the time duration between consecutive
+                              syncs. Default: 15s. Note to developers that customers
+                              specify this value using string (https://golang.org/pkg/time/#Duration.String)
+                              like "3s" in their Custom Resource YAML. However, time.Duration
+                              is at a nanosecond granularity, and it is easy to introduce
+                              a bug where it looks like the code is dealing with seconds
+                              but its actually nanoseconds (or vice versa).'
+                            type: string
+                        required:
+                        - auth
+                        type: object
                       sourceFormat:
+                        type: string
+                      sourceType:
                         type: string
                     type: object
                 type: object

@@ -418,7 +418,7 @@ func (r *RolloutReconciler) computeTargets(ctx context.Context,
 		rs := gitopsv1alpha1.RemoteSync{}
 		key := client.ObjectKey{
 			Namespace: rollout.Namespace,
-			Name:      fmt.Sprintf("%s-%s", pkgID(pkg), clusterName),
+			Name:      makeRemoteSyncName(clusterName, rollout.GetName()),
 		}
 		// since this RS need to exist, remove it from the deletion list
 		delete(RSkeysToBeDeleted, key)
@@ -732,7 +732,7 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) 
 	// or a RootSync in the config-management-system namespace.
 	return &gitopsv1alpha1.RemoteSync{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      fmt.Sprintf("%s-%s", pkgID(target.packageRef), clusterName),
+			Name:      makeRemoteSyncName(clusterName, rollout.GetName()),
 			Namespace: rollout.Namespace,
 			Labels: map[string]string{
 				rolloutLabel: rollout.Name,
@@ -752,17 +752,35 @@ func newRemoteSync(rollout *gitopsv1alpha1.Rollout, target *clusterPackagePair) 
 			Type:       templateType,
 			ClusterRef: clusterRef,
 			Template: &gitopsv1alpha1.Template{
-				Spec:     toSyncSpec(target.packageRef),
+				Spec:     toSyncSpec(target.packageRef, rollout),
 				Metadata: getSpecMetadata(rollout),
 			},
 		},
 	}
 }
 
-func toSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.SyncSpec {
-	return &gitopsv1alpha1.SyncSpec{
+func toSyncSpec(dpkg *packagediscovery.DiscoveredPackage, rollout *gitopsv1alpha1.Rollout) *gitopsv1alpha1.SyncSpec {
+	syncSpec := &gitopsv1alpha1.SyncSpec{
 		SourceFormat: "unstructured",
-		Git: &gitopsv1alpha1.GitInfo{
+	}
+	switch {
+	case dpkg.OciRepo != nil:
+		syncSpec.SourceType = "oci"
+		syncSpec.Oci = &gitopsv1alpha1.OciInfo{
+			Image: dpkg.OciRepo.Image,
+			Dir:   dpkg.Directory,
+		}
+		// copy the fields from the RSync template
+		if rollout.Spec.SyncTemplate.RepoSync != nil {
+			syncSpec.Oci.Auth = rollout.Spec.SyncTemplate.RepoSync.Oci.Auth
+			syncSpec.Oci.GCPServiceAccountEmail = rollout.Spec.SyncTemplate.RepoSync.Oci.GCPServiceAccountEmail
+		} else {
+			syncSpec.Oci.Auth = rollout.Spec.SyncTemplate.RootSync.Oci.Auth
+			syncSpec.Oci.GCPServiceAccountEmail = rollout.Spec.SyncTemplate.RootSync.Oci.GCPServiceAccountEmail
+		}
+	default:
+		syncSpec.SourceType = "git"
+		syncSpec.Git = &gitopsv1alpha1.GitInfo{
 			// TODO(droot): Repo URL can be an HTTP, GIT or SSH based URL
 			// Need to make it configurable
 			Repo:     dpkg.HTTPURL(),
@@ -770,12 +788,9 @@ func toSyncSpec(dpkg *packagediscovery.DiscoveredPackage) *gitopsv1alpha1.SyncSp
 			Dir:      dpkg.Directory,
 			Branch:   dpkg.Branch,
 			Auth:     "none",
-		},
+		}
 	}
-}
-
-func pkgID(dpkg *packagediscovery.DiscoveredPackage) string {
-	return dpkg.ID()
+	return syncSpec
 }
 
 // SetupWithManager sets up the controller with the Manager.
