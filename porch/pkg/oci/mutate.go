@@ -231,7 +231,16 @@ func (p *ociPackageDraft) Close(ctx context.Context) (repository.PackageRevision
 				revisions, err := r.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{
 					Package: p.packageName,
 				})
-				nextRevisionNumber, err := repository.NextRevisionNumber(revisions)
+				if err != nil {
+					return nil, err
+				}
+				var revs []string
+				for _, rev := range revisions {
+					if api.LifecycleIsPublished(rev.Lifecycle()) {
+						revs = append(revs, rev.Key().Revision)
+					}
+				}
+				nextRevisionNumber, err := repository.NextRevisionNumber(revs)
 				if err != nil {
 					return nil, err
 				}
