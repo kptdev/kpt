@@ -17,9 +17,9 @@ Package "wordpress"
 │   └── [volume.yaml]  PersistentVolumeClaim wp-pv-claim
 └── Package "mysql"
     ├── [Kptfile]  Kptfile mysql
-    ├── [deployment.yaml]  PersistentVolumeClaim mysql-pv-claim
     ├── [deployment.yaml]  Deployment wordpress-mysql
-    └── [deployment.yaml]  Service wordpress-mysql
+    ├── [service.yaml]  Service wordpress-mysql
+    └── [volume.yaml]  PersistentVolumeClaim mysql-pv-claim
 ```
 
 ?> Refer to the [tree command reference][tree-doc] for usage.
