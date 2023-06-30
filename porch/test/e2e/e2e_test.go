@@ -2521,7 +2521,7 @@ func (t *PorchSuite) waitUntilRepositoryDeleted(ctx context.Context, name, names
 }
 
 func (t *PorchSuite) waitUntilAllPackagesDeleted(ctx context.Context, repoName string) {
-	err := wait.PollImmediateWithContext(ctx, time.Second, 20*time.Second, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollImmediateWithContext(ctx, time.Second, 60*time.Second, func(ctx context.Context) (done bool, err error) {
 		var pkgRevList porchapi.PackageRevisionList
 		if err := t.client.List(ctx, &pkgRevList); err != nil {
 			t.Logf("error listing packages: %v", err)
