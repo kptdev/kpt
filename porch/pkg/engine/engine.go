@@ -24,6 +24,7 @@ import (
 	"reflect"
 	"strings"
 
+	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
@@ -52,6 +53,11 @@ import (
 )
 
 var tracer = otel.Tracer("engine")
+
+const (
+	OptimisticLockErrorMsg    = "the object has been modified; please apply your changes to the latest version and try again"
+	ResourceVersionAnnotation = "internal.kpt.dev/resource-version"
+)
 
 type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
@@ -127,7 +133,13 @@ func (p *PackageRevision) KubeObjectName() string {
 }
 
 func (p *PackageRevision) GetResources(ctx context.Context) (*api.PackageRevisionResources, error) {
-	return p.repoPackageRevision.GetResources(ctx)
+	prr, err := p.repoPackageRevision.GetResources(ctx)
+	if err != nil {
+		return prr, err
+	}
+
+	err = addResourceVersionAnnotation(prr)
+	return prr, err
 }
 
 type Function struct {
@@ -374,6 +386,11 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 		// If there are no tasks, or the first task is not init or clone, then this revision was not
 		// created from another package revision. That means we expect it to be the first revision
 		// for this package.
+		if len(tasks) == 0 {
+			klog.Warningf("not same origin due to no tasks")
+		} else {
+			klog.Warningf("not same origin due to tasks[0].Type: %v", tasks[0].Type)
+		}
 		return false, nil
 	}
 
@@ -391,6 +408,7 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 	for _, rev := range existingRevs {
 		p, err := rev.GetPackageRevision(ctx)
 		if err != nil {
+			klog.Warningf("not same origin due to error getting packagerevision: %s", err.Error())
 			return false, err
 		}
 		revTasks := p.Spec.Tasks
@@ -436,6 +454,7 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 			case firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil:
 				revRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstObjTask.Clone.Upstream.UpstreamRef.Name)
 				if err != nil {
+					klog.Warningf("not same origin due to error getting packagerevision to check upstreams: %s", err.Error())
 					return false, err
 				}
 				if !found {
@@ -444,6 +463,7 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 
 				objRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstRevTask.Clone.Upstream.UpstreamRef.Name)
 				if err != nil {
+					klog.Warningf("not same origin due to error getting packagerevision to check upstreams 2: %s", err.Error())
 					return false, err
 				}
 				if !found {
@@ -461,6 +481,7 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 			}
 		}
 	}
+	klog.Warningf("not same origin due to falling through")
 	return false, nil
 }
 
@@ -625,6 +646,15 @@ func (cad *cadEngine) mapTaskToMutation(ctx context.Context, obj *api.PackageRev
 func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, oldObj, newObj *api.PackageRevision, parent *PackageRevision) (*PackageRevision, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageRevision", trace.WithAttributes())
 	defer span.End()
+
+	newRV := newObj.GetResourceVersion()
+	if len(newRV) == 0 {
+		return nil, fmt.Errorf("resourceVersion must be specified for an update")
+	}
+
+	if newRV != oldObj.GetResourceVersion() {
+		return nil, apierrors.NewConflict(api.Resource("packagerevisions"), oldObj.GetName(), fmt.Errorf(OptimisticLockErrorMsg))
+	}
 
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
@@ -1040,11 +1070,94 @@ func (cad *cadEngine) DeletePackage(ctx context.Context, repositoryObj *configap
 	return nil
 }
 
+func getResourceFileKubeObject(prr *api.PackageRevisionResources, file, kind, name string) (*fnsdk.KubeObject, error) {
+	if prr.Spec.Resources == nil {
+		return nil, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	if _, ok := prr.Spec.Resources[file]; !ok {
+		return nil, fmt.Errorf("%q not found in PackageRevisionResources '%s/%s'", file, prr.Namespace, prr.Name)
+	}
+
+	ko, err := fnsdk.ParseKubeObject([]byte(prr.Spec.Resources[file]))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %q of PackageRevisionResources %s/%s: %w", file, prr.Namespace, prr.Name, err)
+	}
+	if kind != "" && ko.GetKind() != kind {
+		return nil, fmt.Errorf("%q does not contain kind %q in PackageRevisionResources '%s/%s'", file, kind, prr.Namespace, prr.Name)
+	}
+	if name != "" && ko.GetName() != name {
+		return nil, fmt.Errorf("%q does not contain resource named %q in PackageRevisionResources '%s/%s'", file, name, prr.Namespace, prr.Name)
+	}
+
+	return ko, nil
+}
+
+func getResourceVersionAnnotation(prr *api.PackageRevisionResources) string {
+	ko, err := getResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+
+	if err != nil {
+		klog.Warningf("%s", err.Error())
+		return ""
+	}
+	annotations := ko.GetAnnotations()
+	rv, ok := annotations[ResourceVersionAnnotation]
+	if !ok {
+		return ""
+	}
+
+	return rv
+}
+
+func addResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
+	ko, err := getResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+	if err != nil {
+		return err
+	}
+
+	ko.SetAnnotation(ResourceVersionAnnotation, prr.GetResourceVersion())
+	prr.Spec.Resources["Kptfile"] = ko.String()
+
+	return nil
+}
+
+func removeResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
+	ko, err := getResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+	if err != nil {
+		return err
+	}
+
+	ko.RemoveNestedField("metadata", "annotations", ResourceVersionAnnotation)
+	prr.Spec.Resources["Kptfile"] = ko.String()
+
+	return nil
+}
+
 func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj *configapi.Repository, oldPackage *PackageRevision, old, new *api.PackageRevisionResources) (*PackageRevision, *api.RenderStatus, error) {
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageResources", trace.WithAttributes())
 	defer span.End()
 
 	rev, err := oldPackage.repoPackageRevision.GetPackageRevision(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	newRV := new.GetResourceVersion()
+	if len(newRV) == 0 {
+		// see if the Kptfile annotation exists, for rpkg push commands
+		newRV = getResourceVersionAnnotation(new)
+	}
+
+	if len(newRV) == 0 {
+		return nil, nil, fmt.Errorf("resourceVersion must be specified for an update")
+	}
+
+	if newRV != old.GetResourceVersion() {
+		return nil, nil, apierrors.NewConflict(api.Resource("packagerevisionresources"), old.GetName(), fmt.Errorf(OptimisticLockErrorMsg))
+	}
+
+	// be sure to remove any RV annotation
+	err = removeResourceVersionAnnotation(new)
 	if err != nil {
 		return nil, nil, err
 	}
