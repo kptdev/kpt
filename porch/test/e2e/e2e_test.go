@@ -1872,7 +1872,6 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 		Name:      pr.Name,
 	}, &pr)
 
-
 	// Update the labels and annotations on the approved package.
 	delete(pr.ObjectMeta.Labels, labelKey1)
 	pr.ObjectMeta.Labels[labelKey2] = labelVal2
