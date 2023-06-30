@@ -1835,6 +1835,13 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 	// Propose the package.
 	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
 	t.UpdateF(ctx, &pr)
+
+	// retrieve the updated object
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: pr.Namespace,
+		Name:      pr.Name,
+	}, &pr)
+
 	t.validateLabelsAndAnnos(ctx, pr.Name,
 		map[string]string{
 			labelKey1: labelVal1,
@@ -1858,6 +1865,13 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 			annoKey2: annoVal2,
 		},
 	)
+
+	// retrieve the updated object
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: pr.Namespace,
+		Name:      pr.Name,
+	}, &pr)
+
 
 	// Update the labels and annotations on the approved package.
 	delete(pr.ObjectMeta.Labels, labelKey1)
