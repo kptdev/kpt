@@ -17,8 +17,10 @@
 package e2e
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -110,8 +112,20 @@ func runTestCase(t *testing.T, repoURL string, tc porch.TestCaseConfig) {
 }
 
 func reorderYamlStdout(t *testing.T, buf *bytes.Buffer) {
+	// strip out the internal.kpt.dev/resource-version
+	// annotation, because that will change with every run
+	scanner := bufio.NewScanner(buf)
+	var newBuf bytes.Buffer
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.Contains(line, "internal.kpt.dev/resource-version:") {
+			newBuf.Write([]byte(line))
+			newBuf.Write([]byte("\n"))
+		}
+	}
+
 	var data interface{}
-	if err := yaml.Unmarshal(buf.Bytes(), &data); err != nil {
+	if err := yaml.Unmarshal(newBuf.Bytes(), &data); err != nil {
 		// not yaml.
 		return
 	}
