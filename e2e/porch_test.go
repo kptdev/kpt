@@ -20,7 +20,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io/fs"
 	"os"
 	"os/exec"
