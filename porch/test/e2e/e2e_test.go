@@ -2183,6 +2183,110 @@ func (t *PorchSuite) TestPackageRevisionFinalizers(ctx context.Context) {
 	}, 10*time.Second)
 }
 
+func (t *PorchSuite) TestPackageRevisionOptimisticLocking(ctx context.Context) {
+	const (
+		repository = "pkgrevoptlock"
+		workspace  = "pkgrevoptlock-workspace"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "pkgrevoptlock",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	var pkgRev1 porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &pkgRev1)
+
+	var pkgRev2 porchapi.PackageRevision
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &pkgRev2)
+
+	pkgRev1.Annotations = map[string]string{
+		"anno": "example.com/value",
+	}
+	t.UpdateF(ctx, &pkgRev1)
+
+	pkgRev2.Annotations = map[string]string{
+		"anno": "example.com/anothervalue",
+	}
+	if err := t.client.Update(ctx, &pkgRev2); err == nil {
+		t.Fatalf("Expected optimistic concurrency error, but didn't get one")
+	}
+}
+
+func (t *PorchSuite) TestPackageRevisionResourcesOptimisticLocking(ctx context.Context) {
+	const (
+		repository = "pkgrevresoptlock"
+		workspace  = "pkgrevresoptlock-workspace"
+	)
+
+	t.registerMainGitRepositoryF(ctx, repository)
+
+	pr := &porchapi.PackageRevision{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       packageRevisionGVK.Kind,
+			APIVersion: packageRevisionGVK.GroupVersion().String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: t.namespace,
+		},
+		Spec: porchapi.PackageRevisionSpec{
+			PackageName:    "pkgrevresoptlock",
+			WorkspaceName:  workspace,
+			RepositoryName: repository,
+		},
+	}
+	t.CreateF(ctx, pr)
+
+	var pkgRevResources1 porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &pkgRevResources1)
+
+	var pkgRevResources2 porchapi.PackageRevisionResources
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: t.namespace,
+		Name:      pr.Name,
+	}, &pkgRevResources2)
+
+	filePath1 := filepath.Join("testdata", "pkgrevresoptlock", "cm-update1.yaml")
+	resource1, err := os.ReadFile(filePath1)
+	if err != nil {
+		t.Fatalf("Failed to read ConfigMap from %q: %v", filePath1, err)
+	}
+	pkgRevResources1.Spec.Resources["cm.yaml"] = string(resource1)
+	t.UpdateF(ctx, &pkgRevResources1)
+
+	filePath2 := filepath.Join("testdata", "pkgrevresoptlock", "cm-update2.yaml")
+	resource2, err := os.ReadFile(filePath2)
+	if err != nil {
+		t.Fatalf("Failed to read ConfigMap from %q: %v", filePath2, err)
+	}
+	pkgRevResources2.Spec.Resources["cm.yaml"] = string(resource2)
+	if err := t.client.Update(ctx, &pkgRevResources2); err == nil {
+		t.Fatalf("Expected optimistic concurrency error, but didn't get one")
+	}
+}
+
 func (t *PorchSuite) validateFinalizers(ctx context.Context, name string, finalizers []string) {
 	var pr porchapi.PackageRevision
 	t.GetF(ctx, client.ObjectKey{
