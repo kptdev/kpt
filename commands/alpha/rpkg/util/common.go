@@ -74,7 +74,10 @@ func GetResourceVersionAnnotation(prr *api.PackageRevisionResources) (string, er
 		return "", err
 	}
 	annotations := ko.GetAnnotations()
-	rv, _ := annotations[ResourceVersionAnnotation]
+	rv, ok := annotations[ResourceVersionAnnotation]
+	if !ok {
+		rv = ""
+	}
 	return rv, nil
 }
 
@@ -84,7 +87,10 @@ func AddResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
 		return err
 	}
 
-	ko.SetAnnotation(ResourceVersionAnnotation, prr.GetResourceVersion())
+	_ = ko.SetAnnotation(ResourceVersionAnnotation, prr.GetResourceVersion())
+	if err != nil {
+		return err
+	}
 	prr.Spec.Resources["Kptfile"] = ko.String()
 
 	return nil
@@ -96,7 +102,10 @@ func RemoveResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
 		return err
 	}
 
-	ko.RemoveNestedField("metadata", "annotations", ResourceVersionAnnotation)
+	err = ko.RemoveNestedField("metadata", "annotations", ResourceVersionAnnotation)
+	if err != nil {
+		return err
+	}
 	prr.Spec.Resources["Kptfile"] = ko.String()
 
 	return nil
