@@ -24,7 +24,6 @@ import (
 	"reflect"
 	"strings"
 
-	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	"github.com/GoogleContainerTools/kpt/internal/builtins"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
 	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
