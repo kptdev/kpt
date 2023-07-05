@@ -46,9 +46,25 @@ func TestPorch(t *testing.T) {
 	runTests(t, abs)
 }
 
+func runUtilityCommand(t *testing.T, command string, args ...string) error {
+	cmd := exec.Command(command, args...)
+	t.Logf("running utility command %s %s", command, strings.Join(args, " "))
+	return cmd.Run()
+}
+
 func runTests(t *testing.T, path string) {
 	gitServerURL := startGitServer(t, path)
 	testCases := scanTestCases(t, path)
+
+	// remove any tmp files from previous test runs
+	err := runUtilityCommand(t, "rm", "-rf", "/tmp/porch-e2e")
+	if err != nil {
+		t.Fatalf("Failed to clean up older run: %v", err)
+	}
+	err = runUtilityCommand(t, "mkdir", "/tmp/porch-e2e")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
 
 	for _, tc := range testCases {
 		t.Run(tc.TestCase, func(t *testing.T) {
@@ -72,7 +88,7 @@ func runTestCase(t *testing.T, repoURL string, tc porch.TestCaseConfig) {
 	}
 
 	for i := range tc.Commands {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		command := &tc.Commands[i]
 		cmd := exec.Command("kpt", command.Args...)
 
@@ -90,6 +106,8 @@ func runTestCase(t *testing.T, repoURL string, tc porch.TestCaseConfig) {
 			reorderYamlStdout(t, &stdout)
 		}
 
+		cleanupStderr(t, &stderr)
+
 		if os.Getenv(updateGoldenFiles) != "" {
 			updateCommand(command, err, stdout.String(), stderr.String())
 		}
@@ -103,10 +121,35 @@ func runTestCase(t *testing.T, repoURL string, tc porch.TestCaseConfig) {
 		if got, want := stderr.String(), command.Stderr; got != want {
 			t.Errorf("unexpected stderr content from 'kpt %s'; (-want, +got) %s", strings.Join(command.Args, " "), cmp.Diff(want, got))
 		}
+
+		// hack here; but if the command registered a repo, give a few extra seconds for the repo to reach readiness
+		for _, arg := range command.Args {
+			if arg == "register" {
+				time.Sleep(5 * time.Second)
+			}
+		}
 	}
 
 	if os.Getenv(updateGoldenFiles) != "" {
 		porch.WriteTestCaseConfig(t, &tc)
+	}
+}
+
+// remove PASS lines from kpt fn eval, which includes a duration and will vary
+func cleanupStderr(t *testing.T, buf *bytes.Buffer) {
+	scanner := bufio.NewScanner(buf)
+	var newBuf bytes.Buffer
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !strings.Contains(line, "[PASS]") {
+			newBuf.Write([]byte(line))
+			newBuf.Write([]byte("\n"))
+		}
+	}
+
+	buf.Reset()
+	if _, err := buf.Write(newBuf.Bytes()); err != nil {
+		t.Fatalf("Failed to update cleaned up stderr: %v", err)
 	}
 }
 

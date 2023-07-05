@@ -58,30 +58,19 @@ commands:
       - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
     stdin: |
       apiVersion: config.kubernetes.io/v1
-      kind: ResourceList
       items:
       - apiVersion: kpt.dev/v1
+        info:
+          description: sample description
         kind: Kptfile
         metadata:
-          name: test-package
           annotations:
-            config.kubernetes.io/index: '0'
+            config.kubernetes.io/index: "0"
             config.kubernetes.io/local-config: "true"
             config.kubernetes.io/path: Kptfile
-            internal.config.kubernetes.io/index: '0'
-            internal.config.kubernetes.io/path: 'Kptfile'
-        info:
-          site: http://kpt.dev/test-package
-          description: Updated Test Package Description
-      - apiVersion: v1
-        kind: ConfigMap
-        metadata:
-          name: new-config-map
-          annotations:
-            internal.config.kubernetes.io/path: 'config-map.yaml'
-            config.kubernetes.io/path: 'config-map.yaml'
-        data:
-          key: value
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: Kptfile
+          name: test-package
       - apiVersion: v1
         data:
           name: example
@@ -94,6 +83,37 @@ commands:
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: package-context.yaml
           name: kptfile.kpt.dev
+      kind: ResourceList
+    yaml: true
+    exitCode: 1
+    stderr: "Error: Internal error occurred: resourceVersion must be specified for an update \n"
+    stdout: null
+  - args:
+      - alpha
+      - rpkg
+      - pull
+      - --namespace=rpkg-push
+      - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+      - /tmp/porch-e2e/rpkg-push-git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+  - args:
+      - fn
+      - eval
+      - --image
+      - gcr.io/kpt-fn/search-replace:v0.2.0
+      - --match-kind
+      - Kptfile
+      - /tmp/porch-e2e/rpkg-push-git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+      - --
+      - by-path=info.description
+      - put-value=Updated Test Package Description
+    stderr: "[RUNNING] \"gcr.io/kpt-fn/search-replace:v0.2.0\" on 1 resource(s)\n  Results:\n    [info] info.description: Mutated field value to \"Updated Test Package Description\"\n"
+  - args:
+      - alpha
+      - rpkg
+      - push
+      - --namespace=rpkg-push
+      - git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+      - /tmp/porch-e2e/rpkg-push-git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
   - args:
       - alpha
       - rpkg
@@ -106,7 +126,6 @@ commands:
       - apiVersion: kpt.dev/v1
         info:
           description: Updated Test Package Description
-          site: http://kpt.dev/test-package
         kind: Kptfile
         metadata:
           annotations:
@@ -116,17 +135,6 @@ commands:
             internal.config.kubernetes.io/index: "0"
             internal.config.kubernetes.io/path: Kptfile
           name: test-package
-      - apiVersion: v1
-        data:
-          key: value
-        kind: ConfigMap
-        metadata:
-          annotations:
-            config.kubernetes.io/index: "0"
-            config.kubernetes.io/path: config-map.yaml
-            internal.config.kubernetes.io/index: "0"
-            internal.config.kubernetes.io/path: config-map.yaml
-          name: new-config-map
       - apiVersion: v1
         data:
           name: example
