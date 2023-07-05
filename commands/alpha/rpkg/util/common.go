@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2023 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,21 @@ package util
 
 import (
 	"context"
+	"fmt"
 
-	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	ResourceVersionAnnotation = "internal.kpt.dev/resource-version"
 )
 
 func PackageAlreadyExists(ctx context.Context, c client.Client, repository, packageName, namespace string) (bool, error) {
 	// only the first package revision can be created from init or clone, so
 	// we need to check that the package doesn't already exist.
-	packageRevisionList := porchapi.PackageRevisionList{}
+	packageRevisionList := api.PackageRevisionList{}
 	if err := c.List(ctx, &packageRevisionList, &client.ListOptions{
 		Namespace: namespace,
 	}); err != nil {
@@ -36,4 +42,62 @@ func PackageAlreadyExists(ctx context.Context, c client.Client, repository, pack
 		}
 	}
 	return false, nil
+}
+
+func GetResourceFileKubeObject(prr *api.PackageRevisionResources, file, kind, name string) (*fnsdk.KubeObject, error) {
+	if prr.Spec.Resources == nil {
+		return nil, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
+	}
+
+	if _, ok := prr.Spec.Resources[file]; !ok {
+		return nil, fmt.Errorf("%q not found in PackageRevisionResources '%s/%s'", file, prr.Namespace, prr.Name)
+	}
+
+	ko, err := fnsdk.ParseKubeObject([]byte(prr.Spec.Resources[file]))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %q of PackageRevisionResources %s/%s: %w", file, prr.Namespace, prr.Name, err)
+	}
+	if kind != "" && ko.GetKind() != kind {
+		return nil, fmt.Errorf("%q does not contain kind %q in PackageRevisionResources '%s/%s'", file, kind, prr.Namespace, prr.Name)
+	}
+	if name != "" && ko.GetName() != name {
+		return nil, fmt.Errorf("%q does not contain resource named %q in PackageRevisionResources '%s/%s'", file, name, prr.Namespace, prr.Name)
+	}
+
+	return ko, nil
+}
+
+func GetResourceVersionAnnotation(prr *api.PackageRevisionResources) (string, error) {
+	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+
+	if err != nil {
+		return "", err
+	}
+	annotations := ko.GetAnnotations()
+	rv, _ := annotations[ResourceVersionAnnotation]
+	return rv, nil
+}
+
+func AddResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
+	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+	if err != nil {
+		return err
+	}
+
+	ko.SetAnnotation(ResourceVersionAnnotation, prr.GetResourceVersion())
+	prr.Spec.Resources["Kptfile"] = ko.String()
+
+	return nil
+}
+
+func RemoveResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
+	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
+	if err != nil {
+		return err
+	}
+
+	ko.RemoveNestedField("metadata", "annotations", ResourceVersionAnnotation)
+	prr.Spec.Resources["Kptfile"] = ko.String()
+
+	return nil
 }

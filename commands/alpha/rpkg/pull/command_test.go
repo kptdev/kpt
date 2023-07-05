@@ -74,6 +74,7 @@ items:
     name: bar
     annotations:
       config.kubernetes.io/local-config: "true"
+      internal.kpt.dev/resource-version: "999"
       config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/path: 'Kptfile'
@@ -126,6 +127,7 @@ items:
     name: bar
     annotations:
       config.kubernetes.io/local-config: "true"
+      internal.kpt.dev/resource-version: "999"
       config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/path: 'Kptfile'
