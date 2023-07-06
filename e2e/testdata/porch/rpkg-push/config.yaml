@@ -87,7 +87,6 @@ commands:
     yaml: true
     exitCode: 1
     stderr: "Error: Internal error occurred: resourceVersion must be specified for an update \n"
-    stdout: null
   - args:
       - alpha
       - rpkg

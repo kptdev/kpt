@@ -154,6 +154,10 @@ func cleanupStderr(t *testing.T, buf *bytes.Buffer) {
 }
 
 func reorderYamlStdout(t *testing.T, buf *bytes.Buffer) {
+	if buf.Len() == 0 {
+		return
+	}
+
 	// strip out the internal.kpt.dev/resource-version
 	// annotation, because that will change with every run
 	scanner := bufio.NewScanner(buf)
