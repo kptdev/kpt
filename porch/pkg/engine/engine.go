@@ -53,6 +53,10 @@ import (
 
 var tracer = otel.Tracer("engine")
 
+const (
+	OptimisticLockErrorMsg = "the object has been modified; please apply your changes to the latest version and try again"
+)
+
 type CaDEngine interface {
 	// ObjectCache() is a cache of all our objects.
 	ObjectCache() WatcherManager
@@ -626,6 +630,15 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 	ctx, span := tracer.Start(ctx, "cadEngine::UpdatePackageRevision", trace.WithAttributes())
 	defer span.End()
 
+	newRV := newObj.GetResourceVersion()
+	if len(newRV) == 0 {
+		return nil, fmt.Errorf("resourceVersion must be specified for an update")
+	}
+
+	if newRV != oldObj.GetResourceVersion() {
+		return nil, apierrors.NewConflict(api.Resource("packagerevisions"), oldObj.GetName(), fmt.Errorf(OptimisticLockErrorMsg))
+	}
+
 	repo, err := cad.cache.OpenRepository(ctx, repositoryObj)
 	if err != nil {
 		return nil, err
@@ -1047,6 +1060,15 @@ func (cad *cadEngine) UpdatePackageResources(ctx context.Context, repositoryObj 
 	rev, err := oldPackage.repoPackageRevision.GetPackageRevision(ctx)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	newRV := new.GetResourceVersion()
+	if len(newRV) == 0 {
+		return nil, nil, fmt.Errorf("resourceVersion must be specified for an update")
+	}
+
+	if newRV != old.GetResourceVersion() {
+		return nil, nil, apierrors.NewConflict(api.Resource("packagerevisionresources"), old.GetName(), fmt.Errorf(OptimisticLockErrorMsg))
 	}
 
 	// Validate package lifecycle. Can only update a draft.

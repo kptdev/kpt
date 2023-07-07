@@ -1835,6 +1835,13 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 	// Propose the package.
 	pr.Spec.Lifecycle = porchapi.PackageRevisionLifecycleProposed
 	t.UpdateF(ctx, &pr)
+
+	// retrieve the updated object
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: pr.Namespace,
+		Name:      pr.Name,
+	}, &pr)
+
 	t.validateLabelsAndAnnos(ctx, pr.Name,
 		map[string]string{
 			labelKey1: labelVal1,
@@ -1858,6 +1865,12 @@ func (t *PorchSuite) TestNewPackageRevisionLabels(ctx context.Context) {
 			annoKey2: annoVal2,
 		},
 	)
+
+	// retrieve the updated object
+	t.GetF(ctx, client.ObjectKey{
+		Namespace: pr.Namespace,
+		Name:      pr.Name,
+	}, &pr)
 
 	// Update the labels and annotations on the approved package.
 	delete(pr.ObjectMeta.Labels, labelKey1)
@@ -2508,7 +2521,7 @@ func (t *PorchSuite) waitUntilRepositoryDeleted(ctx context.Context, name, names
 }
 
 func (t *PorchSuite) waitUntilAllPackagesDeleted(ctx context.Context, repoName string) {
-	err := wait.PollImmediateWithContext(ctx, time.Second, 20*time.Second, func(ctx context.Context) (done bool, err error) {
+	err := wait.PollImmediateWithContext(ctx, time.Second, 60*time.Second, func(ctx context.Context) (done bool, err error) {
 		var pkgRevList porchapi.PackageRevisionList
 		if err := t.client.List(ctx, &pkgRevList); err != nil {
 			t.Logf("error listing packages: %v", err)

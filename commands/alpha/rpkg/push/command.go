@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/util"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
@@ -132,6 +133,16 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 			Resources: resources,
 		},
 	}
+
+	rv, err := util.GetResourceVersionAnnotation(&pkgResources)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	pkgResources.ResourceVersion = rv
+	if err = util.RemoveResourceVersionAnnotation(&pkgResources); err != nil {
+		return errors.E(op, err)
+	}
+
 	if err := r.client.Update(r.ctx, &pkgResources); err != nil {
 		return errors.E(op, err)
 	}

@@ -22,6 +22,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg/util"
 	"github.com/GoogleContainerTools/kpt/internal/docs/generated/rpkgdocs"
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
@@ -109,6 +110,10 @@ func (r *runner) runE(_ *cobra.Command, args []string) error {
 		Namespace: *r.cfg.Namespace,
 		Name:      packageName,
 	}, &resources); err != nil {
+		return errors.E(op, err)
+	}
+
+	if err := util.AddResourceVersionAnnotation(&resources); err != nil {
 		return errors.E(op, err)
 	}
 
