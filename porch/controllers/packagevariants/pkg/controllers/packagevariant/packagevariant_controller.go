@@ -16,8 +16,6 @@ package packagevariant
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/hex"
 	"flag"
 	"fmt"
 	"strconv"
@@ -29,6 +27,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 
 	"golang.org/x/mod/semver"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -42,7 +41,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 type Options struct{}
@@ -370,10 +368,13 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 			// we need to copy a published package to a new draft before updating
 			if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
 				klog.Infoln(fmt.Sprintf("package variant %q needs to update package revision %q for new upstream revision, creating new draft", pv.Name, downstream.Name))
+				oldDS := downstream
 				downstream, err = r.copyPublished(ctx, downstream, pv, prList)
 				if err != nil {
+					klog.Errorf("package variant %q failed to copy %q: %s", pv.Name, oldDS.Name, err.Error())
 					return nil, err
 				}
+				klog.Infoln(fmt.Sprintf("package variant %q created %q based on %q", pv.Name, downstream.Name, oldDS.Name))
 			}
 			downstreams[i], err = r.updateDraft(ctx, downstream, upstream)
 			if err != nil {
@@ -394,16 +395,20 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 			// so, clone to a new Draft if that's the case
 			if porchapi.LifecycleIsPublished(downstream.Spec.Lifecycle) {
 				klog.Infoln(fmt.Sprintf("package variant %q needs to mutate to package revision %q, creating new draft", pv.Name, downstream.Name))
+				oldDS := downstream
 				downstream, err = r.copyPublished(ctx, downstream, pv, prList)
+				if err != nil {
+					klog.Errorf("package variant %q failed to copy %q: %s", pv.Name, oldDS.Name, err.Error())
+					return nil, err
+				}
+				klog.Infoln(fmt.Sprintf("package variant %q created %q based on %q", pv.Name, downstream.Name, oldDS.Name))
+				downstreams[i] = downstream
+				// recalculate from the new Draft
+				prr, _, err = r.calculateDraftResources(ctx, pv, downstreams[i])
 				if err != nil {
 					return nil, err
 				}
-				downstreams[i] = downstream
-			}
-			// recalculate from the new Draft
-			prr, _, err = r.calculateDraftResources(ctx, pv, downstreams[i])
-			if err != nil {
-				return nil, err
+
 			}
 			// Save the updated PackageRevisionResources
 			if err := r.Update(ctx, prr); err != nil {
@@ -411,7 +416,6 @@ func (r *PackageVariantReconciler) findAndUpdateExistingRevisions(ctx context.Co
 			}
 			klog.Infoln(fmt.Sprintf("package variant %q updated package revision %q for new mutations", pv.Name, downstream.Name))
 		}
-
 	}
 	return downstreams, nil
 }
@@ -763,10 +767,9 @@ func (r *PackageVariantReconciler) calculateDraftResources(ctx context.Context,
 		return nil, false, fmt.Errorf("nil resources found for PackageRevisionResources '%s/%s'", prr.Namespace, prr.Name)
 	}
 
-	// Calculate a hash of the resources
-	beforeHash, err := hashFromPackageRevisionResources(&prr)
-	if err != nil {
-		return nil, false, err
+	origResources := make(map[string]string, len(prr.Spec.Resources))
+	for k, v := range prr.Spec.Resources {
+		origResources[k] = v
 	}
 
 	// Apply our mutations
@@ -782,12 +785,73 @@ func (r *PackageVariantReconciler) calculateDraftResources(ctx context.Context,
 		return nil, false, err
 	}
 
-	afterHash, err := hashFromPackageRevisionResources(&prr)
-	if err != nil {
-		return nil, false, err
+	if len(prr.Spec.Resources) != len(origResources) {
+		// files were added or deleted
+		klog.Infoln(fmt.Sprintf("PackageVariant %q, PackageRevision %q, resources changed: %d original files, %d new files", pv.Name, prr.Name, len(origResources), len(prr.Spec.Resources)))
+		return &prr, true, nil
 	}
 
-	return &prr, beforeHash != afterHash, nil
+	for k, v := range origResources {
+		newValue, ok := prr.Spec.Resources[k]
+		if !ok {
+			// a file was deleted
+			klog.Infoln(fmt.Sprintf("PackageVariant %q, PackageRevision %q, resources changed: %q in original files, not in new files", pv.Name, prr.Name, k))
+			return &prr, true, nil
+		}
+
+		if newValue != v {
+			// HACK ALERT - TODO(jbelamaric): Fix this
+			// Currently nephio controllers and package variant controller are rendering Kptfiles slightly differently in YAML
+			// not sure why, need to investigate more. It may be due to different versions of kyaml. So, here, just for Kptfiles,
+			// we will parse and compare semantically.
+			//
+			if k == "Kptfile" && kptfilesEqual(v, newValue) {
+				klog.Infoln(fmt.Sprintf("PackageVariant %q, PackageRevision %q, resources changed: Kptfiles differ, but not semantically", pv.Name, prr.Name))
+				continue
+			}
+
+			// a file was changed
+			klog.Infoln(fmt.Sprintf("PackageVariant %q, PackageRevision %q, resources changed: %q different", pv.Name, prr.Name, k))
+			return &prr, true, nil
+		}
+	}
+
+	// all files in orig are in new, no new files, and all contents match
+	// so no change
+	klog.Infoln(fmt.Sprintf("PackageVariant %q, PackageRevision %q, resources unchanged", pv.Name, prr.Name))
+	return &prr, false, nil
+}
+
+func parseKptfile(kf string) (*kptfilev1.KptFile, error) {
+	ko, err := fn.ParseKubeObject([]byte(kf))
+	if err != nil {
+		return nil, err
+	}
+	var kptfile kptfilev1.KptFile
+	err = ko.As(&kptfile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &kptfile, nil
+}
+
+func kptfilesEqual(a, b string) bool {
+	akf, err := parseKptfile(a)
+	if err != nil {
+		return false
+	}
+
+	bkf, err := parseKptfile(b)
+	if err != nil {
+		return false
+	}
+
+	equal, err := kptfileutil.Equal(akf, bkf)
+	if err != nil {
+		return false
+	}
+	return equal
 }
 
 func ensurePackageContext(pv *api.PackageVariant,
@@ -979,13 +1043,4 @@ func isPackageVariantFunc(fn *fn.SubObject, pvName string) (bool, error) {
 
 func generatePVFuncName(funcName, pvName string, pos int) string {
 	return fmt.Sprintf("%s.%s.%s.%d", PackageVariantFuncPrefix, pvName, funcName, pos)
-}
-
-func hashFromPackageRevisionResources(prr *porchapi.PackageRevisionResources) (string, error) {
-	b, err := yaml.Marshal(prr.Spec.Resources)
-	if err != nil {
-		return "", err
-	}
-	hash := sha1.Sum(b)
-	return hex.EncodeToString(hash[:]), nil
 }

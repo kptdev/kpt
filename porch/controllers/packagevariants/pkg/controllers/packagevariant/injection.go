@@ -336,7 +336,7 @@ func setInjectionPointConditionsAndGates(kptfileKubeObject *fn.KubeObject, injec
 	for k := range gateMap {
 		gates = append(gates, kptfilev1.ReadinessGate{ConditionType: k})
 	}
-	sort.Slice(gates, func(i, j int) bool { return gates[i].ConditionType < gates[j].ConditionType })
+	sort.SliceStable(gates, func(i, j int) bool { return gates[i].ConditionType < gates[j].ConditionType })
 
 	if gates != nil {
 		info.ReadinessGates = gates
@@ -348,7 +348,7 @@ func setInjectionPointConditionsAndGates(kptfileKubeObject *fn.KubeObject, injec
 
 	// update the status conditions
 	if conditions != nil {
-		sort.Slice(conditions, func(i, j int) bool { return conditions[i].Type < conditions[j].Type })
+		sort.SliceStable(conditions, func(i, j int) bool { return conditions[i].Type < conditions[j].Type })
 		status.Conditions = convertConditionsFromMetaToKptfile(conditions)
 		err = kptfileKubeObject.SetNestedField(status, "status")
 		if err != nil {
