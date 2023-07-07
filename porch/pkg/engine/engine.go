@@ -131,12 +131,7 @@ func (p *PackageRevision) KubeObjectName() string {
 }
 
 func (p *PackageRevision) GetResources(ctx context.Context) (*api.PackageRevisionResources, error) {
-	prr, err := p.repoPackageRevision.GetResources(ctx)
-	if err != nil {
-		return prr, err
-	}
-
-	return prr, err
+	return p.repoPackageRevision.GetResources(ctx)
 }
 
 type Function struct {
@@ -383,11 +378,6 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 		// If there are no tasks, or the first task is not init or clone, then this revision was not
 		// created from another package revision. That means we expect it to be the first revision
 		// for this package.
-		if len(tasks) == 0 {
-			klog.Warningf("not same origin due to no tasks")
-		} else {
-			klog.Warningf("not same origin due to tasks[0].Type: %v", tasks[0].Type)
-		}
 		return false, nil
 	}
 
@@ -405,7 +395,6 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 	for _, rev := range existingRevs {
 		p, err := rev.GetPackageRevision(ctx)
 		if err != nil {
-			klog.Warningf("not same origin due to error getting packagerevision: %s", err.Error())
 			return false, err
 		}
 		revTasks := p.Spec.Tasks
@@ -451,7 +440,6 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 			case firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil:
 				revRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstObjTask.Clone.Upstream.UpstreamRef.Name)
 				if err != nil {
-					klog.Warningf("not same origin due to error getting packagerevision to check upstreams: %s", err.Error())
 					return false, err
 				}
 				if !found {
@@ -460,7 +448,6 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 
 				objRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstRevTask.Clone.Upstream.UpstreamRef.Name)
 				if err != nil {
-					klog.Warningf("not same origin due to error getting packagerevision to check upstreams 2: %s", err.Error())
 					return false, err
 				}
 				if !found {
@@ -478,7 +465,6 @@ func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.
 			}
 		}
 	}
-	klog.Warningf("not same origin due to falling through")
 	return false, nil
 }
 
