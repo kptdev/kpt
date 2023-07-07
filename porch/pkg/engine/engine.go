@@ -309,14 +309,9 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	sameOrigin, err := ensureSameOrigin(ctx, repo, obj, revs)
-	if err != nil {
-		return nil, fmt.Errorf("error ensuring same origin: %w", err)
-	}
-
-	if !sameOrigin {
-		return nil, fmt.Errorf("cannot create revision of %s with a different origin than other package revisions in the same package", obj.Spec.PackageName)
-	}
+	// TODO: consider using ensureSameOrigin
+	// this function was not working properly and so is no longer called, but if there
+	// is value in that validation and the function is fixed, we should add it back here
 
 	draft, err := repo.CreatePackageRevision(ctx, obj)
 	if err != nil {
