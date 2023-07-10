@@ -53,7 +53,7 @@ func newRunner(ctx context.Context, rcg *genericclioptions.ConfigFlags) *runner 
 		Hidden:  porch.HidePorchCommands,
 	}
 	r.Command.Flags().StringVar(&r.workspace, "workspace", "", "Workspace name of the copy of the package.")
-	r.Command.Flags().BoolVar(&r.replayStrategy, "replay-strategy", true, "Use replay strategy for creating new package revision.")
+	r.Command.Flags().BoolVar(&r.replayStrategy, "replay-strategy", false, "Use replay strategy for creating new package revision.")
 	return r
 }
 
