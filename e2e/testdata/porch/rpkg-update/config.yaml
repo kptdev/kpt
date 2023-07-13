@@ -36,6 +36,7 @@ commands:
       - copy
       - --namespace=rpkg-update
       - --workspace=update-3
+      - --replay-strategy=true
       - git-3f036055f7ba68706372cbe0c4b14d553794f7c4
     stdout: "git-7fcdd499f0790ac3bd8f805e3e5e00825641eb60 created\n"
   - args:

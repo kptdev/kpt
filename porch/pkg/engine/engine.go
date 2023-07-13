@@ -309,15 +309,6 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	sameOrigin, err := ensureSameOrigin(ctx, repo, obj, revs)
-	if err != nil {
-		return nil, fmt.Errorf("error ensuring same origin: %w", err)
-	}
-
-	if !sameOrigin {
-		return nil, fmt.Errorf("cannot create revision of %s with a different origin than other package revisions in the same package", obj.Spec.PackageName)
-	}
-
 	draft, err := repo.CreatePackageRevision(ctx, obj)
 	if err != nil {
 		return nil, err
@@ -365,107 +356,6 @@ func ensureUniqueWorkspaceName(obj *api.PackageRevision, existingRevs []reposito
 		}
 	}
 	return nil
-}
-
-func ensureSameOrigin(ctx context.Context, repo repository.Repository, obj *api.PackageRevision, existingRevs []repository.PackageRevision) (bool, error) {
-	if len(existingRevs) == 0 {
-		// no prior package revisions, no need to check anything else
-		return true, nil
-	}
-
-	tasks := obj.Spec.Tasks
-	if len(tasks) == 0 || !taskTypeOneOf(tasks[0].Type, api.TaskTypeInit, api.TaskTypeClone, api.TaskTypeEdit) {
-		// If there are no tasks, or the first task is not init or clone, then this revision was not
-		// created from another package revision. That means we expect it to be the first revision
-		// for this package.
-		return false, nil
-	}
-
-	firstObjTask := tasks[0].DeepCopy()
-
-	// Edit tasks is a copy of a different revision in the same package, so therefore must
-	// always be allowed.
-	if firstObjTask.Type == api.TaskTypeEdit {
-		return true, nil
-	}
-
-	// iterate over existing package revisions, and look for one with a matching init or clone task.
-	// We consider a packagerevision to have the same upstream if we find at least one existing
-	// packagerevision that matches.
-	for _, rev := range existingRevs {
-		p, err := rev.GetPackageRevision(ctx)
-		if err != nil {
-			return false, err
-		}
-		revTasks := p.Spec.Tasks
-		if len(revTasks) == 0 {
-			// not a match
-			continue
-		}
-		firstRevTask := revTasks[0].DeepCopy()
-		if firstRevTask.Type != firstObjTask.Type {
-			// not a match
-			continue
-		}
-
-		if firstObjTask.Type == api.TaskTypeClone {
-			// the user is allowed to update the git upstream ref, so we exclude that from the equality check.
-			// We make the git upstream refs equal before calling reflect.DeepEqual
-			if firstRevTask.Clone == nil || firstObjTask.Clone == nil {
-				continue
-			}
-
-			switch {
-			// If both the new and existing packagerevision has a git upstream, we consider it
-			// from the same upstream if the repo and directory are the same.
-			case firstRevTask.Clone.Upstream.Git != nil && firstObjTask.Clone.Upstream.Git != nil:
-				firstRevTask.Clone.Upstream.Git.Ref = firstObjTask.Clone.Upstream.Git.Ref
-				if reflect.DeepEqual(firstRevTask, firstObjTask) {
-					return true, nil
-				}
-			// If both the new and existing packagerevision has an oci upstream, we consider it
-			// from the same upstream if the image path is the same. We do not care about any tag
-			// or digest.
-			case firstRevTask.Clone.Upstream.Oci != nil && firstObjTask.Clone.Upstream.Oci != nil:
-				objOciImage := getBaseImage(firstObjTask.Clone.Upstream.Oci.Image)
-				revOciImage := getBaseImage(firstRevTask.Clone.Upstream.Oci.Image)
-				if objOciImage == revOciImage {
-					firstRevTask.Clone.Upstream.Oci.Image = firstObjTask.Clone.Upstream.Oci.Image
-				}
-				if reflect.DeepEqual(firstRevTask, firstObjTask) {
-					return true, nil
-				}
-			// If both the new and existing packagerevision has a porch upstream, we dereference the
-			// upstreamRef and make sure that both reference revisions of the same package.
-			case firstRevTask.Clone.Upstream.UpstreamRef != nil && firstObjTask.Clone.Upstream.UpstreamRef != nil:
-				revRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstObjTask.Clone.Upstream.UpstreamRef.Name)
-				if err != nil {
-					return false, err
-				}
-				if !found {
-					continue
-				}
-
-				objRepoPkgRev, found, err := getPackageRevision(ctx, repo, firstRevTask.Clone.Upstream.UpstreamRef.Name)
-				if err != nil {
-					return false, err
-				}
-				if !found {
-					continue
-				}
-				if revRepoPkgRev.Key().Repository == objRepoPkgRev.Key().Repository &&
-					revRepoPkgRev.Key().Package == objRepoPkgRev.Key().Package {
-					return true, nil
-				}
-
-			}
-		} else {
-			if reflect.DeepEqual(firstRevTask, firstObjTask) {
-				return true, nil
-			}
-		}
-	}
-	return false, nil
 }
 
 func getPackageRevision(ctx context.Context, repo repository.Repository, name string) (repository.PackageRevision, bool, error) {

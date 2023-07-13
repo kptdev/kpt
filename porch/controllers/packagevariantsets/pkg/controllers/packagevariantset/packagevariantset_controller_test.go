@@ -16,6 +16,7 @@ package packagevariantset
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
@@ -135,6 +136,10 @@ func TestEnsurePackageVariants(t *testing.T) {
 	require.Equal(t, 1, len(fc.updated))
 	require.Equal(t, "my-pvs-dnrepo2-dnpkg2", fc.updated[0].GetName())
 	require.Equal(t, 2, len(fc.created))
+	// ordering of calls to create is not stable (map iteration)
+	sort.Slice(fc.created, func(i, j int) bool {
+		return fc.created[i].GetName() < fc.created[j].GetName()
+	})
 	require.Equal(t, "my-pvs-dnrepo3-dnpkg3", fc.created[0].GetName())
 	require.Equal(t, "my-pvs-dnrepo4-supersupersuperlooooooooooooooooooooooo-bec36506", fc.created[1].GetName())
 }
