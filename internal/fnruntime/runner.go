@@ -61,7 +61,7 @@ type RunnerOptions struct {
 	// privileged operation, so explicit permission is required.
 	AllowExec bool
 
-	// AllowNetwork specifies if containered functions are allowed
+	// AllowNetwork specifies if container based functions are allowed
 	// to access network during pipeline execution. Accessing network is
 	// considered a privileged operation (and makes render operation non-hermetic),
 	// so explicit permission is desired.
