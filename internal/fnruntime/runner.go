@@ -61,6 +61,12 @@ type RunnerOptions struct {
 	// privileged operation, so explicit permission is required.
 	AllowExec bool
 
+	// AllowNetwork specifies if containered functions are allowed
+	// to access network during pipeline execution. Accessing network is
+	// considered a privileged operation (and makes render operation non-hermetic),
+	// so explicit permission is desired.
+	AllowNetwork bool
+
 	// allowWasm determines if function wasm are allowed to be run during pipeline
 	// execution. Running wasm function is an alpha feature, so it needs to be
 	// enabled explicitly.
@@ -143,8 +149,14 @@ func NewRunner(
 					cfn := &ContainerFn{
 						Image:           f.Image,
 						ImagePullPolicy: opts.ImagePullPolicy,
-						Ctx:             ctx,
-						FnResult:        fnResult,
+						Perm: ContainerFnPermission{
+							AllowNetwork: opts.AllowNetwork,
+							// mounts are disabled for render operations (currently)
+							// but it may change in the future.
+							// AllowMount: true,
+						},
+						Ctx:      ctx,
+						FnResult: fnResult,
 					}
 					fltr.Run = cfn.Run
 				}

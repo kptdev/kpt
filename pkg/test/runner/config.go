@@ -81,6 +81,9 @@ type TestCaseConfig struct {
 	// AllowExec determines if `fn render` needs to be invoked with `--allow-exec` flag
 	AllowExec bool `json:"allowExec,omitempty" yaml:"allowExec,omitempty"`
 
+	// AllowExec determines if `fn render` needs to be invoked with `--allow-network` flag
+	AllowNetwork bool `json:"allowNetwork,omitempty" yaml:"allowNetwork,omitempty"`
+
 	// AllowWasm determines if `fn render` needs to be invoked with `--allow-alpha-wasm` flag
 	AllowWasm bool `json:"allowWasm,omitempty" yaml:"allowWasm,omitempty"`
 
