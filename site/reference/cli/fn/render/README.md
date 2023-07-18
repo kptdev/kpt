@@ -50,6 +50,11 @@ PKG_PATH:
   can perform privileged operations on your system, so ensure that binaries
   referred in the pipeline are trusted and safe to execute.
 
+--allow-network:
+  Allow functions to access network during pipeline execution. If unspecified,
+  `false` will be the default. Note that this is applicable for container
+  based functions only.
+
 --image-pull-policy:
   If the image should be pulled before rendering the package(s). It can be set
   to one of always, ifNotPresent, never. If unspecified, always will be the
@@ -121,6 +126,11 @@ $ kpt fn render -o stdout \
 ```shell
 # Render my-package-dir with podman as runtime for functions
 $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
+```
+
+```shell
+# Render my-package-dir with network access enabled for functions
+$ kpt fn render --allow-network
 ```
 
 <!--mdtogo-->
