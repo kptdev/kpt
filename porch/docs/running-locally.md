@@ -10,6 +10,7 @@ To run Porch locally, you will need:
 * [go 1.20](https://go.dev/dl/) or newer
 * [docker](https://docs.docker.com/get-docker/)
 * [git](https://git-scm.com/)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/)
 * `make`
 
 ## Getting Started
