@@ -274,6 +274,9 @@ Flags:
     can perform privileged operations on your system, so ensure that binaries
     referred in the pipeline are trusted and safe to execute.
   
+  --allow-network:
+    Allow functions to access network during pipeline execution. Default: ` + "`" + `false` + "`" + `. Note that this is applicable to container based functions only.
+  
   --image-pull-policy:
     If the image should be pulled before rendering the package(s). It can be set
     to one of always, ifNotPresent, never. If unspecified, always will be the
@@ -324,6 +327,9 @@ var RenderExamples = `
 
   # Render my-package-dir with podman as runtime for functions
   $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
+
+  # Render my-package-dir with network access enabled for functions
+  $ kpt fn render --allow-network
 `
 
 var SinkShort = `Write resources to a local directory`
