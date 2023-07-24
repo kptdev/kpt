@@ -165,6 +165,7 @@ go mod vendor
 # Some cleanups
 # Rename all license files to `LICENSE`
 find vendor -type f -name LICENSE.md -execdir mv LICENSE.md LICENSE ';'
+find vendor -type f -name LICENSE.txt -execdir mv LICENSE.txt LICENSE ';'
 # Move LICENSE file to root directory of each dependency. This is necessary for
 # dependencies where code is stored in a versioned sub-directory.
 V2_LICENSE_DIR="vendor/github.com/cpuguy83/go-md2man"
@@ -173,6 +174,10 @@ GO_RESTFUL_LICENSE_DIR="vendor/github.com/emicklei/go-restful"
 mv ${GO_RESTFUL_LICENSE_DIR}/v3/LICENSE ${GO_RESTFUL_LICENSE_DIR}
 KLOG_LICENSE_DIR="vendor/k8s.io/klog"
 mv ${KLOG_LICENSE_DIR}/v2/LICENSE ${KLOG_LICENSE_DIR}
+XXHASH_LICENSE_DIR="vendor/github.com/cespare/xxhash"
+mv "${XXHASH_LICENSE_DIR}/v2/LICENSE" "${XXHASH_LICENSE_DIR}"
+BLACKFRIDAY_LICENSE_DIR="vendor/github.com/russross/blackfriday"
+mv "${BLACKFRIDAY_LICENSE_DIR}/v2/LICENSE" "${BLACKFRIDAY_LICENSE_DIR}"
 
 # Loop through every vendored package
 mozilla_repos=()
