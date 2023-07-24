@@ -21,17 +21,17 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/GoogleContainerTools/kpt/porch/pkg/cmd/server"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp"
-	"go.opentelemetry.io/otel/exporters/otlp/otlpgrpc"
-	"go.opentelemetry.io/otel/exporters/stdout"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/metric/controller/basic"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	genericapiserver "k8s.io/apiserver/pkg/server"
 	"k8s.io/component-base/cli"
 	"k8s.io/klog/v2"
@@ -59,9 +59,7 @@ func run() int {
 }
 
 type telemetry struct {
-	tp       *trace.TracerProvider
-	pusher   *basic.Controller
-	exporter trace.SpanExporter
+	tp *trace.TracerProvider
 }
 
 func (t *telemetry) Start() error {
@@ -71,17 +69,13 @@ func (t *telemetry) Start() error {
 	}
 
 	if config == "stdout" {
-		exportOpts := []stdout.Option{
-			stdout.WithPrettyPrint(),
-		}
-		// Registers both a trace and meter Provider globally.
-		tracerProvider, pusher, err := stdout.InstallNewPipeline(exportOpts, nil)
+		exporter, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
 		if err != nil {
 			return fmt.Errorf("error initializing stdout exporter: %w", err)
 		}
+		t.tp = trace.NewTracerProvider(trace.WithBatcher(exporter))
 
-		t.tp = tracerProvider
-		t.pusher = pusher
+		otel.SetTracerProvider(t.tp)
 		return nil
 	}
 
@@ -99,24 +93,32 @@ func (t *telemetry) Start() error {
 		klog.Infof("tracing to %q", config)
 
 		// See https://github.com/open-telemetry/opentelemetry-go/issues/1484
-		driver := otlpgrpc.NewDriver(
-			otlpgrpc.WithInsecure(),
-			otlpgrpc.WithEndpoint(endpoint),
-			otlpgrpc.WithDialOption(grpc.WithBlock()), // useful for testing
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+		conn, err := grpc.DialContext(ctx, endpoint,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithBlock(),
 		)
+		if err != nil {
+			return fmt.Errorf("failed to create gRPC connection to collector: %w", err)
+		}
+
+		// Set up a trace exporter
+		traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+		if err != nil {
+			return fmt.Errorf("failed to create trace exporter: %w", err)
+		}
+		// Register the trace exporter with a TracerProvider, using a batch
+		// span processor to aggregate spans before export.
+		bsp := trace.NewBatchSpanProcessor(traceExporter)
+		t.tp = trace.NewTracerProvider(
+			trace.WithSpanProcessor(bsp),
+		)
+		otel.SetTracerProvider(t.tp)
 
 		// set global propagator to tracecontext (the default is no-op).
 		otel.SetTextMapPropagator(propagation.TraceContext{})
 
-		// Registers both a trace and meter Provider globally.
-		exporter, tracerProvider, pusher, err := otlp.InstallNewPipeline(ctx, driver)
-		if err != nil {
-			return fmt.Errorf("error initializing otel exporter: %w", err)
-		}
-
-		t.tp = tracerProvider
-		t.pusher = pusher
-		t.exporter = exporter
 		return nil
 	}
 
@@ -124,24 +126,10 @@ func (t *telemetry) Start() error {
 }
 
 func (t *telemetry) Stop() {
-	if t.pusher != nil {
-		if err := t.pusher.Stop(context.Background()); err != nil {
-			klog.Warningf("failed to shut down telemetry: %v", err)
-		}
-		t.pusher = nil
-	}
-
 	if t.tp != nil {
 		if err := t.tp.Shutdown(context.Background()); err != nil {
 			klog.Warningf("failed to shut down telemetry: %v", err)
 		}
 		t.tp = nil
-	}
-
-	if t.exporter != nil {
-		if err := t.exporter.Shutdown(context.Background()); err != nil {
-			klog.Warningf("failed to shut down telemetry exporter: %v", err)
-		}
-		t.exporter = nil
 	}
 }

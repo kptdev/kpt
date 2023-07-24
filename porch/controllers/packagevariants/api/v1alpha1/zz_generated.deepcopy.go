@@ -20,7 +20,8 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -202,6 +203,11 @@ func (in *PackageVariantSpec) DeepCopyInto(out *PackageVariantSpec) {
 		*out = new(PackageContext)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Pipeline != nil {
+		in, out := &in.Pipeline, &out.Pipeline
+		*out = new(v1.Pipeline)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Injectors != nil {
 		in, out := &in.Injectors, &out.Injectors
 		*out = make([]InjectionSelector, len(*in))
@@ -226,7 +232,7 @@ func (in *PackageVariantStatus) DeepCopyInto(out *PackageVariantStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = make([]v1.Condition, len(*in))
+		*out = make([]metav1.Condition, len(*in))
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
