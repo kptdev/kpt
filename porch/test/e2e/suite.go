@@ -106,6 +106,7 @@ func (t *TestSuite) Initialize(ctx context.Context) {
 
 	t.Logf("Testing against server: %q", cfg.Host)
 	cfg.UserAgent = "Porch Test"
+	t.Logf("using timeout %v", cfg.Timeout)
 
 	scheme := createClientScheme(t.T)
 
@@ -215,6 +216,10 @@ func DebugFormat(obj client.Object) string {
 
 func (c *TestSuite) create(ctx context.Context, obj client.Object, opts []client.CreateOption, eh ErrorHandler) {
 	c.Logf("creating object %v", DebugFormat(obj))
+	start := time.Now()
+	defer func() {
+		c.Logf("took %v to create %s/%s", time.Since(start), obj.GetNamespace(), obj.GetName())
+	}()
 
 	if err := c.client.Create(ctx, obj, opts...); err != nil {
 		eh("failed to create resource %s: %v", DebugFormat(obj), err)

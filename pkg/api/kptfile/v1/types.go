@@ -235,6 +235,7 @@ type Subpackage struct {
 }
 
 // Pipeline declares a pipeline of functions used to mutate or validate resources.
+// +kubebuilder:object:generate=true
 type Pipeline struct {
 	//  Sources defines the source packages to resolve as input to the pipeline. Possible values:
 	//  a) A slash-separated, OS-agnostic relative package path which may include '.' and '..' e.g. './base', '../foo'
