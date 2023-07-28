@@ -63,6 +63,16 @@ builds:
       - arm64
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
 
+  - id: windows-amd64
+    env:
+      - CGO_ENABLED=0
+      - GO111MODULE=on
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
+
   - id: darwin-amd64-wasm
     env:
       - CGO_ENABLED=1
@@ -110,6 +120,18 @@ builds:
     goarch:
       - arm64
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
+    
+  - id: windows-amd64-wasm
+    env:
+      - CGO_ENABLED=1
+      - GO111MODULE=on
+      - CC=o64-clang
+      - CXX=o64-clang++
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
 
 dockers:
   - ids:
@@ -122,6 +144,7 @@ dockers:
     image_templates:
       - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile-gcloud"
+
 archives:
   - id: archived
     builds:
@@ -129,6 +152,7 @@ archives:
       - darwin-arm64
       - linux-amd64
       - linux-arm64
+      - windows-amd64
     files:
       - LICENSES*
       - lib.zip*
@@ -139,6 +163,7 @@ archives:
       - darwin-arm64-wasm
       - linux-amd64-wasm
       - linux-arm64-wasm
+      - windows-amd64-wasm
     files:
       - LICENSES*
       - lib.zip*
@@ -150,6 +175,7 @@ archives:
       - darwin-arm64
       - linux-amd64
       - linux-arm64
+      - windows-amd64
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
   - id: bin-only-wasm
     format: binary
@@ -158,6 +184,7 @@ archives:
       - darwin-arm64-wasm
       - linux-amd64-wasm
       - linux-arm64-wasm
+      - windows-amd64-wasm
     name_template: "{{ .ProjectName }}_wasm_{{ .Os }}_{{ .Arch }}"
 checksum:
   name_template: "checksums.txt"
