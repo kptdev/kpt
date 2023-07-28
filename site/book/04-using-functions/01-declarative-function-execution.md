@@ -215,8 +215,8 @@ pipeline:
 
 ## Specifying function `name`
 
-Functions can optionally be named to e.g. express the combined effect
-of `function` and `functionConfig`.
+Functions can optionally be named using the `pipeline.mutators.name`
+or `pipeline.validators.name` field to identify a function.
 
 For example:
 
@@ -234,11 +234,11 @@ pipeline:
         tier: mysql
 ```
 
-Specifying unique function names for all functions in a `Kptfile` is
-highly recommended, since package updates with `kpt pkg update` merges
-the `mutator` and `validator` function lists as associative list using
-the `name` field to identify functions. An unspecified `name` or
-duplicated names may result in unexpected package updates.
+Unique function names for all functions in the Kptfile function
+pipeline is recommended.  If `name` is specified, `kpt pkg update`
+will merge each function pipeline list as an associative list, using
+`name` as the merge key. An unspecified `name` or duplicated names may
+result in unexpected merges.
 
 ## Specifying `selectors`
 
