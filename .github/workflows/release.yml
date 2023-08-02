@@ -52,10 +52,15 @@ jobs:
         id: setup-release-env
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
-      - name: Run GoReleaser within Docker
+      - name: Run GoReleaser
         id: run-goreleaser
-        run: |
-          make release-ci
+        uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --skip-validate -f release/tag/goreleaser.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate SLSA subjects for provenance
         id: hash
         run: |

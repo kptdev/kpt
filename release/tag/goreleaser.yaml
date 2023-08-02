@@ -63,54 +63,6 @@ builds:
       - arm64
     ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
 
-  - id: darwin-amd64-wasm
-    env:
-      - CGO_ENABLED=1
-      - GO111MODULE=on
-      - CC=o64-clang
-      - CXX=o64-clang++
-    goos:
-      - darwin
-    goarch:
-      - amd64
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
-
-  - id: darwin-arm64-wasm
-    env:
-      - CGO_ENABLED=1
-      - GO111MODULE=on
-      - CC=oa64-clang
-      - CXX=oa64-clang++
-    goos:
-      - darwin
-    goarch:
-      - arm64
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}}
-
-  - id: linux-amd64-wasm
-    env:
-      - CGO_ENABLED=1
-      - GO111MODULE=on
-      - CC=x86_64-linux-gnu-gcc
-      - CXX=x86_64-linux-gnu-g++
-    goos:
-      - linux
-    goarch:
-      - amd64
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
-
-  - id: linux-arm64-wasm
-    env:
-      - CGO_ENABLED=1
-      - GO111MODULE=on
-      - CC=aarch64-linux-gnu-gcc
-      - CXX=aarch64-linux-gnu-g++
-    goos:
-      - linux
-    goarch:
-      - arm64
-    ldflags: -s -w -X github.com/GoogleContainerTools/kpt/run.version={{.Version}} -extldflags "-z noexecstack"
-
 dockers:
   - ids:
       - linux-amd64
@@ -133,16 +85,6 @@ archives:
       - LICENSES*
       - lib.zip*
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
-  - id: archived-wasm
-    builds:
-      - darwin-amd64-wasm
-      - darwin-arm64-wasm
-      - linux-amd64-wasm
-      - linux-arm64-wasm
-    files:
-      - LICENSES*
-      - lib.zip*
-    name_template: "{{ .ProjectName }}_wasm_{{ .Os }}_{{ .Arch }}-{{ .Version }}"
   - id: bin-only
     format: binary
     builds:
@@ -151,14 +93,6 @@ archives:
       - linux-amd64
       - linux-arm64
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-  - id: bin-only-wasm
-    format: binary
-    builds:
-      - darwin-amd64-wasm
-      - darwin-arm64-wasm
-      - linux-amd64-wasm
-      - linux-arm64-wasm
-    name_template: "{{ .ProjectName }}_wasm_{{ .Os }}_{{ .Arch }}"
 checksum:
   name_template: "checksums.txt"
 snapshot:
