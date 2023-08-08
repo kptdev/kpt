@@ -25,9 +25,9 @@ require (
 	golang.org/x/oauth2 v0.6.0
 	google.golang.org/api v0.110.0
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
-	k8s.io/api v0.26.0
-	k8s.io/apimachinery v0.26.0
-	k8s.io/client-go v0.26.0
+	k8s.io/api v0.26.7
+	k8s.io/apimachinery v0.26.7
+	k8s.io/client-go v0.26.7
 	k8s.io/klog/v2 v2.90.1
 	k8s.io/utils v0.0.0-20230115233650-391b47cb4029
 	sigs.k8s.io/cli-utils v0.35.0
@@ -130,11 +130,11 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apiextensions-apiserver v0.26.0 // indirect
-	k8s.io/cli-runtime v0.26.0 // indirect
-	k8s.io/component-base v0.26.0 // indirect
+	k8s.io/apiextensions-apiserver v0.26.7 // indirect
+	k8s.io/cli-runtime v0.26.7 // indirect
+	k8s.io/component-base v0.26.7 // indirect
 	k8s.io/kube-openapi v0.0.0-20230109183929-3758b55a6596 // indirect
-	k8s.io/kubectl v0.26.0 // indirect
+	k8s.io/kubectl v0.26.7 // indirect
 	sigs.k8s.io/json v0.0.0-20220713155537-f223a00ba0e2 // indirect
 	sigs.k8s.io/kustomize/api v0.12.1 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
