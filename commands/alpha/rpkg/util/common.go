@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	fnsdk "github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -67,43 +68,28 @@ func GetResourceFileKubeObject(prr *api.PackageRevisionResources, file, kind, na
 	return ko, nil
 }
 
-func GetResourceVersionAnnotation(prr *api.PackageRevisionResources) (string, error) {
-	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
-
+func GetResourceVersion(prr *api.PackageRevisionResources) (string, error) {
+	ko, err := GetResourceFileKubeObject(prr, kptfilev1.RevisionMetaDataFileName, kptfilev1.RevisionMetaDataKind, "")
 	if err != nil {
 		return "", err
 	}
-	annotations := ko.GetAnnotations()
-	rv, ok := annotations[ResourceVersionAnnotation]
-	if !ok {
-		rv = ""
-	}
+	rv, _, _ := ko.NestedString("metadata", "resourceVersion")
 	return rv, nil
 }
 
-func AddResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
-	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
-	if err != nil {
-		return err
+func AddRevisionMetadata(prr *api.PackageRevisionResources) error {
+	kptMetaDataKo := fnsdk.NewEmptyKubeObject()
+	kptMetaDataKo.SetAPIVersion(prr.APIVersion)
+	kptMetaDataKo.SetKind(kptfilev1.RevisionMetaDataKind)
+	if err := kptMetaDataKo.SetNestedField(prr.GetObjectMeta(), "metadata"); err != nil {
+		return fmt.Errorf("cannot set metadata: %v", err)
 	}
-
-	ko.SetAnnotation(ResourceVersionAnnotation, prr.GetResourceVersion())
-	prr.Spec.Resources["Kptfile"] = ko.String()
+	prr.Spec.Resources[kptfilev1.RevisionMetaDataFileName] = kptMetaDataKo.String()
 
 	return nil
 }
 
-func RemoveResourceVersionAnnotation(prr *api.PackageRevisionResources) error {
-	ko, err := GetResourceFileKubeObject(prr, "Kptfile", "Kptfile", "")
-	if err != nil {
-		return err
-	}
-
-	_, err = ko.RemoveNestedField("metadata", "annotations", ResourceVersionAnnotation)
-	if err != nil {
-		return err
-	}
-	prr.Spec.Resources["Kptfile"] = ko.String()
-
+func RemoveRevisionMetadata(prr *api.PackageRevisionResources) error {
+	delete(prr.Spec.Resources, kptfilev1.RevisionMetaDataFileName)
 	return nil
 }

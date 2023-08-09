@@ -29,6 +29,10 @@ import (
 const (
 	KptFileName = "Kptfile"
 
+	RevisionMetaDataFileName = ".KptRevisionMetadata"
+
+	RevisionMetaDataKind = "KptRevisionMetadata"
+
 	// Deprecated: prefer KptFileGVK
 	KptFileKind = "Kptfile"
 

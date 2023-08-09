@@ -38,6 +38,17 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
+      - apiVersion: ""
+        kind: KptRevisionMetadata
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: .KptRevisionMetadata
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: .KptRevisionMetadata
+          name: git-95686470a1fd3a3ba726cce4c8f449f6bbe2b02a
+          namespace: rpkg-init
+          uid: uid:init-package:init-1
       - apiVersion: kpt.dev/v1
         info:
           description: Test Package Description

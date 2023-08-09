@@ -68,13 +68,24 @@ data:
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
+- apiVersion: porch.kpt.dev/v1alpha1
+  kind: KptRevisionMetadata
+  metadata:
+    name: repo-fjdos9u2nfe2f32
+    namespace: ns
+    creationTimestamp: null
+    resourceVersion: "999"
+    annotations:
+      config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: '.KptRevisionMetadata'
+      config.kubernetes.io/path: '.KptRevisionMetadata'
 - apiVersion: kpt.dev/v1
   kind: Kptfile
   metadata:
     name: bar
     annotations:
       config.kubernetes.io/local-config: "true"
-      internal.kpt.dev/resource-version: "999"
       config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/path: 'Kptfile'
@@ -121,13 +132,24 @@ data:
 apiVersion: config.kubernetes.io/v1
 kind: ResourceList
 items:
+- apiVersion: porch.kpt.dev/v1alpha1
+  kind: KptRevisionMetadata
+  metadata:
+    name: repo-fjdos9u2nfe2f32
+    namespace: ns
+    creationTimestamp: null
+    resourceVersion: "999"
+    annotations:
+      config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/index: '0'
+      internal.config.kubernetes.io/path: '.KptRevisionMetadata'
+      config.kubernetes.io/path: '.KptRevisionMetadata'
 - apiVersion: kpt.dev/v1
   kind: Kptfile
   metadata:
     name: bar
     annotations:
       config.kubernetes.io/local-config: "true"
-      internal.kpt.dev/resource-version: "999"
       config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/index: '0'
       internal.config.kubernetes.io/path: 'Kptfile'

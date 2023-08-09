@@ -134,12 +134,12 @@ func (r *runner) runE(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	rv, err := util.GetResourceVersionAnnotation(&pkgResources)
+	rv, err := util.GetResourceVersion(&pkgResources)
 	if err != nil {
 		return errors.E(op, err)
 	}
 	pkgResources.ResourceVersion = rv
-	if err = util.RemoveResourceVersionAnnotation(&pkgResources); err != nil {
+	if err = util.RemoveRevisionMetadata(&pkgResources); err != nil {
 		return errors.E(op, err)
 	}
 
