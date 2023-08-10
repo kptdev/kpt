@@ -1,4 +1,4 @@
-FROM golang:1.20.6-alpine3.18 as builder
+FROM golang:1.20.7-alpine3.18 as builder
 
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
@@ -14,6 +14,6 @@ COPY porch/func/ porch/func/
 RUN cd porch/func ; go build -v -o /wrapper-server/wrapper-server ./wrapper-server
 RUN cp $GOPATH/bin/grpc-health-probe /wrapper-server/
 
-FROM alpine:3.15
+FROM alpine:3.18
 
 COPY --from=builder /wrapper-server/* /wrapper-server/
