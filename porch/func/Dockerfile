@@ -25,7 +25,7 @@ FROM gcr.io/kpt-fn/set-project-id:v0.2.0 as set-project-id
 FROM gcr.io/kpt-fn/starlark:v0.3.0 as starlark
 FROM gcr.io/kpt-fn/upsert-resource:v0.2.0 as upsert-resource
 
-FROM golang:1.20.6-alpine3.18 as builder
+FROM golang:1.20.7-alpine3.18 as builder
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
 RUN go install github.com/grpc-ecosystem/grpc-health-probe@v0.4.11
@@ -43,7 +43,7 @@ COPY porch/func/ porch/func/
 RUN cd porch/func ; go build -v -o /server ./server
 COPY porch/func/config.yaml /config.yaml
 
-FROM alpine:3.15
+FROM alpine:3.18
 
 COPY --from=apply-setters          /usr/local/bin/function /functions/apply-setters
 COPY --from=apply-setters-v1       /usr/local/bin/function /functions/apply-setters-v1
