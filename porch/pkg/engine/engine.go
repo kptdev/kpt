@@ -113,10 +113,13 @@ func (p *PackageRevision) GetPackageRevision(ctx context.Context) (*api.PackageR
 	}
 	repoPkgRev.Labels = p.packageRevisionMeta.Labels
 	if isLatest {
-		if repoPkgRev.Labels == nil {
-			repoPkgRev.Labels = make(map[string]string)
+		// copy the labels in case the cached object is being read by another go routine
+		labels := make(map[string]string, len(repoPkgRev.Labels))
+		for k, v := range repoPkgRev.Labels {
+			labels[k] = v
 		}
-		repoPkgRev.Labels[api.LatestPackageRevisionKey] = api.LatestPackageRevisionValue
+		labels[api.LatestPackageRevisionKey] = api.LatestPackageRevisionValue
+		repoPkgRev.Labels = labels
 	}
 	repoPkgRev.Annotations = p.packageRevisionMeta.Annotations
 	repoPkgRev.Finalizers = p.packageRevisionMeta.Finalizers

@@ -40,10 +40,13 @@ func (c *cachedPackageRevision) GetPackageRevision(ctx context.Context) (*v1alph
 		return nil, err
 	}
 	if c.isLatestRevision {
-		if rev.Labels == nil {
-			rev.Labels = map[string]string{}
+		// copy the labels in case the cached object is being read by another go routine
+		labels := make(map[string]string, len(rev.Labels))
+		for k, v := range rev.Labels {
+			labels[k] = v
 		}
-		rev.Labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
+		labels[v1alpha1.LatestPackageRevisionKey] = v1alpha1.LatestPackageRevisionValue
+		rev.Labels = labels
 	}
 	return rev, nil
 }
