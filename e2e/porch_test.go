@@ -158,13 +158,14 @@ func reorderYamlStdout(t *testing.T, buf *bytes.Buffer) {
 		return
 	}
 
-	// strip out the internal.kpt.dev/resource-version
-	// annotation, because that will change with every run
+	// strip out the resourceVersion:, creationTimestamp:
+	// because that will change with every run
 	scanner := bufio.NewScanner(buf)
 	var newBuf bytes.Buffer
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !strings.Contains(line, "internal.kpt.dev/resource-version:") {
+		if !strings.Contains(line, "resourceVersion:") &&
+			!strings.Contains(line, "creationTimestamp:") {
 			newBuf.Write([]byte(line))
 			newBuf.Write([]byte("\n"))
 		}

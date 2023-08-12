@@ -49,6 +49,17 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
+      - apiVersion: ""
+        kind: KptRevisionMetadata
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: .KptRevisionMetadata
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: .KptRevisionMetadata
+          name: git-a29df72d1135fd010ea49f4d4877001dee423be6
+          namespace: rpkg-copy
+          uid: uid:basens-edit:copy-2
       - apiVersion: kpt.dev/v1
         info:
           description: sample description

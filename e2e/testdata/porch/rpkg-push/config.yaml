@@ -24,6 +24,17 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
+      - apiVersion: ""
+        kind: KptRevisionMetadata
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: .KptRevisionMetadata
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: .KptRevisionMetadata
+          name: git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+          namespace: rpkg-push
+          uid: uid:test-package:push
       - apiVersion: kpt.dev/v1
         info:
           description: sample description
@@ -59,6 +70,17 @@ commands:
     stdin: |
       apiVersion: config.kubernetes.io/v1
       items:
+      - apiVersion: ""
+        kind: KptRevisionMetadata
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: .KptRevisionMetadata
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: .KptRevisionMetadata
+          name: git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+          namespace: rpkg-push
+          uid: uid:test-package:push
       - apiVersion: kpt.dev/v1
         info:
           description: sample description
@@ -122,6 +144,17 @@ commands:
     stdout: |
       apiVersion: config.kubernetes.io/v1
       items:
+      - apiVersion: ""
+        kind: KptRevisionMetadata
+        metadata:
+          annotations:
+            config.kubernetes.io/index: "0"
+            config.kubernetes.io/path: .KptRevisionMetadata
+            internal.config.kubernetes.io/index: "0"
+            internal.config.kubernetes.io/path: .KptRevisionMetadata
+          name: git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
+          namespace: rpkg-push
+          uid: uid:test-package:push
       - apiVersion: kpt.dev/v1
         info:
           description: Updated Test Package Description

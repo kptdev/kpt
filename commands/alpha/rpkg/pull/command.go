@@ -113,7 +113,7 @@ func (r *runner) runE(_ *cobra.Command, args []string) error {
 		return errors.E(op, err)
 	}
 
-	if err := util.AddResourceVersionAnnotation(&resources); err != nil {
+	if err := util.AddRevisionMetadata(&resources); err != nil {
 		return errors.E(op, err)
 	}
 
@@ -200,7 +200,7 @@ func createScheme() (*runtime.Scheme, error) {
 	return scheme, nil
 }
 
-var matchResourceContents = append(kio.MatchAll, kptfilev1.KptFileName)
+var matchResourceContents = append(kio.MatchAll, kptfilev1.KptFileName, kptfilev1.RevisionMetaDataFileName)
 
 func includeFile(path string) bool {
 	for _, m := range matchResourceContents {
