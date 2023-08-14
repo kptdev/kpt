@@ -213,6 +213,33 @@ pipeline:
         tier: mysql
 ```
 
+## Specifying function `name`
+
+Functions can optionally be named using the `pipeline.mutators.name`
+or `pipeline.validators.name` field to identify a function.
+
+For example:
+
+```yaml
+# wordpress/mysql/Kptfile
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+pipeline:
+  mutators:
+    - name: set tier label
+      image: set-labels:v0.1
+      configMap:
+        tier: mysql
+```
+
+Unique function names for all functions in the Kptfile function
+pipeline is recommended.  If `name` is specified, `kpt pkg update`
+will merge each function pipeline list as an associative list, using
+`name` as the merge key. An unspecified `name` or duplicated names may
+result in unexpected merges.
+
 ## Specifying `selectors`
 
 In some cases, you want to invoke the function only on a subset of resources based on a
