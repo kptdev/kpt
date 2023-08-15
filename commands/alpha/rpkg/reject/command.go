@@ -123,7 +123,9 @@ func (r *runner) runE(_ *cobra.Command, args []string) error {
 				fmt.Fprintf(r.Command.OutOrStderr(), "%s no longer proposed for deletion\n", name)
 			}
 		default:
-			fmt.Fprintf(r.Command.ErrOrStderr(), "cannot reject %s with lifecycle '%s'\n", name, pr.Spec.Lifecycle)
+			msg := fmt.Sprintf("cannot reject %s with lifecycle '%s'", name, pr.Spec.Lifecycle)
+			messages = append(messages, msg)
+			fmt.Fprintln(r.Command.ErrOrStderr(), msg)
 		}
 	}
 

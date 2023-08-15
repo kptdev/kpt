@@ -158,6 +158,9 @@ commands:
       - --namespace=rpkg-lifecycle
     stderr: |
       cannot reject git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 with lifecycle 'Published'
+      Error: errors:
+        cannot reject git-017a8366a5e0d9b35ae6dc489d4d3f68046d6034 with lifecycle 'Published' 
+    exitCode: 1
   - args:
       - alpha
       - rpkg
