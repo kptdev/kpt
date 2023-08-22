@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM golang:1.20.7-bullseye as builder
+FROM golang:1.20.7-bookworm as builder
 
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
@@ -45,7 +45,7 @@ COPY porch/test porch/test
 
 RUN cd porch/test; go build -v -o /git-server ./git
 
-FROM debian:bullseye
+FROM debian:bookworm-slim
 RUN apt update && apt install -y ca-certificates && rm -rf /var/lib/apt && rm -rf /var/cache/apt
 COPY --from=builder /git-server /git-server
 ENTRYPOINT ["/git-server", "--port=8080"]
