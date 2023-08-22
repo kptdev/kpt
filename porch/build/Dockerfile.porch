@@ -55,5 +55,13 @@ RUN cd porch; go build -v -o /porch ./cmd/porch
 
 FROM debian:bookworm-slim
 RUN apt update && apt install -y ca-certificates && apt install -y git && rm -rf /var/lib/apt && rm -rf /var/cache/apt
-COPY --from=builder /porch /porch
-ENTRYPOINT ["/porch"]
+
+RUN useradd -s /bin/bash -d /home/porch/ -m -u 1999 porch
+WORKDIR /home/porch
+
+COPY --from=builder /porch /home/porch/porch
+RUN chown porch:porch /home/porch/porch; chmod +x /home/porch/porch
+
+USER porch
+
+ENTRYPOINT ["/home/porch/porch"]
