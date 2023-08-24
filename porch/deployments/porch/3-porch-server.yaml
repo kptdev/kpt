@@ -40,6 +40,8 @@ spec:
           emptyDir: {}
         - name: webhook-certs
           emptyDir: {}
+        - name: api-server-certs
+          emptyDir: {}
       containers:
         - name: porch-server
           # Update image to the image of your porch apiserver build.
@@ -56,6 +58,8 @@ spec:
               name: cache-volume
             - mountPath: /etc/webhook/certs
               name: webhook-certs
+            - name: api-server-certs
+              mountPath: /tmp/certs
           env:
           # Uncomment to enable trace-reporting to jaeger
           #- name: OTEL
@@ -67,6 +71,8 @@ spec:
           args:
             - --function-runner=function-runner:9445
             - --cache-directory=/cache
+            - --cert-dir=/tmp/certs
+            - --secure-port=4443
 
 ---
 apiVersion: v1
@@ -78,7 +84,7 @@ spec:
   ports:
     - port: 443
       protocol: TCP
-      targetPort: 443
+      targetPort: 4443
       name: api
     - port: 8443
       protocol: TCP
