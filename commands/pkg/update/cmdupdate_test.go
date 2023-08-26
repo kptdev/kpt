@@ -134,7 +134,7 @@ func TestCmd_execute(t *testing.T) {
 	}
 }
 
-// TestCmd_execute verifies that update is correctly invoked with an upstream 'mysql' package with multiple versions
+// TestCmd_subpkgVersions verifies that update is correctly invoked with an upstream 'mysql' package with multiple versions
 func TestCmd_subpkgVersions(t *testing.T) {
 	// Setup version v1 of upstream package
 	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
