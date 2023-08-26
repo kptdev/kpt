@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -272,12 +271,12 @@ func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1.
 	if !assert.NoError(t, err) {
 		return false
 	}
-	var res bytes.Buffer
-	d := yaml.NewEncoder(&res)
-	if !assert.NoError(t, d.Encode(kpkg)) {
+	// This mirrors 'WriteFile' in pkg/kptfile/kptfileutil/util.go
+	res, err := yaml.MarshalWithOptions(kpkg, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if !assert.NoError(t, err) {
 		return false
 	}
-	return assert.Equal(t, res.String(), string(b))
+	return assert.Equal(t, string(res), string(b))
 }
 
 // CheckoutBranch checks out the git branch in the repo

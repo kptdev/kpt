@@ -142,7 +142,12 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		Branch: "master",
 	})
 	defer clean()
-	err := g.Tag("dataset1")
+
+	commitDs1, err := g.GetCommit()
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = g.Tag("dataset1")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -163,7 +168,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, "mysql")
 
-	// Initial clone of package version 'dataset1'
+	// pkg get package version 'dataset1'
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@dataset1", w.WorkspaceDirectory})
 	err = getCmd.Command.Execute()
@@ -174,7 +179,49 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		return
 	}
 
-	// update the cloned package to dataset2
+	// Reference Kptfile for package version 'dataset1'
+	pkgDs1Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset1, "mysql"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !g.AssertKptfile(t, dest, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: "mysql",
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset1",
+				Directory: "/mysql",
+			},
+			UpdateStrategy: kptfilev1.ResourceMerge,  // Defaulted
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset1",
+				Directory: "/mysql",
+				Commit:    commitDs1,
+			},
+		},
+		Info: &kptfilev1.PackageInfo{
+			Description: pkgDs1Kptfile.Info.Description,
+		},
+		Pipeline: pkgDs1Kptfile.Pipeline,
+	}) {
+		return
+	}
+
+	// pkg update to version 'dataset2'
 	updateCmd := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	updateCmd.Command.SetArgs([]string{"mysql@dataset2", "--strategy", "fast-forward"})
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
@@ -184,7 +231,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		return
 	}
 
-	commit, err := g.GetCommit()
+	commitDs2, err := g.GetCommit()
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -221,7 +268,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 				Repo:      "file://" + g.RepoDirectory,
 				Ref:       "dataset2",
 				Directory: "/mysql",
-				Commit:    commit,
+				Commit:    commitDs2,
 			},
 		},
 		Info: &kptfilev1.PackageInfo{
