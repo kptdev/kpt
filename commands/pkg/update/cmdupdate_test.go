@@ -142,7 +142,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		Branch: "master",
 	})
 	defer clean()
-	err := g.Tag("v1")
+	err := g.Tag("dataset1")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -154,7 +154,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = g.Tag("v2")
+	err = g.Tag("dataset2")
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -163,9 +163,9 @@ func TestCmd_subpkgVersions(t *testing.T) {
 
 	dest := filepath.Join(w.WorkspaceDirectory, "mysql")
 
-	// Initial clone of package v1
+	// Initial clone of package version 'dataset1'
 	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@v1", w.WorkspaceDirectory})
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@dataset1", w.WorkspaceDirectory})
 	err = getCmd.Command.Execute()
 	if !assert.NoError(t, err) {
 		return
@@ -174,9 +174,9 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		return
 	}
 
-	// update the cloned package to v2
+	// update the cloned package to dataset2
 	updateCmd := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	updateCmd.Command.SetArgs([]string{"mysql@v2", "--strategy", "fast-forward"})
+	updateCmd.Command.SetArgs([]string{"mysql@dataset2", "--strategy", "fast-forward"})
 	if !assert.NoError(t, updateCmd.Command.Execute()) {
 		return
 	}
@@ -189,8 +189,8 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		return
 	}
 
-	// Reference Kptfile for package v2
-	pkgV2Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"))
+	// Reference Kptfile for package version 'dataset2'
+	pkgDs2Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"))
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -210,7 +210,7 @@ func TestCmd_subpkgVersions(t *testing.T) {
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.Git{
 				Repo:      "file://" + g.RepoDirectory,
-				Ref:       "v2",
+				Ref:       "dataset2",
 				Directory: "/mysql",
 			},
 			UpdateStrategy: kptfilev1.FastForward,
@@ -219,15 +219,15 @@ func TestCmd_subpkgVersions(t *testing.T) {
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
-				Ref:       "v2",
+				Ref:       "dataset2",
 				Directory: "/mysql",
 				Commit:    commit,
 			},
 		},
 		Info: &kptfilev1.PackageInfo{
-			Description: pkgV2Kptfile.Info.Description,
+			Description: pkgDs2Kptfile.Info.Description,
 		},
-		Pipeline: pkgV2Kptfile.Pipeline,
+		Pipeline: pkgDs2Kptfile.Pipeline,
 	}) {
 		return
 	}
