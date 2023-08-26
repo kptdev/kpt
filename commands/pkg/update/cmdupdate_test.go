@@ -142,6 +142,9 @@ func TestCmd_subpkgVersions(t *testing.T) {
 	})
 	defer clean()
 	err := g.Tag("v1")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 	// update the master branch
 	if !assert.NoError(t, g.ReplaceData(testutil.Dataset2)) {
 		return
@@ -151,6 +154,9 @@ func TestCmd_subpkgVersions(t *testing.T) {
 		return
 	}
 	err = g.Tag("v2")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
 
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
