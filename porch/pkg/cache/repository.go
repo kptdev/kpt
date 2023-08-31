@@ -404,39 +404,28 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		return nil, nil, fmt.Errorf("error listing packages: %w", err)
 	}
 
-	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
+	// Build mapping from kubeObjectName to PackageRevisions for new PackageRevisions.
 	newPackageRevisionNames := make(map[string]*cachedPackageRevision, len(newPackageRevisions))
+	klog.Infof("New packages:")
 	for _, newPackage := range newPackageRevisions {
-		k := newPackage.Key()
-		if newPackageRevisionMap[k] != nil {
-			klog.Warningf("found duplicate packages with key %v", k)
+		klog.Infof("- %s", newPackage.KubeObjectName())
+		kname := newPackage.KubeObjectName()
+		if newPackageRevisionNames[kname] != nil {
+			klog.Warningf("found duplicate packages with name %v", kname)
 		}
 
 		pkgRev := &cachedPackageRevision{
 			PackageRevision:  newPackage,
 			isLatestRevision: false,
 		}
-		newPackageRevisionMap[k] = pkgRev
 		newPackageRevisionNames[newPackage.KubeObjectName()] = pkgRev
 	}
 
-	identifyLatestRevisions(newPackageRevisionMap)
-
-	newPackageMap := make(map[repository.PackageKey]*cachedPackage)
-
-	for _, newPackageRevision := range newPackageRevisionMap {
-		if !newPackageRevision.isLatestRevision {
-			continue
-		}
-		// TODO: Build package?
-		// newPackage := &cachedPackage{
-		// }
-		// newPackageMap[newPackage.Key()] = newPackage
+	// Build mapping from kubeObjectName to PackageRevisions for existing PackageRevisions
+	oldPackageRevisionNames := make(map[string]*cachedPackageRevision, len(r.cachedPackageRevisions))
+	for _, oldPackage := range r.cachedPackageRevisions {
+		oldPackageRevisionNames[oldPackage.KubeObjectName()] = oldPackage
 	}
-
-	oldPackageRevisions := r.cachedPackageRevisions
-	r.cachedPackageRevisions = newPackageRevisionMap
-	r.cachedPackages = newPackageMap
 
 	// We go through all PackageRev CRs that represents PackageRevisions
 	// in the current repo and make sure they all have a corresponding
@@ -477,8 +466,8 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	// Send notification for packages that changed.
-	for k, newPackage := range r.cachedPackageRevisions {
-		oldPackage := oldPackageRevisions[k]
+	for kname, newPackage := range newPackageRevisionNames {
+		oldPackage := oldPackageRevisionNames[kname]
 		metaPackage, found := existingPkgRevCRsMap[newPackage.KubeObjectName()]
 		if !found {
 			klog.Warningf("no PackageRev CR found for PackageRevision %s", newPackage.KubeObjectName())
@@ -493,8 +482,8 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	// Send notifications for packages that was deleted in the SoT
-	for k, oldPackage := range oldPackageRevisions {
-		if newPackageRevisionMap[k] == nil {
+	for kname, oldPackage := range oldPackageRevisionNames {
+		if newPackageRevisionNames[kname] == nil {
 			nn := types.NamespacedName{
 				Name:      oldPackage.KubeObjectName(),
 				Namespace: oldPackage.KubeObjectNamespace(),
@@ -512,6 +501,33 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 			r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
 		}
 	}
+
+	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
+	for _, newPackage := range newPackageRevisions {
+		k := newPackage.Key()
+		pkgRev := &cachedPackageRevision{
+			PackageRevision:  newPackage,
+			isLatestRevision: false,
+		}
+		newPackageRevisionMap[k] = pkgRev
+	}
+
+	identifyLatestRevisions(newPackageRevisionMap)
+
+	newPackageMap := make(map[repository.PackageKey]*cachedPackage)
+
+	for _, newPackageRevision := range newPackageRevisionMap {
+		if !newPackageRevision.isLatestRevision {
+			continue
+		}
+		// TODO: Build package?
+		// newPackage := &cachedPackage{
+		// }
+		// newPackageMap[newPackage.Key()] = newPackage
+	}
+
+	r.cachedPackageRevisions = newPackageRevisionMap
+	r.cachedPackages = newPackageMap
 
 	return newPackageMap, newPackageRevisionMap, nil
 }
