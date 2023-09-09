@@ -92,3 +92,5 @@ We would love to keep in touch:
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt). You'll
    need to join [Kubernetes on Slack](https://slack.k8s.io/) first.
 1. Join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-users)
+
+This is a test
