@@ -285,6 +285,7 @@ function assertKptLiveApplyEquals {
 function processKptLiveOutput {
     trimTrailingNewlines | \
     filterReconcilePending | \
+    filterUnknownFieldsWarning | \
     sortReconcileEvents | \
     sortActuationEvents
 }
@@ -295,6 +296,10 @@ function trimTrailingNewlines {
 
 function filterReconcilePending {
   grep -v " reconcile pending$" || true
+}
+
+function filterUnknownFieldsWarning {
+  grep -v " unknown field" || true
 }
 
 # sortReconcileEvents sorts reconcile events: successful > failed.
