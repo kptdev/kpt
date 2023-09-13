@@ -72,7 +72,8 @@ func (r *packageCommon) listPackageRevisions(ctx context.Context, filter package
 
 		revisions, err := r.cad.ListPackageRevisions(ctx, repositoryObj, filter.ListPackageRevisionFilter)
 		if err != nil {
-			return err
+			klog.Warningf("error listing package revisions from repository %s/%s: %s", repositoryObj.GetNamespace(), repositoryObj.GetName(), err)
+			continue
 		}
 		for _, rev := range revisions {
 			apiPkgRev, err := rev.GetPackageRevision(ctx)
@@ -117,7 +118,8 @@ func (r *packageCommon) listPackages(ctx context.Context, filter packageFilter, 
 
 		revisions, err := r.cad.ListPackages(ctx, repositoryObj, filter.ListPackageFilter)
 		if err != nil {
-			return err
+			klog.Warningf("error listing packages from repository %s/%s: %s", repositoryObj.GetNamespace(), repositoryObj.GetName(), err)
+			continue
 		}
 		for _, rev := range revisions {
 			if err := callback(rev); err != nil {
