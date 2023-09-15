@@ -61,16 +61,16 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
-KIND_1_24_VERSION=1.24.0
-KIND_1_23_VERSION=1.23.6
-KIND_1_22_VERSION=1.22.9
-KIND_1_21_VERSION=1.21.12
-KIND_1_20_VERSION=1.20.15
-KIND_1_19_VERSION=1.19.16
-KIND_1_18_VERSION=1.18.20
-KIND_1_17_VERSION=1.17.17
-KIND_1_16_VERSION=1.16.15
-DEFAULT_K8S_VERSION=${KIND_1_21_VERSION}
+KIND_1_28_VERSION=1.28.0@sha256:b7a4cad12c197af3ba43202d3efe03246b3f0793f162afb40a33c923952d5b31
+KIND_1_27_VERSION=1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
+KIND_1_26_VERSION=1.26.6@sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb
+KIND_1_25_VERSION=1.25.11@sha256:227fa11ce74ea76a0474eeefb84cb75d8dad1b08638371ecf0e86259b35be0c8
+KIND_1_24_VERSION=1.24.15@sha256:7db4f8bea3e14b82d12e044e25e34bd53754b7f2b0e9d56df21774e6f66a70ab
+KIND_1_23_VERSION=1.23.17@sha256:59c989ff8a517a93127d4a536e7014d28e235fb3529d9fba91b3951d461edfdb
+KIND_1_22_VERSION=1.22.17@sha256:f5b2e5698c6c9d6d0adc419c0deae21a425c07d81bbf3b6a6834042f25d4fba2
+KIND_1_21_VERSION=1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+
+DEFAULT_K8S_VERSION=${KIND_1_28_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -88,16 +88,6 @@ while getopts $options opt; do
 	b)  BUILD_DEPS_AT_HEAD=1;;
 	k)  short_version=$OPTARG
 	    case "$short_version" in
-		1.16) K8S_VERSION=$KIND_1_16_VERSION
-		      ;;
-		1.17) K8S_VERSION=$KIND_1_17_VERSION
-		      ;;
-		1.18) K8S_VERSION=$KIND_1_18_VERSION
-		      ;;
-		1.19) K8S_VERSION=$KIND_1_19_VERSION
-		      ;;
-		1.20) K8S_VERSION=$KIND_1_20_VERSION
-		      ;;
 		1.21) K8S_VERSION=$KIND_1_21_VERSION
 		      ;;
 		1.22) K8S_VERSION=$KIND_1_22_VERSION
@@ -105,6 +95,14 @@ while getopts $options opt; do
 		1.23) K8S_VERSION=$KIND_1_23_VERSION
 		      ;;
 		1.24) K8S_VERSION=$KIND_1_24_VERSION
+		      ;;
+		1.25) K8S_VERSION=$KIND_1_25_VERSION
+		      ;;
+		1.26) K8S_VERSION=$KIND_1_26_VERSION
+		      ;;
+		1.27) K8S_VERSION=$KIND_1_27_VERSION
+		      ;;
+		1.28) K8S_VERSION=$KIND_1_28_VERSION
 		      ;;
         *) K8S_VERSION=$short_version
 		      ;;
@@ -287,6 +285,7 @@ function assertKptLiveApplyEquals {
 function processKptLiveOutput {
     trimTrailingNewlines | \
     filterReconcilePending | \
+    filterUnknownFieldsWarning | \
     sortReconcileEvents | \
     sortActuationEvents
 }
@@ -297,6 +296,10 @@ function trimTrailingNewlines {
 
 function filterReconcilePending {
   grep -v " reconcile pending$" || true
+}
+
+function filterUnknownFieldsWarning {
+  grep -v " unknown field" || true
 }
 
 # sortReconcileEvents sorts reconcile events: successful > failed.
