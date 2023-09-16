@@ -1007,35 +1007,53 @@ func (t *PorchSuite) TestProposeDeleteAndUndo(ctx context.Context) {
 	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
 	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
 
-	// Propose deletion
-	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
-	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+	t.waitUntilMainBranchPackageRevisionExists(ctx, packageName)
 
-	// Undo proposal of deletion
-	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
-	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+	var list porchapi.PackageRevisionList
+	t.ListF(ctx, &list, client.InNamespace(t.namespace))
 
-	// Try to delete the package. This should fail because the lifecycle should be changed back to Published.
-	t.DeleteL(ctx, &porchapi.PackageRevision{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: t.namespace,
-			Name:      created.Name,
-		},
-	})
-	t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: created.Name}, &pkg)
+	for i := range list.Items {
+		pkgRev := list.Items[i]
+		t.Run(fmt.Sprintf("revision %s", pkgRev.Spec.Revision), func(newT *testing.T) {
+			// This is a bit awkward, we should find a better way to allow subtests
+			// with our custom implmentation of t.
+			oldT := t.T
+			t.T = newT
+			defer func() {
+				t.T = oldT
+			}()
 
-	// Propose deletion and then delete the package
-	pkg.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
-	t.UpdateApprovalF(ctx, &pkg, metav1.UpdateOptions{})
+			// Propose deletion
+			pkgRev.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+			t.UpdateApprovalF(ctx, &pkgRev, metav1.UpdateOptions{})
 
-	t.DeleteE(ctx, &porchapi.PackageRevision{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: t.namespace,
-			Name:      created.Name,
-		},
-	})
+			// Undo proposal of deletion
+			pkgRev.Spec.Lifecycle = porchapi.PackageRevisionLifecyclePublished
+			t.UpdateApprovalF(ctx, &pkgRev, metav1.UpdateOptions{})
 
-	t.mustNotExist(ctx, &pkg)
+			// Try to delete the package. This should fail because the lifecycle should be changed back to Published.
+			t.DeleteL(ctx, &porchapi.PackageRevision{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: t.namespace,
+					Name:      pkgRev.Name,
+				},
+			})
+			t.mustExist(ctx, client.ObjectKey{Namespace: t.namespace, Name: pkgRev.Name}, &pkgRev)
+
+			// Propose deletion and then delete the package
+			pkgRev.Spec.Lifecycle = porchapi.PackageRevisionLifecycleDeletionProposed
+			t.UpdateApprovalF(ctx, &pkgRev, metav1.UpdateOptions{})
+
+			t.DeleteE(ctx, &porchapi.PackageRevision{
+				ObjectMeta: metav1.ObjectMeta{
+					Namespace: t.namespace,
+					Name:      pkgRev.Name,
+				},
+			})
+
+			t.mustNotExist(ctx, &pkgRev)
+		})
+	}
 }
 
 func (t *PorchSuite) TestDeleteAndRecreate(ctx context.Context) {
@@ -2568,5 +2586,27 @@ func (t *PorchSuite) waitUntilObjectDeleted(ctx context.Context, gvk schema.Grou
 	})
 	if err != nil {
 		t.Errorf("Object %s not deleted after %s: %v", namespacedName.String(), d.String(), innerErr)
+	}
+}
+
+func (t *PorchSuite) waitUntilMainBranchPackageRevisionExists(ctx context.Context, pkgName string) {
+	err := wait.PollImmediateWithContext(ctx, time.Second, 120*time.Second, func(ctx context.Context) (done bool, err error) {
+		var pkgRevList porchapi.PackageRevisionList
+		if err := t.client.List(ctx, &pkgRevList); err != nil {
+			t.Logf("error listing packages: %v", err)
+			return false, nil
+		}
+		for _, pkgRev := range pkgRevList.Items {
+			pkgName := pkgRev.Spec.PackageName
+			pkgRevision := pkgRev.Spec.Revision
+			if pkgRevision == "main" &&
+				pkgName == pkgRev.Spec.PackageName {
+				return true, nil
+			}
+		}
+		return false, nil
+	})
+	if err != nil {
+		t.Fatalf("Main branch package revision for %s not found", pkgName)
 	}
 }
