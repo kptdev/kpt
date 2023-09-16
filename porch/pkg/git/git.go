@@ -415,21 +415,8 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		refSpecs.AddRefToDelete(ref)
 
 		// If this revision was proposed for deletion, we need to delete the associated branch.
-		refSpecsForDeletionProposed := newPushRefSpecBuilder()
-		deletionProposedBranch := createDeletionProposedName(oldGit.path, oldGit.revision)
-		refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), oldGit.commit))
-		if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
-			if strings.HasPrefix(err.Error(),
-				fmt.Sprintf("remote ref %s%s required to be", branchPrefixInRemoteRepo, deletionProposedBranch)) &&
-				strings.HasSuffix(err.Error(), "but is absent") {
-
-				// the deletionProposed branch might not have existed, so we ignore this error
-				klog.Warningf("branch %s does not exist", deletionProposedBranch)
-
-			} else {
-				klog.Errorf("unexpected error while removing deletionProposed branch: %v", err)
-				return err
-			}
+		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision, oldGit.commit); err != nil {
+			return err
 		}
 
 	case isDraftBranchNameInLocal(rn), isProposedBranchNameInLocal(rn):
@@ -443,6 +430,12 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 			return err
 		}
 
+		// Remove the proposed for deletion branch. We end up here when users
+		// try to delete the main branch version of a packagerevision.
+		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision, oldGit.commit); err != nil {
+			return err
+		}
+
 		// Update the reference
 		refSpecs.AddRefToPush(commitHash, rn)
 
@@ -453,6 +446,26 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	// Update references
 	if err := r.pushAndCleanup(ctx, refSpecs); err != nil {
 		return fmt.Errorf("failed to update git references: %v", err)
+	}
+	return nil
+}
+
+func (r *gitRepository) removeDeletionProposedBranchIfExists(ctx context.Context, path, revision string, commit plumbing.Hash) error {
+	refSpecsForDeletionProposed := newPushRefSpecBuilder()
+	deletionProposedBranch := createDeletionProposedName(path, revision)
+	refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), commit))
+	if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
+		if strings.HasPrefix(err.Error(),
+			fmt.Sprintf("remote ref %s%s required to be", branchPrefixInRemoteRepo, deletionProposedBranch)) &&
+			strings.HasSuffix(err.Error(), "but is absent") {
+
+			// the deletionProposed branch might not have existed, so we ignore this error
+			klog.Warningf("branch %s does not exist", deletionProposedBranch)
+
+		} else {
+			klog.Errorf("unexpected error while removing deletionProposed branch: %v", err)
+			return err
+		}
 	}
 	return nil
 }
