@@ -40,7 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 type Options struct{}
@@ -726,14 +725,14 @@ func (r *PackageVariantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	//      we own, and use those to generate requests
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.PackageVariant{}).
-		Watches(&source.Kind{Type: &porchapi.PackageRevision{}},
+		Watches(&porchapi.PackageRevision{},
 			handler.EnqueueRequestsFromMapFunc(r.mapObjectsToRequests)).
 		Complete(r)
 }
 
-func (r *PackageVariantReconciler) mapObjectsToRequests(obj client.Object) []reconcile.Request {
+func (r *PackageVariantReconciler) mapObjectsToRequests(ctx context.Context, obj client.Object) []reconcile.Request {
 	attachedPackageVariants := &api.PackageVariantList{}
-	err := r.List(context.TODO(), attachedPackageVariants, &client.ListOptions{
+	err := r.List(ctx, attachedPackageVariants, &client.ListOptions{
 		Namespace: obj.GetNamespace(),
 	})
 	if err != nil {

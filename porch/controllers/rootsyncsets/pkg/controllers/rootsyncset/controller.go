@@ -382,9 +382,9 @@ func (r *RootSyncSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.RootSyncSet{}).
-		Watches(
+		WatchesRawSource(
 			&source.Channel{Source: r.channel},
-			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, o client.Object) []reconcile.Request {
 				var rssName string
 				var rssNamespace string
 				if o.GetLabels() != nil {

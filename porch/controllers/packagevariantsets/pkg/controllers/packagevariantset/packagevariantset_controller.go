@@ -40,7 +40,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -389,16 +388,16 @@ func (r *PackageVariantSetReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&api.PackageVariantSet{}).
-		Watches(&source.Kind{Type: &pkgvarapi.PackageVariant{}},
+		Watches(&pkgvarapi.PackageVariant{},
 			handler.EnqueueRequestsFromMapFunc(r.mapObjectsToRequests)).
-		Watches(&source.Kind{Type: &porchapi.PackageRevision{}},
+		Watches(&porchapi.PackageRevision{},
 			handler.EnqueueRequestsFromMapFunc(r.mapObjectsToRequests)).
 		Complete(r)
 }
 
-func (r *PackageVariantSetReconciler) mapObjectsToRequests(obj client.Object) []reconcile.Request {
+func (r *PackageVariantSetReconciler) mapObjectsToRequests(ctx context.Context, obj client.Object) []reconcile.Request {
 	attachedPackageVariants := &api.PackageVariantSetList{}
-	err := r.List(context.TODO(), attachedPackageVariants, &client.ListOptions{
+	err := r.List(ctx, attachedPackageVariants, &client.ListOptions{
 		Namespace: obj.GetNamespace(),
 	})
 	if err != nil {

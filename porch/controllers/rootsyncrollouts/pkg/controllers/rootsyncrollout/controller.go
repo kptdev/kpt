@@ -34,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -359,13 +358,13 @@ func (r *RootSyncRolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&v1alpha1.RootSyncRollout{}).
 		Owns(&rsdapi.RootSyncDeployment{}).
 		Watches(
-			&source.Kind{Type: &pkgRev},
+			&pkgRev,
 			handler.EnqueueRequestsFromMapFunc(r.findRolloutsForPackageRevision),
 		).
 		Complete(r)
 }
 
-func (r *RootSyncRolloutReconciler) findRolloutsForPackageRevision(pkgRev client.Object) []reconcile.Request {
+func (r *RootSyncRolloutReconciler) findRolloutsForPackageRevision(_ context.Context, pkgRev client.Object) []reconcile.Request {
 	// There is not support for reverse lookup by label: https://github.com/kubernetes/kubernetes/issues/1348
 	var requests []reconcile.Request
 	l := pkgRev.GetLabels()
