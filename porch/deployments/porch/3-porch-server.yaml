@@ -73,7 +73,7 @@ spec:
             - --cache-directory=/cache
             - --cert-dir=/tmp/certs
             - --secure-port=4443
-
+            - --feature-gates=APIPriorityAndFairness=false
 ---
 apiVersion: v1
 kind: Service
