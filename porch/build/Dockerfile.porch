@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM golang:1.20.7-bookworm as builder
+FROM golang:1.21.1-bookworm as builder
 
 WORKDIR /go/src/github.com/GoogleContainerTools/kpt
 
