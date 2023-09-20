@@ -1,0 +1,45 @@
+<main>
+    <button class="sidebar-toggle" aria-label="Menu">
+        <div class="sidebar-toggle-button">
+            <span></span><span></span><span></span>
+        </div>
+    </button>
+    <aside class="sidebar">
+        <div class="search">
+            <div class="input-wrap">
+                <input type="search" value="" aria-label="Search text" placeholder="Search">
+                <button class="clear-button" aria-label="Clear search">
+                    <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="8" cy="8" r="8" fill="black"></circle>
+                        <path stroke="white" stroke-width="1.5" d="M4.5,4.5,11.5,11.5"
+                            vector-effect="non-scaling-stroke"></path>
+                        <path stroke="white" stroke-width="1.5" d="M4.5,11.5,11.5,4.5"
+                            vector-effect="non-scaling-stroke"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="results-panel"></div>
+        </div>
+
+        <h1 class="app-name"><a class="app-name-link" data-nosearch="" href="https://kpt.dev"><img
+                    src="/static/images/logo.png" alt="kpt"></a>
+            <div>
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">v1.0.0-beta
+                        <span class="caret"></span></button>
+                    <ol class="dropdown-menu">
+                        <li><a href="/installation/">v1.0.0-beta</a></li>
+                        <li><a href="https://googlecontainertools.github.io/kpt/installation/" target="_self">v0.39</a>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+        </h1>
+
+        <div class="sidebar-nav"><!--sidebar--></div>
+    </aside>
+
+    <section class="content">
+        <article class="markdown-section" id="main"><!--main--></article>
+    </section>
+</main>

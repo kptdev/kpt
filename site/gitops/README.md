@@ -5,4 +5,4 @@ deployment mechanism is [Config Sync](gitops/configsync/), but since configurati
 repositories, other [GitOps](https://opengitops.dev/) tools can also be used.
 
 Currently supported gitops tools:
-* [Config Sync](gitops/configsync/)
+* [Config Sync](configsync/)
