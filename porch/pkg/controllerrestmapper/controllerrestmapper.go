@@ -16,6 +16,7 @@ package controllerrestmapper
 
 import (
 	"fmt"
+	"net/http"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -24,7 +25,7 @@ import (
 )
 
 // New is the constructor for a ControllerRESTMapper
-func New(cfg *rest.Config) (meta.RESTMapper, error) {
+func New(cfg *rest.Config, httpClient *http.Client) (meta.RESTMapper, error) {
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(cfg)
 	if err != nil {
 		return nil, err

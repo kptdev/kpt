@@ -3851,13 +3851,13 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			local := t.TempDir()
 			expectedLocal := t.TempDir()
 
-			err = copyutil.CopyDir(filepath.Join(ds, test.updated), updated)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.updated), updated)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.original), original)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.original), original)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.local), local)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.local), local)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.expectedLocal), expectedLocal)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.expectedLocal), expectedLocal)
 			assert.NoError(t, err)
 			if test.modifyLocalFile {
 				err = os.WriteFile(filepath.Join(local, "somefunction.py"), []byte("Print some other thing"), 0600)

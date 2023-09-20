@@ -37,6 +37,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
@@ -50,6 +51,10 @@ import (
 	"github.com/GoogleContainerTools/kpt/porch/controllers/workloadidentitybindings/pkg/controllers/workloadidentitybinding"
 	"github.com/GoogleContainerTools/kpt/porch/pkg/controllerrestmapper"
 	//+kubebuilder:scaffold:imports
+)
+
+const (
+	metricsAddr = ":8080"
 )
 
 var (
@@ -129,8 +134,7 @@ func run(ctx context.Context) error {
 
 	managerOptions := ctrl.Options{
 		Scheme:                     scheme,
-		MetricsBindAddress:         ":8080",
-		Port:                       9443,
+		Metrics:                    metricsserver.Options{BindAddress: metricsAddr},
 		HealthProbeBindAddress:     ":8081",
 		LeaderElection:             false,
 		LeaderElectionID:           "porch-operators.config.porch.kpt.dev",

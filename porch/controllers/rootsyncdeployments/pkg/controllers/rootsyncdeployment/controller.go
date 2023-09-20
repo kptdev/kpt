@@ -36,7 +36,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -497,17 +496,17 @@ func (r *RootSyncDeploymentReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		For(&v1alpha1.RootSyncDeployment{}).
 		Owns(&rssapi.RootSyncSet{}).
 		Watches(
-			&source.Kind{Type: &containerCluster},
+			&containerCluster,
 			handler.EnqueueRequestsFromMapFunc(r.requestsFromMapFunc),
 		).
 		Watches(
-			&source.Kind{Type: &configController},
+			&configController,
 			handler.EnqueueRequestsFromMapFunc(r.requestsFromMapFunc),
 		).
 		Complete(r)
 }
 
-func (r *RootSyncDeploymentReconciler) requestsFromMapFunc(cluster client.Object) []reconcile.Request {
+func (r *RootSyncDeploymentReconciler) requestsFromMapFunc(_ context.Context, cluster client.Object) []reconcile.Request {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
