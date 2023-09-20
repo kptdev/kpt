@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.20.7-bookworm as builder
+FROM golang:1.21.1-bookworm as builder
 
 WORKDIR /workspace
 COPY go.mod go.sum ./
