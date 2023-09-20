@@ -44,7 +44,7 @@ func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, k
 	}
 
 	switch lifecycle := pr.Spec.Lifecycle; lifecycle {
-	case v1alpha1.PackageRevisionLifecycleProposed:
+	case v1alpha1.PackageRevisionLifecycleProposed, v1alpha1.PackageRevisionLifecycleDeletionProposed:
 		// ok
 	case new:
 		// already correct value
