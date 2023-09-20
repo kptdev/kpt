@@ -62,16 +62,19 @@ type FleetSyncReconciler struct {
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-fleetsyncs webhook paths="." output:rbac:artifacts:config=../../../config/rbac
 
-//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetsyncs,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetsyncs,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetsyncs/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetsyncs/finalizers,verbs=update
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetmemberships,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetmembershipbindings,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=fleetscopes,verbs=get;list;watch;create;update;patch;delete
 
 func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	var fleetsync v1alpha1.FleetSync
 	if err := r.Get(ctx, req.NamespacedName, &fleetsync); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	org := fleetsync.DeepCopy()
+	orig := fleetsync.DeepCopy()
 
 	myFinalizerName := "config.porch.kpt.dev/fleetsyncs"
 	if fleetsync.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -101,6 +104,10 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 
 	r.poller.VerifyProjectIdsForFleetSync(req.NamespacedName, fleetsync.Spec.ProjectIds)
 
+	return r.reconcileMemberships(ctx, req, orig, &fleetsync)
+}
+
+func (r *FleetSyncReconciler) reconcileMemberships(ctx context.Context, req ctrl.Request, orig, fleetsync *v1alpha1.FleetSync) (ctrl.Result, error) {
 	allFound := true
 	errors := make(map[string]error)
 	var hubMemberships []*gkehubv1.Membership
@@ -117,46 +124,12 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	if !allFound {
-		meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
-			Type:               "Ready",
-			Status:             metav1.ConditionFalse,
-			ObservedGeneration: fleetsync.Generation,
-			Reason:             "NotSynced",
-		})
-		meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
-			Type:               "Stalled",
-			Status:             metav1.ConditionFalse,
-			ObservedGeneration: fleetsync.Generation,
-			Reason:             "Progressing",
-		})
-		if err := r.updateStatus(ctx, org, &fleetsync); err != nil {
-			klog.Infof("Error updating status for %s: %v", req.NamespacedName.String(), err)
-		}
+		r.setProgressingCondition(ctx, orig, fleetsync)
 		return ctrl.Result{}, nil
 	}
 
 	if len(errors) != 0 {
-		var builder strings.Builder
-		builder.WriteString("Errors fetching memberships in fleet:\n")
-		for projectId, err := range errors {
-			builder.WriteString(fmt.Sprintf("%s: %s\n", projectId, err.Error()))
-		}
-		meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
-			Type:               "Ready",
-			Status:             metav1.ConditionFalse,
-			ObservedGeneration: fleetsync.Generation,
-			Reason:             "FleetSyncError",
-		})
-		meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
-			Type:               "Stalled",
-			Status:             metav1.ConditionTrue,
-			ObservedGeneration: fleetsync.Generation,
-			Reason:             "FleetSyncError",
-			Message:            builder.String(),
-		})
-		if err := r.updateStatus(ctx, org, &fleetsync); err != nil {
-			klog.Infof("Error updating status for %s: %v", req.NamespacedName.String(), err)
-		}
+		r.setErrorCondition(ctx, orig, fleetsync, "memberships", errors)
 		return ctrl.Result{}, nil
 	}
 
@@ -166,7 +139,11 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	}
 
 	for _, hubMembership := range hubMemberships {
-		m := newMembership(hubMembership, &fleetsync)
+		m, err := newMembership(hubMembership, fleetsync)
+		if err != nil {
+			klog.Warningf("could not create new membership: %s", err.Error())
+			continue
+		}
 		existingMembership, found := findMembership(hubMembership, existingMemberships)
 		if !found {
 			// TODO: We should probably use SSA here rather than Create/Update.
@@ -176,8 +153,8 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			continue
 		}
 
-		if !equality.Semantic.DeepEqual(m.Spec, existingMembership.Spec) {
-			existingMembership.Spec = m.Spec
+		if !equality.Semantic.DeepEqual(m.Data, existingMembership.Data) {
+			existingMembership.Data = m.Data
 			if err := r.Update(ctx, existingMembership); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -188,7 +165,11 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		name := m.GetName()
 		found := false
 		for _, hubm := range hubMemberships {
-			hubmName := membershipId(hubm)
+			hubmName, err := membershipId(hubm)
+			if err != nil {
+				klog.Warning(err)
+				continue
+			}
 			if hubmName == name {
 				found = true
 			}
@@ -200,6 +181,11 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		}
 	}
 
+	r.setReadyCondition(ctx, orig, fleetsync)
+	return ctrl.Result{}, nil
+}
+
+func (r *FleetSyncReconciler) setReadyCondition(ctx context.Context, orig, fleetsync *v1alpha1.FleetSync) {
 	meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
 		Type:               "Ready",
 		Status:             metav1.ConditionTrue,
@@ -212,14 +198,59 @@ func (r *FleetSyncReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		ObservedGeneration: fleetsync.Generation,
 		Reason:             "Synced",
 	})
-	if err := r.updateStatus(ctx, org, &fleetsync); err != nil {
-		klog.Infof("Error updating status for %s: %v", req.NamespacedName.String(), err)
+	if err := r.updateStatus(ctx, orig, fleetsync); err != nil {
+		klog.Errorf("Error updating status for %s/%s: %v", fleetsync.Namespace, fleetsync.Name, err)
 	}
-	return ctrl.Result{}, nil
+}
+
+func (r *FleetSyncReconciler) setProgressingCondition(ctx context.Context, orig, fleetsync *v1alpha1.FleetSync) {
+	meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
+		Type:               "Ready",
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: fleetsync.Generation,
+		Reason:             "NotSynced",
+	})
+	meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
+		Type:               "Stalled",
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: fleetsync.Generation,
+		Reason:             "Progressing",
+	})
+	if err := r.updateStatus(ctx, orig, fleetsync); err != nil {
+		klog.Errorf("Error updating status for %s/%s: %v", fleetsync.Namespace, fleetsync.Name, err)
+	}
+}
+
+func (r *FleetSyncReconciler) setErrorCondition(ctx context.Context, orig, fleetsync *v1alpha1.FleetSync, resource string, errors map[string]error) {
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Errors fetching %s in fleet:\n", resource))
+	for projectId, err := range errors {
+		builder.WriteString(fmt.Sprintf("%s: %s\n", projectId, err.Error()))
+	}
+	meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
+		Type:               "Ready",
+		Status:             metav1.ConditionFalse,
+		ObservedGeneration: fleetsync.Generation,
+		Reason:             "FleetSyncError",
+	})
+	meta.SetStatusCondition(&fleetsync.Status.Conditions, metav1.Condition{
+		Type:               "Stalled",
+		Status:             metav1.ConditionTrue,
+		ObservedGeneration: fleetsync.Generation,
+		Reason:             "FleetSyncError",
+		Message:            builder.String(),
+	})
+	if err := r.updateStatus(ctx, orig, fleetsync); err != nil {
+		klog.Errorf("Error updating status for %s/%s: %v", fleetsync.Namespace, fleetsync.Name, err)
+	}
 }
 
 func findMembership(membership *gkehubv1.Membership, existing []*v1alpha1.FleetMembership) (*v1alpha1.FleetMembership, bool) {
-	name := membershipId(membership)
+	name, err := membershipId(membership)
+	if err != nil {
+		klog.Warning(err)
+		return nil, false
+	}
 	for i := range existing {
 		em := existing[i]
 		if em.Name == name {
@@ -229,11 +260,22 @@ func findMembership(membership *gkehubv1.Membership, existing []*v1alpha1.FleetM
 	return nil, false
 }
 
-func newMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.FleetSync) *v1alpha1.FleetMembership {
+func newMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.FleetSync) (*v1alpha1.FleetMembership, error) {
 	t := true
+
+	id, err := membershipId(hubMembership)
+	if err != nil {
+		return nil, err
+	}
+
+	segments := strings.Split(hubMembership.Name, "/")
+	if len(segments) != 6 {
+		return nil, fmt.Errorf("invalid membership name %q; should be 6 segments")
+	}
+
 	return &v1alpha1.FleetMembership{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      membershipId(hubMembership),
+			Name:      id,
 			Namespace: fleetsync.Namespace,
 			Labels: map[string]string{
 				fleetSyncLabel: fleetsync.Name,
@@ -248,46 +290,54 @@ func newMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.Fleet
 				},
 			},
 		},
-		Spec: v1alpha1.FleetMembershipSpec{
+		Data: v1alpha1.FleetMembershipData{
+			FullName:    hubMembership.Name,
+			Project:     segments[1],
+			Location:    segments[3],
+			Membership:  segments[5],
 			Description: hubMembership.Description,
 			Labels:      hubMembership.Labels,
 			State: v1alpha1.MembershipState{
 				Code: toMembershipStateCode(hubMembership.State),
 			},
 		},
-	}
+	}, nil
 }
 
 func toMembershipStateCode(ms *gkehubv1.MembershipState) v1alpha1.MembershipStateCode {
 	if ms == nil {
-		return v1alpha1.CodeUnspecified
+		return v1alpha1.MSCodeUnspecified
 	}
 
 	switch ms.Code {
 	case "CODE_UNSPECIFIED":
-		return v1alpha1.CodeUnspecified
+		return v1alpha1.MSCodeUnspecified
 	case "CREATING":
-		return v1alpha1.CodeCreating
+		return v1alpha1.MSCodeCreating
 	case "READY":
-		return v1alpha1.CodeReady
+		return v1alpha1.MSCodeReady
 	case "DELETING":
-		return v1alpha1.CodeDeleting
+		return v1alpha1.MSCodeDeleting
 	case "UPDATING":
-		return v1alpha1.CodeUpdating
+		return v1alpha1.MSCodeUpdating
 	case "SERVICE_UPDATING":
-		return v1alpha1.CodeServiceUpdating
+		return v1alpha1.MSCodeServiceUpdating
 	default:
-		return v1alpha1.CodeUnspecified
+		return v1alpha1.MSCodeUnspecified
 	}
 }
 
-func membershipId(hubMembership *gkehubv1.Membership) string {
+func membershipId(hubMembership *gkehubv1.Membership) (string, error) {
+	// projects/*/locations/*/memberships/{membership_id}
 	segments := strings.Split(hubMembership.Name, "/")
-	return segments[(len(segments) - 1)]
+	if len(segments) != 6 {
+		return "", fmt.Errorf("invalid membership name %q; should be 6 segments", hubMembership.Name)
+	}
+	return segments[1] + segments[3] + segments[5], nil
 }
 
-func (r *FleetSyncReconciler) updateStatus(ctx context.Context, org, new *v1alpha1.FleetSync) error {
-	if equality.Semantic.DeepEqual(org.Status, new.Status) {
+func (r *FleetSyncReconciler) updateStatus(ctx context.Context, orig, new *v1alpha1.FleetSync) error {
+	if equality.Semantic.DeepEqual(orig.Status, new.Status) {
 		return nil
 	}
 	return r.Status().Update(ctx, new)

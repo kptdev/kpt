@@ -19,14 +19,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: fleetmemberships.config.porch.kpt.dev
+  name: fleetmembershipbindings.config.porch.kpt.dev
 spec:
   group: config.porch.kpt.dev
   names:
-    kind: FleetMembership
-    listKind: FleetMembershipList
-    plural: fleetmemberships
-    singular: fleetmembership
+    kind: FleetMembershipBinding
+    listKind: FleetMembershipBindingList
+    plural: fleetmembershipbindings
+    singular: fleetmembershipbinding
   scope: Namespaced
   versions:
   - name: v1alpha1
@@ -41,9 +41,7 @@ spec:
           data:
             description: Data contains the discovered (synced) information
             properties:
-              description:
-                type: string
-              fullName:
+              binding:
                 type: string
               labels:
                 additionalProperties:
@@ -53,13 +51,25 @@ spec:
                 type: string
               membership:
                 type: string
+              name:
+                type: string
               project:
+                type: string
+              scope:
+                type: string
+              scopeFullName:
+                type: string
+              scopeLocation:
+                type: string
+              scopeProject:
                 type: string
               state:
                 properties:
                   code:
                     type: string
                 type: object
+            required:
+            - membership
             type: object
           kind:
             description: 'Kind is a string value representing the REST resource this

@@ -22,7 +22,7 @@ rules:
 - apiGroups:
   - config.porch.kpt.dev
   resources:
-  - fleetsyncs
+  - fleetmembershipbindings
   verbs:
   - create
   - delete
@@ -30,6 +30,38 @@ rules:
   - list
   - patch
   - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - fleetmemberships
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - fleetscopes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - config.porch.kpt.dev
+  resources:
+  - fleetsyncs
+  verbs:
+  - get
+  - list
   - watch
 - apiGroups:
   - config.porch.kpt.dev

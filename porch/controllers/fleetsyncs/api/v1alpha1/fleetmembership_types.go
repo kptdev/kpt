@@ -18,7 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type FleetMembershipSpec struct {
+type FleetMembershipData struct {
+	FullName    string `json:"fullName,omitempty"`
+	Project     string `json:"project,omitempty"`
+	Location    string `json:"location,omitempty"`
+	Membership  string `json:"membership,omitempty"`
 	Description string `json:"description,omitempty"`
 
 	Labels map[string]string `json:"labels,omitempty"`
@@ -33,12 +37,12 @@ type MembershipState struct {
 type MembershipStateCode string
 
 const (
-	CodeUnspecified     MembershipStateCode = "unspecified"
-	CodeCreating        MembershipStateCode = "creating"
-	CodeReady           MembershipStateCode = "ready"
-	CodeDeleting        MembershipStateCode = "deleting"
-	CodeUpdating        MembershipStateCode = "updating"
-	CodeServiceUpdating MembershipStateCode = "serviceupdating"
+	MSCodeUnspecified     MembershipStateCode = "unspecified"
+	MSCodeCreating        MembershipStateCode = "creating"
+	MSCodeReady           MembershipStateCode = "ready"
+	MSCodeDeleting        MembershipStateCode = "deleting"
+	MSCodeUpdating        MembershipStateCode = "updating"
+	MSCodeServiceUpdating MembershipStateCode = "serviceupdating"
 )
 
 type FleetMembershipStatus struct {
@@ -51,7 +55,8 @@ type FleetMembership struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   FleetMembershipSpec   `json:"spec,omitempty"`
+	// Data contains the discovered (synced) information
+	Data   FleetMembershipData   `json:"data,omitempty"`
 	Status FleetMembershipStatus `json:"status,omitempty"`
 }
 

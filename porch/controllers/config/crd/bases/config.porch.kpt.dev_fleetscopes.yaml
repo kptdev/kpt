@@ -19,14 +19,14 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.8.0
   creationTimestamp: null
-  name: fleetmemberships.config.porch.kpt.dev
+  name: fleetscopes.config.porch.kpt.dev
 spec:
   group: config.porch.kpt.dev
   names:
-    kind: FleetMembership
-    listKind: FleetMembershipList
-    plural: fleetmemberships
-    singular: fleetmembership
+    kind: FleetScope
+    listKind: FleetScopeList
+    plural: fleetscopes
+    singular: fleetscope
   scope: Namespaced
   versions:
   - name: v1alpha1
@@ -41,8 +41,6 @@ spec:
           data:
             description: Data contains the discovered (synced) information
             properties:
-              description:
-                type: string
               fullName:
                 type: string
               labels:
@@ -51,9 +49,9 @@ spec:
                 type: object
               location:
                 type: string
-              membership:
-                type: string
               project:
+                type: string
+              scope:
                 type: string
               state:
                 properties:
