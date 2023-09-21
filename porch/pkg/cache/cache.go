@@ -53,7 +53,7 @@ type Cache struct {
 }
 
 type objectNotifier interface {
-	NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta)
+	NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta) int
 }
 
 type CacheOptions struct {

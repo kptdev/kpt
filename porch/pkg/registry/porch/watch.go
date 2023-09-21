@@ -235,7 +235,6 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 
 func (w *watcher) sendWatchEvent(ev watch.Event) {
 	// TODO: Handle the case that the watch channel is full?
-	klog.Infof("sending watch event %v", ev)
 	w.resultChan <- ev
 }
 
