@@ -122,7 +122,6 @@ type DiscoverPackagesOptions struct {
 // discoverPackages is the recursive function we use to traverse the tree and find packages.
 // tree is the git-tree we are search, treePath is the repo-relative-path to tree.
 func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recurse bool) error {
-	found := 0
 	for _, e := range tree.Entries {
 		if e.Name == "Kptfile" {
 			p := path.Join(treePath, e.Name)
@@ -132,7 +131,6 @@ func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recur
 			}
 
 			// Found a package
-			found += 1
 			t.packages[treePath] = &packageListEntry{
 				path:     treePath,
 				treeHash: tree.Hash,
@@ -140,8 +138,6 @@ func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recur
 			}
 		}
 	}
-
-	klog.Infof("discoveryPackages in %s found %d valid package Kptfiles", treePath, found)
 
 	if recurse {
 		for _, e := range tree.Entries {

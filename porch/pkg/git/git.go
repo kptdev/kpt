@@ -1658,7 +1658,9 @@ func (r *gitRepository) discoverPackagesInTree(commit *object.Commit, opt Discov
 		return nil, err
 	}
 
-	klog.V(2).Infof("discovered packages @%v with prefix %q: %#v", commit.Hash, opt.FilterPrefix, t.packages)
+	if opt.FilterPrefix == "" {
+		klog.Infof("discovered %d packages @%v", len(t.packages), commit.Hash)
+	}
 	return t, nil
 }
 
