@@ -342,7 +342,8 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 	if err != nil {
 		return nil, err
 	}
-	cad.watcherManager.NotifyPackageRevisionChange(watch.Added, repoPkgRev, pkgRevMeta)
+	sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Added, repoPkgRev, pkgRevMeta)
+	klog.Infof("engine: sent %d for new PackageRevision %s/%s", sent, repoPkgRev.KubeObjectNamespace(), repoPkgRev.KubeObjectName())
 	return &PackageRevision{
 		repoPackageRevision: repoPkgRev,
 		packageRevisionMeta: pkgRevMeta,
@@ -576,7 +577,8 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			return nil, err
 		}
 
-		cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+		sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+		klog.Infof("engine: sent %d for updated PackageRevision metadata %s/%s", sent, repoPkgRev.KubeObjectNamespace(), repoPkgRev.KubeObjectName())
 		return ToPackageRevision(repoPkgRev, pkgRevMeta), nil
 	}
 	switch lifecycle := newObj.Spec.Lifecycle; lifecycle {
@@ -601,7 +603,8 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 			return nil, err
 		}
 
-		cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+		sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+		klog.Infof("engine: sent %d for reclone and replay PackageRevision %s/%s", sent, repoPkgRev.KubeObjectNamespace(), repoPkgRev.KubeObjectName())
 		return ToPackageRevision(repoPkgRev, pkgRevMeta), nil
 	}
 
@@ -701,7 +704,8 @@ func (cad *cadEngine) UpdatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, err
 	}
 
-	cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+	sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, repoPkgRev, pkgRevMeta)
+	klog.Infof("engine: sent %d for updated PackageRevision %s/%s", sent, repoPkgRev.KubeObjectNamespace(), repoPkgRev.KubeObjectName())
 	return ToPackageRevision(repoPkgRev, pkgRevMeta), nil
 }
 
@@ -851,7 +855,8 @@ func (cad *cadEngine) DeletePackageRevision(ctx context.Context, repositoryObj *
 
 	if len(pkgRevMeta.Finalizers) > 0 {
 		klog.Infof("PackageRevision %s deleted, but still have finalizers: %s", oldPackage.KubeObjectName(), strings.Join(pkgRevMeta.Finalizers, ","))
-		cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, oldPackage.repoPackageRevision, oldPackage.packageRevisionMeta)
+		sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Modified, oldPackage.repoPackageRevision, oldPackage.packageRevisionMeta)
+		klog.Infof("engine: sent %d modified for deleted PackageRevision %s/%s with finalizers", sent, oldPackage.repoPackageRevision.KubeObjectNamespace(), oldPackage.KubeObjectName())
 		return nil
 	}
 	klog.Infof("PackageRevision %s deleted for real since no finalizers", oldPackage.KubeObjectName())
@@ -876,7 +881,8 @@ func (cad *cadEngine) deletePackageRevision(ctx context.Context, repo repository
 		klog.Warningf("Error deleting PkgRevMeta %s: %v", nn.String(), err)
 	}
 
-	cad.watcherManager.NotifyPackageRevisionChange(watch.Deleted, repoPkgRev, pkgRevMeta)
+	sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Deleted, repoPkgRev, pkgRevMeta)
+	klog.Infof("engine: sent %d for deleted PackageRevision %s/%s", sent, repoPkgRev.KubeObjectNamespace(), repoPkgRev.KubeObjectName())
 	return nil
 }
 
