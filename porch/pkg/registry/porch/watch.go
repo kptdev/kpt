@@ -74,6 +74,7 @@ type watcher struct {
 	mutex         sync.Mutex
 	eventCallback func(eventType watch.EventType, pr engine.PackageRevision) bool
 	done          bool
+	totalSent     int
 }
 
 var _ watch.Interface = &watcher{}
@@ -139,11 +140,11 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 	}
 	w.mutex.Unlock()
 
-	klog.Infof("starting watch before listing")
 	if err := r.watchPackages(ctx, filter, w); err != nil {
 		return err
 	}
 
+	sentAdd := 0
 	// TODO: Only if rv == 0?
 	if err := r.listPackageRevisions(ctx, filter, selector, func(p *engine.PackageRevision) error {
 		obj, err := p.GetPackageRevision(ctx)
@@ -158,6 +159,7 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 			Type:   watch.Added,
 			Object: obj,
 		}
+		sentAdd += 1
 		w.sendWatchEvent(ev)
 		return nil
 	}); err != nil {
@@ -166,9 +168,9 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 		w.mutex.Unlock()
 		return err
 	}
-	klog.Infof("finished list")
 
 	// Repeatedly flush the backlog until we catch up
+	sentBacklog := 0
 	for {
 		w.mutex.Lock()
 		chunk := backlog
@@ -179,24 +181,24 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 			break
 		}
 
-		klog.Infof("flushing backlog chunk of length %d", len(chunk))
-
 		for _, ev := range chunk {
 			// TODO: Check resource version?
-
+			sentBacklog += 1
 			w.sendWatchEvent(ev)
 		}
 	}
 
 	w.mutex.Lock()
 	// Pick up anything that squeezed in
+	sentNewBacklog := 0
 	for _, ev := range backlog {
 		// TODO: Check resource version?
 
+		sentNewBacklog += 1
 		w.sendWatchEvent(ev)
 	}
 
-	klog.Infof("moving watch into streaming mode")
+	klog.Infof("watch %p: moving watch into streaming mode after sentAdd %d, sentBacklog %d, sentNewBacklog %d", w, sentAdd, sentBacklog, sentNewBacklog)
 	w.eventCallback = func(eventType watch.EventType, pr engine.PackageRevision) bool {
 		if w.done {
 			return false
@@ -236,6 +238,10 @@ func (w *watcher) listAndWatchInner(ctx context.Context, r packageReader, filter
 func (w *watcher) sendWatchEvent(ev watch.Event) {
 	// TODO: Handle the case that the watch channel is full?
 	w.resultChan <- ev
+	w.totalSent += 1
+	if (w.totalSent % 100) == 0 {
+		klog.Infof("watch %p: total sent: %d", w, w.totalSent)
+	}
 }
 
 // OnPackageRevisionChange is the callback called when a PackageRevision changes.
