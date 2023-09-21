@@ -40,7 +40,7 @@ type Poller struct {
 	cancelFunc context.CancelFunc
 
 	projectIds map[string][]types.NamespacedName
-	pollResult map[string]pollResult
+	pollResult map[string]*pollResult
 	mutex      sync.Mutex
 }
 
@@ -104,24 +104,34 @@ func (p *Poller) StopPollingForFleetSync(fleetSync types.NamespacedName) {
 	}
 }
 
-func (p *Poller) LatestPollResult(projectId string) ([]*gkehubv1.Membership, error, bool) {
+func (p *Poller) LatestMembershipResult(projectId string) ([]*gkehubv1.Membership, error, bool) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	res, found := p.pollResult[projectId]
 	if !found {
 		return nil, nil, false
 	}
-	return res.memberships, res.err, true
+	return res.memberships, res.membershipsErr, true
 }
 
 type pollResult struct {
-	err         error
-	memberships []*gkehubv1.Membership
+	membershipsErr error
+	memberships    []*gkehubv1.Membership
+
+	scopesErr error
+	scopes    []*gkehubv1.Scope
+
+	bindingsErrs []error
+	bindings     []*gkehubv1.MembershipBinding
+}
+
+func (pr *pollResult) HasError() bool {
+	return pr.membershipsErr != nil || pr.scopesErr != nil || len(pr.bindingsErrs) > 0
 }
 
 func (p *Poller) pollOnce(ctx context.Context) {
 	var projectIds map[string][]types.NamespacedName
-	var previousPollResult map[string]pollResult
+	var previousPollResult map[string]*pollResult
 	func() {
 		p.mutex.Lock()
 		defer p.mutex.Unlock()
@@ -131,7 +141,7 @@ func (p *Poller) pollOnce(ctx context.Context) {
 
 	klog.Infof("projectIds count %d", len(projectIds))
 
-	newPollResult := p.pollMemberships(ctx, projectIds)
+	newPollResult := p.poll(ctx, projectIds)
 
 	toNotify := make(map[types.NamespacedName]struct{})
 	for projectId, newRes := range newPollResult {
@@ -150,7 +160,7 @@ func (p *Poller) pollOnce(ctx context.Context) {
 		}
 		// If either the previous poll or the current poll errored
 		// out, trigger a reconcile.
-		if newRes.err != nil || oldRes.err != nil {
+		if newRes.HasError() || oldRes.HasError() {
 			klog.Infof("Has errors")
 			nns := projectIds[projectId]
 			for _, nn := range nns {
@@ -160,7 +170,7 @@ func (p *Poller) pollOnce(ctx context.Context) {
 		}
 
 		// If any of the memberships have changed, trigger a reconcile.
-		if !equality.Semantic.DeepEqual(newRes.memberships, oldRes.memberships) {
+		if !equality.Semantic.DeepEqual(newRes, oldRes) {
 			klog.Infof("Not equal")
 			nns := projectIds[projectId]
 			for _, nn := range nns {
@@ -188,27 +198,51 @@ func (p *Poller) pollOnce(ctx context.Context) {
 	}
 }
 
-func (p *Poller) pollMemberships(ctx context.Context, projectIds map[string][]types.NamespacedName) map[string]pollResult {
-	res := make(map[string]pollResult)
+func (p *Poller) poll(ctx context.Context, projectIds map[string][]types.NamespacedName) map[string]*pollResult {
+	res := make(map[string]*pollResult)
 	for projectId := range projectIds {
-		klog.Infof("Polling for memberships for projectId %s", projectId)
-		resp, err := p.listMemberships(ctx, projectId)
+		pr := &pollResult{}
+		res[projectId] = pr
+		respM, err := p.listMemberships(ctx, projectId)
 		if err != nil {
-			res[projectId] = pollResult{
-				err: err,
-			}
-			klog.Infof("Polling failed: %v", err)
+			pr.membershipsErr = err
+			klog.Infof("Membership polling failed: %v", err)
 		} else {
-			res[projectId] = pollResult{
-				memberships: resp.Resources,
-			}
-			klog.Infof("Polling found %d memberships", len(resp.Resources))
+			pr.memberships = respM.Resources
+			klog.Infof("Polling found %d memberships", len(respM.Resources))
 		}
+
+		respS, err := p.listScopes(ctx, projectId)
+		if err != nil {
+			pr.scopesErr = err
+			klog.Infof("Scope polling failed: %v", err)
+		} else {
+			pr.scopes = respS.Scopes
+			klog.Infof("Polling found %d scopes", len(respS.Scopes))
+		}
+
+		if pr.membershipsErr != nil {
+			pr.bindingsErrs = []error{fmt.Errorf("Could not list bindings due to membership retrieval error")}
+			continue
+		}
+
+		for _, mbr := range pr.memberships {
+			respMB, err := p.listMembershipBindings(ctx, mbr.Name)
+			if err != nil {
+				pr.bindingsErrs = append(pr.bindingsErrs, err)
+				klog.Infof("MembershipBinding polling failed: %v", err)
+			} else {
+				pr.bindings = append(pr.bindings, respMB.MembershipBindings...)
+				klog.Infof("Polling found %d membership bindings", len(respMB.MembershipBindings))
+			}
+		}
+
 	}
 	return res
 }
 
 func (p *Poller) listMemberships(ctx context.Context, projectId string) (*gkehubv1.ListMembershipsResponse, error) {
+	klog.Infof("Polling for memberships for projectId %s", projectId)
 	hubClient, err := gkehubv1.NewService(ctx)
 	if err != nil {
 		return nil, err
@@ -216,6 +250,37 @@ func (p *Poller) listMemberships(ctx context.Context, projectId string) (*gkehub
 
 	parent := fmt.Sprintf("projects/%s/locations/global", projectId)
 	resp, err := hubClient.Projects.Locations.Memberships.List(parent).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func (p *Poller) listScopes(ctx context.Context, projectId string) (*gkehubv1.ListScopesResponse, error) {
+	klog.Infof("Polling for scopes for projectId %s", projectId)
+	hubClient, err := gkehubv1.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/global", projectId)
+	resp, err := hubClient.Projects.Locations.Scopes.List(parent).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+func (p *Poller) listMembershipBindings(ctx context.Context, membership string) (*gkehubv1.ListMembershipBindingsResponse, error) {
+	klog.Infof("Polling for membership bindings for membership %s", membership)
+	hubClient, err := gkehubv1.NewService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	//parent := fmt.Sprintf("projects/%s/locations/global/memberships/%s", projectId, membership)
+	resp, err := hubClient.Projects.Locations.Memberships.Bindings.List(membership).Do()
 	if err != nil {
 		return nil, err
 	}
