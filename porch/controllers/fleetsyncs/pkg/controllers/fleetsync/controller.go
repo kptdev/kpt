@@ -145,6 +145,26 @@ func (r *FleetSyncReconciler) reconcileProject(ctx context.Context, projectId st
 		return pr.ErrorSummary()
 	}
 
+	err := r.reconcileMemberships(ctx, projectId, pr, fleetsync)
+	if err != nil {
+		return err
+	}
+
+	err = r.reconcileScopes(ctx, projectId, pr, fleetsync)
+	if err != nil {
+		return err
+	}
+
+	err = r.reconcileMembershipBindings(ctx, projectId, pr, fleetsync)
+	if err != nil {
+		return err
+	}
+
+	r.setReadyCondition(ctx, orig, fleetsync)
+	return nil
+}
+
+func (r *FleetSyncReconciler) reconcileMemberships(ctx context.Context, projectId string, pr *fleetpoller.PollResult, fleetsync *v1alpha1.FleetSync) error {
 	existingMemberships, err := r.findExistingMemberships(ctx, fleetsync.Name, fleetsync.Namespace, projectId)
 	if err != nil {
 		return err
@@ -204,17 +224,132 @@ func (r *FleetSyncReconciler) reconcileProject(ctx context.Context, projectId st
 		}
 	}
 
-	// TODO: fleets and bindings
-	//
-	r.setReadyCondition(ctx, orig, fleetsync)
 	return nil
 }
 
-func (r *FleetSyncReconciler) reconcileScopes(ctx context.Context, orig, fleetsync *v1alpha1.FleetSync) error {
+func (r *FleetSyncReconciler) reconcileScopes(ctx context.Context, projectId string, pr *fleetpoller.PollResult, fleetsync *v1alpha1.FleetSync) error {
+	existingScopes, err := r.findExistingScopes(ctx, fleetsync.Name, fleetsync.Namespace, projectId)
+	if err != nil {
+		return err
+	}
+
+	for _, res := range pr.Scopes {
+		name, err := scopeId(res)
+		if err != nil {
+			klog.Warningf("could not create new scope: %s", err.Error())
+			continue
+		}
+
+		existing, found := existingScopes[name]
+		if !found {
+			m, err := newScope(res, fleetsync)
+			if err != nil {
+				klog.Warningf("could not create new scope: %s", err.Error())
+				continue
+			}
+			// TODO: We should probably use SSA here rather than Create/Update.
+			if err := r.Create(ctx, m); err != nil {
+				return err
+			}
+			continue
+		}
+
+		updated := existing.DeepCopy()
+		err = updateScope(res, fleetsync, updated)
+		if err != nil {
+			klog.Warningf("could not update scope: %s", err.Error())
+			continue
+		}
+
+		if !equality.Semantic.DeepEqual(updated.Data, existing.Data) {
+			if err := r.Update(ctx, updated); err != nil {
+				return err
+			}
+		}
+	}
+
+	for name, m := range existingScopes {
+		found := false
+		for _, res := range pr.Scopes {
+			resName, err := scopeId(res)
+			if err != nil {
+				klog.Warning(err)
+				continue
+			}
+			if resName == name {
+				found = true
+			}
+		}
+		if !found {
+			if err := r.Delete(ctx, m); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
-func (r *FleetSyncReconciler) reconcileMembershipBindings(ctx context.Context, orig, fleetsync *v1alpha1.FleetSync) error {
+func (r *FleetSyncReconciler) reconcileMembershipBindings(ctx context.Context, projectId string, pr *fleetpoller.PollResult, fleetsync *v1alpha1.FleetSync) error {
+	existingBindings, err := r.findExistingMembershipBindings(ctx, fleetsync.Name, fleetsync.Namespace, projectId)
+	if err != nil {
+		return err
+	}
+
+	for _, res := range pr.Bindings {
+		name, err := bindingId(res)
+		if err != nil {
+			klog.Warningf("could not create new binding: %s", err.Error())
+			continue
+		}
+
+		existing, found := existingBindings[name]
+		if !found {
+			m, err := newMembershipBinding(res, fleetsync)
+			if err != nil {
+				klog.Warningf("could not create new binding: %s", err.Error())
+				continue
+			}
+			// TODO: We should probably use SSA here rather than Create/Update.
+			if err := r.Create(ctx, m); err != nil {
+				return err
+			}
+			continue
+		}
+
+		updated := existing.DeepCopy()
+		err = updateMembershipBinding(res, fleetsync, updated)
+		if err != nil {
+			klog.Warningf("could not update binding: %s", err.Error())
+			continue
+		}
+
+		if !equality.Semantic.DeepEqual(updated.Data, existing.Data) {
+			if err := r.Update(ctx, updated); err != nil {
+				return err
+			}
+		}
+	}
+
+	for name, m := range existingBindings {
+		found := false
+		for _, res := range pr.Bindings {
+			resName, err := bindingId(res)
+			if err != nil {
+				klog.Warning(err)
+				continue
+			}
+			if resName == name {
+				found = true
+			}
+		}
+		if !found {
+			if err := r.Delete(ctx, m); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -338,6 +473,167 @@ func membershipId(hubMembership *gkehubv1.Membership) (string, error) {
 	return util.KubernetesName(segments[1]+"-"+segments[3]+"-"+segments[5], nameHashLen, nameMaxLen), nil
 }
 
+func newScope(hubScope *gkehubv1.Scope, fleetsync *v1alpha1.FleetSync) (*v1alpha1.FleetScope, error) {
+	id, err := scopeId(hubScope)
+	if err != nil {
+		return nil, err
+	}
+
+	t := true
+	f := &v1alpha1.FleetScope{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      id,
+			Namespace: fleetsync.Namespace,
+			Labels:    map[string]string{},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: fleetsync.APIVersion,
+					Kind:       fleetsync.Kind,
+					Name:       fleetsync.Name,
+					UID:        fleetsync.UID,
+					Controller: &t,
+				},
+			},
+		},
+	}
+
+	return f, updateScope(hubScope, fleetsync, f)
+}
+
+func updateScope(hubScope *gkehubv1.Scope, fleetsync *v1alpha1.FleetSync, f *v1alpha1.FleetScope) error {
+	segments := strings.Split(hubScope.Name, "/")
+	if len(segments) != 6 {
+		return fmt.Errorf("invalid scope name %q; should be 6 segments")
+	}
+
+	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
+	f.ObjectMeta.Labels[projectIdLabel] = segments[1]
+
+	f.Data = v1alpha1.FleetScopeData{
+		FullName: hubScope.Name,
+		Project:  segments[1],
+		Location: segments[3],
+		Scope:    segments[5],
+		Labels:   hubScope.Labels,
+		State: v1alpha1.ScopeState{
+			Code: toScopeStateCode(hubScope.State),
+		},
+	}
+
+	return nil
+}
+
+func toScopeStateCode(ms *gkehubv1.ScopeLifecycleState) v1alpha1.ScopeStateCode {
+	if ms == nil {
+		return v1alpha1.SSCodeUnspecified
+	}
+
+	switch ms.Code {
+	case "CODE_UNSPECIFIED":
+		return v1alpha1.SSCodeUnspecified
+	case "CREATING":
+		return v1alpha1.SSCodeCreating
+	case "READY":
+		return v1alpha1.SSCodeReady
+	case "DELETING":
+		return v1alpha1.SSCodeDeleting
+	case "UPDATING":
+		return v1alpha1.SSCodeUpdating
+	default:
+		return v1alpha1.SSCodeUnspecified
+	}
+}
+
+func scopeId(scope *gkehubv1.Scope) (string, error) {
+	// `projects/{project}/locations/{location}/scopes/{scope}`
+	segments := strings.Split(scope.Name, "/")
+	if len(segments) != 6 {
+		return "", fmt.Errorf("invalid scope name %q; should be 6 segments", scope.Name)
+	}
+	return util.KubernetesName(segments[1]+"-"+segments[3]+"-"+segments[5], nameHashLen, nameMaxLen), nil
+}
+
+func newMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *v1alpha1.FleetSync) (*v1alpha1.FleetMembershipBinding, error) {
+	id, err := bindingId(hubBinding)
+	if err != nil {
+		return nil, err
+	}
+
+	t := true
+	f := &v1alpha1.FleetMembershipBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      id,
+			Namespace: fleetsync.Namespace,
+			Labels:    map[string]string{},
+			OwnerReferences: []metav1.OwnerReference{
+				{
+					APIVersion: fleetsync.APIVersion,
+					Kind:       fleetsync.Kind,
+					Name:       fleetsync.Name,
+					UID:        fleetsync.UID,
+					Controller: &t,
+				},
+			},
+		},
+	}
+
+	return f, updateMembershipBinding(hubBinding, fleetsync, f)
+}
+
+func updateMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *v1alpha1.FleetSync, f *v1alpha1.FleetMembershipBinding) error {
+	segments := strings.Split(hubBinding.Name, "/")
+	if len(segments) != 8 {
+		return fmt.Errorf("invalid binding name %q; should be 8 segments")
+	}
+
+	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
+	f.ObjectMeta.Labels[projectIdLabel] = segments[1]
+
+	f.Data = v1alpha1.FleetMembershipBindingData{
+		FullName:   hubBinding.Name,
+		Project:    segments[1],
+		Location:   segments[3],
+		Membership: segments[5],
+		Binding:    segments[7],
+		Labels:     hubBinding.Labels,
+		State: v1alpha1.MembershipBindingState{
+			Code: toMembershipBindingStateCode(hubBinding.State),
+		},
+	}
+
+	return nil
+}
+
+func toMembershipBindingStateCode(ms *gkehubv1.MembershipBindingLifecycleState) v1alpha1.MembershipBindingStateCode {
+	if ms == nil {
+		return v1alpha1.MBSCodeUnspecified
+	}
+
+	switch ms.Code {
+	case "CODE_UNSPECIFIED":
+		return v1alpha1.MBSCodeUnspecified
+	case "CREATING":
+		return v1alpha1.MBSCodeCreating
+	case "READY":
+		return v1alpha1.MBSCodeReady
+	case "DELETING":
+		return v1alpha1.MBSCodeDeleting
+	case "UPDATING":
+		return v1alpha1.MBSCodeUpdating
+	default:
+		return v1alpha1.MBSCodeUnspecified
+	}
+}
+
+func bindingId(binding *gkehubv1.MembershipBinding) (string, error) {
+	// `projects/{project}/locations/{location}/memberships/{membership}/bindings/{membershipbinding}`
+	segments := strings.Split(binding.Name, "/")
+	if len(segments) != 8 {
+		return "", fmt.Errorf("invalid membership binding name %q; should be 8 segments", binding.Name)
+	}
+	return util.KubernetesName(segments[1]+"-"+segments[3]+"-"+segments[5]+"-"+segments[7], nameHashLen, nameMaxLen), nil
+}
+
 func (r *FleetSyncReconciler) updateStatus(ctx context.Context, orig, new *v1alpha1.FleetSync) error {
 	if equality.Semantic.DeepEqual(orig.Status, new.Status) {
 		return nil
@@ -351,12 +647,40 @@ func (r *FleetSyncReconciler) findExistingMemberships(ctx context.Context, fsNam
 		return nil, err
 	}
 
-	memberships := make(map[string]*v1alpha1.FleetMembership, len(list.Items))
+	items := make(map[string]*v1alpha1.FleetMembership, len(list.Items))
 	for i := range list.Items {
 		item := &list.Items[i]
-		memberships[item.Name] = item
+		items[item.Name] = item
 	}
-	return memberships, nil
+	return items, nil
+}
+
+func (r *FleetSyncReconciler) findExistingScopes(ctx context.Context, fsName, fsNamespace, projectId string) (map[string]*v1alpha1.FleetScope, error) {
+	var list v1alpha1.FleetScopeList
+	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectIdLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
+		return nil, err
+	}
+
+	items := make(map[string]*v1alpha1.FleetScope, len(list.Items))
+	for i := range list.Items {
+		item := &list.Items[i]
+		items[item.Name] = item
+	}
+	return items, nil
+}
+
+func (r *FleetSyncReconciler) findExistingMembershipBindings(ctx context.Context, fsName, fsNamespace, projectId string) (map[string]*v1alpha1.FleetMembershipBinding, error) {
+	var list v1alpha1.FleetMembershipBindingList
+	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectIdLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
+		return nil, err
+	}
+
+	items := make(map[string]*v1alpha1.FleetMembershipBinding, len(list.Items))
+	for i := range list.Items {
+		item := &list.Items[i]
+		items[item.Name] = item
+	}
+	return items, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
