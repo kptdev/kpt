@@ -420,7 +420,7 @@ func newMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.Fleet
 func updateMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.FleetSync, fm *v1alpha1.FleetMembership) error {
 	segments := strings.Split(hubMembership.Name, "/")
 	if len(segments) != 6 {
-		return fmt.Errorf("invalid membership name %q; should be 6 segments")
+		return fmt.Errorf("invalid membership name %q; should be 6 segments", hubMembership.Name)
 	}
 
 	fm.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
@@ -503,7 +503,7 @@ func newScope(hubScope *gkehubv1.Scope, fleetsync *v1alpha1.FleetSync) (*v1alpha
 func updateScope(hubScope *gkehubv1.Scope, fleetsync *v1alpha1.FleetSync, f *v1alpha1.FleetScope) error {
 	segments := strings.Split(hubScope.Name, "/")
 	if len(segments) != 6 {
-		return fmt.Errorf("invalid scope name %q; should be 6 segments")
+		return fmt.Errorf("invalid scope name %q; should be 6 segments", hubScope.Name)
 	}
 
 	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
@@ -583,7 +583,7 @@ func newMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *v1a
 func updateMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *v1alpha1.FleetSync, f *v1alpha1.FleetMembershipBinding) error {
 	segments := strings.Split(hubBinding.Name, "/")
 	if len(segments) != 8 {
-		return fmt.Errorf("invalid binding name %q; should be 8 segments")
+		return fmt.Errorf("invalid binding name %q; should be 8 segments", hubBinding.Name)
 	}
 
 	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
