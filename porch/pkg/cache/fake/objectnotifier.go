@@ -22,5 +22,6 @@ import (
 
 type ObjectNotifier struct{}
 
-func (o *ObjectNotifier) NotifyPackageRevisionChange(watch.EventType, repository.PackageRevision, meta.PackageRevisionMeta) {
+func (o *ObjectNotifier) NotifyPackageRevisionChange(watch.EventType, repository.PackageRevision, meta.PackageRevisionMeta) int {
+	return 0
 }
