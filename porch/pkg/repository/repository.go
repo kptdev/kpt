@@ -202,6 +202,9 @@ type Repository interface {
 
 	// DeletePackage deletes a package
 	DeletePackage(ctx context.Context, old Package) error
+
+	// Close cleans up any resources associated with the repository
+	Close() error
 }
 
 type FunctionRepository interface {
