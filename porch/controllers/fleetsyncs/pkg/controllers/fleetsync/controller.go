@@ -41,10 +41,12 @@ import (
 )
 
 const (
-	fleetSyncLabel = "config.porch.kpt.dev/fleetsync"
-	projectIdLabel = "config.porch.kpt.dev/fleetsync-project-id"
-	nameMaxLen     = 63
-	nameHashLen    = 8
+	fleetSyncLabel  = "fleetsync.porch.kpt.dev/fleetsync"
+	projectLabel    = "fleetsync.porch.kpt.dev/project"
+	scopeLabel      = "fleetsync.porch.kpt.dev/scope"
+	membershipLabel = "fleetsync.porch.kpt.dev/membership"
+	nameMaxLen      = 63
+	nameHashLen     = 8
 )
 
 type Options struct {
@@ -424,7 +426,8 @@ func updateMembership(hubMembership *gkehubv1.Membership, fleetsync *v1alpha1.Fl
 	}
 
 	fm.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
-	fm.ObjectMeta.Labels[projectIdLabel] = segments[1]
+	fm.ObjectMeta.Labels[projectLabel] = segments[1]
+	fm.ObjectMeta.Labels[membershipLabel] = segments[5]
 
 	fm.Data = v1alpha1.FleetMembershipData{
 		FullName:    hubMembership.Name,
@@ -507,7 +510,8 @@ func updateScope(hubScope *gkehubv1.Scope, fleetsync *v1alpha1.FleetSync, f *v1a
 	}
 
 	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
-	f.ObjectMeta.Labels[projectIdLabel] = segments[1]
+	f.ObjectMeta.Labels[projectLabel] = segments[1]
+	f.ObjectMeta.Labels[scopeLabel] = segments[5]
 
 	f.Data = v1alpha1.FleetScopeData{
 		FullName: hubScope.Name,
@@ -586,8 +590,15 @@ func updateMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *
 		return fmt.Errorf("invalid binding name %q; should be 8 segments", hubBinding.Name)
 	}
 
+	scopeSegs := strings.Split(hubBinding.Scope, "/")
+	if len(scopeSegs) != 6 {
+		return fmt.Errorf("invalid scope name %q; should be 6 segments", hubBinding.Scope)
+	}
+
 	f.ObjectMeta.Labels[fleetSyncLabel] = fleetsync.Name
-	f.ObjectMeta.Labels[projectIdLabel] = segments[1]
+	f.ObjectMeta.Labels[projectLabel] = segments[1]
+	f.ObjectMeta.Labels[membershipLabel] = segments[5]
+	f.ObjectMeta.Labels[scopeLabel] = scopeSegs[5]
 
 	f.Data = v1alpha1.FleetMembershipBindingData{
 		FullName:   hubBinding.Name,
@@ -595,6 +606,7 @@ func updateMembershipBinding(hubBinding *gkehubv1.MembershipBinding, fleetsync *
 		Location:   segments[3],
 		Membership: segments[5],
 		Binding:    segments[7],
+		Scope:      hubBinding.Scope,
 		Labels:     hubBinding.Labels,
 		State: v1alpha1.MembershipBindingState{
 			Code: toMembershipBindingStateCode(hubBinding.State),
@@ -643,7 +655,7 @@ func (r *FleetSyncReconciler) updateStatus(ctx context.Context, orig, new *v1alp
 
 func (r *FleetSyncReconciler) findExistingMemberships(ctx context.Context, fsName, fsNamespace, projectId string) (map[string]*v1alpha1.FleetMembership, error) {
 	var list v1alpha1.FleetMembershipList
-	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectIdLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
+	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
 		return nil, err
 	}
 
@@ -657,7 +669,7 @@ func (r *FleetSyncReconciler) findExistingMemberships(ctx context.Context, fsNam
 
 func (r *FleetSyncReconciler) findExistingScopes(ctx context.Context, fsName, fsNamespace, projectId string) (map[string]*v1alpha1.FleetScope, error) {
 	var list v1alpha1.FleetScopeList
-	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectIdLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
+	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
 		return nil, err
 	}
 
@@ -671,7 +683,7 @@ func (r *FleetSyncReconciler) findExistingScopes(ctx context.Context, fsName, fs
 
 func (r *FleetSyncReconciler) findExistingMembershipBindings(ctx context.Context, fsName, fsNamespace, projectId string) (map[string]*v1alpha1.FleetMembershipBinding, error) {
 	var list v1alpha1.FleetMembershipBindingList
-	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectIdLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
+	if err := r.List(ctx, &list, client.MatchingLabels{fleetSyncLabel: fsName, projectLabel: projectId}, client.InNamespace(fsNamespace)); err != nil {
 		return nil, err
 	}
 
