@@ -47,6 +47,10 @@ func (pr *PackageRevision) UID() types.UID {
 	return pr.Uid
 }
 
+func (pr *PackageRevision) ResourceVersion() string {
+	return pr.PackageRevision.ResourceVersion
+}
+
 func (pr *PackageRevision) Key() repository.PackageRevisionKey {
 	return pr.PackageRevisionKey
 }
