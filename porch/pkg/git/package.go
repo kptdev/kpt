@@ -78,6 +78,10 @@ func (p *gitPackageRevision) UID() types.UID {
 	return p.uid()
 }
 
+func (p *gitPackageRevision) ResourceVersion() string {
+	return p.commit.String()
+}
+
 func (p *gitPackageRevision) Key() repository.PackageRevisionKey {
 	// if the repository has been registered with a directory, then the
 	// package name is the package path relative to the registered directory

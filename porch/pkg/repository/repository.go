@@ -91,6 +91,9 @@ type PackageRevision interface {
 	// GetLock returns the current revision's lock information.
 	// This will be the upstream info for downstream revisions.
 	GetLock() (kptfile.Upstream, kptfile.UpstreamLock, error)
+
+	// ResourceVersion returns the Kube resource version of the package
+	ResourceVersion() string
 }
 
 // Package is an abstract package.

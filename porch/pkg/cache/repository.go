@@ -480,8 +480,9 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		if oldPackage == nil {
 			addSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Added, newPackage, metaPackage)
 		} else {
-			// TODO: only if changed
-			modSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Modified, newPackage, metaPackage)
+			if oldPackage.ResourceVersion() != newPackage.ResourceVersion() {
+				modSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Modified, newPackage, metaPackage)
+			}
 		}
 	}
 

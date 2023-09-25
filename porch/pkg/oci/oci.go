@@ -395,6 +395,10 @@ func (p *ociPackageRevision) UID() types.UID {
 	return p.uid
 }
 
+func (p *ociPackageRevision) ResourceVersion() string {
+	return p.resourceVersion
+}
+
 func (p *ociPackageRevision) Key() repository.PackageRevisionKey {
 	return repository.PackageRevisionKey{
 		Repository:    p.parent.name,
