@@ -66,6 +66,8 @@ type cachedRepository struct {
 	objectNotifier objectNotifier
 
 	metadataStore meta.MetadataStore
+
+	pollInProgress bool
 }
 
 func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectNotifier objectNotifier, metadataStore meta.MetadataStore) *cachedRepository {
@@ -355,6 +357,11 @@ func (r *cachedRepository) pollForever(ctx context.Context) {
 }
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
+	if r.pollInProgress {
+		klog.Infof("repo %s: skipping poll request due to one in progress already", r.id)
+		return
+	}
+	r.pollInProgress = true
 	klog.Infof("repo %s: background-refreshing", r.id)
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
@@ -369,6 +376,7 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
+	r.pollInProgress = false
 }
 
 func (r *cachedRepository) flush() {
