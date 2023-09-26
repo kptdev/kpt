@@ -355,7 +355,8 @@ func (r *cachedRepository) pollForever(ctx context.Context) {
 }
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
-	klog.Infof("repo %s: background-refreshing", r.id)
+	start := time.Now()
+	klog.Infof("repo %s: poll start", r.id)
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
@@ -369,6 +370,8 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
+
+	klog.Infof("repo %s: poll finish in %f secs", r.id, time.Since(start).Seconds())
 }
 
 func (r *cachedRepository) flush() {
