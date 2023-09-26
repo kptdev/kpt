@@ -63,6 +63,10 @@ type ociRepository struct {
 var _ repository.Repository = &ociRepository{}
 var _ repository.FunctionRepository = &ociRepository{}
 
+func (r *ociRepository) Close() error {
+	return nil
+}
+
 func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	if r.content != configapi.RepositoryContentPackage {
 		return []repository.PackageRevision{}, nil

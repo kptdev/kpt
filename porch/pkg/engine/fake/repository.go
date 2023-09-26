@@ -30,6 +30,10 @@ type Repository struct {
 
 var _ repository.Repository = &Repository{}
 
+func (r *Repository) Close() error {
+	return nil
+}
+
 func (r *Repository) ListPackageRevisions(_ context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	var revs []repository.PackageRevision
 	for _, rev := range r.PackageRevisions {

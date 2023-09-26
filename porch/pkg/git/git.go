@@ -131,6 +131,7 @@ func OpenRepository(ctx context.Context, name, namespace string, spec *configapi
 		secret:             spec.SecretRef.Name,
 		credentialResolver: opts.CredentialResolver,
 		userInfoProvider:   opts.UserInfoProvider,
+		cacheDir:           dir,
 		deployment:         deployment,
 	}
 
@@ -157,6 +158,9 @@ type gitRepository struct {
 	credentialResolver repository.CredentialResolver
 	userInfoProvider   repository.UserInfoProvider
 
+	// Folder used for the local git cache.
+	cacheDir string
+
 	// deployment holds spec.deployment
 	// TODO: Better caching here, support repository spec changes
 	deployment bool
@@ -174,6 +178,13 @@ type gitRepository struct {
 }
 
 var _ GitRepository = &gitRepository{}
+
+func (r *gitRepository) Close() error {
+	if err := os.RemoveAll(r.cacheDir); err != nil {
+		return fmt.Errorf("error cleaning up local git cache for repo %s: %v", r.name, err)
+	}
+	return nil
+}
 
 func (r *gitRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
 	ctx, span := tracer.Start(ctx, "gitRepository::ListPackages", trace.WithAttributes())

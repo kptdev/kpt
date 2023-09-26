@@ -333,7 +333,7 @@ func (r *cachedRepository) Close() error {
 		}
 		r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, pr, pkgRevMeta)
 	}
-	return nil
+	return r.repo.Close()
 }
 
 // pollForever will continue polling until signal channel is closed or ctx is done.
