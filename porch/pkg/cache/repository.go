@@ -311,6 +311,7 @@ func (r *cachedRepository) Close() error {
 
 	// Make sure that watch events are sent for packagerevisions that are
 	// removed as part of closing the repository.
+	sent := 0
 	for _, pr := range r.cachedPackageRevisions {
 		nn := types.NamespacedName{
 			Name:      pr.KubeObjectName(),
@@ -319,7 +320,7 @@ func (r *cachedRepository) Close() error {
 		// There isn't really any correct way to handle finalizers here. We are removing
 		// the repository, so we have to just delete the PackageRevision regardless of any
 		// finalizers.
-		klog.Infof("Deleting packagerev %s/%s because repository is closed", nn.Namespace, nn.Name)
+		klog.Infof("repo %s: deleting packagerev %s/%s because repository is closed", r.id, nn.Namespace, nn.Name)
 		pkgRevMeta, err := r.metadataStore.Delete(context.TODO(), nn, true)
 		if err != nil {
 			// There isn't much use in returning an error here, so we just log it
@@ -331,29 +332,31 @@ func (r *cachedRepository) Close() error {
 				Namespace: nn.Namespace,
 			}
 		}
-		r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, pr, pkgRevMeta)
+		sent += r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, pr, pkgRevMeta)
 	}
+	klog.Infof("repo %s: sent %d notifications for %d package revisions during close", r.id, sent, len(r.cachedPackageRevisions))
 	return r.repo.Close()
 }
 
 // pollForever will continue polling until signal channel is closed or ctx is done.
 func (r *cachedRepository) pollForever(ctx context.Context) {
 	r.pollOnce(ctx)
-	ticker := time.NewTicker(1 * time.Minute)
 	for {
 		select {
-		case <-ticker.C:
-			r.pollOnce(ctx)
-
 		case <-ctx.Done():
-			klog.V(2).Infof("exiting repository poller, because context is done: %v", ctx.Err())
+			klog.V(2).Infof("repo %s: exiting repository poller, because context is done: %v", r.id, ctx.Err())
 			return
+		default:
+			r.pollOnce(ctx)
+			time.Sleep(60 * time.Second)
 		}
 	}
 }
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
-	klog.Infof("background-refreshing repo %q", r.id)
+	start := time.Now()
+	klog.Infof("repo %s: poll started", r.id)
+	defer func() { klog.Infof("repo %s: poll finished in %f secs", r.id, time.Since(start).Seconds()) }()
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
@@ -384,6 +387,9 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// TODO: Avoid simultaneous fetches?
 	// TODO: Push-down partial refresh?
 
+	start := time.Now()
+	defer func() { klog.Infof("repo %s: refresh finished in %f secs", r.id, time.Since(start).Seconds()) }()
+
 	// Look up all existing PackageRevCRs so we an compare those to the
 	// actual Packagerevisions found in git/oci, and add/prune PackageRevCRs
 	// as necessary.
@@ -406,12 +412,10 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 
 	// Build mapping from kubeObjectName to PackageRevisions for new PackageRevisions.
 	newPackageRevisionNames := make(map[string]*cachedPackageRevision, len(newPackageRevisions))
-	klog.Infof("New packages:")
 	for _, newPackage := range newPackageRevisions {
-		klog.Infof("- %s", newPackage.KubeObjectName())
 		kname := newPackage.KubeObjectName()
 		if newPackageRevisionNames[kname] != nil {
-			klog.Warningf("found duplicate packages with name %v", kname)
+			klog.Warningf("repo %s: found duplicate packages with name %v", kname)
 		}
 
 		pkgRev := &cachedPackageRevision{
@@ -432,16 +436,16 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// PackageRevision. The ones that doesn't is removed.
 	for _, prm := range existingPkgRevCRs {
 		if _, found := newPackageRevisionNames[prm.Name]; !found {
-			klog.Infof("Deleting PackageRev %s/%s because parent PackageRevision was not found",
-				prm.Namespace, prm.Name)
+			klog.Infof("repo %s: deleting PackageRev %s/%s because parent PackageRevision was not found",
+				r.id, prm.Namespace, prm.Name)
 			if _, err := r.metadataStore.Delete(ctx, types.NamespacedName{
 				Name:      prm.Name,
 				Namespace: prm.Namespace,
 			}, true); err != nil {
 				if !apierrors.IsNotFound(err) {
 					// This will be retried the next time the sync runs.
-					klog.Warningf("unable to delete PackageRev CR for %s/%s: %w",
-						prm.Name, prm.Namespace, err)
+					klog.Warningf("repo %s: unable to delete PackageRev CR for %s/%s: %w",
+						r.id, prm.Name, prm.Namespace, err)
 				}
 			}
 		}
@@ -466,6 +470,8 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	// Send notification for packages that changed.
+	addSent := 0
+	modSent := 0
 	for kname, newPackage := range newPackageRevisionNames {
 		oldPackage := oldPackageRevisionNames[kname]
 		metaPackage, found := existingPkgRevCRsMap[newPackage.KubeObjectName()]
@@ -473,14 +479,15 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 			klog.Warningf("no PackageRev CR found for PackageRevision %s", newPackage.KubeObjectName())
 		}
 		if oldPackage == nil {
-			r.objectNotifier.NotifyPackageRevisionChange(watch.Added, newPackage, metaPackage)
+			addSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Added, newPackage, metaPackage)
 		} else {
-			// TODO: only if changed
-			klog.Warningf("over-notifying of package updates (even on unchanged packages)")
-			r.objectNotifier.NotifyPackageRevisionChange(watch.Modified, newPackage, metaPackage)
+			if oldPackage.ResourceVersion() != newPackage.ResourceVersion() {
+				modSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Modified, newPackage, metaPackage)
+			}
 		}
 	}
 
+	delSent := 0
 	// Send notifications for packages that was deleted in the SoT
 	for kname, oldPackage := range oldPackageRevisionNames {
 		if newPackageRevisionNames[kname] == nil {
@@ -488,19 +495,20 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 				Name:      oldPackage.KubeObjectName(),
 				Namespace: oldPackage.KubeObjectNamespace(),
 			}
-			klog.Infof("Deleting PackageRev %s/%s because PackageRevision was removed from SoT",
-				nn.Namespace, nn.Name)
+			klog.Infof("repo %s: deleting PackageRev %s/%s because PackageRevision was removed from SoT",
+				r.id, nn.Namespace, nn.Name)
 			metaPackage, err := r.metadataStore.Delete(ctx, nn, true)
 			if err != nil {
-				klog.Warningf("Error deleting PkgRevMeta %s: %v")
+				klog.Warningf("repo %s: error deleting PkgRevMeta %s: %v", r.id, nn, err)
 				metaPackage = meta.PackageRevisionMeta{
 					Name:      nn.Name,
 					Namespace: nn.Namespace,
 				}
 			}
-			r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
+			delSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
 		}
 	}
+	klog.Infof("repo %s: addSent %d, modSent %d, delSent for %d old and %d new repo packages", r.id, addSent, modSent, len(oldPackageRevisionNames), len(newPackageRevisionNames))
 
 	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
 	for _, newPackage := range newPackageRevisions {

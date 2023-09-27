@@ -131,7 +131,6 @@ func (t *packageList) discoverPackages(tree *object.Tree, treePath string, recur
 			}
 
 			// Found a package
-			klog.Infof("found package %q with Kptfile hash %q", p, e.Hash)
 			t.packages[treePath] = &packageListEntry{
 				path:     treePath,
 				treeHash: tree.Hash,

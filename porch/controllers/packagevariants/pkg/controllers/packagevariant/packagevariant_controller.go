@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	porchapi "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	configapi "github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -59,6 +60,8 @@ const (
 
 	ConditionTypeStalled = "Stalled" // whether or not the packagevariant object is making progress or not
 	ConditionTypeReady   = "Ready"   // whether or notthe reconciliation succeded
+
+	requeueDuration = 30 * time.Second
 )
 
 //go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-packagevariants webhook paths="." output:rbac:artifacts:config=../../../config/rbac
@@ -119,12 +122,14 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	if errs := validatePackageVariant(pv); len(errs) > 0 {
 		setStalledConditionsToTrue(pv, combineErrors(errs))
+		// do not requeue; failed validation requires a PV change
 		return ctrl.Result{}, nil
 	}
 	upstream, err := r.getUpstreamPR(pv.Spec.Upstream, prList)
 	if err != nil {
 		setStalledConditionsToTrue(pv, err.Error())
-		return ctrl.Result{}, err
+		// requeue, as the upstream may appear
+		return ctrl.Result{RequeueAfter: requeueDuration}, err
 	}
 	meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
 		Type:    ConditionTypeStalled,
@@ -134,7 +139,18 @@ func (r *PackageVariantReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	})
 
 	targets, err := r.ensurePackageVariant(ctx, pv, upstream, prList)
-	setTargetStatusConditions(pv, targets, err)
+	if err != nil {
+		meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
+			Type:    ConditionTypeReady,
+			Status:  "False",
+			Reason:  "Error",
+			Message: err.Error(),
+		})
+		// requeue; it may be an intermittent error
+		return ctrl.Result{RequeueAfter: requeueDuration}, nil
+	}
+
+	setTargetStatusConditions(pv, targets)
 
 	return ctrl.Result{}, nil
 }
@@ -682,19 +698,8 @@ func (r *PackageVariantReconciler) updateDraft(ctx context.Context,
 	return draft, nil
 }
 
-func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.PackageRevision, err error) {
+func setTargetStatusConditions(pv *api.PackageVariant, targets []*porchapi.PackageRevision) {
 	pv.Status.DownstreamTargets = nil
-	if err != nil {
-		klog.Infoln(fmt.Sprintf("setting status to error: %s", err.Error()))
-		meta.SetStatusCondition(&pv.Status.Conditions, metav1.Condition{
-			Type:    ConditionTypeReady,
-			Status:  "False",
-			Reason:  "Error",
-			Message: err.Error(),
-		})
-		klog.Infoln(fmt.Sprintf("Conditions: %v", pv.Status.Conditions))
-		return
-	}
 	for _, t := range targets {
 		pv.Status.DownstreamTargets = append(pv.Status.DownstreamTargets, api.DownstreamTarget{
 			Name: t.GetName(),

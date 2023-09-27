@@ -89,10 +89,11 @@ func (r *watcherManager) WatchPackageRevisions(ctx context.Context, filter repos
 }
 
 // notifyPackageRevisionChange is called to send a change notification to all interested listeners.
-func (r *watcherManager) NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta) {
+func (r *watcherManager) NotifyPackageRevisionChange(eventType watch.EventType, obj repository.PackageRevision, objMeta meta.PackageRevisionMeta) int {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	sent := 0
 	for i, watcher := range r.watchers {
 		if watcher == nil {
 			continue
@@ -106,5 +107,8 @@ func (r *watcherManager) NotifyPackageRevisionChange(eventType watch.EventType, 
 			klog.Infof("stopping watcher in response to !keepGoing")
 			r.watchers[i] = nil
 		}
+		sent += 1
 	}
+
+	return sent
 }
