@@ -108,7 +108,7 @@ changelog:
       - Merge branch
 release:
   github:
-    owner: GoogleContainerTools
+    owner: kptdev
     name: kpt
   draft: false
   prerelease: true
