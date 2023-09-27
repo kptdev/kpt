@@ -66,8 +66,6 @@ type cachedRepository struct {
 	objectNotifier objectNotifier
 
 	metadataStore meta.MetadataStore
-
-	pollInProgress bool
 }
 
 func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectNotifier objectNotifier, metadataStore meta.MetadataStore) *cachedRepository {
@@ -343,26 +341,22 @@ func (r *cachedRepository) Close() error {
 // pollForever will continue polling until signal channel is closed or ctx is done.
 func (r *cachedRepository) pollForever(ctx context.Context) {
 	r.pollOnce(ctx)
-	ticker := time.NewTicker(1 * time.Minute)
 	for {
 		select {
-		case <-ticker.C:
-			r.pollOnce(ctx)
-
 		case <-ctx.Done():
 			klog.V(2).Infof("repo %s: exiting repository poller, because context is done: %v", r.id, ctx.Err())
 			return
+		default:
+			r.pollOnce(ctx)
+			time.Sleep(60 * time.Second)
 		}
 	}
 }
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
-	if r.pollInProgress {
-		klog.Infof("repo %s: skipping poll request due to one in progress already", r.id)
-		return
-	}
-	r.pollInProgress = true
-	klog.Infof("repo %s: background-refreshing", r.id)
+	start := time.Now()
+	klog.Infof("repo %s: poll started", r.id)
+	defer func() { klog.Infof("repo %s: poll finished in %f secs", r.id, time.Since(start).Seconds()) }()
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
@@ -376,7 +370,6 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
-	r.pollInProgress = false
 }
 
 func (r *cachedRepository) flush() {
@@ -394,8 +387,8 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// TODO: Avoid simultaneous fetches?
 	// TODO: Push-down partial refresh?
 
-	klog.Infof("repo %s: start refreshAll", r.id)
-	defer klog.Infof("repo %s: finish refreshAll", r.id)
+	start := time.Now()
+	defer func() { klog.Infof("repo %s: refresh finished in %f secs", r.id, time.Since(start).Seconds()) }()
 
 	// Look up all existing PackageRevCRs so we an compare those to the
 	// actual Packagerevisions found in git/oci, and add/prune PackageRevCRs
