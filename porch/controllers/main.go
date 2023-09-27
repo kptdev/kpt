@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
+	"github.com/GoogleContainerTools/kpt/porch/controllers/fleetsyncs/pkg/controllers/fleetsync"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/functiondiscovery"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/klippy/pkg/controllers/klippy"
 	"github.com/GoogleContainerTools/kpt/porch/controllers/packagevariants/pkg/controllers/packagevariant"
@@ -63,6 +64,7 @@ var (
 		"rootsyncdeployments":      rootsyncdeployment.NewRootSyncDeploymentReconciler(),
 		"functiondiscovery":        &functiondiscovery.FunctionReconciler{},
 		"rootsyncrollouts":         rootsyncrollout.NewRootSyncRolloutReconciler(),
+		"fleetsyncs":               fleetsync.NewFleetSyncReconciler(),
 	}
 )
 
