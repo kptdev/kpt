@@ -292,15 +292,36 @@ func (icm *InventoryResourceGroup) ApplyWithPrune(dc dynamic.Interface, mapper m
 	}
 
 	// Update the cluster inventory object.
+	// Since the ResourceGroup CRD specifies the status as a sub-resource, this
+	// will not update the status.
 	appliedObj, err := namespacedClient.Update(context.TODO(), invInfo, metav1.UpdateOptions{})
-
-	// Update status.
-	if statusPolicy == inventory.StatusPolicyAll {
-		invInfo.SetResourceVersion(appliedObj.GetResourceVersion())
-		_, err = namespacedClient.UpdateStatus(context.TODO(), invInfo, metav1.UpdateOptions{})
+	if err != nil {
+		return err
 	}
 
-	return err
+	// Update status, if status policy allows it.
+	// To avoid losing modifications performed by mutating webhooks, copy the
+	// status from the desired state to the latest state after the previous update.
+	// This also ensures that the ResourceVersion matches the latest state, to
+	// avoid the update being rejected by the server.
+	if statusPolicy == inventory.StatusPolicyAll {
+		status, found, err := unstructured.NestedMap(invInfo.UnstructuredContent(), "status")
+		if err != nil {
+			return err
+		}
+		if found {
+			err = unstructured.SetNestedField(appliedObj.UnstructuredContent(), status, "status")
+			if err != nil {
+				return err
+			}
+			_, err = namespacedClient.UpdateStatus(context.TODO(), appliedObj, metav1.UpdateOptions{})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (icm *InventoryResourceGroup) getNamespacedClient(dc dynamic.Interface, mapper meta.RESTMapper) (*unstructured.Unstructured, dynamic.ResourceInterface, error) {
