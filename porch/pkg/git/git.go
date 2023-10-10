@@ -426,7 +426,7 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 		refSpecs.AddRefToDelete(ref)
 
 		// If this revision was proposed for deletion, we need to delete the associated branch.
-		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision, oldGit.commit); err != nil {
+		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision); err != nil {
 			return err
 		}
 
@@ -443,7 +443,7 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 
 		// Remove the proposed for deletion branch. We end up here when users
 		// try to delete the main branch version of a packagerevision.
-		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision, oldGit.commit); err != nil {
+		if err := r.removeDeletionProposedBranchIfExists(ctx, oldGit.path, oldGit.revision); err != nil {
 			return err
 		}
 
@@ -461,10 +461,10 @@ func (r *gitRepository) DeletePackageRevision(ctx context.Context, old repositor
 	return nil
 }
 
-func (r *gitRepository) removeDeletionProposedBranchIfExists(ctx context.Context, path, revision string, commit plumbing.Hash) error {
+func (r *gitRepository) removeDeletionProposedBranchIfExists(ctx context.Context, path, revision string) error {
 	refSpecsForDeletionProposed := newPushRefSpecBuilder()
 	deletionProposedBranch := createDeletionProposedName(path, revision)
-	refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), commit))
+	refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), plumbing.ZeroHash))
 	if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
 		if strings.HasPrefix(err.Error(),
 			fmt.Sprintf("remote ref %s%s required to be", branchPrefixInRemoteRepo, deletionProposedBranch)) &&
