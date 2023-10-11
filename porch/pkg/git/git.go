@@ -466,13 +466,9 @@ func (r *gitRepository) removeDeletionProposedBranchIfExists(ctx context.Context
 	deletionProposedBranch := createDeletionProposedName(path, revision)
 	refSpecsForDeletionProposed.AddRefToDelete(plumbing.NewHashReference(deletionProposedBranch.RefInLocal(), plumbing.ZeroHash))
 	if err := r.pushAndCleanup(ctx, refSpecsForDeletionProposed); err != nil {
-		if strings.HasPrefix(err.Error(),
-			fmt.Sprintf("remote ref %s%s required to be", branchPrefixInRemoteRepo, deletionProposedBranch)) &&
-			strings.HasSuffix(err.Error(), "but is absent") {
-
+		if errors.Is(err, git.NoErrAlreadyUpToDate) {
 			// the deletionProposed branch might not have existed, so we ignore this error
 			klog.Warningf("branch %s does not exist", deletionProposedBranch)
-
 		} else {
 			klog.Errorf("unexpected error while removing deletionProposed branch: %v", err)
 			return err
