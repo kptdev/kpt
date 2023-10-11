@@ -878,7 +878,9 @@ func (cad *cadEngine) deletePackageRevision(ctx context.Context, repo repository
 	}
 	if _, err := cad.metadataStore.Delete(ctx, nn, true); err != nil {
 		// If this fails, the CR will be cleaned up by the background job.
-		klog.Warningf("Error deleting PkgRevMeta %s: %v", nn.String(), err)
+		if !apierrors.IsNotFound(err) {
+			klog.Warningf("Error deleting PkgRevMeta %s: %v", nn.String(), err)
+		}
 	}
 
 	sent := cad.watcherManager.NotifyPackageRevisionChange(watch.Deleted, repoPkgRev, pkgRevMeta)

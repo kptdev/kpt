@@ -499,7 +499,9 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 				r.id, nn.Namespace, nn.Name)
 			metaPackage, err := r.metadataStore.Delete(ctx, nn, true)
 			if err != nil {
-				klog.Warningf("repo %s: error deleting PkgRevMeta %s: %v", r.id, nn, err)
+				if !apierrors.IsNotFound(err) {
+					klog.Warningf("repo %s: error deleting PkgRevMeta %s: %v", r.id, nn, err)
+				}
 				metaPackage = meta.PackageRevisionMeta{
 					Name:      nn.Name,
 					Namespace: nn.Namespace,
