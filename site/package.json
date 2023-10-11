@@ -8,7 +8,7 @@
   "devDependencies": {
     "@babel/plugin-proposal-optional-chaining": "^7.14.2",
     "@gouch/to-title-case": "^2.2.1",
-    "autoprefixer": "^9.7.4",
+    "autoprefixer": "^10.4.16",
     "href-checker": "etefera/href-checker#docsify",
     "jest": "^27.0.4",
     "markdownlint-cli": "^0.32.2",
