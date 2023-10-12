@@ -71,10 +71,14 @@ func (r *watcherManager) WatchPackageRevisions(ctx context.Context, filter repos
 		filter:         filter,
 	}
 
+	active := 0
 	// See if we have an empty slot in the watchers list
 	inserted := false
 	for i, watcher := range r.watchers {
-		if watcher == nil {
+		if watcher != nil {
+			active += 1
+		} else if !inserted {
+			active += 1
 			r.watchers[i] = w
 			inserted = true
 		}
@@ -82,9 +86,11 @@ func (r *watcherManager) WatchPackageRevisions(ctx context.Context, filter repos
 
 	if !inserted {
 		// We didn't slot it in to an existing slot, append it
+		active += 1
 		r.watchers = append(r.watchers, w)
 	}
 
+	klog.Infof("added watcher %p; there are now %d active watchers and %d slots", w, active, len(r.watchers))
 	return nil
 }
 
