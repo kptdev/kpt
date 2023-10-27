@@ -68,7 +68,7 @@ type cachedRepository struct {
 	metadataStore meta.MetadataStore
 }
 
-func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectNotifier objectNotifier, metadataStore meta.MetadataStore) *cachedRepository {
+func newRepository(id string, repoSpec *configapi.Repository, repo repository.Repository, objectNotifier objectNotifier, metadataStore meta.MetadataStore, repoSyncFrequency time.Duration) *cachedRepository {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &cachedRepository{
 		id:             id,
@@ -81,7 +81,7 @@ func newRepository(id string, repoSpec *configapi.Repository, repo repository.Re
 
 	// TODO: Should we fetch the packages here?
 
-	go r.pollForever(ctx)
+	go r.pollForever(ctx, repoSyncFrequency)
 
 	return r
 }
@@ -339,7 +339,7 @@ func (r *cachedRepository) Close() error {
 }
 
 // pollForever will continue polling until signal channel is closed or ctx is done.
-func (r *cachedRepository) pollForever(ctx context.Context) {
+func (r *cachedRepository) pollForever(ctx context.Context, repoSyncFrequency time.Duration) {
 	r.pollOnce(ctx)
 	for {
 		select {
@@ -348,7 +348,7 @@ func (r *cachedRepository) pollForever(ctx context.Context) {
 			return
 		default:
 			r.pollOnce(ctx)
-			time.Sleep(60 * time.Second)
+			time.Sleep(repoSyncFrequency)
 		}
 	}
 }

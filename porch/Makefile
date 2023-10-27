@@ -159,7 +159,8 @@ run-local: porch
 	--standalone-debug-mode \
 	--kubeconfig="$(KUBECONFIG)" \
 	--cache-directory="$(CACHEDIR)" \
-	--function-runner 192.168.8.202:9445
+	--function-runner 192.168.8.202:9445 \
+	--repo-sync-frequency=60s
 
 .PHONY: run-jaeger
 run-jaeger:

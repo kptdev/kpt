@@ -20,6 +20,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -51,6 +52,7 @@ type PorchServerOptions struct {
 	CoreAPIKubeconfigPath    string
 	FunctionRunnerAddress    string
 	DefaultImagePrefix       string
+	RepoSyncFrequency        time.Duration
 
 	SharedInformerFactory informers.SharedInformerFactory
 	StdOut                io.Writer
@@ -182,6 +184,7 @@ func (o *PorchServerOptions) Config() (*apiserver.Config, error) {
 		ExtraConfig: apiserver.ExtraConfig{
 			CoreAPIKubeconfigPath: o.CoreAPIKubeconfigPath,
 			CacheDirectory:        o.CacheDirectory,
+			RepoSyncFrequency:     o.RepoSyncFrequency,
 			FunctionRunnerAddress: o.FunctionRunnerAddress,
 			DefaultImagePrefix:    o.DefaultImagePrefix,
 		},
@@ -229,4 +232,5 @@ func (o *PorchServerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.FunctionRunnerAddress, "function-runner", "", "Address of the function runner gRPC service.")
 	fs.StringVar(&o.DefaultImagePrefix, "default-image-prefix", "gcr.io/kpt-fn/", "Default prefix for unqualified function names")
 	fs.StringVar(&o.CacheDirectory, "cache-directory", "", "Directory where Porch server stores repository and package caches.")
+	fs.DurationVar(&o.RepoSyncFrequency, "repo-sync-frequency", 60*time.Second, "Frequency in seconds at which registered repositories will be synced.")
 }
