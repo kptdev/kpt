@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	api "github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
 	"github.com/GoogleContainerTools/kpt/porch/api/porchconfig/v1alpha1"
@@ -134,7 +135,7 @@ func openRepositoryFromArchive(t *testing.T, ctx context.Context, testPath, name
 	repo, address := git.ServeGitRepository(t, tarfile, tempdir)
 	metadataStore := createMetadataStoreFromArchive(t, "", "")
 
-	cache := NewCache(t.TempDir(), CacheOptions{
+	cache := NewCache(t.TempDir(), 60*time.Second, CacheOptions{
 		MetadataStore:  metadataStore,
 		ObjectNotifier: &fakecache.ObjectNotifier{},
 	})
