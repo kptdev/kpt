@@ -34,6 +34,10 @@ func (r *Repository) Close() error {
 	return nil
 }
 
+func (r *Repository) Version(ctx context.Context) (string, error) {
+	return "foo", nil
+}
+
 func (r *Repository) ListPackageRevisions(_ context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	var revs []repository.PackageRevision
 	for _, rev := range r.PackageRevisions {
