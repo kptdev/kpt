@@ -15,8 +15,10 @@
 package oci
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -65,6 +67,59 @@ var _ repository.FunctionRepository = &ociRepository{}
 
 func (r *ociRepository) Close() error {
 	return nil
+}
+
+// there is probably a more efficient way to do this
+func (r *ociRepository) Version(ctx context.Context) (string, error) {
+	ctx, span := tracer.Start(ctx, "ociRepository::Version")
+	defer span.End()
+
+	if r.content != configapi.RepositoryContentPackage {
+		return "", nil
+	}
+
+	ociRepo, err := name.NewRepository(r.spec.Registry)
+	if err != nil {
+		return "", err
+	}
+
+	options := r.storage.CreateOptions(ctx)
+
+	tags, err := google.List(ociRepo, options...)
+	if err != nil {
+		return "", err
+	}
+
+	klog.Infof("tags: %#v", tags)
+
+	b := bytes.Buffer{}
+	for _, childName := range tags.Children {
+		path := fmt.Sprintf("%s/%s", r.spec.Registry, childName)
+		child, err := name.NewRepository(path, name.StrictValidation)
+		if err != nil {
+			klog.Warningf("Cannot create nested repository %q: %v", path, err)
+			continue
+		}
+
+		childTags, err := google.List(child, options...)
+		if err != nil {
+			klog.Warningf("Cannot list nested repository %q: %v", path, err)
+			continue
+		}
+
+		// klog.Infof("childTags: %#v", childTags)
+
+		for digest, m := range childTags.Manifests {
+			b.WriteString(digest)
+			mb, err := m.MarshalJSON()
+			if err != nil {
+				return "", err
+			}
+			b.Write(mb)
+		}
+	}
+	hash := sha256.Sum256(b.Bytes())
+	return hex.EncodeToString(hash[:]), nil
 }
 
 func (r *ociRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {

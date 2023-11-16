@@ -15,7 +15,10 @@
 package git
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -184,6 +187,33 @@ func (r *gitRepository) Close() error {
 		return fmt.Errorf("error cleaning up local git cache for repo %s: %v", r.name, err)
 	}
 	return nil
+}
+
+func (r *gitRepository) Version(ctx context.Context) (string, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::Version", trace.WithAttributes())
+	defer span.End()
+
+	if err := r.fetchRemoteRepository(ctx); err != nil {
+		return "", err
+	}
+
+	refs, err := r.repo.References()
+	if err != nil {
+		return "", err
+	}
+
+	b := bytes.Buffer{}
+	for {
+		ref, err := refs.Next()
+		if err == io.EOF {
+			break
+		}
+
+		b.WriteString(ref.String())
+	}
+
+	hash := sha256.Sum256(b.Bytes())
+	return hex.EncodeToString(hash[:]), nil
 }
 
 func (r *gitRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
@@ -629,6 +659,9 @@ func (r *gitRepository) discoverFinalizedPackages(ctx context.Context, ref *plum
 
 // loadDraft will load the draft package.  If the package isn't found (we now require a Kptfile), it will return (nil, nil)
 func (r *gitRepository) loadDraft(ctx context.Context, ref *plumbing.Reference) (*gitPackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::loadDraft", trace.WithAttributes())
+	defer span.End()
+
 	name, workspaceName, err := parseDraftName(ref)
 	if err != nil {
 		return nil, err
@@ -719,6 +752,9 @@ func parseDraftName(draft *plumbing.Reference) (name string, workspaceName v1alp
 }
 
 func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]*gitPackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::loadTaggedPackages", trace.WithAttributes())
+	defer span.End()
+
 	name, ok := getTagNameInLocalRepo(tag.Name())
 	if !ok {
 		return nil, fmt.Errorf("invalid tag ref: %q", tag)
