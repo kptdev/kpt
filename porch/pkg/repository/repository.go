@@ -206,6 +206,9 @@ type Repository interface {
 	// DeletePackage deletes a package
 	DeletePackage(ctx context.Context, old Package) error
 
+	// Version returns a string that is guaranteed to be different if any change has been made to the repo contents
+	Version(ctx context.Context) (string, error)
+
 	// Close cleans up any resources associated with the repository
 	Close() error
 }
