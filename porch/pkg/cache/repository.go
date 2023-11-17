@@ -52,6 +52,8 @@ type cachedRepository struct {
 	repo     repository.Repository
 	cancel   context.CancelFunc
 
+	lastVersion string
+
 	mutex                  sync.Mutex
 	cachedPackageRevisions map[repository.PackageRevisionKey]*cachedPackageRevision
 	cachedPackages         map[repository.PackageKey]*cachedPackage
@@ -84,6 +86,10 @@ func newRepository(id string, repoSpec *configapi.Repository, repo repository.Re
 	go r.pollForever(ctx, repoSyncFrequency)
 
 	return r
+}
+
+func (r *cachedRepository) Version(ctx context.Context) (string, error) {
+	return r.repo.Version(ctx)
 }
 
 func (r *cachedRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
@@ -390,6 +396,15 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	start := time.Now()
 	defer func() { klog.Infof("repo %s: refresh finished in %f secs", r.id, time.Since(start).Seconds()) }()
 
+	curVer, err := r.Version(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if curVer == r.lastVersion {
+		return r.cachedPackages, r.cachedPackageRevisions, nil
+	}
+
 	// Look up all existing PackageRevCRs so we an compare those to the
 	// actual Packagerevisions found in git/oci, and add/prune PackageRevCRs
 	// as necessary.
@@ -538,6 +553,7 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 
 	r.cachedPackageRevisions = newPackageRevisionMap
 	r.cachedPackages = newPackageMap
+	r.lastVersion = curVer
 
 	return newPackageMap, newPackageRevisionMap, nil
 }
