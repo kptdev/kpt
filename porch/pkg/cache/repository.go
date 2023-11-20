@@ -379,6 +379,17 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 	// TODO: Avoid simultaneous fetches?
 	// TODO: Push-down partial refresh?
 
+	// if this is not a package repo, just set the cache to "loaded" and return
+	if r.repoSpec.Spec.Content != configapi.RepositoryContentPackage {
+		r.mutex.Lock()
+		defer r.mutex.Unlock()
+		if r.cachedPackageRevisions != nil {
+			return nil
+		}
+		r.cachedPackageRevisions = make(map[repository.PackageRevisionKey]*cachedPackageRevision)
+		return nil
+	}
+
 	start := time.Now()
 	defer func() { klog.Infof("repo %s: refresh finished in %f secs", r.id, time.Since(start).Seconds()) }()
 
@@ -427,7 +438,7 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 	for _, newPackage := range newPackageRevisions {
 		kname := newPackage.KubeObjectName()
 		if newPackageRevisionNames[kname] != nil {
-			klog.Warningf("repo %s: found duplicate packages with name %v", kname)
+			klog.Warningf("repo %s: found duplicate packages with name %v", r.id, kname)
 		}
 
 		pkgRev := &cachedPackageRevision{
