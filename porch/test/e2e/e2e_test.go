@@ -2568,7 +2568,8 @@ func (t *PorchSuite) mustNotExist(ctx context.Context, obj client.Object) {
 // provided name and namespace is ready, i.e. the Ready condition is true.
 // It also queries for Functions and PackageRevisions, to ensure these are also
 // ready - this is an artifact of the way we've implemented the aggregated apiserver,
-// where the first fetch can sometimes be synchronous.
+// where the first fetch will block on the cache loading. Wait up to two minutes for the
+// package revisions and functions.
 func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespace string) {
 	nn := types.NamespacedName{
 		Name:      name,
@@ -2593,7 +2594,7 @@ func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespa
 	}
 
 	// While we're using an aggregated apiserver, make sure we can query the generated objects
-	if err := wait.PollImmediateWithContext(ctx, time.Second, 10*time.Second, func(ctx context.Context) (bool, error) {
+	if err := wait.PollImmediateWithContext(ctx, time.Second, 120*time.Second, func(ctx context.Context) (bool, error) {
 		var revisions porchapi.PackageRevisionList
 		if err := t.client.List(ctx, &revisions, client.InNamespace(nn.Namespace)); err != nil {
 			innerErr = err
@@ -2605,7 +2606,7 @@ func (t *PorchSuite) waitUntilRepositoryReady(ctx context.Context, name, namespa
 	}
 
 	// Check for functions also (until we move them to CRDs)
-	if err := wait.PollImmediateWithContext(ctx, time.Second, 10*time.Second, func(ctx context.Context) (bool, error) {
+	if err := wait.PollImmediateWithContext(ctx, time.Second, 120*time.Second, func(ctx context.Context) (bool, error) {
 		var functions porchapi.FunctionList
 		if err := t.client.List(ctx, &functions, client.InNamespace(nn.Namespace)); err != nil {
 			innerErr = err
