@@ -65,6 +65,18 @@ func (r *watcherManager) WatchPackageRevisions(ctx context.Context, filter repos
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	// reap any dead watchers
+	for i, watcher := range r.watchers {
+		if watcher == nil {
+			continue
+		}
+		if err := watcher.isDoneFunction(); err != nil {
+			klog.Infof("stopping watcher in reaper: %v", err)
+			r.watchers[i] = nil
+			continue
+		}
+	}
+
 	w := &watcher{
 		isDoneFunction: ctx.Err,
 		callback:       callback,
