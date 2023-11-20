@@ -54,16 +54,25 @@ type cachedRepository struct {
 
 	lastVersion string
 
-	mutex                  sync.Mutex
+	// We use separate mutexes for cache map changes and for the overall
+	// reconcile process. We want update, delete, and reconcile
+	// to all block on the reconcileMutex, which could be held for a long time
+	// during reconcile. For much of that time (during reconcile) we do NOT
+	// want to block reads. There are a few protected areas where we touch map
+	// entries where we need to block reads, so those will also grab the general
+	// mutex.
+	//
+	// Any code that needs to hold both locks MUST get the reconcileMutex first,
+	// or we could end up with deadlocks
+	mutex                  sync.RWMutex
+	reconcileMutex         sync.Mutex
 	cachedPackageRevisions map[repository.PackageRevisionKey]*cachedPackageRevision
-	cachedPackages         map[repository.PackageKey]*cachedPackage
 
 	// TODO: Currently we support repositories with homogenous content (only packages xor functions). Model this more optimally?
 	cachedFunctions []repository.Function
 	// Error encountered on repository refresh by the refresh goroutine.
 	// This is returned back by the cache to the background goroutine when it calls periodicall to resync repositories.
 	refreshRevisionsError error
-	refreshPkgsError      error
 
 	objectNotifier objectNotifier
 
@@ -93,7 +102,7 @@ func (r *cachedRepository) Version(ctx context.Context) (string, error) {
 }
 
 func (r *cachedRepository) ListPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
-	packages, err := r.getPackageRevisions(ctx, filter, false)
+	packages, err := r.getPackageRevisions(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -109,21 +118,8 @@ func (r *cachedRepository) ListFunctions(ctx context.Context) ([]repository.Func
 	return functions, nil
 }
 
-func (r *cachedRepository) getRefreshError() error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	// TODO: This should also check r.refreshPkgsError when
-	//   the package resource is fully supported.
-
-	return r.refreshRevisionsError
-}
-
-func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter, forceRefresh bool) ([]repository.PackageRevision, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	_, packageRevisions, err := r.getCachedPackages(ctx, forceRefresh)
+func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
+	packageRevisions, err := r.getCachedPackageRevisions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -131,44 +127,40 @@ func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repos
 	return toPackageRevisionSlice(packageRevisions, filter), nil
 }
 
-func (r *cachedRepository) getPackages(ctx context.Context, filter repository.ListPackageFilter, forceRefresh bool) ([]repository.Package, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	packages, _, err := r.getCachedPackages(ctx, forceRefresh)
+// getCachedPackageRevisions returns the cache contents, blocking until
+// the cache is loaded
+// caller must NOT hold the lock
+// returned *map* is a copy and can be operated on without locks
+// map entries are NOT copies and should not be modified
+func (r *cachedRepository) getCachedPackageRevisions(ctx context.Context) (map[repository.PackageRevisionKey]*cachedPackageRevision, error) {
+	err := r.blockUntilLoaded(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return toPackageSlice(packages, filter), nil
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	packageRevisions := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(r.cachedPackageRevisions))
+	for k, v := range r.cachedPackageRevisions {
+		packageRevisions[k] = v
+	}
+
+	return packageRevisions, r.refreshRevisionsError
 }
 
-// getCachedPackages returns cachedPackages; fetching it if not cached or if forceRefresh.
-// mutex must be held.
-func (r *cachedRepository) getCachedPackages(ctx context.Context, forceRefresh bool) (map[repository.PackageKey]*cachedPackage, map[repository.PackageRevisionKey]*cachedPackageRevision, error) {
-	// must hold mutex
-	packages := r.cachedPackages
-	packageRevisions := r.cachedPackageRevisions
-	err := r.refreshRevisionsError
-
-	if forceRefresh {
-		packages = nil
-		packageRevisions = nil
-
-		if gitRepo, isGitRepo := r.repo.(git.GitRepository); isGitRepo {
-			// TODO: Figure out a way to do this without the cache layer
-			//  needing to know what type of repo we are working with.
-			if err := gitRepo.UpdateDeletionProposedCache(); err != nil {
-				return nil, nil, err
-			}
+// blocks waiting until the cache is loaded
+func (r *cachedRepository) blockUntilLoaded(ctx context.Context) error {
+	for r.cachedPackageRevisions == nil {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("repo %s: stopped waiting for load because context is done: %v", r.id, ctx.Err())
+		default:
+			time.Sleep(1 * time.Second)
 		}
 	}
 
-	if packages == nil {
-		packages, packageRevisions, err = r.refreshAllCachedPackages(ctx)
-	}
-
-	return packages, packageRevisions, err
+	return nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -227,15 +219,18 @@ func (r *cachedRepository) UpdatePackageRevision(ctx context.Context, old reposi
 }
 
 func (r *cachedRepository) update(ctx context.Context, updated repository.PackageRevision) (*cachedPackageRevision, error) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	// TODO: Technically we only need this package, not all packages
-	if _, _, err := r.getCachedPackages(ctx, false); err != nil {
-		klog.Warningf("failed to get cached packages: %v", err)
-		// TODO: Invalidate all watches? We're dropping an add/update event
+	err := r.blockUntilLoaded(ctx)
+	if err != nil {
 		return nil, err
 	}
+
+	// we need the reconcileMutex, get it first
+	r.reconcileMutex.Lock()
+	defer r.reconcileMutex.Unlock()
+
+	// we will also need the cache lock
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	k := updated.Key()
 	// previous := r.cachedPackageRevisions[k]
@@ -258,11 +253,14 @@ func (r *cachedRepository) update(ctx context.Context, updated repository.Packag
 	// TODO: Just updated package?
 	identifyLatestRevisions(r.cachedPackageRevisions)
 
-	// TODO: Update the latest revisions for the r.cachedPackages
 	return cached, nil
 }
 
 func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old repository.PackageRevision) error {
+	// get the reconcile lock first, before touching the underlying repo
+	r.reconcileMutex.Lock()
+	defer r.reconcileMutex.Unlock()
+
 	// Unwrap
 	unwrapped := old.(*cachedPackageRevision).PackageRevision
 	if err := r.repo.DeletePackageRevision(ctx, unwrapped); err != nil {
@@ -270,46 +268,29 @@ func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old reposi
 	}
 
 	r.mutex.Lock()
-	if r.cachedPackages != nil {
+	if r.cachedPackageRevisions != nil {
 		k := old.Key()
-		// previous := r.cachedPackages[k]
 		delete(r.cachedPackageRevisions, k)
 
 		// Recompute latest package revisions.
 		// TODO: Only for affected object / key?
 		identifyLatestRevisions(r.cachedPackageRevisions)
 	}
-
 	r.mutex.Unlock()
 
 	return nil
 }
 
 func (r *cachedRepository) ListPackages(ctx context.Context, filter repository.ListPackageFilter) ([]repository.Package, error) {
-	packages, err := r.getPackages(ctx, filter, false)
-	if err != nil {
-		return nil, err
-	}
-
-	return packages, nil
+	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *cachedRepository) CreatePackage(ctx context.Context, obj *v1alpha1.Package) (repository.Package, error) {
-	klog.Infoln("cachedRepository::CreatePackage")
-	return r.repo.CreatePackage(ctx, obj)
+	return nil, fmt.Errorf("not implemented")
 }
 
 func (r *cachedRepository) DeletePackage(ctx context.Context, old repository.Package) error {
-	// Unwrap
-	unwrapped := old.(*cachedPackage).Package
-	if err := r.repo.DeletePackage(ctx, unwrapped); err != nil {
-		return err
-	}
-
-	// TODO: Do something more efficient than a full cache flush
-	r.flush()
-
-	return nil
+	return fmt.Errorf("not implemented")
 }
 
 func (r *cachedRepository) Close() error {
@@ -366,30 +347,18 @@ func (r *cachedRepository) pollOnce(ctx context.Context) {
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
-	if _, err := r.getPackageRevisions(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
+	if err := r.reconcileCache(ctx); err != nil {
 		klog.Warningf("error polling repo packages %s: %v", r.id, err)
 	}
-	// TODO: Uncomment when package resources are fully supported
-	//if _, err := r.getPackages(ctx, repository.ListPackageRevisionFilter{}, true); err != nil {
-	//	klog.Warningf("error polling repo packages %s: %v", r.id, err)
-	//}
 	if _, err := r.getFunctions(ctx, true); err != nil {
 		klog.Warningf("error polling repo functions %s: %v", r.id, err)
 	}
 }
 
-func (r *cachedRepository) flush() {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-
-	r.cachedPackageRevisions = nil
-	r.cachedPackages = nil
-}
-
-// refreshAllCachedPackages updates the cached map for this repository with all the newPackages,
-// it also triggers notifications for all package changes.
-// mutex must be held.
-func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[repository.PackageKey]*cachedPackage, map[repository.PackageRevisionKey]*cachedPackageRevision, error) {
+// reconcileCache updates the cached map for this repository
+// it also triggers notifications for all package changes
+// caller must NOT hold any locks
+func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 	// TODO: Avoid simultaneous fetches?
 	// TODO: Push-down partial refresh?
 
@@ -398,11 +367,23 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 
 	curVer, err := r.Version(ctx)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 
 	if curVer == r.lastVersion {
-		return r.cachedPackages, r.cachedPackageRevisions, nil
+		return nil
+	}
+
+	// get the reconcile lock first, to block any repo-level mutations
+	r.reconcileMutex.Lock()
+	defer r.reconcileMutex.Unlock()
+
+	if gitRepo, isGitRepo := r.repo.(git.GitRepository); isGitRepo {
+		// TODO: Figure out a way to do this without the cache layer
+		//  needing to know what type of repo we are working with.
+		if err := gitRepo.UpdateDeletionProposedCache(); err != nil {
+			return err
+		}
 	}
 
 	// Look up all existing PackageRevCRs so we an compare those to the
@@ -410,7 +391,7 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	// as necessary.
 	existingPkgRevCRs, err := r.metadataStore.List(ctx, r.repoSpec)
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
 	// Create a map so we can quickly check if a specific PackageRevisionMeta exists.
 	existingPkgRevCRsMap := make(map[string]meta.PackageRevisionMeta)
@@ -419,10 +400,9 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		existingPkgRevCRsMap[pr.Name] = pr
 	}
 
-	// TODO: Can we avoid holding the lock for the ListPackageRevisions / identifyLatestRevisions section?
 	newPackageRevisions, err := r.repo.ListPackageRevisions(ctx, repository.ListPackageRevisionFilter{})
 	if err != nil {
-		return nil, nil, fmt.Errorf("error listing packages: %w", err)
+		return fmt.Errorf("error listing packages: %w", err)
 	}
 
 	// Build mapping from kubeObjectName to PackageRevisions for new PackageRevisions.
@@ -441,10 +421,13 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 	}
 
 	// Build mapping from kubeObjectName to PackageRevisions for existing PackageRevisions
+	// Grab the RLock while we create this map
+	r.mutex.RLock()
 	oldPackageRevisionNames := make(map[string]*cachedPackageRevision, len(r.cachedPackageRevisions))
 	for _, oldPackage := range r.cachedPackageRevisions {
 		oldPackageRevisionNames[oldPackage.KubeObjectName()] = oldPackage
 	}
+	r.mutex.RUnlock()
 
 	// We go through all PackageRev CRs that represents PackageRevisions
 	// in the current repo and make sure they all have a corresponding
@@ -483,6 +466,25 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 			}
 		}
 	}
+
+	// fix up the isLatestRevision in the new maps
+	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
+	for _, newPackage := range newPackageRevisions {
+		k := newPackage.Key()
+		pkgRev := &cachedPackageRevision{
+			PackageRevision:  newPackage,
+			isLatestRevision: false,
+		}
+		newPackageRevisionMap[k] = pkgRev
+	}
+
+	identifyLatestRevisions(newPackageRevisionMap)
+
+	// hold the RW lock while swap in the new packages
+	r.mutex.Lock()
+	r.cachedPackageRevisions = newPackageRevisionMap
+	r.lastVersion = curVer
+	r.mutex.Unlock()
 
 	// Send notification for packages that changed.
 	addSent := 0
@@ -526,34 +528,5 @@ func (r *cachedRepository) refreshAllCachedPackages(ctx context.Context) (map[re
 		}
 	}
 	klog.Infof("repo %s: addSent %d, modSent %d, delSent for %d old and %d new repo packages", r.id, addSent, modSent, len(oldPackageRevisionNames), len(newPackageRevisionNames))
-
-	newPackageRevisionMap := make(map[repository.PackageRevisionKey]*cachedPackageRevision, len(newPackageRevisions))
-	for _, newPackage := range newPackageRevisions {
-		k := newPackage.Key()
-		pkgRev := &cachedPackageRevision{
-			PackageRevision:  newPackage,
-			isLatestRevision: false,
-		}
-		newPackageRevisionMap[k] = pkgRev
-	}
-
-	identifyLatestRevisions(newPackageRevisionMap)
-
-	newPackageMap := make(map[repository.PackageKey]*cachedPackage)
-
-	for _, newPackageRevision := range newPackageRevisionMap {
-		if !newPackageRevision.isLatestRevision {
-			continue
-		}
-		// TODO: Build package?
-		// newPackage := &cachedPackage{
-		// }
-		// newPackageMap[newPackage.Key()] = newPackage
-	}
-
-	r.cachedPackageRevisions = newPackageRevisionMap
-	r.cachedPackages = newPackageMap
-	r.lastVersion = curVer
-
-	return newPackageMap, newPackageRevisionMap, nil
+	return nil
 }
