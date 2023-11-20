@@ -118,6 +118,13 @@ func (r *cachedRepository) ListFunctions(ctx context.Context) ([]repository.Func
 	return functions, nil
 }
 
+func (r *cachedRepository) getRefreshError() error {
+	r.mutex.RLock()
+	defer r.mutex.RUnlock()
+
+	return r.refreshRevisionsError
+}
+
 func (r *cachedRepository) getPackageRevisions(ctx context.Context, filter repository.ListPackageRevisionFilter) ([]repository.PackageRevision, error) {
 	packageRevisions, err := r.getCachedPackageRevisions(ctx)
 	if err != nil {
