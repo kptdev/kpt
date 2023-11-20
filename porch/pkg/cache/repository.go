@@ -151,16 +151,20 @@ func (r *cachedRepository) getCachedPackageRevisions(ctx context.Context) (map[r
 
 // blocks waiting until the cache is loaded
 func (r *cachedRepository) blockUntilLoaded(ctx context.Context) error {
-	for r.cachedPackageRevisions == nil {
+	for {
 		select {
 		case <-ctx.Done():
 			return fmt.Errorf("repo %s: stopped waiting for load because context is done: %v", r.id, ctx.Err())
 		default:
+			r.mutex.RLock()
+			if r.cachedPackageRevisions != nil {
+				r.mutex.RUnlock()
+				return nil
+			}
+			r.mutex.RUnlock()
 			time.Sleep(1 * time.Second)
 		}
 	}
-
-	return nil
 }
 
 func (r *cachedRepository) getFunctions(ctx context.Context, force bool) ([]repository.Function, error) {
@@ -295,6 +299,12 @@ func (r *cachedRepository) DeletePackage(ctx context.Context, old repository.Pac
 
 func (r *cachedRepository) Close() error {
 	r.cancel()
+
+	r.reconcileMutex.Lock()
+	defer r.reconcileMutex.Unlock()
+
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	// Make sure that watch events are sent for packagerevisions that are
 	// removed as part of closing the repository.
@@ -481,6 +491,8 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 	identifyLatestRevisions(newPackageRevisionMap)
 
 	// hold the RW lock while swap in the new packages
+	// we do this now, *before* sending notifications, so that
+	// anyone responding to the notification will get the new values
 	r.mutex.Lock()
 	r.cachedPackageRevisions = newPackageRevisionMap
 	r.lastVersion = curVer
