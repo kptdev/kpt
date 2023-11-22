@@ -48,6 +48,37 @@ func (n PackageKey) String() string {
 	return fmt.Sprintf("Repository: %q, Package: %q", n.Repository, n.Package)
 }
 
+// CachedIdentier is a used by a cache and underlying storage
+// implementation to avoid unnecessary reloads
+type CachedIdentifier struct {
+	// Key uniquely identifies the resource in the underlying storage
+	Key string
+
+	// Version uniquely identifies the version of the resource in the underlying storage
+	Version string
+}
+
+type PackageRevisionCacheEntry struct {
+	Version         string
+	PackageRevision PackageRevision
+}
+
+type PackageRevisionCache map[string]PackageRevisionCacheEntry
+
+type packageCacheKey struct{}
+
+func ContextWithPackageRevisionCache(ctx context.Context, cache PackageRevisionCache) context.Context {
+	return context.WithValue(ctx, packageCacheKey{}, cache)
+}
+
+func PackageRevisionCacheFromContext(ctx context.Context) PackageRevisionCache {
+	cache, ok := ctx.Value(packageCacheKey{}).(PackageRevisionCache)
+	if !ok {
+		cache = make(PackageRevisionCache)
+	}
+	return cache
+}
+
 // PackageRevision is an abstract package version.
 // We have a single object for both Revision and Resources, because conceptually they are one object.
 // The best way we've found (so far) to represent them in k8s is as two resources, but they map to the same object.
@@ -66,6 +97,9 @@ type PackageRevision interface {
 
 	// Key returns the "primary key" of the package.
 	Key() PackageRevisionKey
+
+	// CachedIdentier returns a unique identifer for this package revision and version
+	CachedIdentifier() CachedIdentifier
 
 	// Lifecycle returns the current lifecycle state of the package.
 	Lifecycle() v1alpha1.PackageRevisionLifecycle

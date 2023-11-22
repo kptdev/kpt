@@ -402,6 +402,10 @@ type ociPackageRevision struct {
 	lifecycle v1alpha1.PackageRevisionLifecycle
 }
 
+func (p *ociPackageRevision) CachedIdentifier() repository.CachedIdentifier {
+	return repository.CachedIdentifier{Key: p.packageName + ":" + string(p.workspaceName), Version: p.resourceVersion}
+}
+
 var _ repository.PackageRevision = &ociPackageRevision{}
 
 func (p *ociPackageRevision) GetResources(ctx context.Context) (*v1alpha1.PackageRevisionResources, error) {
