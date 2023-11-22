@@ -34,7 +34,7 @@ func (cd *cachedDraft) Close(ctx context.Context) (repository.PackageRevision, e
 		return nil, err
 	}
 
-	err = cd.cache.reconcileCache(ctx)
+	err = cd.cache.reconcileCache(ctx, "close-draft")
 	if err != nil {
 		return nil, err
 	}

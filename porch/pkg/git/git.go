@@ -393,7 +393,7 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 		}
 	}
 
-	klog.Infof("git-repo-list: %d draftCache, %d draftLoaded, %d tagCache, %d tagLoaded, %d mainCache, %d mainLoaded",
+	klog.Infof("repo %s/%s: %d draftCache, %d draftLoaded, %d tagCache, %d tagLoaded, %d mainCache, %d mainLoaded", r.namespace, r.name,
 		draftCache, draftLoaded, tagCache, tagLoaded, mainCache, mainLoaded)
 	return result, nil
 }
@@ -1133,8 +1133,6 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 		return err
 	}
 
-	klog.Infof("pushing refs: %v", specs)
-
 	if err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
 		return r.repo.Push(&git.PushOptions{
 			RemoteName:        OriginName,
@@ -1753,9 +1751,6 @@ func (r *gitRepository) discoverPackagesInTree(commit *object.Commit, opt Discov
 		return nil, err
 	}
 
-	if opt.FilterPrefix == "" {
-		klog.Infof("discovered %d packages @%v", len(t.packages), commit.Hash)
-	}
 	return t, nil
 }
 

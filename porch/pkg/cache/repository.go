@@ -102,6 +102,10 @@ func newRepository(id string, repoSpec *configapi.Repository, repo repository.Re
 	return r
 }
 
+func (r *cachedRepository) nn() string {
+	return r.repoSpec.Namespace + "/" + r.repoSpec.Name
+}
+
 func (r *cachedRepository) Version(ctx context.Context) (string, error) {
 	return r.repo.Version(ctx)
 }
@@ -174,7 +178,7 @@ func (r *cachedRepository) blockUntilLoaded(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("repo %s: stopped waiting for load because context is done: %v", r.id, ctx.Err())
+			return fmt.Errorf("repo %s: stopped waiting for load because context is done: %v", r.nn(), ctx.Err())
 		default:
 			r.mutex.RLock()
 			if r.cachedPackageRevisions != nil {
@@ -223,8 +227,8 @@ func (r *cachedRepository) CreatePackageRevision(ctx context.Context, obj *v1alp
 	}
 
 	// reconciliation is faster now, so force it immediately
-	if err := r.reconcileCache(ctx); err != nil {
-		klog.Warningf("error reconciling cache after creating %v in %s: %v", created, r.id, err)
+	if err := r.reconcileCache(ctx, "create"); err != nil {
+		klog.Warningf("error reconciling cache after creating %v in %s: %v", created, r.nn(), err)
 	}
 
 	return &cachedDraft{
@@ -242,8 +246,8 @@ func (r *cachedRepository) UpdatePackageRevision(ctx context.Context, old reposi
 	}
 
 	// reconciliation is faster now, so force it immediately
-	if err := r.reconcileCache(ctx); err != nil {
-		klog.Warningf("error reconciling cache after updating %v in %s: %v", unwrapped.Key(), r.id, err)
+	if err := r.reconcileCache(ctx, "update"); err != nil {
+		klog.Warningf("error reconciling cache after updating %v in %s: %v", unwrapped.Key(), r.nn(), err)
 	}
 
 	return &cachedDraft{
@@ -260,8 +264,8 @@ func (r *cachedRepository) DeletePackageRevision(ctx context.Context, old reposi
 	}
 
 	// reconciliation is faster now, so force it immediately
-	if err := r.reconcileCache(ctx); err != nil {
-		klog.Warningf("error reconciling cache after deleting %v in %s: %v", unwrapped.Key(), r.id, err)
+	if err := r.reconcileCache(ctx, "delete"); err != nil {
+		klog.Warningf("error reconciling cache after deleting %v in %s: %v", unwrapped.Key(), r.nn(), err)
 	}
 
 	return nil
@@ -299,7 +303,7 @@ func (r *cachedRepository) Close() error {
 		// There isn't really any correct way to handle finalizers here. We are removing
 		// the repository, so we have to just delete the PackageRevision regardless of any
 		// finalizers.
-		klog.Infof("repo %s: deleting packagerev %s/%s because repository is closed", r.id, nn.Namespace, nn.Name)
+		klog.Infof("repo %s: deleting packagerev %s/%s because repository is closed", r.nn(), nn.Namespace, nn.Name)
 		pkgRevMeta, err := r.metadataStore.Delete(context.TODO(), nn, true)
 		if err != nil {
 			// There isn't much use in returning an error here, so we just log it
@@ -313,7 +317,7 @@ func (r *cachedRepository) Close() error {
 		}
 		sent += r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, pr, pkgRevMeta)
 	}
-	klog.Infof("repo %s: sent %d notifications for %d package revisions during close", r.id, sent, len(r.cachedPackageRevisions))
+	klog.Infof("repo %s: sent %d notifications for %d package revisions during close", r.nn(), sent, len(r.cachedPackageRevisions))
 	return r.repo.Close()
 }
 
@@ -323,7 +327,7 @@ func (r *cachedRepository) pollForever(ctx context.Context, repoSyncFrequency ti
 	for {
 		select {
 		case <-ctx.Done():
-			klog.V(2).Infof("repo %s: exiting repository poller, because context is done: %v", r.id, ctx.Err())
+			klog.V(2).Infof("repo %s: exiting repository poller, because context is done: %v", r.nn(), ctx.Err())
 			return
 		default:
 			r.pollOnce(ctx)
@@ -333,24 +337,21 @@ func (r *cachedRepository) pollForever(ctx context.Context, repoSyncFrequency ti
 }
 
 func (r *cachedRepository) pollOnce(ctx context.Context) {
-	start := time.Now()
-	klog.Infof("repo %s: poll started", r.id)
-	defer func() { klog.Infof("repo %s: poll finished in %f secs", r.id, time.Since(start).Seconds()) }()
 	ctx, span := tracer.Start(ctx, "Repository::pollOnce", trace.WithAttributes())
 	defer span.End()
 
-	if err := r.reconcileCache(ctx); err != nil {
-		klog.Warningf("error polling repo packages %s: %v", r.id, err)
+	if err := r.reconcileCache(ctx, "poll"); err != nil {
+		klog.Warningf("error polling repo packages %s: %v", r.nn(), err)
 	}
 	if _, err := r.getFunctions(ctx, true); err != nil {
-		klog.Warningf("error polling repo functions %s: %v", r.id, err)
+		klog.Warningf("error polling repo functions %s: %v", r.nn(), err)
 	}
 }
 
 // reconcileCache updates the cached map for this repository
 // it also triggers notifications for all package changes
 // caller must NOT hold any locks
-func (r *cachedRepository) reconcileCache(ctx context.Context) error {
+func (r *cachedRepository) reconcileCache(ctx context.Context, reason string) error {
 	// if this is not a package repo, just set the cache to "loaded" and return
 	if r.repoSpec.Spec.Content != configapi.RepositoryContentPackage {
 		r.mutex.Lock()
@@ -363,7 +364,9 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 	}
 
 	start := time.Now()
-	defer func() { klog.Infof("repo %s: refresh finished in %f secs", r.id, time.Since(start).Seconds()) }()
+	defer func() {
+		klog.Infof("repo %s: reconcile for %s finished in %f secs", r.nn(), reason, time.Since(start).Seconds())
+	}()
 
 	curVer, err := r.Version(ctx)
 	if err != nil {
@@ -417,7 +420,7 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 
 		kname := newPackage.KubeObjectName()
 		if newPackageRevisionNames[kname] != nil {
-			klog.Warningf("repo %s: found duplicate packages with name %v", r.id, kname)
+			klog.Warningf("repo %s: found duplicate packages with name %v", r.nn(), kname)
 		}
 
 		pkgRev := &cachedPackageRevision{
@@ -452,7 +455,7 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 				if !apierrors.IsNotFound(err) {
 					// This will be retried the next time the sync runs.
 					klog.Warningf("repo %s: unable to delete PackageRev CR for %s/%s: %w",
-						r.id, prm.Name, prm.Namespace, err)
+						r.nn(), prm.Name, prm.Namespace, err)
 				}
 			}
 		}
@@ -532,6 +535,6 @@ func (r *cachedRepository) reconcileCache(ctx context.Context) error {
 			delSent += r.objectNotifier.NotifyPackageRevisionChange(watch.Deleted, oldPackage, metaPackage)
 		}
 	}
-	klog.Infof("repo %s: addMeta %d, delMeta %d, addSent %d, modSent %d, delSent %d for %d in-cache and %d in-storage package revisions", r.id, addMeta, delMeta, addSent, modSent, delSent, len(oldPackageRevisionNames), len(newPackageRevisionNames))
+	klog.Infof("repo %s: addMeta %d, delMeta %d, addSent %d, modSent %d, delSent %d for %d in-cache and %d in-storage package revisions", r.nn(), addMeta, delMeta, addSent, modSent, delSent, len(oldPackageRevisionNames), len(newPackageRevisionNames))
 	return nil
 }
