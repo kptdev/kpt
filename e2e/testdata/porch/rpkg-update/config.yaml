@@ -61,6 +61,7 @@ commands:
     stdout: |
       NAME                                           PACKAGE             WORKSPACENAME   REVISION   LATEST   LIFECYCLE   REPOSITORY
       git-3f036055f7ba68706372cbe0c4b14d553794f7c4   basens-edit         update-1                   false    Draft       git
+      git-804ab1a9d043e44255ef3fb77820d5ad7b1576a9   basens-edit         update-3        main       false    Published   git
       git-7fcdd499f0790ac3bd8f805e3e5e00825641eb60   basens-edit         update-3        v1         true     Published   git
       git-7ab0219ace10c1081a8b40a6b97d5da58bdb62e0   basens-edit-clone   update-2                   false    Draft       git
   - args:
@@ -82,6 +83,7 @@ commands:
     stdout: |
       PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
       git-3f036055f7ba68706372cbe0c4b14d553794f7c4                         No update available
+      git-804ab1a9d043e44255ef3fb77820d5ad7b1576a9                         No update available
       git-7fcdd499f0790ac3bd8f805e3e5e00825641eb60                         No update available
       git-7ab0219ace10c1081a8b40a6b97d5da58bdb62e0   git                   v1
   - args:
@@ -110,6 +112,7 @@ commands:
     stdout: |
       PACKAGE REVISION                               UPSTREAM REPOSITORY   UPSTREAM UPDATES
       git-3f036055f7ba68706372cbe0c4b14d553794f7c4                         No update available
+      git-804ab1a9d043e44255ef3fb77820d5ad7b1576a9                         No update available
       git-7fcdd499f0790ac3bd8f805e3e5e00825641eb60                         No update available
       git-7ab0219ace10c1081a8b40a6b97d5da58bdb62e0   git                   No update available
   - args:
