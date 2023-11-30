@@ -119,7 +119,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 		if !isPackageContent(repositorySpec.Spec.Content) {
 			return nil, fmt.Errorf("git repository supports Package content only; got %q", string(repositorySpec.Spec.Content))
 		}
-		key := "git://" + gitSpec.Repo
+		key := "git://" + gitSpec.Repo + gitSpec.Directory
 
 		c.mutex.Lock()
 		defer c.mutex.Unlock()

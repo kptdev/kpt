@@ -316,7 +316,9 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 				if err != nil {
 					return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
 				}
-				draftLoaded += 1
+				if draft != nil {
+					draftLoaded += 1
+				}
 			}
 			if draft != nil {
 				drafts = append(drafts, draft)
@@ -342,7 +344,9 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 					// this tag is not associated with any package (e.g. could be a release tag)
 					continue
 				}
-				tagLoaded += 1
+				if tagged != nil {
+					tagLoaded += 1
+				}
 			}
 			if tagged != nil && filter.Matches(tagged) {
 				result = append(result, tagged)
