@@ -119,7 +119,7 @@ func (c *Cache) OpenRepository(ctx context.Context, repositorySpec *configapi.Re
 		if !isPackageContent(repositorySpec.Spec.Content) {
 			return nil, fmt.Errorf("git repository supports Package content only; got %q", string(repositorySpec.Spec.Content))
 		}
-		key := "git://" + gitSpec.Repo
+		key := "git://" + gitSpec.Repo + gitSpec.Directory
 
 		c.mutex.Lock()
 		defer c.mutex.Unlock()
@@ -175,7 +175,7 @@ func (c *Cache) CloseRepository(repositorySpec *configapi.Repository) error {
 		if git == nil {
 			return fmt.Errorf("git not configured for %s:%s", repositorySpec.ObjectMeta.Namespace, repositorySpec.ObjectMeta.Name)
 		}
-		key = "git://" + git.Repo
+		key = "git://" + git.Repo + git.Directory
 
 	default:
 		return fmt.Errorf("unknown repository type: %q", repositorySpec.Spec.Type)

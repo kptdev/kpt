@@ -309,7 +309,9 @@ func (r *cachedRepository) Close() error {
 			// There isn't much use in returning an error here, so we just log it
 			// and create a PackageRevisionMeta with just name and namespace. This
 			// makes sure that the Delete event is sent.
-			klog.Warningf("Error looking up PackageRev CR for %s: %v")
+			if !apierrors.IsNotFound(err) {
+				klog.Warningf("Error deleting PackageRev CR %s/%s: %s", nn.Namespace, nn.Name, err)
+			}
 			pkgRevMeta = meta.PackageRevisionMeta{
 				Name:      nn.Name,
 				Namespace: nn.Namespace,
