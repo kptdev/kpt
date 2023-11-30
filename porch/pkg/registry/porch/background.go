@@ -174,7 +174,7 @@ func (b *background) isSharedRepository(ctx context.Context, repo *configapi.Rep
 				return true, nil
 			}
 		case configapi.RepositoryTypeGit:
-			if r.Spec.Git.Repo == repo.Spec.Git.Repo {
+			if r.Spec.Git.Repo == repo.Spec.Git.Repo && r.Spec.Git.Directory == repo.Spec.Git.Directory {
 				return true, nil
 			}
 		default:

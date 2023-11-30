@@ -175,7 +175,7 @@ func (c *Cache) CloseRepository(repositorySpec *configapi.Repository) error {
 		if git == nil {
 			return fmt.Errorf("git not configured for %s:%s", repositorySpec.ObjectMeta.Namespace, repositorySpec.ObjectMeta.Name)
 		}
-		key = "git://" + git.Repo
+		key = "git://" + git.Repo + git.Directory
 
 	default:
 		return fmt.Errorf("unknown repository type: %q", repositorySpec.Spec.Type)
