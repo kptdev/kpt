@@ -78,6 +78,18 @@ func (p *gitPackageRevision) UID() types.UID {
 	return p.uid()
 }
 
+func (p *gitPackageRevision) CachedIdentifier() repository.CachedIdentifier {
+	if p.ref != nil {
+		k := p.ref.Name().String()
+		if p.revision == string(p.repo.branch) {
+			k += ":" + p.path
+		}
+		return repository.CachedIdentifier{Key: k, Version: p.ref.Hash().String()}
+	}
+
+	return repository.CachedIdentifier{}
+}
+
 func (p *gitPackageRevision) ResourceVersion() string {
 	return p.commit.String()
 }

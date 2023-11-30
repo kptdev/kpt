@@ -35,6 +35,10 @@ type PackageRevision struct {
 	Kptfile            kptfile.KptFile
 }
 
+func (pr *PackageRevision) CachedIdentifier() repository.CachedIdentifier {
+	return repository.CachedIdentifier{Key: pr.Key().String(), Version: pr.Key().Revision}
+}
+
 func (pr *PackageRevision) KubeObjectName() string {
 	return pr.Name
 }

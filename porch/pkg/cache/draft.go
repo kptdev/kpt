@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/GoogleContainerTools/kpt/porch/pkg/repository"
 )
@@ -28,9 +29,20 @@ type cachedDraft struct {
 var _ repository.PackageDraft = &cachedDraft{}
 
 func (cd *cachedDraft) Close(ctx context.Context) (repository.PackageRevision, error) {
-	if closed, err := cd.PackageDraft.Close(ctx); err != nil {
+	closed, err := cd.PackageDraft.Close(ctx)
+	if err != nil {
 		return nil, err
-	} else {
-		return cd.cache.update(ctx, closed)
 	}
+
+	err = cd.cache.reconcileCache(ctx, "close-draft")
+	if err != nil {
+		return nil, err
+	}
+
+	cpr := cd.cache.getPackageRevision(closed.Key())
+	if cpr == nil {
+		return nil, fmt.Errorf("closed draft not found")
+	}
+
+	return cpr, nil
 }

@@ -308,7 +308,7 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 		return nil, fmt.Errorf("error listing package revisions: %w", err)
 	}
 
-	if err := ensureUniqueWorkspaceName(obj, revs); err != nil {
+	if err := ensureUniqueWorkspaceName(repositoryObj, obj, revs); err != nil {
 		return nil, err
 	}
 
@@ -351,9 +351,20 @@ func (cad *cadEngine) CreatePackageRevision(ctx context.Context, repositoryObj *
 }
 
 // The workspaceName must be unique, because it used to generate the package revision's metadata.name.
-func ensureUniqueWorkspaceName(obj *api.PackageRevision, existingRevs []repository.PackageRevision) error {
+func ensureUniqueWorkspaceName(repositoryObj *configapi.Repository, obj *api.PackageRevision, existingRevs []repository.PackageRevision) error {
+	// HACK
+	// It's ok for the "main" revision to have the same workspace name
+	// So ignore main revisions in this calculation
+	mainRev := ""
+	if repositoryObj.Spec.Git != nil {
+		mainRev = repositoryObj.Spec.Git.Branch
+	}
+
 	for _, r := range existingRevs {
 		k := r.Key()
+		if mainRev != "" && k.Revision == mainRev {
+			continue
+		}
 		if k.WorkspaceName == obj.Spec.WorkspaceName {
 			return fmt.Errorf("package revision workspaceNames must be unique; package revision with name %s in repo %s with "+
 				"workspaceName %s already exists", obj.Spec.PackageName, obj.Spec.RepositoryName, obj.Spec.WorkspaceName)

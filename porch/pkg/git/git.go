@@ -278,6 +278,14 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 
 	mainBranch := r.branch.RefInLocal() // Looking for the registered branch
 
+	// if a cache is available, use it
+	cache := repository.PackageRevisionCacheFromContext(ctx)
+	draftCache := 0
+	tagCache := 0
+	mainCache := 0
+	draftLoaded := 0
+	tagLoaded := 0
+	mainLoaded := 0
 	for {
 		ref, err := refs.Next()
 		if err == io.EOF {
@@ -290,9 +298,25 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 			continue
 
 		case isProposedBranchNameInLocal(ref.Name()), isDraftBranchNameInLocal(ref.Name()):
-			draft, err := r.loadDraft(ctx, ref)
-			if err != nil {
-				return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
+			var draft *gitPackageRevision
+			if entry, ok := cache[ref.Name().String()]; ok {
+				if entry.Version == ref.Hash().String() {
+					dd, good := entry.PackageRevision.(*gitPackageRevision)
+					if !good {
+						klog.Warningf("Found current cached branch %s version %s, but it is not a gitPackageRevision", ref.Name(), entry.Version)
+					} else {
+						draft = dd
+						draftCache += 1
+					}
+				}
+			}
+
+			if draft == nil {
+				draft, err = r.loadDraft(ctx, ref)
+				if err != nil {
+					return nil, fmt.Errorf("failed to load package draft %q: %w", name.String(), err)
+				}
+				draftLoaded += 1
 			}
 			if draft != nil {
 				drafts = append(drafts, draft)
@@ -300,24 +324,61 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 				klog.Warningf("no package draft found for ref %v", ref)
 			}
 		case isTagInLocalRepo(ref.Name()):
-			tagged, err := r.loadTaggedPackages(ctx, ref)
-			if err != nil {
-				// this tag is not associated with any package (e.g. could be a release tag)
-				continue
-			}
-			for _, p := range tagged {
-				if filter.Matches(p) {
-					result = append(result, p)
+			var tagged *gitPackageRevision
+			if entry, ok := cache[ref.Name().String()]; ok {
+				if entry.Version == ref.Hash().String() {
+					dd, good := entry.PackageRevision.(*gitPackageRevision)
+					if !good {
+						klog.Warningf("Found current cached branch %s version %s, but it is not a gitPackageRevision", ref.Name(), entry.Version)
+					} else {
+						tagged = dd
+						tagCache += 1
+					}
 				}
+			}
+			if tagged == nil {
+				tagged, err = r.loadTaggedPackage(ctx, ref)
+				if err != nil {
+					// this tag is not associated with any package (e.g. could be a release tag)
+					continue
+				}
+				tagLoaded += 1
+			}
+			if tagged != nil && filter.Matches(tagged) {
+				result = append(result, tagged)
 			}
 		}
 	}
 
 	if main != nil {
+		// Look for any package whose cached identifier starts with main.Name()
+		// There will be one for each pacakge found in main, but they all will have the same
+		// hash. If that matches main.Hash() there is no change in main and so we can just
+		// copy all the packages rather than rediscovering.
+		var mainpkgs []*gitPackageRevision
+		for k, v := range cache {
+			if strings.Index(k, main.Name().String()) == 0 {
+				if v.Version != main.Hash().String() {
+					continue
+				}
+				gpr, ok := v.PackageRevision.(*gitPackageRevision)
+				if !ok {
+					klog.Warningf("Found current cached main package %s version %s, but it is not a gitPackageRevision", k, v.Version)
+				} else {
+					mainpkgs = append(mainpkgs, gpr)
+					mainCache += 1
+				}
+			}
+		}
+
 		// TODO: ignore packages that are unchanged in main branch, compared to a tagged version?
-		mainpkgs, err := r.discoverFinalizedPackages(ctx, main)
-		if err != nil {
-			return nil, err
+		if len(mainpkgs) == 0 {
+			mp, err := r.discoverFinalizedPackages(ctx, main)
+			if err != nil {
+				return nil, err
+			}
+			mainpkgs = mp
+			mainLoaded = len(mainpkgs)
 		}
 		for _, p := range mainpkgs {
 			if filter.Matches(p) {
@@ -332,6 +393,8 @@ func (r *gitRepository) listPackageRevisions(ctx context.Context, filter reposit
 		}
 	}
 
+	klog.Infof("repo %s/%s: %d draftCache, %d draftLoaded, %d tagCache, %d tagLoaded, %d mainCache, %d mainLoaded", r.namespace, r.name,
+		draftCache, draftLoaded, tagCache, tagLoaded, mainCache, mainLoaded)
 	return result, nil
 }
 
@@ -753,8 +816,8 @@ func parseDraftName(draft *plumbing.Reference) (name string, workspaceName v1alp
 	return name, workspaceName, nil
 }
 
-func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Reference) ([]*gitPackageRevision, error) {
-	ctx, span := tracer.Start(ctx, "gitRepository::loadTaggedPackages", trace.WithAttributes())
+func (r *gitRepository) loadTaggedPackage(ctx context.Context, tag *plumbing.Reference) (*gitPackageRevision, error) {
+	ctx, span := tracer.Start(ctx, "gitRepository::loadTaggedPackage", trace.WithAttributes())
 	defer span.End()
 
 	name, ok := getTagNameInLocalRepo(tag.Name())
@@ -803,9 +866,7 @@ func (r *gitRepository) loadTaggedPackages(ctx context.Context, tag *plumbing.Re
 		return nil, err
 	}
 
-	return []*gitPackageRevision{
-		packageRevision,
-	}, nil
+	return packageRevision, nil
 
 }
 
@@ -1072,8 +1133,6 @@ func (r *gitRepository) pushAndCleanup(ctx context.Context, ph *pushRefSpecBuild
 		return err
 	}
 
-	klog.Infof("pushing refs: %v", specs)
-
 	if err := r.doGitWithAuth(ctx, func(auth transport.AuthMethod) error {
 		return r.repo.Push(&git.PushOptions{
 			RemoteName:        OriginName,
@@ -1118,7 +1177,12 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 
 	var tasks []v1alpha1.Task
 
+	done := false
 	visitCommit := func(commit *object.Commit) error {
+		if done {
+			return nil
+		}
+
 		gitAnnotations, err := ExtractGitAnnotations(commit)
 		if err != nil {
 			return err
@@ -1143,6 +1207,7 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
 					// we have reached the beginning of this package revision and don't need to
 					// continue further
+					done = true
 					break
 				}
 			}
@@ -1692,9 +1757,6 @@ func (r *gitRepository) discoverPackagesInTree(commit *object.Commit, opt Discov
 		return nil, err
 	}
 
-	if opt.FilterPrefix == "" {
-		klog.Infof("discovered %d packages @%v", len(t.packages), commit.Hash)
-	}
 	return t, nil
 }
 
