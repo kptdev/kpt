@@ -165,7 +165,7 @@ deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package   v1         
 ```
 
 Copy the existing, **`Published`** package revision to create a **`Draft`** of
-a new package revision that you can furthe customize:
+a new package revision that you can further customize:
 
 ```sh
 # Copy the published package:
@@ -237,7 +237,7 @@ labels to all resources in the package. Add the following mutator to the
       fruit: apple
 ```
 
-The while `pipeline` section now looks like this:
+The whole `pipeline` section now looks like this:
 
 ```yaml
 pipeline:
