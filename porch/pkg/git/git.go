@@ -1118,7 +1118,12 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 
 	var tasks []v1alpha1.Task
 
+	done := false
 	visitCommit := func(commit *object.Commit) error {
+		if done {
+			return nil
+		}
+
 		gitAnnotations, err := ExtractGitAnnotations(commit)
 		if err != nil {
 			return err
@@ -1143,6 +1148,7 @@ func (r *gitRepository) loadTasks(ctx context.Context, startCommit *object.Commi
 				if gitAnnotation.Task != nil && (gitAnnotation.Task.Type == v1alpha1.TaskTypeClone || gitAnnotation.Task.Type == v1alpha1.TaskTypeInit) {
 					// we have reached the beginning of this package revision and don't need to
 					// continue further
+					done = true
 					break
 				}
 			}
