@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pkg-concurrency-cm
+  namespace: example
+data:
+  foo: foo
+  bar: nextBar
