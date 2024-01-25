@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GOLANG_VERSION         := 1.21.5
+GOLANG_VERSION := 1.21.6
 GORELEASER_CONFIG      = release/tag/goreleaser.yaml
 GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
