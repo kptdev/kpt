@@ -286,6 +286,7 @@ func isdockerCLIoutput(s string) bool {
 		strings.Contains(s, ": Pull complete") ||
 		strings.Contains(s, "Digest: sha256") ||
 		strings.Contains(s, "Status: Downloaded newer image") ||
+		strings.Contains(s, "Status: Image is up to date for") ||
 		strings.Contains(s, "Unable to find image") {
 		return true
 	}
