@@ -214,7 +214,7 @@ func createValidatingWebhook(ctx context.Context, caCert []byte) error {
 	}
 
 	if err := kubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(ctx, validationCfgName, metav1.DeleteOptions{}); err != nil {
-		klog.Error("failed to delete existing webhook: %w", err)
+		klog.Warningf("failed to delete existing webhook: %v", err)
 	}
 
 	if _, err := kubeClient.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(ctx, validateConfig,
