@@ -20,6 +20,8 @@ on:
       - "commands/**"
       - "internal/**"
   push:
+    branches:
+    - '!dependabot/*'
     paths:
       - "site/**"
       - "commands/**"

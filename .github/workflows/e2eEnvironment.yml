@@ -19,6 +19,8 @@ on:
       - "docs/**"
       - "site/**"
   push:
+    branches:
+    - '!dependabot/*'
     paths-ignore:
       - "docs/**"
       - "site/**"

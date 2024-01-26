@@ -16,6 +16,8 @@ name: Porch
 
 on:
   push:
+    branches:
+    - '!dependabot/*'
     paths-ignore:
       - "docs/**"
       - "site/**"

@@ -16,6 +16,8 @@ name: Check Licenses
 on:
   pull_request:
   push:
+    branches:
+    - '!dependabot/*'
 jobs:
   build:
     runs-on: ubuntu-latest
