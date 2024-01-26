@@ -153,6 +153,13 @@ func (t *TestSuite) Initialize(ctx context.Context) {
 			t.Logf("Successfully cleaned up namespace %q", namespace)
 		}
 	})
+
+	t.Cleanup(func() {
+		t.DumpLogsForDeployment(ctx, types.NamespacedName{
+			Name:      "porch-server",
+			Namespace: "porch-system",
+		})
+	})
 }
 
 func (t *TestSuite) IsUsingDevPorch() bool {
