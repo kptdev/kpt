@@ -104,11 +104,11 @@ jobs:
       - name: porch e2e logs
         if: always()
         run: |
-          name=$(kubectl -n porch-system get pod -l app=porch-server -o custom-columns=NAME:.metadata.name --no-headers=true)
-          kubectl -n porch-system logs $name > porch-e2e-server.log
+          mkdir -p logs/
+          OUTDIR=logs/ porch/dev/cd/dump-logs
       - name: Archive logs
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: porch-e2e-server.log
-          path: porch-e2e-server.log
+          name: logs
+          path: logs/**
