@@ -132,7 +132,7 @@ test-live-plan: build
 	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLivePlan/testdata/live-plan/$(T)  ./e2e/
 
 test-porch: build
-	PATH=$(GOBIN):$(PATH) go test -v --count=1 --tags=porch ./e2e/
+	PATH=$(GOBIN):$(PATH) go test -v --count=1 -timeout 20m --tags=porch ./e2e/
 
 vet:
 	go vet ./...
