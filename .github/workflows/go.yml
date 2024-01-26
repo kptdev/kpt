@@ -26,6 +26,8 @@ on:
       - "site/**"
       - "**.md"
   push:
+    branches:
+    - '!dependabot/*'
 
 env:
   GOPATH: ${{ github.workspace }}/go
