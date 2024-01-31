@@ -33,6 +33,7 @@ import (
 const (
 	execRuntime = "exec"
 	podRuntime  = "pod"
+	wasmRuntime = "wasm"
 
 	wrapperServerImageEnv = "WRAPPER_SERVER_IMAGE"
 )
@@ -67,6 +68,7 @@ func run() error {
 	availableRuntimes := map[string]struct{}{
 		execRuntime: {},
 		podRuntime:  {},
+		wasmRuntime: {},
 	}
 	if disableRuntimes != nil {
 		runtimesFromFlag := strings.Split(*disableRuntimes, ",")
@@ -83,6 +85,13 @@ func run() error {
 				return fmt.Errorf("failed to initialize executable evaluator: %w", err)
 			}
 			runtimes = append(runtimes, execEval)
+		case wasmRuntime:
+			// TODO
+			wasmEval, err := internal.NewWasmEvaluator("/tmp/cache-dir")
+			if err != nil {
+				// TODO
+			}
+			runtimes = append(runtimes, wasmEval)
 		case podRuntime:
 			wrapperServerImage := os.Getenv(wrapperServerImageEnv)
 			if wrapperServerImage == "" {
