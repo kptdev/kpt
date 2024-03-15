@@ -47,6 +47,16 @@ func TestCmd(t *testing.T) {
 			},
 			expectedErrorMsg: "inventory policy must be one of strict, adopt",
 		},
+		"invalid status policy": {
+			args: []string{
+				"--status-policy", "noSuchPolicy",
+			},
+			namespace: "testns",
+			destroyCallbackFunc: func(t *testing.T, _ inventory.Info) {
+				t.FailNow()
+			},
+			expectedErrorMsg: "status policy must be one of none, all",
+		},
 		"invalid output format": {
 			args: []string{
 				"--output", "foo",
