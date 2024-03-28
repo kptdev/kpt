@@ -58,7 +58,7 @@ type GitRepository interface {
 	UpdateDeletionProposedCache() error
 }
 
-//go:generate go run golang.org/x/tools/cmd/stringer -type=MainBranchStrategy -linecomment
+//go:generate go run golang.org/x/tools/cmd/stringer@v0.19.0 -type=MainBranchStrategy -linecomment
 type MainBranchStrategy int
 
 const (
