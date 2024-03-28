@@ -53,7 +53,7 @@ type FunctionReconciler struct {
 	ociStorage *kptoci.Storage
 }
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-functions webhook paths="." output:rbac:artifacts:config=config/rbac
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0 rbac:roleName=porch-controllers-functions webhook paths="." output:rbac:artifacts:config=config/rbac
 
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=repositories,verbs=get;list;watch
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=functions,verbs=get;list;watch;create;update;patch;delete
