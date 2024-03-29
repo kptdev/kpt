@@ -14,9 +14,9 @@
 
 package main
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers webhook paths="."
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0 rbac:roleName=porch-controllers webhook paths="."
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 crd paths="./..." output:crd:artifacts:config=config/crd/bases
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0 crd paths="./..." output:crd:artifacts:config=config/crd/bases
 
 import (
 	"context"

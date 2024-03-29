@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 object object:headerFile="../../../../porch/scripts/boilerplate.go.txt"
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0 object:headerFile="../../../../porch/scripts/boilerplate.go.txt"
 
 const (
 	KptFileName = "Kptfile"

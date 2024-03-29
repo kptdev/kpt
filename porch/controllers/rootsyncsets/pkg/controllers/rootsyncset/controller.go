@@ -83,7 +83,7 @@ type RootSyncSetReconciler struct {
 	watchers map[v1alpha1.ClusterRef]*watcher
 }
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.8.0 rbac:roleName=porch-controllers-rootsyncsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0 rbac:roleName=porch-controllers-rootsyncsets webhook paths="." output:rbac:artifacts:config=../../../config/rbac
 
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=config.porch.kpt.dev,resources=rootsyncsets/status,verbs=get;update;patch
