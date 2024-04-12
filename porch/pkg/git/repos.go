@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -110,6 +111,8 @@ func isRepoIDAllowed(s string) bool {
 }
 
 func (r *DynamicRepos) FindRepo(ctx context.Context, id string) (*Repo, error) {
+	id = strings.TrimPrefix(id, ".git")
+
 	dir := filepath.Join(r.baseDir, id)
 	if !isRepoIDAllowed(id) {
 		return nil, fmt.Errorf("invalid name %q", id)
