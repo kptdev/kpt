@@ -95,7 +95,7 @@ will not follow the rules specified by these annotations.
 ### JSONPath syntax
 
 Since there is no formal specification for JSONPath, the supported syntax
-depends on the chosen implimentation. In this case, kpt uses the
+depends on the chosen implementation. In this case, kpt uses the
 [ajson](https://github.com/spyzhov/ajson) library. For details about what
 language features are supported, see the
 [json-path-comparison table](https://cburgmer.github.io/json-path-comparison/).

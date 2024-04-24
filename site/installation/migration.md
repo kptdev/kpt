@@ -346,7 +346,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
    [kpt-functions-catalog]. You can start migrating your existing kpt packages
    using the function.
 3. `July 1, 2021:` Package format `v1` will be released which guarantees
-   backwards compatability for new packages going forward. The existing kpt
+   backwards compatibility for new packages going forward. The existing kpt
    packages are not compatible with the kpt `v1.0` binary and users will be
    prompted to migrate/fix their packages.
 4. `TBD:` Feature releases and bug fixes for pre-v1 versions of kpt will be

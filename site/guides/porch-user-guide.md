@@ -426,7 +426,7 @@ deployments-e06c2f6ec1afdd8c7d977fcf204e4d543778ddac   cloned-bucket   v1       
 deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82   istions-clone   v1                         false    Draft       deployments
 deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package     v1                         false    Draft       deployments
 
-# Propose two packge revisions to be be published
+# Propose two package revisions to be be published
 $ kpt alpha rpkg propose \
   deployments-11ca1db650fa4bfa33deeb7f488fbdc50cdb3b82 \
   deployments-c32b851b591b860efda29ba0e006725c8c1f7764 \
