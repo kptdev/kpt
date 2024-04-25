@@ -7,7 +7,7 @@ KRM resources. Some example use cases:
 - Add a label to resources based on some filtering criteria
 - Use a `Team` custom resource to generate a `Namespace` and associated
   organization-mandated defaults (e.g. `RBAC`, `ResourceQuota`, etc.) when
-  bootstraping a new team
+  bootstrapping a new team
 - Bulk transformation of all `PodSecurityPolicy` resources to improve the
   security posture.
 - Inject a sidecar container (service mesh, mysql proxy, logging) in a workload

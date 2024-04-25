@@ -113,7 +113,7 @@ namespace team blueprint using the UI.
     - Click the **SAVE** button to close the add resource dialog.
   - Click the **ADD BUTTON** button and add a new Resource Quota resource.
     - In the Resource Metadata section, name the resource "base".
-    - In the Compute Resources setion, set Max CPU Requests to "40" and Max
+    - In the Compute Resources section, set Max CPU Requests to "40" and Max
       Memory Requests to "40G".
     - Click the **SAVE** button to close the add resource dialog.
   - Click the **SAVE** button on the upper right corner of the screen.

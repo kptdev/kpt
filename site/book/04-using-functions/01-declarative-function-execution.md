@@ -124,7 +124,7 @@ For example, `set-labels:v0.1` is automatically expanded to `gcr.io/kpt-fn/set-l
 The `exec` field specifies the executable command for the function. You can specify
 an executable with arguments.
 
-Example below uses `sed` executable to replace all occurances of `foo` with `bar`
+Example below uses `sed` executable to replace all occurrences of `foo` with `bar`
 in the package resources.
 
 ```yaml
