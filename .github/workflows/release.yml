@@ -15,8 +15,10 @@
 name: kpt Release
 on:
   push:
+    branches:
+    - '!dependabot/*'
     tags:
-      - "v[1-9].*.*"
+    - "v[1-9].*.*"
 
 jobs:
   build:
