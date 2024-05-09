@@ -94,7 +94,7 @@ func main() {
 
 The [`fn`] library provides a series of KRM level operations for [`ResourceList`]. 
 Basically, the KRM resource `ResourceList.FunctionConfig` and KRM resources `ResourceList.Items` are both converted to 
-`KubeObject` objects. You can use `KubeObject` similar as [`unstructured.Unstrucutred`].
+`KubeObject` objects. You can use `KubeObject` similar as [`unstructured.Unstructured`].
 
 The set-annotation function (see below) iterates the `ResourceList.Items`, finds out the `Deployment` resources and
 adds the annotation. After the iteration, it adds some user message to the `ResourceList.Results`
