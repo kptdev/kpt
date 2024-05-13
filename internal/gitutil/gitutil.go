@@ -97,7 +97,10 @@ func (g *GitLocalRunner) RunVerbose(ctx context.Context, command string, args ..
 func (g *GitLocalRunner) run(ctx context.Context, verbose bool, command string, args ...string) (RunResult, error) {
 	const op errors.Op = "gitutil.run"
 
-	fullArgs := append([]string{command}, args...)
+	fullArgs := append(
+		[]string{"-c", "user.name=Kpt", "-c", "user.email=kpt@kpt.dev", command},
+		args...,
+	)
 	cmd := exec.CommandContext(ctx, g.gitPath, fullArgs...)
 	cmd.Dir = g.Dir
 	// Disable git prompting the user for credentials.

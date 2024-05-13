@@ -732,7 +732,14 @@ func replaceData(repo, data string) error {
 }
 
 func commit(repo, message string) (string, error) {
-	cmd := exec.Command("git", "commit", "-m", message, "--allow-empty")
+	cmd := exec.Command(
+		"git",
+		"-c", "user.name=Kpt",
+		"-c", "user.email=kpt@kpt.dev",
+		"commit",
+		"-m", message,
+		"--allow-empty",
+	)
 	cmd.Dir = repo
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -749,7 +756,12 @@ func commit(repo, message string) (string, error) {
 }
 
 func tag(repo, tag string) error {
-	cmd := exec.Command("git", "tag", tag)
+	cmd := exec.Command(
+		"git",
+		"-c", "user.name=Kpt",
+		"-c", "user.email=kpt@kpt.dev",
+		"tag", tag,
+	)
 	cmd.Dir = repo
 	b, err := cmd.Output()
 	if err != nil {
