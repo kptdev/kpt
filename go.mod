@@ -3,7 +3,6 @@ module github.com/GoogleContainerTools/kpt
 go 1.21
 
 require (
-	github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54
 	github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33
 	github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230209223911-c6c49d0a0636
 	github.com/bytecodealliance/wasmtime-go v0.39.0

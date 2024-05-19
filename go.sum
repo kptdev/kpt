@@ -39,8 +39,6 @@ github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 h1:UQHMgLO+TxOEl
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54 h1:z5iYiugZJiTzQ6ggU0Cae/T+LkrDwcqZyebh8SbmQ0E=
-github.com/GoogleContainerTools/kpt-functions-sdk/go/fn v0.0.0-20220506190241-f85503febd54/go.mod h1:vl3iiwgrqdDgvGi5ckt3O9IoyaHUgFkfxE4RjQIqgwk=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33 h1:9M1bvq7hU/JTY4VVcqhCQT0eAa5HznrFaLAm2ldfe70=
 github.com/GoogleContainerTools/kpt/porch/api v0.0.0-20230121152246-dc44dbd18a33/go.mod h1:ASrhnLAL4ahTuiUJyepqcpVRXIoRMJyDs8/eSxwhgZM=
 github.com/GoogleContainerTools/kpt/rollouts v0.0.0-20230209223911-c6c49d0a0636 h1:9oUTINyozQvQ78QvKM3jTLI54oKMrq9V1VYpb4m8Asc=

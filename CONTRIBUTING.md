@@ -104,8 +104,7 @@ Coming soon
 
 ### Package Orchestrator
 
-Package orchestrator code live under `porch` directory in this repo. Please see the
-[developer docs for porch](porch/docs/development.md) to learn more.
+Package orchestrator code has been moved to the Nephio project: https://github.com/nephio-project/porch
 
 ### Function Catalog
 
