@@ -330,7 +330,7 @@ func (gur *GitUpstreamRepo) ResolveRef(ref string) (string, bool) {
 func (gur *GitUpstreamRepo) getRepoDir(uri string) string {
 	if runtime.GOOS == "windows" {
 		var hash = md5.Sum([]byte(uri))
-		return strings.ToLower(hex.EncodeToString(hash[:]))	
+		return strings.ToLower(hex.EncodeToString(hash[:]))
 	}
 	return strings.ToLower(base32.StdEncoding.EncodeToString(md5.New().Sum([]byte(uri))))
 }
