@@ -75,7 +75,9 @@ func gitCommit(d, msg string) error {
 }
 
 func gitDiff(d, commit1, commit2 string) (string, error) {
-	stdout, stderr, err := runCommand(getCommand(d, "git", []string{"diff", commit1, commit2}))
+	command := getCommand(d, "git", []string{"diff", commit1, commit2})
+	command.Env = []string{"GIT_DIFF_OPTS="}
+	stdout, stderr, err := runCommand(command)
 	if err != nil {
 		return "", fmt.Errorf("git diff error: %w, output: %s, stderr: %s", err, stdout, stderr)
 	}
