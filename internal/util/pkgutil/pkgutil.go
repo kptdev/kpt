@@ -209,6 +209,7 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 		if err != nil {
 			return err
 		}
+		defer f.Close() 
 		// List up to one file or folder in the directory.
 		_, err = f.Readdirnames(1)
 		if err != nil && err != io.EOF {
