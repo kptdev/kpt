@@ -309,6 +309,7 @@ func (sp *SubPkg) WithSubPackages(ps ...*SubPkg) *SubPkg {
 // RGFile represents a minimal resourcegroup.
 type RGFile struct {
 	Name, Namespace, ID string
+	Annotations, Labels map[string]string
 }
 
 func NewRGFile() *RGFile {
@@ -547,8 +548,15 @@ func buildRGFile(pkg *pkg) string {
 	tmp := rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
 	tmp.ObjectMeta.Name = pkg.RGFile.Name
 	tmp.ObjectMeta.Namespace = pkg.RGFile.Namespace
+	tmp.ObjectMeta.Annotations = pkg.RGFile.Annotations
+	tmp.ObjectMeta.Labels = pkg.RGFile.Labels
+
+	if tmp.ObjectMeta.Labels == nil {
+		tmp.ObjectMeta.Labels = make(map[string]string)
+	}
+
 	if pkg.RGFile.ID != "" {
-		tmp.ObjectMeta.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: pkg.RGFile.ID}
+		tmp.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] = pkg.RGFile.ID
 	}
 
 	b, err := yaml.MarshalWithOptions(tmp, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})

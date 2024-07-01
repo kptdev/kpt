@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/GoogleContainerTools/kpt/internal/types"
@@ -736,9 +737,14 @@ func (p *Pkg) LocalInventory() (kptfilev1.Inventory, error) {
 	if !hasKptfile {
 		// Return the ResourceGroup object as inventory.
 		if len(resources) == 1 {
+			labels := resources[0].GetLabels()
+			delete(labels, rgfilev1alpha1.RGInventoryIDLabel)
+
 			return kptfilev1.Inventory{
 				Name:        resources[0].GetName(),
 				Namespace:   resources[0].GetNamespace(),
+				Annotations: resources[0].GetAnnotations(),
+				Labels:      labels,
 				InventoryID: resources[0].GetLabels()[rgfilev1alpha1.RGInventoryIDLabel],
 			}, nil
 		}
@@ -764,9 +770,14 @@ func (p *Pkg) LocalInventory() (kptfilev1.Inventory, error) {
 
 	// ResourceGroup stores the inventory and Kptfile does not contain inventory.
 	if len(resources) == 1 {
+		labels := resources[0].GetLabels()
+		delete(labels, rgfilev1alpha1.RGInventoryIDLabel)
+
 		return kptfilev1.Inventory{
 			Name:        resources[0].GetName(),
 			Namespace:   resources[0].GetNamespace(),
+			Annotations: resources[0].GetAnnotations(),
+			Labels:      labels,
 			InventoryID: resources[0].GetLabels()[rgfilev1alpha1.RGInventoryIDLabel],
 		}, nil
 	}
@@ -788,8 +799,21 @@ func filterResourceGroups(input []*yaml.RNode) (output []*yaml.RNode, err error)
 			continue
 		}
 
+		ClearInternalAnnotations(meta.Annotations)
+		if err := r.SetAnnotations(meta.Annotations); err != nil {
+			return nil, fmt.Errorf("failed to set annotations for resource %w", err)
+		}
+
 		output = append(output, r)
 	}
 
 	return output, nil
+}
+
+func ClearInternalAnnotations(annotations map[string]string) {
+	for k := range annotations {
+		if strings.HasPrefix(k, "internal.config.kubernetes.io/") || strings.HasPrefix(k, "config.kubernetes.io/") {
+			delete(annotations, k)
+		}
+	}
 }

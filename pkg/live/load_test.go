@@ -209,6 +209,36 @@ func TestLoad_LocalDisk(t *testing.T) {
 			},
 			rgFile: "resourcegroup.yaml",
 		},
+		"Inventory information taken from resourcegroup in file": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).WithRGFile(&pkgbuilder.RGFile{
+				Name:      "foo",
+				Namespace: "bar",
+				Annotations: map[string]string{
+					"additional-annotation": "true",
+				},
+				Labels: map[string]string{
+					"cli-utils.sigs.k8s.io/inventory-id": "foo-bar",
+					"additional-label":                   "true",
+				},
+			}),
+			namespace:    "foo",
+			expectedObjs: []object.ObjMetadata{},
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+				Annotations: map[string]string{
+					"additional-annotation": "true",
+				},
+				Labels: map[string]string{
+					"additional-label": "true",
+				},
+			},
+			rgFile: "inventory.yaml",
+		},
 	}
 
 	for tn, tc := range testCases {
@@ -238,6 +268,14 @@ func TestLoad_LocalDisk(t *testing.T) {
 				return objMetas[i].String() < objMetas[j].String()
 			})
 			assert.Equal(t, tc.expectedObjs, objMetas)
+
+			// Simplify testing against empty labels and annotations
+			if len(inv.Labels) == 0 {
+				inv.Labels = nil
+			}
+			if len(inv.Annotations) == 0 {
+				inv.Annotations = nil
+			}
 
 			assert.Equal(t, tc.expectedInv, inv)
 		})
@@ -380,6 +418,39 @@ func TestLoad_StdIn(t *testing.T) {
 				},
 			},
 		},
+		"Inventory using STDIN resourcegroup file with annotations": {
+			pkg: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile(),
+				).
+				WithFile("cm.yaml", configMap).
+				WithRGFile(&pkgbuilder.RGFile{
+					Name:      "foo",
+					Namespace: "bar",
+					ID:        "foo-bar",
+					Annotations: map[string]string{
+						"extra-annotation": "hello-world",
+					},
+				}),
+			namespace: "foo",
+			expectedInv: kptfile.Inventory{
+				Name:        "foo",
+				Namespace:   "bar",
+				InventoryID: "foo-bar",
+				Annotations: map[string]string{
+					"extra-annotation": "hello-world",
+				},
+			},
+			expectedObjs: []object.ObjMetadata{
+				{
+					GroupKind: schema.GroupKind{
+						Kind: "ConfigMap",
+					},
+					Name:      "cm",
+					Namespace: "foo",
+				},
+			},
+		},
 		"Multiple inventories using STDIN resourcegroup and Kptfile is error": {
 			pkg: pkgbuilder.NewRootPkg().
 				WithKptfile(
@@ -479,6 +550,13 @@ func TestLoad_StdIn(t *testing.T) {
 			})
 			assert.Equal(t, tc.expectedObjs, objMetas)
 
+			// Simplify testing against empty labels and annotations
+			if len(inv.Annotations) == 0 {
+				inv.Annotations = nil
+			}
+			if len(inv.Labels) == 0 {
+				inv.Labels = nil
+			}
 			assert.Equal(t, tc.expectedInv, inv)
 		})
 	}

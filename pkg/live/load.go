@@ -135,10 +135,18 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 	}
 	// Inventory found with ResourceGroup object.
 	if len(rgFilter.Inventories) == 1 {
-		invID := rgFilter.Inventories[0].Labels[rgfilev1alpha1.RGInventoryIDLabel]
+		labels := rgFilter.Inventories[0].Labels
+		invID := labels[rgfilev1alpha1.RGInventoryIDLabel]
+		delete(labels, rgfilev1alpha1.RGInventoryIDLabel)
+
+		annotations := rgFilter.Inventories[0].Annotations
+		pkg.ClearInternalAnnotations(annotations)
+
 		return kptfilev1.Inventory{
 			Name:        rgFilter.Inventories[0].Name,
 			Namespace:   rgFilter.Inventories[0].Namespace,
+			Annotations: annotations,
+			Labels:      labels,
 			InventoryID: invID,
 		}, nil
 	}
