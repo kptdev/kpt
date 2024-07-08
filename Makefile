@@ -171,7 +171,7 @@ release-dry-run:
 		-w /go/src/github.com/GoogleContainerTools/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" \
-		--skip-validate --skip-publish
+		--skip=validate,publish
 
 release:
 	@if [ ! -f ".release-env" ]; then \
@@ -187,7 +187,7 @@ release:
 		-w /go/src/github.com/GoogleContainerTools/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" release \
-		--skip-validate
+		--skip=validate
 
 release-ci:
 	@if [ ! -f ".release-env" ]; then \
@@ -204,7 +204,7 @@ release-ci:
 		-w /go/src/github.com/GoogleContainerTools/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" release \
-		--skip-validate
+		--skip=validate
 
 .PHONY: vulncheck
 vulncheck: build
