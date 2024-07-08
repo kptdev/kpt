@@ -19,6 +19,7 @@
 # matrix of GOOS and GOARCH combinations, but instead, we'd need to define separate
 # steps for each targetted OS and ARCH. This is because we need to specify the
 # platform specific C std library (libc) and cross-compiler to be used.
+version: 2
 env:
   - CGO_ENABLED=0
   - GO111MODULE=on
