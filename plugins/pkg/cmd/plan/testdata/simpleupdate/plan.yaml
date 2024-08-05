@@ -1,0 +1,17 @@
+apiVersion: plan.kpt.dev/v1alpha1
+kind: Plan
+spec:
+  actions:
+  - action: Create
+    apiVersion: v1
+    kind: ConfigMap
+    name: cm1
+    namespace: default
+    object:
+      apiVersion: v1
+      data:
+        foo: bar2
+      kind: ConfigMap
+      metadata:
+        name: cm1
+        namespace: default
