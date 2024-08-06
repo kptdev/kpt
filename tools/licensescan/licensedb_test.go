@@ -19,6 +19,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 
 	"sigs.k8s.io/yaml"
@@ -26,7 +28,12 @@ import (
 
 // Test that the license didn't change for the same module
 func TestLicensesForConsistency(t *testing.T) {
-	files := make(map[string]*moduleInfo)
+	type moduleVersion struct {
+		ModuleInfo *moduleInfo
+		Version    string
+	}
+
+	modules := make(map[string][]*moduleVersion)
 
 	if err := filepath.Walk("modules", func(p string, info fs.FileInfo, err error) error {
 		if err != nil {
@@ -46,30 +53,35 @@ func TestLicensesForConsistency(t *testing.T) {
 			return fmt.Errorf("error parsing %q: %w", p, err)
 		}
 
-		files[p] = m
+		modulePath := filepath.Dir(p)
+		modulePath = strings.TrimPrefix(modulePath, "modules/")
+		version := filepath.Base(p)
+		version = strings.TrimSuffix(version, ".yaml")
+		modules[modulePath] = append(modules[modulePath], &moduleVersion{
+			ModuleInfo: m,
+			Version:    version,
+		})
 		return nil
 	}); err != nil {
 		t.Fatalf("error during walk: %v", err)
 	}
 
-	for f1, m1 := range files {
-		dir := filepath.Dir(f1)
-		for f2, m2 := range files {
-			// Only compare pairs once
-			if f1 >= f2 {
-				continue
-			}
+	for module, versions := range modules {
+		sort.Slice(versions, func(i, j int) bool {
+			return versions[i].Version < versions[j].Version
+		})
+		for i := 0; i < len(versions)-1; i++ {
+			v1 := versions[i]
+			v2 := versions[i+1]
 
-			if filepath.Dir(f2) != dir {
-				continue
-			}
-
-			if m1.License != m2.License {
-				switch f1 {
-				case "modules/github.com/klauspost/compress/v1.11.2.yaml":
+			if v1.ModuleInfo.License != v2.ModuleInfo.License {
+				switch module + "@" + v1.Version {
+				case "github.com/klauspost/compress@v1.11.2":
 					// license changed after v1.11.2
+				case "sigs.k8s.io/yaml@v1.3.0":
+					// license changed after v1.3.0
 				default:
-					t.Errorf("license mismatch: %v=%v, %v=%v", f1, m1.License, f2, m2.License)
+					t.Errorf("license mismatch: %v %v=%v, %v=%v", module, v1.Version, v1.ModuleInfo.License, v2.Version, v2.ModuleInfo.License)
 				}
 			}
 
