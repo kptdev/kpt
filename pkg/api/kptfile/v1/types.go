@@ -266,6 +266,14 @@ type Pipeline struct {
 	Validators []Function `yaml:"validators,omitempty" json:"validators,omitempty"`
 }
 
+// ResourceReference allows referencing a resource in the package
+type ResourceReference struct {
+    Name      string `json:"name,omitempty" yaml:"name,omitempty"`
+    Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Kind      string `json:"kind,omitempty" yaml:"kind,omitempty"`
+}
+
+
 // String returns the string representation of Pipeline struct
 // The string returned is the struct content in Go default format.
 func (p *Pipeline) String() string {
@@ -327,6 +335,8 @@ type Function struct {
 	// `Exclude` are used to specify resources on which the function should NOT be executed.
 	// If not specified, all resources selected by `Selectors` are selected.
 	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
+
+	ResourceRef *ResourceReference `json:"resourceRef,omitempty" yaml:"resourceRef,omitempty"`
 }
 
 // Selector specifies the selection criteria
