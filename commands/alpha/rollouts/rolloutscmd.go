@@ -29,7 +29,7 @@ func NewCommand(ctx context.Context, version string) *cobra.Command {
 		Use:   "rollouts",
 		Short: "rollouts",
 		Long:  "rollouts",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

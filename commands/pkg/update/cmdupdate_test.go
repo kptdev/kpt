@@ -278,7 +278,7 @@ func TestCmd_onlyVersionAsInput(t *testing.T) {
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }
 
 // NoOpFailRunE causes the test to fail if run is called.  Useful for validating run isn't called for
 // errors.
@@ -429,7 +429,7 @@ func TestCmd_path(t *testing.T) {
 			defer testutil.Chdir(t, test.currentWD)()
 
 			r := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
+			r.Command.RunE = func(_ *cobra.Command, _ []string) error {
 				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()
 				}

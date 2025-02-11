@@ -170,7 +170,7 @@ func Test_pkgURLFromGHURL(t *testing.T) {
 			r := require.New(t)
 			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
 			// getBranches returns test branches slice
-			getBranches := func(ctx context.Context, repo string) ([]string, error) {
+			getBranches := func(_ context.Context, _ string) ([]string, error) {
 				return tt.branches, nil
 			}
 			got, err := pkgURLFromGHURL(ctx, tt.ghURL, getBranches)

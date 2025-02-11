@@ -193,7 +193,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 	selectedInput := inputResources
 
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
-		err = fnruntime.SetResourceIds(inputResources)
+		err = fnruntime.SetResourceIDs(inputResources)
 		if err != nil {
 			return err
 		}
@@ -221,7 +221,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 
 	if !r.Selector.IsEmpty() || !r.Exclusion.IsEmpty() {
 		outputResources = fnruntime.MergeWithInput(pb.Nodes, selectedInput, inputResources)
-		deleteAnnoErr := fnruntime.DeleteResourceIds(outputResources)
+		deleteAnnoErr := fnruntime.DeleteResourceIDs(outputResources)
 		if deleteAnnoErr != nil {
 			return deleteAnnoErr
 		}

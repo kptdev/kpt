@@ -21,7 +21,7 @@ import (
 
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/update"
+	"github.com/GoogleContainerTools/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -170,9 +170,9 @@ func TestUpdate_FastForward(t *testing.T) {
 			updated := tc.updated.ExpandPkg(t, repos)
 			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &FastForwardUpdater{}
+			updater := &update.FastForwardUpdater{}
 
-			err := updater.Update(Options{
+			err := updater.Update(update.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

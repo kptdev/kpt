@@ -23,7 +23,7 @@ import (
 	pkgtesting "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
 	"github.com/GoogleContainerTools/kpt/internal/testutil"
 	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/fetch"
+	"github.com/GoogleContainerTools/kpt/internal/util/fetch"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
 	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
@@ -85,7 +85,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -104,7 +104,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -127,7 +127,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -150,7 +150,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -177,7 +177,7 @@ func TestCommand_Run(t *testing.T) {
 	}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
@@ -240,7 +240,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
@@ -318,7 +318,7 @@ func TestCommand_Run_branch(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
@@ -400,7 +400,7 @@ func TestCommand_Run_tag(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
@@ -510,7 +510,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 			}
 
 			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
-			err = Command{
+			err = fetch.Command{
 				Pkg: actualPkg,
 			}.Run(fake.CtxWithDefaultPrinter())
 			if !assert.NoError(t, err) {
@@ -568,7 +568,7 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 	}
 
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
-	err = Command{
+	err = fetch.Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -615,7 +615,7 @@ func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
 	}
 
 	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
-	err = Command{
+	err = fetch.Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -637,7 +637,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -661,7 +661,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -688,7 +688,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = Command{
+	err = fetch.Command{
 		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {

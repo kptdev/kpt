@@ -91,4 +91,4 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Path)
 }
 
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }

@@ -86,7 +86,7 @@ func NewRunner(
 		Short:   livedocs.MigrateShort,
 		Long:    livedocs.MigrateShort + "\n" + livedocs.MigrateLong,
 		Example: livedocs.MigrateExamples,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				// default to current working directory
 				args = append(args, ".")

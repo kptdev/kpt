@@ -44,7 +44,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 		// We handle all errors in main after return from cobra so we can
 		// adjust the error message coming from libraries
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err
@@ -158,7 +158,7 @@ var version = "unknown"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("%s\n", version)
 	},
 }

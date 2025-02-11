@@ -415,7 +415,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// set kpt-resource-id annotation on each resource before mutation
-			err = fnruntime.SetResourceIds(input)
+			err = fnruntime.SetResourceIDs(input)
 			if err != nil {
 				return nil, err
 			}
@@ -444,7 +444,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			// merge the output resources with input resources
 			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
 			// delete the kpt-resource-id annotation on each resource
-			err = fnruntime.DeleteResourceIds(input)
+			err = fnruntime.DeleteResourceIDs(input)
 			if err != nil {
 				return nil, err
 			}

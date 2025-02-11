@@ -212,7 +212,7 @@ func getProgress(resInfo *resourceInfo) (string, string, error) {
 
 		color, setColor := printcommon.ColorForStatus(rs.Status)
 		if setColor {
-			s = printcommon.SprintfWithColor(color, s)
+			s = printcommon.SprintfWithColor(color, "%s", s)
 		}
 
 		text = s
@@ -295,7 +295,7 @@ func getConditions(rs *pollingevent.ResourceStatus) []string {
 			}
 		}
 
-		s := printcommon.SprintfWithColor(color, text)
+		s := printcommon.SprintfWithColor(color, "%s", text)
 		conditionStrings = append(conditionStrings, s)
 	}
 	return conditionStrings
