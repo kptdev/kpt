@@ -28,7 +28,7 @@ jobs:
       - run: |
           ./scripts/create-licenses.sh
       # Upload the licenses list so it's available if needed
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Licenses
           path: LICENSES.txt

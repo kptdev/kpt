@@ -27,7 +27,7 @@ func NewCommand(ctx context.Context, _ string) *cobra.Command {
 		Use:   "license",
 		Short: "[Alpha] " + licensedocs.LicenseShort,
 		Long:  "[Alpha] " + licensedocs.LicenseShort + "\n" + licensedocs.LicenseLong,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

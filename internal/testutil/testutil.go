@@ -180,7 +180,7 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 		sourceDir = newSourceDir
 	}
 	upstreamFiles := sets.String{}
-	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(sourceDir, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -199,7 +199,7 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 
 	// get set of filenames in the cloned package
 	localFiles := sets.String{}
-	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(destDir, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -821,7 +821,7 @@ func (w *TestWorkspace) Tag(tagName string) error {
 
 func PrintPackage(paths ...string) error {
 	path := filepath.Join(paths...)
-	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(path, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

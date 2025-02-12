@@ -32,7 +32,7 @@ func GetCommand(ctx context.Context, name string) *cobra.Command {
 		Short:   fndocs.FnShort,
 		Long:    fndocs.FnLong,
 		Aliases: []string{"functions"},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

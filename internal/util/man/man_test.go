@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/GoogleContainerTools/kpt/internal/util/man"
+	man "github.com/GoogleContainerTools/kpt/internal/util/man"
 	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,7 +45,7 @@ info:
 	// write the man md file
 	err = os.Mkdir(filepath.Join(d, "man"), 0700)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(d, "man", ManFilename), []byte(`
+	err = os.WriteFile(filepath.Join(d, "man", man.ManFilename), []byte(`
 java 1   "June 2019"  "Application"
 ==================================================
 
@@ -86,7 +86,7 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -164,11 +164,11 @@ metadata:
 // but can be overridden
 func TestMan_GetExecCmd(t *testing.T) {
 	// default to "man"
-	instance := Command{}
+	instance := man.Command{}
 	assert.Equal(t, "man", instance.GetExecCmd())
 
 	// allow overrides for testing
-	instance = Command{ManExecCommand: "cat"}
+	instance = man.Command{ManExecCommand: "cat"}
 	assert.Equal(t, "cat", instance.GetExecCmd())
 }
 
@@ -176,12 +176,12 @@ func TestMan_GetExecCmd(t *testing.T) {
 // but can be overridden.
 func TestMan_GetStdOut(t *testing.T) {
 	// default to stdout
-	instance := Command{}
+	instance := man.Command{}
 	assert.Equal(t, os.Stdout, instance.GetStdOut())
 
 	// allow overrides for testing
 	b := &bytes.Buffer{}
-	instance = Command{StdOut: b}
+	instance = man.Command{StdOut: b}
 	assert.Equal(t, b, instance.GetStdOut())
 }
 
@@ -203,7 +203,7 @@ info:
 	}
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -234,7 +234,7 @@ info:
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -262,7 +262,7 @@ info:
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -276,7 +276,7 @@ info:
 // path is not under the package directory.
 func TestMan_Execute_failManNotInstalled(t *testing.T) {
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "notrealprogram",
 		Path:           "path",
 		StdOut:         b,

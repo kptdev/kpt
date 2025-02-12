@@ -192,7 +192,7 @@ func E(args ...interface{}) error {
 		case error:
 			e.Err = a
 		case string:
-			e.Err = fmt.Errorf(a)
+			e.Err = fmt.Errorf("%s", a)
 		default:
 			panic(fmt.Errorf("unknown type %T for value %v in call to error.E", a, a))
 		}

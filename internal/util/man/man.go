@@ -53,7 +53,7 @@ const ManFilename = "README.md"
 func (m Command) Run() error {
 	_, err := exec.LookPath(m.GetExecCmd())
 	if err != nil {
-		return errors.Errorf(m.GetExecCmd() + " not installed")
+		return errors.Errorf("%s not installed", m.GetExecCmd())
 	}
 
 	// lookup the path to the man page

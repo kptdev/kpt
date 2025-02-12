@@ -32,7 +32,7 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 		Use:   "alpha",
 		Short: alphadocs.AlphaShort,
 		Long:  alphadocs.AlphaLong,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

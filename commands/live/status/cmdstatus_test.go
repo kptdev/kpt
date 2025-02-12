@@ -265,7 +265,7 @@ foo/deployment.apps/default/foo is InProgress: inProgress
 			invFactory := inventory.FakeClientFactory(tc.inventory)
 			loader := NewFakeLoader(ctx, tf, tc.inventory)
 			runner := NewRunner(ctx, tf, invFactory, loader)
-			runner.PollerFactoryFunc = func(c cmdutil.Factory) (poller.Poller, error) {
+			runner.PollerFactoryFunc = func(_ cmdutil.Factory) (poller.Poller, error) {
 				return &fakePoller{tc.events}, nil
 			}
 

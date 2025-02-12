@@ -55,7 +55,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
 	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
 		"(Experimental) indicates if this package will be deployed to a cluster.")
-	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = c.RegisterFlagCompletionFunc("strategy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
 	return r
