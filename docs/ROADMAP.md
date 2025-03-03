@@ -18,7 +18,7 @@ A few areas of work are ongoing. (This is not exhaustive.)
 ### Package orchestration
 
 See the [package orchestration roadmap](https://github.com/GoogleContainerTools/kpt/blob/main/porch/docs/porch-roadmap.md)
-for more details.
+for more details. See also the [Porch documentation in the Nephio project](https://docs.nephio.org/docs/porch/).
 
 ### Explore various options for function runtime
 
