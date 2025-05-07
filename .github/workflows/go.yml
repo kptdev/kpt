@@ -60,6 +60,7 @@ jobs:
           git config --global user.email you@example.com
           git config --global user.name Your Name
           make all
+          docker version
           make test-docker
         env:
           KPT_FN_RUNTIME: ${{ matrix.runtime }}
