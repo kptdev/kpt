@@ -46,12 +46,12 @@ jobs:
           which podman
           podman version
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '>=1.22.4'
         id: go
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
       - name: Build, Test, Lint
@@ -68,12 +68,12 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '>=1.22.4'
         id: go
       - name: Check out code into the Go module directory
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
       - name: Build
@@ -86,12 +86,12 @@ jobs:
 #    runs-on: windows-2019
 #    steps:
 #      - name: Set up Go
-#        uses: actions/setup-go@v1
+#        uses: actions/setup-go@v5
 #        with:
 #          go-version: '>=1.22.4'
 #        id: go
 #      - name: Check out code into the Go module directory
-#        uses: actions/checkout@v3
+#        uses: actions/checkout@v4
 #        with:
 #          path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
 #      - name: Build
