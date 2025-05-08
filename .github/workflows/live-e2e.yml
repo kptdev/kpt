@@ -31,10 +31,10 @@ jobs:
         version: ["1.28.0@sha256:b7a4cad12c197af3ba43202d3efe03246b3f0793f162afb40a33c923952d5b31"]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: '>=1.22.4'
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       # If you upgrade this version confirm the changes match your expectations
       - name: Install KinD
