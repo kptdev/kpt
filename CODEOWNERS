@@ -1,5 +1,2 @@
-# Generally we are following a permissive policy of code ownership
-# We use the @GoogleContainerTools/kpt-reviewers group so that we can assign a single person to each PR.
-
 # Default
-*     @GoogleContainerTools/kpt-reviewers
+*     @liamfallon @kispaljr 
