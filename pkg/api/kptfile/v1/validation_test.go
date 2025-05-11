@@ -149,6 +149,93 @@ func TestKptfileValidate(t *testing.T) {
 			},
 			valid: false,
 		},
+		{
+			name: "pipeline: valid resource reference",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "gcr.io/kpt-fn/set-labels:v0.1",
+							ResourceRef: &ResourceReference{
+								Name: "my-config",
+								Kind: "ConfigMap",
+							},
+						},
+					},
+				},
+			},
+			valid: true,
+		},
+		{
+			name: "pipeline: resource ref missing name",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "gcr.io/kpt-fn/set-labels:v0.1",
+							ResourceRef: &ResourceReference{
+								Kind: "ConfigMap",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: resource ref missing kind",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "gcr.io/kpt-fn/set-labels:v0.1",
+							ResourceRef: &ResourceReference{
+								Name: "my-config",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: resource ref with configPath",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image:      "gcr.io/kpt-fn/set-labels:v0.1",
+							ConfigPath: "config.yaml",
+							ResourceRef: &ResourceReference{
+								Name: "my-config",
+								Kind: "ConfigMap",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			name: "pipeline: resource ref with configMap",
+			kptfile: KptFile{
+				Pipeline: &Pipeline{
+					Mutators: []Function{
+						{
+							Image: "gcr.io/kpt-fn/set-labels:v0.1",
+							ConfigMap: map[string]string{
+								"key": "value",
+							},
+							ResourceRef: &ResourceReference{
+								Name: "my-config",
+								Kind: "ConfigMap",
+							},
+						},
+					},
+				},
+			},
+			valid: false,
+		},
 	}
 
 	for _, c := range cases {
