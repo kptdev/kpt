@@ -28,8 +28,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/pkg/test/porch"
 	"github.com/google/go-cmp/cmp"
+	"github.com/kptdev/kpt/pkg/test/porch"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 

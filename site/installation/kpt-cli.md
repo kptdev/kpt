@@ -13,10 +13,10 @@ Download pre-compiled binaries:
 
 Optionally verify the [SLSA3 signatures](slsa.dev) generated using the OpenSSF's [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release process. To verify a release binary:
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
-2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/GoogleContainerTools/kpt/releases).
+2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/kptdev/kpt/releases).
 3. Run the verifier:
 ```shell
-slsa-verifier -artifact-path kpt-<os>-<arch> -provenance attestation.intoto.jsonl -source github.com/GoogleContainerTools/kpt -tag <the-tag>
+slsa-verifier -artifact-path kpt-<os>-<arch> -provenance attestation.intoto.jsonl -source github.com/kptdev/kpt -tag <the-tag>
 ```
 
 On Linux and MacOS, make it executable:
@@ -79,7 +79,7 @@ The version of kpt installed using `gcloud` may not be the latest released versi
 Install the latest release with Homebrew on MacOS.
 
 ```shell
-$ brew tap GoogleContainerTools/kpt https://github.com/GoogleContainerTools/kpt.git
+$ brew tap kptdev/kpt https://github.com/kptdev/kpt.git
 $ brew install kpt
 ```
 
@@ -119,7 +119,7 @@ $ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.49 version
 Install by compiling the source. This requires having Go version 1.21+:
 
 ```shell
-$ go install -v github.com/GoogleContainerTools/kpt@main
+$ go install -v github.com/kptdev/kpt@main
 ```
 
 kpt version will return `unknown` for binaries built from source:
@@ -134,12 +134,12 @@ $ kpt version
   https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.49/kpt_linux_amd64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_linux_amd64
 [linux-arm64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.49/kpt_linux_arm64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_linux_arm64
 [darwin-amd64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_amd64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_amd64
 [darwin-arm64]:
-  https://github.com/GoogleContainerTools/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_arm64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_arm64
 [migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation

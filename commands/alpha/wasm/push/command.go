@@ -20,9 +20,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/wasmdocs"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/pkg/wasm"
+	"github.com/kptdev/kpt/internal/docs/generated/wasmdocs"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/pkg/wasm"
 	"github.com/spf13/cobra"
 )
 

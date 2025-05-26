@@ -40,11 +40,11 @@ const (
 )
 
 // FixDocs replaces instances of old with new in the docs for c
-func FixDocs(oldVal, newVal string, c *cobra.Command) {
-	c.Use = strings.ReplaceAll(c.Use, oldVal, newVal)
-	c.Short = strings.ReplaceAll(c.Short, oldVal, newVal)
-	c.Long = strings.ReplaceAll(c.Long, oldVal, newVal)
-	c.Example = strings.ReplaceAll(c.Example, oldVal, newVal)
+func FixDocs(old, new string, c *cobra.Command) {
+	c.Use = strings.ReplaceAll(c.Use, old, new)
+	c.Short = strings.ReplaceAll(c.Short, old, new)
+	c.Long = strings.ReplaceAll(c.Long, old, new)
+	c.Example = strings.ReplaceAll(c.Example, old, new)
 }
 
 func PrintErrorStacktrace() bool {

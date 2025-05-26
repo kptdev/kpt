@@ -21,8 +21,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 )
 
 // TruncateOutput defines should output be truncated

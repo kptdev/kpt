@@ -17,8 +17,8 @@ package live
 import (
 	"encoding/json"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -119,7 +119,7 @@ const NoLocalConfigAnnoVal = "false"
 // "false" value for the local-config annotation doesn't make much sense.
 // With that we can probably enable just presence of local-config annotation
 // as a way to mark that config is local. Can get rid of confusion as pointed out in the
-// issue --> https://github.com/GoogleContainerTools/kpt/issues/2767
+// issue --> https://github.com/kptdev/kpt/issues/2767
 func filterLocalConfig(objs []*unstructured.Unstructured) []*unstructured.Unstructured {
 	var filteredObjs []*unstructured.Unstructured
 	for _, obj := range objs {

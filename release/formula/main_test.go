@@ -40,15 +40,15 @@ func TestFormula(t *testing.T) {
 
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://googlecontainertools.github.io/kpt"
-  url "https://github.com/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz"
+  homepage "https://github.com/kptdev.github.io/kpt"
+  url "https://github.com/kptdev/kpt/archive/v0.0.0-fake.tar.gz"
   sha256 "4e42c5ce1a23511405beb5f51cfe07885fa953db448265fe74ee9b81e0def277"
 
   depends_on "go" => :build
 
   def install
     ENV["GO111MODULE"] = "on"
-    system "go", "build", "-ldflags", "-X github.com/GoogleContainerTools/kpt/run.version=#{version}", *std_go_args
+    system "go", "build", "-ldflags", "-X github.com/kptdev/kpt/run.version=#{version}", *std_go_args
   end
 
   test do
@@ -60,7 +60,7 @@ end
 	httpClient := &http.Client{
 		Transport: &fakeServer{t: t},
 	}
-	url := "https://github.com/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz"
+	url := "https://github.com/kptdev/kpt/archive/v0.0.0-fake.tar.gz"
 	got, err := buildFormula(httpClient, url)
 	if err != nil {
 		t.Fatalf("error from buildFormula(%q): %v", url, err)
@@ -75,8 +75,8 @@ type fakeServer struct {
 }
 
 func (s *fakeServer) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req.URL.Path != "/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz" {
-		s.t.Errorf("Expected to request '/GoogleContainerTools/kpt/archive/v0.0.0-fake.tar.gz', got: %s", req.URL.Path)
+	if req.URL.Path != "/kptdev/kpt/archive/v0.0.0-fake.tar.gz" {
+		s.t.Errorf("Expected to request '//kptdev/kpt/archive/v0.0.0-fake.tar.gz', got: %s", req.URL.Path)
 	}
 	body := bytes.NewReader([]byte(`This is fake content so that our tests don't download big files`))
 	return &http.Response{

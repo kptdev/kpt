@@ -18,10 +18,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/live/plan"
-	"github.com/GoogleContainerTools/kpt/commands/live/apply"
-	"github.com/GoogleContainerTools/kpt/commands/util"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
+	"github.com/kptdev/kpt/commands/alpha/live/plan"
+	"github.com/kptdev/kpt/commands/live/apply"
+	"github.com/kptdev/kpt/commands/util"
+	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )

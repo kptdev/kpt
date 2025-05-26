@@ -15,4 +15,4 @@ If your question is not a [FAQ](/faq/), please [reach out](/contact/)!
 kpt is an OSS project and anyone can [contribute]!
 
 [contribute]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/CONTRIBUTING.md
+  https://github.com/kptdev/kpt/blob/main/CONTRIBUTING.md

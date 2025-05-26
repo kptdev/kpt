@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/cfgflags"
+	"github.com/kptdev/kpt/internal/util/cfgflags"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
@@ -63,8 +63,8 @@ func UpdateQPS(flags *genericclioptions.ConfigFlags) {
 
 			enabled, err := flowcontrol.IsEnabled(ctx, c)
 			if err != nil {
-				klog.Warning("Failed to query apiserver to check for flow control enablement: %v", err)
-				// Default to the lower QPS limits.
+				klog.Warningf("Failed to query apiserver to check for flow control enablement: %v", err)
+				// Default to the lower QPS limits
 			}
 
 			qps := float32(-1)

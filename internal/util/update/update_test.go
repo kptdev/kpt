@@ -22,14 +22,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	pkgtest "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/update"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/pkg"
+	pkgtest "github.com/kptdev/kpt/internal/pkg/testing"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/update"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	kptRepo         = "github.com/GoogleContainerTools/kpt"
+	kptRepo         = "github.com/kptdev/kpt"
 	masterBranch    = "master"
 	testPackageName = "test-package"
 )

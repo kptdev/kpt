@@ -24,10 +24,10 @@ import (
 	"strconv"
 	"strings"
 
-	kptcommands "github.com/GoogleContainerTools/kpt/commands"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	kptcommands "github.com/kptdev/kpt/commands"
+	"github.com/kptdev/kpt/internal/docs/generated/overview"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )

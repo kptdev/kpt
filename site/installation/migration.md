@@ -213,7 +213,7 @@ $ DEMO_HOME=$(mktemp -d); cd $DEMO_HOME
 
 ```shell
 # replace it with your package repo uri
-$ git clone https://github.com/GoogleContainerTools/kpt-functions-catalog.git
+$ git clone https://github.com/kptdev/krm-functions-catalog.git
 ```
 
 ```shell
@@ -311,7 +311,7 @@ $ kpt version
 
 ```shell
 # fetch the package with upgraded version
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-catalog.git/testdata/fix/nginx-v1@master
+$ kpt pkg get https://github.com/kptdev/krm-functions-catalog.git/testdata/fix/nginx-v1@master
 ```
 
 - You might have performed some customizations to your existing package such as,
@@ -353,22 +353,22 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
    reserved for serious security bugs only. Users will be asked to migrate to
    kpt `v1.0`.
 
-[v0.39 commands]: https://googlecontainertools.github.io/kpt/reference/
+[v0.39 commands]: https://kptdev.github.io/kpt/reference/
 [v1.0 commands]: https://kpt.dev/reference/cli/
-[v1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/main/pkg/api/kptfile/v1/types.go
+[v1 kptfile]: https://github.com/kptdev/kpt/blob/main/pkg/api/kptfile/v1/types.go
 [starlark function]: https://catalog.kpt.dev/starlark/v0.2/
 [apply-setters]: https://catalog.kpt.dev/apply-setters/v0.1/
-[setter inheritance]: https://googlecontainertools.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
-[openapi validations]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#openapi-validations
-[required setters]: https://googlecontainertools.github.io/kpt/guides/producer/setters/#required-setters
-[auto-setters]: https://googlecontainertools.github.io/kpt/concepts/setters/#auto-setters
-[migrating inventory objects]: https://googlecontainertools.github.io/kpt/reference/live/alpha/
-[live migration]: https://googlecontainertools.github.io/kpt/reference/cli/live/alpha/
+[setter inheritance]: https://kptdev.github.io/kpt/concepts/setters/#inherit-setter-values-from-parent-package
+[openapi validations]: https://kptdev.github.io/kpt/guides/producer/setters/#openapi-validations
+[required setters]: https://kptdev.github.io/kpt/guides/producer/setters/#required-setters
+[auto-setters]: https://kptdev.github.io/kpt/concepts/setters/#auto-setters
+[migrating inventory objects]: https://kptdev.github.io/kpt/reference/live/alpha/
+[live migration]: https://kptdev.github.io/kpt/reference/cli/live/alpha/
 [configpath]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
-[example kpt package]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/testdata/fix
-[simple example]: https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/master/functions/go/fix#examples
+[example kpt package]: https://github.com/kptdev/krm-functions-catalog/tree/master/testdata/fix
+[simple example]: https://github.com/kptdev/krm-functions-catalog/tree/master/functions/go/fix#examples
 [function config]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution?id=configpath
-[starlark runtime]: https://googlecontainertools.github.io/kpt/guides/producer/functions/starlark/
+[starlark runtime]: https://kptdev.github.io/kpt/guides/producer/functions/starlark/
 [update guide]: https://kpt.dev/book/03-packages/05-updating-a-package
 [render guide]: https://kpt.dev/book/04-using-functions/01-declarative-function-execution
 [eval guide]: https://kpt.dev/book/04-using-functions/02-imperative-function-execution
@@ -377,6 +377,6 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 [installation instructions]: https://kpt.dev/installation/
 [install]: https://kpt.dev/installation/
 [kpt-functions-catalog]: https://catalog.kpt.dev/
-[v1alpha1 kptfile]: https://github.com/GoogleContainerTools/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
+[v1alpha1 kptfile]: https://github.com/kptdev/kpt/blob/master/pkg/kptfile/pkgfile.go#L39
 [git clone]: https://git-scm.com/docs/git-clone
 [publish your package]: https://kpt.dev/book/03-packages/08-publishing-a-package

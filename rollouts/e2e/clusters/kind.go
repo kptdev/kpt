@@ -210,7 +210,7 @@ func (c *kindClusters) ensureConfigSyncIsInstalled(ctx context.Context, name str
 	// defer os.Remove(kubeConfig)
 	// using the --kubeconfig flag as a hack to prevent kind from updating the kubeconfig context
 	c.t.Logf("installing configsync in the cluster %s", name)
-	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/v1.14.2/config-sync-manifest.yaml")
+	cmd := exec.CommandContext(ctx, "kubectl", "apply", "-f", "https://github.com/kptdev/kpt-config-sync/releases/download/v1.14.2/config-sync-manifest.yaml")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KUBECONFIG=%s", kubeConfig))
 	output, err := cmd.CombinedOutput()

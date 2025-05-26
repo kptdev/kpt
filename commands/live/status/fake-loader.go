@@ -18,8 +18,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/cmd/status"

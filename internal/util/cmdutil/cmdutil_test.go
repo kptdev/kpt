@@ -20,7 +20,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/function"
+	"github.com/kptdev/kpt/internal/util/function"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -315,8 +315,8 @@ func TestListImages(t *testing.T) {
       "Examples": {
         "apply-setters-simple": {
           "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
-          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
-          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
+          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
         }
       }
     }
@@ -327,8 +327,8 @@ func TestListImages(t *testing.T) {
       "Examples": {
         "gatekeeper-warning-only": {
           "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
-          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
-          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
+          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
         }
       }
     },
@@ -337,8 +337,8 @@ func TestListImages(t *testing.T) {
       "Examples": {
         "gatekeeper-warning-only": {
           "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
-          "RemoteExamplePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
-          "RemoteSourcePath": "https://github.com/GoogleContainerTools/kpt-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
+          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
+          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
         }
       }
     }

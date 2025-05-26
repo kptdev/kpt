@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 

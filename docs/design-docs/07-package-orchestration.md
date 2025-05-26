@@ -284,9 +284,9 @@ service enables the client to:
     repository
   * edit an existing package (similar to the CLI command(s)
     [kpt fn source](https://kpt.dev/reference/cli/fn/source/) or
-    [kpt pkg pull](https://github.com/GoogleContainerTools/kpt/issues/2557))
+    [kpt pkg pull](https://github.com/kptdev/kpt/issues/2557))
   * roll back / restore a package to any of its previous versions
-    ([kpt pkg pull](https://github.com/GoogleContainerTools/kpt/issues/2557)
+    ([kpt pkg pull](https://github.com/kptdev/kpt/issues/2557)
     of a previous version)
 * Apply changes to a package _draft_. In general, mutations include
   adding/modifying/deleting any part of the package's contents. Some specific
@@ -303,7 +303,7 @@ service enables the client to:
     of a client-side mutations by a UI (equivalent to
     [kpt fn sink](https://kpt.dev/reference/cli/fn/sink/))
 * Rebase a package onto another upstream base package
-  ([detail](https://github.com/GoogleContainerTools/kpt/issues/2548)) or onto
+  ([detail](https://github.com/kptdev/kpt/issues/2548)) or onto
   a newer version of the same package (to aid with conflict resolution during
   the process of publishing a draft package)
 * Get feedback during package authoring, and assistance in recovery from:

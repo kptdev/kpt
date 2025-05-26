@@ -14,7 +14,7 @@ linters:
     - errcheck
 # funlen triggers on test functions which it shouldn't
 #    - funlen
-    - exportloopref
+    - copyloopvar
     - gochecknoinits
     - goconst
     - gocritic

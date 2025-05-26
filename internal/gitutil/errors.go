@@ -15,10 +15,9 @@
 package gitutil
 
 import (
+	"errors"
 	"regexp"
 	"strings"
-
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 )
 
 // GitExecErrorType is used to enumerate git errors.

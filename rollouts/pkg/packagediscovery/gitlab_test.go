@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/xanzy/go-gitlab"
 )

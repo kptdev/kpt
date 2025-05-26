@@ -17,6 +17,6 @@ export d=$(pwd)
 cd $(mktemp -d)
 git init > /dev/null
 
-export PKG=https://github.com/GoogleContainerTools/kpt.git/package-examples/helloworld@v0.5.0
+export PKG=https://github.com/kptdev/kpt.git/package-examples/helloworld@v0.5.0
 
 asciinema rec --overwrite -i 1 -c $d/$1.sh $d/$1.cast

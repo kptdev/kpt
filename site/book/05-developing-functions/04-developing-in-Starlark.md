@@ -18,7 +18,7 @@ Let's write a starlark function which add annotation "managed-by=kpt" only to `D
 ### Get the "get-started" example
 
 ```shell
-kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/starlark/get-started@master set-annotation
+kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/starlark/get-started@master set-annotation
 cd set-annotation
 ```
 

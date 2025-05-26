@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-# disabling href checker https://github.com/GoogleContainerTools/kpt/issues/3157
+# disabling href checker https://github.com/kptdev/kpt/issues/3157
 # Re-enable it by replacing it with robust mechanism
 #      - uses: actions/checkout@v4
 #        with:

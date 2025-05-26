@@ -17,7 +17,7 @@ package packagediscovery
 import (
 	"context"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 )
 
 // getOCIPackages discovers OCI packages for OCI config.

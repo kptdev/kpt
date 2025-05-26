@@ -19,7 +19,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/merge"
+	"github.com/kptdev/kpt/internal/util/merge"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -30,7 +30,7 @@ import (
 // TODO(yuwenma): Those const vars are defined in kpt-functions-sdk/go/fn v0.0.0-20220706221933-7181f451a663+
 // we cannot import go/fn directly because the porch/set-namespace uses an older go/fn version. Bumping kpt module alone fails
 // kpt CI.
-// We should update porch/set-namespace once https://github.com/GoogleContainerTools/kpt-functions-catalog/pull/885 is released.
+// We should update porch/set-namespace once https://github.com/kptdev/krm-functions-catalog/pull/885 is released.
 // and cleanup the const vars below
 const (
 	upstreamIdentifierFmt = "%s|%s|%s|%s"
@@ -55,7 +55,7 @@ func Process(paths ...string) error {
 		}.Execute()
 		if err != nil {
 			// this should be a best effort, do not error if this step fails
-			// https://github.com/GoogleContainerTools/kpt/issues/2559
+			// https://github.com/kptdev/kpt/issues/2559
 			return nil
 		}
 	}

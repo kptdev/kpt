@@ -20,11 +20,11 @@ import (
 	"strings"
 	"testing"
 
-	initialization "github.com/GoogleContainerTools/kpt/commands/pkg/init"
-	"github.com/GoogleContainerTools/kpt/internal/builtins"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/man"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	initialization "github.com/kptdev/kpt/commands/pkg/init"
+	"github.com/kptdev/kpt/internal/builtins"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/util/man"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 

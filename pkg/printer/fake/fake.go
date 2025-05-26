@@ -18,8 +18,8 @@ import (
 	"context"
 	"io"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/printer"
 )
 
 // Printer implements the printer.Printer interface and just ignores

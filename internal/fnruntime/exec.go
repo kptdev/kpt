@@ -23,8 +23,8 @@ import (
 	"os/exec"
 	"time"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	"github.com/kptdev/kpt/pkg/printer"
 )
 
 type ExecFn struct {

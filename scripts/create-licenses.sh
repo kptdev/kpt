@@ -202,7 +202,7 @@ for PACKAGE in $(go list -mod=mod -m -json all | jq -r .Path | sort -f); do
 
   # Skip self.
   # The LICENSE file is at the root but vendor directory contents are selective.
-  if [[ "${PACKAGE}" =~ ^github.com/GoogleContainerTools/kpt(/.*)?$ ]]; then
+  if [[ "${PACKAGE}" =~ ^github.com/kptdev/kpt(/.*)?$ ]]; then
     # echo "Skipping ${PACKAGE}" > /dev/stderr
     continue
   fi

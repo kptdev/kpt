@@ -24,11 +24,11 @@ address several different dimensions of scalability:
 
 ## See Also
 - [Package Orchestration](07-package-orchestration.md)
-- [#3347](https://github.com/GoogleContainerTools/kpt/issues/3347) Bulk package
+- [#3347](https://github.com/kptdev/kpt/issues/3347) Bulk package
   creation
-- [#3243](https://github.com/GoogleContainerTools/kpt/issues/3243) Support bulk
+- [#3243](https://github.com/kptdev/kpt/issues/3243) Support bulk
   package upgrades
-- [#3488](https://github.com/GoogleContainerTools/kpt/issues/3488) Porch:
+- [#3488](https://github.com/kptdev/kpt/issues/3488) Porch:
   BaseRevision controller aka Fan Out controller - but more
 - [Managing Package
    Revisions](https://docs.google.com/document/d/1EzUUDxLm5jlEG9d47AQOxA2W6HmSWVjL1zqyIFkqV1I/edit?usp=sharing)
@@ -466,7 +466,7 @@ in the condition `Ready` being set to `False`.
 PackageVariant resource creators may specify a list of KRM functions to add to
 the beginning of the Kptfile's pipeline. These functions are listed in the field
 `spec.pipeline`, which is a
-[Pipeline](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L236),
+[Pipeline](https://github.com/kptdev/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L236),
 just as in the Kptfile. The user can therefore prepend both `validators` and
 `mutators`.
 
@@ -474,7 +474,7 @@ Functions added in this way are always added to the *beginning* of the Kptfile
 pipeline. In order to enable management of the list on subsequent
 reconciliations, functions added by the package variant controller will use the
 `Name` field of the
-[Function](https://github.com/GoogleContainerTools/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283).
+[Function](https://github.com/kptdev/kpt/blob/cf1f326486214f6b4469d8432287a2fa705b48f5/pkg/api/kptfile/v1/types.go#L283).
 In the Kptfile, each function will be named as the dot-delimited concatenation
 of `PackageVariant`, the name of the PackageVariant resource, the function name
 as specified in the pipeline of the PackageVariant resource (if present), and
@@ -1360,7 +1360,7 @@ The PackageVariantSet status uses these conditions:
     implementation is available, but it is a somewhat different API, without
     support for CEL or any injection. It is focused only on fan out targeting,
     and uses a [slightly different targeting
-    API](https://github.com/GoogleContainerTools/kpt/blob/main/porch/controllers/packagevariantsets/api/v1alpha1/packagevariantset_types.go).
+    API](https://github.com/kptdev/kpt/blob/main/porch/controllers/packagevariantsets/api/v1alpha1/packagevariantset_types.go).
 [^repo-pkg-expr]: This is not exactly correct. As we will see later in the
     `template` discussion, this the repository and package names listed actually
     are just defaults for the template; they can be further manipulated in the

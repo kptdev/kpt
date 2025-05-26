@@ -17,9 +17,9 @@ package packageclustermatcher
 import (
 	"fmt"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
+	"github.com/kptdev/kpt/rollouts/pkg/clusterstore"
+	"github.com/kptdev/kpt/rollouts/pkg/packagediscovery"
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/checker/decls"

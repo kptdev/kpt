@@ -20,12 +20,12 @@ editPage.title = "Edit this page";
 editPage.appendChild(editIcon);
 
 function addGitHubWidget() {
-  createIssue.href = `https://github.com/GoogleContainerTools/kpt/issues/new?labels=documentation&title=Docs: ${document.title} (${window.location})`;
+  createIssue.href = `https://github.com/kptdev/kpt/issues/new?labels=documentation&title=Docs: ${document.title} (${window.location})`;
 
   let path = window.location.pathname;
   const pageName = path.match(bookPath) ? "00.md" : "README.md";
   path += path.endsWith("/") ? pageName : ".md";
-  editPage.href = `https://github.com/GoogleContainerTools/kpt/edit/main/site${path}`;
+  editPage.href = `https://github.com/kptdev/kpt/edit/main/site${path}`;
 
   const container = document.createElement("div");
   container.classList.add("github-widget");
