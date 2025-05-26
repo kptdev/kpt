@@ -15,10 +15,10 @@
 package resolver
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/util/update"
+	"github.com/kptdev/kpt/internal/util/update"
 )
 
 //nolint:gochecknoinits

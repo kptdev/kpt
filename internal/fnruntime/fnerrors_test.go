@@ -131,7 +131,6 @@ error message`,
 		},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			tc.fnExecError.TruncateOutput = tc.truncate
 			s := tc.fnExecError.String()
@@ -204,7 +203,6 @@ lastline`,
 	}
 
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			s := filterDockerCLIOutput(bytes.NewBufferString(tc.input))
 			assert.Equal(t, tc.expected, s)

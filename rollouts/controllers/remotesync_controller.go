@@ -42,8 +42,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
+	"github.com/kptdev/kpt/rollouts/pkg/clusterstore"
 )
 
 var (

@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/licensedocs"
-	"github.com/GoogleContainerTools/kpt/licenses"
+	"github.com/kptdev/kpt/internal/docs/generated/licensedocs"
+	"github.com/kptdev/kpt/licenses"
 	"github.com/spf13/cobra"
 )
 

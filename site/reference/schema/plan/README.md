@@ -19,4 +19,4 @@ an `updated` field that contains the resource after apply (but the state in the 
 is an `error` field that will have a more detailed error message in the cases where the value of the `action` field is `Error`.
 
 The OpenAPI
-[schema is available here](https://raw.githubusercontent.com/GoogleContainerTools/kpt/main/site/reference/schema/kptfile/kptfile.yaml).
+[schema is available here](https://raw.githubusercontent.com/kptdev/kpt/main/site/reference/schema/kptfile/kptfile.yaml).

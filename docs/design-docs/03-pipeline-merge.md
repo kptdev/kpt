@@ -9,7 +9,7 @@ Currently, `kpt pkg update` doesn't merge the `pipeline` section in the Kptfile 
 The fact that the `pipeline` section is a non-associative list with no defined function identity makes 
 it very difficult to merge with upstream counterparts. Ordering of the functions is also important.
 This friction is forcing users to use `setters` and discouraging them from declaring other functions in the `pipeline` as 
-they will be deleted during the `kpt pkg update`. [Here](https://github.com/GoogleContainerTools/kpt/issues/2529) 
+they will be deleted during the `kpt pkg update`. [Here](https://github.com/kptdev/kpt/issues/2529) 
 is the example issue. Merging the pipeline correctly will reduce huge amounts of 
 friction in declaring new functions. This will encourage users to declare more functions 
 in the pipeline which in turn helps to **avoid excessive parameterization**.
@@ -609,7 +609,7 @@ pipeline:
 
 ## Open issues
 
- https://github.com/GoogleContainerTools/kpt/issues/2529
+ https://github.com/kptdev/kpt/issues/2529
 
 ## Alternatives Considered
 
@@ -621,6 +621,6 @@ Why should upstream win in case of conflicts ? Is this what the user always expe
 - Not necessarily. User expectations might be different in different scenarios for resolving conflicts. 
 But since we already went down the path of upstream-wins strategy in case of conflicts for merging resources, 
 we are going down that route to maintain consistency.
-- There is an open [issue](https://github.com/GoogleContainerTools/kpt/issues/1437) to support 
+- There is an open [issue](https://github.com/kptdev/kpt/issues/1437) to support 
 multiple conflict resolution strategies and provide interactive update behavior to resolve 
 conflicts which is out of scope for this doc and will be addressed soon.

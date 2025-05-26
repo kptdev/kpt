@@ -1,7 +1,7 @@
 # Installing Porch
 
 You can install Porch by either using one of the
-[released versions](https://github.com/GoogleContainerTools/kpt/releases), or
+[released versions](https://github.com/kptdev/kpt/releases), or
 building Porch from sources.
 
 ## Prerequisites
@@ -11,7 +11,7 @@ We have just started by documenting one known-good configuration: GCP and GKE.
 We would welcome comparable installation instructions or feedback from people
 that try it out on other clouds / configurations.
 
-To run one of the [released versions](https://github.com/GoogleContainerTools/kpt/releases)
+To run one of the [released versions](https://github.com/kptdev/kpt/releases)
 of Porch on GKE, you will need:
 
 * A [GCP Project](https://console.cloud.google.com/projectcreate)
@@ -68,7 +68,7 @@ gcloud container clusters get-credentials --region us-central1 porch-dev
 ## Run Released Version of Porch
 
 To run a released version of Porch, download the release config bundle from
-[Porch release page](https://github.com/GoogleContainerTools/kpt/releases);
+[Porch release page](https://github.com/kptdev/kpt/releases);
 please note you'll need to scroll past recent kpt releases to the most
 recent `porch/...` release.
 
@@ -118,10 +118,10 @@ You can start [using Porch](guides/porch-user-guide.md).
 To run custom build of Porch, you will need additional [prerequisites](#prerequisites).
 The commands below use [Google Container Registry](https://console.cloud.google.com/gcr).
 
-Clone this repository into `${GOPATH}/src/github.com/GoogleContainerTools/kpt`.
+Clone this repository into `${GOPATH}/src/github.com/kptdev/kpt`.
 
 ```sh
-git clone https://github.com/GoogleContainerTools/kpt.git "${GOPATH}/src/github.com/GoogleContainerTools/kpt"
+git clone https://github.com/kptdev/kpt.git "${GOPATH}/src/github.com/kptdev/kpt"
 ```
 
 [Configure](https://cloud.google.com/sdk/gcloud/reference/auth/configure-docker)
@@ -140,12 +140,12 @@ IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy-no-sa
 ```
 
 If you want to use different repository, you can set `IMAGE_REPO` variable
-(see [Makefile](https://github.com/GoogleContainerTools/kpt/blob/main/porch/Makefile#L28)
+(see [Makefile](https://github.com/kptdev/kpt/blob/main/porch/Makefile#L28)
 for details).
 
 The `make push-and-deploy-no-sa` target will install Porch but not Config Sync.
 You can install Config Sync in your k8s cluster manually following the
-[documentation](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/installation.md).
+[documentation](https://github.com/kptdev/kpt-config-sync/blob/main/docs/installation.md).
 
 **Note**: The `-no-sa` (no service account) targets create Porch deployment
 configuration which does not associate Kubernetes service accounts with GCP

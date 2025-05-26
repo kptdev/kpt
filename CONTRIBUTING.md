@@ -82,7 +82,7 @@ Coming soon
 1. Clone the project
 
    ```shell
-   git clone https://github.com/GoogleContainerTools/kpt
+   git clone https://github.com/kptdev/kpt
    cd kpt
    ```
 
@@ -105,7 +105,7 @@ Package orchestrator code has been moved to the Nephio project: https://github.c
 ### Function Catalog
 
 Function catalog has its own repository. Refer to the
-[documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
+[documentation in the krm-functions-catalog](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
 repo.
 
 ### Config Sync

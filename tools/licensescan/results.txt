@@ -72,13 +72,13 @@
     }
   },
   {
-    "name": "github.com/GoogleContainerTools/kpt/porch/api",
+    "name": "github.com/kptdev/kpt/porch/api",
     "sum": "h1:FSW33xqr8SeoZWQ0MgKtjosMmaUBoHa/z0Tlp493528=",
     "version": "v0.0.0-20220821193112-4792e5fa18ee",
     "licenseInfo": {
       "license": "Apache-2.0",
       "licenseURLs": [
-        "https://pkg.go.dev/github.com/GoogleContainerTools/kpt/porch/api@v0.0.0-20220821193112-4792e5fa18ee?tab=licenses"
+        "https://pkg.go.dev/github.com/kptdev/kpt/porch/api@v0.0.0-20220821193112-4792e5fa18ee?tab=licenses"
       ],
       "mustShipCode": false
     }

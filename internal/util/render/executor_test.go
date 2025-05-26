@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )

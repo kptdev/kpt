@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/pkg/live"
+	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/kubectl/pkg/cmd/util"
 )
 

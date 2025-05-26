@@ -37,11 +37,11 @@ const vanityGoEndpoint = ({ importPrefix, vcs, repoRoot }) =>
 exports.configsync = vanityGoEndpoint({
   importPrefix: 'kpt.dev/configsync',
   vcs: 'git',
-  repoRoot: 'https://github.com/GoogleContainerTools/kpt-config-sync.git'
+  repoRoot: 'https://github.com/kptdev/kpt-config-sync.git'
 });
 
 exports.resourcegroup = vanityGoEndpoint({
   importPrefix: "kpt.dev/resourcegroup",
   vcs: "git",
-  repoRoot: "https://github.com/GoogleContainerTools/kpt-resource-group.git",
+  repoRoot: "https://github.com/kptdev/kpt-resource-group.git",
 });

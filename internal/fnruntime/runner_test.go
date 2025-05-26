@@ -24,9 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/internal/types"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
@@ -80,7 +80,6 @@ data: {foo: bar}
 	}
 
 	for _, c := range cases {
-		c := c
 		t.Run(c.name, func(t *testing.T) {
 			if c.configFileContent != "" {
 				tmp, err := os.CreateTemp("", "kpt-pipeline-*")
@@ -147,7 +146,6 @@ func TestMultilineFormatter(t *testing.T) {
 		},
 	}
 	for name, c := range testcases {
-		c := c
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, c.expected, c.ml.String())
 		})

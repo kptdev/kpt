@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
+	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
+	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"

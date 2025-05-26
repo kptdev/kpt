@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/rest"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	cloudresourcemanagerv1 "google.golang.org/api/cloudresourcemanager/v1"
 	gkehubv1 "google.golang.org/api/gkehub/v1"
 )

@@ -18,14 +18,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/nephio-project/porch/api/porch/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, key client.ObjectKey, new v1alpha1.PackageRevisionLifecycle) error {
+func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, key client.ObjectKey, newLifecycle v1alpha1.PackageRevisionLifecycle) error {
 	scheme := runtime.NewScheme()
 	if err := v1alpha1.SchemeBuilder.AddToScheme(scheme); err != nil {
 		return err
@@ -46,15 +46,15 @@ func UpdatePackageRevisionApproval(ctx context.Context, client rest.Interface, k
 	switch lifecycle := pr.Spec.Lifecycle; lifecycle {
 	case v1alpha1.PackageRevisionLifecycleProposed, v1alpha1.PackageRevisionLifecycleDeletionProposed:
 		// ok
-	case new:
+	case newLifecycle:
 		// already correct value
 		return nil
 	default:
-		return fmt.Errorf("cannot change approval from %s to %s", lifecycle, new)
+		return fmt.Errorf("cannot change approval from %s to %s", lifecycle, newLifecycle)
 	}
 
 	// Approve - change the package revision kind to "final".
-	pr.Spec.Lifecycle = new
+	pr.Spec.Lifecycle = newLifecycle
 
 	opts := metav1.UpdateOptions{}
 	result := &v1alpha1.PackageRevision{}

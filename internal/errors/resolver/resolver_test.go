@@ -15,9 +15,9 @@
 package resolver
 
 import (
+	"errors"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
 	"github.com/stretchr/testify/assert"
 )
 

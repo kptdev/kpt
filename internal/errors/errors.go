@@ -21,8 +21,8 @@ import (
 
 	goerrors "errors"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	kyaml_errors "github.com/go-errors/errors"
+	"github.com/kptdev/kpt/internal/types"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.

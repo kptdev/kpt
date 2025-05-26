@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	rolloutsapi "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	rolloutsapi "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	coreapi "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

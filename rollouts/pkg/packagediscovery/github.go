@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
 	"github.com/google/go-github/v48/github"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"golang.org/x/oauth2"
 	coreapi "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

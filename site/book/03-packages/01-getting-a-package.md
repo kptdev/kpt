@@ -4,7 +4,7 @@ committing them to a Git repository. Consumers fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.9
+$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit
@@ -24,14 +24,14 @@ metadata:
 upstream:
   type: git
   git:
-    repo: https://github.com/GoogleContainerTools/kpt
+    repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
     ref: v0.9
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
-    repo: https://github.com/GoogleContainerTools/kpt
+    repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
     ref: package-examples/wordpress/v0.9
     commit: b9ea0bca019dafa9f9f91fd428385597c708518c
@@ -101,7 +101,7 @@ For example, the following fetches the packages to a directory named
 `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress@v0.9 mywordpress
+$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a

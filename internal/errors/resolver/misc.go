@@ -17,7 +17,7 @@ package resolver
 import (
 	goerrors "errors"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/errors"
 )
 
 //nolint:gochecknoinits

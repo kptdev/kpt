@@ -17,11 +17,11 @@ package init
 import (
 	"context"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/pkg/kptpkg"
+	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	"github.com/kptdev/kpt/pkg/kptpkg"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )

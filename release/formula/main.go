@@ -41,7 +41,7 @@ func run(_ context.Context) error {
 	}
 
 	version := os.Args[1]
-	url := "https://github.com/GoogleContainerTools/kpt/archive/" + version + ".tar.gz"
+	url := "https://github.com/kptdev/kpt/archive/" + version + ".tar.gz"
 
 	formula, err := buildFormula(http.DefaultClient, url)
 	if err != nil {
@@ -108,7 +108,7 @@ const formulaTemplate = `# Copyright 2019 The kpt Authors
 
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://googlecontainertools.github.io/kpt"
+  homepage "https://github.com/kptdev.github.io/kpt"
   url "{{url}}"
   sha256 "{{sha256}}"
 
@@ -116,7 +116,7 @@ class Kpt < Formula
 
   def install
     ENV["GO111MODULE"] = "on"
-    system "go", "build", "-ldflags", "-X github.com/GoogleContainerTools/kpt/run.version=#{version}", *std_go_args
+    system "go", "build", "-ldflags", "-X github.com/kptdev/kpt/run.version=#{version}", *std_go_args
   end
 
   test do

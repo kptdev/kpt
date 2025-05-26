@@ -12,7 +12,7 @@ export NAMESPACE=<YOUR NAMESPACE>
 kubectl create namespace ${NAMESPACE}
 
 # You get this Ghost package by running
-kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/ghost@main ${NAMESPACE} --for-deployment
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/ghost@main ${NAMESPACE} --for-deployment
 ```
 
 #### Update the KRM resources to your own data

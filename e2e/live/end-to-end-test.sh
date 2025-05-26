@@ -21,7 +21,7 @@
 #   FROM KPT ROOT DIR: ./e2e/live/end-to-end-test.sh
 #
 # Example KPT ROOT DIR:
-#   ~/go/src/github.com/GoogleContainerTools/kpt
+#   ~/go/src/github.com/kptdev/kpt
 #
 # Flags:
 #   -b) Build the kpt binary with dependencies at HEAD. Downloads HEAD
@@ -136,11 +136,11 @@ function downloadPreviousKpt {
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   else
     echo -e "${RED}ERROR${NC}: Unknown OS $uname"
     exit 1
@@ -160,11 +160,11 @@ function downloadKpt1.0 {
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-      curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+      curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
     else
       echo -e "${RED}ERROR${NC}: Unknown OS $uname"
       exit 1
@@ -192,10 +192,10 @@ function buildKpt {
 	echo "Building kpt using dependencies at HEAD..."
 	echo
 	# Clone kpt repository into kpt source directory
-	KPT_SRC_DIR="${SRC_DIR}/github.com/GoogleContainerTools/kpt"
+	KPT_SRC_DIR="${SRC_DIR}/github.com/kptdev/kpt"
 	mkdir -p $KPT_SRC_DIR
 	echo "Downloading kpt repository at HEAD..."
-	git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+	git clone https://github.com/kptdev/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
 	echo -e "Downloading kpt repository at HEAD...${GREEN}SUCCESS${NC}"
 	# Clone cli-utils repository into source directory
 	CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"

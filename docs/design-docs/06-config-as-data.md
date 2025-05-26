@@ -61,7 +61,7 @@ A system based on CaD *should* observe the following key principles:
 Our implementation of the Configuration as Data approach (
 [kpt](https://kpt.dev),
 [Config Sync](https://cloud.google.com/anthos-config-management/docs/config-sync-overview),
-and [Package Orchestration](https://github.com/GoogleContainerTools/kpt/tree/main/porch))
+and [Package Orchestration](https://docs.nephio.org/docs/porch/))
 build on the foundation of
 [Kubernetes Resource Model](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md)
 (KRM).

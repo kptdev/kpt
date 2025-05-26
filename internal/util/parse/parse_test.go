@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -165,7 +165,6 @@ func Test_pkgURLFromGHURL(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			r := require.New(t)
 			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
@@ -200,8 +199,8 @@ func Test_parseURL(t *testing.T) {
 			expected: expected{repo: "https://my.git-server.com/repository", dir: "/directory", version: "main"},
 		},
 		"no ref": {
-			ghURL:    "https://github.com/GoogleContainerTools/kpt-functions-catalog.git/examples/apply-replacements-simple",
-			expected: expected{repo: "https://github.com/GoogleContainerTools/kpt-functions-catalog", dir: "/examples/apply-replacements-simple", version: ""},
+			ghURL:    "https://github.com/kptdev/krm-functions-catalog.git/examples/apply-replacements-simple",
+			expected: expected{repo: "https://github.com/kptdev/krm-functions-catalog", dir: "/examples/apply-replacements-simple", version: ""},
 		},
 		".git appears in the middle": {
 			ghURL:    "https://my-site.com/root.gitops.git/foo@main",
@@ -209,7 +208,6 @@ func Test_parseURL(t *testing.T) {
 		},
 	}
 	for name, test := range tests {
-		test := test // capture range variable
 		t.Run(name, func(t *testing.T) {
 			repo, dir, version, err := URL(test.ghURL)
 			assert.NoError(t, err)
@@ -225,9 +223,9 @@ func Test_GitParseArgs(t *testing.T) {
 		expected Target
 	}{
 		"git@ url with .git suffix": {
-			ghURL: "git@github.com:GoogleContainerTools/kpt.git",
+			ghURL: "git@github.com:github.com/kptdev/kpt.git",
 			expected: Target{Git: v1.Git{
-				Repo:      "git@github.com:GoogleContainerTools/kpt",
+				Repo:      "git@github.com:github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",
 			},
@@ -236,18 +234,18 @@ func Test_GitParseArgs(t *testing.T) {
 			skip: true,
 		},
 		"http url with .git suffix": {
-			ghURL: "https://github.com/GoogleContainerTools/kpt.git",
+			ghURL: "https://github.com/kptdev/kpt.git",
 			expected: Target{Git: v1.Git{
-				Repo:      "https://github.com/GoogleContainerTools/kpt",
+				Repo:      "https://github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",
 			},
 				Destination: "kpt"},
 		},
 		"starts with github.com": {
-			ghURL: "https://github.com/GoogleContainerTools/kpt",
+			ghURL: "https://github.com/kptdev/kpt",
 			expected: Target{Git: v1.Git{
-				Repo:      "https://github.com/GoogleContainerTools/kpt",
+				Repo:      "https://github.com/kptdev/kpt",
 				Directory: "/",
 				Ref:       "main",
 			},
@@ -255,7 +253,6 @@ func Test_GitParseArgs(t *testing.T) {
 		},
 	}
 	for name, test := range tests {
-		test := test // capture range variable
 		t.Run(name, func(t *testing.T) {
 			if test.skip {
 				t.SkipNow()

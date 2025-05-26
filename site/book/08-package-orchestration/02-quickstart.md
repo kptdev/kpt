@@ -1,5 +1,5 @@
 ​​In this quickstart you will use Porch to discover configuration packages
-in a [sample repository](https://github.com/GoogleContainerTools/kpt-samples).
+in a [sample repository](https://github.com/kptdev/kpt-samples).
 
 You will use the kpt CLI - the new `kpt alpha` command sub-groups to interact
 with the Package Orchestration service.
@@ -12,7 +12,7 @@ contains a [`basens`][basens] package.
 ```sh
 # Register a sample Git repository:
 $ kpt alpha repo register --namespace default \
-  https://github.com/GoogleContainerTools/kpt-samples.git
+  https://github.com/kptdev/kpt-samples.git
 ```
 
 ?> Refer to the [register command reference][register-doc] for usage.
@@ -29,7 +29,7 @@ if list of names is provided
 # Query repositories registered with Porch:
 $ kpt alpha repo get
 NAME         TYPE  CONTENT  DEPLOYMENT  READY  ADDRESS
-kpt-samples  git   Package              True   https://github.com/GoogleContainerTools/kpt-samples.git
+kpt-samples  git   Package              True   https://github.com/kptdev/kpt-samples.git
 ```
 
 ?> Refer to the [get command reference][get-doc] for usage.
@@ -69,7 +69,7 @@ spec:
   git:
     branch: main
     directory: /
-    repo: https://github.com/GoogleContainerTools/kpt-samples.git
+    repo: https://github.com/kptdev/kpt-samples.git
     secretRef:
       name: ""
   type: git
@@ -100,7 +100,7 @@ directly to interact with Porch, such as listing repository resources:
 # List registered repositories using kubectl
 $ kubectl get repository
 NAME          TYPE   CONTENT   DEPLOYMENT   READY   ADDRESS
-kpt-samples   git    Package                True    https://github.com/GoogleContainerTools/kpt-samples.git
+kpt-samples   git    Package                True    https://github.com/kptdev/kpt-samples.git
 ```
 
 You can use kubectl for _all_ interactions with Porch server if you prefer.
@@ -200,14 +200,14 @@ To continue learning about Porch, you can review:
 * [Provisioning Namespaces with the UI](/guides/namespace-provisioning-ui)
 * [Porch Design Document][design]
 
-[basens]: https://github.com/GoogleContainerTools/kpt-samples/tree/main/basens
+[basens]: https://github.com/kptdev/kpt-samples/tree/main/basens
 [register-doc]: /reference/cli/alpha/repo/reg/
 [get-doc]: /reference/cli/alpha/repo/get/
 [pull-doc]: /reference/cli/alpha/rpkg/pull/
 [unregister-doc]: /reference/cli/alpha/repo/unreg/
 [resources]: /guides/porch-user-guide
 [secret]: https://kubernetes.io/docs/concepts/configuration/secret/
-[basens-v0]: https://github.com/GoogleContainerTools/kpt-samples/tree/basens/v0
-[main-branch]: https://github.com/GoogleContainerTools/kpt-samples/tree/main
+[basens-v0]: https://github.com/kptdev/kpt-samples/tree/basens/v0
+[main-branch]: https://github.com/kptdev/kpt-samples/tree/main
 [resource-list]: /reference/schema/resource-list/
-[design]: https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md
+[design]: https://github.com/kptdev/kpt/blob/main/docs/design-docs/07-package-orchestration.md

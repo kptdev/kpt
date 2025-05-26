@@ -9,7 +9,7 @@ CertManager kpt package.
 ### Fetch the package
 
 ```sh
-kpt pkg get git@github.com/googlecontainertools/kpt.git/package-examples/cert-manager-basic[@VERSION] cert-manager-basic
+kpt pkg get git@github.com/kptdev/kpt.git/package-examples/cert-manager-basic[@VERSION] cert-manager-basic
 ```
 
 ### View package content

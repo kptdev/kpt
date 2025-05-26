@@ -110,7 +110,7 @@ try to offer all the possible customization options. The tenant package should
 offer a reasonable set of defaults with required constraints. Downstream users
 of the tenant package can directly edit, add/delete resources as per their needs.
 
-Here is an example of a [basic tenant package](https://github.com/GoogleContainerTools/kpt/tree/main/package-examples/tenant).
+Here is an example of a [basic tenant package](https://github.com/kptdev/kpt/tree/main/package-examples/tenant).
 
 ```shell
 

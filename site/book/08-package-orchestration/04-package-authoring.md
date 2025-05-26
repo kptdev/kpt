@@ -90,13 +90,13 @@ items:
   upstream:
     type: git
     git:
-      repo: https://github.com/GoogleContainerTools/kpt-samples.git
+      repo: https://github.com/kptdev/kpt-samples.git
       directory: basens
       ref: basens/v0
   upstreamLock:
     type: git
     git:
-      repo: https://github.com/GoogleContainerTools/kpt-samples.git
+      repo: https://github.com/kptdev/kpt-samples.git
       directory: basens
       ref: basens/v0
       commit: 026dfe8e3ef8d99993bc8f7c0c6ba639faa9a634

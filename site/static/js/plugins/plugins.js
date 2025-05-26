@@ -15,7 +15,7 @@ async function addVersionDropdown() {
                 <span class="caret"></span></button>
                 <ol class="dropdown-menu">
                 <li><a href="/installation/">${latestVersion}</a></li>
-                <li><a href="https://googlecontainertools.github.io/kpt/installation/" target="_self">v0.39</a></li>
+                <li><a href="https://kptdev.github.io/kpt/installation/" target="_self">v0.39</a></li>
                 </ol>
               </div>
                 `;

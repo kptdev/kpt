@@ -18,8 +18,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/commands/fn/doc"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/commands/fn/doc"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 

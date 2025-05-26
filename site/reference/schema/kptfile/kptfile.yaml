@@ -13,10 +13,10 @@ definitions:
         type: string
         x-go-name: Type
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   ConditionStatus:
     type: string
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Function:
     properties:
       configMap:
@@ -82,7 +82,7 @@ definitions:
         x-go-name: Selectors
     title: Function specifies a KRM function.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Git:
     properties:
       directory:
@@ -103,7 +103,7 @@ definitions:
         x-go-name: Repo
     title: Git is the user-specified locator for a package on Git.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   GitLock:
     properties:
       commit:
@@ -132,7 +132,7 @@ definitions:
         x-go-name: Repo
     title: GitLock is the resolved locator for a package on Git.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Inventory:
     description: All of the the parameters are required if any are set.
     properties:
@@ -161,7 +161,7 @@ definitions:
     title: Inventory encapsulates the parameters for the inventory resource applied
       to a cluster.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   NameMeta:
     properties:
       name:
@@ -203,7 +203,7 @@ definitions:
   OriginType:
     title: OriginType defines the type of origin for a package.
     type: string
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   PackageInfo:
     description: |-
       These fields are not consumed by any functionality in kpt and are simply passed through.
@@ -250,7 +250,7 @@ definitions:
     title: PackageInfo contains optional information about the package such as license,
       documentation, etc.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Pipeline:
     properties:
       mutators:
@@ -269,14 +269,14 @@ definitions:
         x-go-name: Validators
     title: Pipeline declares a pipeline of functions used to mutate or validate resources.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   ReadinessGate:
     properties:
       conditionType:
         type: string
         x-go-name: ConditionType
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   ResourceMeta:
     properties:
       annotations:
@@ -344,7 +344,7 @@ definitions:
         type: string
         x-go-name: Namespace
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Status:
     properties:
       conditions:
@@ -353,7 +353,7 @@ definitions:
         type: array
         x-go-name: Conditions
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   TypeMeta:
     description: |-
       TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta
@@ -372,7 +372,7 @@ definitions:
   UpdateStrategyType:
     title: UpdateStrategyType defines the strategy for updating a package from upstream.
     type: string
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   Upstream:
     properties:
       git:
@@ -383,7 +383,7 @@ definitions:
         $ref: '#/definitions/UpdateStrategyType'
     title: Upstream is a user-specified upstream locator for a package.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   UpstreamLock:
     properties:
       git:
@@ -392,7 +392,7 @@ definitions:
         $ref: '#/definitions/OriginType'
     title: UpstreamLock is a resolved locator for the last fetch of the package.
     type: object
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
   kptfile:
     properties:
       annotations:
@@ -438,7 +438,7 @@ definitions:
     title: KptFile contains information about a package managed with kpt.
     type: object
     x-go-name: KptFile
-    x-go-package: github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1
+    x-go-package: github.com/kptdev/kpt/pkg/api/kptfile/v1
 info:
   title: Kptfile schema.
   version: v1

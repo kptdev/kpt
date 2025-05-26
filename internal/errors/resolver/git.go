@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
+	"github.com/kptdev/kpt/internal/gitutil"
 )
 
 //nolint:gochecknoinits

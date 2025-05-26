@@ -1,6 +1,6 @@
-module github.com/GoogleContainerTools/kpt/dogfood/sitev2
+module github.com/kptdev/kpt/dogfood/sitev2
 
-go 1.21
+go 1.24
 
 require (
 	github.com/yuin/goldmark v1.4.12

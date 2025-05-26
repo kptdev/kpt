@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/stretchr/testify/assert"
 )
 

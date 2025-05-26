@@ -17,7 +17,7 @@ package fn
 import (
 	"context"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

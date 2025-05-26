@@ -17,9 +17,9 @@ package wasm
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/wasm/pull"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/wasm/push"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/wasmdocs"
+	"github.com/kptdev/kpt/commands/alpha/wasm/pull"
+	"github.com/kptdev/kpt/commands/alpha/wasm/push"
+	"github.com/kptdev/kpt/internal/docs/generated/wasmdocs"
 	"github.com/spf13/cobra"
 )
 

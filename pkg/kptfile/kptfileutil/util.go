@@ -22,11 +22,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/util/git"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -225,7 +225,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output
-// please refer to https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
+// please refer to https://github.com/kptdev/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
 // for related design
 func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	shouldAddSyntheticMergeName := shouldAddFnKey(localKf, updatedKf, originalKf)

@@ -21,7 +21,7 @@ GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
-LDFLAGS := -ldflags "-X github.com/GoogleContainerTools/kpt/run.version=${GIT_COMMIT}
+LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
 else
@@ -59,7 +59,7 @@ install-kind:
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 
 .PHONY: install-go-licenses
 install-go-licenses:
@@ -98,7 +98,7 @@ lint: install-golangci-lint
 	$(GOBIN)/golangci-lint run ./...
 
 license-check: install-go-licenses
-	$(GOBIN)/go-licenses check github.com/GoogleContainerTools/kpt
+	$(GOBIN)/go-licenses check github.com/kptdev/kpt
 
 test:
 	go test -cover ${LDFLAGS} ./...
@@ -130,9 +130,6 @@ test-live-apply: build
 # target to run e2e tests for "kpt live plan" command
 test-live-plan: build
 	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLivePlan/testdata/live-plan/$(T)  ./e2e/
-
-test-porch: build
-	PATH=$(GOBIN):$(PATH) go test -v --count=1 --tags=porch ./e2e/
 
 vet:
 	go vet ./...
@@ -167,8 +164,8 @@ release-dry-run:
 		--rm \
 		--privileged \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/github.com/GoogleContainerTools/kpt \
-		-w /go/src/github.com/GoogleContainerTools/kpt \
+		-v `pwd`:/go/src/github.com/kptdev/kpt \
+		-w /go/src/github.com/kptdev/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" \
 		--skip=validate,publish
@@ -183,8 +180,8 @@ release:
 		--privileged \
 		--env-file .release-env \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/github.com/GoogleContainerTools/kpt \
-		-w /go/src/github.com/GoogleContainerTools/kpt \
+		-v `pwd`:/go/src/github.com/kptdev/kpt \
+		-w /go/src/github.com/kptdev/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" release \
 		--skip=validate
@@ -200,8 +197,8 @@ release-ci:
 		--env-file .release-env \
 		-v ${HOME}/.docker/config.json:/root/.docker/config.json \
 		-v /var/run/docker.sock:/var/run/docker.sock \
-		-v `pwd`:/go/src/github.com/GoogleContainerTools/kpt \
-		-w /go/src/github.com/GoogleContainerTools/kpt \
+		-v `pwd`:/go/src/github.com/kptdev/kpt \
+		-w /go/src/github.com/kptdev/kpt \
 		$(GORELEASER_IMAGE) \
 		-f "$(GORELEASER_CONFIG)" release \
 		--skip=validate

@@ -21,9 +21,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
-	kptplanner "github.com/GoogleContainerTools/kpt/pkg/live/planner"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/pkg/live"
+	kptplanner "github.com/kptdev/kpt/pkg/live/planner"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

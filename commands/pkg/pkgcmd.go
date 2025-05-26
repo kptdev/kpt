@@ -17,12 +17,12 @@ package pkg
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/pkg/diff"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/get"
-	initialization "github.com/GoogleContainerTools/kpt/commands/pkg/init"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/update"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdtree"
+	"github.com/kptdev/kpt/commands/pkg/diff"
+	"github.com/kptdev/kpt/commands/pkg/get"
+	initialization "github.com/kptdev/kpt/commands/pkg/init"
+	"github.com/kptdev/kpt/commands/pkg/update"
+	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
 )
 
