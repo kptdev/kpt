@@ -15,10 +15,10 @@
 package resolver
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
+	"github.com/kptdev/kpt/internal/errors"
 	"github.com/kptdev/kpt/internal/pkg"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )

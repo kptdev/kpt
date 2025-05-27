@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt/healthcheck
 
-go 1.24
+go 1.23.9
 
 require (
 	k8s.io/apimachinery v0.26.1

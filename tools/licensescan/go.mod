@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt/tools/licensescan
 
-go 1.24
+go 1.23.9
 
 require (
 	github.com/spf13/cobra v1.5.0

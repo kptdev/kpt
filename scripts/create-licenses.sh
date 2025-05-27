@@ -178,6 +178,8 @@ XXHASH_LICENSE_DIR="vendor/github.com/cespare/xxhash"
 mv "${XXHASH_LICENSE_DIR}/v2/LICENSE" "${XXHASH_LICENSE_DIR}"
 BLACKFRIDAY_LICENSE_DIR="vendor/github.com/russross/blackfriday"
 mv "${BLACKFRIDAY_LICENSE_DIR}/v2/LICENSE" "${BLACKFRIDAY_LICENSE_DIR}"
+JSON_PATCH_LICENSE_DIR="vendor/github.com/evanphx/json-patch"
+mv "${JSON_PATCH_LICENSE_DIR}/v5/LICENSE" "${JSON_PATCH_LICENSE_DIR}"
 
 # Loop through every vendored package
 mozilla_repos=()

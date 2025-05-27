@@ -277,7 +277,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 func copyDir(ctx context.Context, srcDir string, dstDir string) error {
 	pr := printer.FromContextOrDie(ctx)
 	opts := copy.Options{
-		Skip: func(src string) (bool, error) {
+		Skip: func(_ os.FileInfo, src, _ string) (bool, error) {
 			return strings.HasSuffix(src, ".git"), nil
 		},
 		OnSymlink: func(src string) copy.SymlinkAction {

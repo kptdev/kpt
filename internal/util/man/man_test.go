@@ -98,22 +98,18 @@ Java server ConfigMap
 .TH java 1   "June 2019"  "Application"
 
 .SH NAME
-.PP
 \fBjava\fP
 
 
 .SH SYNOPSIS
-.PP
 kpt clone testdata3/java
 
 
 .SH Description
-.PP
 The \fBjava\fP package runs a container containing a java application.
 
 
 .SH Components
-.PP
 Java server Deployment.
 
 .EX
