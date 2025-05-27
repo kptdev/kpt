@@ -48,7 +48,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.22.4'
+          go-version: '>=1.24'
         id: go
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
@@ -70,7 +70,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.22.4'
+          go-version: '>=1.24'
         id: go
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
@@ -88,7 +88,7 @@ jobs:
 #      - name: Set up Go
 #        uses: actions/setup-go@v5
 #        with:
-#          go-version: '>=1.22.4'
+#          go-version: '>=1.24'
 #        id: go
 #      - name: Check out code into the Go module directory
 #        uses: actions/checkout@v4

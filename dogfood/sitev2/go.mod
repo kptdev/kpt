@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt/dogfood/sitev2
 
-go 1.24
+go 1.23.9
 
 require (
 	github.com/yuin/goldmark v1.4.12

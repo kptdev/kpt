@@ -30,7 +30,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/cache"
 	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 )
 
 // Storage provides helper functions specifically for OCI storage.

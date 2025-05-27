@@ -15,9 +15,9 @@
 package resolver
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/kptdev/kpt/internal/errors"
 	"github.com/kptdev/kpt/internal/util/update"
 )
 

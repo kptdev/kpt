@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GOLANG_VERSION := 1.22.4
-GORELEASER_CONFIG      = release/tag/goreleaser.yaml
-GORELEASER_IMAGE       := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
+GOLANG_VERSION    := 1.24.3
+GORELEASER_CONFIG = release/tag/goreleaser.yaml
+GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
 .PHONY: docs license fix vet fmt lint test build tidy release release-ci
 
@@ -51,11 +51,11 @@ update-deps-to-head:
 
 .PHONY: install-mdrip
 install-mdrip:
-	go install github.com/monopole/mdrip@v1.0.2
+	go install github.com/monopole/mdrip@v1.0.3
 
 .PHONY: install-kind
 install-kind:
-	go install sigs.k8s.io/kind@v0.13.0
+	go install sigs.k8s.io/kind@v0.29.0
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
@@ -63,11 +63,11 @@ install-golangci-lint:
 
 .PHONY: install-go-licenses
 install-go-licenses:
-	go install github.com/google/go-licenses@v1.2.0
+	go install github.com/google/go-licenses@v1.6.0
 
 .PHONY: install-swagger
 install-swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.27.0
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
 
 .PHONY: install-mdtogo
 install-mdtogo:
