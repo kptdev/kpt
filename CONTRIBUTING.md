@@ -32,16 +32,14 @@ information on using pull requests.
 
 ## Community Guidelines
 
-This project follows [Google's Open Source Community Guidelines] and a [Code of
-Conduct].
+This project follows a [Code of Conduct].
 
 ## Community Discussion Groups
 
 Join following groups/channels to discuss ideas with other kpt contributors.
 
-1. For developers join our [email list](https://groups.google.com/forum/?oldui=1#!forum/kpt-dev)
-1. You can add this Google [calendar](https://calendar.google.com/calendar/u/0?cid=Y183cWI2ZTY5MW4zMmhxdmxncTdyMWhmOTFta0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t) to get access to all our meetings. If you'd like to be automatically added to all meetings please join this [list](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx). Note, our meetings are open to anyone and you do not need an agenda to come. You may be asked for an introduction. For your first meeting, we would suggest you either start with Office Hours or the SIG meeting.
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt)
+1. Join our [Discussions](https://github.com/kptdev/kpt/discussions)
 
 ## Style Guides
 
@@ -57,32 +55,12 @@ The kpt toolchain has several components such as `kpt CLI`, `package orchestrato
 component has their own development process.
 Refer to the pointers below to learn more:
 
-## Attend Meetings
-* All [SIGs](governance.md) have a regular scheduled meeting for feature/roadmap management and planning. For example if you are interested in discussing the roadmap for Config Sync you should attend the **Kpt SIG Config Sync** meeting
-* Sub-projects are focused on more tactical items and other sub-project lifecycle items. Sub-projects generally have standups associated with them.
-* Working Groups are nimble. Focused a lot on experimentation. Attend if you'd like to see demos and discuss future looking user experiences.
-* We regularly have an office hours where we invite the entire community to attend.
-* Meeting notes will be kept for all meetings.
-* We will not record meetings unless someone explictly asks for one and there are no objections by attendees. If a meeting is recorded a link to it will be left in the notes.
-
-### Meeting Notes
-Links to meeting notes. Some may require access to mailing lists above. If in doubt join [kpt-contribx](https://groups.google.com/forum/?oldui=1#!forum/kpt-contribx)
-
-* [Kpt Office Hours](https://docs.google.com/document/d/1I5CJDk9xkDj1vvvwvZNgvaNusE2TanX0Iiy9G1oitz0/view)
-* [App Wow Working Group](https://docs.google.com/document/d/1pHsmYjHr9XMwJ_fdJtPiodd8WSg5ilCLIrP_8KE-yKE/view)
-
-Coming soon
-* SIG Config as Data
-* SIG Config Sync
-
-### kpt CLI
-
 #### Building the Source
 
 1. Clone the project
 
    ```shell
-   git clone https://github.com/GoogleContainerTools/kpt
+   git clone https://github.com/kptdev/kpt
    cd kpt
    ```
 
@@ -105,13 +83,8 @@ Package orchestrator code has been moved to the Nephio project: https://github.c
 ### Function Catalog
 
 Function catalog has its own repository. Refer to the
-[documentation in the kpt-functions-catalog](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
+[documentation in the krm-functions-catalog](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
 repo.
-
-### Config Sync
-
-Config Sync has its own [repository](https://github.com/GoogleContainerTools/kpt-config-sync).
-Refer to the [documentation in the config-sync repo](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/contributing.md).
 
 ### Documentation
 
