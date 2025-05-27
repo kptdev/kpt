@@ -85,6 +85,10 @@ You can read about the big upcoming features in the
 If you are interested in contributing please start with 
 [contribution guidelines](CONTRIBUTING.md).
 
+## License
+
+Code is under the [Apache License 2.0](LICENSE), documentation is [CC BY 4.0](LICENSE-documentation).
+
 ## Contact
 
 We would love to keep in touch:
