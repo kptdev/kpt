@@ -609,7 +609,7 @@ pipeline:
 
 ## Open issues
 
- https://github.com/kptdev/kpt/issues/2529
+None.
 
 ## Alternatives Considered
 
