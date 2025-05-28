@@ -12,10 +12,6 @@ For these users, we need to provide a way to preserve old behavior by introducin
 exclude certain resources, such as resources of a certain GVK or local configuration resources, from 
 being acted on by kpt functions during `kpt fn render` and `kpt fn eval`.
 
-### Background
-
-Open source issue: https://github.com/kptdev/kpt/issues/2930
-
 #### Redefining and inclusion of meta resources
 
 Previously, `kpt fn render` and `kpt fn eval` excluded functionConfigs and the Kptfile. A user could include t

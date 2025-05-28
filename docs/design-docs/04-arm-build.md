@@ -5,11 +5,9 @@
 
 ## Why
 
-More people are getting Apple M1 machines.  The current docker images for
-functions do not work.  Here is an example:
-https://github.com/kptdev/kpt/issues/2874
-While it's not a problem for CI/CD pipelines where architecture is mostly amd64
-for client development purposes the users are stuck.
+Many people have Apple M1 machines. While it's not a problem for CI/CD pipelines where
+the architecture is mostly amd64, developers and end users with Apple M1 machines cannot
+use and work on kpt.
 
 ## Design
 
