@@ -1,5 +1,0 @@
-# https://pkg.go.dev/github.com/kptdev/kpt@(devel)
-license: Apache-2.0
-# Specifying the licenseURL here avoids picking up the demo-magic license
-licenseURLs:
-- https://raw.githubusercontent.com/kptdev/kpt/main/LICENSE
