@@ -46,8 +46,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/mdtogo/cmddocs"
-	"github.com/GoogleContainerTools/kpt/mdtogo/common"
+	"github.com/kptdev/kpt/mdtogo/cmddocs"
+	"github.com/kptdev/kpt/mdtogo/common"
 )
 
 var recursive bool

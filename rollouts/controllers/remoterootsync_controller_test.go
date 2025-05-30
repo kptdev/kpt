@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/yaml"

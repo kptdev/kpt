@@ -42,10 +42,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/clusterstore"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packageclustermatcher"
-	"github.com/GoogleContainerTools/kpt/rollouts/pkg/packagediscovery"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
+	"github.com/kptdev/kpt/rollouts/pkg/clusterstore"
+	"github.com/kptdev/kpt/rollouts/pkg/packageclustermatcher"
+	"github.com/kptdev/kpt/rollouts/pkg/packagediscovery"
 )
 
 type Options struct {
@@ -181,7 +181,7 @@ func (r *RolloutReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		(rollout.Status.Overall == "Completed" || rollout.Status.Overall == "Stalled") {
 		// TODO (droot): The rollouts in completed/stalled state will not be reconciled
 		// whenever fleet memberships change, so scheduling a periodic reconcile
-		// until we fix https://github.com/GoogleContainerTools/kpt/issues/3835
+		// until we fix https://github.com/kptdev/kpt/issues/3835
 		// This can be safely removed once we start monitoring fleet changes.
 		// Note: we watch containercluster types, so this problem doesn't exist for the
 		// KCC clusters.

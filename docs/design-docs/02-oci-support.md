@@ -26,7 +26,7 @@ company has practices for managing Docker container images in private registries
 the same practices and security model can be applied to config package images in private
 registries.
 
-https://github.com/GoogleContainerTools/kpt/issues/2300
+https://github.com/kptdev/kpt/issues/2300
 
 ## Design
 

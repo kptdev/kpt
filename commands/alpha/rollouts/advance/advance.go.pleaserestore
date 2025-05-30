@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/rolloutsclient"
-	"github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/rolloutsclient"
+	"github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"github.com/spf13/cobra"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 )

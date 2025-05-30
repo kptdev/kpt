@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/errors"
 )
 
 // RepoSpec specifies a git repository and a branch and path therein.

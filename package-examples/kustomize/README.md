@@ -14,7 +14,7 @@ uses:
 Fetch this package:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/kustomize
+$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/kustomize
 ```
 
 You can view the package hierarchy using the `kpt pkg tree` command or a regular

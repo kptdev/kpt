@@ -25,7 +25,7 @@ import (
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gkehubapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/gkehub/v1beta1"
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 )
 
 var (

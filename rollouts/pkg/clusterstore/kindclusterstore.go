@@ -19,7 +19,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

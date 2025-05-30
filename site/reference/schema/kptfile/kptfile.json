@@ -30,11 +30,11 @@
           "x-go-name": "Type"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "ConditionStatus": {
       "type": "string",
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Function": {
       "type": "object",
@@ -85,7 +85,7 @@
           "x-go-name": "Selectors"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Git": {
       "type": "object",
@@ -107,7 +107,7 @@
           "x-go-name": "Repo"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "GitLock": {
       "type": "object",
@@ -134,7 +134,7 @@
           "x-go-name": "Repo"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Inventory": {
       "description": "All of the the parameters are required if any are set.",
@@ -171,7 +171,7 @@
           "x-go-name": "Namespace"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "NameMeta": {
       "type": "object",
@@ -226,7 +226,7 @@
     "OriginType": {
       "type": "string",
       "title": "OriginType defines the type of origin for a package.",
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "PackageInfo": {
       "description": "These fields are not consumed by any functionality in kpt and are simply passed through.\nNote that like any other KRM resource, humans and automation can also use `metadata.labels` and\n`metadata.annotations` as the extension mechanism.",
@@ -282,7 +282,7 @@
           "x-go-name": "Site"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Pipeline": {
       "type": "object",
@@ -305,7 +305,7 @@
           "x-go-name": "Validators"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "ReadinessGate": {
       "type": "object",
@@ -315,7 +315,7 @@
           "x-go-name": "ConditionType"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "ResourceMeta": {
       "type": "object",
@@ -401,7 +401,7 @@
           "x-go-name": "Namespace"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Status": {
       "type": "object",
@@ -414,7 +414,7 @@
           "x-go-name": "Conditions"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "TypeMeta": {
       "description": "TypeMeta partially copies apimachinery/pkg/apis/meta/v1.TypeMeta\nNo need for a direct dependence; the fields are stable.",
@@ -436,7 +436,7 @@
     "UpdateStrategyType": {
       "type": "string",
       "title": "UpdateStrategyType defines the strategy for updating a package from upstream.",
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "Upstream": {
       "type": "object",
@@ -452,7 +452,7 @@
           "$ref": "#/definitions/UpdateStrategyType"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "UpstreamLock": {
       "type": "object",
@@ -465,7 +465,7 @@
           "$ref": "#/definitions/OriginType"
         }
       },
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     },
     "kptfile": {
       "type": "object",
@@ -527,7 +527,7 @@
         }
       },
       "x-go-name": "KptFile",
-      "x-go-package": "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+      "x-go-package": "github.com/kptdev/kpt/pkg/api/kptfile/v1"
     }
   }
 }

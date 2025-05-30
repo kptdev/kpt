@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 )
 
 // ProgressiveRolloutStrategyReconciler reconciles a ProgressiveRolloutStrategy object

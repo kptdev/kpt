@@ -119,7 +119,7 @@ spec:
                       oci:
                         description: Oci contains configuration specific to importing
                           resources from an OCI package. This definition is copied
-                          from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
+                          from https://github.com/kptdev/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
                         properties:
                           auth:
                             description: auth is the type of secret configured for

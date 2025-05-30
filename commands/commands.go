@@ -18,10 +18,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha"
-	"github.com/GoogleContainerTools/kpt/commands/fn"
-	"github.com/GoogleContainerTools/kpt/commands/live"
-	"github.com/GoogleContainerTools/kpt/commands/pkg"
+	"github.com/kptdev/kpt/commands/alpha"
+	"github.com/kptdev/kpt/commands/fn"
+	"github.com/kptdev/kpt/commands/live"
+	"github.com/kptdev/kpt/commands/pkg"
 	"github.com/spf13/cobra"
 )
 

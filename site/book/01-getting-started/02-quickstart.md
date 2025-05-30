@@ -9,7 +9,7 @@ package of configuration using the underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt/package-examples/nginx@v0.9
+$ kpt pkg get https://github.com/kptdev/kpt/package-examples/nginx@v0.9
 ```
 
 Subsequent commands are run from the `nginx` directory:

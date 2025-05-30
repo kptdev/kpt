@@ -24,7 +24,7 @@ spec:
     sourceType: GitHub
     github:
       selector:
-        org: GoogleContainerTools
+        org: kptdev
         repo: kpt-samples
         directory: "*"
         revision: main

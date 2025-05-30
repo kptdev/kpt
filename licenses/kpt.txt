@@ -1192,7 +1192,7 @@
 
 
 ================================================================================
-= github.com/GoogleContainerTools/kpt/porch/api =
+= github.com/kptdev/kpt/porch/api =
 
 
                                  Apache License

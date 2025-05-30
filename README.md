@@ -59,20 +59,20 @@ The kpt toolchain includes the following components:
   the functions need to be idempotent.
 
 - **Package orchestrator**: 
-  The [package orchestrator](https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md)
+  The [package orchestrator](https://github.com/kptdev/kpt/blob/main/docs/design-docs/07-package-orchestration.md)
   enables the magic behind the unique WYSIWYG experience. It provides a control plane for creating,
   modifying, updating, and deleting packages, and evaluating functions on package data. This enables operations on packaged resources
   similar to operations directly on the live state through the Kubernetes API.
 
 - **Config Sync**: While the package orchestrator
-  can be used with any GitOps tool, [Config Sync](https://github.com/GoogleContainerTools/kpt-config-sync) provides a reference GitOps implementation to complete the WYSIWYG management
+  can be used with any GitOps tool, [Config Sync](https://github.com/kptdev/kpt-config-sync) provides a reference GitOps implementation to complete the WYSIWYG management
   experience and enable end-to-end development of new features, such as 
-  [OCI-based packages](https://github.com/GoogleContainerTools/kpt/issues/2300). Config Sync is also helping to drive improvements
+  [OCI-based packages](https://github.com/kptdev/kpt/issues/2300). Config Sync is also helping to drive improvements
   in upstream Kubernetes. For instance, Config Sync is built on top of [git-sync](https://github.com/kubernetes/git-sync) and
   leverages [Kustomize](https://kustomize.io) to automatically render manifests on the fly when needed. It uses the same apply
   logic as the kpt CLI.
 
-- **Backstage UI plugin**: We've created a proof-of-concept UI in the form of a [Backstage UI plugin](https://github.com/GoogleContainerTools/kpt-backstage-plugins) to demonstrate the WYSIWYG experience that's possible on top of the
+- **Backstage UI plugin**: We've created a proof-of-concept UI in the form of a [Backstage UI plugin](https://github.com/kptdev/kpt-backstage-plugins) to demonstrate the WYSIWYG experience that's possible on top of the
   package orchestrator. More scenarios can be supported by implementing form-based editors for additional Kubernetes resource types.
 
 ## Roadmap

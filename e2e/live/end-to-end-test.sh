@@ -21,7 +21,7 @@
 #   FROM KPT ROOT DIR: ./e2e/live/end-to-end-test.sh
 #
 # Example KPT ROOT DIR:
-#   ~/go/src/github.com/GoogleContainerTools/kpt
+#   ~/go/src/github.com/kptdev/kpt
 #
 # Flags:
 #   -b) Build the kpt binary with dependencies at HEAD. Downloads HEAD
@@ -61,6 +61,11 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
+KIND_1_33_VERSION=1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f
+KIND_1_32_VERSION=1.32.5@sha256:e3b2327e3a5ab8c76f5ece68936e4cafaa82edf58486b769727ab0b3b97a5b0d
+KIND_1_31_VERSION=1.31.9@sha256:b94a3a6c06198d17f59cca8c6f486236fa05e2fb359cbd75dabbfc348a10b211
+KIND_1_30_VERSION=1.30.13@sha256:397209b3d947d154f6641f2d0ce8d473732bd91c87d9575ade99049aa33cd648
+KIND_1_29_VERSION=1.29.12@sha256:62c0672ba99a4afd7396512848d6fc382906b8f33349ae68fb1dbfe549f70dec
 KIND_1_28_VERSION=1.28.0@sha256:b7a4cad12c197af3ba43202d3efe03246b3f0793f162afb40a33c923952d5b31
 KIND_1_27_VERSION=1.27.3@sha256:3966ac761ae0136263ffdb6cfd4db23ef8a83cba8a463690e98317add2c9ba72
 KIND_1_26_VERSION=1.26.6@sha256:6e2d8b28a5b601defe327b98bd1c2d1930b49e5d8c512e1895099e4504007adb
@@ -70,7 +75,7 @@ KIND_1_23_VERSION=1.23.17@sha256:59c989ff8a517a93127d4a536e7014d28e235fb3529d9fb
 KIND_1_22_VERSION=1.22.17@sha256:f5b2e5698c6c9d6d0adc419c0deae21a425c07d81bbf3b6a6834042f25d4fba2
 KIND_1_21_VERSION=1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
 
-DEFAULT_K8S_VERSION=${KIND_1_28_VERSION}
+DEFAULT_K8S_VERSION=${KIND_1_33_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -104,6 +109,16 @@ while getopts $options opt; do
 		      ;;
 		1.28) K8S_VERSION=$KIND_1_28_VERSION
 		      ;;
+		1.29) K8S_VERSION=$KIND_1_29_VERSION
+		      ;;
+		1.30) K8S_VERSION=$KIND_1_30_VERSION
+		      ;;
+		1.31) K8S_VERSION=$KIND_1_31_VERSION
+		      ;;
+		1.32) K8S_VERSION=$KIND_1_32_VERSION
+		      ;;
+		1.33) K8S_VERSION=$KIND_1_33_VERSION
+		      ;;
         *) K8S_VERSION=$short_version
 		      ;;
 	    esac
@@ -136,11 +151,11 @@ function downloadPreviousKpt {
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   else
     echo -e "${RED}ERROR${NC}: Unknown OS $uname"
     exit 1
@@ -160,11 +175,11 @@ function downloadKpt1.0 {
   if [[ "$uname" == "Linux" ]]
   then
     echo "Running on Linux"
-    curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+    curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_linux_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   elif [[ "$uname" == "Darwin" ]]
   then
     echo "Running on Darwin"
-      curl -LJ -o kpt.tar.gz https://github.com/GoogleContainerTools/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
+      curl -LJ -o kpt.tar.gz https://github.com/kptdev/kpt/releases/download/v${KPT_VERSION}/kpt_darwin_amd64-${KPT_VERSION}.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
     else
       echo -e "${RED}ERROR${NC}: Unknown OS $uname"
       exit 1
@@ -192,10 +207,10 @@ function buildKpt {
 	echo "Building kpt using dependencies at HEAD..."
 	echo
 	# Clone kpt repository into kpt source directory
-	KPT_SRC_DIR="${SRC_DIR}/github.com/GoogleContainerTools/kpt"
+	KPT_SRC_DIR="${SRC_DIR}/github.com/kptdev/kpt"
 	mkdir -p $KPT_SRC_DIR
 	echo "Downloading kpt repository at HEAD..."
-	git clone https://github.com/GoogleContainerTools/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
+	git clone https://github.com/kptdev/kpt ${KPT_SRC_DIR} > ${OUTPUT_DIR}/kptbuild 2>&1
 	echo -e "Downloading kpt repository at HEAD...${GREEN}SUCCESS${NC}"
 	# Clone cli-utils repository into source directory
 	CLI_UTILS_SRC_DIR="${SRC_DIR}/sigs.k8s.io/cli-utils"

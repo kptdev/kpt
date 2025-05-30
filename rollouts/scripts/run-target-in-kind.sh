@@ -59,4 +59,4 @@ mkdir -p ~/.kube
 cp $KUBECONFIG ~/.kube/$NAME
 
 # install config sync 
-KUBECONFIG=~/.kube/$NAME kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"
+KUBECONFIG=~/.kube/$NAME kubectl apply -f "https://github.com/kptdev/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"

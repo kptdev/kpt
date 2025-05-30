@@ -207,7 +207,7 @@ Successfully executed 1 function(s) in 1 package(s).
 ```
 
 Note: if you are curious about how KRM functions are implemented. Take a look
-at [set-namespace code](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/functions/go/set-namespace/transformer/namespace.go)
+at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/master/functions/go/set-namespace/transformer/namespace.go)
 to get a feel for the implementation.
 
 ### Permissions

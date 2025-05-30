@@ -40,7 +40,7 @@ And register the sample repository we used in the [quickstart](./02-quickstart):
 # Register the sample repository:
 
 kpt alpha repo register --namespace default \
-  https://github.com/GoogleContainerTools/kpt-samples.git
+  https://github.com/kptdev/kpt-samples.git
 ```
 
 ?> Refer to the [register command reference][register-doc] for usage.
@@ -54,7 +54,7 @@ are considered deployment-ready.
 $ kpt alpha repo get
 NAME         TYPE  CONTENT  DEPLOYMENT  READY  ADDRESS
 deployments  git   Package  true        True   [Your repository address]
-kpt-samples  git   Package              True   https://github.com/GoogleContainerTools/kpt-samples.git
+kpt-samples  git   Package              True   https://github.com/kptdev/kpt-samples.git
 ```
 
 ?> Refer to the [get command reference][get-doc] for usage.

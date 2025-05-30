@@ -17,8 +17,8 @@ package diff
 import (
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
@@ -54,11 +54,11 @@ func TestPkgDiff(t *testing.T) {
 			name: "different upstream in Kptfile is not a diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "master", "resource-merge")).
+					WithUpstream("github.com/kptdev/kpt", "/", "main", "resource-merge")).
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/GoogleContainerTools/kpt", "/", "kpt/v1", "resource-merge")).
+					WithUpstream("github.com/kptdev/kpt", "/", "kpt/v1", "resource-merge")).
 				WithResource(pkgbuilder.DeploymentResource),
 			diff: toStringSet(),
 		},

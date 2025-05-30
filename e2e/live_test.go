@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	livetest "github.com/GoogleContainerTools/kpt/pkg/test/live"
+	livetest "github.com/kptdev/kpt/pkg/test/live"
 	"github.com/stretchr/testify/require"
 )
 

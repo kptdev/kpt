@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/errors"
 )
 
 // GitExecErrorType is used to enumerate git errors.

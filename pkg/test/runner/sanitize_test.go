@@ -74,7 +74,6 @@ func TestSanitizeTimestamps(t *testing.T) {
 	}
 
 	for _, g := range grid {
-		g := g // Avoid range go-tcha
 		t.Run(g.Name, func(t *testing.T) {
 			got := sanitizeTimestamps(g.Input)
 			want := g.Output

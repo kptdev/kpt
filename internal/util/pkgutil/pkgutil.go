@@ -21,9 +21,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/internal/pkg"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -311,7 +311,7 @@ func FormatPackage(pkgPath string) {
 
 // RoundTripKptfilesInPkg reads and writes all Kptfiles in the package including
 // subpackages. This is used to format Kptfiles in the order of go structures
-// TODO: phanimarupaka remove this method after addressing https://github.com/GoogleContainerTools/kpt/issues/2052
+// TODO: phanimarupaka remove this method after addressing https://github.com/kptdev/kpt/issues/2052
 func RoundTripKptfilesInPkg(pkgPath string) error {
 	paths, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, pkgPath, pkg.All, true)
 	if err != nil {

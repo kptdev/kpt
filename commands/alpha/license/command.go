@@ -17,8 +17,8 @@ package license
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/license/info"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/licensedocs"
+	"github.com/kptdev/kpt/commands/alpha/license/info"
+	"github.com/kptdev/kpt/internal/docs/generated/licensedocs"
 	"github.com/spf13/cobra"
 )
 

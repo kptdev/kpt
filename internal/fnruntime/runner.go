@@ -25,15 +25,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GoogleContainerTools/kpt/internal/builtins"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
 	"github.com/google/shlex"
+	"github.com/kptdev/kpt/internal/builtins"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -120,7 +120,7 @@ func NewRunner(
 		// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
 		// directory specified by the functionConfig, kpt v1+ doesn't scope resources
 		// during function execution, so marking the scope to global.
-		// See https://github.com/GoogleContainerTools/kpt/issues/3230 for more details.
+		// See https://github.com/kptdev/kpt/issues/3230 for more details.
 		GlobalScope: true,
 	}
 
@@ -212,7 +212,7 @@ func NewFunctionRunner(ctx context.Context,
 	// by default, the inner most runtimeutil.FunctionFilter scopes resources to the
 	// directory specified by the functionConfig, kpt v1+ doesn't scope resources
 	// during function execution, so marking the scope to global.
-	// See https://github.com/GoogleContainerTools/kpt/issues/3230 for more details.
+	// See https://github.com/kptdev/kpt/issues/3230 for more details.
 	fltr.GlobalScope = true
 	return &FunctionRunner{
 		ctx:       ctx,
@@ -348,7 +348,7 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	// Note: TS SDK and Go SDK implements two different formats for the
 	// result. Go SDK wraps result items while TS SDK doesn't. So examine
 	// if items are wrapped or not to support both the formats for now.
-	// Refer to https://github.com/GoogleContainerTools/kpt/pull/1923#discussion_r628604165
+	// Refer to https://github.com/kptdev/kpt/pull/1923#discussion_r628604165
 	// for some more details.
 	if yml.YNode().Kind == yaml.MappingNode {
 		// check if legacy structured result wraps ResultItems
@@ -372,7 +372,7 @@ func parseStructuredResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 // migrateLegacyResult populates name and namespace in fnResult.Result if a
 // function (e.g. using kyaml Go SDKs) gives results in a schema
 // that puts a resourceRef's name and namespace under a metadata field
-// TODO: fix upstream (https://github.com/GoogleContainerTools/kpt/issues/2091)
+// TODO: fix upstream (https://github.com/kptdev/kpt/issues/2091)
 func migrateLegacyResult(yml *yaml.RNode, fnResult *fnresult.Result) error {
 	items, err := yml.Elements()
 	if err != nil {

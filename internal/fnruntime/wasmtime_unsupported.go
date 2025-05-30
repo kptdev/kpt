@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/GoogleContainerTools/kpt"
+	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
 )
 
 type WasmtimeFn struct {

@@ -53,7 +53,7 @@ metadata:
 spec:
   containers:
   - name: kubernetes-pause
-    image: k8s.gcr.io/pause:2.0
+    image: k8s.gcr.io/pause:1.0
 `
 	deploymentA = `
 kind: Deployment

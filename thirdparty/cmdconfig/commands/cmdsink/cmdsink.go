@@ -6,8 +6,8 @@ package cmdsink
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 

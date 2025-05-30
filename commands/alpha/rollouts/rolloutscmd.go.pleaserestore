@@ -17,10 +17,10 @@ package rollouts
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/advance"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/get"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/status"
-	"github.com/GoogleContainerTools/kpt/commands/util"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/advance"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/get"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/status"
+	"github.com/kptdev/kpt/commands/util"
 	"github.com/spf13/cobra"
 )
 
