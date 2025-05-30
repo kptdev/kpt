@@ -1,0 +1,2 @@
+The kpt project follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/main/code-of-conduct.md).
+More information and links about the CNCF Code of Conduct are [here](https://www.cncf.io/conduct/).
