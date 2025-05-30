@@ -143,10 +143,9 @@ pipeline:
 
 By using `package-context.yaml` as input, `set-namespace` uses the value `example`
 for an `abstract` package and variant's name for a deployable instance. The
-same pattern can be applied to other functions also. For example, the
-[`namespace provisioning`](https://github.com/kptdev/kpt-samples/tree/main/basens)
-package uses `apply-replacements` function to set the RoleBinding group
-using the name of the package.
+same pattern can be applied to other functions also. For example, a
+"namespace provisioning" package might use the `apply-replacements` function to set
+the RoleBinding group using the name of the package.
 
 In some cases, the inputs needed to generate the variant will come from
 some external system or environment. Those can be generated imperatively or
