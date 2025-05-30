@@ -140,4 +140,4 @@ This setup is intended for those installing the plugin into existing backstage d
 The Configuration as Data UI can be added to an existing
 [Backstage](https://backstage.io) application by following the instructions on
 the
-[Configuration as Data Plugin README](https://github.com/kptdev/kpt-backstage-plugins/tree/main/plugins/cad/README.md).
+[Configuration as Data Plugin README](https://github.com/GoogleContainerTools/kpt-backstage-plugins/tree/main/plugins/cad/README.md).
