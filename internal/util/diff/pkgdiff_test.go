@@ -54,7 +54,7 @@ func TestPkgDiff(t *testing.T) {
 			name: "different upstream in Kptfile is not a diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithUpstream("github.com/kptdev/kpt", "/", "master", "resource-merge")).
+					WithUpstream("github.com/kptdev/kpt", "/", "main", "resource-merge")).
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
