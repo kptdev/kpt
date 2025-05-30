@@ -171,7 +171,7 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/kptdev/kpt", "/", "master", "resource-merge").
+						WithUpstream("github.com/kptdev/kpt", "/", "main", "resource-merge").
 						WithUpstreamLock("github.com/kptdev/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
