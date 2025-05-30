@@ -140,7 +140,7 @@ IMAGE_TAG=$(git rev-parse --short HEAD) make push-and-deploy-no-sa
 ```
 
 If you want to use different repository, you can set `IMAGE_REPO` variable
-(see [Makefile](https://github.com/kptdev/kpt/blob/main/porch/Makefile#L28)
+(see [Makefile](https://github.com/nephio-project/porch/blob/main/Makefile#L38)
 for details).
 
 The `make push-and-deploy-no-sa` target will install Porch but not Config Sync.
