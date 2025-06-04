@@ -20,8 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/pkg"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -115,7 +115,7 @@ metadata:
 upstream:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v1
 `,
@@ -127,7 +127,7 @@ metadata:
 upstream:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v2
 `,
@@ -155,7 +155,7 @@ metadata:
 upstream:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v1
 `,
@@ -167,13 +167,13 @@ metadata:
 upstream:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v2
 upstreamLock:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v2
     commit: abc123
@@ -193,13 +193,13 @@ metadata:
 upstream:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v2
 upstreamLock:
   type: git
   git:
-    repo: github.com/GoogleContainerTools/kpt
+    repo: github.com/kptdev/kpt
     directory: /
     ref: v2
     commit: abc123

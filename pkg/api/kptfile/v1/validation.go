@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/api/konfig"
 	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -210,7 +210,7 @@ func AreKRM(nodes []*yaml.RNode) error {
 func IsKRM(n *yaml.RNode) error {
 	if isKustomization(n) {
 		// exclude kustomization files from KRM check
-		// https://github.com/GoogleContainerTools/kpt/issues/2388
+		// https://github.com/kptdev/kpt/issues/2388
 		return nil
 	}
 	meta, err := n.GetMeta()

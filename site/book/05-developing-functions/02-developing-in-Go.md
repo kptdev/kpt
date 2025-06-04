@@ -29,7 +29,7 @@ We start from a "get-started" package which contains a `main.go` file with some 
 export FUNCTION_NAME=set-annotation
 
 # Get the "get-started" package.
-kpt pkg get https://github.com/GoogleContainerTools/kpt-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
+kpt pkg get https://github.com/kptdev/krm-functions-sdk.git/go/get-started@master ${FUNCTION_NAME}
 
 cd ${FUNCTION_NAME}
 
@@ -63,7 +63,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt-functions-sdk/go/fn"
+	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
 
 var _ fn.Runner = &YourFunction{}
@@ -112,7 +112,7 @@ func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items
 }
 ```
 
-Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn).
+Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
 
 
 ### Test the KRM function
@@ -137,7 +137,7 @@ Build the image
 
 The "get-started" package provides the `Dockerfile` that you can download using:
 ```shell
-wget https://raw.githubusercontent.com/GoogleContainerTools/kpt-functions-sdk/master/go/kfn/commands/embed/Dockerfile
+wget https://raw.githubusercontent.com/kptdev/krm-functions-sdk/master/go/kfn/commands/embed/Dockerfile
 ```
 
 ```shell
@@ -154,10 +154,10 @@ kpt fn eval ./testdata/test1/resources.yaml --image ${FN_CONTAINER_REGISTRY}/${F
 ## Next Steps
 
 - See other [go doc examples] to use KubeObject.
-- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/GoogleContainerTools/kpt-functions-catalog/blob/master/CONTRIBUTING.md)
+- To contribute to KRM catalog functions, please follow the [contributor guide](https://github.com/kptdev/krm-functions-catalog/blob/master/CONTRIBUTING.md)
 
-[the kpt function SDK]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
-[go doc examples]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn/examples
-[`fn`]: https://pkg.go.dev/github.com/GoogleContainerTools/kpt-functions-sdk/go/fn
+[the kpt function SDK]: https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn
+[go doc examples]: https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn/examples
+[`fn`]: https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn
 [`ResourceList`]: https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md
 [`unstructured.Unstructured`]: https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured

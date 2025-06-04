@@ -21,10 +21,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/util/function"
-	"github.com/GoogleContainerTools/kpt/internal/util/httputil"
-	"github.com/GoogleContainerTools/kpt/internal/util/porch"
-	"github.com/GoogleContainerTools/kpt/porch/api/porch/v1alpha1"
+	"github.com/kptdev/kpt/internal/util/function"
+	"github.com/kptdev/kpt/internal/util/httputil"
+	"github.com/kptdev/kpt/internal/util/porch"
+	"github.com/nephio-project/porch/api/porch/v1alpha1"
 	"github.com/spf13/cobra"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -40,11 +40,11 @@ const (
 )
 
 // FixDocs replaces instances of old with new in the docs for c
-func FixDocs(old, new string, c *cobra.Command) {
-	c.Use = strings.ReplaceAll(c.Use, old, new)
-	c.Short = strings.ReplaceAll(c.Short, old, new)
-	c.Long = strings.ReplaceAll(c.Long, old, new)
-	c.Example = strings.ReplaceAll(c.Example, old, new)
+func FixDocs(oldVal, newVal string, c *cobra.Command) {
+	c.Use = strings.ReplaceAll(c.Use, oldVal, newVal)
+	c.Short = strings.ReplaceAll(c.Short, oldVal, newVal)
+	c.Long = strings.ReplaceAll(c.Long, oldVal, newVal)
+	c.Example = strings.ReplaceAll(c.Example, oldVal, newVal)
 }
 
 func PrintErrorStacktrace() bool {

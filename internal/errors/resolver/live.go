@@ -15,13 +15,13 @@
 package resolver
 
 import (
+	"errors"
 	"fmt"
 
-	initialization "github.com/GoogleContainerTools/kpt/commands/live/init"
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
+	initialization "github.com/kptdev/kpt/commands/live/init"
+	"github.com/kptdev/kpt/internal/cmdutil"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"
 	"sigs.k8s.io/cli-utils/pkg/print/common"

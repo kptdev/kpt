@@ -11,7 +11,7 @@ Let's take a look at the `wordpress-with-dependencies` package, a modified
 version of the `wordpress` package used earlier:
 
 ```shell
-$ kpt pkg get https://github.com/GoogleContainerTools/kpt.git/package-examples/wordpress-with-dependencies@v0.1
+$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress-with-dependencies@v0.1
 ```
 
 You can see that the resources belonging to wordpress have

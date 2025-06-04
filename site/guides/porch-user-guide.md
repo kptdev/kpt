@@ -16,7 +16,7 @@ To use Porch, you will need:
 Make sure that your `kubectl` context is set up for `kubectl` to interact with the
 correct Kubernetes instance (see
 [installation instructions](guides/porch-installation.md) or
-the [running-locally](https://github.com/GoogleContainerTools/kpt/blob/main/porch/docs/running-locally.md) guide for details).
+the [running-locally](https://docs.nephio.org/docs/porch/running-porch/running-locally/) guide for details).
 
 To check whether `kubectl` is configured with your Porch cluster (or local instance), run:
 

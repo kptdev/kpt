@@ -1,7 +1,6 @@
-module github.com/GoogleContainerTools/kpt/rollouts
+module github.com/kptdev/kpt/rollouts
 
-go 1.21
-toolchain go1.24.1
+go 1.23.9
 
 require (
 	cloud.google.com/go/iam v0.13.0

@@ -23,8 +23,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/gitutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 )
 

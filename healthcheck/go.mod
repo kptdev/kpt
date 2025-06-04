@@ -1,7 +1,6 @@
-module github.com/GoogleContainerTools/kpt/healthcheck
+module github.com/kptdev/kpt/healthcheck
 
-go 1.21
-toolchain go1.24.1
+go 1.23.9
 
 require (
 	k8s.io/apimachinery v0.26.1

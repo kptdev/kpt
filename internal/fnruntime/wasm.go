@@ -21,7 +21,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/pkg/wasm"
+	"github.com/kptdev/kpt/pkg/wasm"
 )
 
 type WasmRuntime string

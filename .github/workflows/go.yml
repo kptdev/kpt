@@ -48,14 +48,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.22.4'
+          go-version: '>=1.24'
         id: go
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
         with:
-          path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+          path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Build, Test, Lint
-        working-directory: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+        working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
@@ -70,31 +70,31 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.22.4'
+          go-version: '>=1.24'
         id: go
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4
         with:
-          path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+          path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
       - name: Build
-        working-directory: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+        working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
           make build
 
-# TODO: fix https://github.com/GoogleContainerTools/kpt/issues/3463
+# TODO: fix https://github.com/kptdev/kpt/issues/3463
 #  build-windows:
 #    runs-on: windows-2019
 #    steps:
 #      - name: Set up Go
 #        uses: actions/setup-go@v5
 #        with:
-#          go-version: '>=1.22.4'
+#          go-version: '>=1.24'
 #        id: go
 #      - name: Check out code into the Go module directory
 #        uses: actions/checkout@v4
 #        with:
-#          path: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+#          path: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
 #      - name: Build
-#        working-directory: ${{ env.GOPATH }}/src/github.com/GoogleContainerTools/kpt
+#        working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
 #        run: |
 #          make build

@@ -22,9 +22,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -197,7 +197,7 @@ func TestDirectSubpackages(t *testing.T) {
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
+								WithUpstream("github.com/kptdev/kpt",
 									"/", "main", string(kptfilev1.ResourceMerge)),
 						).
 						WithResource(pkgbuilder.ConfigMapResource),
@@ -231,7 +231,7 @@ func TestDirectSubpackages(t *testing.T) {
 					pkgbuilder.NewSubPkg("foo").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
+								WithUpstream("github.com/kptdev/kpt",
 									"/", "main", string(kptfilev1.ResourceMerge)),
 						).
 						WithResource(pkgbuilder.ConfigMapResource).
@@ -241,7 +241,7 @@ func TestDirectSubpackages(t *testing.T) {
 									pkgbuilder.NewSubPkg("zork").
 										WithKptfile(
 											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
+												WithUpstream("github.com/kptdev/kpt",
 													"/", "main", string(kptfilev1.ResourceMerge)),
 										).
 										WithResource(pkgbuilder.ConfigMapResource),
@@ -338,7 +338,7 @@ func TestSubpackages(t *testing.T) {
 					pkgbuilder.NewSubPkg("remote-sub1").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
-								WithUpstream("github.com/GoogleContainerTools/kpt",
+								WithUpstream("github.com/kptdev/kpt",
 									"/", "main", string(kptfilev1.ResourceMerge)),
 						).
 						WithSubPackages(
@@ -347,7 +347,7 @@ func TestSubpackages(t *testing.T) {
 									pkgbuilder.NewSubPkg("remote-sub3").
 										WithKptfile(
 											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
+												WithUpstream("github.com/kptdev/kpt",
 													"/", "main", string(kptfilev1.ResourceMerge)),
 										),
 								),
@@ -360,7 +360,7 @@ func TestSubpackages(t *testing.T) {
 									pkgbuilder.NewSubPkg("remote-sub3").
 										WithKptfile(
 											pkgbuilder.NewKptfile().
-												WithUpstream("github.com/GoogleContainerTools/kpt",
+												WithUpstream("github.com/kptdev/kpt",
 													"/", "main", string(kptfilev1.ResourceMerge)),
 										),
 								),

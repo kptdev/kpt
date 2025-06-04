@@ -23,8 +23,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/pkg/test/runner"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/test/runner"
 )
 
 func TestFnRender(t *testing.T) {

@@ -17,9 +17,9 @@ package update
 import (
 	"reflect"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

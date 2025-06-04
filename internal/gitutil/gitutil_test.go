@@ -21,11 +21,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/gitutil"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 

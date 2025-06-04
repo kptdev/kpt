@@ -74,7 +74,7 @@ design.
 
 # Review Process
 
-Design doc creators should raise the pull request similar to [this](https://github.com/GoogleContainerTools/kpt/pull/2576).
+Design doc creators should raise the pull request similar to [this](https://github.com/kptdev/kpt/pull/2576).
 Please name your documents with the design document number.  Pick n+1 from what's currently merged knowing that a slight
 renaming might need to happen if multiple design docs get accepted simultaneously.
 Please keep the name of the design doc in lower case with dashes in between words.

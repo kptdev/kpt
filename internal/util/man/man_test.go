@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	man "github.com/GoogleContainerTools/kpt/internal/util/man"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	man "github.com/kptdev/kpt/internal/util/man"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -98,65 +98,46 @@ Java server ConfigMap
 .TH java 1   "June 2019"  "Application"
 
 .SH NAME
-.PP
 \fBjava\fP
 
 
 .SH SYNOPSIS
-.PP
 kpt clone testdata3/java
 
 
 .SH Description
-.PP
 The \fBjava\fP package runs a container containing a java application.
 
 
 .SH Components
-.PP
 Java server Deployment.
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: java
-
-.fi
-.RE
+.EE
 
 .PP
 Java server Service
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: v1
 kind: Service
 metadata:
   name: java
-
-.fi
-.RE
+.EE
 
 .PP
 Java server ConfigMap
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: java-config
-
-.fi
-.RE
+.EE
 `, b.String())
 }
 
