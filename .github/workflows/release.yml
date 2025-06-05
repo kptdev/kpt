@@ -45,9 +45,6 @@ jobs:
           registry: gcr.io
           username: _json_key
           password: ${{ secrets.GCR_TOKEN }}
-      - name: Check Licenses
-        run: |
-          ./scripts/create-licenses.sh
       - name: Setup release environment
         id: setup-release-env
         run: |-
