@@ -10,6 +10,8 @@ require (
 	github.com/google/go-containerregistry v0.20.5
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
+	github.com/jedib0t/go-pretty/v6 v6.6.7
+	github.com/kptdev/kpt/rollouts v0.0.0-20250604154015-93477536a4dd
 	github.com/nephio-project/porch/api v1.3.0
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
@@ -72,6 +74,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/moby/spdystream v0.5.0 // indirect
@@ -92,6 +95,7 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.64.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
