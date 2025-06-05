@@ -19,9 +19,7 @@ import (
 
 	"github.com/kptdev/kpt/commands/alpha/license"
 	"github.com/kptdev/kpt/commands/alpha/live"
-
-	// TODO: Revert once new module exists
-	// "github.com/kptdev/kpt/commands/alpha/rollouts"
+	"github.com/kptdev/kpt/commands/alpha/rollouts"
 	"github.com/kptdev/kpt/commands/alpha/wasm"
 
 	"github.com/kptdev/kpt/internal/docs/generated/alphadocs"
@@ -51,8 +49,7 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
 		license.NewCommand(ctx, version),
-		// TODO: Revert once new module exists
-		// rollouts.NewCommand(ctx, version),
+		rollouts.NewCommand(ctx, version),
 	)
 
 	return alpha

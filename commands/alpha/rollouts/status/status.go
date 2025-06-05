@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/kptdev/kpt/commands/alpha/rollouts/rolloutsclient"
-	//	rolloutsapi "github.com/kptdev/kpt/rollouts/api/v1alpha1"
+	rolloutsapi "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"github.com/spf13/cobra"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 
