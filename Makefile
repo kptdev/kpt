@@ -40,7 +40,7 @@ LDFLAGS += "
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: generate license fix vet fmt lint license-check test build tidy
+all: generate license fix vet fmt lint test build tidy
 
 build:
 	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
@@ -96,9 +96,6 @@ license:
 
 lint: install-golangci-lint
 	$(GOBIN)/golangci-lint run ./...
-
-license-check: install-go-licenses
-	$(GOBIN)/go-licenses check github.com/kptdev/kpt
 
 test:
 	go test -cover ${LDFLAGS} ./...
