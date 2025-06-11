@@ -1,7 +1,7 @@
 # How to Contribute
 
 We'd love to accept your patches and contributions to this project. To learn more about the project structure and
-organization, please refer to Project [Governance](governance.md) information. There are just a few small guidelines you
+organization, please refer to Project [Governance](https://github.com/kptdev/governance) information. There are just a few small guidelines you
 need to follow.
 
 ## Developer Certificate of Origin (DCO)
