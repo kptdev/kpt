@@ -1,4 +1,13 @@
-# Annotations Reference
+---
+title: Annotations Reference
+linkTitle: Annotations Reference
+description:
+toc_hide: true
+menu:
+  main:
+    parent: "References"
+    weight: 30
+---
 
 The following annotations are used to configure kpt features:
 

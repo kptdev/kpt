@@ -1,11 +1,19 @@
-# Config Connector Status Convention
+---
+title: "Config Connector Status Convention"
+linkTitle: "Config Connector Status Convention"
+description:
+toc_hide: true
+menu:
+  main:
+    parent: "Schema Reference"
+---
 
-`kpt` includes custom rules for [Config Connector] resources to make them easier to work
-with. This document describes how kpt uses fields and conditions on Config Connector
-resources to compute [reconcile status].
+`kpt` includes custom rules for [Config Connector](https://cloud.google.com/config-connector/docs/overview) resources to
+make them easier to work with. This document describes how kpt uses fields and conditions on Config Connector
+resources to compute [reconcile status](../../../book/06-deploying-packages/#reconcile-status).
 
-Config Connector resources expose the `observedGeneration` field in the status
-object, and `kpt` will always report a resource as being `InProgress` if the
+[Config Connector](https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources) resources expose the
+`observedGeneration` field in the status object, and `kpt` will always report a resource as being `InProgress` if the
 `observedGeneration` doesn't match the value of `metadata.generation`.
 
 If the `Ready` condition is `True`, a Config Connector resource will be reported
@@ -30,7 +38,3 @@ been enabled.
 Similar to all other resources, a Config Connector resource will be in the `Terminating`
 state if the `metadata.deletionTimestamp` is set, and considered fully deleted when
 the resource no longer exists in the cluster.
-
-[reconcile status]: /book/06-deploying-packages/?id=reconcile-status
-[Config Connector]: https://cloud.google.com/config-connector/docs/overview
-[Config Connector events]: https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources

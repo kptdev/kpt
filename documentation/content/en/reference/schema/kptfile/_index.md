@@ -1,4 +1,11 @@
-# Kptfile
+---
+title: "Kptfile"
+linkTitle: "Kptfile"
+description:
+toc_hide: true
+menu:
+  main:
+    parent: "Schema Reference"
+---
 
-Grab the OpenAPI
-[schema here](https://raw.githubusercontent.com/kptdev/kpt/main/site/reference/schema/kptfile/kptfile.yaml).
+Grab the OpenAPI [schema here](/openapi/kptfile.yaml).

@@ -1,10 +1,18 @@
-# CRD Status Convention
+---
+title: "CRD Status Convention"
+linkTitle: "CRD Status Convention"
+description:
+toc_hide: true
+menu:
+  main:
+    parent: "Schema Reference"
+---
 
-To enable kpt to calculate the [reconcile status] for CRDs, this document
-provides additional conventions for status conditions following the [Kubernetes
-API Guideline]. Custom controllers should use the following conditions types to
-signal whether a resource has been fully reconciled, and whether it has
-encountered any problems:
+To enable kpt to calculate the [reconcile status](../../../book/06-deploying-packages/#reconcile-status) for CRDs, this
+document provides additional conventions for status conditions following the
+[Kubernetes API Guideline](https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md).
+Custom controllers should use the following conditions types to signal whether a resource has been fully reconciled, and
+whether it has encountered any problems:
 
 - `Reconciling`: Indicates that the resource does not yet match its spec. i.e.
   the desired state as expressed in the resource spec object has not been fully
@@ -54,7 +62,3 @@ status:
 ```
 
 The calculated reconcile status for this resource is `InProgress`.
-
-[kubernetes api guideline]:
-  https://www.google.com/url?q=https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md%23typical-status-properties&sa=D&ust=1585160635349000&usg=AFQjCNE3ncANdus3xckLj3fkeupwFUoABw
-[reconcile status]: /book/06-deploying-packages/?id=reconcile-status

@@ -1,4 +1,4 @@
-baseURL = "https://tag-env-sustainability.cncf.io/"
+baseURL = "http://localhost:1313/"
 title = "kpt documentaion"
 
 # Language settings
