@@ -187,6 +187,10 @@ func RunLicenseScan(ctx context.Context, opts RunLicenseScanOptions) error {
 		"MPL-2.0":          true,
 		"PUBLICDOMAIN":     false,
 		"ISC":              false,
+		"HPND":             false,
+		"CC-BY-3.0":        false,
+		"BSL-1.0":          false,
+		"NCSA":             false,
 	}
 
 	if len(errors) == 0 {
