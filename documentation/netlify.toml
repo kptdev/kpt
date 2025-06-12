@@ -1,0 +1,20 @@
+[build]
+publish = "public"
+command = "make production-build"
+ignore = "exit 1"
+
+[build.environment]
+NODE_VERSION = "18.16.1"
+HUGO_VERSION = "0.115.2"
+
+[context.production.environment]
+HUGO_ENV = "production"
+
+[context.deploy-preview.environment]
+HUGO_ENV = "preview"
+
+[context.deploy-preview]
+command = "make preview-build"
+
+[context.branch-deploy]
+command = "make preview-build"
