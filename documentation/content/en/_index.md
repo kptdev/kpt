@@ -1,7 +1,27 @@
 ---
-title: kpt
+title: kpt Documentation
 toc_hide: true
 ---
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.pathname === "/") {
+      document.querySelector(".breadcrumb").style.display = "none";
+    }
+  });
+</script>
+
+<div class="row mt-5 mb-3">
+    <div class="col-lg-6">
+        <div class="lead">
+        kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience, which simplifies managing Kubernetes platforms and KRM-driven infrastructure at scale by manipulating declarative Configuration as Data.
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <img src="/images/tag-environmental-sustainability_color.svg" alt="Tag Environmental Sustainability logo" style="max-width: 300px;">
+    </div>
+</div>
+
 <h2 id="overview"><span class="material-icons-outlined" style="font-size: 36px;">download</span> Install</h2>
 
 Get started by [installing](/installation/) kpt.

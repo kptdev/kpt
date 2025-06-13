@@ -1,7 +1,17 @@
-# CLI Reference
+---
+title: CLI Reference
+linkTitle: CLI Reference
+description: Overview of kpt commands
+toc_hide: true
+menu:
+  main:
+    parent: "References"
+---
+
+# 
 
 <!--mdtogo:Short
-    Overview of kpt commands
+    
 -->
 
 <!--mdtogo:Long-->

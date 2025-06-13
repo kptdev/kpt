@@ -4,6 +4,9 @@ linkTitle: "sync"
 
 description: >
   Deploy packages.
+menu:
+  main:
+    parent: "alpha"
 ---
 
 <!--mdtogo:Short
@@ -13,3 +16,4 @@ description: >
 <!--mdtogo:Long-->
 The `sync` command group contains subcommands for deploying packages.
 <!--mdtogo-->
+{{< listdocs >}}

@@ -5,6 +5,9 @@ weight: 1
 
 description: |
    Get, update, and describe packages with resources
+menu:
+  main:
+    parent: "References"
 ---
 
 <!--mdtogo:Short
@@ -16,3 +19,5 @@ The `pkg` command group contains subcommands for fetching, updating and describi
 from git repositories.
 
 <!--mdtogo-->
+
+{{< listdocs >}}

@@ -5,6 +5,9 @@ linkTitle: "repo"
 weight: 4
 description: >
    Manage package repositories.
+menu:
+  main:
+    parent: "alpha"
 ---
 
 <!--mdtogo:Short
@@ -14,3 +17,4 @@ description: >
 <!--mdtogo:Long-->
 The `repo` command group contains subcommands for managing package repositories.
 <!--mdtogo-->
+{{< listdocs >}}

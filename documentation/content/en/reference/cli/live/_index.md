@@ -5,6 +5,9 @@ weight: 3
 
 description: |
    Deploy local packages to a cluster.
+menu:
+  main:
+    parent: "References"
 ---
 <!--mdtogo:Short
     Deploy local packages to a cluster.
@@ -15,8 +18,9 @@ The `live` command group contains subcommands for deploying local
 `kpt` packages to a cluster.
 <!--mdtogo-->
 
+{{< listdocs >}}
 
-#### Flags
+## Flags
 
 These are the same flags as is available in [kubectl].
 

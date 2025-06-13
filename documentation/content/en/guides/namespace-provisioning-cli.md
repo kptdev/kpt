@@ -1,8 +1,14 @@
-# Namespace provisioning using kpt CLI
-
-In this guide, we will learn how to create a kpt package from scratch using
-`kpt CLI`. We will also learn how to enable customization of the package
-with minimal manual steps for package consumers.
+---
+title:  Namespace provisioning using kpt CLI
+linkTitle:  Namespace provisioning using kpt CLI
+description: |
+    In this guide, we will learn how to create a kpt package from scratch using `kpt CLI`. We will also learn how to
+    enable customization of the package with minimal manual steps for package consumers.
+toc_hide: true
+menu:
+  main:
+    parent: "Guides"
+---
 
 ## What package are we creating ?
 
@@ -16,10 +22,10 @@ In this guide, we will create a package that will be used for provisioning a nam
 ### Repositories
 
 Platform teams will have to setup two repos:
+
 1. Blueprint repo where reusable kpt packages will live.
-2. Deployment repo where instances of packages that will be deployed to a
-kubernetes cluster will live. Users will create deployable packages from the
-packages in the blueprint repo.
+2. Deployment repo where instances of packages that will be deployed to a kubernetes cluster will live. Users will
+   create deployable packages from the packages in the blueprint repo.
 
 We will refer to the repos with environment variables named $BLUEPRINT_REPO and $DEPLOYMENT_REPO.
 

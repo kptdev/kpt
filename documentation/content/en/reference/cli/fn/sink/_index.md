@@ -19,7 +19,7 @@ Resources must be in one of the following input formats:
    object of kind ResourceList.
 
 `sink` is useful for chaining functions using Unix pipe. For more details, refer
-to [Chaining functions].
+to [Chaining functions](/book/04-using-functions/#chaining-functions-using-the-unix-pipe).
 
 ### Synopsis
 
@@ -48,7 +48,5 @@ $ kpt fn source DIR |
 
 <!--mdtogo-->
 
-[chaining functions]:
-  /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[function specification]:
-  /book/05-developing-functions/01-functions-specification
+ 
+

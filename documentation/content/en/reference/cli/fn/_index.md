@@ -4,6 +4,9 @@ linkTitle: "fn"
 weight: 4
 description: |
    Transform and validate packages using containerized functions.
+menu:
+  main:
+    parent: "References"
 ---
 
 <!--mdtogo:Short
@@ -14,3 +17,4 @@ description: |
 The `fn` command group contains subcommands for transforming and validating `kpt` packages
 using containerized functions.
 <!--mdtogo-->
+{{< listdocs >}}

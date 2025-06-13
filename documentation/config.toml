@@ -48,14 +48,14 @@ anchor = "smart"
 
 [languages]
 [languages.en]
-title = "Cloud Native Finland"
+title = "kpt documentation"
 languageName ="English"
 # Weight used for sorting.
 weight = 1
 contentDir = "content/en"
 
 [languages.en.params]
-description = "Cloud Native Finland"
+description = "kpt documentation"
 
 [markup]
   [markup.goldmark]
@@ -114,10 +114,14 @@ copyright = "kpt contributors "
 # gcs_engine_id = "06963a606b9934e7b"
 
 # Enable Algolia DocSearch
-algolia_docsearch = false
 
-# Enable Lunr.js offline search
-offlineSearch = false
+params.search.algolia = false
+
+#Enable offline search with Lunr.js
+
+offlineSearch = true
+offlineSearchSummaryLength = 70
+offlineSearchMaxResults = 10
 
 # Enable syntax highlighting and copy buttons on code blocks with Prism
 prism_syntax_highlighting = false
@@ -162,3 +166,7 @@ no = 'Sorry to hear that. Please <a href="https://github.com/cncf/tag-env-sustai
 [params.ui.readingtime]
 enable = false
 
+[[menu.main]]
+name = "Functions Catalog"
+url = "https://catalog.kpt.dev/"
+weight = 40
