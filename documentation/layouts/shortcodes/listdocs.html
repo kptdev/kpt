@@ -1,0 +1,21 @@
+{{ $relativePath := .Page.File.Dir }}
+{{ $currentDir := printf "%s/%s" "/content/en/" $relativePath }}
+
+{{ $files := readDir $currentDir }}
+
+<ul>
+
+{{ range $files }}
+  {{ if .IsDir }}
+
+    {{ $subfiles := readDir (printf "%s/%s" $currentDir .Name) }}
+
+    {{ $title := .Name | replaceRE "\\.[^.]+$" "" }}
+
+    <li><a href="{{ printf "%s" .Name }}">{{ $title }}</a></li>
+
+  {{ end }}
+
+{{ end }}
+
+</ul>

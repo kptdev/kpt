@@ -1,0 +1,60 @@
+definitions:
+  Action:
+    properties:
+      type:
+        description: The type of action for the resource. One of Create, Unchanged, Delete, Update, Skip, Error
+        type: string
+      apiVersion:
+        description: The apiVersion of the resource
+        type: string
+      kind:
+        description: The kind of the resource
+        type: string
+      name:
+        description: The name of the resource
+        type: string
+      namespace:
+        description: The namespace of the resource
+        type: string
+      original:
+        description: The state of the resource in the cluster before any changes are applied
+        type: object
+      updated:
+        description: The state of the resource in the cluster after a dry-run server-side apply
+        type: object
+      error:
+        description: The error resulting from the apply operation if any
+        type: string
+    description: 
+    type: object
+  Plan:
+    properties:
+      apiVersion:
+        description: APIVersion is the apiVersion field of a Resource
+        type: string
+      kind:
+        description: Kind is the kind field of a Resource
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        description: Labels is the metadata.labels field of a Resource
+        type: object
+      name:
+        description: Name is the metadata.name field of a Resource
+        type: string
+      namespace:
+        description: Namespace is the metadata.namespace field of a Resource
+        type: string
+      spec:
+        description: Spec is the specification of the Plan.
+        items:
+          $ref: '#/definitions/Action'
+        type: array
+    title: Plan contains actions that will be taken when applying a package
+    type: object
+info:
+  title: Plan schema.
+  version: v1alpha1
+paths: {}
+swagger: "2.0"

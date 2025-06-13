@@ -1,0 +1,9 @@
+[submodule "documentation/themes/docsy"]
+	path = documentation/themes/docsy
+	url = https://github.com/google/docsy.git
+[submodule "documentation/themes/github.com/FortAwesome/Font-Awesome"]
+	path = documentation/themes/github.com/FortAwesome/Font-Awesome
+	url = https://github.com/FortAwesome/Font-Awesome.git
+[submodule "documentation/themes/github.com/twbs/bootstrap"]
+	path = themes/github.com/twbs/bootstrap
+	url = https://github.com/twbs/bootstrap.git

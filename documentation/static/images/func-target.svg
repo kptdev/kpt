@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 268 306" width="268px" height="306px" style="width:268px;height:306px;background:#FFFFFF;" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <rect fill="#FFFFFF" height="56.8583" rx="4.1667" ry="4.1667" style="stroke:#2196F3;stroke-width:2.0833333333333335;" width="68.75" x="154.6875" y="143.7703"/>
+    <text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="27.0833" x="175.5208" y="177.1708" style="white-space: pre;">func</text>
+    <text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="70.8333" x="20.146" y="19.879" style="white-space: pre; font-size: 12.5px;">input items</text>
+    <text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="80.2083" x="14.25" y="297.004" style="white-space: pre; font-size: 12.5px;">output items</text>
+    <text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="89.5833" x="172.3958" y="19.8792" style="white-space: pre;">functionConfig</text>
+    <text fill="#2196F3" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="41.6667" x="168.2292" y="298.0042" style="white-space: pre;">results</text>
+    <path d="M62.0625,44.1245 C70.7396,64.6453 84.5521,92.3537 102.6042,112.5203 C116,127.4787 133.9583,140.4995 150.0313,150.4683 " fill="none" id="input-to-FUNC" style="stroke:#2196F3;stroke-width:3.125;"/>
+    <polygon fill="#2196F3" points="154.5208,153.1974,148.6997,144.7496,150.0785,150.4785,144.3495,151.8573,154.5208,153.1974" style="stroke:#2196F3;stroke-width:3.125;"/>
+    <text fill="#FFA500" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="52.0833" x="96.063" y="99.046" style="white-space: pre; font-size: 12.5px;">Selected</text>
+    <path d="M 56.979 265.768 C 56.7 213.203 56.107 101.69 55.809 45.442" fill="none" id="input-to-output" style="stroke: rgb(33, 150, 243); stroke-width: 3.125;" transform="matrix(-1, 0, 0, -1, 112.787998, 311.210007)"/>
+    <polygon fill="#2196F3" points="56.875 274.096 61.229 264.404 56.979 268.662 52.897 264.23 56.875 274.096" style="stroke: rgb(33, 150, 243); stroke-width: 3.125;"/>
+    <text fill="#FFA500" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="21.875" x="13.958" y="170.879" style="white-space: pre; font-size: 12.5px;">Not</text>
+    <text fill="#FFA500" font-family="Verdana" font-size="12.5" lengthAdjust="spacing" textLength="52.0833" x="0.938" y="186.071" style="white-space: pre; font-size: 12.5px;">Selected</text>
+    <path d="M212.1563,43.9162 C207.375,70.3224 200.1667,110.0724 195.0833,138.1558 " fill="none" id="functionConfig-to-FUNC" style="stroke:#2196F3;stroke-width:3.125;stroke-dasharray:7.0,7.0;"/>
+    <polygon fill="#2196F3" points="194.0938,143.6037,199.8572,135.1164,195.0176,138.4779,191.656,133.6383,194.0938,143.6037" style="stroke:#2196F3;stroke-width:3.125;"/>
+    <path d="M 155.604 201.302 C 131.094 221.804 99.196 248.499 73.869 269.692" fill="none" id="FUNC-to-output" style="stroke: rgb(33, 150, 243); stroke-width: 3.125;"/>
+    <polygon fill="#2196F3" points="69.216 273.585 80.435 270.388 73.765 269.776 74.374 263.068 69.216 273.585" style="stroke: rgb(33, 150, 243); stroke-width: 3.125;"/>
+    <path d="M189.0625,201.3016 C189.0625,218.5724 189.0625,240.8537 189.0625,259.0412 " fill="none" id="FUNC-to-results" style="stroke:#2196F3;stroke-width:3.125;stroke-dasharray:7.0,7.0;"/>
+    <polygon fill="#2196F3" points="189.0625,264.5412,193.2292,255.1662,189.0625,259.3328,184.8958,255.1662,189.0625,264.5412" style="stroke:#2196F3;stroke-width:3.125;"/>
+  </g>
+</svg>
