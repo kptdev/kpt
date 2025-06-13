@@ -29,6 +29,10 @@ pygmentsUseClassic = false
 # See https://help.farbox.com/pygments.html
 pygmentsStyle = "tango"
 
+[module]
+  [[module.imports]]
+    path = "github.com/google/docsy"
+
 # Configure how URLs look like per section.
 [permalinks]
 blog = "/:section/:slug/"
