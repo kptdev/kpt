@@ -20,7 +20,7 @@ disableKinds = ["taxonomy"]
 
 
 # Highlighting config
-pygmentsCodeFences = true
+pygmentsFences = true
 pygmentsUseClasses = false
 
 # Use the new Chroma Go highlighter in Hugo.
@@ -80,7 +80,7 @@ description = "kpt documentation"
 
 [params]
 
-code_of_conduct = "https://lfprojects.org/policies/code-of-conduct/"
+code_of_conduct = "https://github.com/cncf/foundation/blob/main/code-of-conduct.md"
 
 customCSS = ["https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"]
 
