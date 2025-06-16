@@ -10,7 +10,7 @@ enableMissingTranslationPlaceholders = true
 
 enableRobotsTXT = true
 
-theme = ["docsy"]
+theme = ["github.com/google/docsy"]
 
 # Will give values to .Lastmod etc.
 enableGitInfo = true
