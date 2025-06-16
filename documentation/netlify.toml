@@ -11,7 +11,7 @@ HUGO_ENABLEGITINFO = "true"
 [context.production.environment]
 HUGO_ENV = "production"
 NODE_VERSION = "18.16.1"
-HUGO_VERSION = "0.147.8"
+HUGO_VERSION = "0.127.0"
 HUGO_ENABLEGITINFO = "true"
 
 [context.deploy-preview.environment]
