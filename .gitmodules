@@ -4,6 +4,4 @@
 [submodule "documentation/themes/github.com/twbs/bootstrap"]
 	path = themes/github.com/twbs/bootstrap
 	url = https://github.com/twbs/bootstrap.git
-[submodule "documentation/themes/github.com/google/docsy"]
-	path = documentation/themes/docsy
-	url = https://github.com/google/docsy.git
+
