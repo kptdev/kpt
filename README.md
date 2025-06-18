@@ -1,6 +1,9 @@
 <img src="logo/KptLogoLarge.png" width="220">
 
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10656/badge)](https://www.bestpractices.dev/projects/10656)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkptdev%2Fkpt.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkptdev%2Fkpt?ref=badge_shield)
+
 # kpt: Automate Kubernetes Configuration Editing
 
 kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience,
@@ -92,6 +95,10 @@ We would love to keep in touch:
 ## License
 
 Code is under the [Apache License 2.0](LICENSE), documentation is [CC BY 4.0](LICENSE-documentation).
+
+### License scanning status
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkptdev%2Fkpt.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkptdev%2Fkpt?ref=badge_large)
 
 ## Governance
 
