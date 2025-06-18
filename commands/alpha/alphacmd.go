@@ -17,7 +17,6 @@ package alpha
 import (
 	"context"
 
-	"github.com/kptdev/kpt/commands/alpha/license"
 	"github.com/kptdev/kpt/commands/alpha/live"
 	"github.com/kptdev/kpt/commands/alpha/rollouts"
 	"github.com/kptdev/kpt/commands/alpha/wasm"
@@ -48,7 +47,6 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 	alpha.AddCommand(
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
-		license.NewCommand(ctx, version),
 		rollouts.NewCommand(ctx, version),
 	)
 
