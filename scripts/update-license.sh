@@ -23,6 +23,7 @@ go run github.com/justinsb/addlicense@v1.0.1 \
   --ignore ".build/**" \
   --ignore "site/**" \
   --ignore "docs/**" \
+  --ignore "documentation/**" \
   --ignore "**/.expected/results.yaml" \
   --ignore "**/testdata/**" \
   --ignore "**/generated/**" \
