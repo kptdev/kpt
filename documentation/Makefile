@@ -14,7 +14,7 @@ serve:
 
 production-build:
 	git submodule update --init --recursive
-	tree -d
+	hugo version
 	hugo \
 		--minify
 	npx -y pagefind --site public

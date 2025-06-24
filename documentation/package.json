@@ -29,10 +29,10 @@
     "test": "npm run check:links"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.19",
+    "autoprefixer": "^10.4.21",
     "hugo-extended": "^0.127.0",
-    "postcss": "^8.4.38",
-    "postcss-cli": "^11.0.0"
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1"
   },
   "enginesComment": "Ensure that engines.node stays consistent with .nvmrc",
   "engines": {
