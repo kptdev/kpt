@@ -68,12 +68,12 @@ dockers:
   - ids:
       - linux-amd64
     image_templates:
-      - "gcr.io/kpt-dev/kpt:{{ .Tag }}"
+      - "ghcr.io/kptdev/kpt:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile"
   - ids:
       - linux-amd64
     image_templates:
-      - "gcr.io/kpt-dev/kpt-gcloud:{{ .Tag }}"
+      - "ghcr.io/kptdev/kpt-gcloud:{{ .Tag }}"
     dockerfile: "release/images/Dockerfile-gcloud"
 archives:
   - id: archived
