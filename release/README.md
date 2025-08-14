@@ -24,7 +24,7 @@ To cut a new kpt release perform the following:
   - `git push upstream v1.0.0-(alpha|beta|rc).*`
 - This will trigger a Github Action that will use goreleaser to make the
   release. The result will be a github release in the draft state and upload
-  docker images to GCR.
+  docker images to GHCR.
   - Verify that the release looks good. If it does, publish the release through
     the github UI.
 - Update the Homebrew release
