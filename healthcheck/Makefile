@@ -96,7 +96,7 @@ $(TOOLBIN)/controller-gen: ## Download controller-gen locally if necessary.
 	$(call go-get-tool,$(TOOLBIN)/controller-gen,sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3)
 
 $(TOOLBIN)/golangci-lint:
-	$(call go-get-tool,$(TOOLBIN)/golangci-lint,github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.0)
+	$(call go-get-tool,$(TOOLBIN)/golangci-lint,github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8)
 
 $(TOOLBIN)/misspell:
 	$(call go-get-tool,$(TOOLBIN)/misspell,github.com/client9/misspell/cmd/misspell@v0.3.4)	

@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/strings"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	"github.com/kptdev/kpt/internal/util/strings"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"
@@ -135,10 +135,18 @@ func readInvInfoFromStream(in io.Reader) (kptfilev1.Inventory, error) {
 	}
 	// Inventory found with ResourceGroup object.
 	if len(rgFilter.Inventories) == 1 {
-		invID := rgFilter.Inventories[0].Labels[rgfilev1alpha1.RGInventoryIDLabel]
+		labels := rgFilter.Inventories[0].Labels
+		invID := labels[rgfilev1alpha1.RGInventoryIDLabel]
+		delete(labels, rgfilev1alpha1.RGInventoryIDLabel)
+
+		annotations := rgFilter.Inventories[0].Annotations
+		pkg.ClearInternalAnnotations(annotations)
+
 		return kptfilev1.Inventory{
 			Name:        rgFilter.Inventories[0].Name,
 			Namespace:   rgFilter.Inventories[0].Namespace,
+			Annotations: annotations,
+			Labels:      labels,
 			InventoryID: invID,
 		}, nil
 	}

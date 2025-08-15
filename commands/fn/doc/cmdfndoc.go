@@ -22,10 +22,10 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +43,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
 	})
 	cmdutil.FixDocs("kpt", parent, c)

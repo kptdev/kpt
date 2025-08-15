@@ -19,7 +19,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/mdtogo/common"
+	"github.com/kptdev/kpt/mdtogo/common"
 	"github.com/stretchr/testify/assert"
 )
 

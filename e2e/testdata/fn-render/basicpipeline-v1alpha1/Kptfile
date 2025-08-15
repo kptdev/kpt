@@ -22,7 +22,7 @@ dependencies:
     git:
       directory: /package-examples/helloworld-set
       ref: master
-      repo: https://github.com/GoogleContainerTools/kpt
+      repo: https://github.com/kptdev/kpt
 functions:
   autoRunStarlark: true
   starlarkFunctions:
@@ -90,7 +90,7 @@ packageMetadata:
   tags:
     - tag1
     - tag2
-  url: https://github.com/GoogleContainerTools/kpt
+  url: https://github.com/kptdev/kpt
   version: v0.1
 upstream:
   type: git
@@ -98,4 +98,4 @@ upstream:
     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
     directory: package-examples/nginx
     ref: v0.2
-    repo: https://github.com/GoogleContainerTools/kpt
+    repo: https://github.com/kptdev/kpt

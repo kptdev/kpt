@@ -10,12 +10,13 @@ import (
 	"runtime"
 	"testing"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -427,7 +428,7 @@ func setupTest(t *testing.T) string {
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
-	if !assert.NoError(t, copyutil.CopyDir(ds, dir)) {
+	if !assert.NoError(t, copyutil.CopyDir(filesys.MakeFsOnDisk(), ds, dir)) {
 		t.FailNow()
 	}
 	if !assert.NoError(t, os.Chdir(filepath.Dir(dir))) {

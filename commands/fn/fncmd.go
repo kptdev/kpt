@@ -17,12 +17,12 @@ package fn
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/fn/doc"
-	"github.com/GoogleContainerTools/kpt/commands/fn/render"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdeval"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsink"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdsource"
+	"github.com/kptdev/kpt/commands/fn/doc"
+	"github.com/kptdev/kpt/commands/fn/render"
+	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdeval"
+	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdsink"
+	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdsource"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ func GetCommand(ctx context.Context, name string) *cobra.Command {
 		Short:   fndocs.FnShort,
 		Long:    fndocs.FnLong,
 		Aliases: []string{"functions"},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

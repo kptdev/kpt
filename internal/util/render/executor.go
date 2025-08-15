@@ -22,16 +22,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
-	"github.com/GoogleContainerTools/kpt/internal/util/printerutil"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/fn"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/util/attribution"
+	"github.com/kptdev/kpt/internal/util/printerutil"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -415,7 +415,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// set kpt-resource-id annotation on each resource before mutation
-			err = fnruntime.SetResourceIds(input)
+			err = fnruntime.SetResourceIDs(input)
 			if err != nil {
 				return nil, err
 			}
@@ -444,7 +444,7 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			// merge the output resources with input resources
 			input = fnruntime.MergeWithInput(output.Nodes, selectedInput, input)
 			// delete the kpt-resource-id annotation on each resource
-			err = fnruntime.DeleteResourceIds(input)
+			err = fnruntime.DeleteResourceIDs(input)
 			if err != nil {
 				return nil, err
 			}

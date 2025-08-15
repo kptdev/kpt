@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/GoogleContainerTools/kpt/internal/util/man"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	man "github.com/kptdev/kpt/internal/util/man"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,7 +45,7 @@ info:
 	// write the man md file
 	err = os.Mkdir(filepath.Join(d, "man"), 0700)
 	assert.NoError(t, err)
-	err = os.WriteFile(filepath.Join(d, "man", ManFilename), []byte(`
+	err = os.WriteFile(filepath.Join(d, "man", man.ManFilename), []byte(`
 java 1   "June 2019"  "Application"
 ==================================================
 
@@ -86,7 +86,7 @@ Java server ConfigMap
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -98,65 +98,46 @@ Java server ConfigMap
 .TH java 1   "June 2019"  "Application"
 
 .SH NAME
-.PP
 \fBjava\fP
 
 
 .SH SYNOPSIS
-.PP
 kpt clone testdata3/java
 
 
 .SH Description
-.PP
 The \fBjava\fP package runs a container containing a java application.
 
 
 .SH Components
-.PP
 Java server Deployment.
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: java
-
-.fi
-.RE
+.EE
 
 .PP
 Java server Service
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: v1
 kind: Service
 metadata:
   name: java
-
-.fi
-.RE
+.EE
 
 .PP
 Java server ConfigMap
 
-.PP
-.RS
-
-.nf
+.EX
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: java-config
-
-.fi
-.RE
+.EE
 `, b.String())
 }
 
@@ -164,11 +145,11 @@ metadata:
 // but can be overridden
 func TestMan_GetExecCmd(t *testing.T) {
 	// default to "man"
-	instance := Command{}
+	instance := man.Command{}
 	assert.Equal(t, "man", instance.GetExecCmd())
 
 	// allow overrides for testing
-	instance = Command{ManExecCommand: "cat"}
+	instance = man.Command{ManExecCommand: "cat"}
 	assert.Equal(t, "cat", instance.GetExecCmd())
 }
 
@@ -176,12 +157,12 @@ func TestMan_GetExecCmd(t *testing.T) {
 // but can be overridden.
 func TestMan_GetStdOut(t *testing.T) {
 	// default to stdout
-	instance := Command{}
+	instance := man.Command{}
 	assert.Equal(t, os.Stdout, instance.GetStdOut())
 
 	// allow overrides for testing
 	b := &bytes.Buffer{}
-	instance = Command{StdOut: b}
+	instance = man.Command{StdOut: b}
 	assert.Equal(t, b, instance.GetStdOut())
 }
 
@@ -203,7 +184,7 @@ info:
 	}
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -234,7 +215,7 @@ info:
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -262,7 +243,7 @@ info:
 	assert.NoError(t, err)
 
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "cat",
 		Path:           d,
 		StdOut:         b,
@@ -276,7 +257,7 @@ info:
 // path is not under the package directory.
 func TestMan_Execute_failManNotInstalled(t *testing.T) {
 	b := &bytes.Buffer{}
-	instance := Command{
+	instance := man.Command{
 		ManExecCommand: "notrealprogram",
 		Path:           "path",
 		StdOut:         b,

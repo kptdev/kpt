@@ -24,17 +24,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-# disabling href checker https://github.com/GoogleContainerTools/kpt/issues/3157
+      - uses: actions/checkout@v4
+# disabling href checker https://github.com/kptdev/kpt/issues/3157
 # Re-enable it by replacing it with robust mechanism
-#      - uses: actions/checkout@v2
+#      - uses: actions/checkout@v4
 #        with:
 #          repository: etefera/href-checker
 #          ref: docsify
 #          path: href-checker
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16'
+          node-version: '24'
       - name: Lint site content
         run: npm i && npm run lint-check
         working-directory: site

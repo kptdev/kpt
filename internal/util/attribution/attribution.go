@@ -60,7 +60,7 @@ func (a *Attributor) Process() {
 		}.Execute()
 		if err != nil {
 			// this should be a best effort, do not error if this step fails
-			// https://github.com/GoogleContainerTools/kpt/issues/2559
+			// https://github.com/kptdev/kpt/issues/2559
 			return
 		}
 	}

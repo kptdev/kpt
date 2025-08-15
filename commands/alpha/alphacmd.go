@@ -17,16 +17,12 @@ package alpha
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/license"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/live"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/repo"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rpkg"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/sync"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/wasm"
+	"github.com/kptdev/kpt/commands/alpha/live"
+	"github.com/kptdev/kpt/commands/alpha/rollouts"
+	"github.com/kptdev/kpt/commands/alpha/wasm"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/alphadocs"
-	"github.com/GoogleContainerTools/kpt/internal/util/porch"
+	"github.com/kptdev/kpt/internal/docs/generated/alphadocs"
+	"github.com/kptdev/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +31,7 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 		Use:   "alpha",
 		Short: alphadocs.AlphaShort,
 		Long:  alphadocs.AlphaLong,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err
@@ -49,12 +45,8 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 	}
 
 	alpha.AddCommand(
-		repo.NewCommand(ctx, version),
-		rpkg.NewCommand(ctx, version),
-		sync.NewCommand(ctx, version),
 		wasm.NewCommand(ctx, version),
 		live.GetCommand(ctx, "", version),
-		license.NewCommand(ctx, version),
 		rollouts.NewCommand(ctx, version),
 	)
 

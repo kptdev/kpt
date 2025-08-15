@@ -22,14 +22,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	pkgtest "github.com/GoogleContainerTools/kpt/internal/pkg/testing"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/update"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/pkg"
+	pkgtest "github.com/kptdev/kpt/internal/pkg/testing"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/update"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	kptRepo         = "github.com/GoogleContainerTools/kpt"
+	kptRepo         = "github.com/kptdev/kpt"
 	masterBranch    = "master"
 	testPackageName = "test-package"
 )
@@ -75,7 +75,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 				return
 			}
 			upstreamRepo := g.Repos[testutil.Upstream]
-			cmd := &Command{
+			cmd := &update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 			}
@@ -138,7 +138,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
-			if !assert.NoError(t, (&Command{
+			if !assert.NoError(t, (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "v1.2",
 				Strategy: strategy,
@@ -194,7 +194,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
-			err := (&Command{
+			err := (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: u.updater,
 			}).Run(fake.CtxWithDefaultPrinter())
@@ -376,7 +376,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			}
 
 			// run the command
-			err = (&Command{
+			err = (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      masterBranch,
 				Strategy: tc.strategy,
@@ -446,7 +446,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
-			if !assert.NoError(t, (&Command{
+			if !assert.NoError(t, (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "exp",
@@ -810,7 +810,7 @@ func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
 			}
 
 			// Update the local package
-			if !assert.NoError(t, (&Command{
+			if !assert.NoError(t, (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, path.Join(g.LocalWorkspace.FullPackagePath(), tc.updateSubPkg)),
 				Strategy: tc.strategy,
 				Ref:      tc.updateRef,
@@ -856,7 +856,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
-			if !assert.NoError(t, (&Command{
+			if !assert.NoError(t, (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
@@ -913,7 +913,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 			upstreamRepo := g.Repos[testutil.Upstream]
 
 			// Update the local package
-			if !assert.NoError(t, (&Command{
+			if !assert.NoError(t, (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
@@ -956,7 +956,7 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 	testutil.AddKptfileToWorkspace(t, w, kf)
 
 	// Update the local package
-	err := (&Command{
+	err := (&update.Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 
@@ -969,7 +969,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 		strategy := kptfilev1.UpdateStrategies[i]
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
-			err := (&Command{
+			err := (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, path),
 				Strategy: strategy,
 			}).Run(fake.CtxWithDefaultPrinter())
@@ -1034,7 +1034,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 			}
 
 			// Update the local package.
-			err = (&Command{
+			err = (&update.Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 
@@ -1069,7 +1069,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 				return
 			}
 
-			err := (&Command{
+			err := (&update.Command{
 				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "exp",
 				Strategy: strategy,
@@ -1127,7 +1127,7 @@ func TestCommand_Run_manualChange(t *testing.T) {
 		return
 	}
 
-	err := (&Command{
+	err := (&update.Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 	if !assert.NoError(t, err) {
@@ -1181,7 +1181,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 	}
 	upstreamRepo := g.Repos[testutil.Upstream]
 
-	err := (&Command{
+	err := (&update.Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 	if !assert.NoError(t, err) {
@@ -1229,7 +1229,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 	}
 
 	// Update the local package
-	err := (&Command{
+	err := (&update.Command{
 		Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 		Strategy: strategy,
 	}).Run(fake.CtxWithDefaultPrinter())
@@ -2008,7 +2008,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 					return
 				}
 
-				err := (&Command{
+				err := (&update.Command{
 					Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 					Strategy: strategy,
 				}).Run(fake.CtxWithDefaultPrinter())
@@ -3548,7 +3548,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 				return
 			}
 
-			err := (&Command{
+			err := (&update.Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 
@@ -3693,7 +3693,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 			}
 			testutil.AddKptfileToWorkspace(t, w, kf)
 
-			err := (&Command{
+			err := (&update.Command{
 				Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 			if !assert.NoError(t, err) {
@@ -3764,7 +3764,7 @@ func TestMultiUpdateCache(t *testing.T) {
 		UpdateStrategy: kptfilev1.ResourceMerge,
 	}
 	testutil.AddKptfileToWorkspace(t, w, kf)
-	cmd := Command{
+	cmd := update.Command{
 		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
 	}
 	err := cmd.Run(fake.CtxWithDefaultPrinter())
@@ -3851,13 +3851,13 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			local := t.TempDir()
 			expectedLocal := t.TempDir()
 
-			err = copyutil.CopyDir(filepath.Join(ds, test.updated), updated)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.updated), updated)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.original), original)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.original), original)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.local), local)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.local), local)
 			assert.NoError(t, err)
-			err = copyutil.CopyDir(filepath.Join(ds, test.expectedLocal), expectedLocal)
+			err = copyutil.CopyDir(filesys.MakeFsOnDisk(), filepath.Join(ds, test.expectedLocal), expectedLocal)
 			assert.NoError(t, err)
 			if test.modifyLocalFile {
 				err = os.WriteFile(filepath.Join(local, "somefunction.py"), []byte("Print some other thing"), 0600)
@@ -3869,7 +3869,7 @@ func TestReplaceNonKRMFiles(t *testing.T) {
 			// expectedLocal.
 			err = os.WriteFile(filepath.Join(updated, "new.yaml"), []byte("a: b"), 0600)
 			assert.NoError(t, err)
-			err = ReplaceNonKRMFiles(updated, original, local)
+			err = update.ReplaceNonKRMFiles(updated, original, local)
 			assert.NoError(t, err)
 			tg := testutil.TestGitRepo{}
 			tg.AssertEqual(t, local, expectedLocal, false)

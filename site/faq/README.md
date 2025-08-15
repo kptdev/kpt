@@ -121,9 +121,9 @@ don't have to alias it. It is pronounced "kept".
 [Please reach out!][contact]
 
 [Configuration as Data]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/06-config-as-data.md
+  https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md
 [package orchestration]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/docs/design-docs/07-package-orchestration.md
+  https://github.com/kptdev/kpt/blob/main/docs/design-docs/07-package-orchestration.md
 [the kubernetes resource model]:
   https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md
 [declarative application management in kubernetes]:
@@ -134,10 +134,10 @@ don't have to alias it. It is pronounced "kept".
 [contact]: /contact/
 [functions catalog]: https://catalog.kpt.dev/
 [roadmap document]:
-  https://github.com/GoogleContainerTools/kpt/blob/main/docs/ROADMAP.md
-[kpt milestones]: https://github.com/GoogleContainerTools/kpt/milestones
+  https://github.com/kptdev/kpt/blob/main/docs/ROADMAP.md
+[kpt milestones]: https://github.com/kptdev/kpt/milestones
 [kustomize solution]:
-  https://github.com/GoogleContainerTools/kpt/tree/main/package-examples/kustomize
+  https://github.com/kptdev/kpt/tree/main/package-examples/kustomize
 [kustomize]: https://kustomize.io
 [overlay pattern]:
   https://github.com/kubernetes-sigs/kustomize/tree/master/examples/multibases

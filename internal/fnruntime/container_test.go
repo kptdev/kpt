@@ -21,8 +21,8 @@ import (
 	"context"
 	"testing"
 
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -36,8 +36,9 @@ func TestContainerFn(t *testing.T) {
 		err    bool
 	}{
 		{
-			name:  "simple busybox",
-			image: "gcr.io/google-containers/busybox",
+			name:   "no-op function",
+			image:  "gcr.io/kpt-functions/no-op",
+			output: "apiVersion: v1\nkind: ResourceList\nmetadata:\n  name: output\nitems: []\n",
 		},
 		{
 			name:  "non-existing image",

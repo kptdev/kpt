@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
 	"github.com/xanzy/go-gitlab"
 	coreapi "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

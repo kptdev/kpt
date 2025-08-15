@@ -20,7 +20,6 @@
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/rpkg internal/docs/generated/rpkgdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/sync internal/docs/generated/syncdocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/alpha/wasm internal/docs/generated/wasmdocs --license=none --recursive=true --strategy=cmdDocs
-//go:generate $GOBIN/mdtogo site/reference/cli/alpha/license internal/docs/generated/licensedocs --license=none --recursive=true --strategy=cmdDocs
 //go:generate $GOBIN/mdtogo site/reference/cli/README.md internal/docs/generated/overview --license=none --strategy=cmdDocs
 package main
 
@@ -29,10 +28,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/errors/resolver"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/run"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/errors/resolver"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/component-base/cli"

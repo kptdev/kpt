@@ -20,11 +20,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/get"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/get"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
@@ -42,7 +42,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{})
 	defer clean()
 
-	err := Command{
+	err := get.Command{
 		Destination: w.WorkspaceDirectory,
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
@@ -56,7 +56,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	_, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{})
 	defer clean()
 
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo: "foo",
 		},
@@ -82,7 +82,7 @@ func TestCommand_Run(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{Git: &kptfilev1.Git{
+	err := get.Command{Git: &kptfilev1.Git{
 		Repo:      "file://" + g.RepoDirectory,
 		Ref:       "master",
 		Directory: "/",
@@ -143,7 +143,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Git: &kptfilev1.Git{
+	err := get.Command{Git: &kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
 	}.Run(fake.CtxWithDefaultPrinter())
@@ -207,7 +207,7 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	cliOutput := &bytes.Buffer{}
 
 	absPath := filepath.Join(w.WorkspaceDirectory, subdir)
-	err := Command{Git: &kptfilev1.Git{
+	err := get.Command{Git: &kptfilev1.Git{
 		Repo: g.RepoDirectory, Ref: "refs/heads/master", Directory: subdir},
 		Destination: absPath,
 	}.Run(fake.CtxWithPrinter(cliOutput, cliOutput))
@@ -271,7 +271,7 @@ func TestCommand_Run_destination(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
@@ -335,7 +335,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, dest)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
@@ -415,7 +415,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	assert.NotEqual(t, commit, commit2)
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = Command{
+	err = get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/heads/exp",
@@ -498,7 +498,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	assert.NotEqual(t, commit, commit2)
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err = Command{
+	err = get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "refs/tags/v2",
@@ -639,7 +639,7 @@ func TestCommand_Run_ref(t *testing.T) {
 			ref := tc.ref(repos)
 
 			absPath := filepath.Join(w.WorkspaceDirectory, repos[testutil.Upstream].RepoName)
-			err = Command{
+			err = get.Command{
 				Git: &kptfilev1.Git{
 					Repo:      repos[testutil.Upstream].RepoDirectory,
 					Ref:       ref,
@@ -668,7 +668,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
@@ -722,7 +722,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 	assert.NoError(t, err)
 
 	// try to clone and expect a failure
-	err = Command{
+	err = get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
@@ -779,7 +779,7 @@ func TestCommand_Run_nonexistingParentDir(t *testing.T) {
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "more", "dirs", g.RepoName)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Ref:       "master",
@@ -799,7 +799,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, "foo")
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      "foo",
 			Directory: "/",
@@ -829,7 +829,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
@@ -862,7 +862,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	defer clean()
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoDirectory)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      g.RepoDirectory,
 			Directory: "/",
@@ -1387,7 +1387,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 			w.PackageDir = targetDir
 			destinationDir := filepath.Join(w.WorkspaceDirectory, targetDir)
 
-			err = Command{
+			err = get.Command{
 				Git: &kptfilev1.Git{
 					Repo:      upstreamRepo.RepoDirectory,
 					Directory: tc.directory,
@@ -1458,7 +1458,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 	upstreamRepo := repos[testutil.Upstream]
 
 	destinationDir := filepath.Join(w.WorkspaceDirectory, upstreamRepo.RepoName)
-	err := Command{
+	err := get.Command{
 		Git: &kptfilev1.Git{
 			Repo:      upstreamRepo.RepoDirectory,
 			Directory: "/",

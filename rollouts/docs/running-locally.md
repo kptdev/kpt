@@ -7,7 +7,7 @@ To run Rollouts locally, you will need:
 * Linux machine (technically it is possible to run Rollouts locally on a Mac but
   due to differences in Docker between Linux and Mac, the Rollouts scripts are
   confirmed to work on Linux)
-* [go 1.20](https://go.dev/dl/) or newer
+* [go 1.21](https://go.dev/dl/) or newer
 * `make`
 * Either access to GKE clusters, or Kind.
 
@@ -211,25 +211,25 @@ export CS_VERSION=vX.Y.Z
 Then, apply the core Config Sync manifests to your cluster:
 
 ```sh
-KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"
+KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/kptdev/kpt-config-sync/releases/download/${CS_VERSION}/config-sync-manifest.yaml"
 ```
 
 Then, for kubernetes version v1.25 and newer, optionally apply the asm.yaml manifest:
 
 ```sh
-KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/GoogleContainerTools/kpt-config-sync/releases/download/${CS_VERSION}/acm-psp.yaml"
+KUBECONFIG=~/.kube/gke-n kubectl apply -f "https://github.com/kptdev/kpt-config-sync/releases/download/${CS_VERSION}/acm-psp.yaml"
 ```
 
 If you wish to install Config Sync from source instead of using a released version, you can follow
-the [Config Sync installation guide](https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/docs/installation.md).
+the [Config Sync installation guide](https://github.com/kptdev/kpt-config-sync/blob/main/docs/installation.md).
 
 
 ### Running Rollouts controller locally
 
-Clone this repository into `${GOPATH}/src/github.com/GoogleContainerTools/kpt`.
+Clone this repository into `${GOPATH}/src/github.com/kptdev/kpt`.
 
 ```sh
-git clone https://github.com/GoogleContainerTools/kpt.git "${GOPATH}/src/github.com/GoogleContainerTools/kpt"
+git clone https://github.com/kptdev/kpt.git "${GOPATH}/src/github.com/kptdev/kpt"
 ```
 
 Enter the rollouts directory:

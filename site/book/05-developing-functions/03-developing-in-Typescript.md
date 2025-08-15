@@ -45,7 +45,7 @@ Currently supported platforms: amd64 Linux/Mac
 1. Get the `demo-functions` package:
 
    ```shell
-   $ git clone --depth 1 https://github.com/GoogleContainerTools/kpt-functions-sdk.git
+   $ git clone --depth 1 https://github.com/kptdev/krm-functions-sdk.git
    ```
 
    All subsequent commands are run from the `demo-functions` directory:
@@ -233,15 +233,15 @@ Currently supported platforms: amd64 Linux/Mac
 [download-kpt]: /book/01-getting-started/01-system-requirements
 [download-node]: https://nodejs.org/en/download/
 [install-node]: https://github.com/nodejs/help/wiki/Installation/
-[ts sdk api]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
+[ts sdk api]: https://kptdev.github.io/krm-functions-sdk/api/
 [label-namespace]:
-  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
+  https://github.com/kptdev/krm-functions-sdk/blob/master/ts/demo-functions/src/label_namespace.ts
 [validate-rolebinding]:
-  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
+  https://github.com/kptdev/krm-functions-sdk/blob/master/ts/demo-functions/src/validate_rolebinding.ts
 [expand-team-cr]:
-  https://github.com/GoogleContainerTools/kpt-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
+  https://github.com/kptdev/krm-functions-sdk/blob/master/ts/demo-functions/src/expand_team_cr.ts
 [example functions]:
-  https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
+  https://github.com/kptdev/krm-functions-sdk/tree/master/ts/demo-functions/src/
 [document-oriented databases]:
   https://en.wikipedia.org/wiki/Document-oriented_database
 [typescript sdk developer guide]: /sdk/ts-guide

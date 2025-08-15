@@ -33,7 +33,7 @@ This is a porcelain for manually updating the `upstream` section in the
 upstream:
   type: git
   git:
-    repo: https://github.com/GoogleContainerTools/kpt
+    repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
     # Change this from v0.9 to v0.10
     ref: v0.10

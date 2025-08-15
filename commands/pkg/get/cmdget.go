@@ -19,16 +19,16 @@ import (
 	"os"
 	"strings"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/get"
-	"github.com/GoogleContainerTools/kpt/internal/util/parse"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/internal/util/get"
+	"github.com/kptdev/kpt/internal/util/parse"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -55,7 +55,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 			strings.Join(kptfilev1.UpdateStrategiesAsStrings(), ","))
 	c.Flags().BoolVar(&r.isDeploymentInstance, "for-deployment", false,
 		"(Experimental) indicates if this package will be deployed to a cluster.")
-	_ = c.RegisterFlagCompletionFunc("strategy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = c.RegisterFlagCompletionFunc("strategy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return kptfilev1.UpdateStrategiesAsStrings(), cobra.ShellCompDirectiveDefault
 	})
 	return r

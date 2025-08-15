@@ -24,10 +24,10 @@ import (
 	"strconv"
 	"strings"
 
-	kptcommands "github.com/GoogleContainerTools/kpt/commands"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/overview"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	kptcommands "github.com/kptdev/kpt/commands"
+	"github.com/kptdev/kpt/internal/docs/generated/overview"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"
 )
@@ -44,7 +44,7 @@ func GetMain(ctx context.Context) *cobra.Command {
 		// We handle all errors in main after return from cobra so we can
 		// adjust the error message coming from libraries
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err
@@ -158,7 +158,7 @@ var version = "unknown"
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("%s\n", version)
 	},
 }

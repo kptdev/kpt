@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	kptfile "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
 //nolint:gochecknoinits

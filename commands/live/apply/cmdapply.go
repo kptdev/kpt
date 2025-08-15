@@ -20,13 +20,13 @@ import (
 	"os"
 	"time"
 
-	alphaprinterstable "github.com/GoogleContainerTools/kpt/internal/alpha/printers/table"
-	"github.com/GoogleContainerTools/kpt/internal/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/strings"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
-	"github.com/GoogleContainerTools/kpt/pkg/status"
+	alphaprinterstable "github.com/kptdev/kpt/internal/alpha/printers/table"
+	"github.com/kptdev/kpt/internal/cmdutil"
+	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/internal/util/strings"
+	"github.com/kptdev/kpt/pkg/live"
+	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -87,6 +87,9 @@ func NewRunner(
 		"dry-run apply for the resources in the package.")
 	c.Flags().BoolVar(&r.printStatusEvents, "show-status-events", false,
 		"Print status events (always enabled for table output)")
+	c.Flags().StringVar(&r.statusPolicyString, "status-policy", "all",
+		"It determines which status information should be saved in the inventory (if compatible). Available options "+
+			fmt.Sprintf("%q and %q.", "all", "none"))
 	return r
 }
 
@@ -113,9 +116,11 @@ type Runner struct {
 	inventoryPolicyString        string
 	dryRun                       bool
 	printStatusEvents            bool
+	statusPolicyString           string
 
 	inventoryPolicy inventory.Policy
 	prunePropPolicy metav1.DeletionPropagation
+	statusPolicy    inventory.StatusPolicy
 
 	applyRunner func(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructured,
 		dryRunStrategy common.DryRunStrategy) error
@@ -129,6 +134,11 @@ func (r *Runner) preRunE(cmd *cobra.Command, _ []string) error {
 	}
 
 	r.inventoryPolicy, err = flagutils.ConvertInventoryPolicy(r.inventoryPolicyString)
+	if err != nil {
+		return err
+	}
+
+	r.statusPolicy, err = flagutils.ConvertStatusPolicy(r.statusPolicyString)
 	if err != nil {
 		return err
 	}
@@ -229,7 +239,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 
 	// Run the applier. It will return a channel where we can receive updates
 	// to keep track of progress and any issues.
-	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(r.factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, r.statusPolicy, live.ResourceGroupGVK)
 	if err != nil {
 		return err
 	}

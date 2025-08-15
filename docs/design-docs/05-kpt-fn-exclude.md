@@ -12,15 +12,11 @@ For these users, we need to provide a way to preserve old behavior by introducin
 exclude certain resources, such as resources of a certain GVK or local configuration resources, from 
 being acted on by kpt functions during `kpt fn render` and `kpt fn eval`.
 
-### Background
-
-Open source issue: https://github.com/GoogleContainerTools/kpt/issues/2930
-
 #### Redefining and inclusion of meta resources
 
 Previously, `kpt fn render` and `kpt fn eval` excluded functionConfigs and the Kptfile. A user could include t
 hese "meta resources'' by setting the `--include-meta-resources` flag. There is a separate discussion 
-and PR (https://github.com/GoogleContainerTools/kpt/pull/2894) with the following changes:
+and PR (https://github.com/kptdev/kpt/pull/2894) with the following changes:
 
 - The definition of meta-resources. Kpt no longer considers functionConfigs as meta resources; they are KRM 
 resources like any other, and the fact that they are used to configure a KRM function does not mean they should be 

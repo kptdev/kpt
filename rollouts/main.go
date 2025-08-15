@@ -31,8 +31,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	gitopsv1alpha1 "github.com/GoogleContainerTools/kpt/rollouts/api/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/rollouts/controllers"
+	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
+	"github.com/kptdev/kpt/rollouts/controllers"
 	//+kubebuilder:scaffold:imports
 )
 

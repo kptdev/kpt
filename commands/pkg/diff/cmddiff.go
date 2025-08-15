@@ -18,13 +18,13 @@ import (
 	"context"
 	"os"
 
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/diff"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/internal/util/diff"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -89,7 +89,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		r.DiffType = diff.TypeLocal
 		if version != "" {
 			// if target version is specified, default to 'combined' diff-type.
-			// xref: https://github.com/GoogleContainerTools/kpt/issues/139
+			// xref: https://github.com/kptdev/kpt/issues/139
 			r.DiffType = diff.TypeCombined
 		}
 	} else {

@@ -23,16 +23,16 @@ import (
 	"os"
 	"path/filepath"
 
-	initialization "github.com/GoogleContainerTools/kpt/commands/live/init"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/livedocs"
-	"github.com/GoogleContainerTools/kpt/internal/errors"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/live"
+	initialization "github.com/kptdev/kpt/commands/live/init"
+	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
+	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -86,7 +86,7 @@ func NewRunner(
 		Short:   livedocs.MigrateShort,
 		Long:    livedocs.MigrateShort + "\n" + livedocs.MigrateLong,
 		Example: livedocs.MigrateExamples,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(_ *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				// default to current working directory
 				args = append(args, ".")

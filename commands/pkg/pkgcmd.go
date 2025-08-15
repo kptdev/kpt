@@ -17,12 +17,12 @@ package pkg
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/pkg/diff"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/get"
-	initialization "github.com/GoogleContainerTools/kpt/commands/pkg/init"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/update"
-	"github.com/GoogleContainerTools/kpt/internal/docs/generated/pkgdocs"
-	"github.com/GoogleContainerTools/kpt/thirdparty/cmdconfig/commands/cmdtree"
+	"github.com/kptdev/kpt/commands/pkg/diff"
+	"github.com/kptdev/kpt/commands/pkg/get"
+	initialization "github.com/kptdev/kpt/commands/pkg/init"
+	"github.com/kptdev/kpt/commands/pkg/update"
+	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/cmdtree"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ func GetCommand(ctx context.Context, name string) *cobra.Command {
 		Short:   pkgdocs.PkgShort,
 		Long:    pkgdocs.PkgLong,
 		Aliases: []string{"package"},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

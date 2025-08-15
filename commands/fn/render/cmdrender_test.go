@@ -19,8 +19,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,4 +44,4 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }

@@ -233,5 +233,5 @@ $ npm run kpt:docker-build -- --tag=latest
 [crd-openapi]: https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.15.md#customresourcedefinition-openapi-publishing
 [quickstart]: ../quickstart/
 [vscode]: https://code.visualstudio.com/
-[ts sdk api]: https://googlecontainertools.github.io/kpt-functions-sdk/api/
-[demo functions]: https://github.com/GoogleContainerTools/kpt-functions-sdk/tree/master/ts/demo-functions/src/
+[ts sdk api]: https://kptdev.github.io/krm-functions-sdk/api/
+[demo functions]: https://github.com/kptdev/krm-functions-sdk/tree/master/ts/demo-functions/src/

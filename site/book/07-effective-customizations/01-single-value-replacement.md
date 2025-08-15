@@ -120,7 +120,7 @@ find all the appropriate resources that need the namespace.
 We have put in the starter name `bucket` and have an [ensure-name-substring] 
 that shows the package consumer that the project ID prefix is what we suggest.
 However if they have a different naming convention they can alter the name 
-prefix or suffix on all the resources in the pacakge.
+prefix or suffix on all the resources in the package.
 
 Since we are trying to set the annotation to the project ID we can use the 
 [set-annotations] function one time and the annotation are going to be set on 

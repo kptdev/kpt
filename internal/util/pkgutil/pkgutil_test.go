@@ -20,11 +20,11 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/pkgutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,7 +83,7 @@ func TestWalkPackage(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
 			var visited []string
-			if err := pkgutil.WalkPackage(pkgPath, func(s string, info os.FileInfo, err error) error {
+			if err := pkgutil.WalkPackage(pkgPath, func(s string, _ os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -371,7 +371,7 @@ func TestCopyPackage(t *testing.T) {
 			}
 
 			var visited []string
-			if err = filepath.Walk(dest, func(s string, info os.FileInfo, err error) error {
+			if err = filepath.Walk(dest, func(s string, _ os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -406,7 +406,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstream("github.com/GoogleContainerTools/kpt",
+									WithUpstream("github.com/kptdev/kpt",
 										"/", "main", string(kptfilev1.ResourceMerge)),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -444,7 +444,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 						pkgbuilder.NewSubPkg("foo").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstream("github.com/GoogleContainerTools/kpt",
+									WithUpstream("github.com/kptdev/kpt",
 										"/", "main", string(kptfilev1.ResourceMerge)),
 							).
 							WithResource(pkgbuilder.ConfigMapResource).
@@ -454,7 +454,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 										pkgbuilder.NewSubPkg("zork").
 											WithKptfile(
 												pkgbuilder.NewKptfile().
-													WithUpstream("github.com/GoogleContainerTools/kpt",
+													WithUpstream("github.com/kptdev/kpt",
 														"/", "main", string(kptfilev1.ResourceMerge)),
 											).
 											WithResource(pkgbuilder.ConfigMapResource),
@@ -517,7 +517,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 						pkgbuilder.NewSubPkg("remotebar").
 							WithKptfile(
 								pkgbuilder.NewKptfile().
-									WithUpstream("github.com/GoogleContainerTools/kpt",
+									WithUpstream("github.com/kptdev/kpt",
 										"/", "main", string(kptfilev1.ResourceMerge)),
 							),
 					),

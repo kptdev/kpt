@@ -14,15 +14,15 @@
 
 class Kpt < Formula
   desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://googlecontainertools.github.io/kpt"
-  url "https://github.com/GoogleContainerTools/kpt/archive/v1.0.0-beta.43.tar.gz"
-  sha256 "4ca81bc0344fe05fb8761ba26d6cee86f51d644ab57824b201fc88fb93b838da"
+  homepage "https://github.com/kptdev.github.io/kpt"
+  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.49.tar.gz"
+  sha256 "e8f5beb1b4538f0b5d5322cb1600b93728e4a90a975860873883507ee144a262"
 
   depends_on "go" => :build
 
   def install
     ENV["GO111MODULE"] = "on"
-    system "go", "build", "-ldflags", "-X github.com/GoogleContainerTools/kpt/run.version=#{version}", *std_go_args
+    system "go", "build", "-ldflags", "-X github.com/kptdev/kpt/run.version=#{version}", *std_go_args
   end
 
   test do

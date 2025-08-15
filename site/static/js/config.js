@@ -13,7 +13,7 @@ window.$docsify = {
   coverpage: "coverpage.md",
   crossOriginLinks: [
     "https://catalog.kpt.dev/",
-    "https://googlecontainertools.github.io/kpt/installation/",
+    "https://kptdev.github.io/kpt/installation/",
   ],
   auto2top: true,
   repo: "true",
@@ -23,7 +23,7 @@ window.$docsify = {
     crossChapter: true
   },
   corner: {
-    url: "https://github.com/GoogleContainerTools/kpt",
+    url: "https://github.com/kptdev/kpt",
     icon: "github",
   },
   routerMode: "history",

@@ -19,10 +19,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/attribution"
-	"github.com/GoogleContainerTools/kpt/internal/util/pkgutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/attribution"
+	"github.com/kptdev/kpt/internal/util/pkgutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -107,7 +107,7 @@ func kptfilesEqual(pkg1, pkg2, filePath string) (bool, error) {
 
 func pkgSet(pkgPath string) (sets.String, error) {
 	pkgFiles := sets.String{}
-	if err := pkgutil.WalkPackage(pkgPath, func(path string, info os.FileInfo, err error) error {
+	if err := pkgutil.WalkPackage(pkgPath, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

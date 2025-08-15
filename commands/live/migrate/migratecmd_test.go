@@ -20,9 +20,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	rgfilev1alpha1 "github.com/GoogleContainerTools/kpt/pkg/api/resourcegroup/v1alpha1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/pkg"
+	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -168,7 +168,7 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
 			migrateRunner.dryRun = tc.dryRun
 			migrateRunner.rgFile = tc.rgFilename
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			err = migrateRunner.migrateKptfileToRG([]string{dir})
@@ -242,7 +242,7 @@ func TestKptMigrate_retrieveConfigMapInv(t *testing.T) {
 			// Create MigrateRunner and call "retrieveConfigMapInv"
 			cmLoader := manifestreader.NewManifestLoader(tf)
 			migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
-			migrateRunner.cmInvClientFunc = func(factory util.Factory) (inventory.Client, error) {
+			migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
 				return inventory.NewFakeClient([]object.ObjMetadata{}), nil
 			}
 			actual, err := migrateRunner.retrieveConfigMapInv(strings.NewReader(tc.configMap), []string{"-"})

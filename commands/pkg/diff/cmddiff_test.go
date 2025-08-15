@@ -19,10 +19,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/commands/pkg/diff"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/get"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/commands/pkg/diff"
+	"github.com/kptdev/kpt/commands/pkg/get"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
@@ -91,4 +91,4 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Path)
 }
 
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }

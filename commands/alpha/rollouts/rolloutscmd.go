@@ -17,10 +17,10 @@ package rollouts
 import (
 	"context"
 
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/advance"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/get"
-	"github.com/GoogleContainerTools/kpt/commands/alpha/rollouts/status"
-	"github.com/GoogleContainerTools/kpt/commands/util"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/advance"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/get"
+	"github.com/kptdev/kpt/commands/alpha/rollouts/status"
+	"github.com/kptdev/kpt/commands/util"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +29,7 @@ func NewCommand(ctx context.Context, version string) *cobra.Command {
 		Use:   "rollouts",
 		Short: "rollouts",
 		Long:  "rollouts",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			h, err := cmd.Flags().GetBool("help")
 			if err != nil {
 				return err

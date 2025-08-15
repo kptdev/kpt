@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// revive:disable:unused-parameter
+
 package get_test
 
 import (
@@ -21,10 +23,10 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/commands/pkg/get"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/commands/pkg/get"
+	"github.com/kptdev/kpt/internal/testutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -169,7 +171,7 @@ func TestCmd_fail(t *testing.T) {
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }
 
 // NoOpFailRunE causes the test to fail if run is called.  Useful for validating run isn't called for
 // errors.
@@ -205,26 +207,26 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 		validations func(repo, dir string, r *get.Runner, err error)
 	}{
 		"must have at least 1 arg": {
-			argsFunc: func(repo, _ string) []string {
+			argsFunc: func(_, _ string) []string {
 				return []string{}
 			},
 			runE: failRun,
-			validations: func(_, _ string, r *get.Runner, err error) {
+			validations: func(_, _ string, _ *get.Runner, err error) {
 				assert.EqualError(t, err, "requires at least 1 arg(s), only received 0")
 			},
 		},
 		"must provide unambiguous repo, dir and version": {
-			argsFunc: func(repo, _ string) []string {
+			argsFunc: func(_, _ string) []string {
 				return []string{"foo", "bar", "baz"}
 			},
 			runE: failRun,
-			validations: func(_, _ string, r *get.Runner, err error) {
+			validations: func(_, _ string, _ *get.Runner, err error) {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "ambiguous repo/dir@version specify '.git' in argument")
 			},
 		},
 		"repo arg is split up correctly into ref and repo": {
-			argsFunc: func(repo, _ string) []string {
+			argsFunc: func(_, _ string) []string {
 				return []string{"something://foo.git/@master", "./"}
 			},
 			runE: NoOpRunE,

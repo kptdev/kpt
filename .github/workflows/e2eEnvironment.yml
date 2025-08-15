@@ -29,20 +29,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: ["1.19", "1.20", "1.21", "1.22", "1.23", "1.24"]
+        version: ["1.32", "1.33"]
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: '>=1.20.7'
-      - uses: actions/checkout@v3
+          go-version: '>=1.24'
+      - uses: actions/checkout@v4
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       # If you upgrade this version confirm the changes match your expectations
       - name: Install KinD
-        uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
+        uses: engineerd/setup-kind@v0.6.2
         with:
-          version: "v0.13.0"
+          version: "v0.29.0"
           skipClusterCreation: true
+          skipClusterLogsExport: true
       - name: Run Tests
         env:
           K8S_VERSION: ${{ matrix.version }}

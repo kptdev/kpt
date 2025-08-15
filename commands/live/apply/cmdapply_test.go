@@ -18,10 +18,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/testutil"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -47,6 +47,16 @@ func TestCmd(t *testing.T) {
 				t.FailNow()
 			},
 			expectedErrorMsg: "inventory policy must be one of strict, adopt",
+		},
+		"invalid status policy": {
+			args: []string{
+				"--status-policy", "noSuchPolicy",
+			},
+			namespace: "testns",
+			applyCallbackFunc: func(t *testing.T, _ *Runner, _ inventory.Info) {
+				t.FailNow()
+			},
+			expectedErrorMsg: "status policy must be one of none, all",
 		},
 		"invalid output format": {
 			args: []string{

@@ -24,13 +24,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/util/addmergecomment"
-	"github.com/GoogleContainerTools/kpt/internal/util/git"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/kptfile/kptfileutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/gitutil"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/addmergecomment"
+	"github.com/kptdev/kpt/internal/util/git"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	toposort "github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
@@ -179,7 +179,7 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 		sourceDir = newSourceDir
 	}
 	upstreamFiles := sets.String{}
-	err := filepath.Walk(sourceDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(sourceDir, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -198,7 +198,7 @@ func Diff(sourceDir, destDir string, addMergeCommentsToSource bool) (sets.String
 
 	// get set of filenames in the cloned package
 	localFiles := sets.String{}
-	err = filepath.Walk(destDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(destDir, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -731,7 +731,14 @@ func replaceData(repo, data string) error {
 }
 
 func commit(repo, message string) (string, error) {
-	cmd := exec.Command("git", "commit", "-m", message, "--allow-empty")
+	cmd := exec.Command(
+		"git",
+		"-c", "user.name=Kpt",
+		"-c", "user.email=kpt@kpt.dev",
+		"commit",
+		"-m", message,
+		"--allow-empty",
+	)
 	cmd.Dir = repo
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -748,7 +755,12 @@ func commit(repo, message string) (string, error) {
 }
 
 func tag(repo, tag string) error {
-	cmd := exec.Command("git", "tag", tag)
+	cmd := exec.Command(
+		"git",
+		"-c", "user.name=Kpt",
+		"-c", "user.email=kpt@kpt.dev",
+		"tag", tag,
+	)
 	cmd.Dir = repo
 	b, err := cmd.Output()
 	if err != nil {
@@ -808,7 +820,7 @@ func (w *TestWorkspace) Tag(tagName string) error {
 
 func PrintPackage(paths ...string) error {
 	path := filepath.Join(paths...)
-	return filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(path, func(path string, _ os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

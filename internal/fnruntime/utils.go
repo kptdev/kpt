@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
-	fnresult "github.com/GoogleContainerTools/kpt/pkg/api/fnresult/v1"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/internal/types"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -110,8 +110,8 @@ func presentIn(targetNode *yaml.RNode, input []*yaml.RNode) bool {
 	return false
 }
 
-// SetResourceIds adds kpt-resource-id annotation to each input resource
-func SetResourceIds(input []*yaml.RNode) error {
+// SetResourceIDs adds kpt-resource-id annotation to each input resource
+func SetResourceIDs(input []*yaml.RNode) error {
 	id := 0
 	for i := range input {
 		idStr := fmt.Sprintf("%v", id)
@@ -124,8 +124,8 @@ func SetResourceIds(input []*yaml.RNode) error {
 	return nil
 }
 
-// DeleteResourceIds removes the kpt-resource-id annotation from all resources
-func DeleteResourceIds(input []*yaml.RNode) error {
+// DeleteResourceIDs removes the kpt-resource-id annotation from all resources
+func DeleteResourceIDs(input []*yaml.RNode) error {
 	for i := range input {
 		err := input[i].PipeE(yaml.ClearAnnotation(ResourceIDAnnotation))
 		if err != nil {

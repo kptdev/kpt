@@ -21,8 +21,8 @@ import (
 
 	goerrors "errors"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
 	kyaml_errors "github.com/go-errors/errors"
+	"github.com/kptdev/kpt/internal/types"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.
@@ -192,7 +192,7 @@ func E(args ...interface{}) error {
 		case error:
 			e.Err = a
 		case string:
-			e.Err = fmt.Errorf(a)
+			e.Err = fmt.Errorf("%s", a)
 		default:
 			panic(fmt.Errorf("unknown type %T for value %v in call to error.E", a, a))
 		}

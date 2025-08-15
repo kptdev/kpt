@@ -19,9 +19,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	. "github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,7 +54,7 @@ func TestParseDirVersion(t *testing.T) {
 			in:     "/some@dir2@ver1",
 			expDir: "",
 			expVer: "",
-			expErr: ErrMultiVersion,
+			expErr: argutil.ErrMultiVersion,
 		},
 		{ // empty
 			in:     "",
@@ -65,7 +65,7 @@ func TestParseDirVersion(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotDir, gotVer, gotErr := ParseDirVersion(test.in)
+		gotDir, gotVer, gotErr := argutil.ParseDirVersion(test.in)
 
 		assert.Equal(t, gotErr, test.expErr)
 		assert.Equal(t, gotDir, test.expDir)
@@ -102,7 +102,7 @@ func TestParseDirVersionWithDefaults(t *testing.T) {
 			in:     "/some@dir2@ver1",
 			expDir: "",
 			expVer: "",
-			expErr: ErrMultiVersion,
+			expErr: argutil.ErrMultiVersion,
 		},
 		{ // empty
 			in:     "",
@@ -113,7 +113,7 @@ func TestParseDirVersionWithDefaults(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		gotDir, gotVer, gotErr := ParseDirVersionWithDefaults(test.in)
+		gotDir, gotVer, gotErr := argutil.ParseDirVersionWithDefaults(test.in)
 
 		assert.Equal(t, gotErr, test.expErr)
 		assert.Equal(t, gotDir, test.expDir)
@@ -131,19 +131,19 @@ func TestResolveSymlink(t *testing.T) {
 	err = os.Symlink("foo-link", "link-to-foo-link")
 	assert.NoError(t, err)
 
-	actual1, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), "foo-link")
+	actual1, err := argutil.ResolveSymlink(fake.CtxWithDefaultPrinter(), "foo-link")
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", actual1)
 
-	actual2, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), "link-to-foo-link")
+	actual2, err := argutil.ResolveSymlink(fake.CtxWithDefaultPrinter(), "link-to-foo-link")
 	assert.NoError(t, err)
 	assert.Equal(t, "foo", actual2)
 
-	actual3, err := ResolveSymlink(fake.CtxWithDefaultPrinter(), ".")
+	actual3, err := argutil.ResolveSymlink(fake.CtxWithDefaultPrinter(), ".")
 	assert.NoError(t, err)
 	assert.Equal(t, ".", actual3)
 
-	_, err = ResolveSymlink(fake.CtxWithDefaultPrinter(), "baz")
+	_, err = argutil.ResolveSymlink(fake.CtxWithDefaultPrinter(), "baz")
 	assert.Error(t, err)
 	assert.Equal(t, "lstat baz: no such file or directory", err.Error())
 }

@@ -19,9 +19,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/update"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -170,9 +170,9 @@ func TestUpdate_Replace(t *testing.T) {
 			updated := tc.updated.ExpandPkg(t, repos)
 			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &ReplaceUpdater{}
+			updater := &update.ReplaceUpdater{}
 
-			err := updater.Update(Options{
+			err := updater.Update(update.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

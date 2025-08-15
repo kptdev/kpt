@@ -26,11 +26,11 @@ jobs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
-          go-version: '>=1.20.7'
+          go-version: '>=1.24'
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Build, Test, Lint
@@ -45,20 +45,17 @@ jobs:
           registry: gcr.io
           username: _json_key
           password: ${{ secrets.GCR_TOKEN }}
-      - name: Check Licenses
-        run: |
-          ./scripts/create-licenses.sh
       - name: Setup release environment
         id: setup-release-env
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
       - name: Run GoReleaser
         id: run-goreleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: release --skip-validate -f release/tag/goreleaser.yaml
+          version: "~> v2"
+          args: release --skip=validate -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate SLSA subjects for provenance
@@ -76,8 +73,7 @@ jobs:
       actions: read # To read the workflow path.
       id-token: write # To sign the provenance.
       contents: write # To add assets to a release.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.2.1
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
     with:
-      compile-generator: true # Workaround for https://github.com/slsa-framework/slsa-github-generator/issues/1163
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       upload-assets: true # upload to a new release

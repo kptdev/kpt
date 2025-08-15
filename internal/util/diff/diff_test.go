@@ -26,10 +26,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	. "github.com/GoogleContainerTools/kpt/internal/util/diff"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/util/diff"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +39,7 @@ func TestCommand_Diff(t *testing.T) {
 		updatedLocal              testutil.Content
 		fetchRef                  string
 		diffRef                   string
-		diffType                  Type
+		diffType                  diff.Type
 		diffTool                  string
 		diffOpts                  string
 		expDiff                   string
@@ -67,7 +67,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: TypeRemote,
+			diffType: diff.TypeRemote,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -107,7 +107,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: TypeCombined,
+			diffType: diff.TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -148,7 +148,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "v2",
 			diffRef:  "master",
-			diffType: TypeCombined,
+			diffType: diff.TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -194,7 +194,7 @@ func TestCommand_Diff(t *testing.T) {
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: TypeCombined,
+			diffType: diff.TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -245,7 +245,7 @@ locally changed: foo
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: TypeCombined,
+			diffType: diff.TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -300,7 +300,7 @@ locally changed: foo
 			},
 			fetchRef: "main",
 			diffRef:  "main",
-			diffType: TypeCombined,
+			diffType: diff.TypeCombined,
 			diffTool: "diff",
 			diffOpts: "-r -i -w",
 			expDiff: `
@@ -331,7 +331,7 @@ locally changed: foo
 			}
 
 			diffOutput := &bytes.Buffer{}
-			err := (&Command{
+			err := (&diff.Command{
 				Path:         g.LocalWorkspace.FullPackagePath(),
 				Ref:          tc.diffRef,
 				DiffType:     tc.diffType,
@@ -378,10 +378,10 @@ func TestCommand_InvalidRef(t *testing.T) {
 	}
 
 	diffOutput := &bytes.Buffer{}
-	err := (&Command{
+	err := (&diff.Command{
 		Path:         g.LocalWorkspace.FullPackagePath(),
 		Ref:          "hurdygurdy", // ref should not exist in upstream
-		DiffType:     TypeCombined,
+		DiffType:     diff.TypeCombined,
 		DiffTool:     "diff",
 		DiffToolOpts: "-r -i -w",
 		Output:       diffOutput,
@@ -418,10 +418,10 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 	}
 
 	diffOutput := &bytes.Buffer{}
-	err := (&Command{
+	err := (&diff.Command{
 		Path:         g.LocalWorkspace.FullPackagePath(),
 		Ref:          "master",
-		DiffType:     Type3Way,
+		DiffType:     diff.Type3Way,
 		DiffTool:     "echo", // this is a proxy for 3 way diffing to validate we pass proper values
 		DiffToolOpts: "",
 		Output:       diffOutput,
@@ -432,9 +432,9 @@ func TestCommand_Diff3Parameters(t *testing.T) {
 	results := strings.Split(diffOutput.String(), " ")
 	assert.Equal(t, 3, len(results))
 	// Validate diff argument ordering
-	assert.Contains(t, results[0], LocalPackageSource)
-	assert.Contains(t, results[1], RemotePackageSource)
-	assert.Contains(t, results[2], TargetRemotePackageSource)
+	assert.Contains(t, results[0], diff.LocalPackageSource)
+	assert.Contains(t, results[1], diff.RemotePackageSource)
+	assert.Contains(t, results[2], diff.TargetRemotePackageSource)
 }
 
 // Tests against directories in different states
@@ -452,10 +452,10 @@ func TestCommand_NotAKptDirectory(t *testing.T) {
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			diffOutput := &bytes.Buffer{}
-			cmdErr := (&Command{
+			cmdErr := (&diff.Command{
 				Path:         tc.directory,
 				Ref:          "master",
-				DiffType:     TypeCombined,
+				DiffType:     diff.TypeCombined,
 				DiffTool:     "diff",
 				DiffToolOpts: "-r -i -w",
 				Output:       diffOutput,
@@ -498,7 +498,7 @@ func TestStagingDirectoryNames(t *testing.T) {
 	for i := range tests {
 		tt := tests[i]
 		t.Run(tt.expected, func(t *testing.T) {
-			result := NameStagingDirectory(tt.source, tt.branch)
+			result := diff.NameStagingDirectory(tt.source, tt.branch)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

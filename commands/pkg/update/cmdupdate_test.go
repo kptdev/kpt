@@ -23,15 +23,13 @@ import (
 	"strings"
 	"testing"
 	"text/template"
-
-	"github.com/GoogleContainerTools/kpt/commands/pkg/get"
-	"github.com/GoogleContainerTools/kpt/commands/pkg/update"
-	"github.com/GoogleContainerTools/kpt/internal/gitutil"
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	"github.com/GoogleContainerTools/kpt/internal/testutil"
-	"github.com/GoogleContainerTools/kpt/internal/testutil/pkgbuilder"
-	kptfilev1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
-	"github.com/GoogleContainerTools/kpt/pkg/printer/fake"
+	"github.com/kptdev/kpt/commands/pkg/get"
+	"github.com/kptdev/kpt/commands/pkg/update"
+	"github.com/kptdev/kpt/internal/gitutil"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -426,7 +424,7 @@ func TestCmd_onlyVersionAsInput(t *testing.T) {
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
-var NoOpRunE = func(cmd *cobra.Command, args []string) error { return nil }
+var NoOpRunE = func(_ *cobra.Command, _ []string) error { return nil }
 
 // NoOpFailRunE causes the test to fail if run is called.  Useful for validating run isn't called for
 // errors.
@@ -577,7 +575,7 @@ func TestCmd_path(t *testing.T) {
 			defer testutil.Chdir(t, test.currentWD)()
 
 			r := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-			r.Command.RunE = func(cmd *cobra.Command, args []string) error {
+			r.Command.RunE = func(_ *cobra.Command, _ []string) error {
 				if !assert.Equal(t, test.expectedFullPackagePath, r.Update.Pkg.UniquePath.String()) {
 					t.FailNow()
 				}

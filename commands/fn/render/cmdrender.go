@@ -22,13 +22,13 @@ import (
 	"io"
 	"os"
 
-	docs "github.com/GoogleContainerTools/kpt/internal/docs/generated/fndocs"
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
-	"github.com/GoogleContainerTools/kpt/internal/util/argutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/cmdutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/pathutil"
-	"github.com/GoogleContainerTools/kpt/internal/util/render"
-	"github.com/GoogleContainerTools/kpt/pkg/printer"
+	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/internal/util/argutil"
+	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/internal/util/pathutil"
+	"github.com/kptdev/kpt/internal/util/render"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -53,7 +53,7 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 
 	c.Flags().Var(&r.RunnerOptions.ImagePullPolicy, "image-pull-policy",
 		"pull image before running the container "+r.RunnerOptions.ImagePullPolicy.HelpAllowedValues())
-	_ = c.RegisterFlagCompletionFunc("image-pull-policy", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	_ = c.RegisterFlagCompletionFunc("image-pull-policy", func(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return r.RunnerOptions.ImagePullPolicy.AllStrings(), cobra.ShellCompDirectiveDefault
 	})
 

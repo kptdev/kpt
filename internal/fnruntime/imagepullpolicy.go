@@ -53,7 +53,7 @@ func (e *ImagePullPolicy) Set(v string) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("must must be one of " + strings.Join(e.AllStrings(), ", "))
+	return fmt.Errorf("must be one of: %s", strings.Join(e.AllStrings(), ", "))
 }
 
 func (e *ImagePullPolicy) AllStrings() []string {

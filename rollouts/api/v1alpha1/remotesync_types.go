@@ -57,7 +57,7 @@ type GitInfo struct {
 }
 
 // Oci contains configuration specific to importing resources from an OCI package.
-// This definition is copied from https://github.com/GoogleContainerTools/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
+// This definition is copied from https://github.com/kptdev/kpt-config-sync/blob/main/pkg/api/configsync/v1beta1/ociconfig.go
 type OciInfo struct {
 	// image is the OCI image repository URL for the package to sync from.
 	// e.g. `LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_NAME/PACKAGE_NAME`.

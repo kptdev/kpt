@@ -18,7 +18,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/GoogleContainerTools/kpt/internal/types"
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -152,7 +152,6 @@ func TestKptfileValidate(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
 		t.Run(c.name, func(t *testing.T) {
 			err := c.kptfile.Validate(filesys.FileSystemOrOnDisk{}, "")
 			if c.valid && err != nil {
@@ -238,7 +237,6 @@ func TestValidateFunctionName(t *testing.T) {
 	}
 
 	for _, n := range inputs {
-		n := n
 		t.Run(n.Name, func(t *testing.T) {
 			err := ValidateFunctionImageURL(n.Name)
 			if n.Valid && err != nil {
@@ -391,7 +389,6 @@ kind: Kustomization
 		},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			got := isKustomization(yaml.MustParse(tc.input))
 			if got != tc.exp {
@@ -501,7 +498,6 @@ metadata:
 		},
 	}
 	for _, tc := range testcases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			d := t.TempDir()
 			err := os.WriteFile(filepath.Join(d, "f1.yaml"), []byte(tc.input), 0700)

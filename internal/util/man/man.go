@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GoogleContainerTools/kpt/internal/pkg"
-	v1 "github.com/GoogleContainerTools/kpt/pkg/api/kptfile/v1"
 	"github.com/cpuguy83/go-md2man/v2/md2man"
+	"github.com/kptdev/kpt/internal/pkg"
+	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -53,7 +53,7 @@ const ManFilename = "README.md"
 func (m Command) Run() error {
 	_, err := exec.LookPath(m.GetExecCmd())
 	if err != nil {
-		return errors.Errorf(m.GetExecCmd() + " not installed")
+		return errors.Errorf("%s not installed", m.GetExecCmd())
 	}
 
 	// lookup the path to the man page

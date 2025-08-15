@@ -17,7 +17,7 @@ package resolver
 import (
 	"errors"
 
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
 )
 
 //nolint:gochecknoinits
