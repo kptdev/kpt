@@ -1,7 +1,8 @@
 {{ $links := .Site.Params.links }}
 <footer class="row d-print-none">
-	<div class="container-fluid mx-sm-3">
-<!--		<div class="row mb-4">
+
+<!--	<div class="container-fluid mx-sm-3">
+			<div class="row mb-4">
 			<div class="logo-and-hub">
 				<a href="https://www.cncf.io/" class="logo"><img width="210" height="40"
 						src="/images/CNCF_logo_white.svg" alt="Cloud Native Computing Foundation logo" /></a>
@@ -88,16 +89,19 @@
 
 		<div class="copyright py-2">
 			<small class="text-white">
-				&copy; {{ now.Year}} The kpt Authors | Documentation Distributed under CC BY 4.0 | 
+				&copy; {{ now.Year}} kpt a Series of LF Projects, LLC | Documentation Distributed under CC BY 4.0 | 
 				kpt follows <a href="{{ .Site.Params.code_of_conduct }}" target="_blank" rel="noopener">The CNCF Code of Conduct</a> | 
 				This site was built with the <a href="https://www.docsy.dev/">Docsy</a> <a href="https://gohugo.io/">Hugo</a> 
 				theme and deployed to Netlify.</small>
-				<a href="https://www.netlify.com"> <img src="https://www.netlify.com/v3/img/components/netlify-color-bg.svg" alt="Deploys by Netlify" height="25"/> </a>
+				<a href="https://www.netlify.com"> <img src="https://www.netlify.com/v3/img/components/netlify-color-bg.svg" alt="Deploys by Netlify" height="25"/> </a> </br>
+				For website terms of use, trademark policy and other project policies please see <a href="https://lfprojects.org/policies/">lfprojects.org/policies</a>. </br>
+				The Linux Foundation has registered trademarks and uses trademarks. For a list of trademarks of The Linux Foundation, 
+         please see our <a href="https://www.linuxfoundation.org/legal/trademark-usage">Trademark Usage page</a>.
 			{{ if not .Site.Params.ui.footer_about_disable }}
 			{{ with .Site.GetPage "about" }}
 			<p class="mt-2"><a href="{{ .RelPermalink }}">{{ .Title }}</a></p>
 			{{ end }}
 			{{ end }}
 		</div>
-	</div>
+	<!--</div>-->
 </footer>
