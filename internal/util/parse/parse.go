@@ -29,6 +29,8 @@ import (
 )
 
 const gitSuffixRegexp = "\\.git($|/)"
+const FnScaffoldingPackage = "fn"
+const FnScaffoldingURL = "https://github.com/GoogleContainerTools/kpt-functions-sdk.git/go/get-started@master"
 
 type Target struct {
 	kptfilev1.Git
@@ -41,6 +43,9 @@ func GitParseArgs(ctx context.Context, args []string) (Target, error) {
 		return g, nil
 	}
 
+	if args[0] == FnScaffoldingPackage {
+		args[0] = FnScaffoldingURL
+	}
 	// Simple parsing if contains .git{$|/)
 	if HasGitSuffix(args[0]) {
 		return targetFromPkgURL(ctx, args[0], args[1])
