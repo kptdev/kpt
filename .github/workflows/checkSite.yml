@@ -18,6 +18,8 @@ on:
     paths:
       - "site/**"
   push:
+    branches:
+    - '!dependabot/*'
     paths:
       - "site/**"
 jobs:
