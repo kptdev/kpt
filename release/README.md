@@ -13,4 +13,3 @@ To cut a new kpt release perform the following:
 - If the release is an alpha or beta release and there is already a stable version available, the "set as a pre-release" check-box should be checked. Otherwise, leave it checked as "set as the latest release"
 - Check the "create a discussion for this release" check-box
 - Click "publish" and then verify that the github action has run and the artefacts have been produced
-
