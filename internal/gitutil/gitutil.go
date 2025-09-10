@@ -335,7 +335,8 @@ func (gur *GitUpstreamRepo) getRepoDir(uri string) string {
 		var hash = md5.Sum([]byte(uri))
 		return strings.ToLower(hex.EncodeToString(hash[:]))
 	}
-	return strings.ToLower(base32.StdEncoding.EncodeToString(md5.New().Sum([]byte(uri))))
+	sum := md5.Sum([]byte(uri))
+	return strings.ToLower(base32.StdEncoding.EncodeToString(sum[:]))
 }
 
 // getRepoCacheDir
