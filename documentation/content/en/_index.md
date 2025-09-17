@@ -85,6 +85,13 @@ Join the discussions in the [kptdev/kpt](https://github.com/kptdev/kpt/discussio
 
 {{% /blocks/feature %}}
 
+{{% blocks/feature icon="fa-solid fa-people-group" title="Community Meeting" %}}
+
+Participate in our [community meetings](https://zoom-lfx.platform.linuxfoundation.org/meeting/98980817322?password=c09cdcc7-59c0-49c4-9802-ad4d50faafcd&invite=true)
+
+{{% /blocks/feature %}}
+
+
 {{% /blocks/section %}}
 
 {{% blocks/lead color="white" %}}
