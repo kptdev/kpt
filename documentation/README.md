@@ -1,12 +1,12 @@
 # kpt Documentation Site
 
-[![UPDATE ME](https://api.netlify.com/api/v1/badges/61012e8d-a38d-457e-b1e4-6dc9dbb87934/deploy-status)](https://app.netlify.com/sites/cloud-native-finland/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/57cfe7e6-fce7-4a0e-b00b-f6cc68b3f506/deploy-status)](https://app.netlify.com/projects/kptdocs/deploys)
 
 This directory contains a [Hugo](https://gohugo.io) web site published via [Netlify](https://www.netlify.com/) to
-<https://update-me/>.
+<https://kptdocs.netlify.app> what is redirected to <https://kpt.dev/>.
 
 When the `main` branch of this repo is updated a fresh build and deploy of the website is executed. Recent Netlify
-builds and deployments are listed at <https://app.netlify.com/sites/update-me>.
+builds and deployments are listed at <https://app.netlify.com/sites/kptdocs>.
 
 Add content by adding Markdown files to directories in [./content](./content).
 
