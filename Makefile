@@ -40,7 +40,7 @@ LDFLAGS += "
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: generate license fix vet fmt lint test build tidy
+all: license fix vet fmt lint test build tidy
 
 build:
 	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
