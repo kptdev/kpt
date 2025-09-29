@@ -15,10 +15,10 @@ Optionally verify the [SLSA3 signatures](slsa.dev) generated using the OpenSSF's
 [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release
 process. To verify a release binary:
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
-2. Download the signature file `attestation.intoto.jsonl` from the [GitHub releases page](https://github.com/kptdev/kpt/releases).
+2. Download the signature file `multiple.intoto.jsonl` from the [GitHub releases page](https://github.com/kptdev/kpt/releases).
 3. Run the verifier:
 ```shell
-slsa-verifier -artifact-path kpt-<os>-<arch> -provenance attestation.intoto.jsonl -source github.com/kptdev/kpt -tag <the-tag>
+slsa-verifier verify-artifact --provenance-path multiple.intoto.jsonl --source-uri github.com/kptdev/kpt --source-versioned-tag <the-tag> kpt_<os>_<arch>
 ```
 
 On Linux and MacOS, make it executable:
@@ -105,7 +105,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.49 version
+$ docker run ghcr.io/kptdev/kpt:v1.0.0-beta.58 version
 ```
 
 ### `kpt-gcloud`
@@ -113,7 +113,7 @@ $ docker run gcr.io/kpt-dev/kpt:v1.0.0-beta.49 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run gcr.io/kpt-dev/kpt-gcloud:v1.0.0-beta.49 version
+$ docker run ghcr.io/kptdev/kpt-gcloud:v1.0.0-beta.58 version
 ```
 
 ## Source
@@ -131,17 +131,17 @@ $ kpt version
 ```
 
 [gcr.io/kpt-dev/kpt]:
-  https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt?gcrImageListsize=30
+  https://github.com/kptdev/kpt/pkgs/container/kpt
 [gcr.io/kpt-dev/kpt-gcloud]:
-  https://console.cloud.google.com/gcr/images/kpt-dev/GLOBAL/kpt-gcloud?gcrImageListsize=30
+  https://github.com/kptdev/kpt/pkgs/container/kpt-gcloud
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_linux_amd64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_linux_amd64
 [linux-arm64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_linux_arm64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_linux_arm64
 [darwin-amd64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_amd64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_darwin_amd64
 [darwin-arm64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.49/kpt_darwin_arm64
+  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_darwin_arm64
 [migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation
