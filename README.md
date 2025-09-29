@@ -85,6 +85,7 @@ We would love to keep in touch:
 1. Join our [Slack channel](https://kubernetes.slack.com/channels/kpt). You'll
    need to join [Kubernetes on Slack](https://slack.k8s.io/) first.
 1. Join our [Discussions](https://github.com/kptdev/kpt/discussions)
+1. Join our [community meetings](https://zoom-lfx.platform.linuxfoundation.org/meeting/98980817322?password=c09cdcc7-59c0-49c4-9802-ad4d50faafcd&invite=true)
 
 ## License
 
