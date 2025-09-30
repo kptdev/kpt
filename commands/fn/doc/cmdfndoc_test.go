@@ -34,7 +34,7 @@ func TestFnDoc(t *testing.T) {
 			image: "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1",
 		},
 		{
-			image:     "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1",
+			image:     "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.1.0",
 			expectErr: "please ensure the container has an entrypoint and it supports --help flag",
 		},
 		{
