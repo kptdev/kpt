@@ -4,7 +4,7 @@ metadata:
   name: app
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
     configMap:
       namespace: oldNs
-    name: gcr.io/kpt-fn/set-namespace:v0.1.3
+    name: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1

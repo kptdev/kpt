@@ -8,5 +8,5 @@ info:
   description: Package for Ghost application.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.3.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configPath: package-context.yaml

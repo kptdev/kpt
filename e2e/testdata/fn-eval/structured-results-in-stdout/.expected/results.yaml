@@ -4,7 +4,7 @@ metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: gcr.io/kpt-fn/search-replace:v0.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
     exitCode: 0
     results:
       - message: Mutated field value to "4"

@@ -75,9 +75,9 @@ fn-args:
   Path to the file containing `functionConfig` for the function.
 
 --image, i:
-  Container image of the function to execute e.g. `gcr.io/kpt-fn/set-namespace:v0.1`.
-  For convenience, if full image path is not specified, `gcr.io/kpt-fn/` is added as default prefix.
-  e.g. instead of passing `gcr.io/kpt-fn/set-namespace:v0.1` you can pass `set-namespace:v0.1`.
+  Container image of the function to execute e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1`.
+  For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
+  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1` you can pass `set-namespace:v0.1`.
   `eval` executes only one function, so do not use `--exec` flag with this flag.
 
 --image-pull-policy:
@@ -214,7 +214,7 @@ $ kpt fn eval DIR -i gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 
 ```shell
 # execute kubeval function by mounting schema from a local directory on wordpress package
-$ kpt fn eval -i gcr.io/kpt-fn/kubeval:v0.1 \
+$ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4 \
   --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
   --as-current-user wordpress -- additional_schema_locations=/schema-dir
 ```
@@ -223,21 +223,21 @@ $ kpt fn eval -i gcr.io/kpt-fn/kubeval:v0.1 \
 # chaining functions using the unix pipe to set namespace and set labels on
 # wordpress package
 $ kpt fn source wordpress \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
+  | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -- namespace=mywordpress \
+  | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1 -- label_name=color label_value=orange \
   | kpt fn sink wordpress
 ```
 
 ```shell
 # execute container 'set-namespace' on the resources in current directory and write
 # the output resources to another directory
-$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o path/to/dir -- namespace=mywordpress
+$ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -o path/to/dir -- namespace=mywordpress
 ```
 
 ```shell
 # execute container 'set-namespace' on the resources in current directory and write
 # the output resources to stdout which are piped to 'kubectl apply'
-$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordpress \
+$ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -o unwrap -- namespace=mywordpress \
 | kubectl apply -f -
 ```
 
@@ -245,8 +245,8 @@ $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordp
 # execute container 'set-namespace' on the resources in current directory and write
 # the wrapped output resources to stdout which are passed to 'set-annotations' function
 # and the output resources after setting namespace and annotation is written to another directory
-$ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
-| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+$ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -o stdout -- namespace=staging \
+| kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4 -o path/to/dir -- foo=bar
 ```
 
 ```shell

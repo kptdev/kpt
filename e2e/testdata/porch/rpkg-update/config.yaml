@@ -126,14 +126,14 @@ commands:
       - fn
       - eval
       - --image
-      - gcr.io/kpt-fn/search-replace:v0.2.0
+      - ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
       - --match-kind
       - Kptfile
       - /tmp/porch-e2e/pkg-update-git-7ab0219ace10c1081a8b40a6b97d5da58bdb62e0
       - --
       - by-path=upstreamLock.git.ref
       - put-value=invalid
-    stderr: "[RUNNING] \"gcr.io/kpt-fn/search-replace:v0.2.0\" on 1 resource(s)\n  Results:\n    [info] upstreamLock.git.ref: Mutated field value to \"invalid\"\n"
+    stderr: "[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0\" on 1 resource(s)\n  Results:\n    [info] upstreamLock.git.ref: Mutated field value to \"invalid\"\n"
   - args:
       - alpha
       - rpkg

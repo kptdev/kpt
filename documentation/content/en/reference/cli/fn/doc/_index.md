@@ -26,9 +26,9 @@ kpt fn doc --image=IMAGE
 
 ```
 --image, i: (required flag)
-  Container image of the function e.g. `gcr.io/kpt-fn/set-namespace:v0.1`.
-  For convenience, if full image path is not specified, `gcr.io/kpt-fn/` is added as default prefix.
-  e.g. instead of passing `gcr.io/kpt-fn/set-namespace:v0.1` you can pass `set-namespace:v0.1`.
+  Container image of the function e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1`.
+  For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
+  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1` you can pass `set-namespace:v0.1`.
 ```
 
 #### Environment Variables

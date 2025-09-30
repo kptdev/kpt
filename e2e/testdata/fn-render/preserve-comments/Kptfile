@@ -4,4 +4,4 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn-demo/drop-comments:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog-demo/drop-comments:v0.1

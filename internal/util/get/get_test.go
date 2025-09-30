@@ -950,7 +950,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithPipeline(
-										pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 									),
 							).
 							WithResource(pkgbuilder.DeploymentResource),
@@ -963,7 +963,7 @@ func TestCommand_Run_subpackages(t *testing.T) {
 						WithUpstreamRef("upstream", "/", "master", "resource-merge").
 						WithUpstreamLockRef("upstream", "/", "master", 0).
 						WithPipeline(
-							pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"),
+							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 						),
 				).
 				WithResource(pkgbuilder.DeploymentResource),

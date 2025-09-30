@@ -6,9 +6,9 @@ info:
   description: Base tenant package
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: tenant-name
   validators:
-    - image: gcr.io/kpt-fn/starlark:v0.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
       configPath: ns-invariant.yaml

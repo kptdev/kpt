@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
       configPath: starlark-httpbin-gen.yaml

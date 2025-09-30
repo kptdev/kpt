@@ -198,7 +198,7 @@ metadata:
   name: example
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-labels:unstable
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
     configPath: functionconfig.yaml
     selectors:
     - apiVersion: "batch/v1"

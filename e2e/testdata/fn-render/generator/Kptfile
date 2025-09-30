@@ -4,9 +4,9 @@ metadata:
   name: app-with-generator
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
       configMap:
         tier: db

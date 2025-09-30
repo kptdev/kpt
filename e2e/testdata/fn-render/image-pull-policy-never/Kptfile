@@ -4,4 +4,4 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/not-exist:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/not-exist:v0.1

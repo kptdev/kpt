@@ -4,11 +4,11 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
       configPath: delete-all.yaml
-    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
       configMap:
         tier: backend

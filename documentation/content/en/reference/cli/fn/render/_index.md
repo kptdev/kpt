@@ -110,7 +110,7 @@ $ kpt fn render -o path/to/dir
 ```shell
 # Render resources in current directory and write unwrapped resources to stdout
 # which can be piped to kubectl apply
-$ kpt fn render -o unwrap | kpt fn eval -i gcr.io/kpt-fn/remove-local-config-resources:v0.1.0 -o unwrap - | kubectl apply -f -
+$ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/remove-local-config-resources:v0.1.0 -o unwrap - | kubectl apply -f -
 ```
 
 ```shell
@@ -118,7 +118,7 @@ $ kpt fn render -o unwrap | kpt fn eval -i gcr.io/kpt-fn/remove-local-config-res
 # to stdout which are piped to 'set-annotations' function,
 # the transformed resources are written to another directory
 $ kpt fn render -o stdout \
-| kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+| kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4 -o path/to/dir  -- foo=bar
 ```
 
 ```shell

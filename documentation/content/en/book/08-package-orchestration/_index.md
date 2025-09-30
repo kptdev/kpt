@@ -555,7 +555,7 @@ labels to all resources in the package. Add the following mutator to the
 `Kptfile` `pipeline` section:
 
 ```yaml
-  - image: gcr.io/kpt-fn/set-labels:v0.1.5
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
     configMap:
       color: orange
       fruit: apple
@@ -566,11 +566,11 @@ The whole `pipeline` section now looks like this:
 ```yaml
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
     configPath: package-context.yaml
-  - image: gcr.io/kpt-fn/apply-replacements:v0.1.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2
     configPath: update-rolebinding.yaml
-  - image: gcr.io/kpt-fn/set-labels:v0.1.5
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
     configMap:
       color: orange
       fruit: apple

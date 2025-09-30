@@ -4,12 +4,12 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
     # malformed Kptfile
   configPath: statefulset-filter.yaml
-    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configMap:
         namespace: db
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
       configMap:
         app: backend

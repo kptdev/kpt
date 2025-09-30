@@ -146,7 +146,7 @@ pipeline:
       configMap:
         namespace: tenant-name # ←- will be customized for pkg variant
   validators:
-    - image: gcr.io/kpt-fn/starlark:v0.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
       configPath: ns-invariant.yaml
 
 ```

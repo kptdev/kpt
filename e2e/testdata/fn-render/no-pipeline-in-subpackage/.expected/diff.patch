@@ -11,7 +11,7 @@ index 8e84241..c237afd 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
 diff --git a/db/Kptfile b/db/Kptfile
 index 79b7a5a..15f086b 100644
 --- a/db/Kptfile

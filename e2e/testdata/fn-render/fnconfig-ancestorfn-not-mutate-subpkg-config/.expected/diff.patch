@@ -9,7 +9,7 @@ index b64764a..b598023 100644
 +  namespace: staging
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/set-namespace:v0.1.3
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
 diff --git a/db/Kptfile b/db/Kptfile
 index 6218d66..5447bed 100644
 --- a/db/Kptfile
@@ -23,7 +23,7 @@ index 6218d66..5447bed 100644
 +  namespace: staging
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/set-labels:v0.1.4
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
 index 22d2de2..f4d597f 100644
 --- a/db/labelconfig.yaml

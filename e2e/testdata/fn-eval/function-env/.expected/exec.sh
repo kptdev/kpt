@@ -15,7 +15,7 @@
 
 set -eo pipefail
 
-IMAGE_TAG="gcr.io/kpt-fn-demo/printenv:v0.1"
+IMAGE_TAG="ghcr.io/kptdev/krm-functions-catalog-demo/printenv:v0.1"
 export EXPORT_ENV="export_env_value"
 
 kpt fn source \

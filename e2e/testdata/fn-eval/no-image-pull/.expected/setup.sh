@@ -15,8 +15,8 @@
 
 KPT_FN_RUNTIME="${KPT_FN_RUNTIME:=docker}"
 
-${KPT_FN_RUNTIME} image inspect gcr.io/kpt-fn/search-replace:v0.1
+${KPT_FN_RUNTIME} image inspect ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
 # if inspect exits with a 0 exit code the image was found locally, remove it
 if [[ $? == 0 ]]; then
-    ${KPT_FN_RUNTIME} image rm gcr.io/kpt-fn/search-replace:v0.1
+    ${KPT_FN_RUNTIME} image rm ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
 fi

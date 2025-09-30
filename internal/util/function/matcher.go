@@ -86,7 +86,7 @@ func MatchFunctions(functions []v1alpha1.Function, matchers ...Matcher) []v1alph
 
 // GetNames returns the list of function names.
 // - Porch function name is <PackageRepository>:<ImageName>:<Version>. e.g. kpt-functions:set-annotation:v0.1
-// - Catalog v2 function name is trimed to only contain <ImageName>:<Version>, and exclude gcr.io/kpt-fn. e.g. set-annotation:v0.1
+// - Catalog v2 function name is trimed to only contain <ImageName>:<Version>, and exclude ghcr.io/kptdev/krm-functions-catalog. e.g. set-annotation:v0.1
 func GetNames(functions []v1alpha1.Function) []string {
 	var names []string
 	for _, function := range functions {

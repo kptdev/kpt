@@ -120,14 +120,14 @@ commands:
       - fn
       - eval
       - --image
-      - gcr.io/kpt-fn/search-replace:v0.2.0
+      - ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
       - --match-kind
       - Kptfile
       - /tmp/porch-e2e/rpkg-push-git-efe3d01c68dfdcdd69114c9a7c65cce0d662a46f
       - --
       - by-path=info.description
       - put-value=Updated Test Package Description
-    stderr: "[RUNNING] \"gcr.io/kpt-fn/search-replace:v0.2.0\" on 1 resource(s)\n  Results:\n    [info] info.description: Mutated field value to \"Updated Test Package Description\"\n"
+    stderr: "[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0\" on 1 resource(s)\n  Results:\n    [info] info.description: Mutated field value to \"Updated Test Package Description\"\n"
   - args:
       - alpha
       - rpkg

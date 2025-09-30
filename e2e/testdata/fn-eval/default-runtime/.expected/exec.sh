@@ -22,4 +22,4 @@ fi
 
 echo "KPT_FN_RUNTIME is ${KPT_FN_RUNTIME}"
 # run eval with KPT_FN_RUNTIME unset.
-kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1.3 -- namespace=staging
+kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -- namespace=staging

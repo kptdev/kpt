@@ -70,10 +70,10 @@ directory by default.
 | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] LOCAL_DEST_DIRECTORY [flags]`                      | `kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [flags] [LOCAL_DEST_DIRECTORY]` <br> Fetch a remote package from a git subdirectory and writes it to a new local directory.                                                                           |
 | `kpt pkg init DIR [flags]`                                                                        | `kpt pkg init [DIR] [flags]` <br> Initializes an existing empty directory as a kpt package by adding a Kptfile.                                                                                                                                      |
 | `kpt pkg update LOCAL_PKG_DIR[@VERSION] [flags]`                                                  | `kpt pkg update [PKG_PATH][@version] [flags]` <br> Pulls in upstream changes and merges them into a local package.                                                                                                                                   |
-| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources` <br> Fix a local package which is using deprecated features.                                                                                                                                            |
+| `kpt pkg fix DIR [flags]`                                                                         | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/fix:v0.2 --include-meta-resources` <br> Fix a local package which is using deprecated features.                                                                                                                                            |
 | `kpt pkg desc DIR [flags]`                                                                        | Deprecated in favor of reading Kptfile directly                                                                                                                                                                                                      |
 | `kpt pkg diff DIR[@VERSION] [flags]`                                                              | `kpt pkg diff [PKG_PATH][@version] [flags]` <br> Display differences between upstream and local packages.                                                                                                                                            |
-| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image gcr.io/kpt-fn/format:v0.1`                                                                                                                                                                                                      |
+| `kpt cfg fmt DIR/STDIN [flags]`                                                                   | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/format:v0.1`                                                                                                                                                                                                      |
 | `kpt cfg tree DIR/STDIN [flags]`                                                                  | `kpt pkg tree [DIR] [flags]` <br> Displays resources, files and packages in a tree structure.                                                                                                                                                        |
 | `kpt cfg cat DIR/STDIN [flags]`                                                                   | `kpt fn source [DIR] -o unwrap`                                                                                                                                                                                                                      |
 | `kpt fn run DIR/STDIN [flags]`                                                                    | `kpt fn eval [DIR / -] [flags]` <br> Executes a single function on resources in a directory. <br> <br> `kpt fn render [PKG_PATH]` <br> Executes the pipeline of functions on resources in the package and writes the output to the local filesystem. |
@@ -86,13 +86,13 @@ directory by default.
 | `kpt live destroy DIR/STDIN [flags]`                                                              | `kpt live destroy [PKG_PATH / -] [flags]` <br> Removes all files belonging to a package from the cluster.                                                                                                                                            |
 | `kpt live status DIR/STDIN [flags]`                                                               | `kpt live status [PKG_PATH / -] [flags]` <br> Shows the resource status for resources belonging to the package.                                                                                                                                      |
 | `kpt live diff DIR/STDIN [flags]`                                                                 | Deprecated. The functionality will be provided by `dry-run` flag in `apply` and `destroy` commands.                                                                                                                                                  |
-| `kpt cfg set DIR setter_name setter_value`                                                        | `kpt fn eval --image gcr.io/kpt-fn/apply-setters:v0.1 -- 'foo=bar' 'env=[dev, stage]'`                                                                                                                                                               |
-| `kpt cfg create-setter DIR setter_name setter_value`                                              | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=nginx' 'put-comment=kpt-set: ${image}'`                                                                                                                                          |
-| `kpt cfg create-subst DIR subst_name --field-value nginx:1.7.1 --pattern ${image}:${tag} [flags]` | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=nginx:1.7.1' 'put-comment=kpt-set: ${image}:${tag}'`                                                                                                                             |
-| `kpt cfg delete-setter DIR setter_name`                                                           | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=nginx' put-comment=''`                                                                                                                                                           |
-| `kpt cfg delete-subst DIR subst_name [flags]`                                                     | `kpt fn eval --image gcr.io/kpt-fn/search-replace:0.1 -- 'by-value=nginx:1.7.1' put-comment=''`                                                                                                                                                      |
-| `kpt cfg annotate DIR/STDIN [flags]`                                                              | `kpt fn eval --image gcr.io/kpt-fn/set-annotations:v0.1 -- 'name=foo' 'value=bar'`                                                                                                                                                                   |
-| `kpt cfg grep DIR/STDIN [flags]`                                                                  | `kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- 'by-value=foo' 'by-path=bar'`                                                                                                                                                              |
+| `kpt cfg set DIR setter_name setter_value`                                                        | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1 -- 'foo=bar' 'env=[dev, stage]'`                                                                                                                                                               |
+| `kpt cfg create-setter DIR setter_name setter_value`                                              | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0 -- 'by-value=nginx' 'put-comment=kpt-set: ${image}'`                                                                                                                                          |
+| `kpt cfg create-subst DIR subst_name --field-value nginx:1.7.1 --pattern ${image}:${tag} [flags]` | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0 -- 'by-value=nginx:1.7.1' 'put-comment=kpt-set: ${image}:${tag}'`                                                                                                                             |
+| `kpt cfg delete-setter DIR setter_name`                                                           | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0 -- 'by-value=nginx' put-comment=''`                                                                                                                                                           |
+| `kpt cfg delete-subst DIR subst_name [flags]`                                                     | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0 -- 'by-value=nginx:1.7.1' put-comment=''`                                                                                                                                                      |
+| `kpt cfg annotate DIR/STDIN [flags]`                                                              | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4 -- 'name=foo' 'value=bar'`                                                                                                                                                                   |
+| `kpt cfg grep DIR/STDIN [flags]`                                                                  | `kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0 -- 'by-value=foo' 'by-path=bar'`                                                                                                                                                              |
 | `kpt cfg count DIR/STDIN [flags]`                                                                 | Deprecated.                                                                                                                                                                                                                                          |
 
 ### Kptfile schema changes
@@ -227,11 +227,11 @@ $ kpt version
 1.0.0+
 ```
 
-Invoke `gcr.io/kpt-fn/fix` function on the kpt package.
+Invoke `ghcr.io/kptdev/krm-functions-catalog/fix` function on the kpt package.
 
 ```shell
 # you must be using 1.0+ version of kpt
-$ kpt fn eval --image gcr.io/kpt-fn/fix:v0.2 --include-meta-resources --truncate-output=false
+$ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/fix:v0.2 --include-meta-resources --truncate-output=false
 ```
 
 ```shell
@@ -261,7 +261,7 @@ changes to the resources in the live cluster.
 
 #### Manual portion of migration
 
-1. All the functions are treated as `mutators` by the `gcr.io/kpt-fn/fix`
+1. All the functions are treated as `mutators` by the `ghcr.io/kptdev/krm-functions-catalog/fix`
    function and are added to the `mutators` section in the pipeline. Users must
    manually go through the functions and move the validator functions to the
    `validators` section in the pipeline section of `v1` Kptfile.
@@ -282,7 +282,7 @@ changes to the resources in the live cluster.
    once.
 
 Test your migrated kpt package end-to-end and make sure that the
-functionality is as expected. `gcr.io/kpt-fn/fix` is a helper for migration and
+functionality is as expected. `ghcr.io/kptdev/krm-functions-catalog/fix` is a helper for migration and
 doesn't guarantee functional parity.
 
 Finally, [publish your package] to git by upgrading the version so that your
@@ -342,7 +342,7 @@ kpt `v0.39`) to `v1` version(compatible with kpt `v1.0`).
 
 1. `Right now:` You can [install] and try the pre-release version of kpt `v1.0`
    binary.
-2. `June 1, 2021:` `gcr.io/kpt-fn/fix` function will be released in
+2. `June 1, 2021:` `ghcr.io/kptdev/krm-functions-catalog/fix` function will be released in
    [kpt-functions-catalog]. You can start migrating your existing kpt packages
    using the function.
 3. `July 1, 2021:` Package format `v1` will be released which guarantees

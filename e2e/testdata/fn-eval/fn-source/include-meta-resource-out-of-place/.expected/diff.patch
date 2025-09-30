@@ -11,7 +11,7 @@ index 0000000..4fad916
 +  namespace: staging
 +pipeline:
 +  mutators:
-+    - image: gcr.io/kpt-fn/set-labels:v0.1.4
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
 +      configPath: labelconfig.yaml
 diff --git a/out/labelconfig.yaml b/out/labelconfig.yaml
 new file mode 100644

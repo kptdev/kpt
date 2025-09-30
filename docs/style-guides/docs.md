@@ -21,13 +21,13 @@
    - Correct:
 
    ```shell
-   $ kpt fn eval my-package --image gcr.io/kpt-fn/search-replace
+   $ kpt fn eval my-package --image ghcr.io/kptdev/krm-functions-catalog/search-replace
    ```
 
    - Incorrect:
 
    ```shell
-   $ kpt fn eval --image gcr.io/kpt-fn/search-replace my-package
+   $ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace my-package
    ```
 
 5. The name of the tool should always appear as small caps (even at start of
