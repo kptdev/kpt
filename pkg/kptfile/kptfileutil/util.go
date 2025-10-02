@@ -18,20 +18,62 @@ import (
 	"bytes"
 	goerrors "errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 	"sigs.k8s.io/kustomize/kyaml/yaml/merge3"
 )
+
+var DeprecatedKptfileVersions = []schema.GroupVersionKind{
+	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha1"),
+	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha2"),
+}
+
+var SupportedKptfileVersions = []schema.GroupVersionKind{
+	kptfilev1.KptFileGVK(),
+}
+
+// KptfileError records errors regarding reading or parsing of a Kptfile.
+type KptfileError struct {
+	Path types.UniquePath
+	Err  error
+}
+
+func (k *KptfileError) Error() string {
+	return fmt.Sprintf("error reading Kptfile at %q: %v", k.Path.String(), k.Err)
+}
+
+func (k *KptfileError) Unwrap() error {
+	return k.Err
+}
+
+// DeprecatedKptfileError is an implementation of the error interface that is
+// returned whenever kpt encounters a Kptfile using the legacy format.
+type DeprecatedKptfileError struct {
+	Version string
+}
+
+func (e *DeprecatedKptfileError) Error() string {
+	return fmt.Sprintf("old resource version %q found in Kptfile", e.Version)
+}
+
+type UnknownKptfileResourceError struct {
+	GVK schema.GroupVersionKind
+}
+
+func (e *UnknownKptfileResourceError) Error() string {
+	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
+}
 
 func WriteFile(dir string, k interface{}) error {
 	const op errors.Op = "kptfileutil.WriteFile"
@@ -116,7 +158,7 @@ func DefaultKptfile(name string) *kptfilev1.KptFile {
 // sections will also be copied into local.
 func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfileWithoutOrigin"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -124,7 +166,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(updatedPath), err)
@@ -155,7 +197,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 // sections will also be copied into local.
 func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream bool) error {
 	const op errors.Op = "kptfileutil.UpdateKptfile"
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
+	localKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, localPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -163,7 +205,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		localKf = &kptfilev1.KptFile{}
 	}
 
-	updatedKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
+	updatedKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, updatedPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -171,7 +213,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	originKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
+	originKf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, originPath)
 	if err != nil {
 		if !goerrors.Is(err, os.ErrNotExist) {
 			return errors.E(op, types.UniquePath(localPath), err)
@@ -202,7 +244,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFromGit"
 	// read KptFile cloned with the package if it exists
-	kpgfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
+	kpgfile, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
 	if err != nil {
 		return errors.E(op, types.UniquePath(path), err)
 	}
@@ -222,6 +264,109 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 		return errors.E(op, types.UniquePath(path), err)
 	}
 	return nil
+}
+
+// ReadKptfile reads the KptFile in the given pkg.
+// TODO(droot): This method exists for current version of Kptfile.
+// Need to reconcile with the team how we want to handle multiple versions
+// of Kptfile in code. One option is to follow Kubernetes approach to
+// have an internal version of Kptfile that all the code uses. In that case,
+// we will have to implement pieces for IO/Conversion with right interfaces.
+func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
+	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
+	if err != nil {
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
+	}
+	defer f.Close()
+
+	kf, err := DecodeKptfile(f)
+	if err != nil {
+		return nil, &KptfileError{
+			Path: types.UniquePath(p),
+			Err:  err,
+		}
+	}
+	return kf, nil
+}
+
+func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
+	kf := &kptfilev1.KptFile{}
+	c, err := io.ReadAll(in)
+	if err != nil {
+		return kf, err
+	}
+	if err := checkKptfileVersion(c); err != nil {
+		return kf, err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(c))
+	d.KnownFields(true)
+	if err := d.Decode(kf); err != nil {
+		return kf, err
+	}
+	return kf, nil
+}
+
+// checkKptfileVersion verifies the apiVersion and kind of the resource
+// within the Kptfile. If the legacy version is found, the DeprecatedKptfileError
+// is returned. If the currently supported apiVersion and kind is found, no
+// error is returned.
+func checkKptfileVersion(content []byte) error {
+	r, err := yaml.Parse(string(content))
+	if err != nil {
+		return err
+	}
+
+	m, err := r.GetMeta()
+	if err != nil {
+		return err
+	}
+
+	kind := m.Kind
+	gv, err := schema.ParseGroupVersion(m.APIVersion)
+	if err != nil {
+		return err
+	}
+	gvk := gv.WithKind(kind)
+
+	switch {
+	// If the resource type matches what we are looking for, just return nil.
+	case isSupportedKptfileVersion(gvk):
+		return nil
+	// If the kind and group is correct and the version is a known deprecated
+	// schema for the Kptfile, return DeprecatedKptfileError.
+	case isDeprecatedKptfileVersion(gvk):
+		return &DeprecatedKptfileError{
+			Version: gv.Version,
+		}
+	// If the combination of group, version and kind are unknown to us, return
+	// UnknownKptfileResourceError.
+	default:
+		return &UnknownKptfileResourceError{
+			GVK: gv.WithKind(kind),
+		}
+	}
+}
+
+func isDeprecatedKptfileVersion(gvk schema.GroupVersionKind) bool {
+	for _, v := range DeprecatedKptfileVersions {
+		if v == gvk {
+			return true
+		}
+	}
+	return false
+}
+
+func isSupportedKptfileVersion(gvk schema.GroupVersionKind) bool {
+	for _, v := range SupportedKptfileVersions {
+		if v == gvk {
+			return true
+		}
+	}
+	return false
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output

@@ -25,6 +25,7 @@ import (
 	"github.com/kptdev/kpt/internal/testutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -285,7 +286,7 @@ func TestCmd_Run(t *testing.T) {
 			// Otherwise, validate the kptfile values and/or resourcegroup values.
 			var actualInv kptfilev1.Inventory
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, w.WorkspaceDirectory)
+			kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, w.WorkspaceDirectory)
 			assert.NoError(t, err)
 
 			switch tc.rgfilename {

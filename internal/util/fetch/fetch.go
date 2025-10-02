@@ -250,7 +250,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 
 	// Verify that if a Kptfile exists in the package, it contains the correct
 	// version of the Kptfile.
-	_, err = pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
+	_, err = kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, pkgPath)
 	if err != nil {
 		// A Kptfile isn't required, so it is fine if there is no Kptfile.
 		if errors.Is(err, os.ErrNotExist) {
@@ -261,7 +261,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 		// RemoteKptfileError. This allows us to provide information about the
 		// git source of the Kptfile instead of the path to some random
 		// temporary directory.
-		var kfError *pkg.KptfileError
+		var kfError *kptfileutil.KptfileError
 		if errors.As(err, &kfError) {
 			return &pkg.RemoteKptfileError{
 				RepoSpec: c.repoSpec,

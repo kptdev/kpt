@@ -21,6 +21,7 @@ import (
 	"github.com/kptdev/kpt/internal/errors"
 	"github.com/kptdev/kpt/internal/pkg"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 )
 
 //nolint:gochecknoinits
@@ -33,7 +34,7 @@ func init() {
 type pkgErrorResolver struct{}
 
 func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	var kptfileError *pkg.KptfileError
+	var kptfileError *kptfileutil.KptfileError
 	if errors.As(err, &kptfileError) {
 		path := kptfileError.Path
 
@@ -66,7 +67,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var deprecatedv1alpha1KptfileError *pkg.DeprecatedKptfileError
+	var deprecatedv1alpha1KptfileError *kptfileutil.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
 		deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
 		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha1KptfileError.Version)
@@ -77,7 +78,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var deprecatedv1alpha2KptfileError *pkg.DeprecatedKptfileError
+	var deprecatedv1alpha2KptfileError *kptfileutil.DeprecatedKptfileError
 	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
 		deprecatedv1alpha2KptfileError.Version == "v1alpha2" {
 		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha2KptfileError.Version)
@@ -88,7 +89,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 		}, true
 	}
 
-	var unknownKptfileResourceError *pkg.UnknownKptfileResourceError
+	var unknownKptfileResourceError *kptfileutil.UnknownKptfileResourceError
 	if errors.As(err, &unknownKptfileResourceError) {
 		msg := fmt.Sprintf("Error: Kptfile at %q has an unknown resource type (%q).", path, unknownKptfileResourceError.GVK.String())
 		return ResolvedResult{
@@ -98,7 +99,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 
 	msg := fmt.Sprintf("Error: Kptfile at %q can't be read.", path)
 	if err != nil {
-		var kptFileError *pkg.KptfileError
+		var kptFileError *kptfileutil.KptfileError
 		if errors.As(err, &kptFileError) {
 			if kptFileError.Err != nil {
 				msg += fmt.Sprintf("\n\nDetails:\n%v", kptFileError.Err)

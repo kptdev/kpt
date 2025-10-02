@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/gitutil"
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/addmergecomment"
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
@@ -129,11 +128,11 @@ func KptfileAwarePkgEqual(t *testing.T, pkg1, pkg2 string, addMergeCommentsToSou
 
 		// Read the Kptfiles and set the Commit field to an empty
 		// string before we compare.
-		pkg1kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg1Path))
+		pkg1kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg1Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
-		pkg2kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg2Path))
+		pkg2kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(pkg2Path))
 		if !assert.NoError(t, err) {
 			t.FailNow()
 		}
@@ -641,12 +640,12 @@ func replaceData(repo, data string) error {
 		// For Kptfiles we want to keep the Upstream section if the Kptfile
 		// in the data directory doesn't already include one.
 		if filepath.Base(path) == "Kptfile" {
-			dataKptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(path))
+			dataKptfile, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Dir(path))
 			if err != nil {
 				return err
 			}
 			repoKptfileDir := filepath.Dir(filepath.Join(repo, rel))
-			repoKptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, repoKptfileDir)
+			repoKptfile, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, repoKptfileDir)
 			if err != nil {
 				return err
 			}

@@ -15,7 +15,6 @@ import (
 	"github.com/google/shlex"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/internal/fnruntime"
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
@@ -257,7 +256,7 @@ func (r *EvalFnRunner) updateFnList(oldFNs []kptfile.Function) ([]kptfile.Functi
 // SaveFnToKptfile adds the evaluated function and its arguments to Kptfile `pipeline.mutators` or `pipeline.validators` .
 func (r *EvalFnRunner) SaveFnToKptfile() {
 	pr := printer.FromContextOrDie(r.Ctx)
-	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.runFns.Path)
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, r.runFns.Path)
 	if err != nil {
 		pr.Printf("function not added: Kptfile not exists\n")
 		return

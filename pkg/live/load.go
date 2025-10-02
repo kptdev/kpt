@@ -24,6 +24,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/internal/util/strings"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -213,7 +214,7 @@ func (i *InventoryFilter) Filter(object *yaml.RNode) (*yaml.RNode, error) {
 	if err != nil {
 		return object, err
 	}
-	kf, err := pkg.DecodeKptfile(bytes.NewBufferString(s))
+	kf, err := kptfileutil.DecodeKptfile(bytes.NewBufferString(s))
 	if err != nil {
 		return nil, err
 	}
