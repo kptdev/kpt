@@ -22,7 +22,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	pkgtest "github.com/kptdev/kpt/internal/pkg/testing"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
@@ -269,7 +268,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 			expectedErr: "local package files have been modified",
 			expectedCommit: func(writer *testutil.TestSetupManager) (string, error) {
 				upstreamRepo := writer.Repos[testutil.Upstream]
-				f, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
+				f, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(writer.LocalWorkspace.WorkspaceDirectory, upstreamRepo.RepoName))
 				if err != nil {
 					return "", err
 				}
@@ -2046,7 +2045,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 
 				expectedPath := result.expectedLocal.ExpandPkgWithName(t,
 					g.LocalWorkspace.PackageDir, testutil.ToReposInfo(g.Repos))
-				kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, expectedPath)
+				kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, expectedPath)
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}

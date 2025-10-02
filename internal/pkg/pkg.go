@@ -29,8 +29,8 @@ import (
 	"github.com/kptdev/kpt/internal/util/git"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -45,32 +45,9 @@ const (
 	pkgPathAnnotation = "internal.config.kubernetes.io/package-path"
 )
 
-var DeprecatedKptfileVersions = []schema.GroupVersionKind{
-	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha1"),
-	kptfilev1.KptFileGVK().GroupKind().WithVersion("v1alpha2"),
-}
-
 // MatchAllKRM represents set of glob pattern to match all KRM
 // resources including Kptfile.
 var MatchAllKRM = append([]string{kptfilev1.KptFileName}, kio.MatchAll...)
-
-var SupportedKptfileVersions = []schema.GroupVersionKind{
-	kptfilev1.KptFileGVK(),
-}
-
-// KptfileError records errors regarding reading or parsing of a Kptfile.
-type KptfileError struct {
-	Path types.UniquePath
-	Err  error
-}
-
-func (k *KptfileError) Error() string {
-	return fmt.Sprintf("error reading Kptfile at %q: %v", k.Path.String(), k.Err)
-}
-
-func (k *KptfileError) Unwrap() error {
-	return k.Err
-}
 
 // RemoteKptfileError records errors regarding reading or parsing of a Kptfile
 // in a remote repo.
@@ -85,24 +62,6 @@ func (e *RemoteKptfileError) Error() string {
 
 func (e *RemoteKptfileError) Unwrap() error {
 	return e.Err
-}
-
-// DeprecatedKptfileError is an implementation of the error interface that is
-// returned whenever kpt encounters a Kptfile using the legacy format.
-type DeprecatedKptfileError struct {
-	Version string
-}
-
-func (e *DeprecatedKptfileError) Error() string {
-	return fmt.Sprintf("old resource version %q found in Kptfile", e.Version)
-}
-
-type UnknownKptfileResourceError struct {
-	GVK schema.GroupVersionKind
-}
-
-func (e *UnknownKptfileResourceError) Error() string {
-	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
 // RGError is an implementation of the error interface that is returned whenever
@@ -214,116 +173,13 @@ func New(fs filesys.FileSystem, path string) (*Pkg, error) {
 // A nil value represents an implicit package.
 func (p *Pkg) Kptfile() (*kptfilev1.KptFile, error) {
 	if p.kptfile == nil {
-		kf, err := ReadKptfile(p.fsys, p.UniquePath.String())
+		kf, err := kptfileutil.ReadKptfile(p.fsys, p.UniquePath.String())
 		if err != nil {
 			return nil, err
 		}
 		p.kptfile = kf
 	}
 	return p.kptfile, nil
-}
-
-// ReadKptfile reads the KptFile in the given pkg.
-// TODO(droot): This method exists for current version of Kptfile.
-// Need to reconcile with the team how we want to handle multiple versions
-// of Kptfile in code. One option is to follow Kubernetes approach to
-// have an internal version of Kptfile that all the code uses. In that case,
-// we will have to implement pieces for IO/Conversion with right interfaces.
-func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
-	f, err := fs.Open(filepath.Join(p, kptfilev1.KptFileName))
-	if err != nil {
-		return nil, &KptfileError{
-			Path: types.UniquePath(p),
-			Err:  err,
-		}
-	}
-	defer f.Close()
-
-	kf, err := DecodeKptfile(f)
-	if err != nil {
-		return nil, &KptfileError{
-			Path: types.UniquePath(p),
-			Err:  err,
-		}
-	}
-	return kf, nil
-}
-
-func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
-	kf := &kptfilev1.KptFile{}
-	c, err := io.ReadAll(in)
-	if err != nil {
-		return kf, err
-	}
-	if err := CheckKptfileVersion(c); err != nil {
-		return kf, err
-	}
-
-	d := yaml.NewDecoder(bytes.NewBuffer(c))
-	d.KnownFields(true)
-	if err := d.Decode(kf); err != nil {
-		return kf, err
-	}
-	return kf, nil
-}
-
-// CheckKptfileVersion verifies the apiVersion and kind of the resource
-// within the Kptfile. If the legacy version is found, the DeprecatedKptfileError
-// is returned. If the currently supported apiVersion and kind is found, no
-// error is returned.
-func CheckKptfileVersion(content []byte) error {
-	r, err := yaml.Parse(string(content))
-	if err != nil {
-		return err
-	}
-
-	m, err := r.GetMeta()
-	if err != nil {
-		return err
-	}
-
-	kind := m.Kind
-	gv, err := schema.ParseGroupVersion(m.APIVersion)
-	if err != nil {
-		return err
-	}
-	gvk := gv.WithKind(kind)
-
-	switch {
-	// If the resource type matches what we are looking for, just return nil.
-	case isSupportedKptfileVersion(gvk):
-		return nil
-	// If the kind and group is correct and the version is a known deprecated
-	// schema for the Kptfile, return DeprecatedKptfileError.
-	case isDeprecatedKptfileVersion(gvk):
-		return &DeprecatedKptfileError{
-			Version: gv.Version,
-		}
-	// If the combination of group, version and kind are unknown to us, return
-	// UnknownKptfileResourceError.
-	default:
-		return &UnknownKptfileResourceError{
-			GVK: gv.WithKind(kind),
-		}
-	}
-}
-
-func isDeprecatedKptfileVersion(gvk schema.GroupVersionKind) bool {
-	for _, v := range DeprecatedKptfileVersions {
-		if v == gvk {
-			return true
-		}
-	}
-	return false
-}
-
-func isSupportedKptfileVersion(gvk schema.GroupVersionKind) bool {
-	for _, v := range SupportedKptfileVersions {
-		if v == gvk {
-			return true
-		}
-	}
-	return false
 }
 
 // Pipeline returns the Pipeline section of the pkg's Kptfile.
@@ -462,7 +318,7 @@ func Subpackages(fsys filesys.FileSystem, rootPath string, matcher SubpackageMat
 			// path to the slice and return SkipDir since we don't need to
 			// walk any deeper into the directory.
 			if isPkg {
-				kf, err := ReadKptfile(fsys, path)
+				kf, err := kptfileutil.ReadKptfile(fsys, path)
 				if err != nil {
 					return errors.E(op, types.UniquePath(path), err)
 				}
@@ -514,7 +370,7 @@ func IsPackageDir(fsys filesys.FileSystem, path string) (bool, error) {
 // information, it will always return false.
 // If a Kptfile is not found on the provided path, an error will be returned.
 func IsPackageUnfetched(path string) (bool, error) {
-	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, path)
 	if err != nil {
 		return false, err
 	}

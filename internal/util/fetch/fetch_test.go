@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	pkgtesting "github.com/kptdev/kpt/internal/pkg/testing"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
@@ -61,7 +60,7 @@ func createKptfile(workspace *testutil.TestWorkspace, git *kptfilev1.Git, strate
 }
 
 func setKptfileName(workspace *testutil.TestWorkspace, name string) error {
-	kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, workspace.FullPackagePath())
+	kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, workspace.FullPackagePath())
 	if err != nil {
 		return err
 	}

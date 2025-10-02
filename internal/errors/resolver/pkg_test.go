@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,14 +30,14 @@ func TestPkgErrorResolver(t *testing.T) {
 		expected string
 	}{
 		"kptfileError has nested ErrNotExist": {
-			err: &pkg.KptfileError{
+			err: &kptfileutil.KptfileError{
 				Path: "/foo/bar",
 				Err:  os.ErrNotExist,
 			},
 			expected: "Error: No Kptfile found at \"/foo/bar\".",
 		},
 		"kptfileError doesn't have a known nested error": {
-			err: &pkg.KptfileError{
+			err: &kptfileutil.KptfileError{
 				Path: "/some/path",
 				Err:  fmt.Errorf("this is a test"),
 			},
@@ -49,7 +49,7 @@ this is a test
 `,
 		},
 		"kptfileError without nested error": {
-			err: &pkg.KptfileError{
+			err: &kptfileutil.KptfileError{
 				Path: "/some/path",
 			},
 			expected: "Error: Kptfile at \"/some/path\" can't be read.",

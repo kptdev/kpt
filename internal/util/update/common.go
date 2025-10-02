@@ -18,7 +18,7 @@ import (
 	"reflect"
 
 	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -27,12 +27,12 @@ import (
 // upstream information than origin.
 func PkgHasUpdatedUpstream(local, origin string) (bool, error) {
 	const op errors.Op = "update.PkgHasUpdatedUpstream"
-	originKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, origin)
+	originKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, origin)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(local), err)
 	}
 
-	localKf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, local)
+	localKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, local)
 	if err != nil {
 		return false, errors.E(op, types.UniquePath(local), err)
 	}

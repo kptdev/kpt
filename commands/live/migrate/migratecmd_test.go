@@ -22,6 +22,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/pkg"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -180,7 +181,7 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
-			kf, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
+			kf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -1381,11 +1380,11 @@ pipeline:
 	}
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			localKf, err := pkg.DecodeKptfile(strings.NewReader(tc.local))
+			localKf, err := DecodeKptfile(strings.NewReader(tc.local))
 			assert.NoError(t, err)
-			updatedKf, err := pkg.DecodeKptfile(strings.NewReader(tc.update))
+			updatedKf, err := DecodeKptfile(strings.NewReader(tc.update))
 			assert.NoError(t, err)
-			originKf, err := pkg.DecodeKptfile(strings.NewReader(tc.origin))
+			originKf, err := DecodeKptfile(strings.NewReader(tc.origin))
 			assert.NoError(t, err)
 			err = merge(localKf, updatedKf, originKf)
 			if tc.err == nil {
