@@ -1,4 +1,4 @@
 <h{{ .Level }} id="{{ .Anchor }}" {{- with .Attributes.class }} class="{{ . }}" {{- end }}>
-  {{ .Text }}
+  {{ .Text | safeHTML }}
   <a href="#{{ .Anchor }}" class="anchor-link">#</a>
 </h{{ .Level }}>

@@ -39,3 +39,11 @@ package-lock.json
 
 # local tmp directory (in case you download packages here)
 tmp/
+
+# Spell checker
+*.dic
+
+# Hugo
+.hugo*
+resources/
+public/

@@ -54,7 +54,7 @@ This declares two functions:
 - `kubeval` is a validator function which validates the resources against their
   OpenAPI schema.
 
-?> Refer to the [Functions Catalog](https://catalog.kpt.dev/ ":target=_self")
+> Refer to the [Functions Catalog](https://catalog.kpt.dev/ ":target=_self")
 for details on how to use a particular function.
 
 There are two differences between mutators and validators:
@@ -93,7 +93,7 @@ Package "wordpress":
 Successfully executed 3 function(s) in 2 package(s).
 ```
 
- > Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
+> Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
 
 When you invoke the `render` command, kpt performs the following steps:
 
@@ -173,7 +173,7 @@ Using `exec` is not recommended for two reasons:
 
 In [Chapter 2](../02-concepts/#functions), we saw this conceptual representation of a function invocation:
 
-![img](/static/images/func.svg)
+![img](/images/func.svg)
 
 `functionConfig` is an optional meta resource containing the arguments to a
 particular invocation of the function. There are two different ways to declare
