@@ -19,6 +19,7 @@ on:
       - "Formula/**"
       - "demos/**"
       - "docs/**"
+      - "documentation/**"
       - "firebase/**"
       - "logo/**"
       - "package-examples/**"
