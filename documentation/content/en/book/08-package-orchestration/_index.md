@@ -11,6 +11,11 @@ menu:
     weight: 80
 ---
 
+{{< warning >}}
+This chapter is no longer valid and will be moved to the [Porch](https://docs.nephio.org/docs/porch/) documentation.
+The `kpt alpha repo|rpkg` command set are now part of the [porchctl](https://docs.nephio.org/docs/porch/user-guides/porchctl-cli-guide/) tool.
+{{< /warning >}}
+
 ## Introduction
 
 Package Orchestration encompasses management of the overall lifecycle of
