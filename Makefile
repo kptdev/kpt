@@ -16,7 +16,7 @@ GOLANG_VERSION    := 1.24.3
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
-.PHONY: docs license fix vet fmt lint test build tidy release release-ci
+.PHONY: docs fix vet fmt lint test build tidy release release-ci
 
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
@@ -40,7 +40,7 @@ LDFLAGS += "
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: license fix vet fmt lint test build tidy
+all: fix vet fmt lint test build tidy
 
 build:
 	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
@@ -60,10 +60,6 @@ install-kind:
 .PHONY: install-golangci-lint
 install-golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-
-.PHONY: install-go-licenses
-install-go-licenses:
-	go install github.com/google/go-licenses@v1.6.0
 
 .PHONY: install-swagger
 install-swagger:
@@ -90,9 +86,6 @@ generate: install-mdtogo
 
 tidy:
 	go mod tidy
-
-license:
-	scripts/update-license.sh
 
 lint: install-golangci-lint
 	$(GOBIN)/golangci-lint run ./...
