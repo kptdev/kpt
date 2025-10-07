@@ -16,4 +16,4 @@
 # non-zero exit code and no changes in the resources.
 exitCode: 0
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/search-replace:latest"

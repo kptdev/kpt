@@ -57,11 +57,11 @@ info:
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -90,7 +90,7 @@ info:
   description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: mysql
 ```

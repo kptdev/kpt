@@ -11,7 +11,7 @@ index 8632ba7..eaab661 100644
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/Kptfile b/db/Kptfile
 index a9d1c11..4813f6d 100644
 --- a/db/Kptfile
@@ -26,7 +26,7 @@ index a9d1c11..4813f6d 100644
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
 index 0000000..ffdf484

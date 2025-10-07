@@ -41,11 +41,11 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 This declares two functions:
@@ -72,7 +72,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: mysql
 ```
@@ -83,12 +83,12 @@ Now, let's render the package hierarchy:
 $ kpt fn render wordpress
 Package "wordpress/mysql":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 
 Package "wordpress":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 ```
@@ -134,7 +134,7 @@ entire pipeline is aborted and the local filesystem is left intact.
 The `image` field specifies the container image for the function. You can specify
 an image from any container registry. If the registry is omitted, the default
 container registry for functions catalog (`ghcr.io/kptdev/krm-functions-catalog`) is prepended automatically.
-For example, `set-labels:v0.1` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1`.
+For example, `set-labels:v0.1` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
 
 #### `exec`
 
@@ -279,16 +279,16 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         tier: mysql
       selectors:
         - name: wordpress-mysql
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
          app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
@@ -298,16 +298,16 @@ function is invoked on all the resources in the package hierarchy of `wordpress`
 ```shell
 $ kpt fn render wordpress
 Package "wordpress/mysql": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 
 Package "wordpress": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4" on 3 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 3 resource(s)
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
 
 Successfully executed 4 function(s) in 2 package(s).
 ```
@@ -325,15 +325,15 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         tier: mysql
       selectors:
         - name: wordpress-mysql
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: wordpress
-    - image: ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest
       configMap:
         prepend: dev-
       selectors:
@@ -342,7 +342,7 @@ pipeline:
         - kind: Service
           name: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 Now, let's render the package:
@@ -350,18 +350,18 @@ Now, let's render the package:
 ```shell
 kpt fn render wordpress
 Package "wordpress/mysql": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 
 Package "wordpress": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4" on 3 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:v0.2.0" on 2 resource(s)
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:v0.2.0"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 3 resource(s)
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" on 2 resource(s)
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
 
 Successfully executed 5 function(s) in 2 package(s).
 ```
@@ -380,14 +380,14 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         tier: mysql
       selectors:
         - labels:
             foo: bar
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 The following are the matchers you can specify in a selector:
@@ -412,14 +412,14 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         tier: mysql
       exclude:
         - kind: Deployment
           name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 This is distinct from the following, which excludes a resource if it has either kind "Deployment" or name "nginx":
@@ -431,14 +431,14 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         tier: mysql
       exclude:
         - kind: Deployment
         - name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
 ```
 
 The following are the matchers you can specify in an exclusion:
@@ -459,7 +459,7 @@ For example, to set the namespace of all resources in the wordpress package
 hierarchy:
 
 ```shell
-$ kpt fn eval wordpress --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -- namespace=mywordpress
+$ kpt fn eval wordpress --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=mywordpress
 ```
 
 Alternatively, for convenience, you can use the short-hand form of the above command:
@@ -483,7 +483,7 @@ metadata:
   name: wordpress
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: mywordpress
 ```
@@ -689,12 +689,12 @@ For example:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 
 Package "wordpress":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 For complete results, see /tmp/results.yaml
@@ -710,11 +710,11 @@ metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
     exitCode: 0
 ```
 
@@ -726,12 +726,12 @@ rerun:
 $ kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 
 Package "wordpress":
 
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-[FAIL] "ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+[FAIL] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
   Results:
     [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/wordpress" in file "service.yaml" in field "spec.ports.0.port"
   Exit code: 1
@@ -749,11 +749,11 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
     exitCode: 1
     results:
       - message: "Invalid type. Expected: integer, given: string"

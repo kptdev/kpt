@@ -10,7 +10,7 @@ index 122778a..b9df335 100644
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 diff --git a/db/labelconfig.yaml b/db/labelconfig.yaml
 index 22d2de2..19e0746 100644
 --- a/db/labelconfig.yaml

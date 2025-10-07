@@ -261,7 +261,7 @@ func sanitizeTimestamps(stderr string) string {
 	// stable comparison in tests.
 	var sanitized []string
 	for _, line := range strings.Split(stderr, "\n") {
-		// [PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" in 2.0s
+		// [PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 2.0s
 		if strings.HasPrefix(line, "[PASS]") || strings.HasPrefix(line, "[FAIL]") {
 			tokens := strings.Fields(line)
 			if len(tokens) == 4 && tokens[2] == "in" {

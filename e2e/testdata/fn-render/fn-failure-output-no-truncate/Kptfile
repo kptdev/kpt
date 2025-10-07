@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:v0.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
       configMap:
         strict: "true"

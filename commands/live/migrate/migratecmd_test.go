@@ -196,19 +196,23 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 				t.Errorf("inventory information should not be set in Kptfile")
 			}
 
-			if !tc.dryRun {
-				if rg == nil {
-					t.Fatalf("unable to read ResourceGroup file")
+			if tc.dryRun {
+				if rg != nil {
+					t.Errorf("inventory shouldn't be set during dryrun")
 				}
-				assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
-				if len(rg.ObjectMeta.Name) == 0 {
-					t.Errorf("inventory name not set in Kptfile")
-				}
-				if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
-					t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
-				}
-			} else if rg != nil {
-				t.Errorf("inventory shouldn't be set during dryrun")
+				return
+			}
+
+			if rg == nil {
+				t.Fatalf("unable to read ResourceGroup file")
+				return
+			}
+			assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
+			if len(rg.ObjectMeta.Name) == 0 {
+				t.Errorf("inventory name not set in Kptfile")
+			}
+			if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
+				t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
 			}
 		})
 	}

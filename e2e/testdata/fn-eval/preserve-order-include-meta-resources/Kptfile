@@ -28,16 +28,16 @@ upstreamLock:
     commit: 4d2aa98b45ddee4b5fa45fbca16f2ff887de9efb
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: some-space
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         image: nginx
         tag: 1.14.1
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configPath: ./fn-config.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: path/to/foo-star.yaml
 inventory:
   namespace: some-space

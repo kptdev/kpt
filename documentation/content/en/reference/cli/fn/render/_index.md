@@ -77,7 +77,7 @@ PKG_PATH:
 #### Environment Variables
 
 ```
-KPT_FN_RUNTIME:
+KRM_FN_RUNTIMETIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
@@ -110,7 +110,7 @@ $ kpt fn render -o path/to/dir
 ```shell
 # Render resources in current directory and write unwrapped resources to stdout
 # which can be piped to kubectl apply
-$ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/remove-local-config-resources:v0.1.0 -o unwrap - | kubectl apply -f -
+$ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/remove-local-config-resources:latest -o unwrap - | kubectl apply -f -
 ```
 
 ```shell
@@ -118,12 +118,12 @@ $ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/
 # to stdout which are piped to 'set-annotations' function,
 # the transformed resources are written to another directory
 $ kpt fn render -o stdout \
-| kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4 -o path/to/dir  -- foo=bar
+| kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -o path/to/dir  -- foo=bar
 ```
 
 ```shell
 # Render my-package-dir with podman as runtime for functions
-$ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
+$ KRM_FN_RUNTIMETIME=podman kpt fn render my-package-dir
 ```
 
 ```shell

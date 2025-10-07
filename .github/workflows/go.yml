@@ -64,7 +64,7 @@ jobs:
           make all
           make test-docker
         env:
-          KPT_FN_RUNTIME: ${{ matrix.runtime }}
+          KRM_FN_RUNTIMETIME: ${{ matrix.runtime }}
 
   build-macos:
     runs-on: macos-latest

@@ -26,15 +26,15 @@ kpt fn doc --image=IMAGE
 
 ```
 --image, i: (required flag)
-  Container image of the function e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1`.
+  Container image of the function e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.
   For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
-  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1` you can pass `set-namespace:v0.1`.
+  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:v0.1`.
 ```
 
 #### Environment Variables
 
 ```
-KPT_FN_RUNTIME:
+KRM_FN_RUNTIMETIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 

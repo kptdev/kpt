@@ -3375,7 +3375,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithPipeline(
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3386,8 +3386,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithPipeline(
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:v1"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3401,8 +3401,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 							WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
 							WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 0).
 							WithPipeline(
-								pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
-								pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:v1"),
+								pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
+								pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:latest"),
 							),
 					).
 					WithResource(pkgbuilder.ConfigMapResource),
@@ -3413,9 +3413,9 @@ func TestRun_remote_subpackages(t *testing.T) {
 						WithUpstreamRef(testutil.Upstream, "/", masterBranch, "resource-merge").
 						WithUpstreamLockRef(testutil.Upstream, "/", masterBranch, 1).
 						WithPipeline(
-							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
-							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:v1"),
-							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:v1"),
+							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
+							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:latest"),
+							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 						),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
@@ -3434,7 +3434,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 											WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 											WithUpstreamLockRef("foo", "/", masterBranch, 0).
 											WithPipeline(
-												pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
+												pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 											),
 									).
 									WithResource(pkgbuilder.ConfigMapResource),
@@ -3466,7 +3466,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithPipeline(
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 									),
 							).
@@ -3478,8 +3478,8 @@ func TestRun_remote_subpackages(t *testing.T) {
 							WithKptfile(
 								pkgbuilder.NewKptfile().
 									WithPipeline(
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:v1"),
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:v1"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3501,7 +3501,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 									WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 									WithUpstreamLockRef("foo", "/", masterBranch, 0).
 									WithPipeline(
-										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:v1"),
+										pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:latest"),
 									),
 							).
 							WithResource(pkgbuilder.ConfigMapResource),
@@ -3515,13 +3515,13 @@ func TestRun_remote_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkg").
+					pkgbuilder.NewSubPkg("subpkgg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 								WithUpstreamLockRef("foo", "/", masterBranch, 1).
 								WithPipeline(
-									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:v1"),
+									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:latest"),
 									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 								),

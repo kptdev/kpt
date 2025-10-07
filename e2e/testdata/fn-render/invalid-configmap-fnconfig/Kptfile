@@ -4,10 +4,10 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap: # invalid config
         tier: backend
         envs: # lists are not allowed in configmap

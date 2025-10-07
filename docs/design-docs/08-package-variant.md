@@ -492,11 +492,11 @@ spec:
   ...
   pipeline:
     mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: my-ns
       name: my-func
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: foo
 ```
@@ -507,11 +507,11 @@ Then the resulting Kptfile will have these two entries prepended to its
 ```yaml
   pipeline:
     mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: my-ns
       name: PackageVariant.my-pv.my-func.0
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: foo
       name: PackageVariant.my-pv..1

@@ -29,46 +29,46 @@ func TestSanitizeTimestamps(t *testing.T) {
 		{
 			Name: "Prefix match: 12s and 12.1s",
 			Input: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 12s
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" in 12.1s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 12s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" on 1 resource(s)
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 12.1s
 `,
 			Output: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 0s
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" in 0s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 0s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" on 1 resource(s)
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 0s
 `,
 		},
 		{
 			Name: "Suffix match: 1s and 0.1s",
 			Input: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 1s
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" in 0.1s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 1s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" on 1 resource(s)
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 0.1s
 `,
 			Output: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 0s
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" in 0s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 0s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" on 1 resource(s)
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 0s
 `,
 		},
 		{
 			Name: "Only substitute matching lines",
 			Input: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 1s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 1s
 [RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" notin 1s
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" notin 1s
 `,
 			Output: `
-[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\"
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1\" in 0s
+[RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\"
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/starlark:latest\" in 0s
 [RUNNING] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace\" on 1 resource(s)
-[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1\" notin 1s
+[PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" notin 1s
 `,
 		},
 	}

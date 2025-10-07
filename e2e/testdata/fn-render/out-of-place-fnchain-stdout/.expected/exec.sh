@@ -17,5 +17,5 @@
 set -eo pipefail
 
 kpt fn render -o stdout \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4 -- foo=bar \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1 -- tier=backend
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -- foo=bar \
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:latest -- tier=backend

@@ -82,7 +82,7 @@ func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
 	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
 		deprecatedv1alpha2KptfileError.Version == "v1alpha2" {
 		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha2KptfileError.Version)
-		msg += "Please run \"kpt fn eval <PKG_PATH> -i ghcr.io/kptdev/krm-functions-catalog/fix:v0.2 --include-meta-resources\" to upgrade the package and retry."
+		msg += "Please run \"kpt fn eval <PKG_PATH> -i ghcr.io/kptdev/krm-functions-catalog/fix:latest --include-meta-resources\" to upgrade the package and retry."
 
 		return ResolvedResult{
 			Message: msg,

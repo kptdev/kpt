@@ -16,4 +16,4 @@
 set -eo pipefail
 
 kpt fn source |\
-kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1 -- namespace=staging
+kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=staging

@@ -4,6 +4,6 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         foo: bar

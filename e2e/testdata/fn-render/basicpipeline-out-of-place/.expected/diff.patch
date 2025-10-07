@@ -13,10 +13,10 @@ index 0000000..c237afd
 +    tier: backend
 +pipeline:
 +  mutators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +      configMap:
 +        namespace: staging
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
 +      configMap:
 +        tier: backend
 diff --git a/out/resources.yaml b/out/resources.yaml

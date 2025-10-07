@@ -169,9 +169,9 @@ metadata:
   name: example
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: generate-rolebinding-group.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest
       configPath: propagate-rolebinding-group.yaml
 ```
 

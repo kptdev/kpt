@@ -10,7 +10,7 @@ index a47bd49..a402119 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/resources.yaml b/resources.yaml
 index d3ed04c..f66e542 100644
 --- a/resources.yaml

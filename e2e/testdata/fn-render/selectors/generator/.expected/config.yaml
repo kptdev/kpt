@@ -14,17 +14,17 @@
 
 stdErr: |
   Package "generator/db": 
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
 
   Package "generator": 
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
 
   Successfully executed 5 function(s) in 2 package(s).

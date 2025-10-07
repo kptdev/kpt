@@ -17,5 +17,5 @@ image: set-namespace:v0.1.3
 args:
   namespace: staging
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s

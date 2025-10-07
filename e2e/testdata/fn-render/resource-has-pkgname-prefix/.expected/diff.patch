@@ -10,7 +10,7 @@ index 0bcb810..dcafc38 100644
 +    abc: def
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 diff --git a/mysql/Kptfile b/mysql/Kptfile
 index 78ee518..cda1359 100644
 --- a/mysql/Kptfile
@@ -24,7 +24,7 @@ index 78ee518..cda1359 100644
 +    abc: def
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
 index 519cfd3..4e39a5c 100644
 --- a/mysql/mysql-deployment.yaml

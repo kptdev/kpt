@@ -11,7 +11,7 @@ index 6d53889..b36c49f 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/deployment_httpbin.yaml b/deployment_httpbin.yaml
 deleted file mode 100644
 index 49d4f6e..0000000

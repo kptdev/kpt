@@ -48,7 +48,7 @@ func TestKptfileValidate(t *testing.T) {
 							Image: "patch-strategic-merge",
 						},
 						{
-							Image: "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4",
+							Image: "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest",
 							ConfigMap: map[string]string{
 								"environment": "dev",
 							},
@@ -56,7 +56,7 @@ func TestKptfileValidate(t *testing.T) {
 					},
 					Validators: []Function{
 						{
-							Image: "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:v0.2.1",
+							Image: "ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest",
 						},
 					},
 				},
@@ -187,7 +187,7 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
-			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:v1.2.3-alpha1",
+			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest-alpha1",
 			true,
 		},
 		{

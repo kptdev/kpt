@@ -11,7 +11,7 @@ index ae8c2d2..139daf6 100644
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/Kptfile b/db/Kptfile
 index 8c0fd51..fa4480f 100644
 --- a/db/Kptfile
@@ -26,7 +26,7 @@ index 8c0fd51..fa4480f 100644
 +    tier: db
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/resources.yaml b/db/resources.yaml
 index dabe43c..e9be40c 100644
 --- a/db/resources.yaml

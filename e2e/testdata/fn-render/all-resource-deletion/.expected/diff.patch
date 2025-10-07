@@ -11,7 +11,7 @@ index fd49fcf..f9ae49b 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/delete-all.yaml b/delete-all.yaml
 index 3c86d8b..6754b0a 100644
 --- a/delete-all.yaml

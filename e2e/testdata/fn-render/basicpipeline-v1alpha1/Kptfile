@@ -11,7 +11,7 @@ dependencies:
     autoSet: false
     ensureNotExists: false
     functions:
-      - image: ghcr.io/kptdev/krm-functions-catalog/my-func:v0.1
+      - image: ghcr.io/kptdev/krm-functions-catalog/my-func:latest
         config:
           apiVersion: v1
           kind: ConfigMap

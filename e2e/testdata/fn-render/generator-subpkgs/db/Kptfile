@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/upsert-resource:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/upsert-resource:latest
       configPath: fn-config.yaml

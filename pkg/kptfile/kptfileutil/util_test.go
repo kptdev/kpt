@@ -693,7 +693,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         image: nginx
         tag: 1.0.1
@@ -705,7 +705,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         image: nginx
         tag: 1.0.1
@@ -718,7 +718,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         image: nginx
         tag: 1.2.0 // value of tag is updated
@@ -730,7 +730,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
     configMap:
       image: nginx
       new-setter: new-setter-value // new setter is added
@@ -746,7 +746,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			update: `
@@ -756,7 +756,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters-updated.yaml
 `,
 			local: `
@@ -766,7 +766,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters-local.yaml
 `,
 			expected: `
@@ -776,7 +776,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
     configPath: setters-updated.yaml
 `,
 		},
@@ -789,7 +789,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			update: `
@@ -799,7 +799,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			local: `
@@ -809,7 +809,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			expected: `
@@ -819,7 +819,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
     configPath: setters.yaml
 `,
 		},
@@ -832,7 +832,7 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			update: `
@@ -842,9 +842,9 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
 `,
 			local: `
 apiVersion: kpt.dev/v1
@@ -853,9 +853,9 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: foo
 `,
@@ -866,12 +866,12 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
     configPath: setters.yaml
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
     configMap:
       namespace: foo
-  - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
 `,
 		},
 
@@ -883,9 +883,9 @@ metadata:
   name: pipeline
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
 `,
 			update: `
 apiVersion: kpt.dev/v1
@@ -894,7 +894,7 @@ metadata:
   name: pipeline
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
 `,
 			local: `
@@ -904,10 +904,10 @@ metadata:
   name: pipeline
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configPath: setters.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: foo
 `,
@@ -918,9 +918,9 @@ metadata:
   name: pipeline
 pipeline:
   validators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
     configPath: setters.yaml
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
     configMap:
       namespace: foo
 `,
@@ -934,11 +934,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
@@ -950,11 +950,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar-new
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${updated-setter-name}
@@ -966,19 +966,19 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
@@ -990,11 +990,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: foo
       put-value: bar-new
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: abc
       put-comment: ${updated-setter-name}
@@ -1009,11 +1009,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
@@ -1025,11 +1025,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar-new
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${updated-setter-name}
@@ -1041,20 +1041,20 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: my-new-function
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       configMap:
         by-value: abc
         put-comment: ${some-setter-name}
@@ -1066,11 +1066,11 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: foo
       put-value: bar-new
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: abc
       put-comment: ${updated-setter-name}
@@ -1085,12 +1085,12 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr1
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr2
       configMap:
         by-value: abc
@@ -1103,12 +1103,12 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr1
       configMap:
         by-value: foo
         put-value: bar-new
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr2
       configMap:
         by-value: abc
@@ -1121,23 +1121,23 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: my-new-function
       configMap:
         by-value: YOUR_TEAM
         put-value: my-team
-    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
       name: gf1
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr1
       configMap:
         by-value: foo
         put-value: bar
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       name: sl1
       configMap:
         app: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
       name: sr2
       configMap:
         by-value: abc
@@ -1150,23 +1150,23 @@ metadata:
   name: pipeline
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: YOUR_TEAM
       put-value: my-team
     name: my-new-function
-  - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:v0.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest
     name: gf1
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: foo
       put-value: bar-new
     name: sr1
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     configMap:
       app: db
     name: sl1
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
     configMap:
       by-value: abc
       put-comment: ${updated-setter-name}

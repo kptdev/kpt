@@ -9,7 +9,7 @@ index b64764a..b598023 100644
 +  namespace: staging
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/Kptfile b/db/Kptfile
 index 51ef7cb..ccbcb3f 100644
 --- a/db/Kptfile
@@ -21,7 +21,7 @@ index 51ef7cb..ccbcb3f 100644
 +  namespace: staging
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/db/resources.yaml b/db/resources.yaml
 index dabe43c..b44084a 100644
 --- a/db/resources.yaml

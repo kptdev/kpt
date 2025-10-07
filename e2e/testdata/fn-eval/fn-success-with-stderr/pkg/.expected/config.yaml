@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 testType: eval
-image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1
+image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 fnConfig: ../../starlark.yaml

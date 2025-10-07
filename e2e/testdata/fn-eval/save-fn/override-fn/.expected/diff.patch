@@ -9,11 +9,11 @@ index 4a1e2fa..b20f8f5 100644
 +  namespace: newNs
  pipeline:
    mutators:
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 -    configMap:
 -      namespace: oldNs
--    name: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+-    name: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 +      configMap:
 +        namespace: newNs
 diff --git a/resources.yaml b/resources.yaml

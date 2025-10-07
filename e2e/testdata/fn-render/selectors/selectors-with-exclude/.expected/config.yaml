@@ -14,9 +14,9 @@
 
 stdErr: |
   Package "selectors-with-exclude": 
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.1" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
 
   Successfully executed 2 function(s) in 1 package(s).

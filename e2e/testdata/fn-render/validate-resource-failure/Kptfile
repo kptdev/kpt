@@ -4,5 +4,5 @@ metadata:
   name: db
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:v0.5.1 # validates httpbin deployment exists
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
       configPath: starlark-httpbin-val.yaml

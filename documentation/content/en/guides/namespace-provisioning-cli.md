@@ -172,19 +172,19 @@ that can be used to ensure all resources in a package use the same namespace.
 # to autocomplete your choice or to see further options. 
 
 $ kpt fn eval --type mutator --keywords namespace --image set-namespace:v0.4.1 --fn-config package-context.yaml
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 600ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
 
 # let's add `set-namespace` to rendering workflow so that it is invoked whenever
 # package is rendered.
 $ kpt fn eval -i set-namespace:v0.4.1 --fn-config package-context.yaml --save -t mutator
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 600ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
- Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" as mutator in the Kptfile.
+ Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" as mutator in the Kptfile.
 
 # Let's take a look at Kptfile to see if `set-namespace` is added in the
 # rendering pipeline.
@@ -199,14 +199,14 @@ info:
   description: kpt package for provisioning namespace
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configPath: package-context.yaml
 
 # render the package to ensure we have a working package.
 $ kpt fn render
 Package "tenant": 
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 600ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
 Successfully executed 1 function(s) in 1 package(s).
@@ -286,9 +286,9 @@ Run following commands to add apply-replacements in the package rendering workfl
 
 ```shell
 $ kpt fn eval -i apply-replacements:v0.1.1 --fn-config update-rolebinding.yaml --save -t mutator
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2" in 1s
-Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2" as mutator in the Kptfile.
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
+Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.
 
 # ensure our package is being rendered correctly
 $ kpt fn render
@@ -384,12 +384,12 @@ Render the `backend` package so that the package is customized for the `backend`
 
 $ kpt fn render backend
 Package "backend":
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1" in 900ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 900ms
   Results:
     [info]: namespace "example" updated to "backend", 3 values changed
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:v0.1.2" in 1s
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 
 Successfully executed 2 function(s) in 1 package(s).
 # Important thing to note in the above output is that the `set-namespace`
