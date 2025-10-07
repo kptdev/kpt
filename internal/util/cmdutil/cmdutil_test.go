@@ -346,5 +346,5 @@ func TestListImages(t *testing.T) {
 }`)
 	result := function.GetNames(functions)
 	sort.Strings(result)
-	assert.Equal(t, []string{"apply-setters:v0.1.1", "gatekeeper:v0.2.1"}, result)
+	assert.Equal(t, []string{"apply-setters:latest", "gatekeeper:latest"}, result)
 }

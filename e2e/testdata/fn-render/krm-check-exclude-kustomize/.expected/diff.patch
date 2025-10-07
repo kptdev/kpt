@@ -10,7 +10,7 @@ index af4d9f8..12d5e3d 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: set-labels:v0.1
+     - image: set-labels:latest
 diff --git a/kustomization.yaml b/kustomization.yaml
 index f3f0207..6c517af 100644
 --- a/kustomization.yaml

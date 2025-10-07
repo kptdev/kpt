@@ -77,7 +77,7 @@ fn-args:
 --image, i:
   Container image of the function to execute e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.
   For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
-  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:v0.1`.
+  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:latest`.
   `eval` executes only one function, so do not use `--exec` flag with this flag.
 
 --image-pull-policy:
@@ -252,7 +252,7 @@ $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o st
 ```shell
 # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
 # in current directory
-kpt fn eval -i set-namespace:v0.1 --by-kind Deployment --by-name foo -- namespace=staging
+kpt fn eval -i set-namespace:latest --by-kind Deployment --by-name foo -- namespace=staging
 ```
 
 ```shell

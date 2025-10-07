@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -i set-namespace:v0.1.3 --match-name nginx-deployment --match-kind Deployment -- namespace=staging
+kpt fn eval -i set-namespace:latest --match-name nginx-deployment --match-kind Deployment -- namespace=staging

@@ -226,7 +226,7 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 
 // ResolveToImageForCLI converts the function short path to the full image url.
 // If the function is Catalog function, it adds "ghcr.io/kptdev/krm-functions-catalog/".
-// e.g. set-namespace:v0.4.1 --> ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+// e.g. set-namespace:latest --> ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 func ResolveToImageForCLI(_ context.Context, image string) (string, error) {
 	if !strings.Contains(image, "/") {
 		return fmt.Sprintf("ghcr.io/kptdev/krm-functions-catalog/%s", image), nil

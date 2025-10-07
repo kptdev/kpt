@@ -171,7 +171,7 @@ that can be used to ensure all resources in a package use the same namespace.
 # `--keywords`, `--image`, `--fn-config` to see available choices, click `tab`
 # to autocomplete your choice or to see further options. 
 
-$ kpt fn eval --type mutator --keywords namespace --image set-namespace:v0.4.1 --fn-config package-context.yaml
+$ kpt fn eval --type mutator --keywords namespace --image set-namespace:latest --fn-config package-context.yaml
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
@@ -179,7 +179,7 @@ $ kpt fn eval --type mutator --keywords namespace --image set-namespace:v0.4.1 -
 
 # let's add `set-namespace` to rendering workflow so that it is invoked whenever
 # package is rendered.
-$ kpt fn eval -i set-namespace:v0.4.1 --fn-config package-context.yaml --save -t mutator
+$ kpt fn eval -i set-namespace:latest --fn-config package-context.yaml --save -t mutator
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
@@ -285,7 +285,7 @@ EOF
 Run following commands to add apply-replacements in the package rendering workflow.
 
 ```shell
-$ kpt fn eval -i apply-replacements:v0.1.1 --fn-config update-rolebinding.yaml --save -t mutator
+$ kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml --save -t mutator
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.

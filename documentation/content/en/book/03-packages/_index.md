@@ -159,7 +159,7 @@ on the package. For example, to search for resources that have a field with path
 `spec.selector.tier`:
 
 ```shell
-$ kpt fn eval wordpress -i search-replace:v0.1 -- 'by-path=spec.selector.tier'
+$ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 ```
 
 ## Editing a package
@@ -213,7 +213,7 @@ For example, setting a label on all the resources in the `wordpress` package can
 using the following function:
 
 ```shell
-$ kpt fn eval wordpress -i set-labels:v0.1 -- env=dev
+$ kpt fn eval wordpress -i set-labels:latest -- env=dev
 ```
 
 [Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.

@@ -112,7 +112,7 @@ spec:
     - name: http
       port: 7007
       targetPort: http
-" | kpt fn eval "" -o unwrap --image set-image:v0.1.0 -- \
+" | kpt fn eval "" -o unwrap --image set-image:latest -- \
 name=backstage newName=ghcr.io/kptdev/kpt-backstage-plugins/backstage-plugin-cad newTag=v0.1.3 | \
 kubectl apply -f -
 ```

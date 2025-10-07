@@ -134,7 +134,7 @@ entire pipeline is aborted and the local filesystem is left intact.
 The `image` field specifies the container image for the function. You can specify
 an image from any container registry. If the registry is omitted, the default
 container registry for functions catalog (`ghcr.io/kptdev/krm-functions-catalog`) is prepended automatically.
-For example, `set-labels:v0.1` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
+For example, `set-labels:latest` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
 
 #### `exec`
 
@@ -195,7 +195,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: set-labels:v0.1
+    - image: set-labels:latest
       configPath: labels.yaml
 ```
 
@@ -225,7 +225,7 @@ metadata:
   name: mysql
 pipeline:
   mutators:
-    - image: set-labels:v0.1
+    - image: set-labels:latest
       configMap:
         tier: mysql
 ```
@@ -246,7 +246,7 @@ metadata:
 pipeline:
   mutators:
     - name: set tier label
-      image: set-labels:v0.1
+      image: set-labels:latest
       configMap:
         tier: mysql
 ```
@@ -465,7 +465,7 @@ $ kpt fn eval wordpress --image ghcr.io/kptdev/krm-functions-catalog/set-namespa
 Alternatively, for convenience, you can use the short-hand form of the above command:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
+$ kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
  > Refer to the [eval command reference](../../reference/cli/fn/eval/) for usage.
@@ -521,7 +521,7 @@ EOF
 ```
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:v0.1 --fn-config /tmp/fn-config.yaml
+$ kpt fn eval wordpress -i set-namespace:latest --fn-config /tmp/fn-config.yaml
 ```
 
 #### CLI arguments
@@ -532,7 +532,7 @@ the key/value pairs as command line arguments. The following is equivalent to
 what we showed previously:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:v0.1 -- namespace=mywordpress
+$ kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
 Note that the arguments must come after the separator `--`.
@@ -545,7 +545,7 @@ For example, you can selectively add an annotation to the resources if it has ki
 `Deployment` AND name `wordpress`:
 
 ```shell
-$ kpt fn eval wordpress -i set-annotations:v0.1 --match-kind Deployment --match-name wordpress -- foo=bar
+$ kpt fn eval wordpress -i set-annotations:latest --match-kind Deployment --match-name wordpress -- foo=bar
 ```
 
 Here is the list of available selector matcher flags:
@@ -565,14 +565,14 @@ For example, you can set the namespace of all resources in the wordpress package
 except for the ones with the label `foo: bar`:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:v0.1 --exclude-labels foo=bar -- namespace=my-namespace
+$ kpt fn eval wordpress -i set-namespace:latest --exclude-labels foo=bar -- namespace=my-namespace
 ```
 
 If you use multiple exclusions, it will exclude resources that match all provided exclusions. For
 example, you can set the namespace of all resources, except for those that have both kind "Deployment" 
 and name "nginx":
 
-`$ kpt fn eval wordpress -i set-namespace:v0.1 --exclude-kind Deployment --exclude-name nginx -- namespace=my-namespace`
+`$ kpt fn eval wordpress -i set-namespace:latest --exclude-kind Deployment --exclude-name nginx -- namespace=my-namespace`
 
 Here is the list of available exclusion flags:
 
@@ -606,7 +606,7 @@ using the `--network` flag.
 For example, `kubeval` function can download a JSON schema file:
 
 ```shell
-$ kpt fn eval wordpress -i kubeval:v0.1 --network -- schema_location="https://kubernetesjsonschema.dev"
+$ kpt fn eval wordpress -i kubeval:latest --network -- schema_location="https://kubernetesjsonschema.dev"
 ```
 
 #### Mounting Directories
@@ -618,7 +618,7 @@ specified on the [Docker Volumes](https://docs.docker.com/storage/volumes/) page
 For example, `kubeval` function can consume a JSON schema file:
 
 ```shell
-$ kpt fn eval -i kubeval:v0.1 --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
+$ kpt fn eval -i kubeval:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
 Note that the `--as-current-user` flag may be required to run the function as
@@ -640,8 +640,8 @@ Here is an example:
 
 ```shell
 $ kpt fn source wordpress \
-  | kpt fn eval - -i set-namespace:v0.1 -- namespace=mywordpress \
-  | kpt fn eval - -i set-labels:v0.1 -- app=wordpress env=prod \
+  | kpt fn eval - -i set-namespace:latest -- namespace=mywordpress \
+  | kpt fn eval - -i set-labels:latest -- app=wordpress env=prod \
   | kpt fn sink my-wordpress
 ```
 

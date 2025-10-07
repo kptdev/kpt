@@ -163,7 +163,7 @@ function downloadPreviousKpt {
   tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   mv kpt $BIN_DIR/previouskpt
   echo -e "Downloading previous kpt binary...${GREEN}SUCCESS${NC}"
-  rm kpt.tar.gz LICENSES.txt lib.zip
+  rm kpt.tar.gz lib.zip
   set +e
 }
 
@@ -187,7 +187,7 @@ function downloadKpt1.0 {
   tar -xvf kpt.tar.gz > $OUTPUT_DIR/kptdownload 2>&1
   mv kpt $BIN_DIR/kpt1.0.0
   echo -e "Downloading 1.0.0 kpt binary...${GREEN}SUCCESS${NC}"
-  rm kpt.tar.gz LICENSES.txt lib.zip
+  rm kpt.tar.gz lib.zip
   set +e
 }
 

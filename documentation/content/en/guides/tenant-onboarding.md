@@ -142,7 +142,7 @@ info:
   description: Base tenant package
 pipeline:
   mutators:
-    - image: set-namespace:v0.1
+    - image: set-namespace:latest
       configMap:
         namespace: tenant-name # ←- will be customized for pkg variant
   validators:

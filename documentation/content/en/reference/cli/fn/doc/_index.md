@@ -28,7 +28,7 @@ kpt fn doc --image=IMAGE
 --image, i: (required flag)
   Container image of the function e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.
   For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
-  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:v0.1`.
+  e.g. instead of passing `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` you can pass `set-namespace:latest`.
 ```
 
 #### Environment Variables
@@ -45,8 +45,8 @@ KRM_FN_RUNTIMETIME:
 <!--mdtogo:Examples-->
 
 ```shell
-# display the documentation for image set-namespace:v0.1.1
-kpt fn doc -i set-namespace:v0.1.1
+# display the documentation for image set-namespace:latest.1
+kpt fn doc -i set-namespace:latest.1
 ```
 
 <!--mdtogo-->

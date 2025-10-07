@@ -88,7 +88,7 @@ function set_controller_image {
   local NEW="${1}"
   local TAG="${NEW##*:}"
   local IMG="${NEW%:*}"
-  kpt fn eval ${DESTINATION}/controller --image set-image:v0.1.1 -- \
+  kpt fn eval ${DESTINATION}/controller --image set-image:latest -- \
     "name=${OLD}" \
     "newName=${IMG}" \
     "newTag=${TAG}"
