@@ -3515,14 +3515,13 @@ func TestRun_remote_subpackages(t *testing.T) {
 				).
 				WithResource(pkgbuilder.ConfigMapResource).
 				WithSubPackages(
-					pkgbuilder.NewSubPkg("subpkgg").
+					pkgbuilder.NewSubPkg("subpkg").
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 								WithUpstreamLockRef("foo", "/", masterBranch, 1).
 								WithPipeline(
 									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/zork:latest"),
-									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"),
 									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/bar:latest"),
 								),
 						).
