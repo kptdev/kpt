@@ -310,13 +310,13 @@ metadata:
 func TestListImages(t *testing.T) {
 	functions := parseFunctions(`{
   "apply-setters": {
-    "v0.1": {
-      "LatestPatchVersion": "v0.1.1",
+    "v0.2": {
+      "LatestPatchVersion": "v0.2.1",
       "Examples": {
         "apply-setters-simple": {
           "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
-          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.1/examples/apply-setters-simple",
-          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.1/functions/go/apply-setters"
+          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.2/examples/apply-setters-simple",
+          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.2/functions/go/apply-setters"
         }
       }
     }
@@ -346,5 +346,5 @@ func TestListImages(t *testing.T) {
 }`)
 	result := function.GetNames(functions)
 	sort.Strings(result)
-	assert.Equal(t, []string{"apply-setters:latest", "gatekeeper:latest"}, result)
+	assert.Equal(t, []string{"apply-setters:v0.2.1", "gatekeeper:v0.2.1"}, result)
 }
