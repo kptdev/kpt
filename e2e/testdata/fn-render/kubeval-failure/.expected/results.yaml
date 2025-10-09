@@ -4,7 +4,7 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/kubeval:v0.1.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
     exitCode: 1
     results:
       - message: selector is required

@@ -171,20 +171,20 @@ that can be used to ensure all resources in a package use the same namespace.
 # `--keywords`, `--image`, `--fn-config` to see available choices, click `tab`
 # to autocomplete your choice or to see further options. 
 
-$ kpt fn eval --type mutator --keywords namespace --image set-namespace:v0.4.1 --fn-config package-context.yaml
-[RUNNING] "gcr.io/kpt-fn/set-namespace:v0.4.1"
-[PASS] "gcr.io/kpt-fn/set-namespace:v0.4.1" in 600ms
+$ kpt fn eval --type mutator --keywords namespace --image set-namespace:latest --fn-config package-context.yaml
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
 
 # let's add `set-namespace` to rendering workflow so that it is invoked whenever
 # package is rendered.
-$ kpt fn eval -i set-namespace:v0.4.1 --fn-config package-context.yaml --save -t mutator
-[RUNNING] "gcr.io/kpt-fn/set-namespace:v0.4.1"
-[PASS] "gcr.io/kpt-fn/set-namespace:v0.4.1" in 600ms
+$ kpt fn eval -i set-namespace:latest --fn-config package-context.yaml --save -t mutator
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
- Added "gcr.io/kpt-fn/set-namespace:v0.4.1" as mutator in the Kptfile.
+ Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" as mutator in the Kptfile.
 
 # Let's take a look at Kptfile to see if `set-namespace` is added in the
 # rendering pipeline.
@@ -199,14 +199,14 @@ info:
   description: kpt package for provisioning namespace
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configPath: package-context.yaml
 
 # render the package to ensure we have a working package.
 $ kpt fn render
 Package "tenant": 
-[RUNNING] "gcr.io/kpt-fn/set-namespace:v0.4.1"
-[PASS] "gcr.io/kpt-fn/set-namespace:v0.4.1" in 600ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 600ms
   Results:
     [info]: namespace "example" updated to "example", 0 values changed
 Successfully executed 1 function(s) in 1 package(s).
@@ -285,10 +285,10 @@ EOF
 Run following commands to add apply-replacements in the package rendering workflow.
 
 ```shell
-$ kpt fn eval -i apply-replacements:v0.1.1 --fn-config update-rolebinding.yaml --save -t mutator
-[RUNNING] "gcr.io/kpt-fn/apply-replacements:v0.1.1"
-[PASS] "gcr.io/kpt-fn/apply-replacements:v0.1.1" in 1s
-Added "gcr.io/kpt-fn/apply-replacements:v0.1.1" as mutator in the Kptfile.
+$ kpt fn eval -i apply-replacements:latest --fn-config update-rolebinding.yaml --save -t mutator
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
+Added "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" as mutator in the Kptfile.
 
 # ensure our package is being rendered correctly
 $ kpt fn render
@@ -384,12 +384,12 @@ Render the `backend` package so that the package is customized for the `backend`
 
 $ kpt fn render backend
 Package "backend":
-[RUNNING] "gcr.io/kpt-fn/set-namespace:v0.4.1"
-[PASS] "gcr.io/kpt-fn/set-namespace:v0.4.1" in 900ms
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 900ms
   Results:
     [info]: namespace "example" updated to "backend", 3 values changed
-[RUNNING] "gcr.io/kpt-fn/apply-replacements:v0.1.1"
-[PASS] "gcr.io/kpt-fn/apply-replacements:v0.1.1" in 1s
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest" in 1s
 
 Successfully executed 2 function(s) in 1 package(s).
 # Important thing to note in the above output is that the `set-namespace`

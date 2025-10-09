@@ -4,9 +4,9 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: set-namespace:v0.1.3
+    - image: set-namespace:latest
       configMap:
         namespace: staging
-    - image: set-labels:v0.1.4
+    - image: set-labels:latest
       configMap:
         tier: backend

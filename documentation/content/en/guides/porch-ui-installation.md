@@ -57,7 +57,7 @@ kubectl create secret generic -n backstage cad-google-oauth-client --from-litera
 Next, find a published image in the
 [kpt-dev/kpt-backstage-plugins container registry](https://console.cloud.google.com/gcr/images/kpt-dev/global/kpt-backstage-plugins/backstage-plugin-cad?project=kpt-dev).
 For this example, we will use
-`gcr.io/kpt-dev/kpt-backstage-plugins/backstage-plugin-cad:v0.1.3`.
+`ghcr.io/kptdev/kpt-backstage-plugins/backstage-plugin-cad:v0.1.3`.
 
 Now, run the following command to set up the backstage deployment and service.
 Change the image name and tag in the `newName` and `newTag` flags in the below
@@ -112,8 +112,8 @@ spec:
     - name: http
       port: 7007
       targetPort: http
-" | kpt fn eval "" -o unwrap --image set-image:v0.1.0 -- \
-name=backstage newName=gcr.io/kpt-dev/kpt-backstage-plugins/backstage-plugin-cad newTag=v0.1.3 | \
+" | kpt fn eval "" -o unwrap --image set-image:latest -- \
+name=backstage newName=ghcr.io/kptdev/kpt-backstage-plugins/backstage-plugin-cad newTag=v0.1.3 | \
 kubectl apply -f -
 ```
 

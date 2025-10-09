@@ -16,7 +16,7 @@ GOLANG_VERSION    := 1.24.3
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
 
-.PHONY: docs license fix vet fmt lint test build tidy release release-ci
+.PHONY: docs fix vet fmt lint test build tidy release release-ci
 
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
@@ -40,7 +40,7 @@ LDFLAGS += "
 # By default, make test-fn-render/test-fn-eval will run all tests.
 T ?= ".*"
 
-all: license fix vet fmt lint test build tidy
+all: fix vet fmt lint test build tidy
 
 build:
 	go build ${LDFLAGS} -o $(GOBIN)/kpt -v .
@@ -60,10 +60,6 @@ install-kind:
 .PHONY: install-golangci-lint
 install-golangci-lint:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-
-.PHONY: install-go-licenses
-install-go-licenses:
-	go install github.com/google/go-licenses@v1.6.0
 
 .PHONY: install-swagger
 install-swagger:
@@ -91,9 +87,6 @@ generate: install-mdtogo
 tidy:
 	go mod tidy
 
-license:
-	scripts/update-license.sh
-
 lint: install-golangci-lint
 	$(GOBIN)/golangci-lint run ./...
 
@@ -102,20 +95,20 @@ test:
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
-# KPT_FN_RUNTIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-docker: build
 	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
-# KPT_FN_RUNTIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-render: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
-# KPT_FN_RUNTIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-eval: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/

@@ -9,7 +9,7 @@ info:
 pipeline:
   mutators:
     - name: enable-workload-identity
-      image: set-annotations:v0.1.4
+      image: set-annotations:latest
       selectors:
         - apiVersion: v1
           kind: ServiceAccount

@@ -10,10 +10,10 @@ info:
   description: The Ghost App package contains the KRM resources for a Ghost Application.
 pipeline:
   mutators:
-    - image: set-labels:v0.1.5
+    - image: set-labels:latest
       configPath: setlabels.yaml
-    - image: apply-replacements:v0.1.1
+    - image: apply-replacements:latest
       configPath: fn-config-update-host.yaml
   validators:
-    - image: starlark:v0.4.3
+    - image: starlark:latest
       configPath: fn-config-validate-host.yaml

@@ -15,11 +15,11 @@
 
 set -eo pipefail
 
-KPT_FN_RUNTIME="${KPT_FN_RUNTIME:=docker}"
+KRM_FN_RUNTIMETIME="${KRM_FN_RUNTIMETIME:=docker}"
 
-kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1
+kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
 
-${KPT_FN_RUNTIME} image inspect gcr.io/kpt-fn/search-replace:v0.1
+${KRM_FN_RUNTIMETIME} image inspect ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
 if [[ $? != 0 ]]; then
     echo "ERR: Image could not be found locally and may not have been pulled"
     exit 1

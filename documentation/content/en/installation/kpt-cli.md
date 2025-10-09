@@ -130,9 +130,9 @@ kpt version will return `unknown` for binaries built from source:
 $ kpt version
 ```
 
-[gcr.io/kpt-dev/kpt]:
+[ghcr.io/kptdev/kpt]:
   https://github.com/kptdev/kpt/pkgs/container/kpt
-[gcr.io/kpt-dev/kpt-gcloud]:
+[ghcr.io/kptdev/kpt-gcloud]:
   https://github.com/kptdev/kpt/pkgs/container/kpt-gcloud
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:

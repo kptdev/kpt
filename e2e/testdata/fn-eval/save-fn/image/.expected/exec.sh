@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -s -t mutator -i set-namespace:v0.1.3 -- namespace=staging
+kpt fn eval -s -t mutator -i set-namespace:latest -- namespace=staging

@@ -8,6 +8,6 @@ info:
   description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: mysql

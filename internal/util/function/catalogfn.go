@@ -34,7 +34,7 @@ func CatalogFunction(name string, keywords []string, fnTypes []v1alpha1.Function
 			Namespace: CatalogV2,
 		},
 		Spec: v1alpha1.FunctionSpec{
-			Image:         fmt.Sprintf("gcr.io/kpt-fn/%s", name),
+			Image:         fmt.Sprintf("ghcr.io/kptdev/krm-functions-catalog/%s", name),
 			FunctionTypes: fnTypes,
 			Keywords:      keywords,
 		},

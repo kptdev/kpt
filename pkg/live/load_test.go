@@ -78,7 +78,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 				WithKptfile(
 					pkgbuilder.NewKptfile().
 						WithPipeline(
-							pkgbuilder.NewFunction("gcr.io/kpt-dev/func:latest").
+							pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/func:latest").
 								WithConfigPath("cm.yaml"),
 						),
 				).WithRGFile(pkgbuilder.NewRGFile().WithInventory(pkgbuilder.Inventory{
@@ -92,7 +92,7 @@ func TestLoad_LocalDisk(t *testing.T) {
 						WithKptfile(
 							pkgbuilder.NewKptfile().
 								WithPipeline(
-									pkgbuilder.NewFunction("gcr.io/kpt-dev/func").
+									pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/func").
 										WithConfigPath("deployment.yaml"),
 								),
 						).

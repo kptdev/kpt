@@ -80,7 +80,7 @@ to enable customization.
 ...
 pipeline:
   mutators:
-    - image: set-namespace:v0.3.4
+    - image: set-namespace:latest
       configPath: ...
     - image: apply-transform:v0.1.0
       configPath: ...
@@ -136,7 +136,7 @@ Here is an example:
 ...
 pipeline:
   mutators:
-    - image: set-namespace:v0.3.4
+    - image: set-namespace:latest
       configPath: package-context.yaml
 ...
 ```

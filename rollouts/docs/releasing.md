@@ -16,19 +16,19 @@ export VERSION=<version>
 
 Build the docker image:
 ```sh
-IMG=gcr.io/kpt-dev/rollouts-controller:$VERSION make docker-build
+IMG=ghcr.io/kptdev/kpt/rollouts-controller:$VERSION make docker-build
 ```
 
 Make sure you are connected to the kpt-dev project, and then push the image:
 ```sh
 gcloud config set project kpt-dev
-IMG=gcr.io/kpt-dev/rollouts-controller:$VERSION make docker-push
+IMG=ghcr.io/kptdev/kpt/rollouts-controller:$VERSION make docker-push
 ```
 
 Run the `create-manifests` script to update the manifests:
 
 ```sh
-./scripts/create-manifests.sh --controller-image gcr.io/kpt-dev/rollouts-controller:$VERSION
+./scripts/create-manifests.sh --controller-image ghcr.io/kptdev/kpt/rollouts-controller:$VERSION
 ```
 
 Create a pull request with the generated changes. Users can now use `kpt pkg get` to pull the

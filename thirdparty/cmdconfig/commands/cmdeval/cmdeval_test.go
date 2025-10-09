@@ -55,7 +55,7 @@ func TestRunFnCommand_preRunE(t *testing.T) {
 			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -73,7 +73,7 @@ apiVersion: v1
 			output: &bytes.Buffer{},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -91,7 +91,7 @@ apiVersion: v1
 			path:   dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -108,7 +108,7 @@ apiVersion: v1
 			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -126,7 +126,7 @@ apiVersion: v1
 			network: true,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -144,7 +144,7 @@ apiVersion: v1
 			network: true,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -161,7 +161,7 @@ apiVersion: v1
 			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -178,7 +178,7 @@ apiVersion: v1
 			path: dir,
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -200,7 +200,7 @@ apiVersion: v1
 			mount: []string{"type=bind,src=/mount/path,dst=/local/", "type=volume,src=myvol,dst=/local/", "type=tmpfs,dst=/local/"},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -227,7 +227,7 @@ apiVersion: v1
 			},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -268,7 +268,7 @@ apiVersion: v1
 			},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `
@@ -295,7 +295,7 @@ apiVersion: v1
 			},
 			expectedFn: &runtimeutil.FunctionSpec{
 				Container: runtimeutil.ContainerSpec{
-					Image: "gcr.io/kpt-fn/foo:bar",
+					Image: "ghcr.io/kptdev/krm-functions-catalog/foo:bar",
 				},
 			},
 			expectedFnConfig: `

@@ -142,11 +142,11 @@ info:
   description: Base tenant package
 pipeline:
   mutators:
-    - image: set-namespace:v0.1
+    - image: set-namespace:latest
       configMap:
         namespace: tenant-name # ←- will be customized for pkg variant
   validators:
-    - image: gcr.io/kpt-fn/starlark:v0.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: ns-invariant.yaml
 
 ```

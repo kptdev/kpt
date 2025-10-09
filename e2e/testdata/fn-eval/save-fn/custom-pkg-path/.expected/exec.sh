@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval ./sub-pkg -s -t mutator -i set-namespace:v0.1.3 --fn-config=./sub-pkg/fn-config.yaml
+kpt fn eval ./sub-pkg -s -t mutator -i set-namespace:latest --fn-config=./sub-pkg/fn-config.yaml
