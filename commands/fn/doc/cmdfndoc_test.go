@@ -34,7 +34,7 @@ func TestFnDoc(t *testing.T) {
 			image: "ghcr.io/kptdev/krm-functions-catalog/upsert-resource:latest",
 		},
 		{
-			image:     "ghcr.io/kptdev/krm-functions-catalog/upsert-resource:latest",
+			image:     "ghcr.io/kptdev/krm-functions-catalog/upsert-resource:v0.0.1",
 			expectErr: "please ensure the container has an entrypoint and it supports --help flag",
 		},
 		{
