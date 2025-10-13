@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -s -t validator -i set-namespace:latest -- namespace=staging
+kpt fn eval -s -t validator -i set-namespace:v0.2.0 -- namespace=staging

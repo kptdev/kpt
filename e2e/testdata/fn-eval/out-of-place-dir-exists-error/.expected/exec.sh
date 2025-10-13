@@ -17,4 +17,4 @@ set -eo pipefail
 
 rm -rf out; mkdir out
 
-kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o out -- namespace=staging
+kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -o out -- namespace=staging

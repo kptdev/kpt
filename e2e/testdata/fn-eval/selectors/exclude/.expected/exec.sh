@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -i set-namespace:latest --exclude-kind Custom -- namespace=staging
+kpt fn eval -i set-namespace:v0.2.0 --exclude-kind Custom -- namespace=staging

@@ -42,7 +42,7 @@ func NewNodejsFn(loader WasmLoader) (*WasmNodejsFn, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to create temp dir: %w", err)
 	}
-	jsPath := filepath.Join(tempDir, "kpt-fn-wasm-glue-runner.js")
+	jsPath := filepath.Join(tempDir, "krm-fn-wasm-glue-runner.js")
 	if err = os.WriteFile(jsPath, []byte(golangWasmJSCode+glueCode), 0644); err != nil {
 		return nil, fmt.Errorf("unable to write the js glue code file: %w", err)
 	}

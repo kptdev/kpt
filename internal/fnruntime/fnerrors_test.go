@@ -148,7 +148,7 @@ func TestDockerCLIOutputFilter(t *testing.T) {
 		{
 			name: "should filter docker CLI output successfully",
 			input: `Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
-v0.3: Pulling from kpt-fn/starlark
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
 4e9f2cdf4387: Already exists
 aafbf7df3ddf: Pulling fs layer
 aafbf7df3ddf: Verifying Checksum
@@ -163,7 +163,7 @@ Status: Downloaded newer image for ghcr.io/kptdev/krm-functions-catalog/starlark
 		{
 			name: "should filter docker messages and shouldn't truncate trailing lines",
 			input: `Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
-v0.3: Pulling from kpt-fn/starlark
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
 4e9f2cdf4387: Already exists
 aafbf7df3ddf: Pulling fs layer
 aafbf7df3ddf: Verifying Checksum
@@ -184,7 +184,7 @@ lastline
 			name: "should filter interleaved docker messages",
 			input: `firstline
 Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally
-v0.3: Pulling from kpt-fn/starlark
+v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark
 4e9f2cdf4387: Already exists
 aafbf7df3ddf: Pulling fs layer
 aafbf7df3ddf: Verifying Checksum

@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -s -t mutator -i set-namespace:latest -- namespace=newNs
+kpt fn eval -s -t mutator -i set-namespace:v0.2.0 -- namespace=newNs

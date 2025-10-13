@@ -15,4 +15,4 @@
 
 set -eo pipefail
 
-kpt fn eval -i set-namespace:latest --match-labels foo=bar --match-labels foo-1=bar --exclude-annotations foo=bar -- namespace=staging
+kpt fn eval -i set-namespace:v0.2.0 --match-labels foo=bar --match-labels foo-1=bar --exclude-annotations foo=bar -- namespace=staging

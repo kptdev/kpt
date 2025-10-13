@@ -138,7 +138,7 @@ func (r *Runner) runTearDownScript(pkgPath string) error {
 
 func (r *Runner) runFnEval() error {
 	r.t.Logf("Running test against package %s\n", r.pkgName)
-	tmpDir, err := os.MkdirTemp("", "kpt-fn-e2e-*")
+	tmpDir, err := os.MkdirTemp("", "krm-fn-e2e-*")
 	if err != nil {
 		return fmt.Errorf("failed to create temporary dir: %w", err)
 	}

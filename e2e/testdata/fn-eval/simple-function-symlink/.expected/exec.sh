@@ -17,6 +17,6 @@ set -eo pipefail
 
 ln -s ./ new-link
 
-kpt fn eval new-link --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=staging
+kpt fn eval new-link --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -- namespace=staging
 
 rm -rf new-link

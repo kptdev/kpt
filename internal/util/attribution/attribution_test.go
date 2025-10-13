@@ -158,7 +158,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,kpt-fn
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-fn
  `,
 		},
 		{
@@ -169,7 +169,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,kpt-fn
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-fn
  `,
 			group: "pkg",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -188,7 +188,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,kpt-fn,blueprints_controller
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-fn,blueprints_controller
  `,
 			group: "pkg",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1

@@ -17,6 +17,6 @@
 set -eo pipefail
 
 kpt fn source \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest --match-kind Deployment -o stdout -- namespace=staging \
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 --match-kind Deployment -o stdout -- namespace=staging \
 | kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest --match-name custom -- foo=bar \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:latest -o unwrap -- tier=backend
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 -o unwrap -- tier=backend

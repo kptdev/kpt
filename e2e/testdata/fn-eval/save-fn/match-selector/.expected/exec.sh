@@ -16,4 +16,4 @@
 
 set -eo pipefail
 
-kpt fn eval -s -t mutator -i set-namespace:latest --match-kind Deployment -- namespace=staging
+kpt fn eval -s -t mutator -i set-namespace:v0.2.0 --match-kind Deployment -- namespace=staging
