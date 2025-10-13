@@ -17,9 +17,9 @@ set -eo pipefail
 
 KRM_FN_RUNTIMETIME="${KRM_FN_RUNTIMETIME:=docker}"
 
-# Function ghcr.io/kptdev/krm-functions-catalog-demo/foo:v0.1 prints "foo" to stderr and
-# function ghcr.io/kptdev/krm-functions-catalog-demo/bar:v0.1 prints "bar" to stderr.
-# We intentionally tag a wrong image as ghcr.io/kptdev/krm-functions-catalog-demo/foo:v0.1, since we
+# Function ghcr.io/kptdev/krm-functions-catalog/foo:v0.1 prints "foo" to stderr and
+# function ghcr.io/kptdev/krm-functions-catalog/bar:v0.1 prints "bar" to stderr.
+# We intentionally tag a wrong image as ghcr.io/kptdev/krm-functions-catalog/foo:v0.1, since we
 # expect the correct image to be pulled and override the wrong image.
-${KRM_FN_RUNTIMETIME} pull ghcr.io/kptdev/krm-functions-catalog-demo/bar:v0.1
-${KRM_FN_RUNTIMETIME} tag ghcr.io/kptdev/krm-functions-catalog-demo/bar:v0.1 ghcr.io/kptdev/krm-functions-catalog-demo/foo:v0.1
+${KRM_FN_RUNTIMETIME} pull ghcr.io/kptdev/krm-functions-catalog/bar:v0.1
+${KRM_FN_RUNTIMETIME} tag ghcr.io/kptdev/krm-functions-catalog/bar:v0.1 ghcr.io/kptdev/krm-functions-catalog/foo:v0.1

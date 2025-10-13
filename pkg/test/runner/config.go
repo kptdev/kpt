@@ -54,12 +54,18 @@ type TestCaseConfig struct {
 	// ExitCode is the expected exit code from the kpt commands. Default: 0
 	ExitCode int `json:"exitCode,omitempty" yaml:"exitCode,omitempty"`
 
+	// ActualStripLines is a list of lines that should be ignored on the actual function output
+	ActualStripLines []string `json:"actualStripLines,omitempty" yaml:"actualStripLines,omitempty"`
+
 	// StdErr is the expected standard error output and should be checked
 	// when a nonzero exit code is expected. Default: ""
 	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`
 	// StdErrRegEx is the regular expression to match standard error output and should be checked
 	// when a nonzero exit code is expected. Default: ""
 	StdErrRegEx string `json:"stdErrRegEx,omitempty" yaml:"stdErrRegEx,omitempty"`
+
+	// StdErrStripLines is a list of lines that should be ignored on the standard error
+	StdErrStripLines []string `json:"stdErrStripLines,omitempty" yaml:"stdErrStripLines,omitempty"`
 
 	// StdOut is the expected standard output from running the command.
 	// Default: ""

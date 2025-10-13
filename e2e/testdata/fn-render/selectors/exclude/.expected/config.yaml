@@ -12,11 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+actualStripLines:
+  - "    stderr: 'WARNING: The requested image''s platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested'"
+
+stdErrStripLines:
+  - "  Stderr:"
+  - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
+
 stdErr: |
   Package "exclude": 
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" on 2 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" on 2 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
 
   Successfully executed 2 function(s) in 1 package(s).

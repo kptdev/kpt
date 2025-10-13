@@ -21,7 +21,7 @@ results=$(mktemp -d)
 
 kpt fn render -o stdout --results-dir $results \
 | kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest --results-dir $results -- foo=bar \
-| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:latest --results-dir $results -- tier=backend
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 --results-dir $results -- tier=backend
 
 # remove temporary directory
 rm -r $results

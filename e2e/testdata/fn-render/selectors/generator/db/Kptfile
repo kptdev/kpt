@@ -6,12 +6,12 @@ pipeline:
   mutators:
     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: starlark-httpbin.yaml
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
       configMap:
         namespace: db
       selectors:
         - name: httpbin
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
       configMap:
         app: backend
       selectors:

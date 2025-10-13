@@ -4,12 +4,12 @@ metadata:
   name: app-with-generator
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
       configMap:
         namespace: staging
       selectors:
         - name: httpbin
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
       configMap:
         tier: db
       selectors:

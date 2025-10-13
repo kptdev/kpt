@@ -13,4 +13,4 @@
 # limitations under the License.
 
 testType: eval
-image: ghcr.io/kptdev/krm-functions-catalog-demo/drop-comments:v0.1
+image: ghcr.io/kptdev/krm-functions-catalog/drop-comments:v0.1

@@ -4,9 +4,9 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
       configMap:
         namespace: db
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
       configMap:
         app: backend

@@ -425,7 +425,9 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr string, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(cnt int, exitErr error, stdout string, inStderr string, tmpPkgPath, resultsPath string) error {
+	stderr := r.stripLines(inStderr, r.testCase.Config.StdErrStripLines)
+
 	expected, err := newExpected(tmpPkgPath)
 	if err != nil {
 		return err
@@ -455,6 +457,9 @@ func (r *Runner) compareResult(cnt int, exitErr error, stdout string, stderr str
 		if err != nil {
 			return fmt.Errorf("failed to read actual results: %w", err)
 		}
+
+		actual = r.stripLines(actual, r.testCase.Config.ActualStripLines)
+
 		diffOfResult, err := diffStrings(actual, expected.Results)
 		if err != nil {
 			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
@@ -614,4 +619,14 @@ func (r *Runner) updateExpected(tmpPkgPath, resultsPath, sourceOfTruthPath strin
 	}
 
 	return nil
+}
+
+func (r *Runner) stripLines(string2Strip string, linesToStrip []string) string {
+	strippedString := string2Strip
+
+	for _, line2Strip := range linesToStrip {
+		strippedString = strings.ReplaceAll(strippedString, line2Strip+"\n", "")
+	}
+
+	return strippedString
 }

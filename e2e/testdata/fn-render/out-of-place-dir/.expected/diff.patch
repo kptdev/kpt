@@ -11,7 +11,7 @@ index 0000000..bc65066
 +  namespace: staging
 +pipeline:
 +  mutators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +      configMap:
 +        namespace: staging
 diff --git a/out/resources.yaml b/out/resources.yaml
