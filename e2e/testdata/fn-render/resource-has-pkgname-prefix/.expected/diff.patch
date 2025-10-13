@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 0bcb810..dcafc38 100644
+index 21d9773..66b7fc9 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -12,7 +12,7 @@ index 0bcb810..dcafc38 100644
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 diff --git a/mysql/Kptfile b/mysql/Kptfile
-index 78ee518..cda1359 100644
+index 3d51a77..965bc63 100644
 --- a/mysql/Kptfile
 +++ b/mysql/Kptfile
 @@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
@@ -26,7 +26,7 @@ index 78ee518..cda1359 100644
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index 519cfd3..4e39a5c 100644
+index 519cfd3..df71680 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
 @@ -18,8 +18,10 @@ metadata:
@@ -79,7 +79,7 @@ index 519cfd3..4e39a5c 100644
        containers:
          - name: mysql
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index fed2c74..c8a9784 100644
+index fed2c74..24fab45 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
 @@ -16,8 +16,9 @@ metadata:
