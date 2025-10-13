@@ -66,7 +66,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg'
+    cnrm.cloud.google.com/blueprint: 'krm-pkg'
  `,
 		},
 		{
@@ -93,7 +93,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg'
+    cnrm.cloud.google.com/blueprint: 'krm-pkg'
  `,
 			group: "fn",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -101,7 +101,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg-fn'
+    cnrm.cloud.google.com/blueprint: 'krm-pkg-fn'
  `,
 		},
 		{
@@ -112,7 +112,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg-fn'
+    cnrm.cloud.google.com/blueprint: 'krm-fn'
  `,
 			group: "live",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -120,7 +120,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg-fn-live'
+    cnrm.cloud.google.com/blueprint: 'krm-fn-live'
  `,
 		},
 		{
@@ -131,7 +131,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg-fn-live'
+    cnrm.cloud.google.com/blueprint: 'krm-fn-live'
  `,
 			group: "fn",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -139,11 +139,11 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: 'kpt-pkg-fn-live'
+    cnrm.cloud.google.com/blueprint: 'krm-fn-live'
  `,
 		},
 		{
-			name: "add kpt prefix to existing annotation",
+			name: "add krm prefix to existing annotation",
 			input: `
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeSubnetwork
@@ -162,14 +162,14 @@ metadata:
  `,
 		},
 		{
-			name: "add group for existing annotation and existing kpt suffix",
+			name: "add group for existing annotation and existing krm suffix",
 			input: `
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-fn
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-pkg-fn
  `,
 			group: "pkg",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -177,18 +177,18 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,kpt-pkg-fn
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-pkg-fn
  `,
 		},
 		{
-			name: "add group for existing annotation and existing kpt substring",
+			name: "add group for existing annotation and existing krm substring",
 			input: `
 apiVersion: compute.cnrm.cloud.google.com/v1beta1
 kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-fn,blueprints_controller
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-pkg-fn,blueprints_controller
  `,
 			group: "pkg",
 			expected: `apiVersion: compute.cnrm.cloud.google.com/v1beta1
@@ -196,7 +196,7 @@ kind: ComputeSubnetwork
 metadata:
   name: network-name-subnetwork
   annotations:
-    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,kpt-pkg-fn,blueprints_controller
+    cnrm.cloud.google.com/blueprint: cnrm/landing-zone:networking/v0.4.0,krm-pkg-fn,blueprints_controller
  `,
 		},
 	}
@@ -215,11 +215,11 @@ metadata:
 			}
 
 			if test.disable {
-				err = os.Setenv("KPT_DISABLE_ATTRIBUTION", "true")
+				err = os.Setenv("KRM_DISABLE_ATTRIBUTION", "true")
 				if !assert.NoError(t, err) {
 					t.FailNow()
 				}
-				defer os.Setenv("KPT_DISABLE_ATTRIBUTION", "")
+				defer os.Setenv("KRM_DISABLE_ATTRIBUTION", "")
 			}
 
 			a := Attributor{PackagePaths: []string{baseDir}, CmdGroup: test.group}

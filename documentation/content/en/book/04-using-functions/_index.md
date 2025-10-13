@@ -45,13 +45,13 @@ pipeline:
       configMap:
         app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 This declares two functions:
 
 - `set-label` is a mutator function which adds a set of labels to resources.
-- `kubeval` is a validator function which validates the resources against their
+- `kubeconform` is a validator function which validates the resources against their
   OpenAPI schema.
 
 > Refer to the [Functions Catalog](https://catalog.kpt.dev/ ":target=_self")
@@ -88,7 +88,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 ```
@@ -288,7 +288,7 @@ pipeline:
       configMap:
          app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
@@ -306,8 +306,8 @@ Package "wordpress":
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
 
 Successfully executed 4 function(s) in 2 package(s).
 ```
@@ -342,7 +342,7 @@ pipeline:
         - kind: Service
           name: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 Now, let's render the package:
@@ -360,8 +360,8 @@ Package "wordpress":
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" on 2 resource(s)
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
 
 Successfully executed 5 function(s) in 2 package(s).
 ```
@@ -387,7 +387,7 @@ pipeline:
         - labels:
             foo: bar
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 The following are the matchers you can specify in a selector:
@@ -419,7 +419,7 @@ pipeline:
         - kind: Deployment
           name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 This is distinct from the following, which excludes a resource if it has either kind "Deployment" or name "nginx":
@@ -438,7 +438,7 @@ pipeline:
         - kind: Deployment
         - name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 The following are the matchers you can specify in an exclusion:
@@ -603,10 +603,10 @@ host. In those situations, you can use `eval` as described below.
 By default, functions cannot access the network. You can enable network access
 using the `--network` flag.
 
-For example, `kubeval` function can download a JSON schema file:
+For example, `kubeconform` function can download a JSON schema file:
 
 ```shell
-$ kpt fn eval wordpress -i kubeval:latest --network -- schema_location="https://kubernetesjsonschema.dev"
+$ kpt fn eval wordpress -i kubeconform:latest --network -- schema_location="https://kubernetesjsonschema.dev"
 ```
 
 #### Mounting Directories
@@ -615,10 +615,10 @@ By default, functions cannot access the host file system. You can use the
 `--mount` flag to mount host volumes. kpt accepts the same options to `--mount`
 specified on the [Docker Volumes](https://docs.docker.com/storage/volumes/) page.
 
-For example, `kubeval` function can consume a JSON schema file:
+For example, `kubeconform` function can consume a JSON schema file:
 
 ```shell
-$ kpt fn eval -i kubeval:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
+$ kpt fn eval -i kubeconform:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
 Note that the `--as-current-user` flag may be required to run the function as
@@ -694,7 +694,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 For complete results, see /tmp/results.yaml
@@ -714,11 +714,11 @@ items:
     exitCode: 0
   - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+  - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
     exitCode: 0
 ```
 
-Let's see a more interesting result where the `kubeval` function catches a validation issue.
+Let's see a more interesting result where the `kubeconform` function catches a validation issue.
 For example, change the value of `port` field in `service.yaml` from `80` to `"80"` and
 rerun:
 
@@ -731,7 +731,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[FAIL] "ghcr.io/kptdev/krm-functions-catalog/kubeval:latest"
+[FAIL] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
   Results:
     [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/wordpress" in file "service.yaml" in field "spec.ports.0.port"
   Exit code: 1
@@ -753,7 +753,7 @@ items:
     exitCode: 0
   - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+  - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
     exitCode: 1
     results:
       - message: "Invalid type. Expected: integer, given: string"

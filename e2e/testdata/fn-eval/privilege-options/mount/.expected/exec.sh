@@ -20,7 +20,7 @@ mkdir -p "$SCHEMA_DIR"
 curl -sSL 'https://kubernetesjsonschema.dev/master-standalone/configmap-v1.json' -o $SCHEMA_DIR/configmap-v1.json
 
 kpt fn eval \
---image ghcr.io/kptdev/krm-functions-catalog/kubeval:latest \
+--image ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest \
 --as-current-user \
 --mount type=bind,src=$(pwd)/schema,dst=/schema-dir \
 -- \

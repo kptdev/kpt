@@ -219,7 +219,7 @@ languages, and runtimes. For example, the function container image can
 encapsulate:
 
 - A binary built using kpt's official Go or Typescript SDK
-- Wrap an existing KRM tool such as `kubeval`
+- Wrap an existing KRM tool such as `kubeconform`
 - Invoke a bash script performing low-level operations
 - The interpreter for "executable configuration" such as `Starlark` or `Rego`
 

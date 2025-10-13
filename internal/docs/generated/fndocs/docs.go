@@ -189,8 +189,8 @@ var EvalExamples = `
   # and foo environment variable
   $ kpt fn eval DIR -i gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 
-  # execute kubeval function by mounting schema from a local directory on wordpress package
-  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/kubeval:latest \
+  # execute kubeconform function by mounting schema from a local directory on wordpress package
+  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest \
     --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
     --as-current-user wordpress -- additional_schema_locations=/schema-dir
 

@@ -268,7 +268,7 @@ func filterDockerCLIOutput(in io.Reader) string {
 // Example docker output:
 //
 //	"Unable to find image 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest' locally"
-//	"v0.3: Pulling from kpt-fn/starlark"
+//	"v0.3: Pulling from ghcr.io/kptdev/krm-functions-catalog/starlark"
 //	"4e9f2cdf4387: Already exists"
 //	"aafbf7df3ddf: Pulling fs layer"
 //	"aafbf7df3ddf: Verifying Checksum"

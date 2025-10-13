@@ -128,13 +128,13 @@ $ git diff
 #### Declaratively Defining Edits
 
 For operations that need to be performed repeatedly, there is a _declarative_ way to define a pipeline of functions as
-part of the package (in the `Kptfile`). In this `nginx` package, the author has already declared a function (`kubeval`)
+part of the package (in the `Kptfile`). In this `nginx` package, the author has already declared a function (`kubeconform`)
 that validates the resources using their OpenAPI schema.
 
 ```yaml
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/kubeval:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
 ```
 
 You might want to label all resources in the package. To achieve that, you can declare `set-labels` function in the
