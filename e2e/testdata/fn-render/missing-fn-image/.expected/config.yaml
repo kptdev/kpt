@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: "Failed to fetch"
+stdErr: "docker: Error response from daemon: Head \\\"https://ghcr.io/v2/kptdev/krm-functions-catalog/dne/manifests/latest\\\": denied"

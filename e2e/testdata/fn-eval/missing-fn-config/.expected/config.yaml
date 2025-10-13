@@ -12,16 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-stdErrStripLines:
-  - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
-
-actualStripLines:
-  - "      WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested"
-
 testType: eval
-
 exitCode: 1
-
 image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-
 stdErr: "failed to configure function: input namespace cannot be empty"

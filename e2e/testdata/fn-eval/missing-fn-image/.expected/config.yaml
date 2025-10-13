@@ -17,4 +17,4 @@ exitCode: 1
 image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
 args:
   namespace: staging
-stdErr: "Failed to fetch"
+stdErr: "docker: Error response from daemon: Head \\\"https://ghcr.io/v2/kptdev/krm-functions-catalog/dne/manifests/latest\\\": denied"
