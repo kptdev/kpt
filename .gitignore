@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Managed by documentation/Makefile
+documentation/content/en/function-catalog
+documentation/layouts/shortcodes/listexamples.html
+documentation/layouts/shortcodes/listfunctions.html
+documentation/layouts/shortcodes/listversions.html
+
 go.work
 go.work.sum
 .DS_Store
