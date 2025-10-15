@@ -176,5 +176,5 @@ enable = false
 
 [[menu.main]]
 name = "Functions Catalog"
-url = "https://catalog.kpt.dev/"
+url = "https://catalog.kpt.dev/function-catalog/"
 weight = 40
