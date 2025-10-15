@@ -34,7 +34,6 @@ serve:
 
 
 production-build: fetch-external-docs
-	# Initialize submodules
 	git submodule update --init --recursive
 	hugo version
 	hugo \
@@ -43,7 +42,6 @@ production-build: fetch-external-docs
 
 
 preview-build: fetch-external-docs
-	# Initialize submodules
 	git submodule update --init --recursive
 	hugo \
 		--baseURL $(DEPLOY_PRIME_URL) \
