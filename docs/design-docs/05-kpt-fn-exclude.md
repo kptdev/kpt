@@ -31,7 +31,7 @@ kpt fn render and kpt fn eval currently support selector-based mechanisms to tar
 Imperatively:
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --match-kind Deployment
+$ kpt fn eval [PKG_DIR] -i set-labels:latest --match-kind Deployment
 ```
 
 Declaratively:
@@ -40,7 +40,7 @@ Declaratively:
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     selectors:
     - kind: Deployment
 ```
@@ -72,14 +72,14 @@ A few reasons in favor of this design:
 #### Example: Exclude all resources of kind "Deployment"
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --exclude-kind Deployment
+$ kpt fn eval [PKG_DIR] -i set-labels:latest --exclude-kind Deployment
 ```
 
 ```yaml
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     exclude:
     - kind: Deployment
 ```
@@ -87,13 +87,13 @@ pipeline:
 #### Example: Exclude all resources that have both group "apps" and kind "Deployment"
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --exclude-kind Deployment --exclude-group apps
+$ kpt fn eval [PKG_DIR] -i set-labels:latest --exclude-kind Deployment --exclude-group apps
 ```
 ```yaml
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     exclude:
     - kind: Deployment
       group: apps
@@ -105,7 +105,7 @@ pipeline:
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     exclude:
     - kind: Deployment
     - group: apps
@@ -116,13 +116,13 @@ With the current proposal, this is not possible imperatively with kpt fn eval.
 #### Example: Select all resources that have group "apps", but do NOT have kind "Deployment"
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --match-group apps --exclude-kind Deployment
+$ kpt fn eval [PKG_DIR] -i set-labels:latest --match-group apps --exclude-kind Deployment
 ```
 ```yaml
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     selectors:
       group: apps
     exclude:
@@ -134,14 +134,14 @@ pipeline:
 We will support selection and exclusion with annotation and label selectors.
 
 ```shell
-$ kpt fn eval [PKG_DIR] -i set-labels:v0.1.5 --match-annotation foo=bar --exclude-annotation config.kubernetes.io/local-config=true
+$ kpt fn eval [PKG_DIR] -i set-labels:latest --match-annotation foo=bar --exclude-annotation config.kubernetes.io/local-config=true
 ```
 
 ```yaml
 # pipeline of Kptfile
 pipeline:
   mutators:
-  - image: set-labels:v0.1.5
+  - image: set-labels:latest
     selectors:
     - annotations:
         foo: bar
@@ -198,7 +198,7 @@ metadata:
   name: example
 pipeline:
   mutators:
-  - image: gcr.io/kpt-fn/set-labels:unstable
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     configPath: functionconfig.yaml
     selectors:
     - apiVersion: "batch/v1"

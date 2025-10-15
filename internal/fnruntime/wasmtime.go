@@ -123,7 +123,7 @@ func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
 	}
 
 	// Set the args and the environment variables.
-	argc, argv, err := wasmexec.SetArgs(f.Memory, []string{"kpt-fn-wasm-wasmtime"}, []string{})
+	argc, argv, err := wasmexec.SetArgs(f.Memory, []string{"krm-fn-wasm-wasmtime"}, []string{})
 	if err != nil {
 		return err
 	}

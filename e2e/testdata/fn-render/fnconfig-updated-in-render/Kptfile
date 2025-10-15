@@ -10,9 +10,9 @@ info:
   description: sample description
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
       configPath: package-context.yaml
-    - image: gcr.io/kpt-fn/apply-replacements:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-replacements:latest
       configPath: update-labels.yaml
-    - image: gcr.io/kpt-fn/set-labels:v0.1.5
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
       configPath: label-input.yaml

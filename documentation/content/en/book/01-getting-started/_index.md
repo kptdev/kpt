@@ -110,13 +110,13 @@ $ vim deployment.yaml
 The [`kpt fn`](../../reference/cli/fn/) set of commands enable you to execute programs called _kpt functions_. These
 programs are packaged as containers and take in YAML files, mutate or validate them, and then output YAML.
 
-For instance, you can use a function (`gcr.io/kpt-fn/search-replace:v0.1`) to search and replace all the occurrences of
+For instance, you can use a function (`ghcr.io/kptdev/krm-functions-catalog/search-replace:latest`) to search and replace all the occurrences of
 the `app` key in the `spec` section of the YAML document (`spec.**.app`) and set the value to `my-nginx`. 
 
 You can use the `kpt fn eval` command to run this mutation on your local files a single time:
 
 ```shell
-$ kpt fn eval --image gcr.io/kpt-fn/search-replace:v0.1 -- by-path='spec.**.app' put-value=my-nginx
+$ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:latest -- by-path='spec.**.app' put-value=my-nginx
 ```
 
 To see what changes were made to the local package:
@@ -128,13 +128,13 @@ $ git diff
 #### Declaratively Defining Edits
 
 For operations that need to be performed repeatedly, there is a _declarative_ way to define a pipeline of functions as
-part of the package (in the `Kptfile`). In this `nginx` package, the author has already declared a function (`kubeval`)
+part of the package (in the `Kptfile`). In this `nginx` package, the author has already declared a function (`kubeconform`)
 that validates the resources using their OpenAPI schema.
 
 ```yaml
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 You might want to label all resources in the package. To achieve that, you can declare `set-labels` function in the
@@ -143,7 +143,7 @@ You might want to label all resources in the package. To achieve that, you can d
 ```shell
 cat >> Kptfile <<EOF
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         env: dev
 EOF

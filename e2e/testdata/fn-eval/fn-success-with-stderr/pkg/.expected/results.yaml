@@ -4,6 +4,6 @@ metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: gcr.io/kpt-fn/starlark:v0.2
+  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
     stderr: function succeeded, reporting it on stderr
     exitCode: 0

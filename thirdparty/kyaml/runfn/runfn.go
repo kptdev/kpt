@@ -362,7 +362,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
 		// it should fallback to run it as container fn.
 		if r.RunnerOptions.AllowWasm {
-			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), resolvedImage))
+			wFn, err := fnruntime.NewWasmFn(fnruntime.NewOciLoader(filepath.Join(os.TempDir(), "krm-fn-wasm"), resolvedImage))
 			if err != nil {
 				return nil, err
 			}

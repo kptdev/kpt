@@ -7,9 +7,11 @@ metadata:
 pipeline:
   mutators:
     # The following 2 images are built from https://github.com/kptdev/krm-functions-catalog/pull/898.
-    - image: gcr.io/kpt-fn-demo/set-namespace:v0.5.0 # TODO: switch to use the kpt-fn GCR when it is built there.
+    - image: gcr.io/kpt-fn-demo/set-namespace:v0.5.0
+      # ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.0
       configMap:
         namespace: staging
-    - image: gcr.io/kpt-fn-demo/set-labels:v0.2.0 # TODO: switch to use the kpt-fn GCR when it is built there.
+    - image: gcr.io/kpt-fn-demo/set-labels:v0.2.0
+      # ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.0
       configMap:
         tier: backend

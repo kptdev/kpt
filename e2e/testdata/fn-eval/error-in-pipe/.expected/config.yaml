@@ -13,4 +13,4 @@
 # limitations under the License.
 
 exitCode: 1
-stdErr: Failed to fetch
+StdErrRegEx: "(docker: Error response from daemon: Head.*denied|Error.*initializing source docker)"

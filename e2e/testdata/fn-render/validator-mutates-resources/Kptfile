@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
       configMap:
         tier: backend

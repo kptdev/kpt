@@ -13,4 +13,4 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-functions/no-op
+image: ghcr.io/kptdev/krm-functions-catalog/no-op

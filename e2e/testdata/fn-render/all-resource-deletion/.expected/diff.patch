@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index fd49fcf..f9ae49b 100644
+index 3c93e9e..6fa7b45 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
@@ -11,7 +11,7 @@ index fd49fcf..f9ae49b 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/starlark:v0.2.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/delete-all.yaml b/delete-all.yaml
 index 3c86d8b..6754b0a 100644
 --- a/delete-all.yaml

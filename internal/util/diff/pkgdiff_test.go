@@ -66,11 +66,11 @@ func TestPkgDiff(t *testing.T) {
 			name: "different pipelines in Kptfile is a diff",
 			pkg1: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/foo:latest"))).
+					WithPipeline(pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/foo:latest"))).
 				WithResource(pkgbuilder.DeploymentResource),
 			pkg2: pkgbuilder.NewRootPkg().
 				WithKptfile(pkgbuilder.NewKptfile().
-					WithPipeline(pkgbuilder.NewFunction("gcr.io/kpt-dev/buzz:latest"))).
+					WithPipeline(pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/buzz:latest"))).
 				WithResource(pkgbuilder.DeploymentResource),
 			diff: toStringSet("Kptfile"),
 		},

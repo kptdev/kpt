@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: set-labels:v0.1
+    - image: set-labels:v0.1.5
       configMap:
         tier: backend

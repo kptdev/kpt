@@ -61,7 +61,7 @@ info:
   description: A Google Cloud Storage bucket
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.2
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         name: todo-bucket-name
         namespace: todo-namespace
@@ -128,13 +128,13 @@ info:
   description: A Google Cloud Storage bucket
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-namespace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: example-ns
-    - image: gcr.io/kpt-fn/ensure-name-substring:v0.1.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest
       configMap:
         prepend: project111-
-    - image: gcr.io/kpt-fn/set-annotations:v0.1.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
       configMap:
         cnrm.cloud.google.com/project-id: project111
 ```
@@ -191,7 +191,7 @@ metadata:
   name: dont-change-much
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/apply-setters:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:latest
       configMap:
         tag: 1.21
 ```
@@ -265,7 +265,7 @@ metadata:
   name: gatekeeper-disallow-root-user
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/gatekeeper:v0.2
+    - image: ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest
 ```
 
 ## Generation

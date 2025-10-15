@@ -15,11 +15,11 @@
 
 set -eo pipefail
 
-# clear environment variable KPT_FN_RUNTIME if it matches the default
-if [ "${KPT_FN_RUNTIME}" = "docker" ]; then
-   unset KPT_FN_RUNTIME
+# clear environment variable KRM_FN_RUNTIMETIME if it matches the default
+if [ "${KRM_FN_RUNTIMETIME}" = "docker" ]; then
+   unset KRM_FN_RUNTIMETIME
 fi
 
-echo "KPT_FN_RUNTIME is ${KPT_FN_RUNTIME}"
-# run render with KPT_FN_RUNTIME unset.
+echo "KRM_FN_RUNTIMETIME is ${KRM_FN_RUNTIMETIME}"
+# run render with KRM_FN_RUNTIMETIME unset.
 kpt fn render

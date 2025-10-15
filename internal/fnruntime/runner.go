@@ -140,7 +140,7 @@ func NewRunner(
 			case f.Image != "":
 				// If allowWasm is true, we will use wasm runtime for image field.
 				if opts.AllowWasm {
-					wFn, err := NewWasmFn(NewOciLoader(filepath.Join(os.TempDir(), "kpt-fn-wasm"), f.Image))
+					wFn, err := NewWasmFn(NewOciLoader(filepath.Join(os.TempDir(), "krm-fn-wasm"), f.Image))
 					if err != nil {
 						return nil, err
 					}

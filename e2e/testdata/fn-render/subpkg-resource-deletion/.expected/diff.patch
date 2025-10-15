@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 6d53889..b36c49f 100644
+index 364e274..75cfedb 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
@@ -11,9 +11,9 @@ index 6d53889..b36c49f 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/starlark:v0.2.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/db/Kptfile b/db/Kptfile
-index 6dc9479..0aedfe5 100644
+index 6c7674c..11fe9cc 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
 @@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
@@ -26,7 +26,7 @@ index 6dc9479..0aedfe5 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: gcr.io/kpt-fn/starlark:v0.2.1
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 diff --git a/db/resources.yaml b/db/resources.yaml
 index f983597..9dabb18 100644
 --- a/db/resources.yaml

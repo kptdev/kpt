@@ -4,8 +4,8 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/starlark:v0.2.1
-    stderr: '[error] : fail: could not find httpbin deployment'
+  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+    stderr: 'failed to evaluate function: error: function failure'
     exitCode: 1
     results:
       - message: 'fail: could not find httpbin deployment'

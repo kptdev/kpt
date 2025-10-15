@@ -31,10 +31,10 @@ func TestFnDoc(t *testing.T) {
 	}
 	testcases := []testcase{
 		{
-			image: "gcr.io/kpt-fn/set-namespace:v0.1.1",
+			image: "ghcr.io/kptdev/krm-functions-catalog/upsert-resource:latest",
 		},
 		{
-			image:     "gcr.io/kpt-fn/set-namespace:v0.1.0",
+			image:     "ghcr.io/kptdev/krm-functions-catalog/upsert-resource:v0.0.1",
 			expectErr: "please ensure the container has an entrypoint and it supports --help flag",
 		},
 		{

@@ -14,5 +14,5 @@
 
 stdErr: |-
   [WARN] resolved symlink "new-link" to ".", please note that the symlinks within the package are ignored
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"

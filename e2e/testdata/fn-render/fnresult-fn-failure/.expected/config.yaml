@@ -15,4 +15,4 @@
 # One of the functions in the pipeline fails resulting in
 # non-zero exit code and no changes in the resources.
 exitCode: 1
-stdErr: '[error] apps/v1/Deployment/nginx-deployment spec.replicas: Invalid type. Expected: [integer,null], given: string'
+stdErr: '[error] apps/v1/Deployment/nginx-deployment spec.replicas: got string, want null or integer'

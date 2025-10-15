@@ -1,5 +1,5 @@
 diff --git a/sub-pkg/Kptfile b/sub-pkg/Kptfile
-index d9e2f05..93c547b 100644
+index d9e2f05..82455d5 100644
 --- a/sub-pkg/Kptfile
 +++ b/sub-pkg/Kptfile
 @@ -2,3 +2,8 @@ apiVersion: kpt.dev/v1
@@ -9,7 +9,7 @@ index d9e2f05..93c547b 100644
 +  namespace: staging
 +pipeline:
 +  mutators:
-+    - image: gcr.io/kpt-fn/set-namespace:v0.1.3
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +      configPath: fn-config.yaml
 diff --git a/sub-pkg/fn-config.yaml b/sub-pkg/fn-config.yaml
 index 21135f9..1000dd9 100644

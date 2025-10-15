@@ -4,7 +4,7 @@ metadata:
   name: fnresults
 exitCode: 1
 items:
-  - image: gcr.io/kpt-fn/gatekeeper:v0.1.3
+  - image: ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest
     exitCode: 0
     results:
       - message: |-
@@ -31,30 +31,21 @@ items:
         file:
           path: resources.yaml
           index: 4
-  - image: gcr.io/kpt-fn/kubeval:v0.1.1
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
+    stderr: 'failed to evaluate function: error: function failure'
     exitCode: 1
     results:
-      - message: selector is required
+      - message: missing properties 'selector', 'template'
         severity: error
         resourceRef:
           apiVersion: apps/v1
           kind: Deployment
           name: nginx-deployment
         field:
-          path: selector
+          path: spec
         file:
           path: resources.yaml
-      - message: template is required
-        severity: error
-        resourceRef:
-          apiVersion: apps/v1
-          kind: Deployment
-          name: nginx-deployment
-        field:
-          path: template
-        file:
-          path: resources.yaml
-      - message: 'Invalid type. Expected: [integer,null], given: string'
+      - message: got string, want null or integer
         severity: error
         resourceRef:
           apiVersion: apps/v1

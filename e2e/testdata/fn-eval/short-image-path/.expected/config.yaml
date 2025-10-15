@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+actualStripLines:
+  - "    stderr: 'WARNING: The requested image''s platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested'"
+
 testType: eval
-image: set-namespace:v0.1.3
+
+image: set-namespace:v0.2.0
+
 args:
   namespace: staging
+
 stdErr: |
-  [RUNNING] "gcr.io/kpt-fn/set-namespace:v0.1.3"
-  [PASS] "gcr.io/kpt-fn/set-namespace:v0.1.3" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s

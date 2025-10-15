@@ -18,18 +18,18 @@ Otherwise, it will exit with non-zero exit code and print the error message to S
 Flags:
 
   --image, i: (required flag)
-    Container image of the function e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
-    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
-    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
+    Container image of the function e.g. ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + `.
+    For convenience, if full image path is not specified, ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + ` you can pass ` + "`" + `set-namespace:latest` + "`" + `.
 
 Environment Variables:
 
-  KPT_FN_RUNTIME:
+  KRM_FN_RUNTIMETIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var DocExamples = `
-  # display the documentation for image set-namespace:v0.1.1
-  kpt fn doc -i set-namespace:v0.1.1
+  # display the documentation for image set-namespace:latest.1
+  kpt fn doc -i set-namespace:latest.1
 `
 
 var EvalShort = `Execute function on resources`
@@ -80,9 +80,9 @@ Flags:
     Path to the file containing ` + "`" + `functionConfig` + "`" + ` for the function.
   
   --image, i:
-    Container image of the function to execute e.g. ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + `.
-    For convenience, if full image path is not specified, ` + "`" + `gcr.io/kpt-fn/` + "`" + ` is added as default prefix.
-    e.g. instead of passing ` + "`" + `gcr.io/kpt-fn/set-namespace:v0.1` + "`" + ` you can pass ` + "`" + `set-namespace:v0.1` + "`" + `.
+    Container image of the function to execute e.g. ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + `.
+    For convenience, if full image path is not specified, ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/` + "`" + ` is added as default prefix.
+    e.g. instead of passing ` + "`" + `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest` + "`" + ` you can pass ` + "`" + `set-namespace:latest` + "`" + `.
     ` + "`" + `eval` + "`" + ` executes only one function, so do not use ` + "`" + `--exec` + "`" + ` flag with this flag.
   
   --image-pull-policy:
@@ -148,7 +148,7 @@ Flags:
 
 Environment Variables:
 
-  KPT_FN_RUNTIME:
+  KRM_FN_RUNTIMETIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var EvalExamples = `
@@ -189,40 +189,40 @@ var EvalExamples = `
   # and foo environment variable
   $ kpt fn eval DIR -i gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 
-  # execute kubeval function by mounting schema from a local directory on wordpress package
-  $ kpt fn eval -i gcr.io/kpt-fn/kubeval:v0.1 \
+  # execute kubeconform function by mounting schema from a local directory on wordpress package
+  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest \
     --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir \
     --as-current-user wordpress -- additional_schema_locations=/schema-dir
 
   # chaining functions using the unix pipe to set namespace and set labels on
   # wordpress package
   $ kpt fn source wordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-namespace:v0.1 -- namespace=mywordpress \
-    | kpt fn eval - -i gcr.io/kpt-fn/set-labels:v0.1 -- label_name=color label_value=orange \
+    | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=mywordpress \
+    | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-labels:latest -- label_name=color label_value=orange \
     | kpt fn sink wordpress
 
   # execute container 'set-namespace' on the resources in current directory and write
   # the output resources to another directory
-  $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o path/to/dir -- namespace=mywordpress
+  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o path/to/dir -- namespace=mywordpress
 
   # execute container 'set-namespace' on the resources in current directory and write
   # the output resources to stdout which are piped to 'kubectl apply'
-  $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o unwrap -- namespace=mywordpress \
+  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o unwrap -- namespace=mywordpress \
   | kubectl apply -f -
 
   # execute container 'set-namespace' on the resources in current directory and write
   # the wrapped output resources to stdout which are passed to 'set-annotations' function
   # and the output resources after setting namespace and annotation is written to another directory
-  $ kpt fn eval -i gcr.io/kpt-fn/set-namespace:v0.1 -o stdout -- namespace=staging \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir -- foo=bar
+  $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -o stdout -- namespace=staging \
+  | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -o path/to/dir -- foo=bar
 
   # execute container 'set-namespace' on the resources with 'name' foo and 'kind' Deployment
   # in current directory
-  kpt fn eval -i set-namespace:v0.1 --by-kind Deployment --by-name foo -- namespace=staging
+  kpt fn eval -i set-namespace:latest --by-kind Deployment --by-name foo -- namespace=staging
 
   # execute container my-fn with podman on the resources in DIR directory and
   # write output back to DIR
-  $ KPT_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
+  $ KRM_FN_RUNTIMETIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 `
 
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
@@ -299,7 +299,7 @@ Flags:
 
 Environment Variables:
 
-  KPT_FN_RUNTIME:
+  KRM_FN_RUNTIMETIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var RenderExamples = `
@@ -317,16 +317,16 @@ var RenderExamples = `
 
   # Render resources in current directory and write unwrapped resources to stdout
   # which can be piped to kubectl apply
-  $ kpt fn render -o unwrap | kpt fn eval -i gcr.io/kpt-fn/remove-local-config-resources:v0.1.0 -o unwrap - | kubectl apply -f -
+  $ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/remove-local-config-resources:latest -o unwrap - | kubectl apply -f -
 
   # Render resources in current directory, write the wrapped resources
   # to stdout which are piped to 'set-annotations' function,
   # the transformed resources are written to another directory
   $ kpt fn render -o stdout \
-  | kpt fn eval - -i gcr.io/kpt-fn/set-annotations:v0.1.3 -o path/to/dir  -- foo=bar
+  | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -o path/to/dir  -- foo=bar
 
   # Render my-package-dir with podman as runtime for functions
-  $ KPT_FN_RUNTIME=podman kpt fn render my-package-dir
+  $ KRM_FN_RUNTIMETIME=podman kpt fn render my-package-dir
 
   # Render my-package-dir with network access enabled for functions
   $ kpt fn render --allow-network

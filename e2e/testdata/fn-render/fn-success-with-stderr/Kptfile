@@ -4,5 +4,5 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/starlark:v0.2
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
       configPath: starlark.yaml

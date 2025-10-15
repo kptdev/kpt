@@ -14,7 +14,7 @@
 
 testType: eval
 exitCode: 1
-image: gcr.io/kpt-fn/dne # non-existing image
+image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
 args:
   namespace: staging
-stdErr: "Failed to fetch"
+StdErrRegEx: "(docker: Error response from daemon: Head.*denied|Error: initializing source docker:)"

@@ -4,6 +4,6 @@ metadata:
   name: app
 pipeline:
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.1.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
       configMap:
         strict: "true"

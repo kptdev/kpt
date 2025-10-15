@@ -25,10 +25,10 @@ import (
 
 const (
 	CNRMMetricsAnnotation            = "cnrm.cloud.google.com/blueprint"
-	DisableKptAttributionEnvVariable = "KPT_DISABLE_ATTRIBUTION"
+	DisableKrmAttributionEnvVariable = "KRM_DISABLE_ATTRIBUTION"
 )
 
-// Attributor is used to attribute the kpt action on resources
+// Attributor is used to attribute the krm action on resources
 type Attributor struct {
 	// PackagePaths is the package paths to add the attribution annotation
 	PackagePaths []string
@@ -36,14 +36,14 @@ type Attributor struct {
 	// Resources to add the attribution annotation
 	Resources []*kyaml.RNode
 
-	// CmdGroup is the command groups in kpt, e.g., pkg, fn, live
+	// CmdGroup is the command groups in krm, e.g., pkg, fn, live
 	CmdGroup string
 }
 
 // Process invokes Attribution kyaml filter on the resources in input packages paths
 func (a *Attributor) Process() {
-	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
-	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
+	// users can opt-out by setting the "KRM_DISABLE_ATTRIBUTION" environment variable
+	if os.Getenv(DisableKrmAttributionEnvVariable) != "" {
 		return
 	}
 
@@ -72,11 +72,11 @@ func (a *Attributor) Process() {
 
 // Filter implements kyaml.Filter
 // this filter adds "cnrm.cloud.google.com/blueprint" annotation to the resource
-// if the annotation is already present, it appends kpt-<cmdGroup> suffix
+// if the annotation is already present, it appends krm-<cmdGroup> suffix
 // it uses "default" namespace
 func (a *Attributor) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
-	// users can opt-out by setting the "KPT_DISABLE_ATTRIBUTION" environment variable
-	if os.Getenv(DisableKptAttributionEnvVariable) != "" {
+	// users can opt-out by setting the "KRM_DISABLE_ATTRIBUTION" environment variable
+	if os.Getenv(DisableKrmAttributionEnvVariable) != "" {
 		return object, nil
 	}
 
@@ -101,33 +101,33 @@ func (a *Attributor) Filter(object *kyaml.RNode) (*kyaml.RNode, error) {
 // if the cmdGroup is already present, then it is no-op
 func recordAction(curAnnoVal, cmdGroup string) string {
 	if curAnnoVal == "" {
-		return fmt.Sprintf("kpt-%s", cmdGroup)
+		return fmt.Sprintf("krm-%s", cmdGroup)
 	}
-	if !strings.Contains(curAnnoVal, "kpt-") {
+	if !strings.Contains(curAnnoVal, "krm-") {
 		// just append the value
-		return fmt.Sprintf("%s,kpt-%s", curAnnoVal, cmdGroup)
+		return fmt.Sprintf("%s,krm-%s", curAnnoVal, cmdGroup)
 	}
-	// we want to extract the current kpt part from the annotation
+	// we want to extract the current krm part from the annotation
 	// value and make sure that the input cmdGroup is added
-	// e.g. curAnnoVal: cnrm/landing-zone:networking/v0.4.0,kpt-pkg,blueprints_controller
+	// e.g. curAnnoVal: cnrm/landing-zone:networking/v0.4.0,krm-pkg,blueprints_controller
 	curAnnoParts := strings.Split(curAnnoVal, ",")
 
-	// form the new kpt part value
-	newKptPart := []string{"kpt"}
+	// form the new krm part value
+	newKrmPart := []string{"krm"}
 
 	for i, curAnnoPart := range curAnnoParts {
-		if strings.Contains(curAnnoPart, "kpt") {
+		if strings.Contains(curAnnoPart, "krm") {
 			if strings.Contains(curAnnoPart, "pkg") || cmdGroup == "pkg" {
-				newKptPart = append(newKptPart, "pkg")
+				newKrmPart = append(newKrmPart, "pkg")
 			}
 			if strings.Contains(curAnnoPart, "fn") || cmdGroup == "fn" {
-				newKptPart = append(newKptPart, "fn")
+				newKrmPart = append(newKrmPart, "fn")
 			}
 			if strings.Contains(curAnnoPart, "live") || cmdGroup == "live" {
-				newKptPart = append(newKptPart, "live")
+				newKrmPart = append(newKrmPart, "live")
 			}
-			// replace the kpt part with the newly formed part
-			curAnnoParts[i] = strings.Join(newKptPart, "-")
+			// replace the krm part with the newly formed part
+			curAnnoParts[i] = strings.Join(newKrmPart, "-")
 		}
 	}
 	return strings.Join(curAnnoParts, ",")

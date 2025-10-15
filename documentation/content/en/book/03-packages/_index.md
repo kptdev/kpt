@@ -57,11 +57,11 @@ info:
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         app: wordpress
   validators:
-    - image: gcr.io/kpt-fn/kubeval:v0.3
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
@@ -90,7 +90,7 @@ info:
   description: This is an example mysql package.
 pipeline:
   mutators:
-    - image: gcr.io/kpt-fn/set-labels:v0.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
       configMap:
         tier: mysql
 ```
@@ -159,7 +159,7 @@ on the package. For example, to search for resources that have a field with path
 `spec.selector.tier`:
 
 ```shell
-$ kpt fn eval wordpress -i search-replace:v0.1 -- 'by-path=spec.selector.tier'
+$ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 ```
 
 ## Editing a package
@@ -213,7 +213,7 @@ For example, setting a label on all the resources in the `wordpress` package can
 using the following function:
 
 ```shell
-$ kpt fn eval wordpress -i set-labels:v0.1 -- env=dev
+$ kpt fn eval wordpress -i set-labels:latest -- env=dev
 ```
 
 [Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.

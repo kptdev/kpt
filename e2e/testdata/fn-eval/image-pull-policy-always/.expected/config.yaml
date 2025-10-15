@@ -13,7 +13,7 @@
 # limitations under the License.
 
 testType: eval
-image: gcr.io/kpt-fn-demo/foo:v0.1
+image: ghcr.io/kptdev/krm-functions-catalog/foo:v0.1
 sequential: true
 imagePullPolicy: Always
 exitCode: 1

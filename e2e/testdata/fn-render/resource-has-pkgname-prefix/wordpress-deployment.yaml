@@ -13,8 +13,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wordpress
-  labels:
-    app: wordpress
   annotations:
     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
     teamname: 'YOURTEAM' # kpt-set: ${teamname}
@@ -30,8 +28,6 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wp-pv-claim
-  labels:
-    app: wordpress
   annotations:
     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
     teamname: 'YOURTEAM' # kpt-set: ${teamname}
@@ -46,8 +42,6 @@ apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
   name: wordpress
-  labels:
-    app: wordpress
   annotations:
     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
     teamname: 'YOURTEAM' # kpt-set: ${teamname}

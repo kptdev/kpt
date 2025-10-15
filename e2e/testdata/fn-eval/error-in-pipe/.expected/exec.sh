@@ -18,6 +18,6 @@ set -eo pipefail
 rm -rf out
 
 kpt fn source \
-| kpt fn eval - --image gcr.io/kpt-fn/set-namespace:v0.1.3 \
-| kpt fn eval - --image gcr.io/kpt-fn/dne -- foo=bar \
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 \
+| kpt fn eval - --image ghcr.io/kptdev/krm-functions-catalog/dne -- foo=bar \
 | kpt fn sink out
