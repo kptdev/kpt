@@ -134,28 +134,6 @@ vet:
 docker:
 	docker build .
 
-lintdocs:
-	(cd site && npm run lint-fix)
-
-site-generate:
-	go run ./scripts/generate_site_sidebar > site/sidebar.md
-	(cd site && find . -iname "00.md" -execdir ln -sf {} README.md \; && sed -i.bak s/00.md//g sidebar.md && rm sidebar.md.bak)
-
-site-map:
-	make site-run-server
-	./scripts/generate-sitemap.sh
-
-site-run-server:
-	make site-generate
-	./scripts/run-site.sh
-
-site-check:
-	make site-run-server
-	./scripts/check-site.sh
-
-site-verify-examples: install-mdrip install-kind
-	./scripts/verifyExamples.sh
-
 release-dry-run:
 	@docker run \
 		--rm \
