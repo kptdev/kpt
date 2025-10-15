@@ -134,7 +134,7 @@ that validates the resources using their OpenAPI schema.
 ```yaml
 pipeline:
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 You might want to label all resources in the package. To achieve that, you can declare `set-labels` function in the

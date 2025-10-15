@@ -31,7 +31,7 @@ items:
         file:
           path: resources.yaml
           index: 4
-  - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
     stderr: 'failed to evaluate function: error: function failure'
     exitCode: 1
     results:

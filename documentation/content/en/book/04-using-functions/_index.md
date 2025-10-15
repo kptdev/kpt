@@ -45,7 +45,7 @@ pipeline:
       configMap:
         app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 This declares two functions:
@@ -88,7 +88,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 ```
@@ -288,7 +288,7 @@ pipeline:
       configMap:
          app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 When you invoke the render command, the `mysql` package is rendered first, and `set-annotations`
@@ -306,8 +306,8 @@ Package "wordpress":
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
 
 Successfully executed 4 function(s) in 2 package(s).
 ```
@@ -342,7 +342,7 @@ pipeline:
         - kind: Service
           name: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 Now, let's render the package:
@@ -360,8 +360,8 @@ Package "wordpress":
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
 [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest" on 2 resource(s)
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/ensure-name-substring:latest"
-[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[RUNNING] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
 
 Successfully executed 5 function(s) in 2 package(s).
 ```
@@ -387,7 +387,7 @@ pipeline:
         - labels:
             foo: bar
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 The following are the matchers you can specify in a selector:
@@ -419,7 +419,7 @@ pipeline:
         - kind: Deployment
           name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 This is distinct from the following, which excludes a resource if it has either kind "Deployment" or name "nginx":
@@ -438,7 +438,7 @@ pipeline:
         - kind: Deployment
         - name: nginx
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 The following are the matchers you can specify in an exclusion:
@@ -694,7 +694,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[PASS] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[PASS] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
 
 Successfully executed 3 function(s) in 2 package(s).
 For complete results, see /tmp/results.yaml
@@ -714,7 +714,7 @@ items:
     exitCode: 0
   - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
     exitCode: 0
 ```
 
@@ -731,7 +731,7 @@ Package "wordpress/mysql":
 Package "wordpress":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
-[FAIL] "ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest"
+[FAIL] "ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest"
   Results:
     [ERROR] Invalid type. Expected: integer, given: string in object "v1/Service/wordpress" in file "service.yaml" in field "spec.ports.0.port"
   Exit code: 1
@@ -753,7 +753,7 @@ items:
     exitCode: 0
   - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
     exitCode: 0
-  - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
     exitCode: 1
     results:
       - message: "Invalid type. Expected: integer, given: string"

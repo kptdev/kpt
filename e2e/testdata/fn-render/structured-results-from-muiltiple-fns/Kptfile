@@ -5,7 +5,7 @@ metadata:
 pipeline:
   validators:
     - image: ghcr.io/kptdev/krm-functions-catalog/gatekeeper:latest
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
       configMap:
         ignore_missing_schemas: "true"
         strict: "true"

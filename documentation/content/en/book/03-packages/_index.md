@@ -61,7 +61,7 @@ pipeline:
       configMap:
         app: wordpress
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/krm-fn-contrib/kubeconform:latest
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
 ```
 
 The `Kptfile` contains two sections to keep track of the upstream package:
