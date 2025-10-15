@@ -17,12 +17,14 @@ on:
   pull_request:
     paths-ignore:
       - "docs/**"
+      - "documentation/**"
       - "site/**"
   push:
     branches:
     - '!dependabot/*'
     paths-ignore:
       - "docs/**"
+      - "documentation/**"
       - "site/**"
 
 jobs:
