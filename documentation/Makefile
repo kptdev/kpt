@@ -6,6 +6,9 @@ TARGET_HUGO_DIR = content/en/function-catalog/
 LAYOUT_SUBDIR = documentation/layouts/shortcodes/
 TARGET_HUGO_LAYOUT_DIR = layouts/shortcodes/
 
+EXAMPLES_SUBDIR = examples/
+TARGET_HUGO_EXAMPLES_DIR = content/en/examples/
+
 .PHONY: serve production-build preview-build fetch-external-docs
 
 fetch-external-docs:
@@ -13,8 +16,10 @@ fetch-external-docs:
 	rm -rf $(CLONE_DIR)
 	git clone --depth 1 $(EXTERNAL_REPO) $(CLONE_DIR)
 	mkdir -p $(TARGET_HUGO_DIR)
-	cp -r $(CLONE_DIR)/$(CONTENT_SUBDIR)/* $(TARGET_HUGO_DIR)
-	cp -r $(CLONE_DIR)/$(LAYOUT_SUBDIR)/* $(TARGET_HUGO_LAYOUT_DIR)
+	mkdir -p $(TARGET_HUGO_EXAMPLES_DIR)
+	cp -r $(CLONE_DIR)/$(CONTENT_SUBDIR)* $(TARGET_HUGO_DIR)
+	cp -r $(CLONE_DIR)/$(LAYOUT_SUBDIR)* $(TARGET_HUGO_LAYOUT_DIR)
+	cp -r $(CLONE_DIR)/$(EXAMPLES_SUBDIR)* $(TARGET_HUGO_EXAMPLES_DIR)
 	rm -rf $(CLONE_DIR)
 	@echo "--- External documentation ready in $(TARGET_HUGO_DIR) ---"
 
