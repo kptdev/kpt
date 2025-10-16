@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Managed by documentation/Makefile
+documentation/content/en/examples/
 documentation/content/en/function-catalog
 documentation/layouts/shortcodes/listexamples.html
 documentation/layouts/shortcodes/listfunctions.html
