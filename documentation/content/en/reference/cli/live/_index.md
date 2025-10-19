@@ -24,7 +24,7 @@ The `live` command group contains subcommands for deploying local
 
 These are the same flags as is available in [kubectl].
 
-```
+```shell
 --as:
   Username to impersonate for the operation.
 
@@ -50,7 +50,7 @@ These are the same flags as is available in [kubectl].
   The name of the kubeconfig context to use.
 
 --insecure-skip-tls-verify:
-  If true, the server's certificate will not be checked for validity. This will make your HTTPS connections insecure.
+  If true, the servers certificate will not be checked for validity. This will make your HTTPS connections insecure.
 
 --kubeconfig:
   Path to the kubeconfig file to use for CLI requests.
