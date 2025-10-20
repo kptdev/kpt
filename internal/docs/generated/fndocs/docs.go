@@ -24,7 +24,7 @@ Flags:
 
 Environment Variables:
 
-  KRM_FN_RUNTIMETIME:
+  KRM_FN_RUNTIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var DocExamples = `
@@ -148,7 +148,7 @@ Flags:
 
 Environment Variables:
 
-  KRM_FN_RUNTIMETIME:
+  KRM_FN_RUNTIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var EvalExamples = `
@@ -222,7 +222,7 @@ var EvalExamples = `
 
   # execute container my-fn with podman on the resources in DIR directory and
   # write output back to DIR
-  $ KRM_FN_RUNTIMETIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
+  $ KRM_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 `
 
 var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
@@ -299,7 +299,7 @@ Flags:
 
 Environment Variables:
 
-  KRM_FN_RUNTIMETIME:
+  KRM_FN_RUNTIME:
     The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 `
 var RenderExamples = `
@@ -326,7 +326,7 @@ var RenderExamples = `
   | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -o path/to/dir  -- foo=bar
 
   # Render my-package-dir with podman as runtime for functions
-  $ KRM_FN_RUNTIMETIME=podman kpt fn render my-package-dir
+  $ KRM_FN_RUNTIME=podman kpt fn render my-package-dir
 
   # Render my-package-dir with network access enabled for functions
   $ kpt fn render --allow-network
