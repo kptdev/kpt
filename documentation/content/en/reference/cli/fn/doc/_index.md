@@ -34,7 +34,7 @@ kpt fn doc --image=IMAGE
 #### Environment Variables
 
 ```
-KRM_FN_RUNTIMETIME:
+KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 

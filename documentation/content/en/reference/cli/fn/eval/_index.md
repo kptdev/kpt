@@ -145,7 +145,7 @@ fn-args:
 #### Environment Variables
 
 ```
-KRM_FN_RUNTIMETIME:
+KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
@@ -258,7 +258,7 @@ kpt fn eval -i set-namespace:latest --by-kind Deployment --by-name foo -- namesp
 ```shell
 # execute container my-fn with podman on the resources in DIR directory and
 # write output back to DIR
-$ KRM_FN_RUNTIMETIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
+$ KRM_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 ```
 
 <!--mdtogo-->
