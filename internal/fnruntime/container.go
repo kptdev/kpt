@@ -52,7 +52,7 @@ const (
 	podmanBin  string = "podman"
 	nerdctlBin string = "nerdctl"
 
-	ContainerRuntimeEnv = "KRM_FN_RUNTIMETIME"
+	ContainerRuntimeEnv = "KRM_FN_RUNTIME"
 
 	Docker  ContainerRuntime = "docker"
 	Podman  ContainerRuntime = "podman"

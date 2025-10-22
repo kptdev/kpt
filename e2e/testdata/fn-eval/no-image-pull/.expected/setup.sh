@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-KRM_FN_RUNTIMETIME="${KRM_FN_RUNTIMETIME:=docker}"
+KRM_FN_RUNTIME="${KRM_FN_RUNTIME:=docker}"
 
-${KRM_FN_RUNTIMETIME} image inspect ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
+${KRM_FN_RUNTIME} image inspect ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
 # if inspect exits with a 0 exit code the image was found locally, remove it
 if [[ $? == 0 ]]; then
-    ${KRM_FN_RUNTIMETIME} image rm ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
+    ${KRM_FN_RUNTIME} image rm ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
 fi

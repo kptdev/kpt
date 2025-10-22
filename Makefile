@@ -95,20 +95,20 @@ test:
 
 # This target is used to run Go tests that require docker runtime.
 # Some tests, like pipeline tests, need to have docker available to run.
-# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-docker: build
 	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
-# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-render: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
-# KRM_FN_RUNTIMETIME can be set to select the desired function runtime.
+# KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-eval: build
 	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
