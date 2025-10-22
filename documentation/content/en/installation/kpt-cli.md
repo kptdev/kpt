@@ -11,7 +11,7 @@ Download pre-compiled binaries:
 - [MacOS (amd64)][darwin-amd64]
 - [MacOS (arm64)][darwin-arm64]
 
-Optionally verify the [SLSA3 signatures](slsa.dev) generated using the OpenSSF's
+Optionally verify the [SLSA3 signatures](https://slsa.dev/) generated using the OpenSSF's
 [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release
 process. To verify a release binary:
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
