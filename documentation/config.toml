@@ -88,6 +88,8 @@ description = "kpt documentation"
 
 [params]
 
+kpt_version = "v1.0.0-beta.59"
+
 code_of_conduct = "https://github.com/cncf/foundation/blob/main/code-of-conduct.md"
 
 customCSS = ["https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"]
