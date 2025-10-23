@@ -44,7 +44,7 @@ jobs:
       - name: Install KinD
         uses: engineerd/setup-kind@v0.6.2
         with:
-          version: "v0.34.0"
+          version: "v0.30.0"
           skipClusterCreation: true
           skipClusterLogsExport: true
 
