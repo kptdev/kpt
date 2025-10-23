@@ -61,9 +61,11 @@
 OPTIND=1
 
 # Kind/Kubernetes versions.
-KIND_1_33_VERSION=1.33.1@sha256:050072256b9a903bd914c0b2866828150cb229cea0efe5892e2b644d5dd3b34f
-KIND_1_32_VERSION=1.32.5@sha256:e3b2327e3a5ab8c76f5ece68936e4cafaa82edf58486b769727ab0b3b97a5b0d
-KIND_1_31_VERSION=1.31.9@sha256:b94a3a6c06198d17f59cca8c6f486236fa05e2fb359cbd75dabbfc348a10b211
+
+KIND_1_34_VERSION=1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
+KIND_1_33_VERSION=1.33.4@sha256:25a6018e48dfcaee478f4a59af81157a437f15e6e140bf103f85a2e7cd0cbbf2
+KIND_1_32_VERSION=1.32.8@sha256:abd489f042d2b644e2d033f5c2d900bc707798d075e8186cb65e3f1367a9d5a1
+KIND_1_31_VERSION=1.31.12@sha256:0f5cc49c5e73c0c2bb6e2df56e7df189240d83cf94edfa30946482eb08ec57d2
 KIND_1_30_VERSION=1.30.13@sha256:397209b3d947d154f6641f2d0ce8d473732bd91c87d9575ade99049aa33cd648
 KIND_1_29_VERSION=1.29.12@sha256:62c0672ba99a4afd7396512848d6fc382906b8f33349ae68fb1dbfe549f70dec
 KIND_1_28_VERSION=1.28.0@sha256:b7a4cad12c197af3ba43202d3efe03246b3f0793f162afb40a33c923952d5b31
@@ -75,7 +77,11 @@ KIND_1_23_VERSION=1.23.17@sha256:59c989ff8a517a93127d4a536e7014d28e235fb3529d9fb
 KIND_1_22_VERSION=1.22.17@sha256:f5b2e5698c6c9d6d0adc419c0deae21a425c07d81bbf3b6a6834042f25d4fba2
 KIND_1_21_VERSION=1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
 
-DEFAULT_K8S_VERSION=${KIND_1_33_VERSION}
+
+
+NOTE: You must use the @sha256 digest to guarantee an image built for this release, until such a time as we switch to a different tagging scheme. Even then we will highly encourage digest pinning for security and reproducibility reasons.
+
+DEFAULT_K8S_VERSION=${KIND_1_34_VERSION}
 
 # Change from empty string to build the kpt binary from the downloaded
 # repositories at HEAD, including dependencies cli-utils and kustomize.
@@ -118,6 +124,8 @@ while getopts $options opt; do
 		1.32) K8S_VERSION=$KIND_1_32_VERSION
 		      ;;
 		1.33) K8S_VERSION=$KIND_1_33_VERSION
+		      ;;
+		1.34) K8S_VERSION=$KIND_1_34_VERSION
 		      ;;
         *) K8S_VERSION=$short_version
 		      ;;
@@ -252,7 +260,7 @@ function assertKptLiveApplyEquals {
 function processKptLiveOutput {
     trimTrailingNewlines | \
     filterReconcilePending | \
-    filterUnknownFieldsWarning | \
+    filterWarning | \
     sortReconcileEvents | \
     sortActuationEvents
 }
@@ -262,10 +270,11 @@ function trimTrailingNewlines {
 }
 
 function filterReconcilePending {
-  grep -v " reconcile pending$" || true
+  grep -v " reconcile pending$" | \
+  grep -v " unrecognized format .*int64.*$" || true
 }
 
-function filterUnknownFieldsWarning {
+function filterWarning {
   grep -v " unknown field" || true
 }
 
@@ -701,7 +710,7 @@ kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
 assertContains "error: the server doesn't have a resource type \"resourcegroups\""
 # Next, add the ResourceGroup CRD
 echo "kpt live install-resource-group"
-${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live install-resource-group 2> /dev/null | tee $OUTPUT_DIR/status
 assertContains "installing inventory ResourceGroup CRD...success"
 echo "kubectl get resourcegroups.kpt.dev"
 kubectl get resourcegroups.kpt.dev 2>&1 | tee $OUTPUT_DIR/status
@@ -715,7 +724,7 @@ kubectl get resourcegroups.kpt.dev --no-headers 2>&1 | tee $OUTPUT_DIR/status
 assertContains "example-inventory"
 # Finally, add the ResourceGroup CRD again, and check it says it already exists.
 echo "kpt live install-resource-group"
-${BIN_DIR}/kpt live install-resource-group 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live install-resource-group 2> /dev/null | tee $OUTPUT_DIR/status
 assertContains "...success"
 printResult
 
