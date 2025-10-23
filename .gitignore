@@ -18,6 +18,8 @@ documentation/content/en/function-catalog
 documentation/layouts/shortcodes/listexamples.html
 documentation/layouts/shortcodes/listfunctions.html
 documentation/layouts/shortcodes/listversions.html
+documentation/layouts/shortcodes/relatedexamples.html
+documentation/layouts/partials/breadcrumb.html
 
 go.work
 go.work.sum
