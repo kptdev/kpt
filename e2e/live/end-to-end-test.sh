@@ -125,7 +125,7 @@ while getopts $options opt; do
 		      ;;
 		1.33) K8S_VERSION=$KIND_1_33_VERSION
 		      ;;
-		1.34) K8S_VERSION=$KIND_1_33_VERSION
+		1.34) K8S_VERSION=$KIND_1_34_VERSION
 		      ;;
         *) K8S_VERSION=$short_version
 		      ;;
