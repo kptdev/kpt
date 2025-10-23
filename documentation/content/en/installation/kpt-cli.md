@@ -11,7 +11,7 @@ Download pre-compiled binaries:
 - [MacOS (amd64)][darwin-amd64]
 - [MacOS (arm64)][darwin-arm64]
 
-Optionally verify the [SLSA3 signatures](slsa.dev) generated using the OpenSSF's
+Optionally verify the [SLSA3 signatures](https://slsa.dev/) generated using the OpenSSF's
 [slsa-framework/slsa-github-generator](https://github.com/slsa-framework/slsa-github-generator) during the release
 process. To verify a release binary:
 1. Install the verification tool from [slsa-framework/slsa-verifier#installation](https://github.com/slsa-framework/slsa-verifier#installation).
@@ -105,7 +105,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run ghcr.io/kptdev/kpt:v1.0.0-beta.58 version
+$ docker run ghcr.io/kptdev/kpt:{{< kpt_version >}} version
 ```
 
 ### `kpt-gcloud`
@@ -113,7 +113,7 @@ $ docker run ghcr.io/kptdev/kpt:v1.0.0-beta.58 version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run ghcr.io/kptdev/kpt-gcloud:v1.0.0-beta.58 version
+$ docker run ghcr.io/kptdev/kpt-gcloud:{{< kpt_version >}} version
 ```
 
 ## Source
@@ -136,12 +136,12 @@ $ kpt version
   https://github.com/kptdev/kpt/pkgs/container/kpt-gcloud
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_linux_amd64
+  https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_linux_amd64
 [linux-arm64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_linux_arm64
+  https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_linux_arm64
 [darwin-amd64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_darwin_amd64
+  https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_amd64
 [darwin-arm64]:
-  https://github.com/kptdev/kpt/releases/download/v1.0.0-beta.58/kpt_darwin_arm64
+  https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_arm64
 [migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation
