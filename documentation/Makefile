@@ -3,8 +3,8 @@ CLONE_DIR = tmp-krm-clone
 CONTENT_SUBDIR = documentation/content/en/function-catalog/
 TARGET_HUGO_DIR = content/en/function-catalog/
 
-LAYOUT_SUBDIR = documentation/layouts/shortcodes/
-TARGET_HUGO_LAYOUT_DIR = layouts/shortcodes/
+LAYOUT_SUBDIR = documentation/layouts/
+TARGET_HUGO_LAYOUT_DIR = layouts/
 
 EXAMPLES_SUBDIR = examples/
 TARGET_HUGO_EXAMPLES_DIR = content/en/examples/
@@ -18,7 +18,7 @@ fetch-external-docs:
 	mkdir -p $(TARGET_HUGO_DIR)
 	mkdir -p $(TARGET_HUGO_EXAMPLES_DIR)
 	cp -r $(CLONE_DIR)/$(CONTENT_SUBDIR)* $(TARGET_HUGO_DIR)
-	cp -r $(CLONE_DIR)/$(LAYOUT_SUBDIR)* $(TARGET_HUGO_LAYOUT_DIR)
+	cp -r -n $(CLONE_DIR)/$(LAYOUT_SUBDIR)* $(TARGET_HUGO_LAYOUT_DIR)
 	cp -r $(CLONE_DIR)/$(EXAMPLES_SUBDIR)* $(TARGET_HUGO_EXAMPLES_DIR)
 	rm -rf $(CLONE_DIR)
 	@echo "--- External documentation ready in $(TARGET_HUGO_DIR) ---"
