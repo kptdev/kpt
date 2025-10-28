@@ -27,13 +27,13 @@ displaying the differences to a command line diffing tool. By default, the
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg diff [PKG_PATH@VERSION] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Local package path to compare. diff will fail if the directory doesn't exist, or does not
   contain a Kptfile. Defaults to the current working directory.
@@ -46,7 +46,7 @@ VERSION:
 
 #### Flags
 
-```
+```shell
 --diff-type:
   The type of changes to view (local by default). Following types are
   supported:
@@ -77,7 +77,7 @@ VERSION:
 
 #### Environment Variables
 
-```
+```shell
 KPT_EXTERNAL_DIFF:
   Commandline diffing tool ('diff; by default) that will be used to show
   changes.
@@ -100,26 +100,6 @@ KPT_CACHE_DIR:
 <!--mdtogo-->
 
 ### Examples
-
-{{ /* % hide % */ }}
-
-<!-- @makeWorkplace @verifyExamples-->
-
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-<!-- @fetchPackage @verifyExamples-->
-
-```shell
-export SRC_REPO=https://github.com/kptdev/kpt.git
-kpt pkg get $SRC_REPO/package-examples/helloworld-set hello-world
-cd hello-world
-```
-
-{{ /* % /hide % */ }}
 
 <!--mdtogo:Examples-->
 <!-- @pkgDiff @verifyExamples-->

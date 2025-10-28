@@ -16,13 +16,13 @@ description: >
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha wasm push [LOCAL_PATH] [IMAGE]
 ```
 
 #### Args
 
-```
+```shell
 LOCAL_PATH:
   The path to the wasm file.
 IMAGE:

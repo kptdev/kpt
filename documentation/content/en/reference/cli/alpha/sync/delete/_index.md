@@ -17,20 +17,20 @@ the package resources.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha sync delete DEPLOYMENT_NAME [flags]
 ```
 
 #### Args
 
-```
+```shell
 DEPLOYMENT_NAME:
   The name of the sync resource deleted from the cluster.
 ```
 
 #### Flags
 
-```
+```shell
 --keep-auth-secret
   Do not delete the repository authentication secret, if it exists.
 

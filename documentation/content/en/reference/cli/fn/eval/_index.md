@@ -22,13 +22,13 @@ Refer to the [Imperative Function Execution] for detailed overview.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt fn eval [DIR|-] [flags] [-- fn-args]
 ```
 
 #### Args
 
-```
+```shell
 DIR|-:
   Path to the local directory containing resources. Defaults to the current
   working directory. Using '-' as the directory path will cause `eval` to
@@ -44,7 +44,7 @@ DIR|-:
   format where resources are separated by `---`.
 ```
 
-```
+```shell
 fn-args:
   function arguments to be provided as input to the function. These must be
   provided in the `key=value` format and come after the separator `--`.
@@ -52,7 +52,7 @@ fn-args:
 
 #### Flags
 
-```
+```shell
 --as-current-user:
   Use the `uid` and `gid` of the kpt process for container function execution.
   By default, container function is executed as `nobody` user. You may want to use
@@ -144,7 +144,7 @@ fn-args:
 
 #### Environment Variables
 
-```
+```shell
 KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```

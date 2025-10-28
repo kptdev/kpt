@@ -18,7 +18,7 @@ pruning) , so it must be installed in a cluster prior to applying packages.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live install-resource-group
 ```
 

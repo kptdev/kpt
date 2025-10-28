@@ -18,7 +18,7 @@ description: |
 If the function supports `--help`, it will print the documentation to STDOUT.
 Otherwise, it will exit with non-zero exit code and print the error message to STDERR.
 
-```
+```shell
 kpt fn doc --image=IMAGE
 ```
 

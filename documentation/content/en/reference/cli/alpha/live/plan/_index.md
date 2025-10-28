@@ -22,13 +22,13 @@ Note that `plan` does only works reliably with server-side apply.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha live plan [PKG_PATH | -] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH | -:
   Path to the local package which should be applied to the cluster. It must
   contain a Kptfile with inventory information. Defaults to the current working
@@ -38,7 +38,7 @@ PKG_PATH | -:
 
 #### Flags
 
-```
+```shell
 --field-manager:
   Identifier for the **owner** of the fields being applied. Only usable
   when --server-side flag is specified. Default value is kubectl.

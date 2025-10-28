@@ -20,13 +20,13 @@ before running `update`.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg update [PKG_PATH][@VERSION] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Local package path to update. Directory must exist and contain a Kptfile
   to be updated. Defaults to the current working directory.
@@ -44,7 +44,7 @@ VERSION:
 
 #### Flags
 
-```
+```shell
 --strategy:
   Defines which strategy should be used to update the package. This will change
   the update strategy for the current kpt package for the current and future
@@ -61,7 +61,7 @@ VERSION:
 
 #### Env Vars
 
-```
+```shell
 KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them.
   Defaults to <HOME>/.kpt/repos/

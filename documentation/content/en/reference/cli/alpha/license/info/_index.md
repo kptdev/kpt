@@ -15,7 +15,7 @@ description: |
 
 <!--mdtogo:Long-->
 
-```sh
+```shell
 kpt alpha license info
 ```
 

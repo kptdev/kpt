@@ -30,13 +30,13 @@ the `Kptfile` in a `ResourceGroup` manifest in the `resourcegroup.yaml` file.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live migrate [PKG_PATH] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Path to the local package. It must have a Kptfile and inventory metadata
   in the package in either the ConfigMap, Kptfile or ResourceGroup format.
@@ -45,7 +45,7 @@ PKG_PATH:
 
 #### Flags
 
-```
+```shell
 --dry-run:
   Go through the steps of migration, but don't make any changes.
 
