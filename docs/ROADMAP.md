@@ -2,7 +2,7 @@
 
 Last updated: February 9th, 2023
 
-Please follow the [installation](https://kpt.dev/installation/) guide for installing the latest version of kpt.
+Please follow the [installation](https://github.com/kptdev/kpt/blob/main/documentation/content/en/installation/kpt-cli.md) guide for installing the latest version of kpt.
 
 ## Latest releases
 
