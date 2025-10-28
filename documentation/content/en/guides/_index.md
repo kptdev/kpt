@@ -14,6 +14,3 @@ menu:
 - [Namespace Provisioning UI](guides/namespace-provisioning-ui.md)
 - [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
 - [Value Propagation Pattern](guides/value-propagation.md)
-- [Porch Installation Guide](https://docs.nephio.org/docs/porch/user-guides/install-and-using-porch/)
-- [Porch UI Installation Guide](guides/porch-ui-installation.md)
-- [Porch User Guide](https://docs.nephio.org/docs/porch/user-guides/)
