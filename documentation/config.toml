@@ -140,6 +140,7 @@ prism_syntax_highlighting = false
 [params.github]
   repo = "https://github.com/kptdev/kpt"
   branch = "main"
+  subdir = "documentation"
 
 # Configure mermaid (charting) integration
 [params.mermaid]

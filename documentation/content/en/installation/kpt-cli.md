@@ -61,21 +61,6 @@ etc.
 For instructions on how to enable the script for the given shell, see the help page with the commands
 `kpt completion bash -h`, `kpt completion zsh -h`, etc.
 
-## gcloud
-
-Install with gcloud.
-
-```shell
-$ gcloud components install kpt
-```
-
-```shell
-$ kpt version
-```
-
-The version of kpt installed using `gcloud` may not be the latest released version, and can lag behind. Please use
-another installation method if you need to latest release.
-
 ## Homebrew
 
 Install the latest release with Homebrew on MacOS.

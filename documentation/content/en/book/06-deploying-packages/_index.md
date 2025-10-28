@@ -21,8 +21,6 @@ implemented using a custom resource of kind `ResourceGroup`. Otherwise,
 `kpt live` and `kubectl` are complementary. For example, you can use
 `kubectl get` as you normal would.
 
-`kpt` packages can also be deployed with [GitOps](gitops/) tools.
-
 ### Pruning
 
 `live apply` will automatically delete cluster resources that are no longer
@@ -99,7 +97,7 @@ specifying the name, namespace and inventoryID of the `ResourceGroup` resource
 Let's initialize the `wordpress` package:
 
 ```shell
-$ kpt live init wordpress
+kpt live init wordpress
 initializing "resourcegroup.yaml" inventory info (namespace: default)...success
 ```
 
@@ -121,14 +119,11 @@ resources in `wordpress` package were in the `default` namespace, so it chose
 `default` for the namespace. Alternatively, you can manually configure the name
 and namespace of the `ResourceGroup` resource.
 
- > Refer to the [init command reference](../../reference/cli/live/init/) for usage.
+Refer to the [init command reference](../../reference/cli/live/init/) for usage.
 
- {{% alert title="Note" color="primary" %}}
-
- Once a package is applied to the cluster, you do not want to change the `ResourceGroup` CR; doing so severs the
- association between the package and the inventory in the cluster, leading to destructive operations.
-
-{{% /alert %}}
+{{< warning type=warning >}}
+Once a package is applied to the cluster, you do not want to change the `ResourceGroup` CR. Doing so severs the association between the package and the inventory in the cluster, leading to destructive operations.
+{{< /warning >}}
 
 ## Applying a Package
 
@@ -138,16 +133,16 @@ The `wordpress` package requires a `Secret` containing the mysql password.
 Let's create that first:
 
 ```shell
-$ kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
+kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
 ```
-
-!> You can also declare the `Secret` resource, but make sure it is not committed to
-Git as part of the package.
+{{< warning type=info >}}
+You can also declare the `Secret` resource, but make sure it is not committed to Git as part of the package.
+{{< /warning >}}
 
 Then deploy the package and wait for the resources to be reconciled:
 
 ```shell
-$ kpt live apply wordpress --reconcile-timeout=2m
+kpt live apply wordpress --reconcile-timeout=2m
 installing inventory ResourceGroup CRD.
 service/wordpress created
 service/wordpress-mysql created
@@ -171,7 +166,7 @@ deployment.apps/wordpress reconciled
 6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
- > Refer to the [apply command reference](../../reference/cli/live/apply/) for usage.
+Refer to the [apply command reference](../../reference/cli/live/apply/) for usage.
 
 ### `ResourceGroup` CRD
 
@@ -181,15 +176,13 @@ By default, `live apply` automatically installs the `ResourceGroup` CRD (unless
 running `live apply`:
 
 ```shell
-$ kpt live install-resource-group
+kpt live install-resource-group
 ```
 
-{{% alert title="Note" color="primary" %}}
-
+{{< warning type=info >}}
 Installing this CRD requires sufficient ClusterRole permission, so you may
 need to ask your cluster admin to install it for you.
-
-{{% /alert %}}
+{{< /warning >}}
 
 ### Server-side vs Client-side apply
 
@@ -207,7 +200,7 @@ For example, before applying the `wordpresss` package for the first time, you
 would see that 6 resources would be created:
 
 ```shell
-$ kpt live apply wordpress --dry-run
+kpt live apply wordpress --dry-run
 Dry-run strategy: client
 service/wordpress created
 service/wordpress-mysql created
@@ -227,7 +220,7 @@ all the validation steps on the API server.
 After you have deployed the package, you can get its current status at any time:
 
 ```shell
-$ kpt live status wordpress
+kpt live status wordpress
 service/wordpress is Current: Service is ready
 service/wordpress-mysql is Current: Service is ready
 deployment.apps/wordpress is Current: Deployment is available. Replicas: 1
@@ -236,7 +229,7 @@ persistentvolumeclaim/mysql-pv-claim is Current: PVC is Bound
 persistentvolumeclaim/wp-pv-claim is Current: PVC is Bound
 ```
 
- > Refer to the [status command reference](../../reference/cli/live/status/) for usage.
+Refer to the [status command reference](../../reference/cli/live/status/) for usage.
 
 ### Delete the package
 
@@ -244,7 +237,7 @@ To delete all the resources in a package, you can use the `live destroy`
 command:
 
 ```shell
-$ kpt live destroy wordpress
+kpt live destroy wordpress
 persistentvolumeclaim/wp-pv-claim deleted
 persistentvolumeclaim/mysql-pv-claim deleted
 deployment.apps/wordpress-mysql deleted
@@ -267,7 +260,7 @@ persistentvolumeclaim/wp-pv-claim reconciled
 6 resource(s) reconciled, 0 skipped, 0 failed to reconcile, 0 timed out
 ```
 
- > Refer to the [destroy command reference](../../reference/cli/live/destroy/) for usage.
+Refer to the [destroy command reference](../../reference/cli/live/destroy/) for usage.
 
 ## Handling Dependencies
 
@@ -284,7 +277,7 @@ Let's take a look at the `wordpress-with-dependencies` package, a modified
 version of the `wordpress` package used earlier:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress-with-dependencies@v0.1
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress-with-dependencies@v0.1
 ```
 
 You can see that the resources belonging to wordpress have
@@ -311,17 +304,17 @@ Before you can deploy the package, you need to initialize it and create a `Secre
 containing the mysql password:
 
 ```shell
-$ kpt live init wordpress-with-dependencies
+kpt live init wordpress-with-dependencies
 initializing Kptfile inventory info (namespace: default)...success
 
-$ kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
+kubectl create secret generic mysql-pass --from-literal=password=YOUR_PASSWORD
 ```
 
 You can deploy the package just like other packages. You can see that the MySQL `StatefulSet`
 and `Service` are created and reconciled before the Wordpress `Deployment` and `Service` are applied.
 
 ```shell
-$ kpt live apply wordpress-with-dependencies --reconcile-timeout=2m
+kpt live apply wordpress-with-dependencies --reconcile-timeout=2m
 service/wordpress-mysql created
 statefulset.apps/wordpress-mysql created
 service/wordpress-mysql reconcile pending
@@ -341,7 +334,7 @@ deployment.apps/wordpress reconciled
 When you delete the package from the cluster, you can see that
 resources are deleted in reverse order:
 ```shell
-$ kpt live destroy wordpress-with-dependencies
+kpt live destroy wordpress-with-dependencies
 deployment.apps/wordpress deleted
 service/wordpress deleted
 deployment.apps/wordpress reconciled

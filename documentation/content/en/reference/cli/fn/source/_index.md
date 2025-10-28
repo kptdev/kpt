@@ -69,8 +69,3 @@ $ kpt fn source DIR |
 ```
 
 <!--mdtogo-->
-
-[chaining functions]:
-  /book/04-using-functions/02-imperative-function-execution?id=chaining-functions-using-the-unix-pipe
-[function specification]:
-  /book/05-developing-functions/01-functions-specification

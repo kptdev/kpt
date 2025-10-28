@@ -1,5 +1,5 @@
 ---
-title: "Doc"
+title: "`doc`"
 linkTitle: "doc"
 
 description: |

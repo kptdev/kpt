@@ -264,5 +264,4 @@ $ KRM_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
 <!--mdtogo-->
 
 [docker volumes]: https://docs.docker.com/storage/volumes/
-[imperative function execution]: /book/04-using-functions/02-imperative-function-execution
-[function specification]: /book/05-developing-functions/01-functions-specification
+[imperative function execution]: /book/04-using-functions/#imperative-function-execution

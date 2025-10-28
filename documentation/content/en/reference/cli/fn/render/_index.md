@@ -134,4 +134,4 @@ $ kpt fn render --allow-network
 <!--mdtogo-->
 
 [declarative functions execution]:
-  /book/04-using-functions/01-declarative-function-execution
+  /book/04-using-functions/#declarative-function-execution

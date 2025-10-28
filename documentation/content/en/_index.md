@@ -25,13 +25,13 @@ kpt is a package-centric toolchain that enables a WYSIWYG configuration authorin
 {{% blocks/section type="row" color="white"%}}
 
 {{% blocks/feature icon="fas  fa-download " title="Install" %}}
-Get started by [installing](/installation/) kpt.
+Get started by [installing]({{< relref "installation" >}}) kpt.
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-graduation-cap" title="Learn" %}}
-Read [The kpt Book](/book/).
+Read [The kpt Book]({{< relref "book" >}}).
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-info-circle" title="Ask" %}}
-If your question is not a [FAQ](/faq/), please [reach out](/contact/)!
+If your question is not a [FAQ]({{< relref "faq" >}}), please [reach out]( #communication )!
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-briefcase " title="Contribute" %}}
 kpt is an open source project and anyone can [contribute](https://github.com/kptdev/kpt/blob/main/CONTRIBUTING.md)
@@ -44,16 +44,16 @@ kpt is an open source project and anyone can [contribute](https://github.com/kpt
 
 # For users
 
-To get familiar with kpt as an user the best way to start is the first four chapters of the kpt [Book](/book).
-Furthermore it is useful to check the [references](/references) and the catalog of [selected krm functions](https://catalog.kpt.dev/).
+To get familiar with kpt as an user the best way to start is the first four chapters of the kpt [Book]({{< relref "book" >}}).
+Furthermore it is useful to check the [references]({{< relref "reference" >}}) and the catalog of [selected krm functions](https://catalog.kpt.dev/function-catalog).
 
 # For admins
 
-Start with the [installation](/installation/) and with the kpt [Book](/book).
+Start with the [installation]({{< relref "installation" >}}) and with the kpt [Book]({{< relref "book" >}}).
 
 # For developers
 
-To develp krm functions, the best to start with [Chapter 5](/book/05-developing-functions/) of the kpt Book.
+To develp krm functions, the best to start with [Chapter 5]({{< relref "book/05-developing-functions" >}}) of the kpt Book.
 
 # For contributors
 

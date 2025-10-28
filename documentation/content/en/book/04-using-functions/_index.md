@@ -54,7 +54,7 @@ This declares two functions:
 - `kubeconform` is a validator function which validates the resources against their
   OpenAPI schema.
 
-> Refer to the [Functions Catalog](https://catalog.kpt.dev/ ":target=_self")
+Refer to the [Functions Catalog](https://catalog.kpt.dev/function-catalog)
 for details on how to use a particular function.
 
 There are two differences between mutators and validators:
@@ -80,7 +80,7 @@ pipeline:
 Now, let's render the package hierarchy:
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
@@ -93,7 +93,7 @@ Package "wordpress":
 Successfully executed 3 function(s) in 2 package(s).
 ```
 
-> Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
+Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
 
 When you invoke the `render` command, kpt performs the following steps:
 
@@ -159,7 +159,7 @@ Note that you must render the package by allowing executables by specifying `--a
 command line flag as shown below.
 
 ```shell
-$ kpt fn render [PKG_DIR] --allow-exec
+kpt fn render [PKG_DIR] --allow-exec
 ```
 
 Using `exec` is not recommended for two reasons:
@@ -399,7 +399,7 @@ The following are the matchers you can specify in a selector:
 5. `annotations`: resources with matching annotations will be selected.
 6. `labels`: resources with matching labels will be selected.
 
-#### Specifying exclusions
+#### Specifying `exclude`
 
 Similar to `selectors`, you can also specify resources that should be excluded from functions.
 
@@ -459,16 +459,16 @@ For example, to set the namespace of all resources in the wordpress package
 hierarchy:
 
 ```shell
-$ kpt fn eval wordpress --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=mywordpress
+kpt fn eval wordpress --image ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest -- namespace=mywordpress
 ```
 
 Alternatively, for convenience, you can use the short-hand form of the above command:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
+kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
- > Refer to the [eval command reference](../../reference/cli/fn/eval/) for usage.
+Refer to the [eval command reference](../../reference/cli/fn/eval/) for usage.
 
 This changes the resources in the `wordpress` package and the `mysql`
 subpackage.
@@ -510,7 +510,7 @@ resources), is to declare the resource in a separate file and use the
 `fn-config` flag.
 
 ```shell
-$ cat << EOF > /tmp/fn-config.yaml
+cat << EOF > /tmp/fn-config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -521,7 +521,7 @@ EOF
 ```
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:latest --fn-config /tmp/fn-config.yaml
+kpt fn eval wordpress -i set-namespace:latest --fn-config /tmp/fn-config.yaml
 ```
 
 #### CLI arguments
@@ -532,7 +532,7 @@ the key/value pairs as command line arguments. The following is equivalent to
 what we showed previously:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
+kpt fn eval wordpress -i set-namespace:latest -- namespace=mywordpress
 ```
 
 Note that the arguments must come after the separator `--`.
@@ -545,7 +545,7 @@ For example, you can selectively add an annotation to the resources if it has ki
 `Deployment` AND name `wordpress`:
 
 ```shell
-$ kpt fn eval wordpress -i set-annotations:latest --match-kind Deployment --match-name wordpress -- foo=bar
+kpt fn eval wordpress -i set-annotations:latest --match-kind Deployment --match-name wordpress -- foo=bar
 ```
 
 Here is the list of available selector matcher flags:
@@ -565,14 +565,16 @@ For example, you can set the namespace of all resources in the wordpress package
 except for the ones with the label `foo: bar`:
 
 ```shell
-$ kpt fn eval wordpress -i set-namespace:latest --exclude-labels foo=bar -- namespace=my-namespace
+kpt fn eval wordpress -i set-namespace:latest --exclude-labels foo=bar -- namespace=my-namespace
 ```
 
 If you use multiple exclusions, it will exclude resources that match all provided exclusions. For
 example, you can set the namespace of all resources, except for those that have both kind "Deployment" 
 and name "nginx":
 
-`$ kpt fn eval wordpress -i set-namespace:latest --exclude-kind Deployment --exclude-name nginx -- namespace=my-namespace`
+```shell
+kpt fn eval wordpress -i set-namespace:latest --exclude-kind Deployment --exclude-name nginx -- namespace=my-namespace
+```
 
 Here is the list of available exclusion flags:
 
@@ -606,7 +608,7 @@ using the `--network` flag.
 For example, `kubeconform` function can download a JSON schema file:
 
 ```shell
-$ kpt fn eval wordpress -i kubeconform:latest --network -- schema_location="https://kubernetesjsonschema.dev"
+kpt fn eval wordpress -i kubeconform:latest --network -- schema_location="https://kubernetesjsonschema.dev"
 ```
 
 #### Mounting Directories
@@ -618,7 +620,7 @@ specified on the [Docker Volumes](https://docs.docker.com/storage/volumes/) page
 For example, `kubeconform` function can consume a JSON schema file:
 
 ```shell
-$ kpt fn eval -i kubeconform:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
+kpt fn eval -i kubeconform:latest --mount type=bind,src="/path/to/schema-dir",dst=/schema-dir --as-current-user wordpress -- schema_location=file:///schema-dir
 ```
 
 Note that the `--as-current-user` flag may be required to run the function as
@@ -639,13 +641,13 @@ functions using the Unix pipe.
 Here is an example:
 
 ```shell
-$ kpt fn source wordpress \
+kpt fn source wordpress \
   | kpt fn eval - -i set-namespace:latest -- namespace=mywordpress \
   | kpt fn eval - -i set-labels:latest -- app=wordpress env=prod \
   | kpt fn sink my-wordpress
 ```
 
- > Refer to the command reference for usage of [source](../..//reference/cli/fn/source/) and
+Refer to the command reference for usage of [source](../..//reference/cli/fn/source/) and
 [sink](../../reference/cli/fn/sink/) commands.
 
 The following describes the above pipeline:
@@ -686,7 +688,7 @@ In both `render` and `eval`, structured results can be enabled using the `--resu
 For example:
 
 ```shell
-$ kpt fn render wordpress --results-dir /tmp
+kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"
@@ -723,7 +725,7 @@ For example, change the value of `port` field in `service.yaml` from `80` to `"8
 rerun:
 
 ```shell
-$ kpt fn render wordpress --results-dir /tmp
+kpt fn render wordpress --results-dir /tmp
 Package "wordpress/mysql":
 
 [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:latest"

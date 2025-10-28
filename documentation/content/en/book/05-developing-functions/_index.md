@@ -14,7 +14,7 @@ menu:
 ---
 
  > Before you start developing your custom function, check out the
-[Functions Catalog](https://catalog.kpt.dev/ ":target=_self") in case there is
+[Functions Catalog](https://catalog.kpt.dev/function-catalog ":target=_self") in case there is
 an existing function that meets your needs. This is an ever-growing catalog of
 functions that we consider to be generally useful to many users. If your use
 case fits that description, please
@@ -95,7 +95,7 @@ As an example, you can see the `ResourceList` containing resources in the
 `wordpress` package:
 
 ```shell
-$ kpt fn source wordpress | less
+kpt fn source wordpress | less
 ```
 
 ## Developing in Go
@@ -112,7 +112,7 @@ You can develop a KRM function in Go using
 
 ### Prerequisites
 
-- [Install kpt](https://kpt.dev/installation/)
+- [Install kpt](installation)
 
 - [Install Docker](https://docs.docker.com/get-docker/)
 
@@ -197,7 +197,7 @@ func main() {
 
 The [`fn`](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn) library provides a series of KRM level
 operations for
-[`ResourceList`](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md). 
+[`ResourceList`](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn#ResourceList). 
 Basically, the KRM resource `ResourceList.FunctionConfig` and KRM resources `ResourceList.Items` are both converted to 
 `KubeObject` objects. You can use `KubeObject` similar as
 [`unstructured.Unstructured`](https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1/unstructured).
@@ -218,7 +218,7 @@ func (r *YourFunction) Run(ctx *fn.Context, functionConfig *fn.KubeObject, items
 }
 ```
 
-Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
+Learn more about the `KubeObject` from the [go doc](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn#KubeObject).
 
 
 #### Test the KRM function
