@@ -14,7 +14,7 @@ menu:
 
 ### kpt
 
-[Install the kpt CLI](../../installation/) and ensure you are running **version 1.0 or later**:
+Install the [kpt CLI](installation/kpt-cli):
 
 ```shell
 kpt version

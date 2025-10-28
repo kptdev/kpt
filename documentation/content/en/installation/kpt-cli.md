@@ -24,7 +24,7 @@ slsa-verifier verify-artifact --provenance-path multiple.intoto.jsonl --source-u
 On Linux and MacOS, make it executable:
 
 ```shell
-$ chmod +x kpt
+chmod +x kpt
 ```
 
 On MacOS the first time, it may be necessary to open the program from the finder with _ctrl-click open_.
@@ -32,7 +32,7 @@ On MacOS the first time, it may be necessary to open the program from the finder
 Verify the version:
 
 ```shell
-$ kpt version
+kpt version
 ```
 
 ## (Optional) enable shell auto-completion
@@ -41,7 +41,7 @@ kpt provides auto-completion support for several of the common shells.
 To see the options for enabling shell auto-completion:
 
 ```shell
-$ kpt completion -h
+kpt completion -h
 ```
 
 ### Prerequisites
@@ -49,7 +49,7 @@ Previous installations of kpt completion may have added the following line to th
 (e.g. `.bashrc`, `.zshrc`, etc.):
 
 ```shell
-$ complete -C <KPT_PATH> kpt
+complete -C <KPT_PATH> kpt
 ```
 
 This line needs to be removed for kpt's completion implementation to function
@@ -66,12 +66,12 @@ For instructions on how to enable the script for the given shell, see the help p
 Install the latest release with Homebrew on MacOS.
 
 ```shell
-$ brew tap kptdev/kpt https://github.com/kptdev/kpt.git
-$ brew install kpt
+brew tap kptdev/kpt https://github.com/kptdev/kpt.git
+brew install kpt
 ```
 
 ```shell
-$ kpt version
+kpt version
 ```
 
 The version of kpt installed using `brew` can only be a tagged release, master releases are not shipped.
@@ -90,7 +90,7 @@ Use one of the kpt docker images.
 ### `kpt`
 
 ```shell
-$ docker run ghcr.io/kptdev/kpt:{{< kpt_version >}} version
+docker run ghcr.io/kptdev/kpt:{{< kpt_version >}} version
 ```
 
 ### `kpt-gcloud`
@@ -98,7 +98,7 @@ $ docker run ghcr.io/kptdev/kpt:{{< kpt_version >}} version
 An image which includes kpt based upon the Google [cloud-sdk] alpine image.
 
 ```shell
-$ docker run ghcr.io/kptdev/kpt-gcloud:{{< kpt_version >}} version
+docker run ghcr.io/kptdev/kpt-gcloud:{{< kpt_version >}} version
 ```
 
 ## Source
@@ -106,19 +106,17 @@ $ docker run ghcr.io/kptdev/kpt-gcloud:{{< kpt_version >}} version
 Install by compiling the source. This requires having Go version 1.21+:
 
 ```shell
-$ go install -v github.com/kptdev/kpt@main
+go install -v github.com/kptdev/kpt@main
 ```
 
 kpt version will return `unknown` for binaries built from source:
 
 ```shell
-$ kpt version
+kpt version
 ```
 
 [ghcr.io/kptdev/kpt]:
   https://github.com/kptdev/kpt/pkgs/container/kpt
-[ghcr.io/kptdev/kpt-gcloud]:
-  https://github.com/kptdev/kpt/pkgs/container/kpt-gcloud
 [cloud-sdk]: https://github.com/GoogleCloudPlatform/cloud-sdk-docker
 [linux-amd64]:
   https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_linux_amd64
@@ -128,5 +126,4 @@ $ kpt version
   https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_amd64
 [darwin-arm64]:
   https://github.com/kptdev/kpt/releases/download/{{< kpt_version >}}/kpt_darwin_arm64
-[migration guide]: /installation/migration
 [bash-completion]: https://github.com/scop/bash-completion#installation

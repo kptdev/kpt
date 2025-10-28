@@ -25,7 +25,7 @@ kpt is a package-centric toolchain that enables a WYSIWYG configuration authorin
 {{% blocks/section type="row" color="white"%}}
 
 {{% blocks/feature icon="fas  fa-download " title="Install" %}}
-Get started by [installing]({{< relref "installation" >}}) kpt.
+Get started by [installing]({{< relref "installation/kpt-cli.md" >}}) kpt.
 {{% /blocks/feature %}}
 {{% blocks/feature icon="fas fa-graduation-cap" title="Learn" %}}
 Read [The kpt Book]({{< relref "book" >}}).

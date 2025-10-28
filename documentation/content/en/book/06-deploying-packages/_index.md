@@ -29,7 +29,7 @@ present in the local package. This clean-up functionality is called pruning.
 For example, consider a package which has been applied with the following three
 resources:
 
-```
+```shell
 service-1 (Service)
 deployment-1 (Deployment)
 config-map-1 (ConfigMap)
@@ -37,7 +37,7 @@ config-map-1 (ConfigMap)
 
 Then imagine the package is updated to contain the following resources:
 
-```
+```shell
 service-1 (Service)
 deployment-1 (Deployment)
 config-map-2 (ConfigMap)
