@@ -17,13 +17,13 @@ local directory.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg get REPO_URI[.git]/PKG_PATH[@VERSION] [LOCAL_DEST_DIRECTORY] [flags]
 ```
 
 #### Args
 
-```
+```shell
 REPO_URI:
   URI of a git repository containing 1 or more packages as subdirectories.
   In most cases the .git suffix should be specified to delimit the REPO_URI
@@ -49,7 +49,7 @@ LOCAL_DEST_DIRECTORY:
 
 #### Flags
 
-```
+```shell
 --strategy:
   Defines which strategy should be used to update the package. It defaults to
   'resource-merge'.
@@ -69,7 +69,7 @@ LOCAL_DEST_DIRECTORY:
 
 #### Env Vars
 
-```
+```shell
 KPT_CACHE_DIR:
   Controls where to cache remote packages when fetching them.
   Defaults to <HOME>/.kpt/repos/
@@ -80,18 +80,6 @@ KPT_CACHE_DIR:
 <!--mdtogo-->
 
 ### Examples
-
-{{ /* % hide % */ }}
-
-<!-- @makeWorkplace @verifyExamples-->
-
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-{{ /* % /hide % */ }}
 
 <!--mdtogo:Examples-->
 

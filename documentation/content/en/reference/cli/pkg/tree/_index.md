@@ -17,7 +17,7 @@ description: |
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg tree [DIR]
 ```
 
@@ -25,7 +25,7 @@ kpt pkg tree [DIR]
 
 #### Args
 
-```
+```shell
 DIR:
   Path to a directory containing KRM resource(s). Defaults to the current working directory.
 ```

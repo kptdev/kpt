@@ -30,13 +30,13 @@ Refer to the [Declarative Functions Execution] for more details.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt fn render [PKG_PATH] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Local package path to render. Directory must exist and contain a Kptfile
   to be updated. Defaults to the current working directory.
@@ -44,7 +44,7 @@ PKG_PATH:
 
 #### Flags
 
-```
+```shell
 --allow-exec:
   Allow executable binaries to run as function. Note that executable binaries
   can perform privileged operations on your system, so ensure that binaries
@@ -76,7 +76,7 @@ PKG_PATH:
 
 #### Environment Variables
 
-```
+```shell
 KRM_FN_RUNTIMETIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
@@ -134,4 +134,4 @@ $ kpt fn render --allow-network
 <!--mdtogo-->
 
 [declarative functions execution]:
-  /book/04-using-functions/01-declarative-function-execution
+  /book/04-using-functions/#declarative-function-execution

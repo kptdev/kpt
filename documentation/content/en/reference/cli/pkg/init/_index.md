@@ -17,20 +17,20 @@ Kptfile and a placeholder `README.md` file.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg init [DIR] [flags]
 ```
 
 #### Args
 
-```
+```shell
 DIR:
   init fails if DIR does not already exist. Defaults to the current working directory.
 ```
 
 #### Flags
 
-```
+```shell
 --description
   Short description of the package. (default "sample description")
 
@@ -45,17 +45,6 @@ DIR:
 
 ### Examples
 
-{{ /* % hide % */ }}
-
-<!-- @makeWorkplace @verifyExamples-->
-
-```
-# Set up workspace for the test.
-TEST_HOME=$(mktemp -d)
-cd $TEST_HOME
-```
-
-{{ /* % /hide % */ }}
 
 <!--mdtogo:Examples-->
 

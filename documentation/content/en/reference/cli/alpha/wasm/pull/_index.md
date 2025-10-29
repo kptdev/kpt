@@ -16,13 +16,13 @@ description: >
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha wasm pull [IMAGE] [LOCAL_PATH]
 ```
 
 #### Args
 
-```
+```shell
 IMAGE:
   The name of an image. It can be either a tag or a digest.
 LOCAL_PATH:

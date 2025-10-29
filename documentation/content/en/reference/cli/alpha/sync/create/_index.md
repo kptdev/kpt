@@ -17,20 +17,20 @@ the specified package. Config Sync then deploys the package into the cluster.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha sync create DEPLOYMENT_NAME [flags]
 ```
 
 #### Args
 
-```
+```shell
 DEPLOYMENT_NAME:
   The name of the sync resource created in the cluster.
 ```
 
 #### Flags
 
-```
+```shell
 --package
   Name of the package that should be deployed. It must exist in a
   deployment repo and be published.

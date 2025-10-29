@@ -16,13 +16,13 @@ description: |
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt pkg cat [FILE | DIR]
 ```
 
 #### Args
 
-```
+```shell
 FILE | DIR:
   Path to a directory either a directory containing files with KRM resources, or
   a file with KRM resource(s). Defaults to the current directory.
@@ -32,7 +32,7 @@ FILE | DIR:
 
 #### Flags
 
-```
+```shell
 --annotate
   Annotate resources with their file origins.
 

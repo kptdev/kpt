@@ -8,8 +8,6 @@ menu:
     parent: "References"
 ---
 
-# 
-
 <!--mdtogo:Short
     
 -->
@@ -18,7 +16,7 @@ menu:
 
 All kpt commands follow this general synopsis:
 
-```
+```shell
 kpt <group> <command> <positional args> [PKG_PATH] [flags]
 ```
 

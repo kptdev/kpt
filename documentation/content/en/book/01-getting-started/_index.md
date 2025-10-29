@@ -14,10 +14,10 @@ menu:
 
 ### kpt
 
-[Install the kpt CLI](../../installation/) and ensure you are running **version 1.0 or later**:
+Install the [kpt CLI](installation/kpt-cli):
 
 ```shell
-$ kpt version
+kpt version
 ```
 
 ### Git
@@ -61,13 +61,13 @@ underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt/package-examples/nginx@v0.9
+kpt pkg get https://github.com/kptdev/kpt/package-examples/nginx@v1.0.0-beta.59
 ```
 
 Subsequent commands are run from the `nginx` directory:
 
 ```shell
-$ cd nginx
+cd nginx
 ```
 
 `kpt pkg` commands provide the functionality for working with packages on Git and on your local filesystem.
@@ -75,7 +75,7 @@ $ cd nginx
 Next, let's quickly view the content of the package:
 
 ```shell
-$ kpt pkg tree
+kpt pkg tree
 Package "nginx"
 ├── [Kptfile]  Kptfile nginx
 ├── [deployment.yaml]  Deployment my-nginx
@@ -88,7 +88,7 @@ the kpt tool itself and is not deployed to the cluster. Later chapters will expl
 Initialize a local Git repo and commit the forked copy of the package:
 
 ```shell
-$ git init; git add .; git commit -m "Pristine nginx package"
+git init; git add .; git commit -m "Pristine nginx package"
 ```
 
 ### Customize the package
@@ -102,7 +102,7 @@ You may want to manually edit the files. For example, modify the value of `spec.
 your favorite editor:
 
 ```shell
-$ vim deployment.yaml
+vim deployment.yaml
 ```
 
 #### Automating One-time Edits with Functions
@@ -116,13 +116,13 @@ the `app` key in the `spec` section of the YAML document (`spec.**.app`) and set
 You can use the `kpt fn eval` command to run this mutation on your local files a single time:
 
 ```shell
-$ kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:latest -- by-path='spec.**.app' put-value=my-nginx
+kpt fn eval --image ghcr.io/kptdev/krm-functions-catalog/search-replace:latest -- by-path='spec.**.app' put-value=my-nginx
 ```
 
 To see what changes were made to the local package:
 
 ```shell
-$ git diff
+git diff
 ```
 
 #### Declaratively Defining Edits
@@ -154,7 +154,7 @@ This function will ensure that the label `env: dev` is added to all the resource
 The pipeline is executed using the `render` command:
 
 ```shell
-$ kpt fn render
+kpt fn render
 ```
 
 Regardless of how you choose to customize the package — whether by manually editing it or running one-time functions
@@ -168,7 +168,7 @@ declared in the package are executed, and the package is ready to be applied to 
 First, initialize the kpt package:
 
 ```shell
-$ kpt live init
+kpt live init
 ```
 
 This adds metadata to the `Kptfile` required to keep track of changes made
@@ -179,7 +179,7 @@ deleted together.
 Apply the resources to the cluster:
 
 ```shell
-$ kpt live apply --reconcile-timeout=15m
+kpt live apply --reconcile-timeout=15m
 ```
 
 This waits for the resources to be reconciled on the cluster by monitoring their
@@ -193,13 +193,13 @@ you want to merge the upstream changes with changes to your local package.
 First, commit your local changes:
 
 ```shell
-$ git add .; git commit -m "My customizations"
+git add .; git commit -m "My customizations"
 ```
 
-Then update to version `v0.10`:
+Then update to version `latest`:
 
 ```shell
-$ kpt pkg update @v0.10
+kpt pkg update @latest
 ```
 
 This merges the upstream changes with your local changes using a schema-aware
@@ -208,7 +208,7 @@ merge strategy.
 Apply the updated resources to the cluster:
 
 ```shell
-$ kpt live apply --reconcile-timeout=15m
+kpt live apply --reconcile-timeout=15m
 ```
 
 ### Clean up
@@ -216,7 +216,7 @@ $ kpt live apply --reconcile-timeout=15m
 Delete the package from the cluster:
 
 ```shell
-$ kpt live destroy
+kpt live destroy
 ```
 
 Congrats! You should now have a rough idea of what kpt is and what you can do

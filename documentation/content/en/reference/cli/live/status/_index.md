@@ -16,13 +16,13 @@ description: |
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live status [PKG_PATH | -] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH | -:
   Path to the local package for which the status of the package in the cluster
   should be displayed. It must contain either a Kptfile or a ResourceGroup CR
@@ -33,7 +33,7 @@ PKG_PATH | -:
 
 #### Flags
 
-```
+```shell
 --output:
   Determines the output format for the status information. Must be one of the following:
 

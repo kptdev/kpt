@@ -16,13 +16,13 @@ description: >
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt alpha sync get [DEPLOYMENT_NAME] [flags]
 ```
 
 #### Args
 
-```
+```shell
 DEPLOYMENT_NAME:
   The name of a sync resource.
 ```

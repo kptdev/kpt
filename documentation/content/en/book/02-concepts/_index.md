@@ -10,9 +10,8 @@ menu:
 ---
 
 ## What is kpt?
-###
 
-> kpt supports management of
+kpt supports management of
 [Configuration as Data](https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md).
 
 *Configuration as Data* is an approach to management of configuration which:
@@ -46,30 +45,13 @@ The kpt toolchain includes the following components:
   either direct apply or GitOps. By keeping an inventory of deployed resources, kpt enables resource pruning, aggregated
   status and observability, and an improved preview experience.
 
-- **Function SDKs**: Any general-purpose or domain-specific language can be used to create functions to transform
+- [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can be used to create functions to transform
  and/or validate the YAML KRM input/output format, but we provide SDKs to simplify the function authoring process, in 
-  [Go](../05-developing-functions/02-developing-in-Go). 
+  [Go](../05-developing-functions/#developing-in-Go). 
 
-- [**Function catalog**](https://catalog.kpt.dev/): A catalog of off-the-shelf, tested functions. kpt makes
+- [**Function catalog**](https://catalog.kpt.dev/function-catalog): A catalog of off-the-shelf, tested functions. kpt makes
   configuration easy to create and transform, via reusable functions. Because they are expected to be used for in-place
   transformation, the functions need to be idempotent.
-
-- [**Package orchestrator**](https://docs.nephio.org/docs/porch/): 
-  The package orchestrator enables the magic behind the unique WYSIWYG experience. It provides a control plane for
-  creating, modifying, updating, and deleting packages, and evaluating functions on package data. This enables
-  operations on packaged resources similar to operations directly on the live state through the Kubernetes API.
-
-- [**Config Sync**](https://cloud.google.com/anthos-config-management/docs/config-sync-overview): While the package
-  orchestrator can be used with any GitOps tool, Config Sync provides a reference GitOps implementation to complete the
-  WYSIWYG management experience and enable end-to-end development of new features, such as
-  [OCI-based packages](https://github.com/kptdev/kpt/issues/2300). Config Sync is also helping to drive improvements in
-  upstream Kubernetes. For instance, Config Sync is built on top of [git-sync](https://github.com/kubernetes/git-sync)
-  and leverages [Kustomize](https://kustomize.io) to automatically render manifests on the fly when needed. It uses the
-  same apply logic as the kpt CLI.
-
-- **Backstage UI plugin**: We've created a proof-of-concept UI to demonstrate the WYSIWYG experience that's possible on
-  top of the package orchestrator. More scenarios can be supported by implementing form-based editors for additional
-  Kubernetes resource types.
 
 ## Packages
   
@@ -84,13 +66,13 @@ Just as directories can be nested, a package can contain another package, called
 Let's take a look at the wordpress package as an example:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9
+kpt pkg get https://github.com/kptdev/kpt/tree/package-examples/wordpress@v1.0.0-beta.59
 ```
 
 View the package hierarchy using the `tree` command:
 
 ```shell
-$ kpt pkg tree wordpress/
+kpt pkg tree wordpress/
 Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
@@ -128,7 +110,7 @@ compatible with large corpus of existing Kubernetes configuration stored on Git 
 For example, `cockroachdb` is just a vanilla directory of KRM:
 
 ```shell
-$ kpt pkg get https://github.com/kubernetes/examples/staging/cockroachdb
+kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/cockroachdb
 ```
 
 We will go into details of how to work with packages in [Chapter 3](../03-packages).

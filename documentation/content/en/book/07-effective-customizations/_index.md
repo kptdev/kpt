@@ -92,14 +92,14 @@ pipeline:
    directly by the user.
 1. Attributes like resource names which are often updated by consumers to add prefix or suffix
    (e.g. *-dev, *-stage, *-prod, na1-*, eu1-*) are best handled by the
-   [ensure-name-substring](https://catalog.kpt.dev/ensure-name-substring/v0.1/) function that will handle dependency
+   [ensure-name-substring](https://catalog.kpt.dev/function-catalog/ensure-name-substring/v0.2/) function that will handle dependency
    updates as well as capture all the resources in the package.
 1. Instead of setting a particular value on a resource a bulk operation can be applied to all the resources that fit a
    particular interface.  This can be done by a custom function or by
-   [set-namespace](https://catalog.kpt.dev/set-namespace/v0.2/),
-   [search-and-replace](https://catalog.kpt.dev/search-replace/v0.2/),
-   [set-labels](https://catalog.kpt.dev/set-labels/v0.1/) and
-   [set-annotations](https://catalog.kpt.dev/set-annotations/v0.1/) functions.
+   [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/),
+   [search-and-replace](https://catalog.kpt.dev/function-catalog/search-replace/v0.2/),
+   [set-labels](https://catalog.kpt.dev/function-catalog/set-labels/v0.2/) and
+   [set-annotations](https://catalog.kpt.dev/function-catalog/set-annotations/v0.1/) functions.
 
 New bucket configuration:
 
@@ -290,6 +290,4 @@ languages like [Jinja](https://palletsprojects.com/p/jinja/) are very robust and
 
 1. When the generated configuration is simple consider just using a sub-package and running customizations using
    [single value replacement](#single-value-replacement) techniques.
-1. When a complex configuration needs to be generated the package author can create a generator function using turing
-   complete languages and debugging tools. Example of such a function is
-   [folder generation](https://catalog.kpt.dev/generate-folders/v0.1/). The output of the function is plain old KRM.
+

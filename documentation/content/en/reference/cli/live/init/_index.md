@@ -17,13 +17,13 @@ that will keep track of the package inventory.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live init [PKG_PATH] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH:
   Path to the local package which should be updated with inventory information.
   It must contain a Kptfile. Defaults to the current working directory.
@@ -31,7 +31,7 @@ PKG_PATH:
 
 #### Flags
 
-```
+```shell
 --force:
   Forces the inventory values to be updated, even if they are already set.
   Defaults to false.

@@ -20,13 +20,13 @@ fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case, we are specifying tag
 `v0.9`.
 
- > Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
+Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
 
 The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content of the `Kptfile` on
 your local filesystem:
@@ -113,7 +113,7 @@ It is possible to specify a different local directory name to the `get` command.
 For example, the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9 mywordpress
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and follows the familiar
@@ -139,7 +139,7 @@ kpt also provides the `tree` command which is handy for quickly viewing package
 hierarchy and the constituent packages, files, and resources:
 
 ```shell
-$ kpt pkg tree wordpress/
+kpt pkg tree wordpress/
 Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
@@ -153,14 +153,14 @@ Package "wordpress"
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
- > Refer to the [tree command reference](../../reference/cli/pkg/tree/) for usage.
+Refer to the [tree command reference](../../reference/cli/pkg/tree/) for usage.
 
 In addition, you can use a kpt function such as `search-replace` to run a query
 on the package. For example, to search for resources that have a field with path
 `spec.selector.tier`:
 
 ```shell
-$ kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
+kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
 ```
 
 ## Editing a package
@@ -188,7 +188,7 @@ _within_ a package.
 Before you make any changes to package, you should first initialize and commit the pristine package:
 
 ```shell
-$ git init; git add .; git commit -m "Pristine wordpress package"
+git init; git add .; git commit -m "Pristine wordpress package"
 ```
 
 ### Manual edits
@@ -201,7 +201,7 @@ VS Code and IntelliJ provide IDE features such as auto-completion, inline docume
 For example, if you have VS Code installed, try modifying the resources in the `wordpress` package:
 
 ```shell
-$ code wordpress
+code wordpress
 ```
 
 ### Automation
@@ -214,7 +214,7 @@ For example, setting a label on all the resources in the `wordpress` package can
 using the following function:
 
 ```shell
-$ kpt fn eval wordpress -i set-labels:latest -- env=dev
+kpt fn eval wordpress -i set-labels:latest -- env=dev
 ```
 
 [Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.
@@ -224,10 +224,10 @@ $ kpt fn eval wordpress -i set-labels:latest -- env=dev
 Regardless of how you have edited the package, you want to _render_ the package:
 
 ```shell
-$ kpt fn render wordpress
+kpt fn render wordpress
 ```
 
- > Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
+Refer to the [render command reference](../../reference/cli/fn/render/) for usage.
 
 `render` is a critical step in the package lifecycle. At a high level, it
 perform the following steps:
@@ -255,13 +255,13 @@ Before you update the package, you want to commit your local changes.
 First, to see the changes you've made to the fork of the upstream package:
 
 ```shell
-$ git diff
+git diff
 ```
 
 If you're happy with the changes, commit them:
 
 ```shell
-$ git add .; git commit -m "My changes"
+git add .; git commit -m "My changes"
 ```
 
 ## Update the package
@@ -269,7 +269,7 @@ $ git add .; git commit -m "My changes"
 For example, you can update to version `v0.10` of the `wordpress` package:
 
 ```shell
-$ kpt pkg update wordpress@v0.10
+kpt pkg update wordpress@v0.10
 ```
 
 This is a porcelain for manually updating the `upstream` section in the
@@ -289,7 +289,7 @@ upstream:
 and then running:
 
 ```shell
-$ kpt pkg update wordpress
+kpt pkg update wordpress
 ```
 
 The `update` command updates the local `wordpress` package and the dependent
@@ -303,21 +303,21 @@ Several different strategies are available to handle the merge. By default, the
 `resource-merge` strategy is used which performs a structural comparison of the
 resource using OpenAPI schema.
 
- > Refer to the [update command reference](../../reference/cli/pkg/update/) for usage.
+Refer to the [update command reference](../../reference/cli/pkg/update/) for usage.
 
 ### Commit the updated resources
 
 Once you have successfully updated the package, commit the changes:
 
 ```shell
-$ git add .; git commit -m "Updated wordpress to v0.10"
+git add .; git commit -m "Updated wordpress to v0.10"
 ```
 ## Creating a package
 
 Creating a new package is simple: create a new directory and [author resources](#editing-a-package):
 
 ```shell
-$ mkdir awesomeapp
+mkdir awesomeapp
 # Create resources in awesomeapp/
 ```
 
@@ -325,12 +325,12 @@ For convenience, you can use `pkg init` command to create a minimal `Kptfile`
 and `README` files:
 
 ```shell
-$ kpt pkg init awesomeapp
+kpt pkg init awesomeapp
 writing Kptfile
 writing README.md
 ```
 
- > Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
+Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
 
 The `info` section of the `Kptfile` contains some optional package metadata you
 may want to set. These fields are not consumed by any functionality in kpt:
@@ -368,7 +368,7 @@ Let's revisit the `wordpress` package and see how it was composed in the first
 place. Currently, it has the following package hierarchy:
 
 ```shell
-$ kpt pkg tree wordpress/
+kpt pkg tree wordpress/
 Package "wordpress"
 ├── [Kptfile]  Kptfile wordpress
 ├── [service.yaml]  Service wordpress
@@ -386,7 +386,7 @@ First, let's delete the `mysql` subpackage. Deleting a subpackage is done by
 simply deleting the subdirectory:
 
 ```shell
-$ rm -r wordpress/mysql
+rm -r wordpress/mysql
 ```
 
 We're going to add back the `mysql` subpackage using the two different
@@ -397,13 +397,13 @@ approaches:
 Create the directory:
 
 ```shell
-$ mkdir wordpress/mysql
+mkdir wordpress/mysql
 ```
 
 Initialize the package:
 
 ```shell
-$ kpt pkg init wordpress/mysql
+kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
 
@@ -414,13 +414,13 @@ This creates a [dependent package](#getting-a-package).
 Remove the existing directory if it exists:
 
 ```shell
-$ rm -rf wordpress/mysql
+rm -rf wordpress/mysql
 ```
 
 Fetch the package:
 
 ```shell
-$ kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
+kpt pkg get https://github.com/kubernetes/website.git/content/en/examples/application/mysql@snapshot-initial-v1.20 wordpress/mysql
 ```
 
 This creates an [independent package](#getting-a-package). If you wish to make this a dependent
@@ -439,25 +439,25 @@ Start by initializing the the `wordpress` directory as a Git repo if you haven't
 already done so:
 
 ```shell
-$ cd wordpress; git init; git add .; git commit -m "My wordpress package"
+cd wordpress; git init; git add .; git commit -m "My wordpress package"
 ```
 
 Tag the commit:
 
 ```shell
-$ git tag v0.1
+git tag v0.1
 ```
 
 Push the commit which requires you to have access to the repo:
 
 ```shell
-$ git push origin v0.1
+git push origin v0.1
 ```
 
 You can then fetch the published package:
 
 ```shell
-$ kpt pkg get <MY_REPO_URL>/@v0.1
+kpt pkg get <MY_REPO_URL>/@v0.1
 ```
 
 ### Monorepo Versioning
@@ -471,19 +471,19 @@ repo but instead is in the directory `packages/wordpress`.
 Tag the commit:
 
 ```shell
-$ git tag packages/wordpress/v0.1
+git tag packages/wordpress/v0.1
 ```
 
 Push the commit:
 
 ```shell
-$ git push origin packages/wordpress/v0.1
+git push origin packages/wordpress/v0.1
 ```
 
 You can then fetch the published package:
 
 ```shell
-$ kpt pkg get <MY_REPO_URL>/packages/wordpress@v0.1
+kpt pkg get <MY_REPO_URL>/packages/wordpress@v0.1
 ```
 
 [tagging]: https://git-scm.com/book/en/v2/Git-Basics-Tagging

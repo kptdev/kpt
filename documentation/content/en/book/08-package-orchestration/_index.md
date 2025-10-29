@@ -11,7 +11,7 @@ menu:
     weight: 80
 ---
 
-{{< warning >}}
+{{< warning type=warning >}}
 This chapter is no longer valid and will be moved to the [Porch](https://docs.nephio.org/docs/porch/) documentation.
 The `kpt alpha repo|rpkg` command set are now part of the [porchctl](https://docs.nephio.org/docs/porch/user-guides/porchctl-cli-guide/) tool.
 {{< /warning >}}
@@ -71,7 +71,7 @@ $ kpt alpha repo register --namespace default \
   https://github.com/kptdev/kpt-samples.git
 ```
 
- > Refer to the [register command reference](../../reference/cli/alpha/repo/reg/) for usage.
+Refer to the [register command reference](../../reference/cli/alpha/repo/reg/) for usage.
 
 The sample repository is public and Porch therefore doesn't require
 authentication to read the repository and discover packages within it.
@@ -88,7 +88,7 @@ NAME         TYPE  CONTENT  DEPLOYMENT  READY  ADDRESS
 kpt-samples  git   Package              True   https://github.com/kptdev/kpt-samples.git
 ```
 
- > Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
+Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
 
 From the output you can see that:
 
@@ -109,7 +109,7 @@ resources.
 You can use the `-oyaml` to see the YAML representation of the repository
 registration resource:
 
- > kpt uses the same output format flags as `kubectl`. Flags with which you are
+kpt uses the same output format flags as `kubectl`. Flags with which you are
 already familiar from using `kubectl get` will work with the kpt commands
 that get or list Porch resources.
 
@@ -176,9 +176,9 @@ kpt-samples-da07e9611f9b99028f761c07a79e3c746d6fc43b   basens    main       fals
 kpt-samples-afcf4d1fac605a60ba1ea4b87b5b5b82e222cb69   basens    v0         true     Published   kpt-samples
 ```
 
- > Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
+Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
 
- > The `r` prefix of the `rpkg` command group stands for `remote`. The commands
+The `r` prefix of the `rpkg` command group stands for `remote`. The commands
 in the `kpt alpha rpkg` group interact with packages managed (remotely) by Porch
 server. The commands in the `rpkg` group are similar to the `kpt pkg` commands
 except that they operate on remote packages managed by Porch server rather than
@@ -238,7 +238,7 @@ basens/Kptfile
 ...
 ```
 
- > Refer to the [pull command reference](../../reference/cli/alpha/rpkg/pull/) for usage.
+Refer to the [pull command reference](../../reference/cli/alpha/rpkg/pull/) for usage.
 
 ### Unregister the repository
 
@@ -304,7 +304,7 @@ kpt alpha repo register --namespace default \
   https://github.com/kptdev/kpt-samples.git
 ```
 
- > Refer to the [register command reference](../../reference/cli/alpha/repo/reg/) for usage.
+Refer to the [register command reference](../../reference/cli/alpha/repo/reg/) for usage.
 
 You now have two repositories registered, and your repository is marked as
 deployment repository. This indicates that published packages in the repository
@@ -318,7 +318,7 @@ deployments  git   Package  true        True   [Your repository address]
 kpt-samples  git   Package              True   https://github.com/kptdev/kpt-samples.git
 ```
 
- > Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
+Refer to the [get command reference](../../reference/cli/alpha/repo/get/) for usage.
 
 ## Package Authoring
 
@@ -347,18 +347,18 @@ kpt-samples-afcf4d1fac605a60ba1ea4b87b5b5b82e222cb69   basens        v0         
 ...
 ```
 
- > Refer to the [init command reference](../../reference/cli/alpha/rpkg/init/) for usage.
+Refer to the [init command reference](../../reference/cli/alpha/rpkg/init/) for usage.
 
 You can see the `new-package` is created in the `Draft` lifecycle stage. This
 means that the package is being authored.
 
-> You may notice that the name of the package revision
-> `deployments-c32b851b591b860efda29ba0e006725c8c1f7764` was assigned
-> automatically. Packages in a git repository may be located in subdirectories
-> and to make sure Porch works well with the rest of the Kubernetes ecosystem,
-> the resource names must meet Kubernetes requirements. The resource names
-> assigned by Porch are stable, and computed as hash of the repository name,
-> directory path within the repository, and revision.
+You may notice that the name of the package revision
+`deployments-c32b851b591b860efda29ba0e006725c8c1f7764` was assigned
+automatically. Packages in a git repository may be located in subdirectories
+and to make sure Porch works well with the rest of the Kubernetes ecosystem,
+the resource names must meet Kubernetes requirements. The resource names
+assigned by Porch are stable, and computed as hash of the repository name,
+directory path within the repository, and revision.
 
 The contents of the new package revision are the same as if it was created using
 the [`kpt pkg init`](/book/03-packages/06-creating-a-package) command, except it
@@ -392,7 +392,7 @@ NAME                                                   PACKAGE   REVISION   LATE
 deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b   istions   v1         false    Draft       deployments
 ```
 
- > Refer to the [clone command reference](../../reference/cli/alpha/rpkg/clone/) for usage.
+Refer to the [clone command reference](../../reference/cli/alpha/rpkg/clone/) for usage.
 
 Cloning a package using the Package Orchestration service is an action similar to
 [`kpt pkg get`](/book/03-packages/01-getting-a-package) command. Porch will
@@ -433,12 +433,12 @@ You can find out more about the `upstream` and `upstreamLock` sections of the
 `Kptfile` in an [earlier chapter](/book/03-packages/01-getting-a-package)
 of the book.
 
-> A cloned package must be created in a repository in the same namespace as
-> the source package. Cloning a package with the Package Orchestration Service
-> retains a reference to the upstream package revision in the clone, and
-> cross-namespace references are not allowed. Package revisions in repositories
-> in other namespaces can be cloned using a reference directly to the underlying
-> oci or git repository as described below.
+A cloned package must be created in a repository in the same namespace as
+the source package. Cloning a package with the Package Orchestration Service
+retains a reference to the upstream package revision in the clone, and
+cross-namespace references are not allowed. Package revisions in repositories
+in other namespaces can be cloned using a reference directly to the underlying
+oci or git repository as described below.
 
 You can also clone a package from a repository that is _not_ registered with
 Porch, for example:
@@ -505,7 +505,7 @@ deployments-c32b851b591b860efda29ba0e006725c8c1f7764   new-package   v1         
 deployments-93bb9ac8c2fb7a5759547a38f5f48b369f42d08a   new-package   v2         false    Draft       deployments
 ```
 
- > Refer to the [copy command reference](../../reference/cli/alpha/rpkg/copy/) for usage.
+Refer to the [copy command reference](../../reference/cli/alpha/rpkg/copy/) for usage.
 
 Unlike `clone` of a package which establishes the upstream-downstream
 relationship between the respective packages, and updates the `Kptfile`
@@ -530,7 +530,7 @@ disk, make any desired changes, and then pushing the updated contents to Porch.
 $ kpt alpha rpkg pull deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b ./istions -ndefault
 ```
 
- > Refer to the [pull command reference][rpkg-pull] for usage.
+Refer to the [pull command reference][rpkg-pull] for usage.
 
 The command downloaded the `istions/v1` package revision contents and saved
 them in the `./istions` directory. Now you will make some changes.
@@ -583,7 +583,7 @@ Save the changes and push the package contents back to the server:
 $ kpt alpha rpkg push deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b ./istions -ndefault
 ```
 
- > Refer to the [push command reference](../../reference/cli/alpha/rpkg/push/) for usage.
+Refer to the [push command reference](../../reference/cli/alpha/rpkg/push/) for usage.
 
 Now, pull the contents of the package revision again, and inspect one of the
 configuration files.
@@ -664,7 +664,7 @@ deployments-eeb52a8072ca2602e7ee27f3c56ad6344b024f5b proposed
 deployments-8baf4892d6bdeda0f26ef4b1088fddb85c5a2486 proposed
 ```
 
- > Refer to the [propose command reference](../../reference/cli/alpha/rpkg/propose/) for usage.
+Refer to the [propose command reference](../../reference/cli/alpha/rpkg/propose/) for usage.
 
 The two package revisions are now **`Proposed`**:
 
@@ -694,12 +694,12 @@ $ kpt alpha rpkg reject deployments-8baf4892d6bdeda0f26ef4b1088fddb85c5a2486 -nd
 deployments-8baf4892d6bdeda0f26ef4b1088fddb85c5a2486 rejected
 ```
 
- > Refer to the [approve](../../reference/cli/alpha/rpkg/approve/) and [reject](../../reference/cli/alpha/rpkg/reject/)
+Refer to the [approve](../../reference/cli/alpha/rpkg/approve/) and [reject](../../reference/cli/alpha/rpkg/reject/)
    command reference for usage.
 
-> Approving a package revisions requires that the current user has been granted
-> update access to the `approve` subresource of `packagerevisions`. This allows
-> for giving only a limited set of users permission to approve package revisions.
+Approving a package revisions requires that the current user has been granted
+update access to the `approve` subresource of `packagerevisions`. This allows
+for giving only a limited set of users permission to approve package revisions.
 
 Now, confirm lifecycle stages of the package revisions:
 

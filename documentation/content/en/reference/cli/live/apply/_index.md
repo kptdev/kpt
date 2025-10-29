@@ -17,13 +17,13 @@ cluster resources match the local package configuration.
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live apply [PKG_PATH | -] [flags]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH | -:
   Path to the local package which should be applied to the cluster. It must
   contain a Kptfile or a ResourceGroup manifest with inventory metadata.
@@ -33,7 +33,7 @@ PKG_PATH | -:
 
 #### Flags
 
-```
+```shell
 --dry-run:
   It true, kpt will validate the resources in the package and print which
   resources will be applied and which resources will be pruned, but no resources

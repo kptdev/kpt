@@ -16,13 +16,13 @@ description: |
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt live destroy [PKG_PATH | -]
 ```
 
 #### Args
 
-```
+```shell
 PKG_PATH | -:
   Path to the local package which should be deleted from the cluster. It must
   contain a Kptfile or a ResourceGroup manifest with inventory metadata.
@@ -32,7 +32,7 @@ PKG_PATH | -:
 
 #### Flags
 
-```
+```shell
 --dry-run:
   It true, kpt will print the resources that will be removed from the cluster,
   but no resources will be deleted.

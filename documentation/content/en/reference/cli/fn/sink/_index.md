@@ -25,7 +25,7 @@ to [Chaining functions](/book/04-using-functions/#chaining-functions-using-the-u
 
 <!--mdtogo:Long-->
 
-```
+```shell
 kpt fn sink DIR [flags]
 
 DIR:
