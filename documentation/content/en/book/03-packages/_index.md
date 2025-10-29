@@ -53,6 +53,7 @@ upstreamLock:
     commit: b9ea0bca019dafa9f9f91fd428385597c708518c
 info:
   emails:
+    - road-runner@theacmecorporation.com
     - wily.e.coyote@theacmecorporation.com
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
