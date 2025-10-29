@@ -4,7 +4,7 @@ metadata:
   name: wordpress
 info:
   emails:
-    - kpt-team@google.com
+    - wily.e.coyote@theacmecorporation.com
   description: This is an example wordpress package with mysql subpackage.
 pipeline:
   mutators:

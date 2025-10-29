@@ -4,5 +4,5 @@ metadata:
   name: mysql
 info:
   emails:
-    - kpt-team@google.com
+    - wily.e.coyote@theacmecorporation.com
   description: This is an example mysql package.
