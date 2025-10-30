@@ -1,0 +1,20 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: mysql
+info:
+  description: mysql package
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+      configMap:
+        namespace: example-ns
+      name: set namespace
+    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+      configMap:
+        fruit: apple
+      name: set fruit label
+    - image: gcr.io/kpt-fn/set-labels:v0.2.0
+      configMap:
+        color: orange
+      name: set color label
