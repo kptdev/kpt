@@ -289,7 +289,7 @@ EOF
 ```
 
 Run the KRM function
-```
+```shell
 {kpt fn source testdata; cat fn-config.yaml} | go run main.go
 ```
 
@@ -306,8 +306,8 @@ metadata: # kpt-merge: /nginx-deployment
 
 #### Debug the KRM function in VSCode
 
-Open VSCode in the main directory of the KRM function. Use a ".vscode/launch.json" file with a similar configuration to below to
-configure the KRM function launch configuration for debugging:
+Open VSCode in the main directory of the KRM function. Use a ".vscode/launch.json" file to
+set the KRM function launch configuration for debugging:
 
 ```json
 {
