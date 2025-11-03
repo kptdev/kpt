@@ -6,3 +6,8 @@ info:
   emails:
     - wily.e.coyote@theacmecorporation.com
   description: This is an example mysql package.
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        tier: mysql
