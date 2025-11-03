@@ -8,4 +8,4 @@ menu:
     parent: "Schema Reference"
 ---
 
-Grab the OpenAPI [schema here](/openapi/kptfile.yaml).
+Grab the OpenAPI [schema here](./kptfile.yaml).

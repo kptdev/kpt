@@ -23,9 +23,9 @@ can have one of the values:
 * **Skip**: No changes will be made to this resource due to the presence of one or more lifecycle directives.
 * **Error**: An error was encountered for the resource.
 
-There is also an `original` field which contains the resource from the cluster before apply (is it does exist), and
+There is also an `original` field which contains the resource from the cluster before apply (if it does exist), and
 an `updated` field that contains the resource after apply (but the state in the cluster remains unchanged). Finally,
 there is an `error` field that will have a more detailed error message in the cases where the value of the `action`
 field is `Error`.
 
-The OpenAPI [schema is available here](/openapi/kptfile.yaml).
+The OpenAPI [schema is available here](./plan.yaml).
