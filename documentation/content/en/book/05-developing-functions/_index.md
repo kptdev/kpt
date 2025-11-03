@@ -1,5 +1,5 @@
 ---
-title: "Chapter 5: Developing-functions"
+title: "Chapter 5: Developing Functions"
 linkTitle: "Chapter 5: Developing-functions"
 description: |
     [Chapter 2](../02-concepts/#functions) provided a high-level conceptual explanation of functions. We discussed how
@@ -28,8 +28,8 @@ With this approach you create a custom container image which can execute
 programs in an arbitrary language or encapsulate existing tools as long as it
 satisfies the KRM Functions Specification we will see later in this chapter.
 
-To simplify development, we provide frameworks for developing functions in Go
-and Typescript. We will cover these later in this chapter.
+To simplify development, we provide a framework for developing functions in Go.
+We will cover that framework later in this chapter.
 
 ### Authoring Executable Configuration
 
@@ -39,9 +39,9 @@ resource. This is referred to as _executable configuration_. We will see two
 examples of executable configuration pattern in this chapter.
 
 Although using executable configuration saves some time initially, it can become
-an anti-pattern if it grows in complexity. We recommend limiting their use to:
+an anti-pattern if it grows in complexity. We recommend limiting their use if:
 
-- Small amount of logic (< 20 lines)
+- There is a small amount of logic (< 20 lines)
 - You do not forsee this logic growing in complexity in the future
 
 Otherwise, you are better off developing functions in a general-purpose language
@@ -84,7 +84,8 @@ detail in [chapter 4](../04-using-functions#privileged-execution).
 In order to enable functions to be developed in different toolchains and
 languages and be interoperable and backwards compatible, the kpt project created
 a standard for the inter-process communication between the orchestrator (i.e.
-kpt CLI) and functions. This standard was published as [KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
+kpt CLI) and functions. This standard was published as the
+[KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md#krm-functions-specification)
 and donated to the CNCF as part of the Kubernetes SIG-CLI.
 
 Understanding this specification enables you to have a deeper understanding of
@@ -101,10 +102,10 @@ kpt fn source wordpress | less
 ## Developing in Go
 
 You can develop a KRM function in Go using
-[the kpt function SDK](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
+[the KRM function SDK](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
 
-- **General-purpose language:** Compared to Domain Specific Languages (DSL), Go
-  is a general-purpose programming language that provides:
+GO is more suitbale for developing KRM functions than Domain SPecific Languages (DSLs).
+Go is a general-purpose programming language that provides:
   - Proper abstractions and language features
   - An extensive ecosystem of tooling (e.g. IDE support)
   - A comprehensive catalog of well-supported libraries
@@ -112,11 +113,11 @@ You can develop a KRM function in Go using
 
 ### Prerequisites
 
-- [Install kpt](installation)
+- [Install kpt](installation/kpt-cli/)
 
 - [Install Docker](https://docs.docker.com/get-docker/)
 
-- [Golang](https://go.dev/dl/) (at least version 1.19)
+- [Golang](https://go.dev/dl/) (at least version 1.24)
 
 ### Quickstart
 

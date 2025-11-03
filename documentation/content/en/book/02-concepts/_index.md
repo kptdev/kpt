@@ -35,7 +35,7 @@ applies transformation **functions**, using the same
 [KRM function specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md),
 but optimizes for in-place configuration transformation rather than out-of-place transformation. 
 
-Validation goes hand-in-hand with customization and kpt functions can be used to automate both mutation and validation
+Validation goes hand-in-hand with customization and KRM functions can be used to automate both mutation and validation
 of resources, similar to
 [Kubernetes admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/). 
 
@@ -107,10 +107,10 @@ even if it does not contain a `Kptfile`. Effectively, you are telling kpt to tre
 automatically creates the `Kptfile` on the local filesystem to keep track of the upstream repo. This means that kpt is
 compatible with large corpus of existing Kubernetes configuration stored on Git today!
 
-For example, `cockroachdb` is just a vanilla directory of KRM:
+For example, `spark` is just a vanilla directory of KRM:
 
 ```shell
-kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/cockroachdb
+kpt pkg get https://github.com/kubernetes/examples/tree/master/_archived/spark
 ```
 
 We will go into details of how to work with packages in [Chapter 3](../03-packages).
@@ -181,7 +181,7 @@ upstream package even though you may not deploy the package personally.
 
 ## Functions
 
-A kpt function (also called a _KRM function_) is a containerized program that
+A KRM function (formerly called a _kpt_ function_) is a containerized program that
 can perform CRUD operations on KRM resources stored on the local filesystem. kpt
 functions are the extensible mechanism to automate mutation and validation of
 KRM resources. Some example use cases:
@@ -200,7 +200,7 @@ Since functions are containerized, they can encapsulate different toolchains,
 languages, and runtimes. For example, the function container image can
 encapsulate:
 
-- A binary built using kpt's official Go or Typescript SDK
+- A binary built using kpt's official Go SDK
 - Wrap an existing KRM tool such as `kubeconform`
 - Invoke a bash script performing low-level operations
 - The interpreter for "executable configuration" such as `Starlark` or `Rego`
@@ -225,7 +225,8 @@ executed, kpt can provide the following guarantees:
   be able to run functions hermetically without any privileges; preventing
   out-of-band access to the host filesystem and networking.
 
-We will discuss the KRM Functions Specification Standard in detail in Chapter 5.
+We will discuss the KRM Functions Specification Standard in detail in
+[Chapter 5](../05-developing-functions).
 At a high level, a function execution looks like this:
 
 ![img](/images/func.svg)
