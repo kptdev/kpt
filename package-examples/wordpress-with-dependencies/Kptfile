@@ -6,3 +6,10 @@ info:
   emails:
     - wily.e.coyote@theacmecorporation.com
   description: This is an example package that uses the depends-on annotation
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: wordpress
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
