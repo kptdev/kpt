@@ -1,5 +1,5 @@
-[starlark]: https://catalog.kpt.dev/starlark/v0.4/
-[apply-replacements]: https://catalog.kpt.dev/apply-replacements/v0.1/
+[starlark]: https://catalog.kpt.dev/function-catalog/starlark/v0.5/
+[apply-replacements]: https://catalog.kpt.dev/function-catalog/apply-replacements/v0.1/
 
 # Value propagation pattern
 

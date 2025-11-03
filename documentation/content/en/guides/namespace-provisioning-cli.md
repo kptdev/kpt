@@ -2,7 +2,7 @@
 title:  Namespace provisioning using kpt CLI
 linkTitle:  Namespace provisioning using kpt CLI
 description: |
-    In this guide, we will learn how to create a kpt package from scratch using `kpt CLI`. We will also learn how to
+    In this guide, we will learn how to create a kpt package from scratch using the `kpt CLI`. We will also learn how to
     enable customization of the package with minimal manual steps for package consumers.
 toc_hide: true
 menu:
@@ -157,8 +157,8 @@ Package "basens"
 
 Before we add more resources to the package, let's configure our package to
 ensure that the namespace for new resources in the package is set correctly.
-kpt offers a set of common functions as part of [kpt-function-catalog](https://catalog.kpt.dev)
-and it has a [set-namespace](https://catalog.kpt.dev/set-namespace) function
+kpt offers a set of common functions as part of the [Functions Catalog](https://catalog.kpt.dev/function-catalog/)
+and it has a [set-namespace](https://catalog.kpt.dev/function-catalog/set-namespace/v0.4/) function
 that can be used to ensure all resources in a package use the same namespace.
 
 ```shell
@@ -214,7 +214,8 @@ Successfully executed 1 function(s) in 1 package(s).
 
 Note: if you are curious about how KRM functions are implemented. Take a look
 at [set-namespace code](https://github.com/kptdev/krm-functions-catalog/blob/master/functions/go/set-namespace/transformer/namespace.go)
-to get a feel for the implementation.
+to get a feel for the implementation. You can also check out [Chapter 5: Developing Functions](https://kpt.dev/book/05-developing-functions/)
+of the kpt book.
 
 ### Permissions
 
@@ -249,7 +250,8 @@ subjects:
 
 To enable automatic customization of this role binding for an instance of a
 namespace package, we can bind the value of package instance name to the group
-name in the above role binding resource. We will use the [apply-replacements function](https://catalog.kpt.dev/apply-replacements/v0.1/)
+name in the above role binding resource. We will use the
+[apply-replacements function](https://catalog.kpt.dev/function-catalog/apply-replacements/v0.1/)
 from kpt-function-catalog for binding the values.
 Here is an snippet that does that:
 
@@ -344,14 +346,10 @@ $ git tag basens/v0 && git push origin basens/v0
 So, now the package should be available in the `blueprint` repo. Consumers
 (application teams or platform team provisioning namespace on behalf of
 application team) will now use this published package to create deployable
-instances of it. There are different ways to create deployable instances of
-this package:
+instances of it. We can create deployable instances of this package using the
+kpt CLI as described in the next section.
 
-- [Use package orchestration CLI](guides/porch-user-guide.md)
-- Use package orchestration UI (coming soon)
-- Use kpt CLI without package orchestration as described in the next section.
-
-### Package Consumption Workflow (without package orchestration)
+### Package Consumption Workflow
 
 Assuming you are onboarding a new micro-service called backend, let’s go
 through the process of creating an instance of the basens package for backend.
