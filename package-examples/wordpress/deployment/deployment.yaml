@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: wordpress
-          image: wordpress:4.8-apache
+          image: wordpress:6.8-apache
           ports:
             - name: wordpress
               protocol: TCP

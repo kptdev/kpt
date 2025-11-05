@@ -2,4 +2,4 @@
 
 Please refer to [kpt book] for consuming this package.
 
-[kpt book]: https://kpt.dev/book/06-deploying-packages/03-handling-dependencies
+[kpt book]: https://kpt.dev/book/06-deploying-packages/#handling-dependencies
