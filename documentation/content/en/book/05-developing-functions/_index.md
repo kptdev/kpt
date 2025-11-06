@@ -104,7 +104,7 @@ kpt fn source wordpress | less
 You can develop a KRM function in Go using
 [the KRM function SDK](https://pkg.go.dev/github.com/kptdev/krm-functions-sdk/go/fn).
 
-GO is more suitbale for developing KRM functions than Domain SPecific Languages (DSLs).
+GO is more suitable for developing KRM functions than Domain Specific Languages (DSLs).
 Go is a general-purpose programming language that provides:
   - Proper abstractions and language features
   - An extensive ecosystem of tooling (e.g. IDE support)
