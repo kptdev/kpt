@@ -18,7 +18,7 @@ kpt is a package-centric toolchain that enables a WYSIWYG configuration authorin
         </div>
     </div>
     <div class="col-lg-6">
-        <img src="/images/logo-with-name.svg" alt="kpt logo" style="max-width: 300px;">
+        <img src="/images/kpt_stacked_color.svg" alt="kpt logo" style="max-width: 300px;">
     </div>
 </div>
 
