@@ -90,3 +90,8 @@ section {
 .td-box--white p > a {
 	color: $link-color;
 }
+
+// Force link hover color to use our SCSS variable
+a:hover {
+	color: $link-hover-color !important;
+}
