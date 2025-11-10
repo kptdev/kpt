@@ -13,17 +13,17 @@ menu:
 
 ## Introduction
 
-We use `kpt live apply` instead `kubectl apply` since it provides some critical
-functionality not provided by the latter: pruning and reconcile status. To
+We use `kpt live apply` instead of `kubectl apply` since it provides some critical
+functionality not provided by `kubectl apply`: namely *pruning* and *reconcile status*. To
 enable this functionality, we need a cluster-side mechanism for grouping and
 tracking resources belonging to a package. This cluster-side grouping is
 implemented using a custom resource of kind `ResourceGroup`. Otherwise,
 `kpt live` and `kubectl` are complementary. For example, you can use
-`kubectl get` as you normal would.
+`kubectl get` as you normally would.
 
 ### Pruning
 
-`live apply` will automatically delete cluster resources that are no longer
+`kpt live apply` will automatically delete cluster resources that are no longer
 present in the local package. This clean-up functionality is called pruning.
 
 For example, consider a package which has been applied with the following three
@@ -35,7 +35,7 @@ deployment-1 (Deployment)
 config-map-1 (ConfigMap)
 ```
 
-Then imagine the package is updated to contain the following resources:
+The package is updated to contain the following resources:
 
 ```shell
 service-1 (Service)
@@ -43,8 +43,8 @@ deployment-1 (Deployment)
 config-map-2 (ConfigMap)
 ```
 
-When the updated package is applied, `config-map-1` is automatically deleted
-from the cluster.
+When the updated package is applied, `config-map-2` is applied to the cluster and
+`config-map-1` is automatically deleted from the cluster.
 
 ### Reconcile Status
 
@@ -58,22 +58,23 @@ This is referred to as _apply status_ and _reconcile status_ respectively:
 
 ![img](/images/status.svg)
 
-The `live apply` command computes the reconcile status. An example of this could
-be applying a `Deployment`. Without computing reconcile status, the operation
+The `kpt live apply` command computes the reconcile status. An example of this could
+be applying a `Deployment`. Without computing the reconcile status, the operation
 would be reported as successful as soon as the resource has been created in the
-API server. With reconcile status, `live apply` will wait until the desired
+API server. With reconcile status, `kpt live apply` will wait until the desired
 number of pods have been created and become available.
 
 For core kubernetes types, reconcile status is computed using hardcoded rules.
-For CRDs, the status computation is based on recommended [convention for status
-fields] that needs to be followed by custom resource publishers. If CRDs follow
-these conventions, `live apply` will be able to correctly compute status. `kpt` also
-has special rules for computing status for
+For CRDs, the status computation is based on the recommended
+[convention for status fields](../../reference/schema/crd-status-convention/)
+that must be followed by custom resource publishers. If CRDs follow
+these conventions, `kpt live apply` will correctly compute the reconciliation status.
+`kpt` alsohas special rules for computing status for
 [Config Connector resources](../../reference/schema/config-connector-status-convention/).
 
-Usually multiple resources are being applied together, and we want to know
-when all of those resources have been successfully reconciled. `live apply` computes
-the aggregate status and will wait until either they are all reconciled, the timeout
+Multiple resources are usually applied together and we want to know
+when all of these resources have been successfully reconciled. `kpt live apply` computes
+the aggregate status and waits until either they are all reconciled, the timeout
 expires, or all the remaining unreconciled resources have reached a state where they
 are unlikely to successfully reconcile. An example of the latter for `Deployment`
 resources is when the progress deadline is exceeded.
@@ -82,17 +83,17 @@ resources is when the progress deadline is exceeded.
 
 Sometimes resources must be applied in a specific order. For example,
 an application might require that a database is available when it starts.
-`kpt live` lets users express these constraints on resources, and use them
+`kpt live` lets users express these constraints on resources, and uses them
 to make sure a resource has been successfully applied and reconciled before
 any resources that depend on it are applied.
 
 ## Initializing a Package for Apply
 
 Before you can apply the package to the cluster, it needs to be initialized
-using `live init`. This is a one-time client-side operation that adds metadata
+using `kpt live init`. This is a one-time client-side operation that adds metadata
 to the `ResourceGroup` CR (by default located in `resourcegroup.yaml` file)
 specifying the name, namespace and inventoryID of the `ResourceGroup` resource
-`live apply` command will use to store the inventory (list of the resources applied).
+`kpt live apply` command will use to store the inventory (list of the resources applied).
 
 Let's initialize the `wordpress` package:
 
@@ -113,21 +114,20 @@ metadata:
     cli-utils.sigs.k8s.io/inventory-id: 0a32e2c0200b4bd4c19cd3e097086b4648b8902d-1653113657067255815
 ```
 
-`ResourceGroup` is a namespace-scoped resource. By default, `live init` command
+`ResourceGroup` is a namespace-scoped resource. By default, `kpt live init` command
 uses heuristics to automatically choose the namespace. In this example, all the
-resources in `wordpress` package were in the `default` namespace, so it chose
+resources in `wordpress` package are in the `default` namespace, so it chooses
 `default` for the namespace. Alternatively, you can manually configure the name
-and namespace of the `ResourceGroup` resource.
-
-Refer to the [init command reference](../../reference/cli/live/init/) for usage.
+and namespace of the `ResourceGroup` resource. Refer to the
+[init command reference](../../reference/cli/live/init/) for usage.
 
 {{< warning type=warning >}}
-Once a package is applied to the cluster, you do not want to change the `ResourceGroup` CR. Doing so severs the association between the package and the inventory in the cluster, leading to destructive operations.
+Once a package is applied to the cluster, do not change the `ResourceGroup` CR. Doing so corrupts the association between the package and the inventory in the cluster, possibly leading to unpredictible and destructive operations.
 {{< /warning >}}
 
 ## Applying a Package
 
-Once you have initialized the package, you can deploy it using `live apply`.
+Once you have initialized the package, you can deploy it using `kpt live apply`.
 
 The `wordpress` package requires a `Secret` containing the mysql password.
 Let's create that first:
@@ -170,10 +170,10 @@ Refer to the [apply command reference](../../reference/cli/live/apply/) for usag
 
 ### `ResourceGroup` CRD
 
-By default, `live apply` automatically installs the `ResourceGroup` CRD (unless
+By default, `kpt live apply` automatically installs the `ResourceGroup` CRD (unless
 `--dry-run` is specified) since it needs to create the associated
 `ResourceGroup` custom resource. You can also manually install the CRD before
-running `live apply`:
+running `kpt live apply`:
 
 ```shell
 kpt live install-resource-group
@@ -186,7 +186,7 @@ need to ask your cluster admin to install it for you.
 
 ### Server-side vs Client-side apply
 
-By default, `live apply` command uses client-side apply. The updates are
+By default, `kpt live apply` command uses client-side apply. The updates are
 accomplished by calculating and sending a patch from the client. Server-side
 apply, which can be enabled with the `--server-side` flag, sends the entire
 resource to the server for the update.
@@ -233,7 +233,7 @@ Refer to the [status command reference](../../reference/cli/live/status/) for us
 
 ### Delete the package
 
-To delete all the resources in a package, you can use the `live destroy`
+To delete all the resources in a package, you can use the `kpt live destroy`
 command:
 
 ```shell
