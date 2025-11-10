@@ -20,11 +20,11 @@ fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.59
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case, we are specifying tag
-`v0.9`.
+`v1.0.0-beta.59`.
 
 Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
 
@@ -42,14 +42,14 @@ upstream:
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    ref: v0.9
+    ref: v1.0.0-beta.59
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v0.9
+    ref: package-examples/wordpress/v1.0.0-beta.59
     commit: b9ea0bca019dafa9f9f91fd428385597c708518c
 info:
   emails:
@@ -113,7 +113,7 @@ It is possible to specify a different local directory name to the `get` command.
 For example, the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v0.9 mywordpress
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.59 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and follows the familiar
@@ -266,10 +266,10 @@ git add .; git commit -m "My changes"
 
 ## Update the package
 
-For example, you can update to version `v0.10` of the `wordpress` package:
+For example, you can update to version `main` of the `wordpress` package:
 
 ```shell
-kpt pkg update wordpress@v0.10
+kpt pkg update wordpress@main
 ```
 
 This is a porcelain for manually updating the `upstream` section in the
@@ -281,8 +281,8 @@ upstream:
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    # Change this from v0.9 to v0.10
-    ref: v0.10
+    # Change this from v1.0.0-beta.59 to main
+    ref: main
   updateStrategy: resource-merge
 ```
 
@@ -293,7 +293,7 @@ kpt pkg update wordpress
 ```
 
 The `update` command updates the local `wordpress` package and the dependent
-`mysql` package to the upstream version `v0.10` by doing a 3-way merge between:
+`mysql` package to the upstream version `main` by doing a 3-way merge between:
 
 1. Original upstream commit
 2. New upstream commit
@@ -310,7 +310,7 @@ Refer to the [update command reference](../../reference/cli/pkg/update/) for usa
 Once you have successfully updated the package, commit the changes:
 
 ```shell
-git add .; git commit -m "Updated wordpress to v0.10"
+git add .; git commit -m "Updated wordpress to main"
 ```
 ## Creating a package
 

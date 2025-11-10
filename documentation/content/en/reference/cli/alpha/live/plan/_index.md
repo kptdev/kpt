@@ -10,7 +10,9 @@ description: >
     Output a plan for the changes that will happen when applying a package.
 -->
 
-?> This feature is still in alpha, so the UX and the output format is subject to change.
+{{< warning type=warning >}}
+This feature is still in alpha, so the output format is subject to change.
+{{< /warning >}}
 
 `plan` does a dry-run of applying a package to the cluster. It outputs the results
 in combination with a diff for every resource that will be updated, which gives an
