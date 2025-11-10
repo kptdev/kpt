@@ -21,7 +21,8 @@ as `Current`, i.e it has been successfully reconciled.
 
 If the `Ready` condition is `False`, `kpt` will look at the `Reason` field on the
 condition object to determine whether the resource is making progress towards
-reconciliation. The possible values mirrors those used by [Config Connector events].
+reconciliation. The possible values mirrors those used by
+[Config Connector events](https://cloud.google.com/config-connector/docs/how-to/monitoring-your-resources#viewing_events).
 If the value is one of the following, the resource is considered to have failed
 reconciliation:
 - `ManagementConflict`
@@ -29,11 +30,11 @@ reconciliation:
 - `DeleteFailed`
 - `DependencyInvalid`
 
-Note that this doesn't necessarily mean it could never successfully reconcile. 
+Note that this doesn't necessarily mean the kpt package  could never successfully reconcile. 
 The Config Connector controller will keep retrying. But it does mean that the
 resource is in a state where an external change is most likely needed to resolve
-the issue. Typical examples would be missing permissions or an API that has not
-been enabled.
+the issue. Typical examples would be missing permissions for a resource or an API that the
+kpt package uses has not been enabled.
 
 Similar to all other resources, a Config Connector resource will be in the `Terminating`
 state if the `metadata.deletionTimestamp` is set, and considered fully deleted when

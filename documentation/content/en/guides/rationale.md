@@ -81,10 +81,8 @@ typical API clients, this enables interoperability of a variety of generators, t
 need to make all changes through a monolithic generator implementation. 
 
 kpt also extends its capabilities in areas that are
-[out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope),
-notably packaging, and provides a
-[package orchestration service](https://github.com/kptdev/kpt/blob/main/docs/design-docs/07-package-orchestration.md)
-in addition to a client-side CLI.
+[out of scope](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/scope.md#examples-of-projects-and-areas-not-in-scope)
+in other approches, notably packaging and a client-side CLI.
 
 kpt enables WYSIWYG management of configuration similar to how the live state can be modified with traditional
 imperative tools, thus eliminating this dichotomy:
