@@ -11,33 +11,47 @@ menu:
 
 ## What is kpt?
 
-kpt supports management of
-[Configuration as Data](https://github.com/kptdev/kpt/blob/main/docs/design-docs/06-config-as-data.md).
+kpt (Kubernetes Package Transformation) supports management of Configuration as Data (CaD).
 
-*Configuration as Data* is an approach to management of configuration which:
+*Configuration as Data* is an approach to management of configuration (incl. configuration of infrastructure, policy,
+services, applications, etc.)  which:
 
 * makes configuration data the source of truth, stored separately from the live
   state
 * uses a uniform, serializable data model to represent configuration
-* separates code that acts on the configuration from the data and from packages
-  / bundles of the data
-* abstracts configuration file structure and storage from operations that act
-  upon the configuration data; clients manipulating configuration data don’t
-  need to directly interact with storage (git, container images)
+* separates code that acts on the configuration from the data and from packages / bundles of the data
+* abstracts configuration file structure and storage from operations that act upon the configuration data; clients
+  manipulating configuration data don’t need to directly interact with storage (git, container images)
 
 This enables machine manipulation of configuration for Kubernetes and any infrastructure represented in the 
 [Kubernetes Resource Model (KRM)](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md).
 
-kpt manages KRM resources in bundles called **packages**.
+![img](/images/cad-overview.svg)
 
-Off-the-shelf packages are rarely deployed without any customization. Like [kustomize](https://kustomize.io), kpt
-applies transformation **functions**, using the same
-[KRM function specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md),
-but optimizes for in-place configuration transformation rather than out-of-place transformation. 
+### Configuration as data key principles
 
-Validation goes hand-in-hand with customization and KRM functions can be used to automate both mutation and validation
-of resources, similar to
-[Kubernetes admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/). 
+* secrets should be stored separately, in a secret-focused storage system
+* stores a versioned history of configuration changes by change sets to bundles of related configuration data
+* relies on uniformity and consistency of the configuration format, including type metadata, to enable pattern-based
+  operations on the configuration data, along the lines of duck typing
+* separates schemas for the configuration data from the data, and relies on schema information for strongly typed
+  operations and to disambiguate data structures and other variations within the model
+* decouples abstractions of configuration from collections of configuration data
+* represents abstractions of configuration generators as data with schemas, like other configuration data
+* finds, filters / queries / selects, and/or validates configuration data that can be operated on by given code
+  (functions)
+* finds and/or filters / queries / selects code (functions) that can operate on resource types contained within a body
+  of configuration data
+* actuation (reconciliation of configuration data with live state) is separate from transformation of configuration
+  data, and is driven by the declarative data model
+* transformations, particularly value propagation, are preferable to wholesale configuration generation except when the
+  expansion is dramatic (say, >10x)
+* transformation input generation should usually be decoupled from propagation
+* deployment context inputs should be taken from well defined “provider context” objects
+* identifiers and references should be declarative
+* live state should be linked back to sources of truth (configuration)
+
+### Components of the kpt toolchain
 
 The kpt toolchain includes the following components:
 
@@ -55,6 +69,19 @@ The kpt toolchain includes the following components:
 
 ## Packages
   
+kpt manages KRM resources in bundles called **packages**.
+
+Off-the-shelf packages are rarely deployed without any customization. Like [kustomize](https://kustomize.io), kpt
+applies transformation **functions**, using the same
+[KRM function specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md),
+but optimizes for in-place configuration transformation rather than out-of-place transformation. 
+
+Validation goes hand-in-hand with customization and KRM functions can be used to automate both mutation and validation
+of resources, similar to
+[Kubernetes admission control](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/). 
+
+
+
 A kpt package is a bundle of configuration _data_. It is represented as a directory tree containing KRM resources using
 YAML as the file format.
 
