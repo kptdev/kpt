@@ -240,7 +240,7 @@ func Test_GitParseArgs(t *testing.T) {
 				Directory: "/",
 				Ref:       "main",
 			},
-				Destination: "kpt"},
+				Destination: "."},
 		},
 		"starts with github.com": {
 			ghURL: "https://github.com/kptdev/kpt",
@@ -249,7 +249,7 @@ func Test_GitParseArgs(t *testing.T) {
 				Directory: "/",
 				Ref:       "main",
 			},
-				Destination: "kpt"},
+				Destination: "."},
 		},
 	}
 	for name, test := range tests {
@@ -258,7 +258,7 @@ func Test_GitParseArgs(t *testing.T) {
 				t.SkipNow()
 			}
 			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
-			actual, err := GitParseArgs(ctx, []string{test.ghURL, ""})
+			actual, err := GitParseArgs(ctx, []string{test.ghURL, ""}, true)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expected, actual)
 		})
