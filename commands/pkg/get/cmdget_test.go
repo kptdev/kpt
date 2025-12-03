@@ -250,7 +250,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
 			},
 		},
-		"current working dir -- should use package name": {
+		"current working dir -- should use current directory directly": {
 			argsFunc: func(repo, _ string) []string {
 				return []string{fmt.Sprintf("file://%s.git/blueprints/java", repo), "foo/../bar/../"}
 			},
@@ -260,7 +260,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
 				assert.Equal(t, "master", r.Get.Git.Ref)
 				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory), r.Get.Destination)
 			},
 		},
 		"clean relative path": {
