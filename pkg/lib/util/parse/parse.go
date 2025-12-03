@@ -256,6 +256,7 @@ func getRepoAndPkg(v string) (string, string, error) {
 }
 
 func getDest(v, repo, subdir string, explicitDest bool) (string, error) {
+	originalV := v
 	v = filepath.Clean(v)
 
 	f, err := os.Stat(v)
@@ -274,9 +275,9 @@ func getDest(v, repo, subdir string, explicitDest bool) (string, error) {
 	}
 
 	// LOCATION EXISTS
-	// Check if user explicitly specified current directory (. or paths that resolve to .)
+	// Check if user explicitly specified current directory (. or empty string)
 	// to match git clone behavior
-	if explicitDest && v == "." {
+	if explicitDest && (originalV == "." || originalV == "") {
 		return v, nil
 	}
 

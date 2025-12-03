@@ -75,13 +75,12 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	destInfo, err := os.Stat(c.Destination)
-	switch {
-	case err == nil:
+	if err == nil {
 		// Destination exists - check if it's an empty directory
 		if !destInfo.IsDir() {
 			return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination exists and is not a directory"))
 		}
-
+		
 		// Check if directory is empty
 		entries, err := os.ReadDir(c.Destination)
 		if err != nil {
@@ -91,14 +90,14 @@ func (c Command) Run(ctx context.Context) error {
 			return errors.E(op, errors.Exist, types.UniquePath(c.Destination), fmt.Errorf("destination directory already exists"))
 		}
 		// Directory exists but is empty, we can use it
-	case goerrors.Is(err, os.ErrNotExist):
+	} else if !goerrors.Is(err, os.ErrNotExist) {
+		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
+	} else {
 		// Directory doesn't exist, create it
 		err = os.MkdirAll(c.Destination, 0700)
 		if err != nil {
 			return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 		}
-	default:
-		return errors.E(op, errors.IO, types.UniquePath(c.Destination), err)
 	}
 
 	// normalize path to a filepath
