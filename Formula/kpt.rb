@@ -13,10 +13,10 @@
 # limitations under the License.
 
 class Kpt < Formula
-  desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://github.com/kptdev.github.io/kpt"
-  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.49.tar.gz"
-  sha256 "e8f5beb1b4538f0b5d5322cb1600b93728e4a90a975860873883507ee144a262"
+  desc "A toolchain for composing, customizing, and deploying Kubernetes packages at scale"
+  homepage "https://kpt.dev"
+  url "https://github.com/kptdev/kpt/archive/v1.0.0-beta.59.tar.gz"
+  sha256 "77f8693eea137a97c8e66178392fef6d5a7644aaf10a06091c57e0fcd9552340"
 
   depends_on "go" => :build
 
