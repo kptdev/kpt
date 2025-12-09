@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: guestbook
+info:
+  emails:
+    - wily.e.coyote@theacmecorporation.com
+  description: This is an example guestbook package.
