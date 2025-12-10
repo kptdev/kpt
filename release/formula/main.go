@@ -107,8 +107,8 @@ const formulaTemplate = `# Copyright 2019 The kpt Authors
 # limitations under the License.
 
 class Kpt < Formula
-  desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://github.com/kptdev.github.io/kpt"
+  desc "A toolchain for composing, customizing, and deploying Kubernetes packages at scale"
+  homepage "https://kpt.dev"
   url "{{url}}"
   sha256 "{{sha256}}"
 
