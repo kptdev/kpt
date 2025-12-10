@@ -1,0 +1,25 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: guestbook
+info:
+  emails:
+    - wily.e.coyote@theacmecorporation.com
+  description: This is an example guestbook package.
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/create-setters:v0.1
+      selectors:
+        - kind: Namespace
+      configMap:
+        namespace: default
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2
+      selectors:
+        - kind: Namespace
+      configMap:
+        namespace: default
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4
+      configMap:
+        namespace: default
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:v0.1
