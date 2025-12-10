@@ -6,8 +6,8 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-        app: guestbook
-        tier: frontend
+      app: guestbook
+      tier: frontend
   template:
     metadata:
       labels:
