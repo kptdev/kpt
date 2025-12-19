@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/api/konfig"
 	kustomizetypes "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"

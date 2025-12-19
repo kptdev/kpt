@@ -24,9 +24,9 @@ import (
 	"strings"
 
 	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"

@@ -21,10 +21,10 @@ import (
 	"time"
 
 	alphaprinterstable "github.com/kptdev/kpt/internal/alpha/printers/table"
-	"github.com/kptdev/kpt/internal/cmdutil"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/strings"
+	"github.com/kptdev/kpt/pkg/lib/cmdutil"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"

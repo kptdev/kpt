@@ -21,11 +21,11 @@ import (
 
 	"github.com/kptdev/kpt/internal/errors"
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
