@@ -179,7 +179,7 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
-			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:unstable",
+			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest",
 			true,
 		},
 		{
@@ -187,7 +187,7 @@ func TestValidateFunctionName(t *testing.T) {
 			true,
 		},
 		{
-			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:latest-alpha1",
+			"ghcr.io/kptdev/krm-functions-catalog/generate-folders:v1.2.3-alpha1",
 			true,
 		},
 		{
