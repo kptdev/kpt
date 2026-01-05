@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package pkgutil contains utility functions for packages
 package pkgutil
 
 import (
@@ -171,7 +172,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 
 // RemoveStaleItems removes files and directories from the dst package that were present in the org package,
 // but are not present in the src package. It does not remove the root Kptfile of the dst package.
-func RemoveStaleItems(org, src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
+func RemoveStaleItems(org, src, dst string, _ bool, _ pkg.SubpackageMatcher) error {
 	var dirsToDelete []string
 	walkErr := filepath.Walk(dst, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

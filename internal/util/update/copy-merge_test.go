@@ -21,7 +21,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	. "github.com/kptdev/kpt/internal/util/update"
+	"github.com/kptdev/kpt/internal/util/update"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -213,16 +213,15 @@ func TestCopyMerge(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-
 			repos := testutil.EmptyReposInfo
 			origin := tc.origin.ExpandPkg(t, repos)
 			local := tc.local.ExpandPkg(t, repos)
 			updated := tc.updated.ExpandPkg(t, repos)
 			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &CopyMergeUpdater{}
+			updater := &update.CopyMergeUpdater{}
 
-			err := updater.Update(Options{
+			err := updater.Update(update.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),
@@ -234,7 +233,6 @@ func TestCopyMerge(t *testing.T) {
 			}
 
 			testutil.KptfileAwarePkgEqual(t, local, expected, false)
-
 		})
 	}
 }
@@ -249,8 +247,8 @@ func TestCopyMergeError(t *testing.T) {
 	}
 	os.RemoveAll(src)
 
-	updater := &CopyMergeUpdater{}
-	options := Options{
+	updater := &update.CopyMergeUpdater{}
+	options := update.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -259,7 +257,6 @@ func TestCopyMergeError(t *testing.T) {
 	err = updater.Update(options)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no such file or directory")
-
 }
 
 func TestCopyMergeErrorUpdatingKptfile(t *testing.T) {
@@ -280,8 +277,8 @@ kind: malformedKptfile
 `), 0644)
 	assert.NoError(t, err)
 
-	updater := &CopyMergeUpdater{}
-	options := Options{
+	updater := &update.CopyMergeUpdater{}
+	options := update.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -306,8 +303,8 @@ func TestCopyMergeErrorCopyingFile(t *testing.T) {
 		t.Fatalf("Failed to create directory: %v", err)
 	}
 
-	updater := &CopyMergeUpdater{}
-	options := Options{
+	updater := &update.CopyMergeUpdater{}
+	options := update.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -389,16 +386,15 @@ func TestCopyMergeDifferentMetadata(t *testing.T) {
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-
 			repos := testutil.EmptyReposInfo
-			origin := tc.origin.ExpandPkg(t, repos)                      //metadata.name: "base"
-			local := tc.local.ExpandPkgWithName(t, "local", repos)       //metadata.name: "local"
-			updated := tc.updated.ExpandPkgWithName(t, "updated", repos) //metadata.name: "updated"
-			expected := tc.expected.ExpandPkgWithName(t, "local", repos) //metadata.name: "local" I am expeting this field to not change
+			origin := tc.origin.ExpandPkg(t, repos)                      // metadata.name: "base"
+			local := tc.local.ExpandPkgWithName(t, "local", repos)       // metadata.name: "local"
+			updated := tc.updated.ExpandPkgWithName(t, "updated", repos) // metadata.name: "updated"
+			expected := tc.expected.ExpandPkgWithName(t, "local", repos) // metadata.name: "local" I am expeting this field to not change
 
-			updater := &CopyMergeUpdater{}
+			updater := &update.CopyMergeUpdater{}
 
-			err := updater.Update(Options{
+			err := updater.Update(update.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),
@@ -410,7 +406,6 @@ func TestCopyMergeDifferentMetadata(t *testing.T) {
 			}
 
 			testutil.KptfileAwarePkgEqual(t, local, expected, false)
-
 		})
 	}
 }
@@ -432,8 +427,8 @@ func TestCopyMergeErrorRemovingFile(t *testing.T) {
 	assert.NoError(t, os.Mkdir(filePathDst, 0755))
 	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
 
-	updater := &CopyMergeUpdater{}
-	options := Options{
+	updater := &update.CopyMergeUpdater{}
+	options := update.Options{
 		OriginPath:  org,
 		UpdatedPath: src,
 		LocalPath:   dst,
