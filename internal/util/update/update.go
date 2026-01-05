@@ -90,6 +90,7 @@ var strategies = map[kptfilev1.UpdateStrategyType]func() Updater{
 	kptfilev1.FastForward:        func() Updater { return FastForwardUpdater{} },
 	kptfilev1.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
 	kptfilev1.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
+	kptfilev1.CopyMerge:          func() Updater { return CopyMergeUpdater{} },
 }
 
 // Command updates the contents of a local package to a different version.
