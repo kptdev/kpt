@@ -9,7 +9,6 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.20.5
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/igorsobreira/titlecase v0.0.0-20140109233139-4156b5b858ac
 	github.com/jedib0t/go-pretty/v6 v6.6.7
 	github.com/kptdev/kpt/rollouts v0.0.0-20250604154015-93477536a4dd
 	github.com/nephio-project/porch/api v1.3.0

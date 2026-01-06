@@ -39,8 +39,8 @@ func TestFormula(t *testing.T) {
 # limitations under the License.
 
 class Kpt < Formula
-  desc "Toolkit to manage,and apply Kubernetes Resource config data files"
-  homepage "https://github.com/kptdev.github.io/kpt"
+  desc "A toolchain for composing, customizing, and deploying Kubernetes packages at scale"
+  homepage "https://kpt.dev"
   url "https://github.com/kptdev/kpt/archive/v0.0.0-fake.tar.gz"
   sha256 "4e42c5ce1a23511405beb5f51cfe07885fa953db448265fe74ee9b81e0def277"
 
