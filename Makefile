@@ -1,4 +1,4 @@
-# Copyright 2019 The kpt Authors
+# Copyright 2019,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,28 +98,28 @@ test:
 # KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-docker: build
-	PATH=$(GOBIN):$(PATH) go test -cover --tags=docker ./...
+	PATH="$(GOBIN):$(PATH)" go test -cover --tags=docker ./...
 
 # KPT_E2E_UPDATE_EXPECTED=true (if expected output to be updated)
 # target to run e2e tests for "kpt fn render" command
 # KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-render: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
+	PATH="$(GOBIN):$(PATH)" go test -v --tags=docker --run=TestFnRender/testdata/fn-render/$(T) ./e2e/
 
 # target to run e2e tests for "kpt fn eval" command
 # KRM_FN_RUNTIME can be set to select the desired function runtime.
 # If unspecified, the default function runtime will be used.
 test-fn-eval: build
-	PATH=$(GOBIN):$(PATH) go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
+	PATH="$(GOBIN):$(PATH)" go test -v --tags=docker --run=TestFnEval/testdata/fn-eval/$(T)  ./e2e/
 
 # target to run e2e tests for "kpt live apply" command
 test-live-apply: build
-	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
+	PATH="$(GOBIN):$(PATH)" go test -v -timeout=20m --tags=kind -p 2 --run=TestLiveApply/testdata/live-apply/$(T)  ./e2e/
 
 # target to run e2e tests for "kpt live plan" command
 test-live-plan: build
-	PATH=$(GOBIN):$(PATH) go test -v -timeout=20m --tags=kind -p 2 --run=TestLivePlan/testdata/live-plan/$(T)  ./e2e/
+	PATH="$(GOBIN):$(PATH)" go test -v -timeout=20m --tags=kind -p 2 --run=TestLivePlan/testdata/live-plan/$(T)  ./e2e/
 
 vet:
 	go vet ./...
