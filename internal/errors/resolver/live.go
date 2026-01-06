@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	initialization "github.com/kptdev/kpt/commands/live/init"
-	"github.com/kptdev/kpt/internal/cmdutil"
 	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/lib/cmdutil"
 	"github.com/kptdev/kpt/pkg/live"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"

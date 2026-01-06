@@ -22,7 +22,7 @@ import (
 	"os"
 
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/pkg/lib/types"
 )
 
 // TruncateOutput defines should output be truncated
@@ -110,7 +110,7 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 	if leadingNewline {
 		fmt.Fprint(pr.errStream, "\n")
 	}
-	fmt.Fprintf(pr.errStream, "Package %q:\n", p.DisplayPath)
+	fmt.Fprintf(pr.errStream, "Package: %q\n", p.DisplayPath)
 }
 
 // Printf is the wrapper over fmt.Printf that displays the output.
@@ -129,14 +129,14 @@ func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
 	}
 	o := pr.errStream
 	if !opt.PkgDisplayPath.Empty() {
-		format = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath)) + format
+		format = fmt.Sprintf("Package: %q", string(opt.PkgDisplayPath)) + format
 	} else if !opt.PkgPath.Empty() {
 		// try to print relative path of the pkg if we can else use abs path
 		relPath, err := opt.PkgPath.RelativePath()
 		if err != nil {
 			relPath = string(opt.PkgPath)
 		}
-		format = fmt.Sprintf("Package %q: ", relPath) + format
+		format = fmt.Sprintf("Package: %q", relPath) + format
 	}
 	fmt.Fprintf(o, format, args...)
 }

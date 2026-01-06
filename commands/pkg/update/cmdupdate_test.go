@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019-2025 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -485,7 +485,7 @@ func TestCmd_output(t *testing.T) {
 				).
 				WithResource(pkgbuilder.SecretResource),
 			expectedOutput: `
-Package "{{ .PKG_NAME }}":
+Package: "{{ .PKG_NAME }}"
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -559,7 +559,7 @@ Updated 1 package(s).
 						WithResource(pkgbuilder.ConfigMapResource),
 				),
 			expectedOutput: `
-Package "{{ .PKG_NAME }}":
+Package: "{{ .PKG_NAME }}"
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -567,7 +567,7 @@ Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
 Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Updating package "subpkg" with strategy "fast-forward".
 
-Package "{{ .PKG_NAME }}/subpkg":
+Package: "{{ .PKG_NAME }}/subpkg"
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
@@ -667,7 +667,7 @@ Updated 2 package(s).
 						WithResource(pkgbuilder.DeploymentResource, pkgbuilder.SetFieldPath("5", "spec", "replicas")),
 				),
 			expectedOutput: `
-Package "{{ .PKG_NAME }}":
+Package: "{{ .PKG_NAME }}"
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -676,7 +676,7 @@ Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Deleting package "subpkg2" from local since it is removed in upstream.
 Package "subpkg1" deleted from upstream, but keeping local since it has changes.
 
-Package "{{ .PKG_NAME }}/subpkg1":
+Package: "{{ .PKG_NAME }}/subpkg1"
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "foo").RepoDirectory }}@master
@@ -735,7 +735,7 @@ Updated 2 package(s).
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 			expectedOutput: `
-Package "{{ .PKG_NAME }}":
+Package: "{{ .PKG_NAME }}"
 Fetching upstream from {{ (index .REPOS "upstream").RepoDirectory }}@master
 <git_output>
 Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
@@ -743,7 +743,7 @@ Fetching origin from {{ (index .REPOS "upstream").RepoDirectory }}@master
 Updating package "{{ .PKG_NAME }}" with strategy "resource-merge".
 Adding package "subpkg" from upstream.
 
-Package "{{ .PKG_NAME }}/subpkg":
+Package: "{{ .PKG_NAME }}/subpkg"
 Fetching upstream from {{ (index .REPOS "foo").RepoDirectory }}@v1
 <git_output>
 Updating package "subpkg" with strategy "force-delete-replace".
