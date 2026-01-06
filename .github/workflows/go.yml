@@ -23,7 +23,8 @@ on:
       - "firebase/**"
       - "logo/**"
       - "package-examples/**"
-      - "release/**"
+      - "release/images/**"
+      - "release/tag/**"
       - "site/**"
       - "**.md"
   push:
