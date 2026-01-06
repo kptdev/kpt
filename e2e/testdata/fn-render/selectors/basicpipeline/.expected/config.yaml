@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  Package: "basicpipeline" 
+  Package: "basicpipeline"
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" on 1 resource(s)
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
