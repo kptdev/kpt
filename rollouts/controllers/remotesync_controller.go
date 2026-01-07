@@ -39,7 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
@@ -456,8 +455,8 @@ func (r *RemoteSyncReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.RemoteSync{}).
 		Watches(
-			&source.Channel{Source: r.channel},
-			handler.EnqueueRequestsFromMapFunc(func(o client.Object) []reconcile.Request {
+			&gitopsv1alpha1.RemoteSync{},
+			handler.EnqueueRequestsFromMapFunc(func(ctx context.Context, o client.Object) []reconcile.Request {
 				logger := klog.NewKlogr().WithValues("controller", "remotesync")
 
 				var rsName string

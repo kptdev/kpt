@@ -39,7 +39,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	gkeclusterapis "github.com/GoogleCloudPlatform/k8s-config-connector/pkg/clients/generated/apis/container/v1beta1"
 	gitopsv1alpha1 "github.com/kptdev/kpt/rollouts/api/v1alpha1"
@@ -812,18 +811,17 @@ func (r *RolloutReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 	r.store = clusterStore
 
-	var containerCluster gkeclusterapis.ContainerCluster
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&gitopsv1alpha1.Rollout{}).
 		Owns(&gitopsv1alpha1.RemoteSync{}).
 		Watches(
-			&source.Kind{Type: &containerCluster},
+			&gkeclusterapis.ContainerCluster{},
 			handler.EnqueueRequestsFromMapFunc(r.mapClusterUpdateToRequest),
 		).
 		Complete(r)
 }
 
-func (r *RolloutReconciler) mapClusterUpdateToRequest(cluster client.Object) []reconcile.Request {
+func (r *RolloutReconciler) mapClusterUpdateToRequest(ctx context.Context, cluster client.Object) []reconcile.Request {
 	logger := klog.FromContext(context.Background())
 
 	var requests []reconcile.Request

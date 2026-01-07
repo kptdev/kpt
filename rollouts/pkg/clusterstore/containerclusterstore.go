@@ -127,10 +127,10 @@ func (cs *ContainerClusterStore) getRESTConfig(ctx context.Context, cluster *gke
 		return nil, fmt.Errorf("error decoding ca certificate: %w", err)
 	}
 	restConfig.CAData = caData
-	if cluster.Status.Endpoint == "" {
+	if cluster.Status.Endpoint == nil || *cluster.Status.Endpoint == "" {
 		return nil, fmt.Errorf("cluster master endpoint field is empty")
 	}
-	restConfig.Host = "https://" + cluster.Status.Endpoint
+	restConfig.Host = "https://" + *cluster.Status.Endpoint
 	tokenSource, err := cs.getConfigConnectorContextTokenSource(ctx, cluster.GetNamespace())
 	if err != nil {
 		return nil, err
