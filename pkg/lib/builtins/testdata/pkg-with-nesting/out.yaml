@@ -42,21 +42,8 @@ items:
       internal.config.kubernetes.io/path: 'package-context.yaml'
   data:
     name: order-service
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: kptfile.kpt.dev
-    annotations:
-      config.kubernetes.io/local-config: "true"
-      internal.config.kubernetes.io/path: 'subpkg/package-context.yaml'
-  data:
-    name: subpkg
 results:
 - message: generated package context
   severity: info
   file:
     path: package-context.yaml
-- message: generated package context
-  severity: info
-  file:
-    path: subpkg/package-context.yaml
