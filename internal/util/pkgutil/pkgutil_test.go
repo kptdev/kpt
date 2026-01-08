@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -548,4 +548,43 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 			assert.Equal(t, tc.expected, paths)
 		})
 	}
+}
+
+func TestRemoveStaleItems_RemovesFile(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	// Create a file in org and dst, but not in src
+	fileName := "file.txt"
+	assert.NoError(t, os.WriteFile(filepath.Join(org, fileName), []byte("content"), 0644))
+	assert.NoError(t, os.WriteFile(filepath.Join(dst, fileName), []byte("content"), 0644))
+
+	// Should remove file.txt from dst
+	err := pkgutil.RemoveStaleItems(org, src, dst, true, pkg.All)
+	assert.NoError(t, err)
+	_, err = os.Stat(filepath.Join(dst, fileName))
+	assert.True(t, os.IsNotExist(err))
+}
+
+func TestRemoveStaleItems_ErrorOnRemove(t *testing.T) {
+	org := t.TempDir()
+	src := t.TempDir()
+	dst := t.TempDir()
+
+	fileName := "file.txt"
+	filePathDst := filepath.Join(dst, fileName)
+	filePathOrg := filepath.Join(org, fileName)
+
+	assert.NoError(t, os.WriteFile(filePathOrg, []byte("content"), 0644))
+	assert.NoError(t, os.WriteFile(filePathDst, []byte("content"), 0644))
+
+	// Replace file in dst with a non-empty directory to force os.Remove error
+	assert.NoError(t, os.Remove(filePathDst))
+	assert.NoError(t, os.Mkdir(filePathDst, 0755))
+	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
+
+	err := pkgutil.RemoveStaleItems(org, src, dst, true, pkg.All)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "directory not empty")
 }

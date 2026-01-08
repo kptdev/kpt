@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package pkgutil contains utility functions for packages
 package pkgutil
 
 import (
@@ -169,6 +170,62 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 	return nil
 }
 
+// RemoveStaleItems removes files and directories from the dst package that were present in the org package,
+// but are not present in the src package. It does not remove the root Kptfile of the dst package.
+func RemoveStaleItems(org, src, dst string, _ bool, _ pkg.SubpackageMatcher) error {
+	var dirsToDelete []string
+	walkErr := filepath.Walk(dst, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// The root directory should never be deleted.
+		if path == dst {
+			return nil
+		}
+
+		relPath, err := filepath.Rel(dst, path)
+		if err != nil {
+			return err
+		}
+
+		// Skip the root Kptfile
+		if relPath == kptfilev1.KptFileName {
+			return nil
+		}
+
+		srcPath := filepath.Join(src, relPath)
+		orgPath := filepath.Join(org, relPath)
+
+		_, srcErr := os.Stat(srcPath)
+		_, orgErr := os.Stat(orgPath)
+
+		// Only remove if:
+		// - not present in src (srcErr is os.IsNotExist)
+		// - present in org (orgErr is nil)
+		if os.IsNotExist(srcErr) && orgErr == nil {
+			if info.IsDir() {
+				dirsToDelete = append(dirsToDelete, path)
+			} else {
+				if err := os.Remove(path); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+	if walkErr != nil {
+		return walkErr
+	}
+	sort.Slice(dirsToDelete, SubPkgFirstSorter(dirsToDelete))
+	for _, dir := range dirsToDelete {
+		if err := os.Remove(dir); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func RemovePackageContent(path string, removeRootKptfile bool) error {
 	// Walk the package (while ignoring subpackages) and delete all files.
 	// We capture the paths to any subdirectories in the package so we
@@ -209,7 +266,6 @@ func RemovePackageContent(path string, removeRootKptfile bool) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
 		// List up to one file or folder in the directory.
 		_, err = f.Readdirnames(1)
 		if err != nil && err != io.EOF {

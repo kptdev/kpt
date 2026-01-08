@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../rollouts/hack/boilerplate.go.txt"
 
 const (
 	KptFileName = "Kptfile"
@@ -105,6 +107,8 @@ func ToUpdateStrategy(strategy string) (UpdateStrategyType, error) {
 		return FastForward, nil
 	case string(ForceDeleteReplace):
 		return ForceDeleteReplace, nil
+	case string(CopyMerge):
+		return CopyMerge, nil
 	default:
 		return "", fmt.Errorf("unknown update strategy %q", strategy)
 	}
@@ -119,6 +123,8 @@ const (
 	FastForward UpdateStrategyType = "fast-forward"
 	// ForceDeleteReplace wipes all local changes to the package.
 	ForceDeleteReplace UpdateStrategyType = "force-delete-replace"
+	// CopyMerge copies the updated package into the local package.
+	CopyMerge UpdateStrategyType = "copy-merge"
 )
 
 // UpdateStrategies is a slice with all the supported update strategies.
@@ -126,6 +132,7 @@ var UpdateStrategies = []UpdateStrategyType{
 	ResourceMerge,
 	FastForward,
 	ForceDeleteReplace,
+	CopyMerge,
 }
 
 // UpdateStrategiesAsStrings returns a list of update strategies as strings.
@@ -395,4 +402,10 @@ const (
 	ConditionTrue    ConditionStatus = "True"
 	ConditionFalse   ConditionStatus = "False"
 	ConditionUnknown ConditionStatus = "Unknown"
+)
+
+// BFSRenderAnnotation is an annotation that can be used to indicate that a package
+// should be hydrated from the root package to the subpackages in a Breadth-First Level Order manner.
+const (
+	BFSRenderAnnotation = "kpt.dev/bfs-rendering"
 )

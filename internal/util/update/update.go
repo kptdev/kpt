@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ var strategies = map[kptfilev1.UpdateStrategyType]func() Updater{
 	kptfilev1.FastForward:        func() Updater { return FastForwardUpdater{} },
 	kptfilev1.ForceDeleteReplace: func() Updater { return ReplaceUpdater{} },
 	kptfilev1.ResourceMerge:      func() Updater { return ResourceMergeUpdater{} },
+	kptfilev1.CopyMerge:          func() Updater { return CopyMergeUpdater{} },
 }
 
 // Command updates the contents of a local package to a different version.
