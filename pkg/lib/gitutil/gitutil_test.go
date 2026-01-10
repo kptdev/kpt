@@ -22,9 +22,9 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/pkg/lib/gitutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
