@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/cli-utils/pkg/manifestreader"

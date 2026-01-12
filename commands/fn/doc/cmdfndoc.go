@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 )
@@ -65,7 +65,8 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 		return errors.New("image must be specified")
 	}
 	// TODO: We probably should be going through the runner
-	image, err := fnruntime.ResolveToImageForCLI(c.Context(), r.Image)
+	resolveFunc := fnruntime.ResolveToImageForCLIFunc(fnruntime.GHCRImagePrefix)
+	image, err := resolveFunc(c.Context(), r.Image)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,7 @@
 //go:build docker
 // +build docker
 
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/test/runner"
 )
 

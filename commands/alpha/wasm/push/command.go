@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import (
 	"path"
 
 	"github.com/kptdev/kpt/internal/docs/generated/wasmdocs"
-	"github.com/kptdev/kpt/internal/errors"
+	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/wasm"
 	"github.com/spf13/cobra"
 )

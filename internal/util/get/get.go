@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/hook"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/addmergecomment"
@@ -34,6 +32,8 @@ import (
 	"github.com/kptdev/kpt/internal/util/stack"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -61,6 +61,10 @@ type Command struct {
 	// Kptfile. This determines how changes will be merged when updating the
 	// package.
 	UpdateStrategy kptfilev1.UpdateStrategyType
+
+	// DefaultKrmFunctionImagePrefix is the prefix to be used with unqualified
+	// KRM function image names. Defaults to "ghcr.io/kptdev/krm-functions-catalog/".
+	DefaultKrmFunctionImagePrefix string
 }
 
 // Run runs the Command.
@@ -127,7 +131,7 @@ func (c Command) Run(ctx context.Context) error {
 		pr := printer.FromContextOrDie(ctx)
 		pr.Printf("\nCustomizing package for deployment.\n")
 		hookCmd := hook.Executor{}
-		hookCmd.RunnerOptions.InitDefaults()
+		hookCmd.RunnerOptions.InitDefaults(c.DefaultKrmFunctionImagePrefix)
 		hookCmd.PkgPath = c.Destination
 
 		builtinHooks := []kptfilev1.Function{
@@ -165,7 +169,7 @@ func (c Command) fetchPackages(ctx context.Context, rootPkg *pkg.Pkg) error {
 
 		if kf.Upstream != nil && kf.UpstreamLock == nil {
 			packageCount++
-			pr.PrintPackage(p, !(p == rootPkg))
+			pr.PrintPackage(p, p != rootPkg)
 			pr.Printf("Fetching %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 			err := (&fetch.Command{
 				Pkg: p,
@@ -219,6 +223,10 @@ func (c *Command) DefaultValues() error {
 	// default the update strategy to resource-merge
 	if len(c.UpdateStrategy) == 0 {
 		c.UpdateStrategy = kptfilev1.ResourceMerge
+	}
+
+	if len(c.DefaultKrmFunctionImagePrefix) == 0 {
+		c.DefaultKrmFunctionImagePrefix = fnruntime.GHCRImagePrefix
 	}
 
 	return nil

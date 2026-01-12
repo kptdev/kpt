@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ func (o *OciLoader) getFilePath() (string, error) {
 		return "", fmt.Errorf("unable to create temp dir in %v: %w", o.cacheDir, err)
 	}
 	wasmFile := filepath.Join(o.tempDir, "fn.wasm")
-	err = os.WriteFile(wasmFile, data, 0644)
+	err = os.WriteFile(wasmFile, data, 0600)
 	if err != nil {
 		return "", fmt.Errorf("unable to write wasm content to %v: %w", wasmFile, err)
 	}

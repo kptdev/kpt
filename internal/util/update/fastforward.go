@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,12 +19,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/internal/errors"
 	"github.com/kptdev/kpt/internal/pkg"
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"

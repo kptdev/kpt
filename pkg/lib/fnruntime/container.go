@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -224,14 +224,22 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 	return ce
 }
 
-// ResolveToImageForCLI converts the function short path to the full image url.
-// If the function is Catalog function, it adds "ghcr.io/kptdev/krm-functions-catalog/".
-// e.g. set-namespace:latest --> ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
-func ResolveToImageForCLI(_ context.Context, image string) (string, error) {
-	if !strings.Contains(image, "/") {
-		return fmt.Sprintf("ghcr.io/kptdev/krm-functions-catalog/%s", image), nil
+// ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
+// If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
+// A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
+func ResolveToImageForCLIFunc(prefix string) func(_ context.Context, image string) (string, error) {
+	prefix = strings.TrimSuffix(prefix, "/")
+	if prefix == "" {
+		return func(_ context.Context, image string) (string, error) {
+			return image, nil
+		}
 	}
-	return image, nil
+	return func(_ context.Context, image string) (string, error) {
+		if !strings.Contains(image, "/") {
+			return fmt.Sprintf("%s/%s", prefix, image), nil
+		}
+		return image, nil
+	}
 }
 
 // ContainerImageError is an error type which will be returned when
