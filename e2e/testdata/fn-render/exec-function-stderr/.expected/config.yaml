@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,11 +14,8 @@
 
 allowExec: true
 stdErr: |
-  [RUNNING] "./testdata/fn-render/exec-function-stderr/function.sh"
-  [PASS] "./testdata/fn-render/exec-function-stderr/function.sh" in 0s
-    Stderr:
-      "Hello world 0!"
-      "Hello world 1!"
-      "Hello world 2!"
-      "Hello world 3!"
-      ...(18 line(s) truncated, use '--truncate-output=false' to disable)
+    Package: "exec-function-stderr"
+    [RUNNING] "./testdata/fn-render/exec-function-stderr/function.sh"
+    [PASS] "./testdata/fn-render/exec-function-stderr/function.sh" in 0s
+     Stderr: Hello world 0!, Hello world 1!, Hello world 2!, Hello world 3!, Hello world 4!, Hello world 5!, Hello world 6!, Hello world 7!, Hello world 8!, Hello world 9!, Hello world 10!, Hello world 11!, Hello world 12!, Hello world 13!, Hello world 14!, Hello world 15!, Hello world 16!, Hello world 17!, Hello world 18!, Hello world 19!, Hello world 20!, 
+    Successfully executed 1 function(s) in 1 package(s).

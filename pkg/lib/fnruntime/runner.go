@@ -254,6 +254,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 				pr.Printf("[RUNNING] %q", fr.name)
 			}
 		}
+		pr.Printf("\n")
 	}
 	t0 := time.Now()
 	output, err = fr.do(input)
@@ -455,7 +456,7 @@ func printFnResult(ctx context.Context, fnResult *fnresult.Result, opt *printer.
 			UseQuote:  false,
 			Separator: ", ",
 		}
-		pr.OptPrintf(opt, "%s", ri.String())
+		pr.OptPrintf(opt, "%s\n", ri.String())
 	}
 }
 
@@ -477,7 +478,7 @@ func printFnStderr(ctx context.Context, stdErr string) {
 			UseQuote:  false,
 			Separator: ", ",
 		}
-		pr.Printf("%s", errLine.String())
+		pr.Printf(" %s", errLine.String())
 	}
 }
 

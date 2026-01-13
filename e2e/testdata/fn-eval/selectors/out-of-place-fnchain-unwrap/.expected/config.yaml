@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,7 @@ stdErr: |
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" on 1 resource(s)
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 0s
-    Results:
-      [info] metadata.annotations: set annotations: {"foo":"bar"}
+  [Results]: [info] metadata.annotations: set annotations: {"foo":"bar"}
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
 
