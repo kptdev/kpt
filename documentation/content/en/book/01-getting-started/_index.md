@@ -39,7 +39,7 @@ Please follow the [instructions](https://podman.io/getting-started/installation)
 
 If you want to set up rootless container runtime, [this](https://rootlesscontaine.rs/) may be a useful resource for you.
 
-Environment variable can be used to control which container runtime to use. More details can be found in the reference
+Environment variables can be used to control which container runtime to use. More details can be found in the reference
 documents for [`kpt fn render`](../../reference/cli/fn/render/) and [`kpt fn eval`](../../reference/cli/fn/eval/).
 
 ### Kubernetes cluster
