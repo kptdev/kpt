@@ -7,6 +7,7 @@ menu:
   main:
     weight: 20
 ---
+
 _by Frank Farzan with contributions from the kpt team and community_
 
 Welcome to the _The kpt Book_, a step-by-step introduction to kpt.
@@ -24,11 +25,11 @@ This book is organized as follows:
 
 Let's get started!
 
-[chapter 1]: /book/01-getting-started/
-[chapter 2]: /book/02-concepts/
-[chapter 3]: /book/03-packages/
-[chapter 4]: /book/04-using-functions/
-[chapter 5]: /book/05-developing-functions/
-[chapter 6]: /book/06-deploying-packages/
-[chapter 7]: /book/07-effective-customizations/
-[chapter 8]: /book/08-package-orchestration/
+[Chapter 1]: /documentation/content/en/book/01-getting-started/
+[Chapter 2]: /book/02-concepts/
+[Chapter 3]: /book/03-packages/
+[Chapter 4]: /book/04-using-functions/
+[Chapter 5]: /book/05-developing-functions/
+[Chapter 6]: /book/06-deploying-packages/
+[Chapter 7]: /book/07-effective-customizations/
+[Chapter 8]: /book/08-package-orchestration/
