@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import (
 	"os"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/internal/util/render"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -84,7 +84,7 @@ type Runner struct {
 }
 
 func (r *Runner) InitDefaults() {
-	r.RunnerOptions.InitDefaults()
+	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {

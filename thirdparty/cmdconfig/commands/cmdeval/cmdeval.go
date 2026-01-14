@@ -14,12 +14,12 @@ import (
 
 	"github.com/google/shlex"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
@@ -168,7 +168,7 @@ type EvalFnRunner struct {
 }
 
 func (r *EvalFnRunner) InitDefaults() {
-	r.RunnerOptions.InitDefaults()
+	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {

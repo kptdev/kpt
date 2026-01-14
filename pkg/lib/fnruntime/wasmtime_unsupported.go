@@ -1,4 +1,6 @@
-// Copyright 2021 The kpt Authors
+//go:build !cgo
+
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +14,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package resolver
+package fnruntime
+
+// Stub functions for running without wasmtime support compiled in.
+// wasmtime requires cgo, which is not always a viable option.
 
 import (
-	goerrors "errors"
-
-	"github.com/kptdev/kpt/internal/errors"
+	"fmt"
+	"io"
 )
 
-//nolint:gochecknoinits
-func init() {
-	AddErrorResolver(&alreadyHandledErrorResolver{})
+const (
+	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
+)
+
+type WasmtimeFn struct {
 }
 
-type alreadyHandledErrorResolver struct{}
+func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
+	return nil, fmt.Errorf(msg)
+}
 
-func (*alreadyHandledErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	kioErr := errors.UnwrapKioError(err)
-	if goerrors.Is(kioErr, errors.ErrAlreadyHandled) {
-		return ResolvedResult{}, true
-	}
-	return ResolvedResult{}, false
+func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
+	return fmt.Errorf(msg)
 }

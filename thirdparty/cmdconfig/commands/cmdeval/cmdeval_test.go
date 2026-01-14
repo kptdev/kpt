@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"

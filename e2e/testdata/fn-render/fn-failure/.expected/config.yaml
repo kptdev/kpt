@@ -1,4 +1,4 @@
-# Copyright 2021 The kpt Authors
+# Copyright 2021,2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,9 @@
 # non-zero exit code and no changes in the resources.
 exitCode: 1
 stdErr: |
+  Package: "fn-failure"
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest"
   [FAIL] "ghcr.io/kptdev/krm-functions-catalog/starlark:latest" in 0s
-    Results:
-      [error]: httpbin-gen:3:73: got newline, want primary expression
+  [Results]: [error]: httpbin-gen:3:73: got newline, want primary expression
+   Stderr: failed to evaluate function: error: function failure  Exit code: 1
+

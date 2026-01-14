@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,7 @@ func TestExecErrorString(t *testing.T) {
 		{
 			name:        "no truncate - empty stderr",
 			fnExecError: ExecError{},
-			expected: `  Stderr:
-    ""
-  Exit Code: 0
+			expected: `[Stderr]:   Exit Code: 0
 `,
 		},
 		{
@@ -43,10 +41,7 @@ func TestExecErrorString(t *testing.T) {
 error message2`,
 				ExitCode: 1,
 			},
-			expected: `  Stderr:
-    "error message1"
-    "error message2"
-  Exit Code: 1
+			expected: `[Stderr]: error message1, error message2  Exit Code: 1
 `,
 		},
 		{
@@ -59,13 +54,7 @@ error message
 error message`,
 				ExitCode: 1,
 			},
-			expected: `  Stderr:
-    "error message"
-    "error message"
-    "error message"
-    "error message"
-    "error message"
-  Exit Code: 1
+			expected: `[Stderr]: error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -78,12 +67,7 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `  Stderr:
-    "error message"
-    "error message"
-    "error message"
-    "error message"
-  Exit Code: 1
+			expected: `[Stderr]: error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -97,13 +81,7 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `  Stderr:
-    "error message"
-    "error message"
-    "error message"
-    "error message"
-    ...(1 line(s) truncated, use '--truncate-output=false' to disable)
-  Exit Code: 1
+			expected: `[Stderr]: error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 		{
@@ -120,13 +98,7 @@ error message`,
 				ExitCode: 1,
 			},
 			truncate: true,
-			expected: `  Stderr:
-    "error message"
-    "error message"
-    "error message"
-    "error message"
-    ...(4 line(s) truncated, use '--truncate-output=false' to disable)
-  Exit Code: 1
+			expected: `[Stderr]: error message, error message, error message, error message, error message, error message, error message, error message  Exit Code: 1
 `,
 		},
 	}

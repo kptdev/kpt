@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )

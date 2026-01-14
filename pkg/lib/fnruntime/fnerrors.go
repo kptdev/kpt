@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,13 @@ type ExecError struct {
 func (fe *ExecError) String() string {
 	var b strings.Builder
 
-	errLines := &MultiLineFormatter{
-		Title:          "Stderr",
-		Lines:          strings.Split(fe.Stderr, "\n"),
-		UseQuote:       true,
-		TruncateOutput: fe.TruncateOutput,
+	errLine := &SingleLineFormatter{
+		Title:     "[Stderr]",
+		Lines:     strings.Split(fe.Stderr, "\n"),
+		UseQuote:  false,
+		Separator: ", ",
 	}
-	b.WriteString(errLines.String())
+	b.WriteString(errLine.String())
 	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
 	return b.String()
 }

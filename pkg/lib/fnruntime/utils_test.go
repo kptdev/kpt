@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package fnruntime
 import (
 	"testing"
 
-	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
@@ -26,7 +26,7 @@ func TestIsMatch(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		selector kptfile.Selector
+		selector kptfilev1.Selector
 		expected bool
 	}{
 		{
@@ -39,7 +39,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				Kind: "Deployment",
 			},
 			expected: true,
@@ -54,7 +54,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				Name: "nginx-deployment",
 			},
 			expected: true,
@@ -70,7 +70,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				Namespace: "staging",
 			},
 			expected: true,
@@ -85,7 +85,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				APIVersion: "apps/v1",
 			},
 			expected: true,
@@ -101,7 +101,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				Name:       "nginx-deployment",
 				Namespace:  "staging",
 				Kind:       "Deployment",
@@ -120,7 +120,7 @@ metadata:
     internal.config.k8s.io/kpt-resource-id: "0"
 spec:
   replicas: 3`,
-			selector: kptfile.Selector{
+			selector: kptfilev1.Selector{
 				Name:       "nginx-deployment",
 				Namespace:  "prod",
 				Kind:       "Deployment",

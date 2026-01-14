@@ -20,11 +20,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/printerutil"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 )
 
 // RunFns runs the set of configuration functions in a local directory against

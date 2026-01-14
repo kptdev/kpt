@@ -1,4 +1,4 @@
-// Copyright 2019 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kptdev/kpt/internal/errors"
-	"github.com/kptdev/kpt/internal/errors/resolver"
 	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/errors/resolver"
 	"github.com/kptdev/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
