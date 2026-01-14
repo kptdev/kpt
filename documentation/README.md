@@ -26,7 +26,14 @@ npm install
 Then run the site using `npm run serve`. To have the site run locally with a functioning local search, run
 `npm run serve:with-pagefind`.
 
+### Windows note (PowerShell/CMD)
+
+The site pulls some dependencies via Git submodules. If `npm install` succeeds but the site fails to build (for example, missing theme assets), initialize submodules and try again:
+
+```powershell
+git submodule update --init --recursive
+```
+
 ## License
 
 Licensed under the [Creative Commons Attribution 4.0 International license](LICENSE-documentation)
- 
