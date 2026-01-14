@@ -64,7 +64,6 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	// TODO: We probably should be going through the runner
 	resolveFunc := fnruntime.ResolveToImageForCLIFunc(fnruntime.GHCRImagePrefix)
 	image, err := resolveFunc(c.Context(), r.Image)
 	if err != nil {
