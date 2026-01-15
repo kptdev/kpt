@@ -26,10 +26,10 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/util/addmergecomment"
-	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/gitutil"
+	"github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	toposort "github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"

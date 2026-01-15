@@ -15,18 +15,18 @@
 package resolver
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
-    "github.com/kptdev/kpt/internal/pkg"
-    kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-    "github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-    "github.com/kptdev/kpt/pkg/lib/errors"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
 //nolint:gochecknoinits
 func init() {
-    AddErrorResolver(&pkgErrorResolver{})
+	AddErrorResolver(&pkgErrorResolver{})
 }
 
 // pkgErrorResolver is an implementation of the ErrorResolver interface
@@ -34,82 +34,82 @@ func init() {
 type pkgErrorResolver struct{}
 
 func (*pkgErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-    var kptfileError *kptfileutil.KptfileError
-    if errors.As(err, &kptfileError) {
-        path := kptfileError.Path
+	var kptfileError *kptfileutil.KptfileError
+	if errors.As(err, &kptfileError) {
+		path := kptfileError.Path
 
-        return resolveNestedErr(kptfileError, path.String())
-    }
+		return resolveNestedErr(kptfileError, path.String())
+	}
 
-    var remoteKptfileError *pkg.RemoteKptfileError
-    if errors.As(err, &remoteKptfileError) {
-        path := remoteKptfileError.RepoSpec.RepoRef()
+	var remoteKptfileError *pkg.RemoteKptfileError
+	if errors.As(err, &remoteKptfileError) {
+		path := remoteKptfileError.RepoSpec.RepoRef()
 
-        return resolveNestedErr(remoteKptfileError, path)
-    }
+		return resolveNestedErr(remoteKptfileError, path)
+	}
 
-    var validateError *kptfilev1.ValidateError
-    if errors.As(err, &validateError) {
-        return ResolvedResult{
-            Message: validateError.Error(),
-        }, true
-    }
+	var validateError *kptfilev1.ValidateError
+	if errors.As(err, &validateError) {
+		return ResolvedResult{
+			Message: validateError.Error(),
+		}, true
+	}
 
-    return ResolvedResult{}, false
+	return ResolvedResult{}, false
 }
 
 func resolveNestedErr(err error, path string) (ResolvedResult, bool) {
-    if errors.Is(err, os.ErrNotExist) {
-        msg := fmt.Sprintf("Error: No Kptfile found at %q.", path)
+	if errors.Is(err, os.ErrNotExist) {
+		msg := fmt.Sprintf("Error: No Kptfile found at %q.", path)
 
-        return ResolvedResult{
-            Message: msg,
-        }, true
-    }
+		return ResolvedResult{
+			Message: msg,
+		}, true
+	}
 
-    var deprecatedv1alpha1KptfileError *kptfileutil.DeprecatedKptfileError
-    if errors.As(err, &deprecatedv1alpha1KptfileError) &&
-        deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
-        msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha1KptfileError.Version)
-        msg += "Please update the package to the latest format by following https://kpt.dev/installation/migration."
+	var deprecatedv1alpha1KptfileError *kptfileutil.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha1KptfileError) &&
+		deprecatedv1alpha1KptfileError.Version == "v1alpha1" {
+		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha1KptfileError.Version)
+		msg += "Please update the package to the latest format by following https://kpt.dev/installation/migration."
 
-        return ResolvedResult{
-            Message: msg,
-        }, true
-    }
+		return ResolvedResult{
+			Message: msg,
+		}, true
+	}
 
-    var deprecatedv1alpha2KptfileError *kptfileutil.DeprecatedKptfileError
-    if errors.As(err, &deprecatedv1alpha2KptfileError) &&
-        deprecatedv1alpha2KptfileError.Version == "v1alpha2" {
-        msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha2KptfileError.Version)
-        msg += "Please run \"kpt fn eval <PKG_PATH> -i ghcr.io/kptdev/krm-functions-catalog/fix:latest --include-meta-resources\" to upgrade the package and retry."
+	var deprecatedv1alpha2KptfileError *kptfileutil.DeprecatedKptfileError
+	if errors.As(err, &deprecatedv1alpha2KptfileError) &&
+		deprecatedv1alpha2KptfileError.Version == "v1alpha2" {
+		msg := fmt.Sprintf("Error: Kptfile at %q has an old version (%q) of the Kptfile schema.\n", path, deprecatedv1alpha2KptfileError.Version)
+		msg += "Please run \"kpt fn eval <PKG_PATH> -i ghcr.io/kptdev/krm-functions-catalog/fix:latest --include-meta-resources\" to upgrade the package and retry."
 
-        return ResolvedResult{
-            Message: msg,
-        }, true
-    }
+		return ResolvedResult{
+			Message: msg,
+		}, true
+	}
 
-    var unknownKptfileResourceError *kptfileutil.UnknownKptfileResourceError
-    if errors.As(err, &unknownKptfileResourceError) {
-        msg := fmt.Sprintf("Error: Kptfile at %q has an unknown resource type (%q).", path, unknownKptfileResourceError.GVK.String())
-        return ResolvedResult{
-            Message: msg,
-        }, true
-    }
+	var unknownKptfileResourceError *kptfileutil.UnknownKptfileResourceError
+	if errors.As(err, &unknownKptfileResourceError) {
+		msg := fmt.Sprintf("Error: Kptfile at %q has an unknown resource type (%q).", path, unknownKptfileResourceError.GVK.String())
+		return ResolvedResult{
+			Message: msg,
+		}, true
+	}
 
-    msg := fmt.Sprintf("Error: Kptfile at %q can't be read.", path)
-    if err != nil {
-        var kptFileError *kptfileutil.KptfileError
-        if errors.As(err, &kptFileError) {
-            if kptFileError.Err != nil {
-                msg += fmt.Sprintf("\n\nDetails:\n%v", kptFileError.Err)
-            }
-        } else {
-            msg += fmt.Sprintf("\n\nDetails:\n%v", err)
-        }
-    }
+	msg := fmt.Sprintf("Error: Kptfile at %q can't be read.", path)
+	if err != nil {
+		var kptFileError *kptfileutil.KptfileError
+		if errors.As(err, &kptFileError) {
+			if kptFileError.Err != nil {
+				msg += fmt.Sprintf("\n\nDetails:\n%v", kptFileError.Err)
+			}
+		} else {
+			msg += fmt.Sprintf("\n\nDetails:\n%v", err)
+		}
+	}
 
-    return ResolvedResult{
-        Message: msg,
-    }, true
+	return ResolvedResult{
+		Message: msg,
+	}, true
 }

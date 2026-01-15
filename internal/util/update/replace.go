@@ -18,9 +18,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/types"
 )
 

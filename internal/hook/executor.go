@@ -19,11 +19,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
