@@ -1,0 +1,26 @@
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevisionResources
+metadata:
+  name: "test-resources"
+spec:
+  packageName: "test-package"
+  workspaceName: "v2"
+  revision: 2
+  repositoryName: "test-repo"
+  resources:
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: test-package
+      info:
+        description: test package
+    fruitstore.yaml: |
+      apiVersion: test.group/v1
+      kind: FruitStore
+      metadata:
+        name: test-fruit-store
+      spec:
+        airConditioned: false
+        preferredTemperature: 20
+        fruits: []

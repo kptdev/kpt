@@ -1,0 +1,49 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: fruitstores.test.group
+spec:
+  group: test.group
+  names:
+    kind: FruitStore
+    plural: fruitstores
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          properties:
+            apiVersion:
+              type: string
+            kind:
+              type: string
+            metadata:
+              type: object
+            spec:
+              type: object
+              properties:
+                airConditioned:  # control field
+                  type: bool
+                  default: false
+                preferredTemperature:  # control field
+                  type: integer
+                fruits:
+                  type: array
+                  x-kubernetes-list-type: map
+                  x-kubernetes-list-map-keys: [ name ]
+                  x-kubernetes-patch-merge-key: name
+                  x-kubernetes-patch-strategy: merge
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      amount:
+                        type: integer
+                    required:
+                      - name
+                      - amount
+              required:
+                - preferredTemperature

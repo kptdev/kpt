@@ -19,9 +19,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -221,7 +222,7 @@ func TestCopyMerge(t *testing.T) {
 
 			updater := &update.CopyMergeUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),
@@ -248,7 +249,7 @@ func TestCopyMergeError(t *testing.T) {
 	os.RemoveAll(src)
 
 	updater := &update.CopyMergeUpdater{}
-	options := update.Options{
+	options := updatetypes.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -278,7 +279,7 @@ kind: malformedKptfile
 	assert.NoError(t, err)
 
 	updater := &update.CopyMergeUpdater{}
-	options := update.Options{
+	options := updatetypes.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -304,7 +305,7 @@ func TestCopyMergeErrorCopyingFile(t *testing.T) {
 	}
 
 	updater := &update.CopyMergeUpdater{}
-	options := update.Options{
+	options := updatetypes.Options{
 		UpdatedPath: src,
 		LocalPath:   dst,
 		IsRoot:      true,
@@ -394,7 +395,7 @@ func TestCopyMergeDifferentMetadata(t *testing.T) {
 
 			updater := &update.CopyMergeUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),
@@ -428,7 +429,7 @@ func TestCopyMergeErrorRemovingFile(t *testing.T) {
 	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
 
 	updater := &update.CopyMergeUpdater{}
-	options := update.Options{
+	options := updatetypes.Options{
 		OriginPath:  org,
 		UpdatedPath: src,
 		LocalPath:   dst,

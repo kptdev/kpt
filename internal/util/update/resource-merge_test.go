@@ -19,9 +19,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/util/update"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	. "github.com/kptdev/kpt/internal/util/update"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -164,14 +165,14 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/kptdev/kpt", "/", "main", "resource-merge").
-						WithUpstreamLock("github.com/kptdev/kpt", "/", "main", "abc123"),
+						WithUpstream("github.com/kptdev/kpt", "/", "master", "resource-merge").
+						WithUpstreamLock("github.com/kptdev/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
 			local: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream("github.com/kptdev/kpt", "/", "main", "resource-merge").
+						WithUpstream("github.com/kptdev/kpt", "/", "master", "resource-merge").
 						WithUpstreamLock("github.com/kptdev/kpt", "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -283,9 +284,9 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			updated := tc.updated.ExpandPkg(t, repos)
 			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &update.ResourceMergeUpdater{}
+			updater := &ResourceMergeUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

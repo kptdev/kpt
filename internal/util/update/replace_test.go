@@ -19,9 +19,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -130,7 +131,7 @@ func TestUpdate_Replace(t *testing.T) {
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
-		"doesn't update the Kptfile": {
+		"Doesn't update the Kptfile": {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
@@ -172,7 +173,7 @@ func TestUpdate_Replace(t *testing.T) {
 
 			updater := &update.ReplaceUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

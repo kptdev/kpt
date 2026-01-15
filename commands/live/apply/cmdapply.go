@@ -24,7 +24,7 @@ import (
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/strings"
-	"github.com/kptdev/kpt/pkg/lib/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"

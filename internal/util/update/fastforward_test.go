@@ -19,9 +19,10 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -172,7 +173,7 @@ func TestUpdate_FastForward(t *testing.T) {
 
 			updater := &update.FastForwardUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),
