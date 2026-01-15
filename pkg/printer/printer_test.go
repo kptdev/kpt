@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
 func TestOptPrintf_WithDisplayPath(t *testing.T) {
