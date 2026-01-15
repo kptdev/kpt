@@ -22,17 +22,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/otiai10/copy"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
+	"github.com/kptdev/kpt/internal/gitutil"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/util/git"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/gitutil"
-	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 

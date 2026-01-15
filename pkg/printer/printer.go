@@ -21,8 +21,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 )
 
 // TruncateOutput defines should output be truncated

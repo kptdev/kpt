@@ -18,9 +18,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/testutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

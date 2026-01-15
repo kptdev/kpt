@@ -19,7 +19,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 

@@ -18,7 +18,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 

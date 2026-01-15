@@ -17,9 +17,9 @@ package update
 import (
 	"reflect"
 
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 

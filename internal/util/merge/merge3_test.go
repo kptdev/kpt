@@ -20,9 +20,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/merge"
-	"github.com/kptdev/kpt/pkg/lib/testutil"
-	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

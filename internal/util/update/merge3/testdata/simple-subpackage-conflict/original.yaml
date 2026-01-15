@@ -1,0 +1,51 @@
+apiVersion: porch.kpt.dev/v1alpha1
+kind: PackageRevisionResources
+metadata:
+  name: "test-resources"
+spec:
+  packageName: "test-package"
+  workspaceName: "v1"
+  revision: 1
+  repositoryName: "test-repo"
+  resources:
+    Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: test-package
+      info:
+        description: test package
+    deployment.yaml: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: test-app
+      spec:
+        selector:
+          matchLabels:
+            app: test-app
+        template:
+          metadata:
+            labels:
+              app: test-app
+          spec:
+            containers:
+              - name: test-app
+                image: test-image:original
+    subpackage/Kptfile: |
+      apiVersion: kpt.dev/v1
+      kind: Kptfile
+      metadata:
+        name: test-subpackage
+      info:
+        description: test subpackage
+    subpackage/cm.yaml: |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: test-subpackage-configmap
+      data:
+        key1: value1
+        key2: |
+          key21: value21
+          key22: value22

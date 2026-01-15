@@ -1,4 +1,4 @@
-// Copyright 2022,2026 The kpt Authors
+// Copyright 2022,2025-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,11 +15,19 @@
 package render
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
@@ -226,4 +234,276 @@ metadata:
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
+}
+
+func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, context.Context) {
+	var outputBuffer bytes.Buffer
+	ctx := context.Background()
+	ctx = printer.WithContext(ctx, printer.New(&outputBuffer, &outputBuffer))
+
+	mockFileSystem := filesys.MakeFsInMemory()
+
+	rootPkgPath := "/root"
+	err := mockFileSystem.Mkdir(rootPkgPath)
+	assert.NoError(t, err)
+
+	subPkgPath := "/root/subpkg"
+	err = mockFileSystem.Mkdir(subPkgPath)
+	assert.NoError(t, err)
+
+	childPkgPath := "/root/subpkg/child"
+	err = mockFileSystem.Mkdir(subPkgPath)
+	assert.NoError(t, err)
+
+	siblingPkgPath := "/root/sibling"
+	err = mockFileSystem.Mkdir(subPkgPath)
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+  annotations:
+    kpt.dev/bfs-rendering: %t
+`, renderBfs))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sub-package
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(siblingPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sibling-package
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(childPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: child-package
+`))
+	assert.NoError(t, err)
+
+	renderer := &Renderer{
+		PkgPath:        rootPkgPath,
+		ResultsDirPath: "/results",
+		FileSystem:     mockFileSystem,
+	}
+
+	return renderer, &outputBuffer, ctx
+}
+
+func TestRenderer_Execute_RenderOrder(t *testing.T) {
+	tests := []struct {
+		name          string
+		renderBfs     bool
+		expectedOrder func(output string) bool
+	}{
+		{
+			name:      "Use hydrateBfsOrder with renderBfs true",
+			renderBfs: true,
+			expectedOrder: func(output string) bool {
+				rootIndex := strings.Index(output, `Package: "root"`)            // First
+				siblingIndex := strings.Index(output, `Package: "root/sibling"`) // Second
+				return rootIndex < siblingIndex
+			},
+		},
+		{
+			name:      "Use default hydrate with renderBfs false",
+			renderBfs: false,
+			expectedOrder: func(output string) bool {
+				siblingIndex := strings.Index(output, `Package: "root/sibling"`) // First
+				rootIndex := strings.Index(output, `Package: "root"`)            // Fourth
+				return rootIndex > siblingIndex
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			renderer, outputBuffer, ctx := setupRendererTest(t, tc.renderBfs)
+
+			fnResults, err := renderer.Execute(ctx)
+			assert.NoError(t, err)
+			assert.NotNil(t, fnResults)
+			assert.Equal(t, 0, len(fnResults.Items))
+
+			output := outputBuffer.String()
+			assert.True(t, tc.expectedOrder(output))
+		})
+	}
+}
+
+func TestHydrate_ErrorCases(t *testing.T) {
+	mockFileSystem := filesys.MakeFsInMemory()
+
+	// Create a mock root package
+	rootPath := "/root"
+	err := mockFileSystem.Mkdir(rootPath)
+	assert.NoError(t, err)
+
+	// Add a Kptfile to the root package
+	err = mockFileSystem.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+`))
+	assert.NoError(t, err)
+
+	root, err := newPkgNode(mockFileSystem, rootPath, nil)
+	assert.NoError(t, err)
+
+	hctx := &hydrationContext{
+		root:       root,
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFileSystem,
+	}
+
+	t.Run("Cycle Detection in hydrate", func(t *testing.T) {
+		// Add the root package to the hydration context in a "Hydrating" state to simulate a cycle
+		hctx.pkgs[root.pkg.UniquePath] = &pkgNode{
+			pkg:   root.pkg,
+			state: Hydrating,
+		}
+
+		_, err := hydrate(context.Background(), root, hctx)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "cycle detected in pkg dependencies")
+	})
+
+	t.Run("Error in LocalResources", func(t *testing.T) {
+		// Simulate an error in LocalResources by creating a package with no Kptfile
+		invalidPkgPath := "/invalid"
+		err := mockFileSystem.Mkdir(invalidPkgPath)
+		assert.NoError(t, err)
+
+		invalidPkgNode, err := newPkgNode(mockFileSystem, invalidPkgPath, nil)
+		if err != nil {
+			assert.Contains(t, err.Error(), "error reading Kptfile")
+			return
+		}
+
+		// If no error, proceed to call hydrate (this should not happen in this case)
+		_, err = hydrate(context.Background(), invalidPkgNode, hctx)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to read Kptfile")
+	})
+}
+
+func TestHydrateBfsOrder_ErrorCases(t *testing.T) {
+	ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
+	mockFileSystem := filesys.MakeFsInMemory()
+
+	rootPkgPath := "/root"
+	err := mockFileSystem.Mkdir(rootPkgPath)
+	assert.NoError(t, err)
+
+	subPkgPath := "/root/subpkg"
+	err = mockFileSystem.Mkdir(subPkgPath)
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+  annotations:
+    ktp.dev/bfs-rendering: true
+`))
+	assert.NoError(t, err)
+
+	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sub-package
+`))
+	assert.NoError(t, err)
+
+	// Create a mock hydration context
+	root, err := newPkgNode(mockFileSystem, rootPkgPath, nil)
+	assert.NoError(t, err)
+
+	hctx := &hydrationContext{
+		root:       root,
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFileSystem,
+	}
+
+	t.Run("Cycle Detection in hydrateBfsOrder", func(t *testing.T) {
+		// Add the root package to the hydration context in a "Hydrating" state to simulate a cycle
+		hctx.pkgs[root.pkg.UniquePath] = &pkgNode{
+			pkg:   root.pkg,
+			state: Hydrating,
+		}
+
+		_, err := hydrateBfsOrder(ctx, root, hctx)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "cycle detected in pkg dependencies")
+	})
+
+	t.Run("Invalid Package State in hydrateBfsOrder", func(t *testing.T) {
+		// Add the root package to the hydration context in an invalid state
+		hctx.pkgs[root.pkg.UniquePath] = &pkgNode{
+			pkg:   root.pkg,
+			state: -1, // Invalid state
+		}
+
+		_, err := hydrateBfsOrder(ctx, root, hctx)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "package found in invalid state")
+	})
+
+	t.Run("Wet Package State in hydrateBfsOrder would continue", func(t *testing.T) {
+		hctx.pkgs[root.pkg.UniquePath] = &pkgNode{
+			pkg:   root.pkg,
+			state: Wet,
+		}
+
+		_, err := hydrateBfsOrder(ctx, root, hctx)
+		assert.NoError(t, err)
+	})
+}
+
+func TestHydrateBfsOrder_RunPipelineError(t *testing.T) {
+	ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
+	mockFileSystem := filesys.MakeFsInMemory()
+
+	rootPkgPath := "/root"
+	assert.NoError(t, mockFileSystem.Mkdir(rootPkgPath))
+
+	// Write a Kptfile with an invalid api version
+	_ = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/ERROR
+kind: Kptfile
+metadata:
+  name: root-package
+  annotations:
+    kpt.dev/bfs-rendering: "true"
+`))
+
+	p, _ := pkg.New(mockFileSystem, rootPkgPath)
+	root := &pkgNode{
+		pkg:   p,
+		state: Dry,
+	}
+	hctx := &hydrationContext{
+		root:       root,
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFileSystem,
+	}
+
+	_, err := hydrateBfsOrder(ctx, root, hctx)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown resource type")
 }

@@ -15,23 +15,26 @@
 package update
 
 import (
+	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
 )
 
 // CopyMergeUpdater is responsible for synchronizing the destination package
 // with the source package by updating the Kptfile and copying and replacing package contents.
 type CopyMergeUpdater struct{}
 
+var _ updatetypes.Updater = &CopyMergeUpdater{}
+
 // Update synchronizes the destination/local package with the source/update package by updating the Kptfile
 // and copying package contents. It deletes resources from the destination package if they were present
 // in the original package, but not present anymore in the source package.
 // It takes an Options struct as input, which specifies the paths
 // and other parameters for the update operation. Returns an error if the update fails.
-func (u CopyMergeUpdater) Update(options Options) error {
+func (u CopyMergeUpdater) Update(options updatetypes.Options) error {
 	const op errors.Op = "update.Update"
 
 	dst := options.LocalPath

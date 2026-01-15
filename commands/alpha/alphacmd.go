@@ -22,7 +22,6 @@ import (
 	"github.com/kptdev/kpt/commands/alpha/wasm"
 
 	"github.com/kptdev/kpt/internal/docs/generated/alphadocs"
-	"github.com/kptdev/kpt/internal/util/porch"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +40,6 @@ func GetCommand(ctx context.Context, _, version string) *cobra.Command {
 			}
 			return cmd.Usage()
 		},
-		Hidden: porch.HidePorchCommands,
 	}
 
 	alpha.AddCommand(
