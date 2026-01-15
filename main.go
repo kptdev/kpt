@@ -26,9 +26,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/errors/resolver"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/run"
 	"github.com/spf13/cobra"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"

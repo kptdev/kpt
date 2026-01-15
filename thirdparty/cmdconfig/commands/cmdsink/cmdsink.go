@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/spf13/cobra"
 )
 

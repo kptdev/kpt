@@ -21,9 +21,9 @@ import (
 	"testing"
 
 	initialization "github.com/kptdev/kpt/commands/pkg/init"
-	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/util/man"
 	"github.com/kptdev/kpt/pkg/lib/builtins"
+	"github.com/kptdev/kpt/pkg/lib/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )

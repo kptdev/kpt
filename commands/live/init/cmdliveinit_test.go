@@ -21,11 +21,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kptdev/kpt/internal/testutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/cli-runtime/pkg/genericclioptions"

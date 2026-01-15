@@ -21,10 +21,10 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/testutil"
-	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
+	"github.com/kptdev/kpt/pkg/lib/testutil"
+	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"

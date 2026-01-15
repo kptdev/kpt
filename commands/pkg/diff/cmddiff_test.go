@@ -21,7 +21,7 @@ import (
 
 	"github.com/kptdev/kpt/commands/pkg/diff"
 	"github.com/kptdev/kpt/commands/pkg/get"
-	"github.com/kptdev/kpt/internal/testutil"
+	"github.com/kptdev/kpt/pkg/lib/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
