@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
 // FunctionRunner knows how to run a function.
@@ -31,11 +31,11 @@ type FunctionRunner interface {
 // FunctionRuntime provides a way to obtain a function runner to be used for a given function configuration.
 // If the function is not found, this should return an error that includes a NotFoundError in the chain.
 type FunctionRuntime interface {
-	GetRunner(ctx context.Context, fn *v1.Function) (FunctionRunner, error)
+	GetRunner(ctx context.Context, fn *kptfilev1.Function) (FunctionRunner, error)
 }
 
 type NotFoundError struct {
-	Function v1.Function
+	Function kptfilev1.Function
 }
 
 func (e *NotFoundError) Error() string {

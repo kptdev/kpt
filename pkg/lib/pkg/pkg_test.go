@@ -22,9 +22,9 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )

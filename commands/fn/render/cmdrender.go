@@ -24,10 +24,10 @@ import (
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/internal/util/render"
 	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"

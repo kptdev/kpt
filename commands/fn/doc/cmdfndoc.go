@@ -23,8 +23,8 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 )

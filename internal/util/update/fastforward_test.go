@@ -19,9 +19,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/testutil"
-	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
+	"github.com/kptdev/kpt/pkg/lib/testutil"
+	"github.com/kptdev/kpt/pkg/lib/testutil/pkgbuilder"
 	"github.com/stretchr/testify/assert"
 )
 
