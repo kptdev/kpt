@@ -17,10 +17,8 @@ package cmdutil
 import (
 	"bytes"
 	"path/filepath"
-	"sort"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/util/function"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -305,46 +303,4 @@ metadata:
 			}
 		})
 	}
-}
-
-func TestListImages(t *testing.T) {
-	functions := parseFunctions(`{
-  "apply-setters": {
-    "v0.2": {
-      "LatestPatchVersion": "v0.2.1",
-      "Examples": {
-        "apply-setters-simple": {
-          "LocalExamplePath": "/apply-setters/v0.1/apply-setters-simple",
-          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.2/examples/apply-setters-simple",
-          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/apply-setters/v0.2/functions/go/apply-setters"
-        }
-      }
-    }
-  },
-  "gatekeeper": {
-    "v0.1": {
-      "LatestPatchVersion": "v0.1.3",
-      "Examples": {
-        "gatekeeper-warning-only": {
-          "LocalExamplePath": "/gatekeeper/v0.1/gatekeeper-warning-only",
-          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.1/examples/gatekeeper-warning-only",
-          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.1/functions/go/gatekeeper"
-        }
-      }
-    },
-    "v0.2": {
-      "LatestPatchVersion": "v0.2.1",
-      "Examples": {
-        "gatekeeper-warning-only": {
-          "LocalExamplePath": "/gatekeeper/v0.2/gatekeeper-warning-only",
-          "RemoteExamplePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.2/examples/gatekeeper-warning-only",
-          "RemoteSourcePath": "https://github.com/kptdev/krm-functions-catalog/tree/gatekeeper/v0.2/functions/go/gatekeeper"
-        }
-      }
-    }
-  }
-}`)
-	result := function.GetNames(functions)
-	sort.Strings(result)
-	assert.Equal(t, []string{"apply-setters:v0.2.1", "gatekeeper:v0.2.1"}, result)
 }

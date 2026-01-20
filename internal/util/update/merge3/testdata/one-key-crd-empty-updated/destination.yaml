@@ -1,5 +1,5 @@
 apiVersion: porch.kpt.dev/v1alpha1
-kind: PackageRevisionResources
+kind: MergeTestResources
 metadata:
   name: "test-resources"
 spec:
