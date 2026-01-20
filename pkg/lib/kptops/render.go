@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kpt
+package kptops
 
 import (
 	"context"
@@ -24,18 +24,18 @@ import (
 	"github.com/kptdev/kpt/internal/util/render"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func NewRenderer(runnerOptions fnruntime.RunnerOptions) fn.Renderer {
+func NewRenderer(runnerOptions runneroptions.RunnerOptions) fn.Renderer {
 	return &renderer{runnerOptions: runnerOptions}
 }
 
 type renderer struct {
-	runnerOptions fnruntime.RunnerOptions
+	runnerOptions runneroptions.RunnerOptions
 }
 
 var _ fn.Renderer = &renderer{}

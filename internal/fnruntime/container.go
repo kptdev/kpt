@@ -29,6 +29,7 @@ import (
 	"time"
 
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -76,7 +77,7 @@ type ContainerFn struct {
 	// Image is the container image to run
 	Image string
 	// ImagePullPolicy controls the image pulling behavior.
-	ImagePullPolicy ImagePullPolicy
+	ImagePullPolicy runneroptions.ImagePullPolicy
 	// Container function will be killed after this timeour.
 	// The default value is 5 minutes.
 	Timeout time.Duration
@@ -180,11 +181,11 @@ func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 	}
 
 	switch f.ImagePullPolicy {
-	case NeverPull:
+	case runneroptions.NeverPull:
 		args = append(args, "--pull", "never")
-	case AlwaysPull:
+	case runneroptions.AlwaysPull:
 		args = append(args, "--pull", "always")
-	case IfNotPresentPull:
+	case runneroptions.IfNotPresentPull:
 		args = append(args, "--pull", "missing")
 	default:
 		args = append(args, "--pull", "missing")
@@ -222,24 +223,6 @@ func NewContainerEnvFromStringSlice(envStr []string) *runtimeutil.ContainerEnv {
 		}
 	}
 	return ce
-}
-
-// ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
-// If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
-// A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
-func ResolveToImageForCLIFunc(prefix string) func(_ context.Context, image string) (string, error) {
-	prefix = strings.TrimSuffix(prefix, "/")
-	if prefix == "" {
-		return func(_ context.Context, image string) (string, error) {
-			return image, nil
-		}
-	}
-	return func(_ context.Context, image string) (string, error) {
-		if !strings.Contains(image, "/") {
-			return fmt.Sprintf("%s/%s", prefix, image), nil
-		}
-		return image, nil
-	}
 }
 
 // ContainerImageError is an error type which will be returned when

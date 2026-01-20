@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kpt
+package kptops
 
 import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/util/render"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -106,8 +106,8 @@ spec:
 		FileSystem: fs,
 		Runtime:    &runtime{},
 	}
-	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
@@ -220,8 +220,8 @@ spec:
 		FileSystem: fs,
 		Runtime:    &runtime{},
 	}
-	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = fnruntime.IfNotPresentPull
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {

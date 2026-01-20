@@ -26,7 +26,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )

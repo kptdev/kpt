@@ -21,10 +21,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/internal/builtins"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/man"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/builtins"
+	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -143,9 +144,9 @@ func (i *DefaultInitializer) Initialize(
 		}
 	}
 
-	pkgContextPath := filepath.Join(up, builtins.PkgContextFile)
+	pkgContextPath := filepath.Join(up, pkgcontexttypes.PkgContextFile)
 	if !fsys.Exists(pkgContextPath) {
-		pr.Printf("writing %s\n", filepath.Join(opts.RelPath, builtins.PkgContextFile))
+		pr.Printf("writing %s\n", filepath.Join(opts.RelPath, pkgcontexttypes.PkgContextFile))
 		if err := fsys.WriteFile(pkgContextPath, []byte(builtins.AbstractPkgContext())); err != nil {
 			return err
 		}

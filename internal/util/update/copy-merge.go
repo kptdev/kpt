@@ -20,7 +20,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 )
 
 // CopyMergeUpdater is responsible for synchronizing the destination package

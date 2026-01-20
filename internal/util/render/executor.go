@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/attribution"
@@ -31,7 +32,7 @@ import (
 	"github.com/kptdev/kpt/pkg/fn"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -60,7 +61,7 @@ type Renderer struct {
 	Output io.Writer
 
 	// RunnerOptions contains options controlling function execution.
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
@@ -196,7 +197,7 @@ type hydrationContext struct {
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
 
-	runnerOptions fnruntime.RunnerOptions
+	runnerOptions runneroptions.RunnerOptions
 
 	fileSystem filesys.FileSystem
 

@@ -26,7 +26,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/internal/util/render"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
@@ -80,11 +80,11 @@ type Runner struct {
 	Command        *cobra.Command
 	ctx            context.Context
 
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 }
 
 func (r *Runner) InitDefaults() {
-	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {

@@ -17,6 +17,8 @@ package fnruntime
 import (
 	"fmt"
 	"strings"
+
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 )
 
 const (
@@ -45,7 +47,7 @@ type ExecError struct {
 func (fe *ExecError) String() string {
 	var b strings.Builder
 
-	errLine := &SingleLineFormatter{
+	errLine := &runneroptions.SingleLineFormatter{
 		Title:     "[Stderr]",
 		Lines:     strings.Split(fe.Stderr, "\n"),
 		UseQuote:  false,

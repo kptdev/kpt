@@ -18,7 +18,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
@@ -156,7 +156,7 @@ type EvalFnRunner struct {
 	Exclusion            kptfile.Selector
 	dataItems            []string
 
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 
 	// we will need to parse these values into Selector and Exclusion
 	selectorLabels      []string
@@ -168,7 +168,7 @@ type EvalFnRunner struct {
 }
 
 func (r *EvalFnRunner) InitDefaults() {
-	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
