@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// internal package containing implementation details of the package
+// Package internal package containing implementation details of the package
 // manipulation primitives.
 package internal

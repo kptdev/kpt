@@ -121,8 +121,8 @@ func removeArmPlatformWarning(got string) string {
 	if strings.HasSuffix(got, "  Stderr:\n") {
 		// The warning message was the only message on stderr
 		return strings.Replace(got, "  Stderr:\n", "", 1)
-	} else {
-		// There are other messages on stderr, so leave the "Stderr:"" tag in place
-		return got
 	}
+
+	// There are other messages on stderr, so leave the "Stderr:"" tag in place
+	return got
 }

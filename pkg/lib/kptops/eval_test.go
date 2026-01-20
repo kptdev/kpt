@@ -43,9 +43,9 @@ func ReadResourceList(t *testing.T, pkgdir string, config *yaml.RNode) []byte {
 	if err := (kio.Pipeline{Inputs: []kio.Reader{r}, Outputs: []kio.Writer{w}}).Execute(); err != nil {
 		t.Fatalf("Failed to load package %q", pkgdir)
 		return nil
-	} else {
-		return rl.Bytes()
 	}
+
+	return rl.Bytes()
 }
 
 func TestSetLabels(t *testing.T) {

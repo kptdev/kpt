@@ -56,7 +56,7 @@ func SchemasFromCrdKubeObjects(kos fn.KubeObjects) (map[string]spec.Schema, erro
 		// TODO: should this be an error?
 		for k := range maps.Keys(defs) {
 			if _, ok := definitions[k]; ok {
-				klog.Warningf("duplicate schema definition %q, later occurence will be used", k)
+				klog.Warningf("duplicate schema definition %q, later occurrence will be used", k)
 			}
 		}
 

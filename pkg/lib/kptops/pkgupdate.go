@@ -36,7 +36,7 @@ type PkgUpdateOpts struct {
 }
 
 // PkgUpdate is a wrapper around `kpt pkg update`, running it against the package in packageDir
-func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdateOpts) error {
+func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOpts) error {
 	// TODO: Printer should be a logr
 	pr := printer.New(os.Stdout, os.Stderr)
 	ctx = printer.WithContext(ctx, pr)
@@ -57,9 +57,9 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 	}
 
 	if kf.Upstream == nil || kf.Upstream.Git == nil {
-		return fmt.Errorf("package must have an upstream reference") //errors.E(op, u.Pkg.UniquePath,
-		// fmt.Errorf("package must have an upstream reference"))
+		return fmt.Errorf("package must have an upstream reference")
 	}
+
 	// originalRootKfRef := rootKf.Upstream.Git.Ref
 	if ref != "" {
 		kf.Upstream.Git.Ref = ref
@@ -75,6 +75,8 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 	var updatedRepoSpec git.RepoSpec
 	var updatedDir string
 	var originDir string
+
+	//nolint:gocritic
 	switch kf.Upstream.Type {
 	case kptfilev1.GitOrigin:
 		g := kf.Upstream.Git
@@ -102,7 +104,7 @@ func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdat
 			// 	return errors.E(op, p.UniquePath, err)
 			// }
 			if err := fetch.NewCloner(originRepoSpec).ClonerUsingGitExec(ctx); err != nil {
-				return err //errors.E(op, p.UniquePath, err)
+				return err
 			}
 			originDir = originRepoSpec.AbsPath()
 		} else {

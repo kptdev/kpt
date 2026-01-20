@@ -187,7 +187,7 @@ metadata:
 spec:
   image: nginx:1.2.3
 `
-	expectedDbResources := `apiVersion: apps/v1
+	expectedDBResources := `apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: db
@@ -237,7 +237,7 @@ spec:
 
 	if res, err := fs.ReadFile("/app/db/resources.yaml"); err != nil {
 		t.Errorf("Failed to read file: %v", err)
-	} else if got, want := string(res), expectedDbResources; got != want {
+	} else if got, want := string(res), expectedDBResources; got != want {
 		t.Errorf("unexpected file contents: got %q, want %q", got, want)
 	}
 }

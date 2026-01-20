@@ -34,12 +34,12 @@ import (
 )
 
 func readFile(t *testing.T, path string) []byte {
-	if data, err := os.ReadFile(path); err != nil {
+	data, err := os.ReadFile(path)
+	if err != nil {
 		t.Fatalf("Cannot read file %q", err)
 		return nil
-	} else {
-		return data
 	}
+	return data
 }
 
 func TestRender(t *testing.T) {
@@ -81,7 +81,7 @@ func TestRender(t *testing.T) {
 			got := output.String()
 			want := readFile(t, filepath.Join(testdata, test.name, test.want))
 
-			if diff := cmp.Diff(string(want), string(got)); diff != "" {
+			if diff := cmp.Diff(string(want), got); diff != "" {
 				t.Errorf("Unexpected result (-want, +got): %s", diff)
 			}
 		})
@@ -90,7 +90,7 @@ func TestRender(t *testing.T) {
 
 func TestPackagePrinter(t *testing.T) {
 	klog.InitFlags(nil)
-	flag.Set("logtostderr", "false")
+	_ = flag.Set("logtostderr", "false")
 
 	var buf bytes.Buffer
 	klog.SetOutput(&buf)
@@ -118,12 +118,15 @@ func TestPackagePrinter(t *testing.T) {
 }
 
 func TestPrinterLoggingDepth(t *testing.T) {
-	flag.Set("logtostderr", "false")
+	_ = flag.Set("logtostderr", "false")
 
 	var buf bytes.Buffer
 	klog.SetOutput(&buf)
 
-	_, filename, _, _ := goruntime.Caller(0)
+	_, filename, _, ok := goruntime.Caller(0)
+	if !ok {
+		t.Errorf("call to goruntime.Caller failed")
+	}
 	expectedFile := filepath.Base(filename)
 
 	p := &packagePrinter{}
