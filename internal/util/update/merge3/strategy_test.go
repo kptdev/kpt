@@ -33,8 +33,8 @@ data:
 `)
 	dest := orig.Copy()
 
-	strat := GetHandlingStrategy(orig, nil, dest)
-	assert.Equal(t, filters.Skip, strat)
+	strategy := GetHandlingStrategy(orig, nil, dest)
+	assert.Equal(t, filters.Skip, strategy)
 }
 
 func TestNotEqualWillKeepDest(t *testing.T) {
@@ -49,6 +49,6 @@ data:
 	dest := orig.Copy()
 	dest.SetDataMap(map[string]string{"foo.txt": "baz"})
 
-	strat := GetHandlingStrategy(orig, nil, dest)
-	assert.Equal(t, filters.KeepDest, strat)
+	strategy := GetHandlingStrategy(orig, nil, dest)
+	assert.Equal(t, filters.KeepDest, strategy)
 }

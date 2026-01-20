@@ -166,6 +166,7 @@ func assocListMergeCheck(t *Merge3TestSuite, kos fn.KubeObjects) {
 	})(t, kos)
 }
 
+//nolint:unparam
 func makeFruitCheckFunc(expectedTemp int, expectedFruits map[string]int) func(*Merge3TestSuite, fn.KubeObjects) {
 	return func(t *Merge3TestSuite, kos fn.KubeObjects) {
 		obj, err := kos.Where(nameIs(testCrName)).EnsureSingleItem()

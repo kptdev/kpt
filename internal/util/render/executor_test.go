@@ -31,6 +31,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
+const rootString = "/root"
+
 func TestPathRelToRoot(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -243,7 +245,7 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 
 	mockFileSystem := filesys.MakeFsInMemory()
 
-	rootPkgPath := "/root"
+	rootPkgPath := rootString
 	err := mockFileSystem.Mkdir(rootPkgPath)
 	assert.NoError(t, err)
 
@@ -347,7 +349,7 @@ func TestHydrate_ErrorCases(t *testing.T) {
 	mockFileSystem := filesys.MakeFsInMemory()
 
 	// Create a mock root package
-	rootPath := "/root"
+	rootPath := rootString
 	err := mockFileSystem.Mkdir(rootPath)
 	assert.NoError(t, err)
 
@@ -404,7 +406,7 @@ func TestHydrateBfsOrder_ErrorCases(t *testing.T) {
 	ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
 	mockFileSystem := filesys.MakeFsInMemory()
 
-	rootPkgPath := "/root"
+	rootPkgPath := rootString
 	err := mockFileSystem.Mkdir(rootPkgPath)
 	assert.NoError(t, err)
 
@@ -479,7 +481,7 @@ func TestHydrateBfsOrder_RunPipelineError(t *testing.T) {
 	ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
 	mockFileSystem := filesys.MakeFsInMemory()
 
-	rootPkgPath := "/root"
+	rootPkgPath := rootString
 	assert.NoError(t, mockFileSystem.Mkdir(rootPkgPath))
 
 	// Write a Kptfile with an invalid api version

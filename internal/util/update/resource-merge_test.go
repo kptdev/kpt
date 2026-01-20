@@ -21,7 +21,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	. "github.com/kptdev/kpt/internal/util/update"
+	"github.com/kptdev/kpt/internal/util/update"
 	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
 )
@@ -284,7 +284,7 @@ func TestUpdate_ResourceMerge(t *testing.T) {
 			updated := tc.updated.ExpandPkg(t, repos)
 			expected := tc.expected.ExpandPkg(t, repos)
 
-			updater := &ResourceMergeUpdater{}
+			updater := &update.ResourceMergeUpdater{}
 
 			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,

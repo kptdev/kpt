@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package kptops contains implementations of kpt operations
 package kptops
 
 import (
@@ -23,7 +24,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// TODO: Accept a virtual filesystem or other package abstraction
 func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) (string, error) {
 	kptfile, err := kptfileutil.DecodeKptfile(strings.NewReader(kptfileContents))
 	if err != nil {
@@ -66,7 +66,6 @@ func UpdateName(kptfileContents string, name string) (string, error) {
 	return string(b), nil
 }
 
-// TODO: accept a virtual filesystem
 func UpdateKptfileUpstream(name string, contents map[string]string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) error {
 	kptfile, found := contents[kptfilev1.KptFileName]
 	if !found {
@@ -102,7 +101,7 @@ func normalizeGitFields(u *kptfilev1.Upstream) {
 	if u.Git != nil {
 		// Ensure .git suffix is present
 		if !strings.HasSuffix(u.Git.Repo, ".git") {
-			u.Git.Repo = u.Git.Repo + ".git"
+			u.Git.Repo += ".git"
 		}
 
 		// Ensure directory doesn't start with a slash
@@ -115,7 +114,7 @@ func normalizeGitLockFields(l *kptfilev1.UpstreamLock) {
 	if l.Git != nil {
 		// Ensure .git suffix is present
 		if !strings.HasSuffix(l.Git.Repo, ".git") {
-			l.Git.Repo = l.Git.Repo + ".git"
+			l.Git.Repo += ".git"
 		}
 
 		// Ensure directory doesn't start with a slash

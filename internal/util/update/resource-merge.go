@@ -369,11 +369,13 @@ func collectKubeObjectsFromPackages(localPath, updatedPath, originalPath string)
 
 func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, error) {
 	// TODO: these should probably be merged, destination will always override updated this way
-	kubeobjects := append(updated, destination...)
+	var kubeobjects fn.KubeObjects
+	copy(kubeobjects, updated)
+	kubeobjects = append(kubeobjects, destination...)
 	_, crdObjects := merge3.FilterCrds(kubeobjects)
 	crdSchemas, err := merge3.SchemasFromCrdKubeObjects(crdObjects)
 	if err != nil {
-		klog.Error("An error occured during CRD extraction: %w", err)
+		klog.Error("An error occurred during CRD extraction: %w", err)
 		return nil, nil
 	}
 
@@ -406,7 +408,6 @@ func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation stri
 		return nil, errors.E(types.UniquePath(directoryPath), err)
 	}
 	return fn.MoveToKubeObjects(nodes), err
-
 }
 
 func writeResourcesToDirectory(destPath string, kubeObjects fn.KubeObjects) error {

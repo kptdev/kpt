@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package merge3 executes a 3-way merge update
 package merge3
 
 import (
@@ -55,9 +56,8 @@ func GetHandlingStrategy(original, updated, dest *yaml.RNode) filters.ResourceMe
 	case original != nil && updated == nil:
 		if equals(original, dest) {
 			return filters.Skip
-		} else {
-			return filters.KeepDest
 		}
+		return filters.KeepDest
 	// Do not re-add if deleted from local.
 	case original != nil && dest == nil:
 		return filters.Skip

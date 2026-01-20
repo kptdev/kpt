@@ -28,10 +28,11 @@ func applySetters(rl *framework.ResourceList) error {
 
 	var fn function.ApplySetters
 	function.Decode(rl.FunctionConfig, &fn)
-	if items, err := fn.Filter(rl.Items); err != nil {
+	items, err := fn.Filter(rl.Items)
+	if err != nil {
 		return fmt.Errorf("apply-setter evaluation failed: %w", err)
-	} else {
-		rl.Items = items
 	}
+
+	rl.Items = items
 	return nil
 }

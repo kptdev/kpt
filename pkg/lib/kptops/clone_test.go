@@ -20,6 +20,8 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
+const exampleRepoURL = "https://github.com/example/repo.git"
+
 func TestNormalizeGitFields(t *testing.T) {
 	// Test case 1: Add .git suffix and normalize directory path
 	upstream := &kptfilev1.Upstream{
@@ -29,7 +31,7 @@ func TestNormalizeGitFields(t *testing.T) {
 		},
 	}
 	normalizeGitFields(upstream)
-	if upstream.Git.Repo != "https://github.com/example/repo.git" {
+	if upstream.Git.Repo != exampleRepoURL {
 		t.Errorf("Expected .git suffix, got %q", upstream.Git.Repo)
 	}
 	if upstream.Git.Directory != "path/to/dir" {
@@ -39,12 +41,12 @@ func TestNormalizeGitFields(t *testing.T) {
 	// Test case 2: Already has .git suffix
 	upstream = &kptfilev1.Upstream{
 		Git: &kptfilev1.Git{
-			Repo:      "https://github.com/example/repo.git",
+			Repo:      exampleRepoURL,
 			Directory: "path/to/dir",
 		},
 	}
 	normalizeGitFields(upstream)
-	if upstream.Git.Repo != "https://github.com/example/repo.git" {
+	if upstream.Git.Repo != exampleRepoURL {
 		t.Errorf("Expected unchanged repo URL, got %q", upstream.Git.Repo)
 	}
 }
@@ -53,12 +55,12 @@ func TestNormalizeGitLockFields(t *testing.T) {
 	// Test case 1: Add .git suffix and normalize directory path
 	lock := &kptfilev1.UpstreamLock{
 		Git: &kptfilev1.GitLock{
-			Repo:      "https://github.com/example/repo",
+			Repo:      exampleRepoURL,
 			Directory: "/path/to/dir",
 		},
 	}
 	normalizeGitLockFields(lock)
-	if lock.Git.Repo != "https://github.com/example/repo.git" {
+	if lock.Git.Repo != exampleRepoURL {
 		t.Errorf("Expected .git suffix, got %q", lock.Git.Repo)
 	}
 	if lock.Git.Directory != "path/to/dir" {
@@ -68,12 +70,12 @@ func TestNormalizeGitLockFields(t *testing.T) {
 	// Test case 2: Already has .git suffix
 	lock = &kptfilev1.UpstreamLock{
 		Git: &kptfilev1.GitLock{
-			Repo:      "https://github.com/example/repo.git",
+			Repo:      exampleRepoURL,
 			Directory: "path/to/dir",
 		},
 	}
 	normalizeGitLockFields(lock)
-	if lock.Git.Repo != "https://github.com/example/repo.git" {
+	if lock.Git.Repo != exampleRepoURL {
 		t.Errorf("Expected unchanged repo URL, got %q", lock.Git.Repo)
 	}
 }

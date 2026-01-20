@@ -59,7 +59,7 @@ const (
 	logDepth            = 2
 )
 
-func (p *packagePrinter) PrintPackage(pkg *pkg.Pkg, leadingNewline bool) {
+func (p *packagePrinter) PrintPackage(pkg *pkg.Pkg, _ bool) {
 	p.printfDepth(logDepth, packagePrefixFormat, pkg.DisplayPath)
 }
 
