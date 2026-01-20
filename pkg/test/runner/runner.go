@@ -489,9 +489,11 @@ func (r *Runner) compareResult(cnt int, exitErr error, stdout string, inStderr s
 // check stdout and stderr against expected
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
-	if !strings.Contains(stderr, expectedStderr) {
-		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, stderr))
-		return fmt.Errorf("wanted stderr %q, got %q", expectedStderr, stderr)
+	conditionedStderr := removeArmPlatformWarning(stderr)
+
+	if !strings.Contains(conditionedStderr, expectedStderr) {
+		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, conditionedStderr))
+		return fmt.Errorf("wanted stderr %q, got %q", expectedStderr, conditionedStderr)
 	}
 	stdErrRegEx := r.testCase.Config.StdErrRegEx
 	if stdErrRegEx != "" {
@@ -499,8 +501,8 @@ func (r *Runner) compareOutput(stdout string, stderr string) error {
 		if err != nil {
 			return fmt.Errorf("unable to compile the regular expression %q: %w", stdErrRegEx, err)
 		}
-		if !r.MatchString(stderr) {
-			return fmt.Errorf("unable to match regular expression %q, got %v", stdErrRegEx, stderr)
+		if !r.MatchString(conditionedStderr) {
+			return fmt.Errorf("unable to match regular expression %q, got %v", stdErrRegEx, conditionedStderr)
 		}
 	}
 	expectedStdout := r.testCase.Config.StdOut

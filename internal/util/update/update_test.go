@@ -3203,8 +3203,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 							pkgbuilder.NewKptfile().
 								WithUpstreamRef("foo", "/", masterBranch, "resource-merge").
 								WithUpstreamLockRef("foo", "/", masterBranch, 0),
-						).
-						WithResource(pkgbuilder.ConfigMapResource),
+						),
 				),
 		},
 		"fast-forward updates can be used even if subpackages has changes": {
