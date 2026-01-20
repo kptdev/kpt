@@ -44,9 +44,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
-	})
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }

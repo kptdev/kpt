@@ -50,14 +50,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
-	})
 	r.Command.Flags().StringArrayVarP(
 		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
-	_ = r.Command.RegisterFlagCompletionFunc("keywords", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestKeywords(cmd), cobra.ShellCompDirectiveDefault
-	})
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
