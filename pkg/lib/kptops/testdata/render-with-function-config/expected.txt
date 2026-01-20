@@ -52,7 +52,7 @@ items:
     annotations:
       cnrm.cloud.google.com/force-destroy: "false"
       cnrm.cloud.google.com/project-id: updated-project-id # kpt-set: ${project-id}
-      cnrm.cloud.google.com/blueprint: 'kpt-fn'
+      cnrm.cloud.google.com/blueprint: 'kpt-fn,krm-fn'
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'bucket.yaml'
       internal.config.kubernetes.io/index: '0'

@@ -26,6 +26,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/types"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -99,13 +100,13 @@ data: {foo: bar}
 }
 func TestSingleLineFormatter(t *testing.T) {
 	type testcase struct {
-		sf       *SingleLineFormatter
+		sf       *runneroptions.SingleLineFormatter
 		expected string
 	}
 
 	testcases := map[string]testcase{
 		"single line without quotes and comma separator": {
-			sf: &SingleLineFormatter{
+			sf: &runneroptions.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1", "line2", "line3"},
 				UseQuote:  false,
@@ -114,7 +115,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: `Summary: line1, line2, line3`,
 		},
 		"single line with quotes and space separator": {
-			sf: &SingleLineFormatter{
+			sf: &runneroptions.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1", "line2", "line3"},
 				UseQuote:  true,
@@ -123,7 +124,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: `Summary: "line1" "line2" "line3"`,
 		},
 		"single line with newline suppression": {
-			sf: &SingleLineFormatter{
+			sf: &runneroptions.SingleLineFormatter{
 				Title:     "Summary",
 				Lines:     []string{"line1\n", "line2\nextra", "line3"},
 				UseQuote:  false,
@@ -132,7 +133,7 @@ func TestSingleLineFormatter(t *testing.T) {
 			expected: `Summary: line1, line2 extra, line3`,
 		},
 		"empty lines": {
-			sf: &SingleLineFormatter{
+			sf: &runneroptions.SingleLineFormatter{
 				Title:     "Empty",
 				Lines:     []string{},
 				UseQuote:  false,
@@ -642,7 +643,7 @@ func TestRunnerOptions_InitDefaults(t *testing.T) {
 
 	for testName, tc := range tests {
 		t.Run(testName, func(t *testing.T) {
-			opts := &RunnerOptions{}
+			opts := &runneroptions.RunnerOptions{}
 			opts.InitDefaults(tc.prefix)
 
 			result, err := opts.ResolveToImage(context.TODO(), fnName)

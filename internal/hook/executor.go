@@ -19,12 +19,13 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -39,7 +40,7 @@ type Executor struct {
 	ResultsDirPath string
 	Output         io.Writer
 
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 
 	FileSystem filesys.FileSystem
 

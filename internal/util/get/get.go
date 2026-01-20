@@ -33,7 +33,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -136,7 +136,7 @@ func (c Command) Run(ctx context.Context) error {
 
 		builtinHooks := []kptfilev1.Function{
 			{
-				Image: fnruntime.FuncGenPkgContext,
+				Image: runneroptions.FuncGenPkgContext,
 			},
 		}
 		if err := hookCmd.Execute(ctx, builtinHooks); err != nil {
@@ -226,7 +226,7 @@ func (c *Command) DefaultValues() error {
 	}
 
 	if len(c.DefaultKrmFunctionImagePrefix) == 0 {
-		c.DefaultKrmFunctionImagePrefix = fnruntime.GHCRImagePrefix
+		c.DefaultKrmFunctionImagePrefix = runneroptions.GHCRImagePrefix
 	}
 
 	return nil

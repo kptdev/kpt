@@ -26,13 +26,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-)
-
-const (
-	PkgContextFile = "package-context.yaml"
-	PkgContextName = "kptfile.kpt.dev"
-
-	ConfigKeyPackagePath = "package-path"
+	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
 )
 
 var (
@@ -46,15 +40,10 @@ var (
 // minimal configuration.
 type PackageContextGenerator struct {
 	// PackageConfig contains the package configuration to set.
-	PackageConfig *PackageConfig
+	PackageConfig *pkgcontexttypes.PackageConfig
 }
 
-// PackageConfig holds package automatic configuration
-type PackageConfig struct {
-	// PackagePath is the path to the package, as determined by the names of the parent packages.
-	// The path to a package is the parent package path joined with the package name.
-	PackagePath string
-}
+var _ pkgcontexttypes.PackageContextGenerator = &PackageContextGenerator{}
 
 // Run function reads the function input `resourceList` from a given reader `r`
 // and writes the function output to the provided writer `w`.
@@ -78,7 +67,7 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 	// - Generates a package context resource for the root kpt package (i.e Kptfile)
 	for _, resource := range resourceList.Items {
 		gvk := resid.GvkFromNode(resource)
-		if gvk.Equals(configMapGVK) && resource.GetName() == PkgContextName {
+		if gvk.Equals(configMapGVK) && resource.GetName() == pkgcontexttypes.PkgContextName {
 			// drop existing package context resources
 			continue
 		}
@@ -118,7 +107,7 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
-func pkgContextResource(kptfile *yaml.RNode, packageConfig *PackageConfig) (*yaml.RNode, error) {
+func pkgContextResource(kptfile *yaml.RNode, packageConfig *pkgcontexttypes.PackageConfig) (*yaml.RNode, error) {
 	cm := yaml.MustParse(AbstractPkgContext())
 
 	kptfilePath, _, err := kioutil.GetFileAnnotations(kptfile)
@@ -132,7 +121,7 @@ func pkgContextResource(kptfile *yaml.RNode, packageConfig *PackageConfig) (*yam
 	}
 
 	annotations := map[string]string{
-		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), PkgContextFile),
+		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), pkgcontexttypes.PkgContextFile),
 	}
 
 	for k, v := range annotations {
@@ -145,7 +134,7 @@ func pkgContextResource(kptfile *yaml.RNode, packageConfig *PackageConfig) (*yam
 	}
 	if packageConfig != nil {
 		if packageConfig.PackagePath != "" {
-			data[ConfigKeyPackagePath] = packageConfig.PackagePath
+			data[pkgcontexttypes.ConfigKeyPackagePath] = packageConfig.PackagePath
 		}
 	}
 
@@ -165,5 +154,5 @@ metadata:
     config.kubernetes.io/local-config: "true"
 data:
   name: example
-`, PkgContextName)
+`, pkgcontexttypes.PkgContextName)
 }

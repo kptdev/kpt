@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package update returns a kpt updating function to a user
-package update
+// Package pkgcontext holds types for kpt file package context
+package pkgcontext
 
 import (
-	internalupdate "github.com/kptdev/kpt/internal/util/update"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/kpt/internal/builtins"
+	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
 )
 
-func GetUpdater(strategy string) updatetypes.Updater {
-	return internalupdate.GetUpdater(strategy)
+func GetGenerator(packageConfig *pkgcontexttypes.PackageConfig) pkgcontexttypes.PackageContextGenerator {
+	return &builtins.PackageContextGenerator{
+		PackageConfig: packageConfig,
+	}
 }

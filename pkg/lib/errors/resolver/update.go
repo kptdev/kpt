@@ -15,15 +15,15 @@
 package resolver
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/kptdev/kpt/internal/util/update"
-    "github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/internal/util/update"
+	"github.com/kptdev/kpt/pkg/lib/errors"
 )
 
 //nolint:gochecknoinits
 func init() {
-    AddErrorResolver(&updateErrorResolver{})
+	AddErrorResolver(&updateErrorResolver{})
 }
 
 // updateErrorResolver is an implementation of the ErrorResolver interface
@@ -31,25 +31,25 @@ func init() {
 type updateErrorResolver struct{}
 
 func (*updateErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-    var msg string
+	var msg string
 
-    var pkgNotGitRepoError *update.PkgNotGitRepoError
-    if errors.As(err, &pkgNotGitRepoError) {
-        //nolint:lll
-        msg = fmt.Sprintf("Package %q is not within a git repository.", pkgNotGitRepoError.Path)
-        msg += " Please initialize a repository using 'git init' and then commit the changes using 'git commit -m \"<commit message>\"'."
-    }
+	var pkgNotGitRepoError *update.PkgNotGitRepoError
+	if errors.As(err, &pkgNotGitRepoError) {
+		//nolint:lll
+		msg = fmt.Sprintf("Package %q is not within a git repository.", pkgNotGitRepoError.Path)
+		msg += " Please initialize a repository using 'git init' and then commit the changes using 'git commit -m \"<commit message>\"'."
+	}
 
-    var pkgRepoDirtyError *update.PkgRepoDirtyError
-    if errors.As(err, &pkgRepoDirtyError) {
-        msg = fmt.Sprintf("Package %q contains uncommitted changes.", pkgRepoDirtyError.Path)
-        msg += " Please commit the changes using 'git commit -m \"<commit message>\"'."
-    }
+	var pkgRepoDirtyError *update.PkgRepoDirtyError
+	if errors.As(err, &pkgRepoDirtyError) {
+		msg = fmt.Sprintf("Package %q contains uncommitted changes.", pkgRepoDirtyError.Path)
+		msg += " Please commit the changes using 'git commit -m \"<commit message>\"'."
+	}
 
-    if msg != "" {
-        return ResolvedResult{
-            Message: msg,
-        }, true
-    }
-    return ResolvedResult{}, false
+	if msg != "" {
+		return ResolvedResult{
+			Message: msg,
+		}, true
+	}
+	return ResolvedResult{}, false
 }

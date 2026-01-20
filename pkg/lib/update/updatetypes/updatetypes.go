@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package update returns a kpt updating function to a user
-
+// Package updatetypes holds the exposed types for updates in kpt
 package updatetypes
+
+// Updater updates a local package
+type Updater interface {
+	Update(options Options) error
+}
 
 type Options struct {
 	// RelPackagePath is the relative path of a subpackage to the root. If the
@@ -36,9 +40,4 @@ type Options struct {
 	// updated and origin were fetched based on the information in the
 	// Kptfile from this package.
 	IsRoot bool
-}
-
-// Updater updates a local package
-type Updater interface {
-	Update(options Options) error
 }

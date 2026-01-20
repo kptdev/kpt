@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kpt
+package kptops
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/render"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"k8s.io/klog/v2"
@@ -72,7 +72,7 @@ func TestRender(t *testing.T) {
 				FileSystem: filesys.FileSystemOrOnDisk{},
 				Output:     &output,
 			}
-			r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
+			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 
 			if _, err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
 				t.Errorf("Render failed: %v", err)

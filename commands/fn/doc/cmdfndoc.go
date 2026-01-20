@@ -23,7 +23,8 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
@@ -64,7 +65,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := fnruntime.ResolveToImageForCLIFunc(fnruntime.GHCRImagePrefix)
+	resolveFunc := (&runneroptions.RunnerOptions{}).ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
 	image, err := resolveFunc(c.Context(), r.Image)
 	if err != nil {
 		return err
