@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 func runCommand(cmd *exec.Cmd) (string, string, error) {
@@ -109,4 +110,19 @@ func diffStrings(actual, expected string) (string, error) {
 	// diff is expected to exit with 1 so we ignore the error here
 	output, _, _ := runCommand(getCommand(tmpDir, "diff", []string{"-u", expectedPath, actualPath}))
 	return output, nil
+}
+
+func removeArmPlatformWarning(got string) string {
+	got = strings.ReplaceAll(
+		got,
+		" Stderr: WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested",
+		"")
+
+	if strings.HasSuffix(got, "  Stderr:\n") {
+		// The warning message was the only message on stderr
+		return strings.Replace(got, "  Stderr:\n", "", 1)
+	} else {
+		// There are other messages on stderr, so leave the "Stderr:"" tag in place
+		return got
+	}
 }
