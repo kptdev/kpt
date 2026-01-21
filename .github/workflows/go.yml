@@ -58,6 +58,8 @@ jobs:
         with:
           go-version-file: ${{ env.GOPATH }}/src/github.com/kptdev/kpt/go.mod # This ensures CI always uses the version defined in go.mod
         id: go
+        env:
+          GOTOOLCHAIN: auto
       - name: Build, Test, Lint
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
@@ -80,6 +82,8 @@ jobs:
         with:
           go-version-file: ${{ env.GOPATH }}/src/github.com/kptdev/kpt/go.mod # This ensures CI always uses the version defined in go.mod
         id: go
+        env:
+          GOTOOLCHAIN: auto
       - name: Build
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
