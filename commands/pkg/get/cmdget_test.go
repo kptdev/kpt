@@ -111,7 +111,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 	}
 
 	r := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
-	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
+	r.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err = r.Command.Execute()
 
 	assert.NoError(t, err)
@@ -159,9 +159,9 @@ func TestCmd_fail(t *testing.T) {
 	r := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SilenceErrors = true
 	r.Command.SilenceUsage = true
-	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "./"})
+	r.Command.SetArgs([]string{"file://" + filepath.Join("not", "real", "dir") + ".git/@master", "nonexistent"})
 
-	defer os.RemoveAll("dir")
+	defer os.RemoveAll("nonexistent")
 
 	err := r.Command.Execute()
 	if !assert.Error(t, err) {
@@ -234,7 +234,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Equal(t, "master", r.Get.Git.Ref)
 				assert.Equal(t, "something://foo", r.Get.Git.Repo)
-				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "foo"), r.Get.Destination)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory), r.Get.Destination)
 			},
 		},
 		"repo arg is split up correctly into ref, directory and repo": {
@@ -247,7 +247,7 @@ func TestCmd_Execute_flagAndArgParsing(t *testing.T) {
 				assert.Equal(t, fmt.Sprintf("file://%s", repo), r.Get.Git.Repo)
 				assert.Equal(t, "master", r.Get.Git.Ref)
 				assert.Equal(t, "/blueprints/java", r.Get.Git.Directory)
-				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory, "java"), r.Get.Destination)
+				assert.Equal(t, filepath.Join(pathPrefix, w.WorkspaceDirectory), r.Get.Destination)
 			},
 		},
 		"current working dir -- should use current directory directly": {
