@@ -93,7 +93,7 @@ Just as directories can be nested, a package can contain another package, called
 Let's take a look at the wordpress package as an example:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt/tree/package-examples/wordpress@v1.0.0-beta.59
+kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.59
 ```
 
 View the package hierarchy using the `tree` command:
