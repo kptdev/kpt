@@ -56,7 +56,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 'go.mod' # This ensures CI always uses the version defined in go.mod
+          go-version-file: ${{ env.GOPATH }}/src/github.com/kptdev/kpt/go.mod # This ensures CI always uses the version defined in go.mod
         id: go
       - name: Build, Test, Lint
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
@@ -78,7 +78,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: 'go.mod' # This ensures CI always uses the version defined in go.mod
+          go-version-file: ${{ env.GOPATH }}/src/github.com/kptdev/kpt/go.mod # This ensures CI always uses the version defined in go.mod
         id: go
       - name: Build
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
