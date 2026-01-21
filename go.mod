@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt
 
-go 1.24.7
+go 1.25.6
 
 require (
 	github.com/bytecodealliance/wasmtime-go v1.0.0
