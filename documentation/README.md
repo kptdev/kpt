@@ -23,8 +23,7 @@ from this folder:
 npm install
 ```
 
-Then run the site using `npm run serve`. To have the site run locally with a functioning local search, run
-`npm run serve:with-pagefind`.
+Then run the site using `make serve`. 
 
 ## License
 
