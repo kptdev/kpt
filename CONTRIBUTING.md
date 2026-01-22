@@ -1,8 +1,8 @@
 # How to Contribute
 
 We'd love to accept your patches and contributions to this project. To learn more about the project structure and
-organization, please refer to Project [Governance](https://github.com/kptdev/governance) information. There are just a few small guidelines you
-need to follow.
+organization, please refer to Project [Governance](https://github.com/kptdev/governance) information. There are just a
+few small guidelines you need to follow.
 
 ## Developer Certificate of Origin (DCO)
 
@@ -11,10 +11,33 @@ for their contribution. To do this when creating a commit with the Git CLI, a si
 [the -s option](https://git-scm.com/docs/git-commit#git-commit--s). The sign-off is stored as part of the commit message
 itself. 
 
+## Copyright notices
+
+All files should have the copyriht notice
+```
+// Copyright 2025 The kpt Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+```
+
+The year should be the year when the file was created or if it was modifed later it shold be the year when the file was created - the year when the last modification has been made, like 
+`Copyright 2021 - 2025 The kpt Authors`
+
+
 ## Contributing large features
 
 Larger features and all the features that affect the interface (CLI or API) of
-kpt components need to have a reviewed and merged design document.  It is OK to
+kpt components need to have a reviewed and merged design document. It is OK to
 start with a prototype in your private fork but if you intend for your feature
 to be shipped in kpt please create a design document with this
 [design template](/docs/design-docs/00-template.md).
@@ -94,7 +117,7 @@ changes and PR description should start with `Docs:`.
 #### Run the docs locally
 
 Make docs changes and test them by running the site in a docker container with
-`make site-run-server`.
+`make serve`.
 
 It's usually a good idea to test locally for the following:
 
@@ -103,21 +126,9 @@ It's usually a good idea to test locally for the following:
 
 #### Update docs
 
-Docs are under [site/] and use [docsify] to present the source markdown files.
-The sidebar is automatically updated for the site at deployment time.
+Docs are under [documentation/]. Refer to (the README,md)[documentation/README.md] in the folder to details about
+documentaiton contributions. 
 
-#### Docs Hygiene
-
-The kpt website uses markdownlint to lint docs for formatting and style. Use
-prettier with the `"prettier.proseWrap": "always"` setting to auto-format docs
-in VSCode.
-
-This includes:
-
-- Lint docs with markdownlint to standardize them and make them easier to
-  update.
-- Run the kpt website through the [W3 Link Checker] in recursive mode and fix
-  warnings and errors.
 
 [error message style guide]: docs/style-guides/errors.md
 [documentation style guide]: docs/style-guides/docs.md
