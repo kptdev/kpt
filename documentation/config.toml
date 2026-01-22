@@ -181,3 +181,4 @@ enable = false
 name = "Functions Catalog"
 url = "https://catalog.kpt.dev/"
 weight = 40
+target = "_self"
