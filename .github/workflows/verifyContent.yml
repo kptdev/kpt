@@ -30,15 +30,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v6
+      - name: Checkout
+        uses: actions/checkout@v5
         with:
-          go-version: '>=1.24'
-      - uses: actions/checkout@v5
-      - run: |
+          path: go/src/github.com/kptdev/kpt
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go/src/github.com/kptdev/kpt/go.mod
+          cache: true
+      - name: Build
+        working-directory: go/src/github.com/kptdev/kpt
+        run: |
           make build
       - name: Get dependencies
+        working-directory: go/src/github.com/kptdev/kpt
         run: |
           make install-mdrip
           make install-kind
       - name: Verify Examples
+        working-directory: go/src/github.com/kptdev/kpt
         run: make site-verify-examples
