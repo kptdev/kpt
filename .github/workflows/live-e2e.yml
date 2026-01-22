@@ -34,11 +34,14 @@ jobs:
       matrix:
         version: ["1.33.4@sha256:25a6018e48dfcaee478f4a59af81157a437f15e6e140bf103f85a2e7cd0cbbf2", "1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a"]
     steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+        with:
+          path: go/src/github.com/kptdev/kpt
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25.6'
-          check-latest: true 
+          go-version-file: go/src/github.com/kptdev/kpt/go.mod
           cache: true
       - uses: actions/checkout@v5
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions

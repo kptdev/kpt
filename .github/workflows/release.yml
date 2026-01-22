@@ -27,17 +27,18 @@ jobs:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: '1.25.6'
-          check-latest: true 
-          cache: true
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          path: go/src/github.com/kptdev/kpt
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go/src/github.com/kptdev/kpt/go.mod
+          cache: true
       - name: Build, Test, Lint
+        working-directory: go/src/github.com/kptdev/kpt
         run: |
           git config --global user.email you@example.com
           git config --global user.name Your Name
@@ -59,6 +60,7 @@ jobs:
         with:
           distribution: goreleaser
           version: "~> v2"
+          workdir: go/src/github.com/kptdev/kpt
           args: release --skip=validate -f release/tag/goreleaser.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

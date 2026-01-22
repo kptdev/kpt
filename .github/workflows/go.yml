@@ -57,7 +57,6 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          check-latest: true 
           cache: true
       - name: Build, Test, Lint
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
@@ -80,7 +79,6 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: go/src/github.com/kptdev/kpt/go.mod
-          check-latest: true 
           cache: true
       - name: Build
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
