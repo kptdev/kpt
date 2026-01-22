@@ -44,7 +44,6 @@ jobs:
         with:
           go-version-file: go/src/github.com/kptdev/kpt/go.mod
           cache: true
-      - uses: actions/checkout@v5
       # Pinned to Commit to ensure action is consistent: https://docs.github.com/en/actions/learn-github-actions/security-hardening-for-github-actions#using-third-party-actions
       # If you upgrade this version confirm the changes match your expectations
       - name: Install KinD
