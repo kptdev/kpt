@@ -30,9 +30,13 @@ All files should have the copyright notice.
 // limitations under the License.
 ```
 
-The year should be the year when the file was created or if it was modifed later it shold be the year when the file was created - the year when the last modification has been made, like 
-`Copyright 2021 - 2025 The kpt Authors`
+If the file has never been modified: use the creation year only
 
+* Example: `Copyright 2025 The kpt Authors`
+
+If the file has been modified: use a year range from creation to last modification
+
+* Example: `Copyright 2024-2026 The kpt Authors`
 
 ## Contributing large features
 
