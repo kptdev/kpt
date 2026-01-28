@@ -72,7 +72,9 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
-		"--rm", // delete the container afterward
+		"--rm",        // delete the container afterward
+		"-i",          // interactive mode to accept stdin
+		"--stdin",     // keep stdin open
 		image,
 		"--help",
 	}
@@ -90,6 +92,15 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	cmd := exec.Command(runtime.GetBin(), dockerRunArgs...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
+	
+	// Provide an empty ResourceList as stdin for functions that expect input
+	// This prevents "expected exactly one object, got 0" errors
+	emptyResourceList := `apiVersion: config.kubernetes.io/v1
+kind: ResourceList
+items: []
+`
+	cmd.Stdin = bytes.NewBufferString(emptyResourceList)
+	
 	err = cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
