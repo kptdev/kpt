@@ -82,5 +82,3 @@ stdOut: |
 stdErr: |
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
-
-  For complete results, see

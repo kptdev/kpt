@@ -23,8 +23,9 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 )
@@ -43,9 +44,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
-	})
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -64,7 +62,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := fnruntime.ResolveToImageForCLIFunc(fnruntime.GHCRImagePrefix)
+	resolveFunc := (&runneroptions.RunnerOptions{}).ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
 	image, err := resolveFunc(c.Context(), r.Image)
 	if err != nil {
 		return err

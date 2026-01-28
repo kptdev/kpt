@@ -15,11 +15,11 @@ import (
 	"github.com/google/shlex"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
@@ -50,14 +50,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
-	})
 	r.Command.Flags().StringArrayVarP(
 		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
-	_ = r.Command.RegisterFlagCompletionFunc("keywords", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestKeywords(cmd), cobra.ShellCompDirectiveDefault
-	})
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
 		"`mutator` (default) or `validator`. tell the function type for autocompletion and `--save` flag")
 	_ = r.Command.RegisterFlagCompletionFunc("type", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -156,7 +150,7 @@ type EvalFnRunner struct {
 	Exclusion            kptfile.Selector
 	dataItems            []string
 
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 
 	// we will need to parse these values into Selector and Exclusion
 	selectorLabels      []string
@@ -168,7 +162,7 @@ type EvalFnRunner struct {
 }
 
 func (r *EvalFnRunner) InitDefaults() {
-	r.RunnerOptions.InitDefaults(fnruntime.GHCRImagePrefix)
+	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {

@@ -23,7 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/pkg/test/runner"
 )
 

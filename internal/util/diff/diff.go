@@ -24,13 +24,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/addmergecomment"
 	"github.com/kptdev/kpt/internal/util/fetch"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/gitutil"
+	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )

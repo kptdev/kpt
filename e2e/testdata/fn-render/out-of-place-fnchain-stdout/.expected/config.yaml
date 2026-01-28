@@ -6,7 +6,6 @@ stdErr: |
   Package: "out-of-place-fnchain-stdout"
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
-  
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest" in 0s
   [Results]: [info] metadata.annotations: set annotations: {"foo":"bar"}, [info] metadata.annotations: set annotations: {"foo":"bar"}, [info] spec.template.metadata.annotations: set annotations: {"foo":"bar"}, [info] metadata.annotations: set annotations: {"foo":"bar"}

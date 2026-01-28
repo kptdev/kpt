@@ -22,7 +22,7 @@ import (
 	goerrors "errors"
 
 	kyaml_errors "github.com/go-errors/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/internal/types"
 )
 
 // Error is the type that implements error interface used in the kpt codebase.

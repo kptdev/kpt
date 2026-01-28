@@ -20,12 +20,13 @@ import (
 	"path/filepath"
 
 	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
@@ -36,6 +37,8 @@ import (
 // fail without making any changes.
 type FastForwardUpdater struct{}
 
+var _ updatetypes.Updater = &FastForwardUpdater{}
+
 var kptfileSet = func() sets.String {
 	s := sets.String{}
 	s.Insert(kptfilev1.KptFileName)
@@ -43,7 +46,7 @@ var kptfileSet = func() sets.String {
 }()
 
 // We should try to pull the common code up into the Update command.
-func (u FastForwardUpdater) Update(options Options) error {
+func (u FastForwardUpdater) Update(options updatetypes.Options) error {
 	const op errors.Op = "update.Update"
 	// Verify that there are no local changes that would prevent us from
 	// using the FastForward strategy.
