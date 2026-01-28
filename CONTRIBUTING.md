@@ -13,7 +13,7 @@ itself.
 
 ## Copyright notices
 
-All files should have the copyriht notice
+All files should have the copyright notice.
 ```
 // Copyright 2025 The kpt Authors
 //
@@ -127,7 +127,7 @@ It's usually a good idea to test locally for the following:
 #### Update docs
 
 Docs are under [documentation/]. Refer to (the README,md)[documentation/README.md] in the folder to details about
-documentaiton contributions. 
+documentation contributions. 
 
 
 [error message style guide]: docs/style-guides/errors.md
