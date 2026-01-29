@@ -11,18 +11,6 @@ menu:
     weight: 90
 ---
 
-<!--
-## Table of contents
-
-1. Overview: Using kpt in CI/CD
-2. CI responsibilities vs developer responsibilities
-3. Typical kpt CI workflow (conceptual)
-4. Rendering in CI
-5. Applying configuration in CI (optional and gated)
-6. Handling secrets in CI
-7. Example: Using kpt in a Cloud Build pipeline
-8. Common mistakes and anti-patterns -->
-
 ## Overview: Using kpt in CI/CD
 
 Continuous integration (CI) is the practice of running automated checks on every change so that teams can validate
@@ -73,7 +61,7 @@ At a high level, a CI run follows this sequence:
 4. Observe results and fail fast if any checks fail.
 5. Optionally apply the rendered resources when explicit deployment gates are satisfied.
 
-![img](/images/ci-kpt-workflow.png)
+![img](/images/ci-kpt-workflow.svg)
 
 This flow emphasizes determinism and no hidden state: the repository is the source of truth, the rendered output is
 derived entirely from the checked-out files, and the results should be consistent across developer machines and CI
@@ -88,9 +76,12 @@ configuration that CI can use for downstream steps.
 ### Prerequisites
 
 Since kpt functions run as containers, your CI environment must have access to a container runtime (for example,
-Docker).
+Podman).
 
-- Docker socket: Ensure your CI step mounts the Docker socket (for example, `/var/run/docker.sock`).
+Podman is preferred in CI because it supports rootless operation and does not require a daemon.
+
+- Podman socket: Ensure your CI step can access the Podman socket (for example, `/run/podman/podman.sock` or rootless
+  `$XDG_RUNTIME_DIR/podman/podman.sock`).
 - Privileges: The CI runner requires permissions to pull images and run containers.
 
 ### Why render (including validation)
