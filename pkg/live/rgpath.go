@@ -94,7 +94,7 @@ func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) erro
 //
 //nolint:interfacer
 func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
-	if err := validateAnnotationTypes(n); err != nil {
+	if err := validateMetadataStringMaps(n); err != nil {
 		return nil, err
 	}
 	b, err := n.MarshalJSON()
@@ -113,37 +113,86 @@ func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) 
 	}, nil
 }
 
-func validateAnnotationTypes(n *yaml.RNode) error {
+// validateMetadataStringMaps inspects the raw YAML nodes for metadata.annotations
+// and metadata.labels to ensure all values are strings. This prevents silent data
+// loss that occurs when non-string values (booleans, integers, floats) are
+// unmarshaled into map[string]string fields.
+//
+// Parameters:
+//   - n: The RNode representing a Kubernetes resource
+//
+// Returns:
+//   - error: A descriptive error if any annotation or label value is not a string,
+//     nil otherwise
+func validateMetadataStringMaps(n *yaml.RNode) error {
 	metadata := n.Field("metadata")
 	if metadata == nil || metadata.Value == nil {
 		return nil
 	}
 
-	annotations := metadata.Value.Field("annotations")
-	if annotations == nil || annotations.Value == nil {
+	// Validate annotations
+	if err := validateStringMap(metadata.Value, "annotations", "annotation"); err != nil {
+		return err
+	}
+
+	// Validate labels
+	if err := validateStringMap(metadata.Value, "labels", "label"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateStringMap checks that all values in a metadata field (annotations or labels)
+// are strings. It inspects the YAML tag of each value to detect non-string types
+// that would be silently dropped during unmarshaling.
+//
+// Parameters:
+//   - metadata: The RNode for the metadata field
+//   - fieldName: The name of the field to validate ("annotations" or "labels")
+//   - fieldType: Human-readable name for error messages ("annotation" or "label")
+//
+// Returns:
+//   - error: A descriptive error if any value is not a string, nil otherwise
+func validateStringMap(metadata *yaml.RNode, fieldName, fieldType string) error {
+	field := metadata.Field(fieldName)
+	if field == nil || field.Value == nil {
 		return nil
 	}
 
-	annotationNode := annotations.Value.YNode()
-	// Handle explicit null annotations (annotations: null)
-	if annotationNode.Tag == "!!null" {
+	mapNode := field.Value.YNode()
+	if mapNode == nil {
 		return nil
 	}
-	if annotationNode.Kind != yaml.MappingNode {
-		return fmt.Errorf("metadata.annotations must be a string map")
+
+	// Handle explicit null (e.g., annotations: null)
+	if mapNode.Tag == "!!null" {
+		return nil
 	}
 
-	for i := 0; i < len(annotationNode.Content); i += 2 {
-		keyNode := annotationNode.Content[i]
-		valueNode := annotationNode.Content[i+1]
+	if mapNode.Kind != yaml.MappingNode {
+		return fmt.Errorf("metadata.%s must be a string map", fieldName)
+	}
+
+	for i := 0; i < len(mapNode.Content); i += 2 {
+		keyNode := mapNode.Content[i]
+		valueNode := mapNode.Content[i+1]
 		if valueNode.Kind != yaml.ScalarNode || valueNode.Tag != "!!str" {
-			return fmt.Errorf("annotation %q must be a string, got %s", keyNode.Value, yamlTagToType(valueNode))
+			return fmt.Errorf("%s %q must be a string, got %s", fieldType, keyNode.Value, yamlTagToType(valueNode))
 		}
 	}
 
 	return nil
 }
 
+// yamlTagToType converts a YAML node's tag to a human-readable type name
+// for use in error messages.
+//
+// Parameters:
+//   - node: The YAML node to inspect
+//
+// Returns:
+//   - string: A human-readable type name (e.g., "boolean", "integer", "number")
 func yamlTagToType(node *yaml.Node) string {
 	if node.Kind != yaml.ScalarNode {
 		return "non-scalar"

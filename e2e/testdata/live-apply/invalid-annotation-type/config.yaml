@@ -23,4 +23,4 @@ exitCode: 1
 
 # Error should be in stderr with clear message about which field failed
 stdErr: |
-  annotation "example.com/enabled" must be a string, got boolean
+  error: annotation "example.com/enabled" must be a string, got boolean
