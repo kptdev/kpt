@@ -70,6 +70,15 @@ metadata:
   name: cm
 data: {}
 `
+	configMapWithBadAnnotation = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  annotations:
+    example.com/bad-anno: true
+data: {}
+`
 	crd = `
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition

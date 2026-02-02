@@ -16,6 +16,7 @@ package live
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
@@ -93,6 +94,9 @@ func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) erro
 //
 //nolint:interfacer
 func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
+	if err := validateAnnotationTypes(n); err != nil {
+		return nil, err
+	}
 	b, err := n.MarshalJSON()
 	if err != nil {
 		return nil, err
@@ -107,6 +111,60 @@ func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) 
 	return &unstructured.Unstructured{
 		Object: m,
 	}, nil
+}
+
+func validateAnnotationTypes(n *yaml.RNode) error {
+	metadata := n.Field("metadata")
+	if metadata == nil || metadata.Value == nil {
+		return nil
+	}
+
+	annotations := metadata.Value.Field("annotations")
+	if annotations == nil || annotations.Value == nil {
+		return nil
+	}
+
+	annotationNode := annotations.Value.YNode()
+	// Handle explicit null annotations (annotations: null)
+	if annotationNode.Tag == "!!null" {
+		return nil
+	}
+	if annotationNode.Kind != yaml.MappingNode {
+		return fmt.Errorf("metadata.annotations must be a string map")
+	}
+
+	for i := 0; i < len(annotationNode.Content); i += 2 {
+		keyNode := annotationNode.Content[i]
+		valueNode := annotationNode.Content[i+1]
+		if valueNode.Kind != yaml.ScalarNode || valueNode.Tag != "!!str" {
+			return fmt.Errorf("annotation %q must be a string, got %s", keyNode.Value, yamlTagToType(valueNode))
+		}
+	}
+
+	return nil
+}
+
+func yamlTagToType(node *yaml.Node) string {
+	if node.Kind != yaml.ScalarNode {
+		return "non-scalar"
+	}
+	switch node.Tag {
+	case "!!bool":
+		return "boolean"
+	case "!!int":
+		return "integer"
+	case "!!float":
+		return "number"
+	case "!!null":
+		return "null"
+	case "!!str":
+		return "string"
+	default:
+		if node.Tag == "" {
+			return "unknown"
+		}
+		return node.Tag
+	}
 }
 
 const NoLocalConfigAnnoVal = "false"

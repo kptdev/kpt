@@ -189,6 +189,13 @@ func TestPathManifestReader_Read(t *testing.T) {
 				},
 			},
 		},
+		"Bad annotation type is rejected": {
+			manifests: map[string]string{
+				"bad-anno.yaml": configMapWithBadAnnotation,
+			},
+			namespace:      "test-namespace",
+			expectedErrMsg: "annotation \"example.com/bad-anno\" must be a string, got boolean",
+		},
 	}
 
 	for tn, tc := range testCases {
