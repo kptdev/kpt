@@ -24,7 +24,7 @@ import (
 	"github.com/kptdev/kpt/internal/builtins"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/util/man"
-	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
+	builtintypes "github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )
@@ -81,7 +81,7 @@ kpt live apply my-pkg --reconcile-timeout=2m --output=table
 Details: https://kpt.dev/reference/cli/live/
 `, "'", "`"), string(b))
 
-	b, err = os.ReadFile(filepath.Join(d, "my-pkg", pkgcontexttypes.PkgContextFile))
+	b, err = os.ReadFile(filepath.Join(d, "my-pkg", builtintypes.PkgContextFile))
 	assert.NoError(t, err)
 	assert.Equal(t, b, []byte(builtins.AbstractPkgContext()))
 }

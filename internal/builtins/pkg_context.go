@@ -26,7 +26,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
+	builtintypes "github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
 )
 
 var (
@@ -40,10 +40,10 @@ var (
 // minimal configuration.
 type PackageContextGenerator struct {
 	// PackageConfig contains the package configuration to set.
-	PackageConfig *pkgcontexttypes.PackageConfig
+	PackageConfig *builtintypes.PackageConfig
 }
 
-var _ pkgcontexttypes.PackageContextGenerator = &PackageContextGenerator{}
+var _ builtintypes.BuiltinFunction = &PackageContextGenerator{}
 
 // Run function reads the function input `resourceList` from a given reader `r`
 // and writes the function output to the provided writer `w`.
@@ -67,7 +67,7 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 	// - Generates a package context resource for the root kpt package (i.e Kptfile)
 	for _, resource := range resourceList.Items {
 		gvk := resid.GvkFromNode(resource)
-		if gvk.Equals(configMapGVK) && resource.GetName() == pkgcontexttypes.PkgContextName {
+		if gvk.Equals(configMapGVK) && resource.GetName() == builtintypes.PkgContextName {
 			// drop existing package context resources
 			continue
 		}
@@ -107,7 +107,7 @@ func (pc *PackageContextGenerator) Process(resourceList *framework.ResourceList)
 
 // pkgContextResource generates package context resource from a given
 // Kptfile. The resource is generated adjacent to the Kptfile of the package.
-func pkgContextResource(kptfile *yaml.RNode, packageConfig *pkgcontexttypes.PackageConfig) (*yaml.RNode, error) {
+func pkgContextResource(kptfile *yaml.RNode, packageConfig *builtintypes.PackageConfig) (*yaml.RNode, error) {
 	cm := yaml.MustParse(AbstractPkgContext())
 
 	kptfilePath, _, err := kioutil.GetFileAnnotations(kptfile)
@@ -121,7 +121,7 @@ func pkgContextResource(kptfile *yaml.RNode, packageConfig *pkgcontexttypes.Pack
 	}
 
 	annotations := map[string]string{
-		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), pkgcontexttypes.PkgContextFile),
+		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), builtintypes.PkgContextFile),
 	}
 
 	for k, v := range annotations {
@@ -134,7 +134,7 @@ func pkgContextResource(kptfile *yaml.RNode, packageConfig *pkgcontexttypes.Pack
 	}
 	if packageConfig != nil {
 		if packageConfig.PackagePath != "" {
-			data[pkgcontexttypes.ConfigKeyPackagePath] = packageConfig.PackagePath
+			data[builtintypes.ConfigKeyPackagePath] = packageConfig.PackagePath
 		}
 	}
 
@@ -154,5 +154,5 @@ metadata:
     config.kubernetes.io/local-config: "true"
 data:
   name: example
-`, pkgcontexttypes.PkgContextName)
+`, builtintypes.PkgContextName)
 }

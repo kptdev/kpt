@@ -12,16 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package pkgcontext holds types for kpt file package context
-package pkgcontext
+// Package builtins passes builtin functions back to the caller for recognized configuration types
+package builtins
 
 import (
+	"fmt"
+	"reflect"
+
 	"github.com/kptdev/kpt/internal/builtins"
-	"github.com/kptdev/kpt/pkg/lib/pkgcontext/pkgcontexttypes"
+	builtintypes "github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
 )
 
-func GetGenerator(packageConfig *pkgcontexttypes.PackageConfig) pkgcontexttypes.PackageContextGenerator {
-	return &builtins.PackageContextGenerator{
-		PackageConfig: packageConfig,
+func GetBuiltinFn(config any) builtintypes.BuiltinFunction {
+	fmt.Println(reflect.TypeOf(config))
+
+	if reflect.TypeOf(config) == reflect.TypeOf(&builtintypes.PackageConfig{}) {
+		packageConfig := config.(*builtintypes.PackageConfig)
+		return &builtins.PackageContextGenerator{
+			PackageConfig: packageConfig,
+		}
+	} else {
+		panic(fmt.Errorf("unsupported builtin function configuration %v of type %v", config, reflect.TypeOf(config)))
 	}
 }

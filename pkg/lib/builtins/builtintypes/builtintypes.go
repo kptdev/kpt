@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package pkgcontexttypes holds types for kpt file package context
-package pkgcontexttypes
+// Package builtintypes holds types for kpt file package context
+package builtintypes
 
 import (
 	"io"
@@ -28,8 +28,8 @@ const (
 	ConfigKeyPackagePath = "package-path"
 )
 
-// PackageContextGenerator is a generator of package context
-type PackageContextGenerator interface {
+// BuiltinFunction returns a reference to a builtin function
+type BuiltinFunction interface {
 	Run(io.Reader, io.Writer) error
 	Process(*framework.ResourceList) error
 }
