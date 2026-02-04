@@ -119,6 +119,13 @@ func TestResourceStreamManifestReader_Read(t *testing.T) {
 			namespace:      "test-namespace",
 			expectedErrMsg: "annotation \"example.com/bad-anno\" must be a string, got boolean",
 		},
+		"Bad label type is rejected": {
+			manifests: map[string]string{
+				"bad-label.yaml": configMapWithBadLabel,
+			},
+			namespace:      "test-namespace",
+			expectedErrMsg: "label \"app.kubernetes.io/enabled\" must be a string, got boolean",
+		},
 	}
 
 	for tn, tc := range testCases {

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bad-label-config
+  labels:
+    app.kubernetes.io/enabled: true
+data:
+  key: value

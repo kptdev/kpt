@@ -79,6 +79,15 @@ metadata:
     example.com/bad-anno: true
 data: {}
 `
+	configMapWithBadLabel = `
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+  labels:
+    app.kubernetes.io/enabled: true
+data: {}
+`
 	crd = `
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition

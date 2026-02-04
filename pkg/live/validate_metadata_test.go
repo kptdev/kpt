@@ -446,15 +446,15 @@ func TestYamlTagToType(t *testing.T) {
 		kind     yaml.Kind
 		expected string
 	}{
-		{tag: "!!bool", kind: yaml.ScalarNode, expected: "boolean"},
-		{tag: "!!int", kind: yaml.ScalarNode, expected: "integer"},
-		{tag: "!!float", kind: yaml.ScalarNode, expected: "number"},
-		{tag: "!!null", kind: yaml.ScalarNode, expected: "null"},
-		{tag: "!!str", kind: yaml.ScalarNode, expected: "string"},
+		{tag: yaml.NodeTagBool, kind: yaml.ScalarNode, expected: "boolean"},
+		{tag: yaml.NodeTagInt, kind: yaml.ScalarNode, expected: "integer"},
+		{tag: yaml.NodeTagFloat, kind: yaml.ScalarNode, expected: "number"},
+		{tag: yaml.NodeTagNull, kind: yaml.ScalarNode, expected: "null"},
+		{tag: yaml.NodeTagString, kind: yaml.ScalarNode, expected: "string"},
 		{tag: "!!custom", kind: yaml.ScalarNode, expected: "!!custom"},
-		{tag: "", kind: yaml.ScalarNode, expected: "unknown"},
-		{tag: "!!str", kind: yaml.MappingNode, expected: "non-scalar"},
-		{tag: "!!str", kind: yaml.SequenceNode, expected: "non-scalar"},
+		{tag: yaml.NodeTagEmpty, kind: yaml.ScalarNode, expected: "unknown"},
+		{tag: yaml.NodeTagString, kind: yaml.MappingNode, expected: "non-scalar"},
+		{tag: yaml.NodeTagString, kind: yaml.SequenceNode, expected: "non-scalar"},
 	}
 
 	for _, tc := range testCases {

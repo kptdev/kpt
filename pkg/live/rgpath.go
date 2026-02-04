@@ -166,7 +166,7 @@ func validateStringMap(metadata *yaml.RNode, fieldName, fieldType string) error 
 	}
 
 	// Handle explicit null (e.g., annotations: null)
-	if mapNode.Tag == "!!null" {
+	if mapNode.Tag == yaml.NodeTagNull {
 		return nil
 	}
 
@@ -177,7 +177,7 @@ func validateStringMap(metadata *yaml.RNode, fieldName, fieldType string) error 
 	for i := 0; i < len(mapNode.Content); i += 2 {
 		keyNode := mapNode.Content[i]
 		valueNode := mapNode.Content[i+1]
-		if valueNode.Kind != yaml.ScalarNode || valueNode.Tag != "!!str" {
+		if valueNode.Kind != yaml.ScalarNode || valueNode.Tag != yaml.NodeTagString {
 			return fmt.Errorf("%s %q must be a string, got %s", fieldType, keyNode.Value, yamlTagToType(valueNode))
 		}
 	}
@@ -198,18 +198,18 @@ func yamlTagToType(node *yaml.Node) string {
 		return "non-scalar"
 	}
 	switch node.Tag {
-	case "!!bool":
+	case yaml.NodeTagBool:
 		return "boolean"
-	case "!!int":
+	case yaml.NodeTagInt:
 		return "integer"
-	case "!!float":
+	case yaml.NodeTagFloat:
 		return "number"
-	case "!!null":
+	case yaml.NodeTagNull:
 		return "null"
-	case "!!str":
+	case yaml.NodeTagString:
 		return "string"
 	default:
-		if node.Tag == "" {
+		if node.Tag == yaml.NodeTagEmpty {
 			return "unknown"
 		}
 		return node.Tag

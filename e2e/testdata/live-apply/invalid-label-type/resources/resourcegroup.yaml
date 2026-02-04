@@ -1,0 +1,7 @@
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: inventory-obj
+  namespace: invalid-label-type
+  labels:
+    cli-utils.sigs.k8s.io/inventory-id: test-invalid-label
