@@ -36,7 +36,7 @@ be spending time understanding the use-cases and need for this project. [Trackin
 
 ## Feedback channels:
 1. File a [new issue] on Github, but please search first. 
-1. kpt-users@googlegroups.com
+
 
 [new issue]: https://github.com/kptdev/kpt/issues/new/choose
 [The Kpt Book]: https://kpt.dev/book/
