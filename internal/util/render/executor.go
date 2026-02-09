@@ -97,7 +97,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	// If the annotation "kpt.dev/bfs-rendering" is set to "true", use hydrateBfsOrder
 	// otherwise use the default hydrate function in depth-first post-order.
 	hydrateFn := hydrate
-	if value, exists := kptfile.Annotations[kptfilev1.BFSRenderAnnotation]; exists && value == "true" {
+	if value, exists := kptfile.Annotations[kptfilev1.BFSRenderAnnotation]; exists && kptfilev1.ToCondition(value) == kptfilev1.ConditionTrue {
 		hydrateFn = hydrateBfsOrder
 	}
 

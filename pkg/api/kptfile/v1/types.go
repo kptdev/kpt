@@ -19,6 +19,7 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -409,3 +410,16 @@ const (
 const (
 	BFSRenderAnnotation = "kpt.dev/bfs-rendering"
 )
+
+func ToCondition(value string) ConditionStatus {
+	switch strings.ToLower(value) {
+	case strings.ToLower(string(ConditionTrue)):
+		return ConditionTrue
+
+	case strings.ToLower(string(ConditionFalse)):
+		return ConditionFalse
+
+	default:
+		return ConditionUnknown
+	}
+}
