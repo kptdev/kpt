@@ -23,12 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type test struct {
-	name   string
-	dir    string
-	expErr error
-}
-
 func TestGetBuiltinFunction(t *testing.T) {
 	assert.PanicsWithError(t, "unsupported builtin function configuration <nil> of type <nil>", func() { GetBuiltinFn(nil) })
 	assert.PanicsWithError(t, "unsupported builtin function configuration hello of type string", func() { GetBuiltinFn("hello") })

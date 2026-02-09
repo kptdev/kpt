@@ -12,6 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package internal package containing implementation details of the package
-// manipulation primitives.
-package internal
+package kptops
+
+import (
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+)
+
+var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
+	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.0": applySetters,
+	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
+	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
+}
+
+func FindProcessor(image string) framework.ResourceListProcessorFunc {
+	return functions[image]
+}

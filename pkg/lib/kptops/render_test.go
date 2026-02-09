@@ -43,7 +43,7 @@ func readFile(t *testing.T, path string) []byte {
 }
 
 func TestRender(t *testing.T) {
-	testdata, err := filepath.Abs(filepath.Join(".", "testdata"))
+	testdata, err := filepath.Abs(filepath.Join(".", "../../../internal/kptops/testdata"))
 	if err != nil {
 		t.Fatalf("Cannot compute absolute path for ./testdata: %v", err)
 	}

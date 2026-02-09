@@ -18,9 +18,9 @@ import (
 	"context"
 	"io"
 
+	internal "github.com/kptdev/kpt/internal/kptops"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
-	"github.com/kptdev/kpt/pkg/lib/kptops/internal"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )

@@ -12,27 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
-
-import (
-	"fmt"
-
-	function "github.com/kptdev/krm-functions-catalog/functions/go/apply-setters/applysetters"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-)
-
-func applySetters(rl *framework.ResourceList) error {
-	if rl.FunctionConfig == nil {
-		return nil // nothing to do
-	}
-
-	var fn function.ApplySetters
-	function.Decode(rl.FunctionConfig, &fn)
-	items, err := fn.Filter(rl.Items)
-	if err != nil {
-		return fmt.Errorf("apply-setter evaluation failed: %w", err)
-	}
-
-	rl.Items = items
-	return nil
-}
+// Package internal package containing implementation details of the package
+// manipulation primitives.
+package kptops

@@ -31,7 +31,6 @@ func GetBuiltinFn(config any) builtintypes.BuiltinFunction {
 		return &builtins.PackageContextGenerator{
 			PackageConfig: packageConfig,
 		}
-	} else {
-		panic(fmt.Errorf("unsupported builtin function configuration %v of type %v", config, reflect.TypeOf(config)))
 	}
+	panic(fmt.Errorf("unsupported builtin function configuration %v of type %v", config, reflect.TypeOf(config)))
 }

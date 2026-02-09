@@ -12,18 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package kptops
 
 import (
+	"fmt"
+
+	function "github.com/kptdev/krm-functions-catalog/functions/go/apply-setters/applysetters"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.0": applySetters,
-	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
-	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
-}
+func applySetters(rl *framework.ResourceList) error {
+	if rl.FunctionConfig == nil {
+		return nil // nothing to do
+	}
 
-func FindProcessor(image string) framework.ResourceListProcessorFunc {
-	return functions[image]
+	var fn function.ApplySetters
+	function.Decode(rl.FunctionConfig, &fn)
+	items, err := fn.Filter(rl.Items)
+	if err != nil {
+		return fmt.Errorf("apply-setter evaluation failed: %w", err)
+	}
+
+	rl.Items = items
+	return nil
 }

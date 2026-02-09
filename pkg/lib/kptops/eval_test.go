@@ -64,7 +64,7 @@ func TestSetLabels(t *testing.T) {
 		t.Fatalf("Failed to create function config map: %v", err)
 	}
 
-	input := ReadResourceList(t, path.Join(".", "testdata", "bucket"), config)
+	input := ReadResourceList(t, path.Join("../../../internal/kptops", "testdata", "bucket"), config)
 	var output bytes.Buffer
 	if err := runner.Run(bytes.NewReader(input), &output); err != nil {
 		t.Errorf("Eval failed: %v", err)
