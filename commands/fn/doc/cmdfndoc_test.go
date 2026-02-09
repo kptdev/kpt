@@ -16,15 +16,26 @@ package doc_test
 
 import (
 	"bytes"
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/kpt/commands/fn/doc"
+	"github.com/kptdev/kpt/pkg/lib/fnruntime"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 )
 
 // TestDesc_Execute tests happy path for Describe command.
 func TestFnDoc(t *testing.T) {
+	// Skip test if Docker is not available
+	runtime, err := fnruntime.StringToContainerRuntime(os.Getenv(fnruntime.ContainerRuntimeEnv))
+	if err != nil {
+		t.Skipf("Skipping test: %v", err)
+	}
+	if err := fnruntime.ContainerRuntimeAvailable(runtime); err != nil {
+		t.Skipf("Skipping test: container runtime not available: %v", err)
+	}
 	type testcase struct {
 		image     string
 		expectErr string
@@ -44,14 +55,21 @@ func TestFnDoc(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		b := &bytes.Buffer{}
-		runner := doc.NewRunner(fake.CtxWithPrinter(b, b), "kpt")
-		runner.Image = tc.image
-		err := runner.Command.Execute()
-		if tc.expectErr == "" {
-			testutil.AssertNoError(t, err)
-		} else {
-			testutil.AssertErrorContains(t, err, tc.expectErr)
-		}
+		t.Run(tc.image, func(t *testing.T) {
+			b := &bytes.Buffer{}
+			runner := doc.NewRunner(fake.CtxWithPrinter(b, b), "kpt")
+			runner.Image = tc.image
+			err := runner.Command.Execute()
+			if tc.expectErr == "" {
+				// Skip if container runtime fails to pull/run the image
+				// This can happen in CI due to rate limits or network issues
+				if err != nil && strings.Contains(err.Error(), "exit status 125") {
+					t.Skipf("Skipping test: container runtime failed to run image: %v", err)
+				}
+				testutil.AssertNoError(t, err)
+			} else {
+				testutil.AssertErrorContains(t, err, tc.expectErr)
+			}
+		})
 	}
 }
