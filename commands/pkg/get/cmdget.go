@@ -76,6 +76,8 @@ type Runner struct {
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	const op errors.Op = "cmdget.preRunE"
+	// Track if destination was explicitly provided
+	explicitDest := len(args) > 1
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
 	} else {
@@ -88,7 +90,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	t, err := parse.GitParseArgs(r.ctx, args)
+	t, err := parse.GitParseArgs(r.ctx, args, explicitDest)
 	if err != nil {
 		return errors.E(op, err)
 	}
