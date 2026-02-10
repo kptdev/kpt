@@ -24,7 +24,7 @@ kpt fn doc --image=IMAGE
 
 #### Flags
 
-```
+```shell
 --image, i: (required flag)
   Container image of the function e.g. `ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest`.
   For convenience, if full image path is not specified, `ghcr.io/kptdev/krm-functions-catalog/` is added as default prefix.
