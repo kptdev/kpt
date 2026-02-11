@@ -82,7 +82,7 @@ func renderRolloutsAsTable(cmd *cobra.Command, rollouts *rolloutsapi.RolloutList
 				readyCount++
 			}
 		}
-		t.AppendRow([]interface{}{
+		t.AppendRow([]any{
 			rollout.Name,
 			rollout.Status.Overall,
 			fmt.Sprintf("%d/%d", readyCount, len(rollout.Status.ClusterStatuses))})

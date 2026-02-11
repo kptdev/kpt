@@ -89,7 +89,7 @@ func renderStatusAsTable(cmd *cobra.Command, rollout *rolloutsapi.Rollout) {
 	t.AppendHeader(table.Row{"CLUSTER", "PACKAGE ID", "PACKAGE STATUS", "SYNC STATUS"})
 	for _, cluster := range rollout.Status.ClusterStatuses {
 		pkgStatus := cluster.PackageStatus
-		t.AppendRow([]interface{}{cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
+		t.AppendRow([]any{cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
 	}
 	t.AppendSeparator()
 	// t.AppendRow([]interface{}{300, "Tyrion", "Lannister", 5000})
@@ -108,7 +108,7 @@ func renderWaveStatusAsTable(cmd *cobra.Command, rollout *rolloutsapi.Rollout) {
 			if i == 0 {
 				waveName = wave.Name
 			}
-			t.AppendRow([]interface{}{waveName, cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
+			t.AppendRow([]any{waveName, cluster.Name, pkgStatus.PackageID, pkgStatus.Status, pkgStatus.SyncStatus})
 		}
 		t.AppendSeparator()
 	}
