@@ -19,9 +19,9 @@ import (
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/pkg/kptpkg"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )

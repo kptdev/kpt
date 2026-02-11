@@ -19,9 +19,11 @@ import (
 	"path/filepath"
 
 	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 )
 
 // Updater updates a package to a new upstream version.
@@ -30,8 +32,16 @@ import (
 // delete the local package.  This will wipe all local changes.
 type ReplaceUpdater struct{}
 
-func (u ReplaceUpdater) Update(options Options) error {
+var _ updatetypes.Updater = &ReplaceUpdater{}
+
+func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 	const op errors.Op = "update.Update"
+
+	// Update Kptfile for root package
+	if err := kptfileutil.UpdateKptfile(options.LocalPath, options.UpdatedPath, options.OriginPath, true); err != nil {
+		return errors.E(op, types.UniquePath(options.LocalPath), err)
+	}
+
 	paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(options.LocalPath), err)

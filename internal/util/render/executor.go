@@ -1,4 +1,4 @@
-// Copyright 2022,2026 The kpt Authors
+// Copyright 2022,2025-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,15 +22,17 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/attribution"
 	"github.com/kptdev/kpt/internal/util/printerutil"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -59,7 +61,7 @@ type Renderer struct {
 	Output io.Writer
 
 	// RunnerOptions contains options controlling function execution.
-	RunnerOptions fnruntime.RunnerOptions
+	RunnerOptions runneroptions.RunnerOptions
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
@@ -86,11 +88,21 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		runtime:       e.Runtime,
 	}
 
-	if _, err = hydrate(ctx, root, hctx); err != nil {
-		// Note(droot): ignore the error in function result saving
-		// to avoid masking the hydration error.
-		// don't disable the CLI output in case of error
-		_ = e.saveFnResults(ctx, hctx.fnResults)
+	kptfile, err := kptfileutil.ReadKptfile(e.FileSystem, e.PkgPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Kptfile: %w", err)
+	}
+
+	// Choose hydration function based on annotation
+	// If the annotation "kpt.dev/bfs-rendering" is set to "true", use hydrateBfsOrder
+	// otherwise use the default hydrate function in depth-first post-order.
+	hydrateFn := hydrate
+	if value, exists := kptfile.Annotations[kptfilev1.BFSRenderAnnotation]; exists && kptfilev1.ToCondition(value) == kptfilev1.ConditionTrue {
+		hydrateFn = hydrateBfsOrder
+	}
+
+	if _, err := hydrateFn(ctx, root, hctx); err != nil {
+		_ = e.saveFnResults(ctx, hctx.fnResults) // Ignore save error to avoid masking hydration error
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, err)
 	}
 
@@ -185,7 +197,7 @@ type hydrationContext struct {
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
 
-	runnerOptions fnruntime.RunnerOptions
+	runnerOptions runneroptions.RunnerOptions
 
 	fileSystem filesys.FileSystem
 
@@ -331,6 +343,198 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 	return output, err
 }
 
+// hydrateBfsOrder performs a top-down hydration such that
+// a parent package can modify its subpackages and itself,
+// but a subpackage cannot modify parents or its siblings.
+// The order left to right is ascendant alphabetical order of the package names.
+func hydrateBfsOrder(ctx context.Context, root *pkgNode, hctx *hydrationContext) ([]*yaml.RNode, error) {
+	const op errors.Op = "pkg.render"
+
+	// Phase 1: Discover packages and load their resources
+	allNodes, childrenMap, err := discoverAndLoadPackages(root, hctx)
+	if err != nil {
+		return nil, errors.E(op, root.pkg.UniquePath, err)
+	}
+
+	// Phase 2: Execute pipelines in top-down order with scoped visibility
+	err = executePipelinesWithScopedVisibility(ctx, allNodes, childrenMap, hctx)
+	if err != nil {
+		return nil, errors.E(op, root.pkg.UniquePath, err)
+	}
+
+	return root.resources, nil
+}
+
+// discoverAndLoadPackages performs a Breadth-First search trasversal to
+// discover all packages, build tree structure and load their local resources.
+func discoverAndLoadPackages(root *pkgNode, hctx *hydrationContext) ([]*pkgNode, map[types.UniquePath][]*pkgNode, error) {
+	queue := []*pkgNode{root}
+	var allNodes []*pkgNode
+	childrenMap := map[types.UniquePath][]*pkgNode{}
+
+	for len(queue) > 0 {
+		current := queue[0]
+		queue = queue[1:]
+		allNodes = append(allNodes, current)
+
+		if err := validatePackageState(current, hctx); err != nil {
+			return nil, nil, err
+		}
+
+		if err := loadPackageResources(current, hctx); err != nil {
+			return nil, nil, err
+		}
+
+		newNodes, err := processSubpackages(current, hctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		queue = append(queue, newNodes...)
+		childrenMap[current.pkg.UniquePath] = append(childrenMap[current.pkg.UniquePath], newNodes...)
+	}
+
+	return allNodes, childrenMap, nil
+}
+
+// validatePackageState checks if the package is in a valid state for processing
+func validatePackageState(current *pkgNode, hctx *hydrationContext) error {
+	if curr, found := hctx.pkgs[current.pkg.UniquePath]; found {
+		switch curr.state {
+		case Hydrating:
+			return fmt.Errorf("cycle detected in pkg dependencies")
+		case Wet:
+			return nil
+		default:
+			return fmt.Errorf("package found in invalid state %v", curr.state)
+		}
+	}
+
+	current.state = Dry
+	hctx.pkgs[current.pkg.UniquePath] = current
+	return nil
+}
+
+// loadPackageResources loads local resources for the package and tracks input files
+func loadPackageResources(current *pkgNode, hctx *hydrationContext) error {
+	localResources, err := current.pkg.LocalResources()
+	if err != nil {
+		return err
+	}
+	current.resources = localResources
+
+	relPath, err := current.pkg.RelativePathTo(hctx.root.pkg)
+	if err != nil {
+		return err
+	}
+
+	if err := trackInputFiles(hctx, relPath, localResources); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// processSubpackages discovers and creates nodes for direct subpackages
+func processSubpackages(current *pkgNode, hctx *hydrationContext) ([]*pkgNode, error) {
+	subpkgs, err := current.pkg.DirectSubpackages()
+	if err != nil {
+		return nil, err
+	}
+
+	var newNodes []*pkgNode
+	for _, subpkg := range subpkgs {
+		subPkgNode, err := newPkgNode(hctx.fileSystem, "", subpkg)
+		if err != nil {
+			return nil, err
+		}
+		newNodes = append(newNodes, subPkgNode)
+	}
+
+	return newNodes, nil
+}
+
+// executePipelinesWithScopedVisibility executes pipelines for all packages in top-down order
+// Each package can see itself plus its descendants (children, granchildren) only
+func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNode, childrenMap map[types.UniquePath][]*pkgNode, hctx *hydrationContext) error {
+	for _, node := range allNodes {
+		node.state = Hydrating
+		hctx.pkgs[node.pkg.UniquePath] = node
+
+		input := buildPipelineInputWithScopedVisibility(node, childrenMap)
+		output, err := node.runPipeline(ctx, hctx, input)
+		if err != nil {
+			return err
+		}
+
+		node.resources = output
+		node.state = Wet
+		hctx.pkgs[node.pkg.UniquePath] = node
+
+		propagateResourcesAcrossNodes(node, allNodes)
+	}
+
+	aggregateRootResources(allNodes, hctx)
+	return nil
+}
+
+// propagateResourcesAcrossNodes distributes resources from the current node to their target packages
+func propagateResourcesAcrossNodes(currentNode *pkgNode, allNodes []*pkgNode) {
+	var remaining []*yaml.RNode
+	resourcesByPackage := make(map[string][]*yaml.RNode)
+
+	// Group resources by their target package path
+	for _, resource := range currentNode.resources {
+		pkgPath, _ := pkg.GetPkgPathAnnotation(resource)
+		if pkgPath == "" {
+			pkgPath = currentNode.pkg.UniquePath.String()
+		}
+		resourcesByPackage[pkgPath] = append(resourcesByPackage[pkgPath], resource)
+	}
+
+	// Distribute resources to their target nodes
+	for _, targetNode := range allNodes {
+		targetPath := targetNode.pkg.UniquePath.String()
+		if resources, exists := resourcesByPackage[targetPath]; exists {
+			if targetPath == currentNode.pkg.UniquePath.String() {
+				remaining = append(remaining, resources...)
+			} else {
+				targetNode.resources = resources
+			}
+		}
+	}
+
+	currentNode.resources = remaining
+}
+
+// aggregateRootResources rebuilds root resources from all package resources
+func aggregateRootResources(allNodes []*pkgNode, hctx *hydrationContext) {
+	var aggregated []*yaml.RNode
+	for _, node := range allNodes {
+		aggregated = append(aggregated, node.resources...)
+	}
+	hctx.root.resources = aggregated
+}
+
+// buildPipelineInputWithScopedVisibility creates the input resource
+// list for a package's pipeline using childrenMap to find descendants
+func buildPipelineInputWithScopedVisibility(node *pkgNode, childrenMap map[types.UniquePath][]*pkgNode) []*yaml.RNode {
+	var input []*yaml.RNode
+
+	input = append(input, node.resources...)
+
+	var collectDescendants func(*pkgNode)
+	collectDescendants = func(n *pkgNode) {
+		for _, child := range childrenMap[n.pkg.UniquePath] {
+			input = append(input, child.resources...)
+			collectDescendants(child)
+		}
+	}
+
+	collectDescendants(node)
+	return input
+}
+
 // runPipeline runs the pipeline defined at current pkgNode on given input resources.
 func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, input []*yaml.RNode) ([]*yaml.RNode, error) {
 	const op errors.Op = "pipeline.run"
@@ -365,8 +569,6 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
 		return nil, errors.E(op, pn.pkg.UniquePath, err)
 	}
-	// print a new line after a pipeline running
-	pr.Printf("\n")
 	return mutatedResources, nil
 }
 
@@ -388,9 +590,8 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 
 	for i, mutator := range mutators {
 		if pl.Mutators[i].ConfigPath != "" {
-			// kpt v1.0.0-beta15+ onwards, functionConfigs are included in the
-			// function inputs during `render` and as a result, they can be
-			// mutated during the `render`.
+			// functionConfigs are included in the function inputs during `render`
+			// and as a result, they can be mutated during the `render`.
 			// So functionConfigs needs be updated in the FunctionRunner instance
 			// before every run.
 			for _, r := range input {

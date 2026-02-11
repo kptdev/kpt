@@ -23,8 +23,9 @@ import (
 	"os/exec"
 
 	"github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/internal/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 )
@@ -43,9 +44,6 @@ func NewRunner(ctx context.Context, parent string) *Runner {
 	}
 	r.Command = c
 	c.Flags().StringVarP(&r.Image, "image", "i", "", "kpt function image name")
-	_ = r.Command.RegisterFlagCompletionFunc("image", func(cmd *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
-		return cmdutil.SuggestFunctions(cmd), cobra.ShellCompDirectiveDefault
-	})
 	cmdutil.FixDocs("kpt", parent, c)
 	return r
 }
@@ -64,7 +62,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := fnruntime.ResolveToImageForCLIFunc(fnruntime.GHCRImagePrefix)
+	resolveFunc := (&runneroptions.RunnerOptions{}).ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
 	image, err := resolveFunc(c.Context(), r.Image)
 	if err != nil {
 		return err
@@ -72,9 +70,9 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
-		"--rm",        // delete the container afterward
-		"-i",          // interactive mode to accept stdin
-		"--stdin",     // keep stdin open
+		"--rm",    // delete the container afterward
+		"-i",      // interactive mode to accept stdin
+		"--stdin", // keep stdin open
 		image,
 		"--help",
 	}
@@ -92,7 +90,7 @@ func (r *Runner) runE(c *cobra.Command, _ []string) error {
 	cmd := exec.Command(runtime.GetBin(), dockerRunArgs...)
 	cmd.Stdout = &out
 	cmd.Stderr = &errout
-	
+
 	// Provide an empty ResourceList as stdin for functions that expect input
 	// This prevents "expected exactly one object, got 0" errors
 	emptyResourceList := `apiVersion: config.kubernetes.io/v1
@@ -100,7 +98,7 @@ kind: ResourceList
 items: []
 `
 	cmd.Stdin = bytes.NewBufferString(emptyResourceList)
-	
+
 	err = cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {

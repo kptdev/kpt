@@ -19,13 +19,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	v1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
 func TestNotFound(t *testing.T) {
 	var err error
 
-	fn := &v1.Function{Image: "foo"}
+	fn := &kptfilev1.Function{Image: "foo"}
 	err = &NotFoundError{Function: *fn}
 
 	var notFoundErr *NotFoundError

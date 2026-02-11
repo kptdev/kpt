@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
-	"github.com/kptdev/kpt/pkg/lib/fnruntime"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
 	"github.com/spf13/cobra"
@@ -218,8 +218,8 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:       dir,
 				ResultsDir: "foo/",
-				RunnerOptions: fnruntime.RunnerOptions{
-					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				RunnerOptions: runneroptions.RunnerOptions{
+					ImagePullPolicy: runneroptions.IfNotPresentPull,
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,
@@ -259,8 +259,8 @@ apiVersion: v1
 			path: dir,
 			expectedStruct: &runfn.RunFns{
 				Path: dir,
-				RunnerOptions: fnruntime.RunnerOptions{
-					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				RunnerOptions: runneroptions.RunnerOptions{
+					ImagePullPolicy: runneroptions.IfNotPresentPull,
 				},
 				Env:                   []string{"FOO=BAR", "BAR"},
 				ContinueOnEmptyResult: true,
@@ -286,8 +286,8 @@ apiVersion: v1
 			expectedStruct: &runfn.RunFns{
 				Path:          dir,
 				AsCurrentUser: true,
-				RunnerOptions: fnruntime.RunnerOptions{
-					ImagePullPolicy: fnruntime.IfNotPresentPull,
+				RunnerOptions: runneroptions.RunnerOptions{
+					ImagePullPolicy: runneroptions.IfNotPresentPull,
 				},
 				Env:                   []string{},
 				ContinueOnEmptyResult: true,

@@ -22,6 +22,7 @@ import (
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -130,7 +131,7 @@ func TestUpdate_Replace(t *testing.T) {
 						WithResource(pkgbuilder.DeploymentResource),
 				),
 		},
-		"doesn't update the Kptfile": {
+		"Updates the Kptfile": {
 			origin: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
@@ -155,7 +156,7 @@ func TestUpdate_Replace(t *testing.T) {
 			expected: pkgbuilder.NewRootPkg().
 				WithKptfile(
 					pkgbuilder.NewKptfile().
-						WithUpstream(kptRepo, "/", "master", "force-delete-replace").
+						WithUpstream(kptRepo, "/", "v1.0", "force-delete-replace").
 						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
@@ -172,7 +173,7 @@ func TestUpdate_Replace(t *testing.T) {
 
 			updater := &update.ReplaceUpdater{}
 
-			err := updater.Update(update.Options{
+			err := updater.Update(updatetypes.Options{
 				RelPackagePath: tc.relPackagePath,
 				OriginPath:     filepath.Join(origin, tc.relPackagePath),
 				LocalPath:      filepath.Join(local, tc.relPackagePath),

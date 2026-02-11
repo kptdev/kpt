@@ -26,7 +26,7 @@ import (
 
 	kptcommands "github.com/kptdev/kpt/commands"
 	"github.com/kptdev/kpt/internal/docs/generated/overview"
-	"github.com/kptdev/kpt/internal/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/commandutil"

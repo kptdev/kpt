@@ -21,14 +21,21 @@ import (
 	"path/filepath"
 	"strings"
 
+	"sigs.k8s.io/kustomize/kyaml/pathutil"
+
 	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/internal/types"
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/merge"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
+	"github.com/kptdev/kpt/internal/util/update/merge3"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	"github.com/kptdev/kpt/pkg/lib/types"
+	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/krm-functions-sdk/go/fn"
+	"gopkg.in/yaml.v2"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -38,7 +45,9 @@ import (
 // packages, and performing a 3-way merge of the Resources.
 type ResourceMergeUpdater struct{}
 
-func (u ResourceMergeUpdater) Update(options Options) error {
+var _ updatetypes.Updater = &ResourceMergeUpdater{}
+
+func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 	const op errors.Op = "update.Update"
 	if !options.IsRoot {
 		hasChanges, err := PkgHasUpdatedUpstream(options.LocalPath, options.OriginPath)
@@ -149,24 +158,52 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 	if err := kptfileutil.UpdateKptfile(localPath, updatedPath, originalPath, !isRootPkg); err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
-
-	// merge the Resources: original + updated + dest => dest
-	err := merge.Merge3{
-		OriginalPath: originalPath,
-		UpdatedPath:  updatedPath,
-		DestPath:     localPath,
-		// TODO: Write a test to ensure this is set
-		MergeOnPath:        true,
-		IncludeSubPackages: false,
-	}.Merge()
+	originalKos, updatedKos, destinationKos, err := collectKubeObjectsFromPackages(localPath, updatedPath, originalPath)
 	if err != nil {
-		return errors.E(op, types.UniquePath(localPath), err)
+		return errors.E(op, err)
+	}
+
+	crdSchemas, err := getCrdSchemas(updatedKos, destinationKos)
+	if err != nil {
+		return err
+	}
+
+	mergedKos, err := merge3.Merge(
+		originalKos, updatedKos, destinationKos, crdSchemas,
+	)
+	if err != nil {
+		return err
+	}
+
+	err = writeResourcesToDirectory(localPath, mergedKos)
+	if err != nil {
+		return err
 	}
 
 	if err := ReplaceNonKRMFiles(updatedPath, originalPath, localPath); err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
 	return nil
+}
+
+func findExclusions(destPath string) ([]string, error) {
+	var resultPaths []string
+	paths, err := pathutil.DirsWithFile(destPath, kptfilev1.KptFileName, true)
+	if err != nil {
+		return resultPaths, err
+	}
+
+	for _, p := range paths {
+		rel, err := filepath.Rel(destPath, p)
+		if err != nil {
+			return resultPaths, err
+		}
+		if rel == "." {
+			continue
+		}
+		resultPaths = append(resultPaths, p)
+	}
+	return resultPaths, nil
 }
 
 // replaceNonKRMFiles replaces the non KRM files in localDir with the corresponding files in updatedDir,
@@ -311,4 +348,84 @@ func compareFiles(src, dst string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+func collectKubeObjectsFromPackages(localPath, updatedPath, originalPath string) (fn.KubeObjects, fn.KubeObjects, fn.KubeObjects, error) {
+	originalKos, err := loadResourcesFromDirectory(originalPath, "original")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	updatedKos, err := loadResourcesFromDirectory(updatedPath, "updated")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	destinationKos, err := loadResourcesFromDirectory(localPath, "dest")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return originalKos, updatedKos, destinationKos, nil
+}
+
+func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, error) {
+	// TODO: these should probably be merged, destination will always override updated this way
+	var kubeobjects fn.KubeObjects
+	copy(kubeobjects, updated)
+	kubeobjects = append(kubeobjects, destination...)
+	_, crdObjects := merge3.FilterCrds(kubeobjects)
+	crdSchemas, err := merge3.SchemasFromCrdKubeObjects(crdObjects)
+	if err != nil {
+		klog.Error("An error occurred during CRD extraction: %w", err)
+		return nil, nil
+	}
+
+	marshalledSchemas, err := yaml.Marshal(crdSchemas)
+	if err != nil {
+		return nil, err
+	}
+
+	return marshalledSchemas, nil
+}
+
+func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation string) (fn.KubeObjects, error) {
+	exclusions, err := findExclusions(directoryPath)
+	if err != nil {
+		return nil, err
+	}
+	reader := merge.PruningLocalPackageReader{
+		LocalPackageReader: kio.LocalPackageReader{
+			PackagePath:        directoryPath,
+			IncludeSubpackages: false,
+			SetAnnotations:     map[string]string{"config.kubernetes.io/merge-source": mergeSourceAnnotation},
+			PackageFileName:    kptfilev1.KptFileName,
+			PreserveSeqIndent:  true,
+			WrapBareSeqNode:    true,
+		},
+		Exclusions: exclusions,
+	}
+	nodes, err := reader.Read()
+	if err != nil {
+		return nil, errors.E(types.UniquePath(directoryPath), err)
+	}
+	return fn.MoveToKubeObjects(nodes), err
+}
+
+func writeResourcesToDirectory(destPath string, kubeObjects fn.KubeObjects) error {
+	destWriter := &kio.LocalPackageReadWriter{
+		PackagePath:        destPath,
+		IncludeSubpackages: false,
+		PackageFileName:    kptfilev1.KptFileName,
+		SetAnnotations:     map[string]string{"config.kubernetes.io/merge-source": "dest"},
+		PreserveSeqIndent:  true,
+		WrapBareSeqNode:    true,
+	}
+	_, err := destWriter.Read()
+	if err != nil {
+		return errors.E(types.UniquePath(destPath), err)
+	}
+	err = destWriter.Write(kubeObjects.CopyToResourceNodes())
+	if err != nil {
+		return err
+	}
+	return nil
 }
