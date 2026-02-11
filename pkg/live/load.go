@@ -333,18 +333,18 @@ func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
 	var inventoryObj = &unstructured.Unstructured{
-		Object: map[string]any{
+		Object: map[string]interface{}{
 			"apiVersion": groupVersion,
 			"kind":       ResourceGroupGVK.Kind,
-			"metadata": map[string]any{
+			"metadata": map[string]interface{}{
 				"name":      inv.Name,
 				"namespace": inv.Namespace,
-				"labels": map[string]any{
+				"labels": map[string]interface{}{
 					common.InventoryLabel: inv.InventoryID,
 				},
 			},
-			"spec": map[string]any{
-				"resources": []any{},
+			"spec": map[string]interface{}{
+				"resources": []interface{}{},
 			},
 		},
 	}

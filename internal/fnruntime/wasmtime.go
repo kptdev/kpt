@@ -218,6 +218,6 @@ func (f *WasmtimeFn) Write(fd int, b []byte) (n int, err error) {
 }
 
 // Error implements the wasmexec.errorLogger interface
-func (f *WasmtimeFn) Error(format string, params ...any) {
+func (f *WasmtimeFn) Error(format string, params ...interface{}) {
 	log.Printf("ERROR: "+format+"\n", params...)
 }
