@@ -12,7 +12,7 @@ index 2336da4..85f42f5 100644
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..12338f5 100644
+index 1f15150..936d957 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -15,12 +15,20 @@ apiVersion: apps/v1
