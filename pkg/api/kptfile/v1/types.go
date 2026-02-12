@@ -328,6 +328,10 @@ type Function struct {
 	// this is primarily used for merging function declaration with upstream counterparts
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 
+	// `Tag` is an optional field for specifying/overriding the tag of the function image.
+	// Can be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints
+	Tag string `yaml:"tag,omitempty" json:"tag,omitempty"`
+
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected
 	Selectors []Selector `yaml:"selectors,omitempty" json:"selectors,omitempty"`
