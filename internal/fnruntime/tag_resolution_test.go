@@ -61,7 +61,7 @@ func TestFilterParseSortTags(t *testing.T) {
 			tags:     []string{"v0.1", "v0.2.1", "v0.1.2", "v0.2", "v0.1.1", "v0.2.3", "v0.2.2", "v0"},
 			expected: []string{"v0.2.3", "v0.2.2", "v0.2.1", "v0.2", "v0.1.2", "v0.1.1", "v0.1", "v0"},
 		},
-		"sha hashes filtered out": {
+		"digests filtered out": {
 			tags:     []string{"v0.1.0", "sha256-59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c.sbom", "v0.1.1"},
 			expected: []string{"v0.1.1", "v0.1.0"},
 		},
@@ -92,7 +92,7 @@ func stringifyVersionSlice(list []*semver.Version) []string {
 }
 
 func TestResolveFunctionImage(t *testing.T) {
-	const image = "test-function"
+	const image = "gchr.io/kptdev/krm-functions-catalog/test-function"
 	tagSet := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
 
 	testCases := map[string]struct {
@@ -163,7 +163,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			repoErr:       "test",
 			expectedErr:   "failed to list tags for image",
 		},
-		"sha replaced correctly": {
+		"digest replaced correctly": {
 			functionImage: image + "@sha256:59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c",
 			functionTag:   "~0.1",
 			repoTags:      tagSet,

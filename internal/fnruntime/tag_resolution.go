@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	regclientref "github.com/regclient/regclient/types/ref"
 	"k8s.io/klog/v2"
 )
 
@@ -40,28 +41,39 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		return image, nil
 	}
 
-	image = strings.SplitN(image, "@", 2)[0] // remove sha
-	image = strings.SplitN(image, ":", 2)[0] // remove original tag
-	if _, versionErr := semver.NewVersion(tag); versionErr == nil {
-		return fmt.Sprintf("%s:%s", image, tag), nil
+	ref, err := regclientref.New(image)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse image %q as reference: %w", image, err)
+	}
+	ref.Tag = ""
+	ref.Digest = ""
+	image = ref.CommonName()
+
+	if _, versionErr := semver.NewVersion(tag); versionErr == nil { //nolint:revive
+		// A valid version is a valid constraint, but we don't want to waste time listing
+		// when we are given an exact version. We just return from here.
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {
 		possibleTags, err := tr.lister.List(ctx, image)
 		if err != nil {
 			return "", fmt.Errorf("failed to list tags for image %q: %w", image, err)
 		}
 
-		for _, possibleVersion := range filterParseSortTags(possibleTags) {
-			if constraint.Check(possibleVersion) {
-				return fmt.Sprintf("%s:%s", image, possibleVersion.Original()), nil
+		filteredVersions := filterParseSortTags(possibleTags)
+		for _, version := range filteredVersions {
+			if constraint.Check(version) {
+				ref.Tag = version.Original()
+				return ref.CommonName(), nil
 			}
 		}
 
-		return "", fmt.Errorf("no remote tag matched the version constraint %q from %v", tag, possibleTags)
+		return "", fmt.Errorf("no remote tag matched the version constraint %q from %d possible tags", tag, len(filteredVersions))
 	} else {
 		klog.Warningf("Tag %q could not be parsed as a semantic version (\"%s\") or constraint (\"%s\"), will use it literally",
 			tag, versionErr, constraintErr)
-		return fmt.Sprintf("%s:%s", image, tag), nil
 	}
+
+	ref.Tag = tag
+	return ref.CommonName(), nil
 }
 
 // filterParseSortTags takes in a list of potential tags, and returns all the valid semvers in descending order

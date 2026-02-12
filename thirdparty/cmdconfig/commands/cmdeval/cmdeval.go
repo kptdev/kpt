@@ -51,7 +51,7 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
 	r.Command.Flags().StringVar(
-		&r.Tag, "tag", "", "run this image as a function")
+		&r.Tag, "tag", "", "semantic version constraint for the image tag or exact tag replacement")
 	r.Command.Flags().StringArrayVarP(
 		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
