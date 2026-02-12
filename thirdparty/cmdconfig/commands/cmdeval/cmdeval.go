@@ -50,6 +50,8 @@ func GetEvalFnRunner(ctx context.Context, parent string) *EvalFnRunner {
 		fmt.Sprintf("output resources are written to provided location. Allowed values: %s|%s|<OUT_DIR_PATH>", cmdutil.Stdout, cmdutil.Unwrap))
 	r.Command.Flags().StringVarP(
 		&r.Image, "image", "i", "", "run this image as a function")
+	r.Command.Flags().StringVar(
+		&r.Tag, "tag", "", "run this image as a function")
 	r.Command.Flags().StringArrayVarP(
 		&r.Keywords, "keywords", "k", nil, "filter functions that match one or more keywords")
 	r.Command.Flags().StringVarP(&r.FnType, "type", "t", "",
@@ -134,6 +136,7 @@ type EvalFnRunner struct {
 	OutContent           bytes.Buffer
 	FromStdin            bool
 	Image                string
+	Tag                  string
 	SaveFn               bool
 	Keywords             []string
 	FnType               string
@@ -186,6 +189,7 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 	newFn := &kptfile.Function{}
 	if r.Image != "" {
 		newFn.Image = r.Image
+		newFn.Tag = r.Tag
 	} else {
 		newFn.Exec = r.Exec
 	}
