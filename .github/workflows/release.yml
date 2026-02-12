@@ -66,6 +66,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate SLSA subjects for provenance
         id: hash
+        working-directory: go/src/github.com/kptdev/kpt
         run: |
           set -euo pipefail
 
