@@ -163,6 +163,12 @@ func TestResolveFunctionImage(t *testing.T) {
 			repoErr:       "test",
 			expectedErr:   "failed to list tags for image",
 		},
+		"sha replaced correctly": {
+			functionImage: image + "@sha256:59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c",
+			functionTag:   "~0.1",
+			repoTags:      tagSet,
+			expectedTag:   "v0.1.2",
+		},
 	}
 
 	for name, tc := range testCases {

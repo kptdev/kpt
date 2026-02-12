@@ -40,7 +40,8 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		return image, nil
 	}
 
-	image = strings.Split(image, ":")[0]
+	image = strings.SplitN(image, "@", 2)[0] // remove sha
+	image = strings.SplitN(image, ":", 2)[0] // remove original tag
 	if _, versionErr := semver.NewVersion(tag); versionErr == nil {
 		return fmt.Sprintf("%s:%s", image, tag), nil
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {

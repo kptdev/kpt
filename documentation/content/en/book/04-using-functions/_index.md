@@ -136,6 +136,42 @@ an image from any container registry. If the registry is omitted, the default
 container registry for functions catalog (`ghcr.io/kptdev/krm-functions-catalog`) is prepended automatically.
 For example, `set-labels:latest` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
 
+#### `tag`
+
+The `tag` field specifies the exact tag of the function container image *or* a semantic version constraint for the
+desired tag. The version constraints are validated by `github.com/Masterminds/semver/v3`, so they must fulfil that spec.
+
+If a `tag` is provided, it will override whatever tag is already specified within the `image` field,
+*even if `tag` is not a valid semantic version or constraint*.
+
+Examples:
+```yaml
+image: set-labels
+tag: "~0.2"
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3 # latest patch version of 0.2.x
+===
+image: set-labels
+tag: "<0.2"
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 # latest patch version of 0.1.x
+===
+image: set-labels:v0.2.1
+tag: v0.2.3
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
+===
+image: set-labels@sha256:23631a784be4828a37ae98478df9d586840220ef87037c7703f6c61dcf8e49ac
+tag: v0.2.3
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
+===
+image: set-labels:v0.2.1
+tag: de3c135
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:de3c135
+```
+
 #### `exec`
 
 The `exec` field specifies the executable command for the function. You can specify
