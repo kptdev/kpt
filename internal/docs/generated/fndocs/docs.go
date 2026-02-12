@@ -131,7 +131,7 @@ Flags:
        The provided directory must not already exist.
   
   --tag:
-    Does nothing if `+ "`" + `--image` + "`" + ` is not specified.
+    Does nothing if ` + "`" + `--image` + "`" + ` is not specified.
     If specified, the tag of the function container image will be replaced by:
     a) the latest available tag matching ` + "`" + `--tag` + "`" + `, if it is a semantic version constraint, or
     b) the literal value of ` + "`" + `--tag` + "`" + `, if it is not a semantic version constraint.
