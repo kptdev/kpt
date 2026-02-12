@@ -136,7 +136,7 @@ Flags:
     a) the latest available tag matching ` + "`" + `--tag` + "`" + `, if it is a semantic version constraint, or
     b) the literal value of ` + "`" + `--tag` + "`" + `, if it is not a semantic version constraint.
     See the constraints spec here: https://github.com/Masterminds/semver
-
+  
   --type, t;
     Specify the function type. Accept value ` + "`" + `mutator` + "`" + ` (default), ` + "`" + `validator` + "`" + `. 
     If used with ` + "`" + `--save` + "`" + `, this flag will save the evaluated function to the corresponding
@@ -230,38 +230,6 @@ var EvalExamples = `
   # execute container my-fn with podman on the resources in DIR directory and
   # write output back to DIR
   $ KRM_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
-`
-
-var ExportShort = `Auto-generating function pipelines for different workflow orchestrators`
-var ExportLong = `
-  kpt fn export DIR/ [--fn-path FUNCTIONS_DIR/] --workflow ORCHESTRATOR [--output OUTPUT_FILENAME]
-  
-  DIR:
-    Path to a package directory.
-  FUNCTIONS_DIR:
-    Read functions from the directory instead of the DIR/.
-  ORCHESTRATOR:
-    Supported orchestrators are:
-      - github-actions
-      - cloud-build
-      - gitlab-ci
-      - jenkins
-      - tekton
-      - circleci
-  OUTPUT_FILENAME:
-    Specifies the filename of the generated pipeline. If omitted, the default
-    output is stdout
-`
-var ExportExamples = `
-
-  # read functions from DIR, run them against it as one step.
-  # write the generated GitHub Actions pipeline to main.yaml.
-  kpt fn export DIR/ --output main.yaml --workflow github-actions
-
-
-  # discover functions in FUNCTIONS_DIR and run them against resource in DIR.
-  # write the generated Cloud Build pipeline to stdout.
-  kpt fn export DIR/ --fn-path FUNCTIONS_DIR/ --workflow cloud-build
 `
 
 var RenderShort = `Render a package.`
