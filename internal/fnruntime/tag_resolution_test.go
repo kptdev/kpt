@@ -92,7 +92,7 @@ func stringifyVersionSlice(list []*semver.Version) []string {
 }
 
 func TestResolveFunctionImage(t *testing.T) {
-	const image = "gchr.io/kptdev/krm-functions-catalog/test-function"
+	const image = "ghcr.io/kptdev/krm-functions-catalog/test-function"
 	tagSet := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
 
 	testCases := map[string]struct {

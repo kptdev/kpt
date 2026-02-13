@@ -150,22 +150,26 @@ image: set-labels
 tag: "~0.2"
 ---
 result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3 # latest patch version of 0.2.x
-===
+```
+```yaml
 image: set-labels
 tag: "<0.2"
 ---
 result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 # latest patch version of 0.1.x
-===
+```
+```yaml
 image: set-labels:v0.2.1
 tag: v0.2.3
 ---
 result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
-===
+```
+```yaml
 image: set-labels@sha256:23631a784be4828a37ae98478df9d586840220ef87037c7703f6c61dcf8e49ac
 tag: v0.2.3
 ---
 result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
-===
+```
+```yaml
 image: set-labels:v0.2.1
 tag: de3c135
 ---

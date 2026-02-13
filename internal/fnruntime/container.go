@@ -150,14 +150,19 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 		return err
 	}
 
-	tagResolver := &TagResolver{
-		lister: &RegClientLister{
-			client: regclient.New(regclient.WithUserAgent(UserAgent)),
-		},
-	}
-	f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
-	if err != nil {
-		return err
+	if f.Tag != "" {
+		tagResolver := &TagResolver{
+			lister: &RegClientLister{
+				client: regclient.New(
+					regclient.WithUserAgent(UserAgent),
+					regclient.WithDockerCreds(),
+				),
+			},
+		}
+		f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
+		if err != nil {
+			return err
+		}
 	}
 
 	switch runtime {

@@ -66,7 +66,7 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 			}
 		}
 
-		return "", fmt.Errorf("no remote tag matched the version constraint %q from %d possible tags", tag, len(filteredVersions))
+		return "", fmt.Errorf("no remote tag matched the version constraint %q from %s", tag, abbrevSlice(filteredVersions))
 	} else {
 		klog.Warningf("Tag %q could not be parsed as a semantic version (\"%s\") or constraint (\"%s\"), will use it literally",
 			tag, versionErr, constraintErr)
@@ -85,8 +85,8 @@ func filterParseSortTags(tags []string) []*semver.Version {
 			continue
 		}
 
-		if strings.HasPrefix(tag, "master-git-") {
-			klog.V(3).Infof("Skipping tag %q", tag)
+		if strings.Contains(tag, "-git-") {
+			klog.V(3).Infof("Skipping tag %q because it looks like a git-based build tag", tag)
 			continue
 		}
 
@@ -104,4 +104,20 @@ func filterParseSortTags(tags []string) []*semver.Version {
 	})
 
 	return versions
+}
+
+func abbrevSlice(slice []*semver.Version) string {
+	switch len(slice) {
+	case 0:
+		return "[]"
+	case 1, 2, 3:
+		out := make([]string, len(slice))
+		for i, v := range slice {
+			out[i] = v.Original()
+		}
+		return "[" + strings.Join(out, ",") + "]"
+	default:
+		return fmt.Sprintf("[%s, %s, ..., %s]",
+			slice[0].Original(), slice[1].Original(), slice[len(slice)-1].Original())
+	}
 }
