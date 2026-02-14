@@ -6,6 +6,7 @@ require (
 	github.com/bytecodealliance/wasmtime-go v1.0.0
 	github.com/cpuguy83/go-md2man/v2 v2.0.7
 	github.com/go-errors/errors v1.5.1
+	github.com/google/cel-go v0.22.1
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.20.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
