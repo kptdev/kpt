@@ -106,6 +106,8 @@ type RegClientLister struct {
 	client *regclient.RegClient
 }
 
+var _ TagLister = &RegClientLister{}
+
 func (l *RegClientLister) List(ctx context.Context, image string) ([]string, error) {
 	ref, err := regclientref.New(image)
 	if err != nil {
