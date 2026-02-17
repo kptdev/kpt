@@ -35,7 +35,7 @@ func init() {
 
 const (
 	noInventoryObjErrorMsg = `
-Error: Package uninitialized. Please run "kpt live init" command.
+Error: Package uninitialized. Please run "kpt live init --name=<deployment-name>" command.
 
 The package needs to be initialized to generate the template
 which will store state for resource sets. This state is
@@ -70,6 +70,11 @@ Error: Inventory information has already been added to the package Kptfile objec
 
 	multipleResourceGroupsMsg = `
 Error: Multiple ResourceGroup objects found. Please make sure at most one ResourceGroup object exists within the package.
+`
+
+	//nolint:lll
+	legacyRGMissingInvIDMsg = `
+Error: Found existing ResourceGroup without an inventory-id label. To automatically repair and migrate this legacy ResourceGroup, run this command again with the --force flag.
 `
 )
 
@@ -119,6 +124,11 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	if _, ok := errors.AsType[*pkg.MultipleResourceGroupsError](err); ok {
 		msg := multipleResourceGroupsMsg
+		return ResolvedResult{Message: msg}, true
+	}
+
+	if _, ok := errors.AsType[*initialization.LegacyRGMissingInventoryIDError](err); ok {
+		msg := legacyRGMissingInvIDMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
