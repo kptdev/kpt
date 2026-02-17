@@ -381,13 +381,30 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 			return nil
 		}
 
-		// Make sure resourcegroup file does not exist.
+		// Check if resourcegroup file already exists.
 		_, rgFileErr := os.Stat(filepath.Join(dir, mr.rgFile))
 		switch {
 		case rgFileErr == nil:
-			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
-		case err != nil && !goerrors.Is(err, os.ErrNotExist):
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+			if !mr.force {
+				// When not in force mode, check if this is a legacy RG
+				// (missing inventory-id) and surface the specific error.
+				rg, readErr := p.ReadRGFile(mr.rgFile)
+				if readErr == nil {
+					invID := rg.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+					if invID == "" {
+						return errors.E(op, types.UniquePath(dir), &initialization.LegacyRGMissingInventoryIDError{})
+					}
+				}
+				return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
+			}
+			// Force mode: proceed to overwrite the existing RG file.
+		case rgFileErr != nil && !goerrors.Is(rgFileErr, os.ErrNotExist):
+			return errors.E(op, errors.IO, types.UniquePath(dir), rgFileErr)
+		}
+
+		if kf.Inventory.Name == "" {
+			return errors.E(op, types.UniquePath(dir),
+				fmt.Errorf("Kptfile inventory has empty name; re-run: kpt live init --name=<name>"))
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{
@@ -478,8 +495,15 @@ func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string
 
 		if err != nil {
 			var invExistsError *initialization.InvExistsError
+			var legacyErr *initialization.LegacyRGMissingInventoryIDError
 			if errors.As(err, &invExistsError) {
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
+			} else if errors.As(err, &legacyErr) {
+				// Legacy RG without inventory-id detected. If force is
+				// not set, surface the error so the user sees repair
+				// instructions. (When force *is* set, ConfigureInventoryInfo
+				// already overwrites the RG, so we never land here.)
+				return err
 			} else {
 				return err
 			}
