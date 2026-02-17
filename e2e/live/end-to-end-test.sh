@@ -764,8 +764,8 @@ assertContains "name: inventory-18030002"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
-echo "kpt live init --quiet --force --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --quiet --force --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --quiet --force --name=inventory-18030002 e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --quiet --force --name=inventory-18030002 e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "initializing resourcegroup"
 printResult
 
