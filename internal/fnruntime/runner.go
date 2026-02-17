@@ -157,7 +157,7 @@ func NewRunner(
 	var evaluator *CELEvaluator
 	if f.Condition != "" {
 		var err error
-		evaluator, err = NewCELEvaluator()
+		evaluator, err = NewCELEvaluator(f.Condition)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CEL evaluator: %w", err)
 		}
@@ -221,8 +221,8 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 	pr := printer.FromContextOrDie(fr.ctx)
 	
 	// Check condition before executing function
-	if fr.condition != "" && fr.evaluator != nil {
-		shouldExecute, err := fr.evaluator.EvaluateCondition(fr.condition, input)
+	if fr.evaluator != nil {
+		shouldExecute, err := fr.evaluator.EvaluateCondition(fr.ctx, input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
 		}

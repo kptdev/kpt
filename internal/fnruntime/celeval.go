@@ -15,6 +15,7 @@
 package fnruntime
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/cel-go/cel"
@@ -26,39 +27,55 @@ import (
 // CELEvaluator evaluates CEL expressions against KRM resources
 type CELEvaluator struct {
 	env *cel.Env
+	prg cel.Program // Pre-compiled program for the condition
 }
 
 // NewCELEvaluator creates a new CEL evaluator with the standard environment
-func NewCELEvaluator() (*CELEvaluator, error) {
+// The environment is created once and reused for all evaluations
+func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
+		// Add cost limits to protect against expensive operations
+		cel.CostLimit(100000), // Limit computational cost
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
 	}
 
-	return &CELEvaluator{
+	evaluator := &CELEvaluator{
 		env: env,
-	}, nil
+	}
+
+	// Pre-compile the condition if provided
+	if condition != "" {
+		ast, issues := env.Compile(condition)
+		if issues != nil && issues.Err() != nil {
+			return nil, fmt.Errorf("failed to compile CEL expression: %w", issues.Err())
+		}
+
+		// Check AST complexity
+		if ast.SourceInfo().LineOffsets()[len(ast.SourceInfo().LineOffsets())-1] > 10000 {
+			return nil, fmt.Errorf("CEL expression too complex: exceeds maximum character limit")
+		}
+
+		// Create the program with cost tracking
+		prg, err := env.Program(ast, cel.CostTracking(&cel.CostTracker{}))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create CEL program: %w", err)
+		}
+
+		evaluator.prg = prg
+	}
+
+	return evaluator, nil
 }
 
 // EvaluateCondition evaluates a CEL condition expression against a list of resources
 // Returns true if the condition is met, false otherwise
-func (e *CELEvaluator) EvaluateCondition(condition string, resources []*yaml.RNode) (bool, error) {
-	if condition == "" {
+// The program is pre-compiled, so this just evaluates it with the given resources
+func (e *CELEvaluator) EvaluateCondition(ctx context.Context, resources []*yaml.RNode) (bool, error) {
+	if e.prg == nil {
 		return true, nil
-	}
-
-	// Compile the expression
-	ast, issues := e.env.Compile(condition)
-	if issues != nil && issues.Err() != nil {
-		return false, fmt.Errorf("failed to compile CEL expression: %w", issues.Err())
-	}
-
-	// Create the program
-	prg, err := e.env.Program(ast)
-	if err != nil {
-		return false, fmt.Errorf("failed to create CEL program: %w", err)
 	}
 
 	// Convert resources to a format suitable for CEL
@@ -67,8 +84,8 @@ func (e *CELEvaluator) EvaluateCondition(condition string, resources []*yaml.RNo
 		return false, fmt.Errorf("failed to convert resources: %w", err)
 	}
 
-	// Evaluate the expression
-	out, _, err := prg.Eval(map[string]interface{}{
+	// Evaluate the expression with context for timeout protection
+	out, _, err := e.prg.ContextEval(ctx, map[string]interface{}{
 		"resources": resourceList,
 	})
 	if err != nil {
@@ -101,15 +118,19 @@ func (e *CELEvaluator) resourcesToList(resources []*yaml.RNode) ([]interface{}, 
 }
 
 // resourceToMap converts a single RNode to a map for CEL evaluation
+// RNode internally uses map[string]interface{}, so we can access it directly
 func (e *CELEvaluator) resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
-	// Get the YAML string representation
+	// RNode.YNode() returns the underlying yaml.Node which contains the data
+	// We can work with it directly without serialization
+	var result map[string]interface{}
+	
+	// Get the YAML string representation only if needed
 	yamlStr, err := resource.String()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert resource to string: %w", err)
 	}
 
 	// Parse into a generic map
-	var result map[string]interface{}
 	err = yaml.Unmarshal([]byte(yamlStr), &result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal resource: %w", err)

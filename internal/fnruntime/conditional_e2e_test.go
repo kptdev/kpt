@@ -25,6 +25,7 @@ import (
 	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/fnresult"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -151,7 +152,7 @@ metadata:
 			fnResult := &fnresult.Result{}
 			fnResults := &fnresult.ResultList{}
 			
-			evaluator, err := NewCELEvaluator()
+			evaluator, err := NewCELEvaluator(tc.condition)
 			require.NoError(t, err)
 
 			runner := &FunctionRunner{
@@ -254,10 +255,10 @@ data:
 				input = append(input, rnode)
 			}
 
-			evaluator, err := NewCELEvaluator()
+			evaluator, err := NewCELEvaluator(tc.condition)
 			require.NoError(t, err)
 
-			result, err := evaluator.EvaluateCondition(tc.condition, input)
+			result, err := evaluator.EvaluateCondition(ctx, input)
 			require.NoError(t, err)
 			assert.Equal(t, tc.shouldExecute, result)
 		})
