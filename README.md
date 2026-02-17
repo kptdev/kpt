@@ -35,7 +35,7 @@ The best place to get started and learn about specific features of kpt is to vis
 
 ## Install kpt
 
-kpt installation instructions can be found on [kpt.dev/installation](https://kpt.dev/installation/)
+kpt installation instructions can be found on [kpt.dev/installation/kpt-cli](https://kpt.dev/installation/kpt-cli/)
 
 ## kpt components
 
