@@ -34,7 +34,7 @@ func init() {
 
 const (
 	noInventoryObjErrorMsg = `
-Error: Package uninitialized. Please run "kpt live init" command.
+Error: Package uninitialized. Please run "kpt live init --name=<deployment-name>" command.
 
 The package needs to be initialized to generate the template
 which will store state for resource sets. This state is
@@ -133,7 +133,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	if errors.As(err, &inventoryInfoValidationError) {
 		msg := "Error: The inventory information is not valid."
 		msg += " Please update the information in the ResourceGroup file or provide information with the command line flags."
-		msg += " To generate the inventory information the first time, use the 'kpt live init' command."
+		msg += " To generate the inventory information the first time, use the 'kpt live init --name=<deployment-name>' command."
 
 		msg += "\nDetails:\n"
 		for _, v := range inventoryInfoValidationError.Violations {

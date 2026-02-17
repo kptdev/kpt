@@ -171,13 +171,15 @@ Flags:
     Defaults to false.
   
   --inventory-id:
-    Inventory identifier for the package. This is used to detect overlap between
-    packages that might use the same name and namespace for the inventory object.
-    Defaults to an auto-generated value.
+    (Advanced) Override the auto-derived inventory ID. Only needed to adopt a
+    legacy ResourceGroup with a non-standard ID. Normally this is automatically
+    derived from --name and the namespace.
   
   --name:
-    The name for the ResourceGroup resource that contains the inventory
-    for the package. Defaults to the name of the package.
+    A stable deployment name for this package instance (required). This
+    identifies the set of resources managed on the cluster and must remain
+    consistent across re-initializations. For example, if you delete and
+    re-fetch the package, use the same --name to preserve resource ownership.
   
   --namespace:
     The namespace for the ResourceGroup resource that contains the inventory
@@ -191,10 +193,10 @@ Flags:
 `
 var InitExamples = `
   # initialize a package in the current directory.
-  $ kpt live init
+  $ kpt live init --name=my-app
 
   # initialize a package with explicit namespace for the ResourceGroup.
-  $ kpt live init --namespace=test my-dir
+  $ kpt live init --name=my-app --namespace=test my-dir
 `
 
 var InstallResourceGroupShort = `Install the ResourceGroup CRD in the cluster.`

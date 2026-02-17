@@ -17,9 +17,8 @@ package init
 import (
 	"os"
 	"path/filepath"
-	"regexp"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/testutil"
@@ -28,6 +27,7 @@ import (
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -70,8 +70,6 @@ inventory:
     namespace: test-namespace
     inventoryID: ` + testInventoryID + "\n"
 
-var testTime = time.Unix(5555555, 66666666)
-
 var resourceGroupInventory = `
 apiVersion: kpt.dev/v1alpha1
 kind: ResourceGroup
@@ -80,49 +78,111 @@ metadata:
   namespace: test-namespace
 `
 
-func TestCmd_generateID(t *testing.T) {
+func TestValidateName(t *testing.T) {
+	testCases := map[string]struct {
+		name        string
+		expectError bool
+		errContains string
+	}{
+		"valid lowercase name": {
+			name: "my-app-staging",
+		},
+		"valid name with dots": {
+			name: "my.app.v1",
+		},
+		"empty string is rejected": {
+			name:        "",
+			expectError: true,
+			errContains: "--name is required",
+		},
+		"whitespace-only is rejected": {
+			name:        "   ",
+			expectError: true,
+			errContains: "--name is required",
+		},
+		"uppercase is rejected": {
+			name:        "MyApp",
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
+		},
+		"underscore is rejected": {
+			name:        "my_app",
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
+		},
+		"special chars are rejected": {
+			name:        "my-app!",
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
+		},
+		"starts with dash is rejected": {
+			name:        "-my-app",
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
+		},
+		"exceeds 253 chars is rejected": {
+			name:        strings.Repeat("a", 254),
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			result, err := validateName(tc.name)
+			if tc.expectError {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.errContains)
+				assert.Empty(t, result)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, strings.TrimSpace(tc.name), result)
+			}
+		})
+	}
+}
+
+func TestCmd_generateHash(t *testing.T) {
 	testCases := map[string]struct {
 		namespace string
 		name      string
-		t         time.Time
 		expected  string
 		isError   bool
 	}{
 		"Empty inventory namespace is an error": {
 			name:      inventoryName,
 			namespace: "",
-			t:         testTime,
 			isError:   true,
 		},
 		"Empty inventory name is an error": {
 			name:      "",
 			namespace: inventoryNamespace,
-			t:         testTime,
 			isError:   true,
 		},
-		"Namespace/name hash is valid": {
+		"Namespace/name hash is deterministic": {
 			name:      inventoryName,
 			namespace: inventoryNamespace,
-			t:         testTime,
-			expected:  "fa6dc0d39b0465b90f101c2ad50d50e9b4022f23-5555555066666666",
+			expected:  "b71156e872dad0b8efe1ce0303da20ef583453d6",
+			isError:   false,
+		},
+		"Same inputs produce same hash": {
+			name:      inventoryName,
+			namespace: inventoryNamespace,
+			expected:  "b71156e872dad0b8efe1ce0303da20ef583453d6",
 			isError:   false,
 		},
 	}
 
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
-			actual, err := generateID(tc.namespace, tc.name, tc.t)
-			// Check if there should be an error
+			actual, err := generateHash(tc.namespace, tc.name)
 			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
+				require.Error(t, err)
 				return
 			}
-			assert.NoError(t, err)
-			if tc.expected != actual {
-				t.Errorf("expecting generated id (%s), got (%s)", tc.expected, actual)
-			}
+			require.NoError(t, err)
+			assert.Len(t, actual, 40, "SHA-1 hex must be 40 chars (valid label value)")
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -137,19 +197,53 @@ func TestCmd_Run(t *testing.T) {
 		inventoryID       string
 		force             bool
 		expectedErrorMsg  string
-		expectAutoGenID   bool
 		expectedInventory kptfilev1.Inventory
 	}{
-		"Fields are defaulted if not provided": {
-			kptfile:         kptFile,
-			name:            "",
-			rgfilename:      "resourcegroup.yaml",
-			namespace:       "testns",
-			inventoryID:     "",
-			expectAutoGenID: true,
+		"Missing name is an error": {
+			kptfile:          kptFile,
+			name:             "",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			inventoryID:      "",
+			expectedErrorMsg: "--name is required",
+		},
+		"Whitespace-only name is rejected": {
+			kptfile:          kptFile,
+			name:             "   ",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			inventoryID:      "",
+			expectedErrorMsg: "--name is required",
+		},
+		"Invalid DNS name is rejected": {
+			kptfile:          kptFile,
+			name:             "My_App!",
+			rgfilename:       "resourcegroup.yaml",
+			namespace:        "testns",
+			inventoryID:      "",
+			expectedErrorMsg: "not a valid Kubernetes resource name",
+		},
+		"Explicit inventory-id is preserved when both flags are set": {
+			kptfile:     kptFile,
+			rgfilename:  "resourcegroup.yaml",
+			name:        "my-pkg",
+			namespace:   "my-ns",
+			inventoryID: "custom-legacy-id-123",
 			expectedInventory: kptfilev1.Inventory{
-				Namespace: "testns",
-				Name:      "inventory-*",
+				Namespace:   "my-ns",
+				Name:        "my-pkg",
+				InventoryID: "custom-legacy-id-123",
+			},
+		},
+		"Provided name derives deterministic inventory ID": {
+			kptfile:     kptFile,
+			rgfilename:  "resourcegroup.yaml",
+			name:        "my-pkg",
+			namespace:   "my-ns",
+			inventoryID: "",
+			expectedInventory: kptfilev1.Inventory{
+				Namespace: "my-ns",
+				Name:      "my-pkg",
 			},
 		},
 		"Provided values are used": {
@@ -313,42 +407,87 @@ func TestCmd_Run(t *testing.T) {
 			}
 
 			expectedInv := tc.expectedInventory
-			assertInventoryName(t, expectedInv.Name, actualInv.Name)
+			assert.Equal(t, expectedInv.Name, actualInv.Name)
 			assert.Equal(t, expectedInv.Namespace, actualInv.Namespace)
-			if tc.expectAutoGenID {
-				assertGenInvID(t, actualInv.Name, actualInv.Namespace, actualInv.InventoryID)
-			} else {
+			if expectedInv.InventoryID != "" {
 				assert.Equal(t, expectedInv.InventoryID, actualInv.InventoryID)
+			} else {
+				// Verify deterministic derivation: same name+namespace always yields same hash.
+				expectedHash, err := generateHash(actualInv.Namespace, actualInv.Name)
+				assert.NoError(t, err)
+				assert.Equal(t, expectedHash, actualInv.InventoryID)
 			}
 		})
 	}
 }
 
-func assertInventoryName(t *testing.T, expected, actual string) bool {
-	re := regexp.MustCompile(`^inventory-[0-9]+$`)
-	if expected == "inventory-*" {
-		if re.MatchString(actual) {
-			return true
-		}
-		t.Errorf("expected value on the format 'inventory-[0-9]+', but found %q", actual)
+func TestGenerateHash_DifferentInputs(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		ns       string
+		name     string
+		expected string
+	}{
+		{"short pair ab:cd", "ab", "cd", "6d6a43180d720d2526a9c90829cde33f9b36dbdb"},
+		{"my-ns:my-pkg", "my-ns", "my-pkg", "6ebf2b6944e9fc957759dd2405ff3879d06197f7"},
+		{"ns-a:name-a", "ns-a", "name-a", "01a2429bd398b1d880a145b9f6a40c091119ca7a"},
+		{"ns-a:name-b", "ns-a", "name-b", "a7a0df7b43e5aafeb3161a480aa7e68fdc8f3201"},
+		{"ns-b:name-a", "ns-b", "name-a", "5ba3e66f5bcd5729b91904f0a7fcc78141644db6"},
 	}
-	return assert.Equal(t, expected, actual)
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			got, err := generateHash(tc.ns, tc.name)
+			require.NoError(t, err)
+			assert.Len(t, got, 40)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
+
+	// Changing either namespace or name must change the hash.
+	h1, _ := generateHash("ns-a", "name-a")
+	h2, _ := generateHash("ns-a", "name-b")
+	h3, _ := generateHash("ns-b", "name-a")
+	assert.NotEqual(t, h1, h2, "different name should produce different hash")
+	assert.NotEqual(t, h1, h3, "different namespace should produce different hash")
+	assert.NotEqual(t, h2, h3, "both differ should produce different hash")
 }
 
-func assertGenInvID(t *testing.T, name, namespace, actual string) bool {
-	re := regexp.MustCompile(`^([a-z0-9]+)-[0-9]+$`)
-	match := re.FindStringSubmatch(actual)
-	if len(match) != 2 {
-		t.Errorf("unexpected format for autogenerated inventoryID")
-		return false
-	}
-	prefix, err := generateHash(namespace, name)
-	if err != nil {
-		panic(err)
-	}
-	if got, want := match[1], prefix; got != want {
-		t.Errorf("expected prefix %q, but found %q", want, got)
-		return false
-	}
-	return true
+func TestGenerateHash_NoSeparatorAmbiguity(t *testing.T) {
+	// These inputs would collide without length-prefixed encoding:
+	//   "a" + "bcd"  vs  "abc" + "d"
+	// With the format "%d:%s:%d:%s":
+	//   "1:a:3:bcd"  vs  "3:abc:1:d"
+	h1, err := generateHash("a", "bcd")
+	require.NoError(t, err)
+	h2, err := generateHash("abc", "d")
+	require.NoError(t, err)
+	assert.NotEqual(t, h1, h2, "length-prefixed encoding must prevent separator ambiguity")
+
+	// Also verify the exact expected values.
+	assert.Equal(t, "a1724ac2a61ec038d055881eb4403c74ab4256e9", h1)
+	assert.Equal(t, "f99cca29ebcfd3bca8c3605d253e4fec27b917ae", h2)
+}
+
+func TestCmd_MissingNameFlagReturnsError(t *testing.T) {
+	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	w, clean := testutil.SetupWorkspace(t)
+	defer clean()
+	err := os.WriteFile(filepath.Join(w.WorkspaceDirectory, "Kptfile"),
+		[]byte(kptFile), 0600)
+	require.NoError(t, err)
+
+	revert := testutil.Chdir(t, w.WorkspaceDirectory)
+	defer revert()
+
+	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner.RGFileName = "resourcegroup.yaml"
+	runner.Command.SetArgs([]string{})
+
+	err = runner.Command.Execute()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "--name is required")
 }

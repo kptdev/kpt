@@ -17,13 +17,12 @@ package init
 import (
 	"context"
 	"crypto/sha1"
+	"encoding/hex"
 	goerrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/internal/pkg"
@@ -36,15 +35,18 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
-	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/config"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const defaultInventoryName = "inventory"
+// errNameRequired is returned when --name is not provided or blank.
+var errNameRequired = fmt.Errorf(
+	"--name is required: provide a stable deployment name " +
+		"(e.g. --name=my-app-staging) that remains consistent across re-initializations")
 
 // InvExistsError defines new error when the inventory
 // values have already been set on the Kptfile.
@@ -90,11 +92,12 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	}
 	r.Command = cmd
 
-	cmd.Flags().StringVar(&r.Name, "name", "", "Inventory object name")
+	cmd.Flags().StringVar(&r.Name, "name", "", "Stable deployment name for this package (required)")
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
-	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Inventory id for the package")
-	cmd.Flags().StringVar(&r.RGFileName, "rg-file", rgfilev1alpha1.RGFileName, "Name of the file holding the ResourceGroup resource.")
+	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Override the auto-derived inventory ID (advanced)")
+	_ = cmd.Flags().MarkHidden("inventory-id")
+	cmd.Flags().StringVar(&r.RGFileName, "rg-file", rgfilev1alpha1.RGFileName, "Filename for the ResourceGroup CR")
 	return r
 }
 
@@ -126,6 +129,11 @@ func (r *Runner) preRunE(_ *cobra.Command, _ []string) error {
 
 func (r *Runner) runE(_ *cobra.Command, args []string) error {
 	const op errors.Op = "cmdliveinit.runE"
+	name, err := validateName(r.Name)
+	if err != nil {
+		return errors.E(op, err)
+	}
+	r.Name = name
 	if len(args) == 0 {
 		// default to the current working directory
 		cwd, err := os.Getwd()
@@ -193,15 +201,19 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 		pr.Printf("initializing %q data (namespace: %s)...", c.RGFileName, namespace)
 	}
 
-	// Autogenerate the name if it is not provided through the flag.
+	// Internal callers (e.g. migrate) may pass empty Name with an explicit
+	// InventoryID; derive a stable name from the package directory.
 	if c.Name == "" {
-		randomSuffix := common.RandomStr()
-		c.Name = fmt.Sprintf("%s-%s", defaultInventoryName, randomSuffix)
+		if c.InventoryID != "" {
+			c.Name = filepath.Base(c.Pkg.UniquePath.String())
+		} else {
+			return errors.E(op, c.Pkg.UniquePath, errNameRequired)
+		}
 	}
 
-	// Autogenerate the inventory ID if not provided through the flag.
+	// Derive inventory ID from namespace+name unless explicitly overridden.
 	if c.InventoryID == "" {
-		c.InventoryID, err = generateID(namespace, c.Name, time.Now())
+		c.InventoryID, err = generateHash(namespace, c.Name)
 		if err != nil {
 			return errors.E(op, c.Pkg.UniquePath, err)
 		}
@@ -262,9 +274,8 @@ func createRGFile(p *pkg.Pkg, inv *kptfilev1.Inventory, filename string, force b
 	if rg != nil && !force {
 		return errors.E(op, p.UniquePath, &InvInRGExistsError{})
 	}
-	// Initialize new resourcegroup object, as rg should have been nil.
+	// Initialize new ResourceGroup and populate inventory fields.
 	rg = &rgfilev1alpha1.ResourceGroup{ResourceMeta: rgfilev1alpha1.DefaultMeta}
-	// // Finally, set the inventory parameters in the ResourceGroup object and write it.
 	rg.Name = inv.Name
 	rg.Namespace = inv.Namespace
 	rg.Labels = map[string]string{rgfilev1alpha1.RGInventoryIDLabel: inv.InventoryID}
@@ -302,33 +313,30 @@ func writeRGFile(dir string, rg *rgfilev1alpha1.ResourceGroup, filename string) 
 	return nil
 }
 
-// generateID returns the string which is a SHA1 hash of the passed namespace
-// and name, with the unix timestamp string concatenated. Returns an error
-// if either the namespace or name are empty.
-func generateID(namespace string, name string, t time.Time) (string, error) {
-	const op errors.Op = "cmdliveinit.generateID"
-	hashStr, err := generateHash(namespace, name)
-	if err != nil {
-		return "", errors.E(op, err)
+// generateHash returns a deterministic 40-char hex inventory ID from namespace
+// and name using SHA-1. Both fields are length-prefixed to prevent collisions
+// (e.g. ns="ab", name="cd" vs ns="a", name="bcd").
+func generateHash(namespace, name string) (string, error) {
+	if namespace == "" || name == "" {
+		return "", fmt.Errorf("cannot generate inventory ID: namespace and name must be non-empty")
 	}
-	timeStr := strconv.FormatInt(t.UTC().UnixNano(), 10)
-	return fmt.Sprintf("%s-%s", hashStr, timeStr), nil
+	h := sha1.New()
+	fmt.Fprintf(h, "%d:%s:%d:%s", len(namespace), namespace, len(name), name)
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// generateHash returns the SHA1 hash of the concatenated "namespace:name" string,
-// or an error if either namespace or name is empty.
-func generateHash(namespace string, name string) (string, error) {
-	const op errors.Op = "cmdliveinit.generateHash"
-	if len(namespace) == 0 || len(name) == 0 {
-		return "", errors.E(op,
-			fmt.Errorf("can not generate hash with empty namespace or name"))
+// validateName rejects empty, whitespace-only, and non-RFC-1123 names.
+// Returns the trimmed name on success.
+func validateName(name string) (string, error) {
+	trimmed := strings.TrimSpace(name)
+	if trimmed == "" {
+		return "", errNameRequired
 	}
-	str := fmt.Sprintf("%s:%s", namespace, name)
-	h := sha1.New()
-	if _, err := h.Write([]byte(str)); err != nil {
-		return "", errors.E(op, err)
+	if errs := validation.IsDNS1123Subdomain(trimmed); len(errs) > 0 {
+		return "", fmt.Errorf("--name %q is not a valid Kubernetes resource name: %s",
+			trimmed, strings.Join(errs, "; "))
 	}
-	return fmt.Sprintf("%x", (h.Sum(nil))), nil
+	return trimmed, nil
 }
 
 // kptfileInventoryEmpty returns true if the Inventory structure
