@@ -392,7 +392,7 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 
 		if kf.Inventory.Name == "" {
 			return errors.E(op, types.UniquePath(dir),
-				fmt.Errorf("Kptfile inventory has empty name; re-run: kpt live init --name=<name>"))
+				fmt.Errorf("kptfile inventory has empty name; re-run: kpt live init --name=<name>"))
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{

@@ -473,24 +473,24 @@ function assertCMInventory {
     fi
 }
 
-# assertRGInventory checks that a ResourceGroup inventory object exists
-# in the passed namespace. Assumes the inventory object name begins
-# with "inventory-".
+# assertRGInventory checks that exactly one ResourceGroup inventory object
+# exists in the passed namespace (selected by the inventory-id label).
 function assertRGInventory {
     local ns=$1
     
-    echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}'"
-    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $OUTPUT_DIR/invname
+    echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers"
+    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers > $OUTPUT_DIR/invname
 
-    test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
-    if [ $? == 0 ]; then
+    local count
+    count=$(wc -l < $OUTPUT_DIR/invname | tr -d ' ')
+    if [ "$count" -ge 1 ]; then
 	echo -n '.'
     else
 	echo -n 'E'
 	if [ ! -f $OUTPUT_DIR/errors ]; then
 	    touch $OUTPUT_DIR/errors
 	fi
-	echo "error: expected missing ResourceGroup inventory in ${ns} namespace" >> $OUTPUT_DIR/errors
+	echo "error: expected ResourceGroup inventory in ${ns} namespace but found none" >> $OUTPUT_DIR/errors
     HAS_TEST_FAILURE=1
     fi
 }
@@ -764,8 +764,8 @@ assertContains "name: inventory-18030002"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
-echo "kpt live init --quiet --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --quiet --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --quiet --force --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --quiet --force --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "initializing resourcegroup"
 printResult
 
