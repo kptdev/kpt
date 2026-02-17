@@ -35,8 +35,6 @@ type CELEvaluator struct {
 func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
-		// Add cost limits to protect against expensive operations
-		cel.CostLimit(100000), // Limit computational cost
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
@@ -58,8 +56,8 @@ func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 			return nil, fmt.Errorf("CEL expression too complex: exceeds maximum character limit")
 		}
 
-		// Create the program with cost tracking
-		prg, err := env.Program(ast, cel.CostTracking(&cel.CostTracker{}))
+		// Create the program
+		prg, err := env.Program(ast)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CEL program: %w", err)
 		}
@@ -84,8 +82,8 @@ func (e *CELEvaluator) EvaluateCondition(ctx context.Context, resources []*yaml.
 		return false, fmt.Errorf("failed to convert resources: %w", err)
 	}
 
-	// Evaluate the expression with context for timeout protection
-	out, _, err := e.prg.ContextEval(ctx, map[string]interface{}{
+	// Evaluate the expression
+	out, _, err := e.prg.Eval(map[string]interface{}{
 		"resources": resourceList,
 	})
 	if err != nil {
