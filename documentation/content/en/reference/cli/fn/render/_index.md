@@ -77,7 +77,7 @@ PKG_PATH:
 #### Environment Variables
 
 ```shell
-KRM_FN_RUNTIMETIME:
+KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
@@ -123,7 +123,7 @@ $ kpt fn render -o stdout \
 
 ```shell
 # Render my-package-dir with podman as runtime for functions
-$ KRM_FN_RUNTIMETIME=podman kpt fn render my-package-dir
+$ KRM_FN_RUNTIME=podman kpt fn render my-package-dir
 ```
 
 ```shell

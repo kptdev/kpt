@@ -31,6 +31,8 @@ import (
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient"
+	regclientref "github.com/regclient/regclient/types/ref"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
@@ -48,6 +50,8 @@ const (
 	defaultLongTimeout                             = 5 * time.Minute
 	versionCommandTimeout                          = 5 * time.Second
 	minSupportedDockerVersion string               = "v20.10.0"
+
+	UserAgent = "regclient/kpt"
 
 	dockerBin  string = "docker"
 	podmanBin  string = "podman"
@@ -76,6 +80,7 @@ type ContainerFn struct {
 
 	// Image is the container image to run
 	Image string
+	Tag   string
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy runneroptions.ImagePullPolicy
 	// Container function will be killed after this timeour.
@@ -94,6 +99,29 @@ type ContainerFn struct {
 	// FnResult is used to store the information about the result from
 	// the function.
 	FnResult *fnresult.Result
+}
+
+// RegClientLister is a TagLister using the regclient module to list remote OCI tags.
+type RegClientLister struct {
+	client *regclient.RegClient
+}
+
+var _ TagLister = &RegClientLister{}
+
+func (l *RegClientLister) List(ctx context.Context, image string) ([]string, error) {
+	ref, err := regclientref.New(image)
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() { _ = l.client.Close(ctx, ref) }()
+
+	tagList, err := l.client.TagList(ctx, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return tagList.GetTags()
 }
 
 func (r ContainerRuntime) GetBin() string {
@@ -122,6 +150,21 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	if f.Tag != "" {
+		tagResolver := &TagResolver{
+			lister: &RegClientLister{
+				client: regclient.New(
+					regclient.WithUserAgent(UserAgent),
+					regclient.WithDockerCreds(),
+				),
+			},
+		}
+		f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
+		if err != nil {
+			return err
+		}
 	}
 
 	switch runtime {
@@ -193,8 +236,7 @@ func (f *ContainerFn) getCmd(binName string) (*exec.Cmd, context.CancelFunc) {
 	for _, storageMount := range f.StorageMounts {
 		args = append(args, "--mount", storageMount.String())
 	}
-	args = append(args,
-		NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
+	args = append(args, NewContainerEnvFromStringSlice(f.Env).GetDockerFlags()...)
 	args = append(args, f.Image)
 	// setup container run timeout
 	timeout := defaultLongTimeout

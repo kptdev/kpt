@@ -15,10 +15,10 @@
 
 set -eo pipefail
 
-KRM_FN_RUNTIMETIME="${KRM_FN_RUNTIMETIME:=docker}"
+KRM_FN_RUNTIME="${KRM_FN_RUNTIME:=docker}"
 
 # Function ghcr.io/kptdev/krm-functions-catalog/foo:v0.1 prints "foo" to stderr and
 # function ghcr.io/kptdev/krm-functions-catalog/bar:v0.1 prints "bar" to stderr.
 # We intentionally tag a wrong image as pull ghcr.io/kptdev/krm-functions-catalog/bar:v0.1
-${KRM_FN_RUNTIMETIME} pull ghcr.io/kptdev/krm-functions-catalog/foo:v0.1
-${KRM_FN_RUNTIMETIME} tag ghcr.io/kptdev/krm-functions-catalog/foo:v0.1 ghcr.io/kptdev/krm-functions-catalog/bar:v0.1
+${KRM_FN_RUNTIME} pull ghcr.io/kptdev/krm-functions-catalog/foo:v0.1
+${KRM_FN_RUNTIME} tag ghcr.io/kptdev/krm-functions-catalog/foo:v0.1 ghcr.io/kptdev/krm-functions-catalog/bar:v0.1

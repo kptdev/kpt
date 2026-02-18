@@ -1,0 +1,14 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
+      tag: "0.4.1 - 0.4.3"
+      configMap:
+        namespace: staging
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels
+      tag: "~0.2"
+      configMap:
+        tier: backend

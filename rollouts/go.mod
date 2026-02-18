@@ -1,6 +1,6 @@
 module github.com/kptdev/kpt/rollouts
 
-go 1.25.6
+go 1.25.7
 
 require (
 	cloud.google.com/go/iam v0.13.0
