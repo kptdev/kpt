@@ -116,19 +116,16 @@ func (e *CELEvaluator) resourcesToList(resources []*yaml.RNode) ([]interface{}, 
 }
 
 // resourceToMap converts a single RNode to a map for CEL evaluation
-// RNode internally uses map[string]interface{}, so we can access it directly
+// Note: We serialize to string then unmarshal because RNode's internal YNode structure
+// is not directly compatible with CEL's type system. While this has a memory cost,
+// it ensures correct CEL evaluation of nested fields and complex structures.
 func (e *CELEvaluator) resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
-	// RNode.YNode() returns the underlying yaml.Node which contains the data
-	// We can work with it directly without serialization
-	var result map[string]interface{}
-	
-	// Get the YAML string representation only if needed
 	yamlStr, err := resource.String()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert resource to string: %w", err)
 	}
 
-	// Parse into a generic map
+	var result map[string]interface{}
 	err = yaml.Unmarshal([]byte(yamlStr), &result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal resource: %w", err)
