@@ -116,9 +116,9 @@ func (e *CELEvaluator) resourcesToList(resources []*yaml.RNode) ([]interface{}, 
 }
 
 // resourceToMap converts a single RNode to a map for CEL evaluation
-// Note: We serialize to string then unmarshal because RNode's internal YNode structure
-// is not directly compatible with CEL's type system. While this has a memory cost,
-// it ensures correct CEL evaluation of nested fields and complex structures.
+// RNode doesn't provide a direct method to convert to map[string]interface{},
+// so we serialize to YAML string and unmarshal back. This is the standard approach
+// used throughout the kpt codebase for converting RNode to generic maps.
 func (e *CELEvaluator) resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 	yamlStr, err := resource.String()
 	if err != nil {
