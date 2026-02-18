@@ -15,6 +15,7 @@
 GOLANG_VERSION    := 1.25.7
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
+YEAR_GEN          := $(shell date '+%Y')
 
 .PHONY: docs fix vet fmt lint test build tidy release release-ci
 
@@ -81,7 +82,7 @@ schema:
 generate: install-mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	GOBIN=$(GOBIN) go generate ./...
+	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
 	go fmt ./internal/docs/generated/...
 
 tidy:

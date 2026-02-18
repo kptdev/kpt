@@ -106,6 +106,7 @@ func NewRunner(
 				} else {
 					cfn := &ContainerFn{
 						Image:           f.Image,
+						Tag:             f.Tag,
 						ImagePullPolicy: opts.ImagePullPolicy,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
