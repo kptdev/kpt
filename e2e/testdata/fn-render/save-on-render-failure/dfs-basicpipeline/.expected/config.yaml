@@ -1,0 +1,13 @@
+exitCode: 1
+saveOnRenderFailure: true
+stdErr: |
+  Package: "dfs-basicpipeline"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0"
+  [FAIL] "ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0" in 0s
+   Stderr: docker: Error response from daemon: failed to resolve reference "ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0": ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0: not found, , Run 'docker run --help' for more information  Exit code: 125
+  
+  Partially executed 2 function(s) in 1 package(s).

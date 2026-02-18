@@ -101,9 +101,11 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		hydrateFn = hydrateBfsOrder
 	}
 
-	if _, err := hydrateFn(ctx, root, hctx); err != nil {
-		_ = e.saveFnResults(ctx, hctx.fnResults) // Ignore save error to avoid masking hydration error
-		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, err)
+	_, hydErr := hydrateFn(ctx, root, hctx)
+
+	if hydErr != nil && !hctx.runnerOptions.SaveOnRenderFailure {
+		_ = e.saveFnResults(ctx, hctx.fnResults)
+		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
 	}
 
 	// adjust the relative paths of the resources.
@@ -123,24 +125,29 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place
-		pkgWriter := &kio.LocalPackageReadWriter{
-			PackagePath:        string(root.pkg.UniquePath),
-			PreserveSeqIndent:  true,
-			PackageFileName:    kptfilev1.KptFileName,
-			IncludeSubpackages: true,
-			WrapBareSeqNode:    true,
-			FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
-			MatchFilesGlob:     pkg.MatchAllKRM,
-		}
-		err = pkgWriter.Write(hctx.root.resources)
-		if err != nil {
-			return nil, fmt.Errorf("failed to save resources: %w", err)
-		}
+		// Only write resources if hydration succeeded OR SaveOnRenderFailure is enabled
+		if hydErr == nil || hctx.runnerOptions.SaveOnRenderFailure {
+			pkgWriter := &kio.LocalPackageReadWriter{
+				PackagePath:        string(root.pkg.UniquePath),
+				PreserveSeqIndent:  true,
+				PackageFileName:    kptfilev1.KptFileName,
+				IncludeSubpackages: true,
+				WrapBareSeqNode:    true,
+				FileSystem:         filesys.FileSystemOrOnDisk{FileSystem: e.FileSystem},
+				MatchFilesGlob:     pkg.MatchAllKRM,
+			}
+			err = pkgWriter.Write(hctx.root.resources)
+			if err != nil {
+				return nil, fmt.Errorf("failed to save resources: %w", err)
+			}
 
-		if err = pruneResources(e.FileSystem, hctx); err != nil {
-			return nil, err
+			if hydErr == nil {
+				if err = pruneResources(e.FileSystem, hctx); err != nil {
+					return nil, err
+				}
+			}
 		}
-		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+		e.printPipelineExecutionSummary(pr, *hctx, hydErr)
 	} else {
 		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
 		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
@@ -156,7 +163,24 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		}
 	}
 
+	if hydErr != nil {
+		_ = e.saveFnResults(ctx, hctx.fnResults) // Ignore save error to avoid masking hydration error
+		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
+	}
+
 	return hctx.fnResults, e.saveFnResults(ctx, hctx.fnResults)
+}
+
+func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrationContext, hydErr error) {
+	if hydErr == nil {
+		pr.Printf("Successfully executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+	} else {
+		if hctx.executedFunctionCnt == 0 {
+			pr.Printf("Failed to execute any functions in %d package(s).\n", len(hctx.pkgs))
+		} else {
+			pr.Printf("Partially executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
+		}
+	}
 }
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
@@ -310,11 +334,13 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		}
 
 		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
+		input = append(input, transitiveResources...)
 		if err != nil {
+			if hctx.runnerOptions.SaveOnRenderFailure {
+				curr.resources = input
+			}
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
-
-		input = append(input, transitiveResources...)
 	}
 
 	// gather resources present at the current package
@@ -333,6 +359,9 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
+		if hctx.runnerOptions.SaveOnRenderFailure {
+			curr.resources = output
+		}
 		return output, errors.E(op, curr.pkg.UniquePath, err)
 	}
 
@@ -463,14 +492,19 @@ func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNo
 
 		input := buildPipelineInputWithScopedVisibility(node, childrenMap)
 		output, err := node.runPipeline(ctx, hctx, input)
+
+		node.resources = output
 		if err != nil {
+			if hctx.runnerOptions.SaveOnRenderFailure {
+				hctx.pkgs[node.pkg.UniquePath] = node
+				propagateResourcesAcrossNodes(node, allNodes)
+				aggregateRootResources(allNodes, hctx)
+			}
 			return err
 		}
 
-		node.resources = output
 		node.state = Wet
 		hctx.pkgs[node.pkg.UniquePath] = node
-
 		propagateResourcesAcrossNodes(node, allNodes)
 	}
 
@@ -563,11 +597,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return nil, errors.E(op, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, pn.pkg.UniquePath, err)
 	}
 	return mutatedResources, nil
 }
@@ -637,7 +671,8 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		}
 		err = mutation.Execute()
 		if err != nil {
-			return nil, err
+			clearAnnotationsOnMutFailure(input)
+			return input, err
 		}
 		hctx.executedFunctionCnt++
 
@@ -706,6 +741,20 @@ func cloneResources(input []*yaml.RNode) (output []*yaml.RNode) {
 		output = append(output, resource.Copy())
 	}
 	return
+}
+
+// clearAnnotationsOnMutFailure removes annotations that are added during mutation when mutation fails.
+func clearAnnotationsOnMutFailure(input []*yaml.RNode) {
+	annotations := []string{
+		"config.k8s.io/id",
+		"internal.config.kubernetes.io/annotations-migration-resource-id",
+		"internal.config.kubernetes.io/id",
+	}
+	for _, r := range input {
+		for _, annotation := range annotations {
+			_ = r.PipeE(yaml.ClearAnnotation(annotation))
+		}
+	}
 }
 
 // path (location) of a KRM resources is tracked in a special key in

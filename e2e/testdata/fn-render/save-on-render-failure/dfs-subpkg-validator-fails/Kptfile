@@ -1,0 +1,12 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: dfs-subpkg-validator-fails
+info:
+  description: DFS - Subpackage validator fails
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+      configMap:
+        test: "subpkg-fail"
+        level: "root"

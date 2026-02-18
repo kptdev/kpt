@@ -1,0 +1,15 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  annotations:
+    kpt.dev/bfs-rendering: "true"
+  name: bfs-parent-and-subpkg-both-fail
+info:
+  description: BFS - Both parent and subpackage fail
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+      configMap:
+        pkg: root
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0

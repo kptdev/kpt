@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,9 @@ type TestCaseConfig struct {
 
 	// AllowWasm determines if `fn render` needs to be invoked with `--allow-alpha-wasm` flag
 	AllowWasm bool `json:"allowWasm,omitempty" yaml:"allowWasm,omitempty"`
+
+	// SaveOnRenderFailure determines if `fn render` needs to be invoked with `--save-on-render-failure` flag
+	SaveOnRenderFailure bool `json:"saveOnRenderFailure,omitempty" yaml:"saveOnRenderFailure,omitempty"`
 
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`

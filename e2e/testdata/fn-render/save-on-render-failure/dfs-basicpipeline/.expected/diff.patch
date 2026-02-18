@@ -1,0 +1,31 @@
+diff --git a/Kptfile b/Kptfile
+index a2aef8c..93f2bd5 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: save-on-render-failure
++  annotations:
++    app: myapp
++  namespace: staging
+ pipeline:
+   mutators:
+   - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+diff --git a/resources.yaml b/resources.yaml
+index 0848ba0..7eece9b 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -2,5 +2,12 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  annotations:
++    app: myapp
++  namespace: staging
+ spec:
+   replicas: 3
++  template:
++    metadata:
++      annotations:
++        app: myapp
