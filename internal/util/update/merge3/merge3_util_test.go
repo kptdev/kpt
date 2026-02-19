@@ -16,6 +16,7 @@ package merge3
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,9 +77,7 @@ func (t *Merge3TestSuite) parseCrds(directory string, crds []string) []byte {
 	definitions := map[string]spec.Schema{}
 	for _, crd := range crds {
 		parsed := t.parseCrd(directory, crd)
-		for key, val := range parsed {
-			definitions[key] = val
-		}
+		maps.Copy(definitions, parsed)
 	}
 
 	addSchemas := map[string]map[string]spec.Schema{

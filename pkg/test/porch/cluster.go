@@ -75,7 +75,7 @@ func KubectlApply(t *testing.T, config string) {
 }
 
 func KubectlWaitForDeployment(t *testing.T, namespace, name string) {
-	args := []string{"rollout", "status", "deployment", "--namespace", namespace, name}
+	args := []string{"status", "deployment", "--namespace", namespace, name}
 	cmd := exec.Command("kubectl", args...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {

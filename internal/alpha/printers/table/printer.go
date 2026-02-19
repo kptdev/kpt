@@ -264,7 +264,7 @@ func getConditions(rs *pollingevent.ResourceStatus) []string {
 
 	var conditionStrings []string
 	for _, cond := range conditions {
-		condition := cond.(map[string]interface{})
+		condition := cond.(map[string]any)
 		conditionType := condition["type"].(string)
 		conditionStatus := condition["status"].(string)
 		conditionReason := condition["reason"].(string)
