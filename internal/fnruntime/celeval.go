@@ -71,7 +71,7 @@ func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 // EvaluateCondition evaluates a CEL condition expression against a list of resources
 // Returns true if the condition is met, false otherwise
 // The program is pre-compiled, so this just evaluates it with the given resources
-func (e *CELEvaluator) EvaluateCondition(ctx context.Context, resources []*yaml.RNode) (bool, error) {
+func (e *CELEvaluator) EvaluateCondition(_ context.Context, resources []*yaml.RNode) (bool, error) {
 	if e.prg == nil {
 		return true, nil
 	}
