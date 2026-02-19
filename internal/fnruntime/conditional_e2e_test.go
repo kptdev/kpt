@@ -21,9 +21,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/internal/fnruntime/runneroptions"
+	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/internal/types"
-	"github.com/kptdev/kpt/internal/util/fnresult"
+	"github.com/kptdev/kpt/internal/fnruntime"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -149,8 +150,8 @@ metadata:
 			}
 
 			// Create function runner with condition
-			fnResult := &fnresult.Result{}
-			fnResults := &fnresult.ResultList{}
+			fnResult := &fnresultv1.Result{}
+			fnResults := &fnresultv1.ResultList{}
 			
 			evaluator, err := NewCELEvaluator(tc.condition)
 			require.NoError(t, err)
