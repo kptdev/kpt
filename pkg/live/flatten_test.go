@@ -36,7 +36,7 @@ func Test_Flatten(t *testing.T) {
 			name: "list with list",
 			in: []*unstructured.Unstructured{
 				{
-					Object: map[string]any{
+					Object: map[string]interface{}{
 						"kind":  "List",
 						"items": anySlice(simpleList),
 					},
@@ -55,7 +55,7 @@ func Test_Flatten(t *testing.T) {
 	}
 }
 
-func anySlice(in []*unstructured.Unstructured) (out []any) {
+func anySlice(in []*unstructured.Unstructured) (out []interface{}) {
 	for _, o := range in {
 		out = append(out, o.Object)
 	}
@@ -64,13 +64,13 @@ func anySlice(in []*unstructured.Unstructured) (out []any) {
 
 var simpleList = []*unstructured.Unstructured{
 	{
-		Object: map[string]any{
+		Object: map[string]interface{}{
 			"kind":    "ConfigMap",
 			"version": "v1",
 		},
 	},
 	{
-		Object: map[string]any{
+		Object: map[string]interface{}{
 			"kind":    "Pod",
 			"version": "v1",
 		},

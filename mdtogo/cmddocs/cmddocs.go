@@ -120,8 +120,8 @@ func cleanUpContent(text string) string {
 
 		line = strings.ReplaceAll(line, "`", "` + \"`\" + `")
 
-		if after, ok := strings.CutPrefix(line, "####"); ok {
-			line = after
+		if strings.HasPrefix(line, "####") {
+			line = strings.TrimPrefix(line, "####")
 			line = fmt.Sprintf("%s:", strings.TrimSpace(line))
 		}
 

@@ -23,7 +23,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -133,7 +132,7 @@ func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
 	if err != nil {
 		t.Fatalf("error looking up resource group: %v", err)
 	}
-	var rg map[string]any
+	var rg map[string]interface{}
 	err = yaml.Unmarshal(outBuf.Bytes(), &rg)
 	if err != nil {
 		t.Fatalf("error unmarshalling inventory object: %v", err)
@@ -141,11 +140,11 @@ func (r *Runner) VerifyInventory(t *testing.T, name, namespace string) {
 
 	var inventory []InventoryEntry
 	if rg["spec"] != nil {
-		spec := rg["spec"].(map[string]any)
+		spec := rg["spec"].(map[string]interface{})
 		if spec["resources"] != nil {
-			resources := spec["resources"].([]any)
+			resources := spec["resources"].([]interface{})
 			for i := range resources {
-				r := resources[i].(map[string]any)
+				r := resources[i].(map[string]interface{})
 				inventory = append(inventory, InventoryEntry{
 					Group:     r["group"].(string),
 					Kind:      r["kind"].(string),
@@ -277,5 +276,10 @@ func (r *Runner) removeOptionalEvents(t *testing.T, text string) string {
 }
 
 func equalsAny(s string, strs []string) bool {
-	return slices.Contains(strs, s)
+	for _, str := range strs {
+		if str == s {
+			return true
+		}
+	}
+	return false
 }

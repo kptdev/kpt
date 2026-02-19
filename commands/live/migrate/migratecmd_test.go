@@ -41,18 +41,18 @@ var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
 var rgInvObj = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "kpt.dev/v1alpha1",
 		"kind":       "ResourceGroup",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
 			"namespace": testNamespace,
-			"labels": map[string]any{
+			"labels": map[string]interface{}{
 				common.InventoryLabel: testInventoryLabel,
 			},
 		},
-		"spec": map[string]any{
-			"resources": []any{},
+		"spec": map[string]interface{}{
+			"resources": []interface{}{},
 		},
 	},
 }
@@ -68,13 +68,13 @@ metadata:
 `
 
 var cmInvObj = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
 			"namespace": testNamespace,
-			"labels": map[string]any{
+			"labels": map[string]interface{}{
 				common.InventoryLabel: testInventoryLabel,
 			},
 		},
@@ -82,10 +82,10 @@ var cmInvObj = &unstructured.Unstructured{
 }
 
 var pod1 = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Pod",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      "pod-1",
 			"namespace": testNamespace,
 		},
@@ -93,10 +93,10 @@ var pod1 = &unstructured.Unstructured{
 }
 
 var pod2 = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "Pod",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      "pod-2",
 			"namespace": testNamespace,
 		},

@@ -16,7 +16,6 @@ package kptops
 
 import (
 	"errors"
-	"maps"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	kyaml "sigs.k8s.io/kustomize/kyaml/yaml"
@@ -36,7 +35,9 @@ func setLabels(rl *framework.ResourceList) error {
 
 	for _, n := range rl.Items {
 		l := n.GetLabels()
-		maps.Copy(l, labels)
+		for k, v := range labels {
+			l[k] = v
+		}
 		if err := n.SetLabels(l); err != nil {
 			return err
 		}

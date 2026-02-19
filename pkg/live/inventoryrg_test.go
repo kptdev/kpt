@@ -30,18 +30,18 @@ var inventoryObjName = "test-inventory-obj"
 var testInventoryLabel = "test-inventory-label"
 
 var inventoryObj = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "kpt.dev/v1alpha1",
 		"kind":       "ResourceGroup",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
 			"namespace": testNamespace,
-			"labels": map[string]any{
+			"labels": map[string]interface{}{
 				common.InventoryLabel: testInventoryLabel,
 			},
 		},
-		"spec": map[string]any{
-			"resources": []any{},
+		"spec": map[string]interface{}{
+			"resources": []interface{}{},
 		},
 	},
 }
@@ -185,13 +185,13 @@ func TestLoadStore(t *testing.T) {
 }
 
 var cmInvObj = &unstructured.Unstructured{
-	Object: map[string]any{
+	Object: map[string]interface{}{
 		"apiVersion": "v1",
 		"kind":       "ConfigMap",
-		"metadata": map[string]any{
+		"metadata": map[string]interface{}{
 			"name":      inventoryObjName,
 			"namespace": testNamespace,
-			"labels": map[string]any{
+			"labels": map[string]interface{}{
 				common.InventoryLabel: testInventoryLabel,
 			},
 		},

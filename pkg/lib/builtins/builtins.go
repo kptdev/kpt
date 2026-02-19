@@ -26,7 +26,7 @@ import (
 func GetBuiltinFn(config any) builtintypes.BuiltinFunction {
 	fmt.Println(reflect.TypeOf(config))
 
-	if reflect.TypeOf(config) == reflect.TypeFor[*builtintypes.PackageConfig]() {
+	if reflect.TypeOf(config) == reflect.TypeOf(&builtintypes.PackageConfig{}) {
 		packageConfig := config.(*builtintypes.PackageConfig)
 		return &builtins.PackageContextGenerator{
 			PackageConfig: packageConfig,
