@@ -20,7 +20,6 @@ import (
 
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
-	"github.com/google/cel-go/common/types/ref"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -52,7 +51,8 @@ func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 		}
 
 		// Check AST complexity
-		if ast.SourceInfo().LineOffsets()[len(ast.SourceInfo().LineOffsets())-1] > 10000 {
+		lineOffsets := ast.SourceInfo().LineOffsets
+		if len(lineOffsets) > 0 && lineOffsets[len(lineOffsets)-1] > 10000 {
 			return nil, fmt.Errorf("CEL expression too complex: exceeds maximum character limit")
 		}
 
