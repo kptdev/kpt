@@ -574,8 +574,9 @@ func TestRenderer_PrintPipelineExecutionSummary(t *testing.T) {
 
 func TestPkgNode_ClearAnnotationsOnMutFailure(t *testing.T) {
 	tests := []struct {
-		name        string
-		inputYAML   string
+		name               string
+		inputYAML                 string
+		hasNonRenderingAnnotation bool
 	}{
 		{
 			name: "clears all migration annotations",
@@ -587,7 +588,9 @@ metadata:
     config.k8s.io/id: "123"
     internal.config.kubernetes.io/annotations-migration-resource-id: "456"
     internal.config.kubernetes.io/id: "789"
+    internal.config.k8s.io/kpt-resource-id: "abc"
     other.annotation: "keep"`,
+			hasNonRenderingAnnotation: true,
 		},
 		{
 			name: "handles resources without migration annotations",
@@ -597,6 +600,7 @@ metadata:
   name: test
   annotations:
     other.annotation: "keep"`,
+			hasNonRenderingAnnotation: true,
 		},
 		{
 			name: "handles resources with no annotations",
@@ -604,6 +608,7 @@ metadata:
 kind: ConfigMap
 metadata:
   name: test`,
+			hasNonRenderingAnnotation: false,
 		},
 	}
 
@@ -619,6 +624,11 @@ metadata:
 				assert.NotContains(t, annotations, "config.k8s.io/id")
 				assert.NotContains(t, annotations, "internal.config.kubernetes.io/annotations-migration-resource-id")
 				assert.NotContains(t, annotations, "internal.config.kubernetes.io/id")
+				assert.NotContains(t, annotations, "internal.config.k8s.io/kpt-resource-id")
+				// Verify other.annotation is preserved after clearing
+				if tc.hasNonRenderingAnnotation {
+					assert.Contains(t, annotations, "other.annotation")
+				}
 			}
 		})
 	}

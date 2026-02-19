@@ -138,6 +138,10 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 			}
 			err = pkgWriter.Write(hctx.root.resources)
 			if err != nil {
+				if hydErr != nil {
+					// Preserve the hydration error as the primary error
+					return nil, fmt.Errorf("failed to save resources: %w (original render error: %v)", err, hydErr)
+				}
 				return nil, fmt.Errorf("failed to save resources: %w", err)
 			}
 
@@ -148,7 +152,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 			}
 		}
 		e.printPipelineExecutionSummary(pr, *hctx, hydErr)
-	} else {
+	} else if hydErr == nil {
 		// the intent of the user is to write the resources to either stdout|unwrapped|<OUT_DIR>
 		// so, write the resources to provided e.Output which will be written to appropriate destination by cobra layer
 		writer := &kio.ByteWriter{
@@ -319,6 +323,20 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 	var input []*yaml.RNode
 
+	// gather resources present at the current package
+	currPkgResources, err := curr.pkg.LocalResources()
+	if err != nil {
+		return output, errors.E(op, curr.pkg.UniquePath, err)
+	}
+
+	err = trackInputFiles(hctx, relPath, currPkgResources)
+	if err != nil {
+		return nil, err
+	}
+
+	// include current package's resources in the input resource list
+	input = append(input, currPkgResources...)
+
 	// determine sub packages to be hydrated
 	subpkgs, err := curr.pkg.DirectSubpackages()
 	if err != nil {
@@ -334,32 +352,24 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 		}
 
 		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
-		input = append(input, transitiveResources...)
 		if err != nil {
-			if hctx.runnerOptions.SaveOnRenderFailure {
+			if transitiveResources != nil && hctx.runnerOptions.SaveOnRenderFailure {
+				input = append(input, transitiveResources...)
 				curr.resources = input
 			}
 			return output, errors.E(op, subpkg.UniquePath, err)
 		}
-	}
 
-	// gather resources present at the current package
-	currPkgResources, err := curr.pkg.LocalResources()
-	if err != nil {
-		return output, errors.E(op, curr.pkg.UniquePath, err)
+		input = append(input, transitiveResources...)
 	}
-
-	err = trackInputFiles(hctx, relPath, currPkgResources)
-	if err != nil {
-		return nil, err
-	}
-
-	// include current package's resources in the input resource list
-	input = append(input, currPkgResources...)
 
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
 		if hctx.runnerOptions.SaveOnRenderFailure {
+			// Fall back to input if output is nil (early errors before pipeline execution)
+			if output == nil {
+				output = input
+			}
 			curr.resources = output
 		}
 		return output, errors.E(op, curr.pkg.UniquePath, err)
@@ -492,10 +502,13 @@ func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNo
 
 		input := buildPipelineInputWithScopedVisibility(node, childrenMap)
 		output, err := node.runPipeline(ctx, hctx, input)
-
-		node.resources = output
 		if err != nil {
 			if hctx.runnerOptions.SaveOnRenderFailure {
+				// Fall back to input if output is nil (early errors before pipeline execution)
+				if output == nil {
+					output = input
+				}
+				node.resources = output
 				hctx.pkgs[node.pkg.UniquePath] = node
 				propagateResourcesAcrossNodes(node, allNodes)
 				aggregateRootResources(allNodes, hctx)
@@ -503,8 +516,10 @@ func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNo
 			return err
 		}
 
+		node.resources = output
 		node.state = Wet
 		hctx.pkgs[node.pkg.UniquePath] = node
+
 		propagateResourcesAcrossNodes(node, allNodes)
 	}
 
@@ -749,6 +764,7 @@ func clearAnnotationsOnMutFailure(input []*yaml.RNode) {
 		"config.k8s.io/id",
 		"internal.config.kubernetes.io/annotations-migration-resource-id",
 		"internal.config.kubernetes.io/id",
+		fnruntime.ResourceIDAnnotation,
 	}
 	for _, r := range input {
 		for _, annotation := range annotations {
