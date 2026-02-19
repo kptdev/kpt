@@ -16,16 +16,17 @@ package fnruntime
 
 import (
 	"context"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/internal/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -33,7 +34,7 @@ import (
 // of conditional function execution
 func TestFunctionRunner_ConditionalExecution_E2E(t *testing.T) {
 	ctx := context.Background()
-	fsys := filesys.MakeFsInMemory()
+	_ = filesys.MakeFsInMemory() // Reserved for future use
 	
 	testCases := []struct {
 		name              string
@@ -148,6 +149,24 @@ metadata:
 				return nodes, nil
 			}
 
+			// Create adapter function to match FunctionFilter.Run signature
+			adapterFunc := func(reader io.Reader, writer io.Writer) error {
+				// Parse YAML from reader into RNodes
+				nodes, err := (&kio.ByteReader{Reader: reader}).Read()
+				if err != nil {
+					return err
+				}
+
+				// Call mockFilter
+				resultNodes, err := mockFilter(nodes)
+				if err != nil {
+					return err
+				}
+
+				// Write results back to writer
+				return (&kio.ByteWriter{Writer: writer}).Write(resultNodes)
+			}
+
 			// Create function runner with condition
 			fnResult := &fnresultv1.Result{}
 			fnResults := &fnresultv1.ResultList{}
@@ -161,7 +180,7 @@ metadata:
 				pkgPath:          types.UniquePath("test"),
 				disableCLIOutput: true,
 				filter: &runtimeutil.FunctionFilter{
-					Run: mockFilter,
+					Run: adapterFunc,
 				},
 				fnResult:  fnResult,
 				fnResults: fnResults,
@@ -178,8 +197,8 @@ metadata:
 			if tc.shouldExecute {
 				assert.True(t, functionExecuted, tc.description)
 				// Verify annotation was added
-				annotation, err := output[0].GetAnnotations()["test-annotation"]
-				assert.NoError(t, err)
+				annotations := output[0].GetAnnotations()
+				annotation := annotations["test-annotation"]
 				assert.Equal(t, "executed", annotation)
 			} else {
 				assert.False(t, functionExecuted, tc.description)
