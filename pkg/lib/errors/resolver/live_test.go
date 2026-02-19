@@ -42,7 +42,7 @@ func TestLiveErrorResolver(t *testing.T) {
 				},
 			},
 			expected: `
-Error: 1 resource types could not be found in the cluster or as CRDs among the applied resources.
+Error: 1 resource types not found in the cluster or as CRDs among the applied resources.
 
 Resource types:
 apps/v1, Kind=Deployment

@@ -17,6 +17,7 @@ package resolver
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	initialization "github.com/kptdev/kpt/commands/live/init"
 	"github.com/kptdev/kpt/internal/pkg"
@@ -131,27 +132,29 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 	var inventoryInfoValidationError *live.InventoryInfoValidationError
 	if errors.As(err, &inventoryInfoValidationError) {
-		msg := "Error: The inventory information is not valid."
-		msg += " Please update the information in the ResourceGroup file or provide information with the command line flags."
-		msg += " To generate the inventory information the first time, use the 'kpt live init' command."
+		var msg strings.Builder
+		msg.WriteString("Error: The inventory information is not valid.")
+		msg.WriteString(" Please update the information in the ResourceGroup file or provide information with the command line flags.")
+		msg.WriteString(" To generate the inventory information the first time, use the 'kpt live init' command.")
 
-		msg += "\nDetails:\n"
+		msg.WriteString("\nDetails:\n")
 		for _, v := range inventoryInfoValidationError.Violations {
-			msg += fmt.Sprintf("%s\n", v.Reason)
+			msg.WriteString(fmt.Sprintf("%s\n", v.Reason))
 		}
 
-		return ResolvedResult{Message: msg}, true
+		return ResolvedResult{Message: msg.String()}, true
 	}
 
 	var unknownTypesError *manifestreader.UnknownTypesError
 	if errors.As(err, &unknownTypesError) {
-		msg := fmt.Sprintf("Error: %d resource types could not be found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds))
-		msg += "\n\nResource types:\n"
+		var msg strings.Builder
+		msg.WriteString(fmt.Sprintf("Error: %d resource types not found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds)))
+		msg.WriteString("\n\nResource types:\n")
 		for _, gvk := range unknownTypesError.GroupVersionKinds {
-			msg += fmt.Sprintf("%s\n", gvk)
+			msg.WriteString(fmt.Sprintf("%s\n", gvk))
 		}
 
-		return ResolvedResult{Message: msg}, true
+		return ResolvedResult{Message: msg.String()}, true
 	}
 
 	var resultError *common.ResultError

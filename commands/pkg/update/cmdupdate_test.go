@@ -787,7 +787,7 @@ Updated 2 package(s).
 
 			tmpl := template.Must(template.New("test").Parse(tc.expectedOutput))
 			var expected bytes.Buffer
-			err = tmpl.Execute(&expected, map[string]interface{}{
+			err = tmpl.Execute(&expected, map[string]any{
 				"PKG_PATH": g.LocalWorkspace.FullPackagePath(),
 				"PKG_NAME": g.LocalWorkspace.PackageDir,
 				"REPOS":    g.Repos,

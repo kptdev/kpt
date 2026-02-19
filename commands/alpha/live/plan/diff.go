@@ -23,8 +23,8 @@ import (
 
 type Diff struct {
 	Type  string
-	Left  interface{}
-	Right interface{}
+	Left  any
+	Right any
 	Path  string
 }
 
@@ -36,7 +36,7 @@ func diffObjects(b, a *unstructured.Unstructured) ([]Diff, error) {
 	return diffs, nil
 }
 
-func diffMaps(prefix string, l, r map[string]interface{}) ([]Diff, error) {
+func diffMaps(prefix string, l, r map[string]any) ([]Diff, error) {
 	var diffs []Diff
 	for k, lv := range l {
 		childPrefix := prefix + "." + k
@@ -66,7 +66,7 @@ func diffMaps(prefix string, l, r map[string]interface{}) ([]Diff, error) {
 	return diffs, nil
 }
 
-func diffSlices(prefix string, l, r []interface{}) ([]Diff, error) {
+func diffSlices(prefix string, l, r []any) ([]Diff, error) {
 	var diffs []Diff
 	for i, lv := range l {
 		childPrefix := prefix + "." + strconv.Itoa(i)
@@ -95,7 +95,7 @@ func diffSlices(prefix string, l, r []interface{}) ([]Diff, error) {
 	return diffs, nil
 }
 
-func diffValue(path string, lv, rv interface{}) ([]Diff, error) {
+func diffValue(path string, lv, rv any) ([]Diff, error) {
 	switch lv := lv.(type) {
 	// case string:
 	// 	rvString, ok := rv.(string)
@@ -107,15 +107,15 @@ func diffValue(path string, lv, rv interface{}) ([]Diff, error) {
 	// 	if !ok || lv != rvInt64 {
 	// 		diffs = append(diffs, Diff{Type: "Change", Path: childPrefix, Left: lv, Right: rv})
 	// 	}
-	case map[string]interface{}:
-		rvMap, ok := rv.(map[string]interface{})
+	case map[string]any:
+		rvMap, ok := rv.(map[string]any)
 		if !ok {
 			return []Diff{{Type: "Change", Path: path, Left: lv, Right: rv}}, nil
 		}
 		return diffMaps(path, lv, rvMap)
 
-	case []interface{}:
-		rvSlice, ok := rv.([]interface{})
+	case []any:
+		rvSlice, ok := rv.([]any)
 		if !ok {
 			return []Diff{{Type: "Change", Path: path, Left: lv, Right: rv}}, nil
 		}

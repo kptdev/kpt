@@ -135,7 +135,7 @@ func (icm *InventoryResourceGroup) Load() (object.ObjMetadataSet, error) {
 	}
 	klog.V(4).Infof("loading %d inventory items", len(items))
 	for _, itemUncast := range items {
-		item := itemUncast.(map[string]interface{})
+		item := itemUncast.(map[string]any)
 		namespace, _, err := unstructured.NestedString(item, "namespace")
 		if err != nil {
 			return []object.ObjMetadata{}, err
@@ -189,10 +189,10 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 	klog.V(4).Infof("getting inventory resource group")
 	// Create a slice of Resources as empty Interface
 	klog.V(4).Infof("Creating list of %d resources", len(icm.objMetas))
-	var objs []interface{}
+	var objs []any
 	for _, objMeta := range icm.objMetas {
 		klog.V(4).Infof("storing inventory obj refercence: %s/%s", objMeta.Namespace, objMeta.Name)
-		objs = append(objs, map[string]interface{}{
+		objs = append(objs, map[string]any{
 			"group":     objMeta.GroupKind.Group,
 			"kind":      objMeta.GroupKind.Kind,
 			"namespace": objMeta.Namespace,
@@ -200,12 +200,12 @@ func (icm *InventoryResourceGroup) GetObject() (*unstructured.Unstructured, erro
 		})
 	}
 	klog.V(4).Infof("Creating list of %d resources status", len(icm.objMetas))
-	var objStatus []interface{}
+	var objStatus []any
 	for _, objMeta := range icm.objMetas {
 		status, found := objStatusMap[objMeta]
 		if found {
 			klog.V(4).Infof("storing inventory obj refercence and its status: %s/%s", objMeta.Namespace, objMeta.Name)
-			objStatus = append(objStatus, map[string]interface{}{
+			objStatus = append(objStatus, map[string]any{
 				"group":     objMeta.GroupKind.Group,
 				"kind":      objMeta.GroupKind.Kind,
 				"namespace": objMeta.Namespace,
@@ -541,7 +541,7 @@ func stringToUnstructured(str string) (*unstructured.Unstructured, error) {
 	if err != nil {
 		return nil, err
 	}
-	var m map[string]interface{}
+	var m map[string]any
 	if err := yaml.Unmarshal([]byte(s), &m); err != nil {
 		return nil, err
 	}

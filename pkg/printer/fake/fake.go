@@ -31,9 +31,9 @@ type Printer struct {
 
 func (np *Printer) PrintPackage(*pkg.Pkg, bool) {}
 
-func (np *Printer) OptPrintf(*printer.Options, string, ...interface{}) {}
+func (np *Printer) OptPrintf(*printer.Options, string, ...any) {}
 
-func (np *Printer) Printf(string, ...interface{}) {}
+func (np *Printer) Printf(string, ...any) {}
 
 func (np *Printer) OutStream() io.Writer { return np.outStream }
 
