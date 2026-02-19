@@ -1,7 +1,9 @@
 # Tenant onboarding
 
-**Note:** This guide is a work in progress and may not fully reflect the
+{{< warning type=warning >}}
+This guide is a work in progress and may not fully reflect the
 current state of kpt. It is due for a rewrite.
+{{< /warning >}}
 
 We have seen that in large organizations using kubernetes, there is a platform
 team (or infrastructure team) that is responsible for managing the kubernetes
