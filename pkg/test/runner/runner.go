@@ -211,6 +211,9 @@ func (r *Runner) runFnEval() error {
 			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--exec", string(r.testCase.Config.EvalConfig.execUniquePath))
 			}
+			if r.testCase.Config.EvalConfig.Tag != "" {
+				kptArgs = append(kptArgs, "--tag", r.testCase.Config.EvalConfig.Tag)
+			}
 			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
 			}

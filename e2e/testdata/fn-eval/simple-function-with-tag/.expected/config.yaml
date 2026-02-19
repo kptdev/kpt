@@ -1,5 +1,4 @@
-#! /bin/bash
-# Copyright 2021 The kpt Authors
+# Copyright 2026 The kpt Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -eo pipefail
-
-# clear environment variable KRM_FN_RUNTIME if it matches the default
-if [ "${KRM_FN_RUNTIME}" = "docker" ]; then
-   unset KRM_FN_RUNTIME
-fi
-
-echo "KRM_FN_RUNTIME is ${KRM_FN_RUNTIME}"
-# run eval with KRM_FN_RUNTIME unset.
-kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -- namespace=staging
+testType: eval
+image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
+tag: "~0.4"
+args:
+  namespace: staging

@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../rollouts/hack/boilerplate.go.txt"
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../rollouts/hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
@@ -327,6 +327,10 @@ type Function struct {
 	// `Name` is used to uniquely identify the function declaration
 	// this is primarily used for merging function declaration with upstream counterparts
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
+
+	// `Tag` is an optional field for specifying/overriding the tag of the function image.
+	// Can be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints
+	Tag string `yaml:"tag,omitempty" json:"tag,omitempty"`
 
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected
