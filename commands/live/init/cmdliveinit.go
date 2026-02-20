@@ -205,7 +205,13 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	// InventoryID; derive a stable name from the package directory.
 	if c.Name == "" {
 		if c.InventoryID != "" {
-			c.Name = filepath.Base(c.Pkg.UniquePath.String())
+			dirName := filepath.Base(c.Pkg.UniquePath.String())
+			if errs := validation.IsDNS1123Label(dirName); len(errs) > 0 {
+				return errors.E(op, c.Pkg.UniquePath,
+					fmt.Errorf("directory name %q is not a valid Kubernetes resource name and --name was not provided: %s",
+						dirName, strings.Join(errs, "; ")))
+			}
+			c.Name = dirName
 		} else {
 			return errors.E(op, c.Pkg.UniquePath, errNameRequired)
 		}
@@ -321,7 +327,9 @@ func generateHash(namespace, name string) (string, error) {
 		return "", fmt.Errorf("cannot generate inventory ID: namespace and name must be non-empty")
 	}
 	h := sha1.New()
-	fmt.Fprintf(h, "%d:%s:%d:%s", len(namespace), namespace, len(name), name)
+	if _, err := fmt.Fprintf(h, "%d:%s:%d:%s", len(namespace), namespace, len(name), name); err != nil {
+		return "", fmt.Errorf("failed to write hash input: %w", err)
+	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
@@ -332,7 +340,7 @@ func validateName(name string) (string, error) {
 	if trimmed == "" {
 		return "", errNameRequired
 	}
-	if errs := validation.IsDNS1123Subdomain(trimmed); len(errs) > 0 {
+	if errs := validation.IsDNS1123Label(trimmed); len(errs) > 0 {
 		return "", fmt.Errorf("--name %q is not a valid Kubernetes resource name: %s",
 			trimmed, strings.Join(errs, "; "))
 	}

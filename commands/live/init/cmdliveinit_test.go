@@ -87,8 +87,10 @@ func TestValidateName(t *testing.T) {
 		"valid lowercase name": {
 			name: "my-app-staging",
 		},
-		"valid name with dots": {
-			name: "my.app.v1",
+		"dots are rejected (label, not subdomain)": {
+			name:        "my.app.v1",
+			expectError: true,
+			errContains: "not a valid Kubernetes resource name",
 		},
 		"empty string is rejected": {
 			name:        "",
@@ -120,8 +122,8 @@ func TestValidateName(t *testing.T) {
 			expectError: true,
 			errContains: "not a valid Kubernetes resource name",
 		},
-		"exceeds 253 chars is rejected": {
-			name:        strings.Repeat("a", 254),
+		"exceeds 63 chars is rejected": {
+			name:        strings.Repeat("a", 64),
 			expectError: true,
 			errContains: "not a valid Kubernetes resource name",
 		},
@@ -467,6 +469,77 @@ func TestGenerateHash_NoSeparatorAmbiguity(t *testing.T) {
 	// Also verify the exact expected values.
 	assert.Equal(t, "a1724ac2a61ec038d055881eb4403c74ab4256e9", h1)
 	assert.Equal(t, "f99cca29ebcfd3bca8c3605d253e4fec27b917ae", h2)
+}
+
+func TestConfigureInventoryInfo_InvalidDirectoryNameFallback(t *testing.T) {
+	// Internal callers (e.g. migrate) pass Name="" with InventoryID set.
+	// ConfigureInventoryInfo.Run() derives the name from the package directory.
+	// If the directory name fails IsDNS1123Label, Run must return an error.
+	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+	defer tf.Cleanup()
+
+	parentDir, err := os.MkdirTemp("", "kpt-init-test-*")
+	require.NoError(t, err)
+	defer os.RemoveAll(parentDir)
+
+	invalidDir := filepath.Join(parentDir, "UPPER_invalid")
+	require.NoError(t, os.MkdirAll(invalidDir, 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(invalidDir, kptfilev1.KptFileName),
+		[]byte(kptFile), 0600))
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, invalidDir)
+	require.NoError(t, err)
+
+	c := &ConfigureInventoryInfo{
+		Pkg:         p,
+		Factory:     tf,
+		Quiet:       true,
+		Name:        "",
+		InventoryID: "explicit-inv-id-123",
+		RGFileName:  "resourcegroup.yaml",
+	}
+	err = c.Run(fake.CtxWithDefaultPrinter())
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not a valid Kubernetes resource name")
+	assert.Contains(t, err.Error(), "--name was not provided")
+}
+
+func TestConfigureInventoryInfo_ValidDirectoryNameFallback(t *testing.T) {
+	// Happy path for internal callers: Name="" with InventoryID set,
+	// and the directory name IS a valid DNS-1123 label.
+	tf := cmdtesting.NewTestFactory().WithNamespace("test-ns")
+	defer tf.Cleanup()
+
+	parentDir, err := os.MkdirTemp("", "kpt-init-test-*")
+	require.NoError(t, err)
+	defer os.RemoveAll(parentDir)
+
+	validDir := filepath.Join(parentDir, "my-valid-pkg")
+	require.NoError(t, os.MkdirAll(validDir, 0700))
+	require.NoError(t, os.WriteFile(filepath.Join(validDir, kptfilev1.KptFileName),
+		[]byte(kptFile), 0600))
+
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, validDir)
+	require.NoError(t, err)
+
+	c := &ConfigureInventoryInfo{
+		Pkg:         p,
+		Factory:     tf,
+		Quiet:       true,
+		Name:        "",
+		InventoryID: "explicit-inv-id-456",
+		RGFileName:  "resourcegroup.yaml",
+	}
+	err = c.Run(fake.CtxWithDefaultPrinter())
+
+	require.NoError(t, err)
+
+	rg, err := pkg.ReadRGFile(validDir, "resourcegroup.yaml")
+	require.NoError(t, err)
+	require.NotNil(t, rg)
+	assert.Equal(t, "my-valid-pkg", rg.Name)
+	assert.Equal(t, "explicit-inv-id-456", rg.Labels[rgfilev1alpha1.RGInventoryIDLabel])
 }
 
 func TestCmd_MissingNameFlagReturnsError(t *testing.T) {

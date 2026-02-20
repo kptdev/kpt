@@ -483,15 +483,16 @@ function assertRGInventory {
 
     local count
     count=$(wc -l < $OUTPUT_DIR/invname | tr -d ' ')
-    if [ "$count" -ge 1 ]; then
+    if [ "$count" -eq 1 ]; then
 	echo -n '.'
     else
 	echo -n 'E'
 	if [ ! -f $OUTPUT_DIR/errors ]; then
 	    touch $OUTPUT_DIR/errors
 	fi
-	echo "error: expected ResourceGroup inventory in ${ns} namespace but found none" >> $OUTPUT_DIR/errors
-    HAS_TEST_FAILURE=1
+	echo "error: expected exactly 1 ResourceGroup inventory in ${ns} namespace, found ${count}:" >> $OUTPUT_DIR/errors
+	cat $OUTPUT_DIR/invname >> $OUTPUT_DIR/errors
+	HAS_TEST_FAILURE=1
     fi
 }
 
