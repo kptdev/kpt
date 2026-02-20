@@ -241,8 +241,7 @@ $ git push origin update-tenant-a
 
 ## Summary
 
-So, in this guide, how platform teams can enable self service workflow for
-application teams to onboard a new tenant. In the next guide, we will explore
+In this guide, we explored how platform teams can enable self-service workflows for application teams to onboard a new tenant. In the next guide, we will explore
 how platform teams can do it at a scale when there are hundreds of tenants
 provisioned on a kubernetes cluster. Next guides will explore package lifecycle
 (pkg diff/update) use cases at large scale.

@@ -56,6 +56,11 @@ func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 			return nil, fmt.Errorf("CEL expression too complex: exceeds maximum character limit")
 		}
 
+		// Validate that the expression returns a boolean
+		if ast.OutputType() != cel.BoolType {
+			return nil, fmt.Errorf("CEL expression must return a boolean, got %v", ast.OutputType())
+		}
+
 		// Create the program
 		prg, err := env.Program(ast)
 		if err != nil {

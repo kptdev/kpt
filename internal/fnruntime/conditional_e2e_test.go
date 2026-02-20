@@ -15,7 +15,6 @@
 package fnruntime
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"testing"
@@ -35,9 +34,7 @@ import (
 // TestFunctionRunner_ConditionalExecution_E2E tests the complete flow
 // of conditional function execution
 func TestFunctionRunner_ConditionalExecution_E2E(t *testing.T) {
-	out := &bytes.Buffer{}
-	errOut := &bytes.Buffer{}
-	ctx := printer.WithContext(context.Background(), printer.New(out, errOut))
+	ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
 	_ = filesys.MakeFsInMemory() // Reserved for future use
 
 	testCases := []struct {
