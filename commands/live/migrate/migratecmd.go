@@ -377,8 +377,11 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 		}
 
 		if _, err := kptfileutil.ValidateInventory(kf.Inventory); err != nil {
-			// Kptfile does not contain inventory: migration is not needed.
-			return nil
+			if kf.Inventory == nil {
+				return nil
+			}
+			return errors.E(op, types.UniquePath(dir),
+				fmt.Errorf("inventory in Kptfile is incomplete and cannot be migrated: %w", err))
 		}
 
 		// Check if resourcegroup file already exists.
