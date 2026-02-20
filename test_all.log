@@ -1,0 +1,103 @@
+﻿=== RUN   TestExecErrorString
+=== RUN   TestExecErrorString/no_truncate_-_empty_stderr
+=== RUN   TestExecErrorString/no_truncate_-_normal_failure
+=== RUN   TestExecErrorString/no_truncate_-_long_stderr
+=== RUN   TestExecErrorString/truncate_-_normal_failure
+=== RUN   TestExecErrorString/truncate_-_long_stderr_1
+=== RUN   TestExecErrorString/truncate_-_long_stderr_2
+--- PASS: TestExecErrorString (0.00s)
+    --- PASS: TestExecErrorString/no_truncate_-_empty_stderr (0.00s)
+    --- PASS: TestExecErrorString/no_truncate_-_normal_failure (0.00s)
+    --- PASS: TestExecErrorString/no_truncate_-_long_stderr (0.00s)
+    --- PASS: TestExecErrorString/truncate_-_normal_failure (0.00s)
+    --- PASS: TestExecErrorString/truncate_-_long_stderr_1 (0.00s)
+    --- PASS: TestExecErrorString/truncate_-_long_stderr_2 (0.00s)
+=== RUN   TestDockerCLIOutputFilter
+=== RUN   TestDockerCLIOutputFilter/should_filter_docker_CLI_output_successfully
+=== RUN   TestDockerCLIOutputFilter/should_filter_docker_messages_and_shouldn't_truncate_trailing_lines
+=== RUN   TestDockerCLIOutputFilter/should_filter_interleaved_docker_messages
+--- PASS: TestDockerCLIOutputFilter (0.00s)
+    --- PASS: TestDockerCLIOutputFilter/should_filter_docker_CLI_output_successfully (0.00s)
+    --- PASS: TestDockerCLIOutputFilter/should_filter_docker_messages_and_shouldn't_truncate_trailing_lines (0.00s)
+    --- PASS: TestDockerCLIOutputFilter/should_filter_interleaved_docker_messages (0.00s)
+=== RUN   TestFunctionConfig
+=== RUN   TestFunctionConfig/no_config
+=== RUN   TestFunctionConfig/file_config
+    runner_test.go:94: 
+        	Error Trace:	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/runner_test.go:94
+        	Error:      	Received unexpected error:
+        	            	fn.readConfig: missing function config "C:\\Users\\Surbhi\\AppData\\Local\\Temp\\kpt-pipeline-72748820"
+        	Test:       	TestFunctionConfig/file_config
+        	Messages:   	unexpected error
+    runner_test.go:97: 
+        	Error Trace:	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/runner_test.go:97
+        	Error:      	Not equal: 
+        	            	expected: "apiVersion: cft.dev/v1alpha1\nkind: ResourceHierarchy\nmetadata:\n  name: root-hierarchy\n  namespace: hierarchy\n"
+        	            	actual  : ""
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1,6 +1 @@
+        	            	-apiVersion: cft.dev/v1alpha1
+        	            	-kind: ResourceHierarchy
+        	            	-metadata:
+        	            	-  name: root-hierarchy
+        	            	-  namespace: hierarchy
+        	            	 
+        	Test:       	TestFunctionConfig/file_config
+        	Messages:   	unexpected result
+=== RUN   TestFunctionConfig/map_config
+--- FAIL: TestFunctionConfig (0.00s)
+    --- PASS: TestFunctionConfig/no_config (0.00s)
+    --- FAIL: TestFunctionConfig/file_config (0.00s)
+    --- PASS: TestFunctionConfig/map_config (0.00s)
+=== RUN   TestSingleLineFormatter
+=== RUN   TestSingleLineFormatter/single_line_with_newline_suppression
+=== RUN   TestSingleLineFormatter/empty_lines
+=== RUN   TestSingleLineFormatter/single_line_without_quotes_and_comma_separator
+=== RUN   TestSingleLineFormatter/single_line_with_quotes_and_space_separator
+--- PASS: TestSingleLineFormatter (0.00s)
+    --- PASS: TestSingleLineFormatter/single_line_with_newline_suppression (0.00s)
+    --- PASS: TestSingleLineFormatter/empty_lines (0.00s)
+    --- PASS: TestSingleLineFormatter/single_line_without_quotes_and_comma_separator (0.00s)
+    --- PASS: TestSingleLineFormatter/single_line_with_quotes_and_space_separator (0.00s)
+=== RUN   TestEnforcePathInvariants
+--- PASS: TestEnforcePathInvariants (0.00s)
+=== RUN   TestGetResourceRefMetadata
+--- PASS: TestGetResourceRefMetadata (0.00s)
+=== RUN   TestPrintFnStderr
+=== RUN   TestPrintFnStderr/no_output
+=== RUN   TestPrintFnStderr/truncated_output
+=== RUN   TestPrintFnStderr/non-truncated_output
+--- PASS: TestPrintFnStderr (0.00s)
+    --- PASS: TestPrintFnStderr/no_output (0.00s)
+    --- PASS: TestPrintFnStderr/truncated_output (0.00s)
+    --- PASS: TestPrintFnStderr/non-truncated_output (0.00s)
+=== RUN   TestRunnerOptions_InitDefaults
+=== RUN   TestRunnerOptions_InitDefaults/empty
+=== RUN   TestRunnerOptions_InitDefaults/trailing_slash
+=== RUN   TestRunnerOptions_InitDefaults/no_trailing_slash
+--- PASS: TestRunnerOptions_InitDefaults (0.00s)
+    --- PASS: TestRunnerOptions_InitDefaults/empty (0.00s)
+    --- PASS: TestRunnerOptions_InitDefaults/trailing_slash (0.00s)
+    --- PASS: TestRunnerOptions_InitDefaults/no_trailing_slash (0.00s)
+=== RUN   TestIsMatch
+=== RUN   TestIsMatch/kind_match
+=== RUN   TestIsMatch/name_match
+=== RUN   TestIsMatch/namespace_match
+=== RUN   TestIsMatch/apiVersion_match
+=== RUN   TestIsMatch/GVKNN_match
+=== RUN   TestIsMatch/namespace_not_matched_but_rest_did
+--- PASS: TestIsMatch (0.00s)
+    --- PASS: TestIsMatch/kind_match (0.00s)
+    --- PASS: TestIsMatch/name_match (0.00s)
+    --- PASS: TestIsMatch/namespace_match (0.00s)
+    --- PASS: TestIsMatch/apiVersion_match (0.00s)
+    --- PASS: TestIsMatch/GVKNN_match (0.00s)
+    --- PASS: TestIsMatch/namespace_not_matched_but_rest_did (0.00s)
+=== RUN   TestNewConfigMap
+--- PASS: TestNewConfigMap (0.00s)
+FAIL
+FAIL	github.com/kptdev/kpt/internal/fnruntime	0.418s
+FAIL

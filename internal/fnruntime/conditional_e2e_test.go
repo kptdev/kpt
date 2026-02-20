@@ -15,15 +15,17 @@
 package fnruntime
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/kptdev/kpt/internal/types"
 	fnresultv1 "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/internal/types"
+	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -33,15 +35,17 @@ import (
 // TestFunctionRunner_ConditionalExecution_E2E tests the complete flow
 // of conditional function execution
 func TestFunctionRunner_ConditionalExecution_E2E(t *testing.T) {
-	ctx := context.Background()
+	out := &bytes.Buffer{}
+	errOut := &bytes.Buffer{}
+	ctx := printer.WithContext(context.Background(), printer.New(out, errOut))
 	_ = filesys.MakeFsInMemory() // Reserved for future use
-	
+
 	testCases := []struct {
-		name              string
-		condition         string
-		inputResources    []string
-		shouldExecute     bool
-		description       string
+		name           string
+		condition      string
+		inputResources []string
+		shouldExecute  bool
+		description    string
 	}{
 		{
 			name:      "condition met - ConfigMap exists",
@@ -170,7 +174,7 @@ metadata:
 			// Create function runner with condition
 			fnResult := &fnresultv1.Result{}
 			fnResults := &fnresultv1.ResultList{}
-			
+
 			evaluator, err := NewCELEvaluator(tc.condition)
 			require.NoError(t, err)
 
@@ -214,15 +218,15 @@ metadata:
 // TestFunctionRunner_ConditionalExecution_ComplexConditions tests more advanced CEL expressions
 func TestFunctionRunner_ConditionalExecution_ComplexConditions(t *testing.T) {
 	ctx := context.Background()
-	
+
 	testCases := []struct {
-		name           string
-		condition      string
-		resources      []string
-		shouldExecute  bool
+		name          string
+		condition     string
+		resources     []string
+		shouldExecute bool
 	}{
 		{
-			name: "multiple conditions with AND",
+			name:      "multiple conditions with AND",
 			condition: `resources.exists(r, r.kind == "ConfigMap") && resources.exists(r, r.kind == "Deployment")`,
 			resources: []string{
 				`apiVersion: v1
@@ -237,7 +241,7 @@ metadata:
 			shouldExecute: true,
 		},
 		{
-			name: "check nested field",
+			name:      "check nested field",
 			condition: `resources.exists(r, r.kind == "Deployment" && r.spec.replicas > 2)`,
 			resources: []string{
 				`apiVersion: apps/v1
@@ -250,7 +254,7 @@ spec:
 			shouldExecute: true,
 		},
 		{
-			name: "check data field in ConfigMap",
+			name:      "check data field in ConfigMap",
 			condition: `resources.exists(r, r.kind == "ConfigMap" && r.data.environment == "production")`,
 			resources: []string{
 				`apiVersion: v1

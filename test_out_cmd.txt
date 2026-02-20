@@ -1,0 +1,25 @@
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists
+--- FAIL: TestFunctionRunner_ConditionalExecution_E2E (0.00s)
+    --- FAIL: TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists (0.00s)
+panic: printer missing in context [recovered, repanicked]
+
+goroutine 51 [running]:
+testing.tRunner.func1.2({0x7ff6f73c0740, 0x7ff6f77fbbf0})
+	C:/Program Files/Go/src/testing/testing.go:1974 +0x239
+testing.tRunner.func1()
+	C:/Program Files/Go/src/testing/testing.go:1977 +0x349
+panic({0x7ff6f73c0740?, 0x7ff6f77fbbf0?})
+	C:/Program Files/Go/src/runtime/panic.go:860 +0x13a
+github.com/kptdev/kpt/pkg/printer.FromContextOrDie(...)
+	C:/Users/Surbhi/Catroid/kpt/pkg/printer/printer.go:153
+github.com/kptdev/kpt/internal/fnruntime.(*FunctionRunner).Filter(0x3fd8cb927ea8, {0x3fd8cb927e88, 0x1, 0x4})
+	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/runner.go:222 +0x97f
+github.com/kptdev/kpt/internal/fnruntime.TestFunctionRunner_ConditionalExecution_E2E.func1(0x3fd8cb4aaa00)
+	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/conditional_e2e_test.go:193 +0x3ec
+testing.tRunner(0x3fd8cb4aaa00, 0x3fd8cb88b110)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 50
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+FAIL	github.com/kptdev/kpt/internal/fnruntime	0.575s
+FAIL
