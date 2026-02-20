@@ -70,12 +70,15 @@ func (i *DefaultInitializer) Initialize(
 		pkgName = string(p.DisplayPath)
 	}
 
+	pr := printer.FromContextOrDie(ctx)
+
 	up := string(p.UniquePath)
 	if !fsys.Exists(string(p.UniquePath)) {
-		return errors.Errorf("%s does not exist", p.UniquePath)
+		pr.Printf("creating package directory %s\n", opts.RelPath)
+		if err := fsys.MkdirAll(up); err != nil {
+			return errors.Errorf("failed to create directory %s: %w", p.UniquePath, err)
+		}
 	}
-
-	pr := printer.FromContextOrDie(ctx)
 
 	if !fsys.Exists(filepath.Join(up, kptfilev1.KptFileName)) {
 		pr.Printf("writing %s\n", filepath.Join(opts.RelPath, "Kptfile"))
