@@ -196,7 +196,7 @@ optional gated apply.
 To keep the example concrete, we use the WordPress package. You can fetch it locally with:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.59
+$ kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.61
 ```
 
 ### Render-only build
@@ -224,7 +224,7 @@ steps:
         kpt fn render ${_PACKAGE_DIR}
 
 substitutions:
-  _KPT_VERSION: v1.0.0-beta.59
+  _KPT_VERSION: v1.0.0-beta.61
   _PACKAGE_DIR: wordpress
 ```
 
@@ -266,7 +266,7 @@ steps:
         KUBECONFIG=/workspace/kubeconfig kpt live apply ${_PACKAGE_DIR}
 
 substitutions:
-  _KPT_VERSION: v1.0.0-beta.59
+  _KPT_VERSION: v1.0.0-beta.61
   _PACKAGE_DIR: wordpress
 
 # Define where the secret comes from

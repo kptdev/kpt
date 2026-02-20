@@ -20,11 +20,11 @@ fork the package to use it.
 Let's revisit the Wordpress example:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.59
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61
 ```
 
 A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case, we are specifying tag
-`v1.0.0-beta.59`.
+`v1.0.0-beta.61`.
 
 Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
 
@@ -42,14 +42,14 @@ upstream:
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    ref: v1.0.0-beta.59
+    ref: v1.0.0-beta.61
   updateStrategy: resource-merge
 upstreamLock:
   type: git
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    ref: package-examples/wordpress/v1.0.0-beta.59
+    ref: package-examples/wordpress/v1.0.0-beta.61
     commit: b9ea0bca019dafa9f9f91fd428385597c708518c
 info:
   emails:
@@ -113,7 +113,7 @@ It is possible to specify a different local directory name to the `get` command.
 For example, the following fetches the packages to a directory named `mywordpress`:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.59 mywordpress
+kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61 mywordpress
 ```
 
 The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and follows the familiar
@@ -281,7 +281,7 @@ upstream:
   git:
     repo: https://github.com/kptdev/kpt
     directory: /package-examples/wordpress
-    # Change this from v1.0.0-beta.59 to main
+    # Change this from v1.0.0-beta.61 to main
     ref: main
   updateStrategy: resource-merge
 ```
@@ -314,21 +314,13 @@ git add .; git commit -m "Updated wordpress to main"
 ```
 ## Creating a package
 
-Creating a new package is simple: create a new directory and [author resources](#editing-a-package):
-
-```shell
-mkdir awesomeapp
-# Create resources in awesomeapp/
-```
-
-For convenience, you can use `pkg init` command to create a minimal `Kptfile`
-and `README` files:
+Creating a new package is simple. Use the `pkg init` command to create a package directory with a minimal `Kptfile` and `README` files:
 
 ```shell
 kpt pkg init awesomeapp
-writing Kptfile
-writing README.md
 ```
+
+This will create the `awesomeapp` directory if it doesn't exist, and initialize it with the necessary files.
 
 Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
 
@@ -394,12 +386,6 @@ approaches:
 
 ### Create a new package
 
-Create the directory:
-
-```shell
-mkdir wordpress/mysql
-```
-
 Initialize the package:
 
 ```shell
@@ -407,7 +393,7 @@ kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
 
-This creates a [dependent package](#getting-a-package).
+This will create the `wordpress/mysql` directory if it doesn't exist, and initialize it as a [dependent package](#getting-a-package).
 
 ### Get an existing package
 
