@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kptdev/kpt/internal/types"
@@ -75,7 +76,7 @@ func (e *UnknownKptfileResourceError) Error() string {
 	return fmt.Sprintf("unknown resource type %q found in Kptfile", e.GVK.String())
 }
 
-func WriteFile(dir string, k interface{}) error {
+func WriteFile(dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteFile"
 	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
@@ -352,21 +353,11 @@ func checkKptfileVersion(content []byte) error {
 }
 
 func isDeprecatedKptfileVersion(gvk schema.GroupVersionKind) bool {
-	for _, v := range DeprecatedKptfileVersions {
-		if v == gvk {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(DeprecatedKptfileVersions, gvk)
 }
 
 func isSupportedKptfileVersion(gvk schema.GroupVersionKind) bool {
-	for _, v := range SupportedKptfileVersions {
-		if v == gvk {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(SupportedKptfileVersions, gvk)
 }
 
 // merge merges the Kptfiles from various sources and updates localKf with output

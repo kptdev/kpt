@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/kptdev/kpt/internal/types"
@@ -237,10 +238,8 @@ func isKustomization(n *yaml.RNode) bool {
 		// read the file path of the resource
 		resourceFile := filepath.Base(resourcePath)
 
-		for _, kustomizationFileName := range konfig.RecognizedKustomizationFileNames() {
-			if resourceFile == kustomizationFileName {
-				return true
-			}
+		if slices.Contains(konfig.RecognizedKustomizationFileNames(), resourceFile) {
+			return true
 		}
 	}
 	meta, err := n.GetMeta()

@@ -263,7 +263,7 @@ func sanitizeTimestamps(stderr string) string {
 	// Output will have non-deterministic output timestamps. We will replace these to static message for
 	// stable comparison in tests.
 	var sanitized []string
-	for _, line := range strings.Split(stderr, "\n") {
+	for line := range strings.SplitSeq(stderr, "\n") {
 		// [PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 2.0s
 		if strings.HasPrefix(line, "[PASS]") || strings.HasPrefix(line, "[FAIL]") {
 			tokens := strings.Fields(line)
