@@ -65,7 +65,6 @@ func (p *Pipeline) validate(fsys filesys.FileSystem, pkgPath types.UniquePath) e
 	}
 	return nil
 }
-
 func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkgPath types.UniquePath) error {
 	if f.Image == "" && f.Exec == "" {
 		return &ValidateError{
@@ -89,7 +88,34 @@ func (f *Function) validate(fsys filesys.FileSystem, fnType string, idx int, pkg
 			}
 		}
 	}
-	// TODO(droot): validate the exec
+
+	// Validate ResourceRef
+	if f.ResourceRef != nil {
+		if f.ConfigPath != "" {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+				Reason: "resourceRef cannot be specified with configPath",
+			}
+		}
+		if len(f.ConfigMap) != 0 {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d]", fnType, idx),
+				Reason: "resourceRef cannot be specified with configMap",
+			}
+		}
+		if f.ResourceRef.Name == "" {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].resourceRef", fnType, idx),
+				Reason: "name is required",
+			}
+		}
+		if f.ResourceRef.Kind == "" {
+			return &ValidateError{
+				Field:  fmt.Sprintf("pipeline.%s[%d].resourceRef", fnType, idx),
+				Reason: "kind is required",
+			}
+		}
+	}
 
 	if len(f.ConfigMap) != 0 && f.ConfigPath != "" {
 		return &ValidateError{
