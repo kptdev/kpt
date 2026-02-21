@@ -473,25 +473,26 @@ function assertCMInventory {
     fi
 }
 
-# assertRGInventory checks that a ResourceGroup inventory object exists
-# in the passed namespace. Assumes the inventory object name begins
-# with "inventory-".
+# assertRGInventory checks that exactly one ResourceGroup inventory object
+# exists in the passed namespace (selected by the inventory-id label).
 function assertRGInventory {
     local ns=$1
     
-    echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}'"
-    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers | awk '{print $1}' > $OUTPUT_DIR/invname
+    echo "kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers"
+    kubectl get resourcegroups.kpt.dev -n $ns --selector='cli-utils.sigs.k8s.io/inventory-id' --no-headers > $OUTPUT_DIR/invname
 
-    test 1 == $(grep "inventory-" $OUTPUT_DIR/invname | wc -l);
-    if [ $? == 0 ]; then
+    local count
+    count=$(wc -l < $OUTPUT_DIR/invname | tr -d ' ')
+    if [ "$count" -eq 1 ]; then
 	echo -n '.'
     else
 	echo -n 'E'
 	if [ ! -f $OUTPUT_DIR/errors ]; then
 	    touch $OUTPUT_DIR/errors
 	fi
-	echo "error: expected missing ResourceGroup inventory in ${ns} namespace" >> $OUTPUT_DIR/errors
-    HAS_TEST_FAILURE=1
+	echo "error: expected exactly 1 ResourceGroup inventory in ${ns} namespace, found ${count}:" >> $OUTPUT_DIR/errors
+	cat $OUTPUT_DIR/invname >> $OUTPUT_DIR/errors
+	HAS_TEST_FAILURE=1
     fi
 }
 
@@ -617,8 +618,8 @@ waitForDefaultServiceAccount
 # Test: Apply dry-run without ResourceGroup CRD installation fails
 echo "[ResourceGroup] Testing initial apply dry-run without ResourceGroup inventory CRD"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
-echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a
+echo "kpt live init --quiet --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --quiet --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a
 echo "kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a"
 ${BIN_DIR}/kpt live apply --dry-run e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "Error: The ResourceGroup CRD was not found in the cluster. Please install it either by using the '--install-resource-group' flag or the 'kpt live install-resource-group' command."
@@ -731,9 +732,9 @@ printResult
 # Test: Basic Kptfile/ResourceGroup inititalizing inventory info
 echo "Testing init for Kptfile/ResourceGroup"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/
-echo "kpt live init e2e/live/testdata/rg-test-case-1a"
+echo "kpt live init --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...success"
 # Difference in Kptfile should have inventory data
 diff e2e/live/testdata/Kptfile e2e/live/testdata/rg-test-case-1a/Kptfile 2>&1 | tee $OUTPUT_DIR/status
@@ -745,12 +746,12 @@ assertNotContains "inventoryID:"
 cat e2e/live/testdata/rg-test-case-1a/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
 assertContains "kind: ResourceGroup"
 assertContains "namespace: rg-test-namespace"
-assertContains "name: inventory-"
+assertContains "name: rg-test-case-1a"
 printResult
 
 echo "Testing init Kptfile/ResourceGroup already initialized"
-echo "kpt live init e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --name=rg-test-case-1a e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"resourcegroup.yaml\" data (namespace: rg-test-namespace)...failed"
 assertContains "Error: Inventory information has already been added to the package ResourceGroup object."
 printResult
@@ -764,8 +765,8 @@ assertContains "name: inventory-18030002"
 printResult
 
 echo "Testing init quiet Kptfile/ResourceGroup"
-echo "kpt live init --quiet e2e/live/testdata/rg-test-case-1a"
-${BIN_DIR}/kpt live init --quiet e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --quiet --force --name=inventory-18030002 e2e/live/testdata/rg-test-case-1a"
+${BIN_DIR}/kpt live init --quiet --force --name=inventory-18030002 e2e/live/testdata/rg-test-case-1a 2>&1 | tee $OUTPUT_DIR/status
 assertNotContains "initializing resourcegroup"
 printResult
 
@@ -1113,7 +1114,7 @@ printResult
 echo "[ResourceGroup] Testing continue-on-error"
 echo "kpt live apply e2e/live/testdata/continue-on-error"
 cp -f e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error
-${BIN_DIR}/kpt live init e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init --name=continue-on-error e2e/live/testdata/continue-on-error 2>&1 | tee $OUTPUT_DIR/status
 diff e2e/live/testdata/Kptfile e2e/live/testdata/continue-on-error/resourcegroup.yaml 2>&1 | tee $OUTPUT_DIR/status
 assertContains "namespace: continue-err-namespace"
 printResult
@@ -1214,12 +1215,12 @@ waitForDefaultServiceAccount
 # Setup: kpt live init with custom resourcegroup file
 # Applies resources in "test-case-1c" directory
 echo "Testing kpt live init with custom ResourceGroup file"
-echo "kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c"
-${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+echo "kpt live init --rg-file=custom-rg.yaml --name=test-case-1c e2e/live/testdata/test-case-1c"
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml --name=test-case-1c e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...success"
 printResult
 # Re-running live init should fail as ResourceGroup file already exists
-${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
+${BIN_DIR}/kpt live init --rg-file=custom-rg.yaml --name=test-case-1c e2e/live/testdata/test-case-1c 2>&1 | tee $OUTPUT_DIR/status
 assertContains "initializing \"custom-rg.yaml\" data (namespace: test-namespace)...failed"
 printResult
 
