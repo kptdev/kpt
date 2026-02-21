@@ -15,7 +15,6 @@
 package testutil
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -45,10 +44,10 @@ const TmpDirPrefix = "test-kpt"
 
 const (
 	Dataset1            = "dataset1"
-	Dataset2            = "dataset2"
+	Dataset2            = "dataset2" // Dataset2 is a replica of Dataset1 with workload spec changes (ports, replica count etc.) and a Kptfile mod
 	Dataset3            = "dataset3"
-	Dataset4            = "dataset4" // Dataset4 is replica of Dataset2 with different setter values
-	Dataset5            = "dataset5" // Dataset5 is replica of Dataset2 with additional non KRM files
+	Dataset4            = "dataset4" // Dataset4 is a replica of Dataset2 with different setter values
+	Dataset5            = "dataset5" // Dataset5 is a replica of Dataset2 with additional non KRM files
 	Dataset6            = "dataset6" // Dataset6 contains symlinks
 	DatasetMerged       = "datasetmerged"
 	DiffOutput          = "diff_output"
@@ -271,12 +270,12 @@ func (g *TestGitRepo) AssertKptfile(t *testing.T, cloned string, kpkg kptfilev1.
 	if !assert.NoError(t, err) {
 		return false
 	}
-	var res bytes.Buffer
-	d := yaml.NewEncoder(&res)
-	if !assert.NoError(t, d.Encode(kpkg)) {
+	// This mirrors 'WriteFile' in pkg/kptfile/kptfileutil/util.go
+	res, err := yaml.MarshalWithOptions(kpkg, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	if !assert.NoError(t, err) {
 		return false
 	}
-	return assert.Equal(t, res.String(), string(b))
+	return assert.Equal(t, string(res), string(b))
 }
 
 // CheckoutBranch checks out the git branch in the repo
