@@ -1,0 +1,13 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: dfs-parent-validator-fails
+info:
+  description: DFS - Parent validator fails
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+      configMap:
+        test: "parent-fail"
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0

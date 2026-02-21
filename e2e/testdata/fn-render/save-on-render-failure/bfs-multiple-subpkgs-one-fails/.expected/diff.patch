@@ -1,0 +1,124 @@
+diff --git a/Kptfile b/Kptfile
+index 436929b..101eb46 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,6 +4,8 @@ metadata:
+   annotations:
+     kpt.dev/bfs-rendering: "true"
+   name: bfs-multiple-subpkgs-one-fails
++  labels:
++    pkg: root
+ info:
+   description: BFS - Multiple subpackages, sub2 fails
+ pipeline:
+diff --git a/service.yaml b/service.yaml
+index 9148b9b..2e551c8 100644
+--- a/service.yaml
++++ b/service.yaml
+@@ -2,6 +2,10 @@ apiVersion: v1
+ kind: Service
+ metadata:
+   name: root-service
++  labels:
++    pkg: root
+ spec:
+   ports:
+   - port: 80
++  selector:
++    pkg: root
+diff --git a/sub1/Kptfile b/sub1/Kptfile
+index 2d62077..0f03268 100644
+--- a/sub1/Kptfile
++++ b/sub1/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: sub1
++  labels:
++    pkg: sub1
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+diff --git a/sub1/deployment.yaml b/sub1/deployment.yaml
+index 2f649ba..c2245a9 100644
+--- a/sub1/deployment.yaml
++++ b/sub1/deployment.yaml
+@@ -2,5 +2,14 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: sub1-deployment
++  labels:
++    pkg: sub1
+ spec:
+   replicas: 1
++  selector:
++    matchLabels:
++      pkg: sub1
++  template:
++    metadata:
++      labels:
++        pkg: sub1
+diff --git a/sub2/Kptfile b/sub2/Kptfile
+index 792277c..6412843 100644
+--- a/sub2/Kptfile
++++ b/sub2/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: sub2
++  labels:
++    pkg: sub2
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+diff --git a/sub2/deployment.yaml b/sub2/deployment.yaml
+index 20375ea..7290360 100644
+--- a/sub2/deployment.yaml
++++ b/sub2/deployment.yaml
+@@ -2,5 +2,14 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: sub2-deployment
++  labels:
++    pkg: sub2
+ spec:
+   replicas: 2
++  selector:
++    matchLabels:
++      pkg: sub2
++  template:
++    metadata:
++      labels:
++        pkg: sub2
+diff --git a/sub3/Kptfile b/sub3/Kptfile
+index ff35b98..958a351 100644
+--- a/sub3/Kptfile
++++ b/sub3/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: sub3
++  labels:
++    pkg: root
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+diff --git a/sub3/deployment.yaml b/sub3/deployment.yaml
+index dc257b3..3a13d11 100644
+--- a/sub3/deployment.yaml
++++ b/sub3/deployment.yaml
+@@ -2,5 +2,14 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: sub3-deployment
++  labels:
++    pkg: root
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      pkg: root
++  template:
++    metadata:
++      labels:
++        pkg: root

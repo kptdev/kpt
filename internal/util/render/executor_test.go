@@ -509,3 +509,127 @@ metadata:
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown resource type")
 }
+
+func TestRenderer_PrintPipelineExecutionSummary(t *testing.T) {
+	tests := []struct {
+		name                string
+		executedFunctionCnt int
+		pkgCount            int
+		hydErr              error
+		expectedOutput      string
+	}{
+		{
+			name:                "Success with functions executed",
+			executedFunctionCnt: 3,
+			pkgCount:            2,
+			hydErr:              nil,
+			expectedOutput:      "Successfully executed 3 function(s) in 2 package(s).\n",
+		},
+		{
+			name:                "Success with no functions",
+			executedFunctionCnt: 0,
+			pkgCount:            1,
+			hydErr:              nil,
+			expectedOutput:      "Successfully executed 0 function(s) in 1 package(s).\n",
+		},
+		{
+			name:                "Failure with no functions executed",
+			executedFunctionCnt: 0,
+			pkgCount:            2,
+			hydErr:              fmt.Errorf("pipeline error"),
+			expectedOutput:      "Failed to execute any functions in 2 package(s).\n",
+		},
+		{
+			name:                "Partial execution with some functions executed",
+			executedFunctionCnt: 2,
+			pkgCount:            3,
+			hydErr:              fmt.Errorf("pipeline error"),
+			expectedOutput:      "Partially executed 2 function(s) in 3 package(s).\n",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var outputBuffer bytes.Buffer
+			pr := printer.New(&outputBuffer, &outputBuffer)
+
+			renderer := &Renderer{}
+
+			hctx := hydrationContext{
+				executedFunctionCnt: tc.executedFunctionCnt,
+				pkgs:                make(map[types.UniquePath]*pkgNode, tc.pkgCount),
+			}
+
+			// Populate pkgs map with dummy entries
+			for i := 0; i < tc.pkgCount; i++ {
+				hctx.pkgs[types.UniquePath(fmt.Sprintf("/pkg%d", i))] = &pkgNode{}
+			}
+
+			renderer.printPipelineExecutionSummary(pr, hctx, tc.hydErr)
+
+			assert.Equal(t, tc.expectedOutput, outputBuffer.String())
+		})
+	}
+}
+
+func TestPkgNode_ClearAnnotationsOnMutFailure(t *testing.T) {
+	tests := []struct {
+		name               string
+		inputYAML                 string
+		hasNonRenderingAnnotation bool
+	}{
+		{
+			name: "clears all migration annotations",
+			inputYAML: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  annotations:
+    config.k8s.io/id: "123"
+    internal.config.kubernetes.io/annotations-migration-resource-id: "456"
+    internal.config.kubernetes.io/id: "789"
+    internal.config.k8s.io/kpt-resource-id: "abc"
+    other.annotation: "keep"`,
+			hasNonRenderingAnnotation: true,
+		},
+		{
+			name: "handles resources without migration annotations",
+			inputYAML: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+  annotations:
+    other.annotation: "keep"`,
+			hasNonRenderingAnnotation: true,
+		},
+		{
+			name: "handles resources with no annotations",
+			inputYAML: `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test`,
+			hasNonRenderingAnnotation: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			nodes, err := kio.ParseAll(tc.inputYAML)
+			assert.NoError(t, err)
+
+			clearAnnotationsOnMutFailure(nodes)
+
+			for _, node := range nodes {
+				annotations := node.GetAnnotations()
+				assert.NotContains(t, annotations, "config.k8s.io/id")
+				assert.NotContains(t, annotations, "internal.config.kubernetes.io/annotations-migration-resource-id")
+				assert.NotContains(t, annotations, "internal.config.kubernetes.io/id")
+				assert.NotContains(t, annotations, "internal.config.k8s.io/kpt-resource-id")
+				// Verify other.annotation is preserved after clearing
+				if tc.hasNonRenderingAnnotation {
+					assert.Contains(t, annotations, "other.annotation")
+				}
+			}
+		})
+	}
+}

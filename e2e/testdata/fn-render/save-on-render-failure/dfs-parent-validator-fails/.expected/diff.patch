@@ -1,0 +1,62 @@
+diff --git a/Kptfile b/Kptfile
+index 86325b3..2efd0b0 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,12 +2,14 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: dfs-parent-validator-fails
++  labels:
++    test: parent-fail
+ info:
+   description: DFS - Parent validator fails
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+       configMap:
+-        test: "parent-fail"
++        test: parent-fail
+   validators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
+diff --git a/configmap.yaml b/configmap.yaml
+index 20a54f6..ad595de 100644
+--- a/configmap.yaml
++++ b/configmap.yaml
+@@ -2,5 +2,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: root-config
++  labels:
++    test: parent-fail
+ data:
+   key: value
+diff --git a/subpkg/Kptfile b/subpkg/Kptfile
+index e940ae8..a2fe9c5 100644
+--- a/subpkg/Kptfile
++++ b/subpkg/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: subpkg
++  namespace: subpkg-ns
++  labels:
++    test: parent-fail
+ info:
+   description: Subpackage that succeeds
+ pipeline:
+diff --git a/subpkg/service.yaml b/subpkg/service.yaml
+index 276bf9e..3ba5cae 100644
+--- a/subpkg/service.yaml
++++ b/subpkg/service.yaml
+@@ -2,6 +2,11 @@ apiVersion: v1
+ kind: Service
+ metadata:
+   name: sub-service
++  namespace: subpkg-ns
++  labels:
++    test: parent-fail
+ spec:
+   ports:
+   - port: 80
++  selector:
++    test: parent-fail

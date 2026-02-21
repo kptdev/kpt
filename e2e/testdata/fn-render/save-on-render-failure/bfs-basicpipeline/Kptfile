@@ -1,0 +1,17 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  annotations:
+    kpt.dev/bfs-rendering: "true"
+  name: save-on-render-failure
+pipeline:
+  mutators:
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+    configMap:
+      namespace: staging
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+    configMap:
+      app: myapp
+  - image: invalid-image:v0.0.0
+    configMap:
+      tier: backend
