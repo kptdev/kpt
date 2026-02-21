@@ -1,0 +1,16 @@
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_not_met_-_ConfigMap_missing
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_Deployment_count_check
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_not_met_-_no_Deployments
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/always_true_condition
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/always_false_condition
+--- PASS: TestFunctionRunner_ConditionalExecution_E2E (0.05s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists (0.05s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/condition_not_met_-_ConfigMap_missing (0.00s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_Deployment_count_check (0.00s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/condition_not_met_-_no_Deployments (0.00s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/always_true_condition (0.00s)
+    --- PASS: TestFunctionRunner_ConditionalExecution_E2E/always_false_condition (0.00s)
+PASS
+ok  	github.com/kptdev/kpt/internal/fnruntime	1.965s

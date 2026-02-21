@@ -153,7 +153,27 @@ func NewRunner(
 			}
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	
+	// Initialize CEL evaluator if a condition is specified
+	var evaluator *CELEvaluator
+	if f.Condition != "" {
+		var err error
+		evaluator, err = NewCELEvaluator(f.Condition)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create CEL evaluator: %w", err)
+		}
+	}
+	
+	fr, err := NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+	
+	// Set condition and evaluator
+	fr.condition = f.Condition
+	fr.evaluator = evaluator
+	
+	return fr, nil
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
@@ -194,10 +214,29 @@ type FunctionRunner struct {
 	fnResult         *fnresult.Result
 	fnResults        *fnresult.ResultList
 	opts             runneroptions.RunnerOptions
+	condition        string        // CEL condition expression
+	evaluator        *CELEvaluator // CEL evaluator for condition checking
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
+	
+	// Check condition before executing function
+	if fr.evaluator != nil {
+		shouldExecute, err := fr.evaluator.EvaluateCondition(fr.ctx, input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
+		}
+		
+		if !shouldExecute {
+			if !fr.disableCLIOutput {
+				pr.Printf("[SKIPPED] %q (condition not met)\n", fr.name)
+			}
+			// Return input unchanged - function is skipped
+			return input, nil
+		}
+	}
+	
 	if !fr.disableCLIOutput {
 		if fr.opts.AllowWasm {
 			if fr.opts.DisplayResourceCount {

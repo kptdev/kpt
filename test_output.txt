@@ -1,0 +1,45 @@
+﻿=== RUN   TestNewCELEvaluator
+--- PASS: TestNewCELEvaluator (0.00s)
+=== RUN   TestNewCELEvaluator_EmptyCondition
+--- PASS: TestNewCELEvaluator_EmptyCondition (0.00s)
+=== RUN   TestEvaluateCondition_EmptyCondition
+--- PASS: TestEvaluateCondition_EmptyCondition (0.00s)
+=== RUN   TestEvaluateCondition_SimpleTrue
+--- PASS: TestEvaluateCondition_SimpleTrue (0.00s)
+=== RUN   TestEvaluateCondition_SimpleFalse
+--- PASS: TestEvaluateCondition_SimpleFalse (0.00s)
+=== RUN   TestEvaluateCondition_ResourceExists
+--- PASS: TestEvaluateCondition_ResourceExists (0.00s)
+=== RUN   TestEvaluateCondition_ResourceCount
+--- PASS: TestEvaluateCondition_ResourceCount (0.00s)
+=== RUN   TestEvaluateCondition_InvalidExpression
+--- PASS: TestEvaluateCondition_InvalidExpression (0.00s)
+=== RUN   TestEvaluateCondition_NonBooleanResult
+--- PASS: TestEvaluateCondition_NonBooleanResult (0.00s)
+=== RUN   TestEvaluateCondition_Immutability
+--- PASS: TestEvaluateCondition_Immutability (0.00s)
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E
+=== RUN   TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists
+--- FAIL: TestFunctionRunner_ConditionalExecution_E2E (0.00s)
+    --- FAIL: TestFunctionRunner_ConditionalExecution_E2E/condition_met_-_ConfigMap_exists (0.00s)
+panic: printer missing in context [recovered, repanicked]
+
+goroutine 45 [running]:
+testing.tRunner.func1.2({0x7ff7808d0740, 0x7ff780d0bc20})
+	C:/Program Files/Go/src/testing/testing.go:1974 +0x239
+testing.tRunner.func1()
+	C:/Program Files/Go/src/testing/testing.go:1977 +0x349
+panic({0x7ff7808d0740?, 0x7ff780d0bc20?})
+	C:/Program Files/Go/src/runtime/panic.go:860 +0x13a
+github.com/kptdev/kpt/pkg/printer.FromContextOrDie(...)
+	C:/Users/Surbhi/Catroid/kpt/pkg/printer/printer.go:153
+github.com/kptdev/kpt/internal/fnruntime.(*FunctionRunner).Filter(0x31472873fea8, {0x31472873fe88, 0x1, 0x4})
+	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/runner.go:222 +0x97f
+github.com/kptdev/kpt/internal/fnruntime.TestFunctionRunner_ConditionalExecution_E2E.func1(0x314728879200)
+	C:/Users/Surbhi/Catroid/kpt/internal/fnruntime/conditional_e2e_test.go:193 +0x3ec
+testing.tRunner(0x314728879200, 0x314728bec850)
+	C:/Program Files/Go/src/testing/testing.go:2036 +0xc3
+created by testing.(*T).Run in goroutine 44
+	C:/Program Files/Go/src/testing/testing.go:2101 +0x4a9
+FAIL	github.com/kptdev/kpt/internal/fnruntime	2.084s
+FAIL

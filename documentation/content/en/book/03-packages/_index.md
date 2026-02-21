@@ -314,21 +314,13 @@ git add .; git commit -m "Updated wordpress to main"
 ```
 ## Creating a package
 
-Creating a new package is simple: create a new directory and [author resources](#editing-a-package):
-
-```shell
-mkdir awesomeapp
-# Create resources in awesomeapp/
-```
-
-For convenience, you can use `pkg init` command to create a minimal `Kptfile`
-and `README` files:
+Creating a new package is simple. Use the `pkg init` command to create a package directory with a minimal `Kptfile` and `README` files:
 
 ```shell
 kpt pkg init awesomeapp
-writing Kptfile
-writing README.md
 ```
+
+This will create the `awesomeapp` directory if it doesn't exist, and initialize it with the necessary files.
 
 Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
 
@@ -392,14 +384,6 @@ rm -r wordpress/mysql
 We're going to add back the `mysql` subpackage using the two different
 approaches:
 
-### Create a new package
-
-Create the directory:
-
-```shell
-mkdir wordpress/mysql
-```
-
 Initialize the package:
 
 ```shell
@@ -407,7 +391,7 @@ kpt pkg init wordpress/mysql
 # author resources in mysql
 ```
 
-This creates a [dependent package](#getting-a-package).
+This will create the `wordpress/mysql` directory if it doesn't exist, and initialize it as a [dependent package](#getting-a-package).
 
 ### Get an existing package
 
