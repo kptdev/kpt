@@ -13,3 +13,4 @@ menu:
 - [Namespace Provisioning CLI](guides/namespace-provisioning-cli.md)
 - [Variant Constructor Pattern](guides/variant-constructor-pattern.md)
 - [Value Propagation Pattern](guides/value-propagation.md)
+- [Tenant Onboarding](guides/tenant-onboarding.md)

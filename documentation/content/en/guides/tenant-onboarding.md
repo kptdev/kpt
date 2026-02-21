@@ -1,5 +1,10 @@
 # Tenant onboarding
 
+{{< warning type=warning >}}
+This guide is a work in progress and may not fully reflect the
+current state of kpt. It is due for a rewrite.
+{{< /warning >}}
+
 We have seen that in large organizations using kubernetes, there is a platform
 team (or infrastructure team) that is responsible for managing the kubernetes
 clusters. Typically a kubernetes cluster is shared by multiple teams to run
@@ -39,7 +44,7 @@ There are many ways to organize the tenant package and its variants. In this gui
 we will explore one of the patterns where we keep the packages and their variants
 in different repos as shown in the figure below.
 
-![drawing](/static/images/tenant-onboarding.svg)
+![tenant package organization diagram](/images/tenant-onboarding.svg)
 
 Package catalog repo contains kpt packages that will be used to create variants
 of the packages. Platform repo contains the variants of the packages and there
@@ -241,8 +246,7 @@ $ git push origin update-tenant-a
 
 ## Summary
 
-So, in this guide, how platform teams can enable self service workflow for
-application teams to onboard a new tenant. In the next guide, we will explore
-how platform teams can do it at a scale when there are hundreds of tenants
-provisioned on a kubernetes cluster. Next guides will explore package lifecycle
-(pkg diff/update) use cases at large scale.
+With the above workflow, platform teams can enable self-service tenant
+onboarding for application teams. Application teams can create and customize
+package variants, run validations, and submit changes via pull requests against
+the platform repo.
