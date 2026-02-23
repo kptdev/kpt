@@ -342,6 +342,8 @@ func generateHash(namespace, name string) (string, error) {
 	if namespace == "" || name == "" {
 		return "", fmt.Errorf("cannot generate inventory ID: namespace and name must be non-empty")
 	}
+	// Note: SHA-1 is used here strictly for deterministic ID generation,
+	// not for cryptographic security.
 	h := sha1.New()
 	if _, err := fmt.Fprintf(h, "%d:%s:%d:%s", len(namespace), namespace, len(name), name); err != nil {
 		return "", fmt.Errorf("failed to write hash input: %w", err)
