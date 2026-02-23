@@ -2,6 +2,8 @@
 
 This document is focused on using Porch via the `kpt` CLI.
 
+Porch, from the [Nephio Project](https://github.com/nephio-project/porch), is the recommended approach for deploying workloads in kpt.
+
 Installation of Porch, including prerequisites, is covered in a
 [dedicated document](guides/porch-installation.md).
 

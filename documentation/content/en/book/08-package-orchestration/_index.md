@@ -29,7 +29,7 @@ configuration [**packages**](../02-concepts/#packages), including:
 * package customization with _guardrails_
 * evaluation of functions on package contents
 * approval flow to publish a change to a configuration package
-* deployment and rollouts
+* deployment
 
 Package Orchestration enables [workflows](../02-concepts/#workflows)
 similar to those supported by the kpt CLI, but makes them available as a
