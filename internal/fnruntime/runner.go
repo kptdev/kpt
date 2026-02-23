@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -67,6 +68,7 @@ func NewRunner(
 
 	fnResult := &fnresult.Result{
 		Image:    f.Image,
+		Tag:      f.Tag,
 		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
@@ -157,14 +159,37 @@ func NewRunner(
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
-// and it's config.
+// and its config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
 	pkgPath types.UniquePath,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
-	name := fnResult.Image
+	name := func() string {
+
+		if name := fnResult.Image; name != "" {
+			tag := fnResult.Tag
+			tagInName := strings.Contains(name, ":")
+
+			if tag == "" {
+				if tagInName {
+					return name
+				}
+
+				tag = "latest"
+				return fmt.Sprintf("%s:%s", name, tag)
+			} else {
+				if tagInName {
+					return regexp.MustCompile(":.*$").ReplaceAllString(name, ":"+tag)
+				}
+
+				return fmt.Sprintf("%s:%s", name, tag)
+			}
+		}
+
+		return ""
+	}()
 	if name == "" {
 		name = fnResult.ExecPath
 	}
@@ -249,6 +274,7 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 
 	fnResult := fr.fnResult
 	output, err = fr.filter.Filter(input)
+	fr.name = fr.fnResult.Image
 
 	if fr.opts.SetPkgPathAnnotation {
 		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, fr.pkgPath); pkgPathErr != nil {

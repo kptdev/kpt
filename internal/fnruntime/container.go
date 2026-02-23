@@ -162,8 +162,15 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 			},
 		}
 		f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
+		f.FnResult.Image = f.Image
 		if err != nil {
 			return err
+		}
+	} else { // the Tag is not specified either exactly or with a semver constraint
+		if !strings.Contains(f.Image, ":") {
+			// the image string doesn't itself contain the tag
+			// therefore we default to "latest" and should reflect that in the FnResult
+			f.FnResult.Image = f.Image + ":latest"
 		}
 	}
 
