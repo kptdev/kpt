@@ -196,7 +196,7 @@ optional gated apply.
 To keep the example concrete, we use the WordPress package. You can fetch it locally with:
 
 ```shell
-$ kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.59
+$ kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.61
 ```
 
 ### Render-only build
@@ -224,7 +224,7 @@ steps:
         kpt fn render ${_PACKAGE_DIR}
 
 substitutions:
-  _KPT_VERSION: v1.0.0-beta.59
+  _KPT_VERSION: v1.0.0-beta.61
   _PACKAGE_DIR: wordpress
 ```
 
@@ -266,7 +266,7 @@ steps:
         KUBECONFIG=/workspace/kubeconfig kpt live apply ${_PACKAGE_DIR}
 
 substitutions:
-  _KPT_VERSION: v1.0.0-beta.59
+  _KPT_VERSION: v1.0.0-beta.61
   _PACKAGE_DIR: wordpress
 
 # Define where the secret comes from
@@ -281,8 +281,8 @@ availableSecrets:
 This section highlights practices that commonly lead to CI failures, drift, or unintended cluster changes. Avoid the
 following:
 
-- Running `kpt pkg init` in CI. Packages and `Kptfile` metadata should be authored by developers, not created during
-  CI runs.
+- Running `kpt pkg init` in CI to create package metadata. The `Kptfile` and package structure should be authored by developers
+  and committed to Git, not generated during CI runs.
 - Mutating packages in CI. CI should validate and render the declared intent, not change the source of truth.
 - Storing secrets in configuration. Secrets must not appear in YAML files, the `Kptfile`, or `functionConfig`.
 - Applying on pull requests. PRs should validate only; deployment belongs in gated, mainline workflows.
