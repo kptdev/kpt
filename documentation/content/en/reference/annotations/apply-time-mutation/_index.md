@@ -110,9 +110,8 @@ from pod-a.
 Create a new kpt package:
 
 ```shell
-mkdir my-pkg
+kpt pkg init my-pkg
 cd my-pkg
-kpt pkg init
 ```
 
 Configure two pods, with one that depends on the other:

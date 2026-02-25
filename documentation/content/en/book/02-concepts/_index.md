@@ -88,6 +88,13 @@ YAML as the file format.
 A package is explicitly declared using a file named `Kptfile` containing a KRM resource of kind `Kptfile`. The Kptfile
 contains metadata about the package and is just a regular resource in the YAML format.
 
+### Kptfile Annotations
+
+The Kptfile supports annotations that control package-level behavior:
+
+- **`kpt.dev/bfs-rendering`**: When set to `"true"`, renders the package hierarchy in breadth-first order instead of the default depth-first post-order.
+- **`kpt.dev/save-on-render-failure`**: When set to `"true"`, saves partially rendered resources to disk even when rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios (e.g., Porch integration) where preserving partial progress is valuable.
+
 Just as directories can be nested, a package can contain another package, called a _subpackage_.
 
 Let's take a look at the wordpress package as an example:
@@ -181,7 +188,7 @@ Instead of consuming an existing package, you can also create a package from scr
 
 ![img](/images/lifecycle/flow5.svg)
 
-- **Create**: Initialize a directory using `kpt pkg init`.
+- **Create**: Initialize a package using `kpt pkg init`. The command creates the directory if it doesn't exist.
 
 Now, let's say you have rendered the package, and want to deploy it to a cluster. The workflow
 may look like this:
