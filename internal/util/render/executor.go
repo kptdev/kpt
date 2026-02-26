@@ -185,11 +185,13 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
 	}
 
+	saveErr := e.saveFnResults(ctx, hctx.fnResults)
+
 	if e.Output == nil {
-		updateRenderStatus(hctx, nil)
+		updateRenderStatus(hctx, saveErr)
 	}
 
-	return hctx.fnResults, e.saveFnResults(ctx, hctx.fnResults)
+	return hctx.fnResults, saveErr
 }
 
 func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrationContext, hydErr error) {
@@ -213,15 +215,15 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 	}
 
 	rootPath := hctx.root.pkg.UniquePath.String()
-	condition := kptfilev1.ConditionTrue
+	conditionStatus := kptfilev1.ConditionTrue
 	reason := kptfilev1.ReasonRenderSuccess
 	message := ""
 	if hydErr != nil {
-		condition = kptfilev1.ConditionFalse
+		conditionStatus = kptfilev1.ConditionFalse
 		reason = kptfilev1.ReasonRenderFailed
 		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
 	}
-	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(condition, reason, message))
+	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message))
 }
 
 // setRenderCondition reads the Kptfile at pkgPath, sets the Rendered condition, and writes it back.
