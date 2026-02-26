@@ -431,6 +431,23 @@ const (
 	ConditionUnknown ConditionStatus = "Unknown"
 )
 
+// Rendered condition type and reasons
+const (
+	ConditionTypeRendered = "Rendered"
+	ReasonRenderSuccess   = "RenderSuccess"
+	ReasonRenderFailed    = "RenderFailed"
+)
+
+// NewRenderedCondition creates a Rendered status condition.
+func NewRenderedCondition(status ConditionStatus, reason, message string) Condition {
+	return Condition{
+		Type:    ConditionTypeRendered,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	}
+}
+
 // BFSRenderAnnotation is an annotation that can be used to indicate that a package
 // should be hydrated from the root package to the subpackages in a Breadth-First Level Order manner.
 // SaveOnRenderFailureAnnotation is an annotation that controls whether partially rendered
