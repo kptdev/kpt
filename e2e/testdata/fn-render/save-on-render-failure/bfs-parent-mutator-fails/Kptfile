@@ -3,6 +3,7 @@ kind: Kptfile
 metadata:
   annotations:
     kpt.dev/bfs-rendering: "true"
+    kpt.dev/save-on-render-failure: "true"
   name: bfs-parent-mutator-fails
 info:
   description: BFS - Parent mutator fails

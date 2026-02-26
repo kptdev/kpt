@@ -1,10 +1,10 @@
 diff --git a/Kptfile b/Kptfile
-index 3e37f10..87a67b1 100644
+index 491b12e..8c66fe7 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,12 +4,14 @@ metadata:
-   annotations:
+@@ -5,12 +5,14 @@ metadata:
      kpt.dev/bfs-rendering: "true"
+     kpt.dev/save-on-render-failure: "true"
    name: bfs-parent-validator-fails
 +  labels:
 +    test: parent-fail

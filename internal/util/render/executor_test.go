@@ -574,7 +574,7 @@ func TestRenderer_PrintPipelineExecutionSummary(t *testing.T) {
 
 func TestPkgNode_ClearAnnotationsOnMutFailure(t *testing.T) {
 	tests := []struct {
-		name               string
+		name                      string
 		inputYAML                 string
 		hasNonRenderingAnnotation bool
 	}{

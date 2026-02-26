@@ -1,6 +1,8 @@
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
   name: dfs-multiple-subpkgs-one-fails
 info:
   description: DFS - Multiple subpackages, sub2 fails

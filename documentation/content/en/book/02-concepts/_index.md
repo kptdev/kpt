@@ -90,10 +90,20 @@ contains metadata about the package and is just a regular resource in the YAML f
 
 ### Kptfile Annotations
 
+<<<<<<< HEAD
 The Kptfile supports annotations that control package-level behavior:
 
 - **`kpt.dev/bfs-rendering`**: When set to `"true"`, renders the package hierarchy in breadth-first order instead of the default depth-first post-order.
 - **`kpt.dev/save-on-render-failure`**: When set to `"true"`, saves partially rendered resources to disk even when rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios (e.g., Porch integration) where preserving partial progress is valuable.
+=======
+The Kptfile supports annotations that control package-level behaviour:
+
+- **`kpt.dev/bfs-rendering`**: When set to `"true"`, renders the package hierarchy in breadth-first order instead of
+the default depth-first post-order.
+- **`kpt.dev/save-on-render-failure`**: When set to `"true"`, saves partially rendered resources to disk even when
+rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is
+essential for programmatic package rendering scenarios where preserving partial progress is valuable.
+>>>>>>> main
 
 Just as directories can be nested, a package can contain another package, called a _subpackage_.
 

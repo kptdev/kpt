@@ -58,10 +58,6 @@ type RunnerOptions struct {
 
 	// ResolveToImage will resolve a partial image to a fully-qualified one
 	ResolveToImage ImageResolveFunc
-
-	// SaveOnRenderFailure determines whether to save the partially rendered
-	// resources when rendering fails.
-	SaveOnRenderFailure bool
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {

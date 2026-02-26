@@ -93,6 +93,11 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		return nil, fmt.Errorf("failed to read Kptfile: %w", err)
 	}
 
+	// Read save-on-render-failure behavior from Kptfile annotation
+	if value, exists := kptfile.Annotations[kptfilev1.SaveOnRenderFailureAnnotation]; exists && kptfilev1.ToCondition(value) == kptfilev1.ConditionTrue {
+		hctx.saveOnRenderFailure = true
+	}
+
 	// Choose hydration function based on annotation
 	// If the annotation "kpt.dev/bfs-rendering" is set to "true", use hydrateBfsOrder
 	// otherwise use the default hydrate function in depth-first post-order.
@@ -103,7 +108,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 
 	_, hydErr := hydrateFn(ctx, root, hctx)
 
-	if hydErr != nil && !hctx.runnerOptions.SaveOnRenderFailure {
+	if hydErr != nil && !hctx.saveOnRenderFailure {
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
 	}
@@ -125,8 +130,8 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 
 	if e.Output == nil {
 		// the intent of the user is to modify resources in-place
-		// Only write resources if hydration succeeded OR SaveOnRenderFailure is enabled
-		if hydErr == nil || hctx.runnerOptions.SaveOnRenderFailure {
+		// Only write resources if hydration succeeded OR save-on-render-failure is enabled
+		if hydErr == nil || hctx.saveOnRenderFailure {
 			pkgWriter := &kio.LocalPackageReadWriter{
 				PackagePath:        string(root.pkg.UniquePath),
 				PreserveSeqIndent:  true,
@@ -224,6 +229,10 @@ type hydrationContext struct {
 	// fnResults stores function results gathered
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
+
+	// saveOnRenderFailure indicates whether partially rendered resources
+	// should be saved when rendering fails. Read from the root Kptfile annotation.
+	saveOnRenderFailure bool
 
 	runnerOptions runneroptions.RunnerOptions
 
@@ -353,7 +362,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 		transitiveResources, err = hydrate(ctx, subPkgNode, hctx)
 		if err != nil {
-			if transitiveResources != nil && hctx.runnerOptions.SaveOnRenderFailure {
+			if transitiveResources != nil && hctx.saveOnRenderFailure {
 				input = append(input, transitiveResources...)
 				curr.resources = input
 			}
@@ -365,7 +374,7 @@ func hydrate(ctx context.Context, pn *pkgNode, hctx *hydrationContext) (output [
 
 	output, err = curr.runPipeline(ctx, hctx, input)
 	if err != nil {
-		if hctx.runnerOptions.SaveOnRenderFailure {
+		if hctx.saveOnRenderFailure {
 			// Fall back to input if output is nil (early errors before pipeline execution)
 			if output == nil {
 				output = input
@@ -503,7 +512,7 @@ func executePipelinesWithScopedVisibility(ctx context.Context, allNodes []*pkgNo
 		input := buildPipelineInputWithScopedVisibility(node, childrenMap)
 		output, err := node.runPipeline(ctx, hctx, input)
 		if err != nil {
-			if hctx.runnerOptions.SaveOnRenderFailure {
+			if hctx.saveOnRenderFailure {
 				// Fall back to input if output is nil (early errors before pipeline execution)
 				if output == nil {
 					output = input

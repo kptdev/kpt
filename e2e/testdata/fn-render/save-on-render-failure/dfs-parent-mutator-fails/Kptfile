@@ -1,6 +1,8 @@
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
   name: dfs-parent-mutator-fails
 info:
   description: DFS - Parent mutator fails

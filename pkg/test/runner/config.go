@@ -94,9 +94,6 @@ type TestCaseConfig struct {
 	// AllowWasm determines if `fn render` needs to be invoked with `--allow-alpha-wasm` flag
 	AllowWasm bool `json:"allowWasm,omitempty" yaml:"allowWasm,omitempty"`
 
-	// SaveOnRenderFailure determines if `fn render` needs to be invoked with `--save-on-render-failure` flag
-	SaveOnRenderFailure bool `json:"saveOnRenderFailure,omitempty" yaml:"saveOnRenderFailure,omitempty"`
-
 	// Skip means should this test case be skipped. Default: false
 	Skip bool `json:"skip,omitempty" yaml:"skip,omitempty"`
 

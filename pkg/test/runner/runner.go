@@ -371,10 +371,6 @@ func (r *Runner) runFnRender() error {
 				kptArgs = append(kptArgs, "--allow-exec")
 			}
 
-			if r.testCase.Config.SaveOnRenderFailure {
-				kptArgs = append(kptArgs, "--save-on-render-failure")
-			}
-
 			if r.testCase.Config.AllowWasm {
 				kptArgs = append(kptArgs, allowWasmFlag)
 			}
