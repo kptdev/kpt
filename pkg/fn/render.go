@@ -22,8 +22,9 @@ import (
 )
 
 type RenderOptions struct {
-	PkgPath string
-	Runtime FunctionRuntime
+	PkgPath     string
+	Runtime     FunctionRuntime
+	DisplayName string
 }
 
 type Renderer interface {
