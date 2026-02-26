@@ -61,7 +61,7 @@ underlying Git version control system.
 First, let's fetch the _kpt package_ from Git to your local filesystem:
 
 ```shell
-kpt pkg get https://github.com/kptdev/kpt/package-examples/nginx@v1.0.0-beta.59
+kpt pkg get https://github.com/kptdev/kpt/package-examples/nginx@v1.0.0-beta.61
 ```
 
 Subsequent commands are run from the `nginx` directory:

@@ -21,7 +21,7 @@ This book is organized as follows:
 - [Chapter 5] guides you through developing custom functions.
 - [Chapter 6] covers how to deploy a package to a Kubernetes cluster.
 - [Chapter 7] covers effective customizations techniques.
-- [Chapter 9] provides a practical guide for using kpt in CI/CD workflows.
+- [Chapter 8] provides a practical guide for using kpt in CI/CD workflows.
 
 Let's get started!
 
@@ -32,5 +32,4 @@ Let's get started!
 [chapter 5]: /book/05-developing-functions/
 [chapter 6]: /book/06-deploying-packages/
 [chapter 7]: /book/07-effective-customizations/
-[chapter 8]: /book/08-package-orchestration/
-[chapter 9]: /book/09-ci-user-guide/
+[chapter 8]: /book/08-ci-user-guide/

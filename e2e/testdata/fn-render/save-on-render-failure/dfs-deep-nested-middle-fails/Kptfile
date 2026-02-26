@@ -1,6 +1,8 @@
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
   name: dfs-deep-nested-middle-fails
 info:
   description: DFS - Deep nested, middle level fails

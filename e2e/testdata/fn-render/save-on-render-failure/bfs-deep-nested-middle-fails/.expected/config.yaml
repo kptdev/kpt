@@ -1,3 +1,2 @@
 exitCode: 1
-saveOnRenderFailure: true
 StdErrRegEx: "(docker: Error response from daemon: Head.*denied|Error.*initializing source docker)"

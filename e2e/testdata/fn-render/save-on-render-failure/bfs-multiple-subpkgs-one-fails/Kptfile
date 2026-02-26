@@ -3,6 +3,7 @@ kind: Kptfile
 metadata:
   annotations:
     kpt.dev/bfs-rendering: "true"
+    kpt.dev/save-on-render-failure: "true"
   name: bfs-multiple-subpkgs-one-fails
 info:
   description: BFS - Multiple subpackages, sub2 fails

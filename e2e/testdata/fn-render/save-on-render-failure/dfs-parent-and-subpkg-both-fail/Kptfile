@@ -1,6 +1,8 @@
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
   name: dfs-parent-and-subpkg-both-fail
 info:
   description: DFS - Both parent and subpackage fail

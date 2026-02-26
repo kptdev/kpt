@@ -103,10 +103,6 @@ Refer to the pointers below to learn more:
    make all
    ```
 
-### Package Orchestrator
-
-Package orchestrator code has been moved to the Nephio project: https://github.com/nephio-project/porch
-
 ### Function Catalog
 
 Function catalog has its own repository. Refer to the

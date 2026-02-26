@@ -411,8 +411,11 @@ const (
 
 // BFSRenderAnnotation is an annotation that can be used to indicate that a package
 // should be hydrated from the root package to the subpackages in a Breadth-First Level Order manner.
+// SaveOnRenderFailureAnnotation is an annotation that controls whether partially rendered
+// resources are saved to disk when rendering fails.
 const (
-	BFSRenderAnnotation = "kpt.dev/bfs-rendering"
+	BFSRenderAnnotation           = "kpt.dev/bfs-rendering"
+	SaveOnRenderFailureAnnotation = "kpt.dev/save-on-render-failure"
 )
 
 func ToCondition(value string) ConditionStatus {

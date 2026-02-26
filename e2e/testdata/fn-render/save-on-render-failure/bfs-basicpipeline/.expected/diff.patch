@@ -1,11 +1,11 @@
 diff --git a/Kptfile b/Kptfile
-index 2b64f0f..b2b7aa6 100644
+index ec2c042..d795f4f 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -3,7 +3,9 @@ kind: Kptfile
- metadata:
+@@ -4,7 +4,9 @@ metadata:
    annotations:
      kpt.dev/bfs-rendering: "true"
+     kpt.dev/save-on-render-failure: "true"
 +    app: myapp
    name: save-on-render-failure
 +  namespace: staging

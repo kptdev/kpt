@@ -3,6 +3,7 @@ kind: Kptfile
 metadata:
   annotations:
     kpt.dev/bfs-rendering: "true"
+    kpt.dev/save-on-render-failure: "true"
   name: bfs-subpkg-validator-fails
 info:
   description: BFS - Subpackage validator fails
