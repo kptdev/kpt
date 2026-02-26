@@ -314,21 +314,13 @@ git add .; git commit -m "Updated wordpress to main"
 ```
 ## Creating a package
 
-<<<<<<< HEAD
 Creating a new package is simple. Use the `pkg init` command to initialize a directory as a kpt package with a minimal `Kptfile` and `README` files:
-=======
-Creating a new package is simple. Use the `pkg init` command to create a package directory with a minimal `Kptfile` and `README` files:
->>>>>>> main
 
 ```shell
 kpt pkg init awesomeapp
 ```
 
-<<<<<<< HEAD
 The command will automatically create the `awesomeapp` directory if it doesn't exist, eliminating the need to manually create the directory beforehand.
-=======
-This will create the `awesomeapp` directory if it doesn't exist, and initialize it with the necessary files.
->>>>>>> main
 
 Refer to the [init command reference](../../reference/cli/pkg/init/) for usage.
 
