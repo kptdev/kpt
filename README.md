@@ -24,7 +24,7 @@ scale by manipulating declarative [Configuration as Data](docs/design-docs/06-co
 
 See [the FAQ](https://kpt.dev/faq/) for more details about how kpt is different from alternatives.
 
-Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.  
+Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.
 
 ## Why kpt?
 
