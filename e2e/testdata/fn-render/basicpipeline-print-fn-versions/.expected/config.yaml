@@ -24,10 +24,10 @@ stdErr: |
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:0.4.1 - 0.4.3"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.3" in 0s
   [Results]: [info]: namespace [default] updated to "staging", 1 value(s) changed, [info]: all `depends-on` annotations are up-to-date. no `namespace` changed
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:~0.2"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:>=0.2.4 <0.2.5"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4" in 0s
   [Results]: [info]: set 4 labels in total
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:~0.2"
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:>=v0.2.4 <v0.2.5"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4" in 0s
   [Results]: [info]: set 4 labels in total
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1"
@@ -39,3 +39,6 @@ stdErr: |
   [RUNNING] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest"
   [PASS] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest" in 0s
   [Results]: [info]: set 4 labels in total
+  [RUNNING] "builtins/gen-pkg-context"
+  [PASS] "builtins/gen-pkg-context" in 0s
+  [Results]: [info]: generated package context
