@@ -75,7 +75,7 @@ pipeline:
 ```
 
 ```shell
-kpt fn render my-package --allow-alpha-wasm
+kpt fn render my-package --allow-alpha-wasm --allow-exec
 ```
 
 Note: Using local WASM files makes your package less portable since the file needs to exist on every system.
