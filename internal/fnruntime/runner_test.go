@@ -671,7 +671,12 @@ func TestBuildFunctionDisplayName(t *testing.T) {
 	}{
 		{"no tag, no colon", "myimage", "", "myimage:latest"},
 		{"no tag, has colon", "myimage:v1", "", "myimage:v1"},
-		{"no tag, has digest", "myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1", "", "myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1"},
+		{
+			"no tag, has digest",
+			"myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1",
+			"",
+			"myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1",
+		},
 		{"has tag, no colon", "myimage", "v2", "myimage:v2"},
 		{"has semver tag, no colon", "myimage", "~0.2", "myimage:~0.2"},
 		{"has tag, has colon", "myimage:v1", "v2", "myimage:v2"},
