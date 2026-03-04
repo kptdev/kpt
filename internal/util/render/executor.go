@@ -250,7 +250,7 @@ type pkgNode struct {
 	state hydrationState
 
 	// KRM resources that we have gathered post hydration for this package.
-	// These inludes resources at this pkg as well all it's children.
+	// These inludes resources at this pkg as well all its children.
 	resources []*yaml.RNode
 }
 
