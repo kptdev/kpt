@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 77ed23c..99dd3a1 100644
+index abd5626..15c9ac1 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -11,6 +11,20 @@ index 77ed23c..99dd3a1 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels
+diff --git a/package-context.yaml b/package-context.yaml
+new file mode 100644
+index 0000000..5607ec6
+--- /dev/null
++++ b/package-context.yaml
+@@ -0,0 +1,8 @@
++apiVersion: v1
++kind: ConfigMap
++metadata:
++  name: kptfile.kpt.dev
++  annotations:
++    config.kubernetes.io/local-config: "true"
++data:
++  name: app
 diff --git a/resources.yaml b/resources.yaml
 index 1f15150..faa5100 100644
 --- a/resources.yaml

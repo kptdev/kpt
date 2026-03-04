@@ -519,12 +519,16 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 // It combines the image name with the appropriate tag, handling cases where the tag
 // is already present in the image name or needs to be appended.
 func buildFunctionDisplayName(fnResult *fnresult.Result) string {
-	if fnResult.Image == "" {
-		return ""
-	}
-
 	name := fnResult.Image
 	tag := fnResult.Tag
+
+	if name == "" {
+		return ""
+	}
+	if strings.HasPrefix(fnResult.Image, "builtins/") {
+		// Built-in pseudo-image - no tagging
+		return name
+	}
 
 	// Find digest separator first (takes precedence over tag)
 	separatorIndex := strings.LastIndex(name, "@")
