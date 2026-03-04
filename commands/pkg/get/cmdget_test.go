@@ -81,7 +81,7 @@ func TestCmd_execute(t *testing.T) {
 			},
 			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -142,7 +142,7 @@ func TestCmdMainBranch_execute(t *testing.T) {
 			},
 			UpdateStrategy: kptfilev1.ResourceMerge,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",

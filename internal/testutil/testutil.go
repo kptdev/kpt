@@ -31,7 +31,7 @@ import (
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/printer/fake"
-	toposort "github.com/philopon/go-toposort"
+	"github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
 	assertnow "gotest.tools/assert"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -651,10 +651,10 @@ func replaceData(repo, data string) error {
 			}
 			// Only copy over the Upstream section from the existing
 			// Kptfile if other values hasn't been provided.
-			if dataKptfile.Upstream == nil || reflect.DeepEqual(dataKptfile.Upstream, kptfilev1.Upstream{}) {
+			if dataKptfile.Upstream == nil || reflect.DeepEqual(*dataKptfile.Upstream, kptfilev1.Upstream{}) {
 				dataKptfile.Upstream = repoKptfile.Upstream
 			}
-			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(dataKptfile.UpstreamLock, kptfilev1.UpstreamLock{}) {
+			if dataKptfile.UpstreamLock == nil || reflect.DeepEqual(*dataKptfile.UpstreamLock, kptfilev1.Locator{}) {
 				dataKptfile.UpstreamLock = repoKptfile.UpstreamLock
 			}
 			dataKptfile.Name = repoKptfile.Name

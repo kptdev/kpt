@@ -64,7 +64,7 @@ install-golangci-lint:
 
 .PHONY: install-swagger
 install-swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
 
 .PHONY: install-mdtogo
 install-mdtogo:
@@ -76,7 +76,7 @@ fix:
 fmt:
 	go fmt ./...
 
-schema:
+schema: install-swagger
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo

@@ -72,7 +72,7 @@ type KptFile struct {
 	Upstream *Upstream `yaml:"upstream,omitempty" json:"upstream,omitempty"`
 
 	// UpstreamLock is a resolved locator for the last fetch of the package.
-	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
+	UpstreamLock *Locator `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty" json:"info,omitempty"`
@@ -92,6 +92,9 @@ type OriginType string
 const (
 	// GitOrigin specifies a package as having been cloned from a git repository.
 	GitOrigin OriginType = "git"
+
+	// GenericOrigin specifies a package being stored in a custom storage.
+	GenericOrigin OriginType = "generic"
 )
 
 // UpdateStrategyType defines the strategy for updating a package from upstream.
@@ -171,14 +174,20 @@ type Git struct {
 	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
-// UpstreamLock is a resolved locator for the last fetch of the package.
-type UpstreamLock struct {
+// Locator is a resolved locator for the last fetch of the package.
+type Locator struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
 
 	// Git is the resolved locator for a package on Git.
 	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+
+	// Generic is a minimal locator for a package stored in some generic storage type (e.g.: a database)
+	Generic *GenericLock `yaml:"generic,omitempty" json:"generic,omitempty"`
 }
+
+// Deprecated: use `Locator` instead.
+type UpstreamLock = Locator
 
 // GitLock is the resolved locator for a package on Git.
 type GitLock struct {
@@ -197,6 +206,19 @@ type GitLock struct {
 	// Commit is the SHA-1 for the last fetch of the package.
 	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
+}
+
+// GenericLock is a minimal locator for a package stored in a generic storage backend.
+type GenericLock struct {
+	// StoreID is a descriptor of the underlying storage type.
+	// e.g. 'DB' for database
+	StoreID string `yaml:"storeID,omitempty" json:"storeID,omitempty"`
+	// ResourceID is a unique identifier of the resource.
+	// The format depends on the underlying storage.
+	ResourceID string `yaml:"resourceID,omitempty" json:"resourceID,omitempty"`
+	// ResourceVersion indicates the last fetched version of the resource.
+	// The format depends on the underlying storage.
+	ResourceVersion string `yaml:"resourceVersion,omitempty" json:"resourceVersion,omitempty"`
 }
 
 // PackageInfo contains optional information about the package such as license, documentation, etc.
