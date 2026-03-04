@@ -610,7 +610,7 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 		}
 	}
 	if pkg.Kptfile.UpstreamLock != nil {
-		kptfile.UpstreamLock = &kptfilev1.UpstreamLock{
+		kptfile.UpstreamLock = &kptfilev1.Locator{
 			Type: "git",
 			Git: &kptfilev1.GitLock{
 				Repo:      pkg.Kptfile.UpstreamLock.Repo,

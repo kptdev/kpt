@@ -251,7 +251,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = &kptfilev1.UpstreamLock{
+	kpgfile.UpstreamLock = &kptfilev1.Locator{
 		Type: kptfilev1.GitOrigin,
 		Git: &kptfilev1.GitLock{
 			Repo:      spec.OrgRepo,

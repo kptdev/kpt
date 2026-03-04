@@ -47,3 +47,6 @@ tmp/
 .hugo*
 resources/
 public/
+
+# Build directory
+.build/

@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) (string, error) {
+func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upstream, lock kptfilev1.Locator) (string, error) {
 	kptfile, err := kptfileutil.DecodeKptfile(strings.NewReader(kptfileContents))
 	if err != nil {
 		return "", fmt.Errorf("cannot parse Kptfile: %w", err)
@@ -66,7 +66,7 @@ func UpdateName(kptfileContents string, name string) (string, error) {
 	return string(b), nil
 }
 
-func UpdateKptfileUpstream(name string, contents map[string]string, upstream kptfilev1.Upstream, lock kptfilev1.UpstreamLock) error {
+func UpdateKptfileUpstream(name string, contents map[string]string, upstream kptfilev1.Upstream, lock kptfilev1.Locator) error {
 	kptfile, found := contents[kptfilev1.KptFileName]
 	if !found {
 		return fmt.Errorf("package %q is missing Kptfile", name)
@@ -109,8 +109,8 @@ func normalizeGitFields(u *kptfilev1.Upstream) {
 	}
 }
 
-// normalizeGitLockFields ensures consistent formatting for UpstreamLock git fields
-func normalizeGitLockFields(l *kptfilev1.UpstreamLock) {
+// normalizeGitLockFields ensures consistent formatting for Locator git fields
+func normalizeGitLockFields(l *kptfilev1.Locator) {
 	if l.Git != nil {
 		// Ensure .git suffix is present
 		if !strings.HasSuffix(l.Git.Repo, ".git") {

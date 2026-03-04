@@ -118,7 +118,7 @@ func TestCmd_execute(t *testing.T) {
 			},
 			UpdateStrategy: kptfilev1.FastForward,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
