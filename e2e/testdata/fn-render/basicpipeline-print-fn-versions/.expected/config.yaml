@@ -30,3 +30,12 @@ stdErr: |
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:~0.2"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4" in 0s
   [Results]: [info]: set 4 labels in total
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1" in 0s
+  [Results]: [info]: set 4 labels in total
+  [RUNNING] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest"
+  [PASS] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]: [info]: set 4 labels in total
+  [RUNNING] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest"
+  [PASS] "ghcr.io:443/kptdev/krm-functions-catalog/set-labels:latest" in 0s
+  [Results]: [info]: set 4 labels in total

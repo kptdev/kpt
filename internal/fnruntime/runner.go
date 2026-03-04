@@ -525,22 +525,26 @@ func buildFunctionDisplayName(fnResult *fnresult.Result) string {
 
 	name := fnResult.Image
 	tag := fnResult.Tag
-	splitName := strings.SplitAfter(name, ":")
-	nameIncludesTag := len(splitName) > 1 && !strings.Contains(splitName[len(splitName)-1], "/")
+
+	// Find digest separator first (takes precedence over tag)
+	separatorIndex := strings.LastIndex(name, "@")
+	if separatorIndex == -1 {
+		// No digest - look for tag separator
+		separatorIndex = strings.LastIndex(name, ":")
+	}
+	nameHasTagOrDigest := separatorIndex != -1 && !strings.Contains(name[separatorIndex+1:], "/")
 
 	// If no tag specified and name already has tag, use as-is
 	if tag == "" {
-		if nameIncludesTag {
+		if nameHasTagOrDigest {
 			return name
 		}
 		return name + ":latest"
 	}
 
 	// Tag specified: replace existing tag or append
-	if nameIncludesTag {
-		if idx := strings.LastIndex(name, ":"); idx != -1 {
-			return name[:idx] + ":" + tag
-		}
+	if nameHasTagOrDigest {
+		return name[:separatorIndex] + ":" + tag
 	}
 	return name + ":" + tag
 }

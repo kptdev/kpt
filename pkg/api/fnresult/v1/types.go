@@ -23,10 +23,13 @@ import (
 // Result contains the structured result from an individual function
 type Result struct {
 	// Image is the full name of the image that generates this result
+	// If Image does not contain a tag/digest suffix and Tag is empty, ":latest"
+	// will be automatically substituted into the image name printed in output
 	// Image and Exec are mutually exclusive
 	Image string `yaml:"image,omitempty"`
 	// Tag is the version tag (either exact or a semver constraint) of the function image
-	// If no tag was specified in the function configuration, Tag defaults to "latest"
+	// If Image contains a tag/digest suffix, Tag overrides that suffix in the image name
+	// printed in output
 	Tag string `yaml:"tag,omitempty"`
 	// ExecPath is the the absolute os-specific path to the executable file
 	// If user provides an executable file with commands, ExecPath should

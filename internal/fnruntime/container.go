@@ -166,9 +166,14 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 			return err
 		}
 		f.FnResult.Image = f.Image
-	} else if !strings.Contains(f.Image, ":") {
+	} else if func() bool {
+		ref, err := regclientref.New(f.Image)
+		return err == nil &&
+			ref.Tag == "latest" && ref.Digest == "" &&
+			!strings.Contains(f.Image, ":latest")
+	}() {
 		// No Tag specified, either exactly or with a semver constraint;
-		// no tag in image string.
+		// no tag or digest already in image string.
 		// kpt resolution defaults to "latest": we reflect that in the FnResult
 		f.FnResult.Image = f.Image + ":latest"
 	}
