@@ -1,4 +1,4 @@
-<img src="logo/KptLogoLarge.png" width="220">
+<img src="https://raw.githubusercontent.com/kptdev/.github/main/kpt_stacked_color-100x123.png" width="220" alt="kpt logo">
 
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10656/badge)](https://www.bestpractices.dev/projects/10656)
