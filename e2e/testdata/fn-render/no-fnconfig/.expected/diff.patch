@@ -1,0 +1,16 @@
+diff --git a/Kptfile b/Kptfile
+index f2d1249..8b6135d 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -8,3 +8,11 @@ pipeline:
+       configMap:
+         namespace: staging
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: already handled error

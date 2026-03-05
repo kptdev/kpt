@@ -1,0 +1,16 @@
+diff --git a/Kptfile b/Kptfile
+index 1307fb5..15413d2 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -10,3 +10,11 @@ pipeline:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+       configMap:
+         tier: backend
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pkg.Subpackages: pkg ./db: error reading Kptfile at "./db": yaml: line 10: mapping values are not allowed in this context

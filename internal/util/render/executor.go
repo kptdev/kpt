@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kptdev/kpt/internal/fnruntime"
@@ -34,6 +35,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -109,6 +111,9 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	_, hydErr := hydrateFn(ctx, root, hctx)
 
 	if hydErr != nil && !hctx.saveOnRenderFailure {
+		if e.Output == nil {
+			updateRenderStatus(hctx, hydErr)
+		}
 		_ = e.saveFnResults(ctx, hctx.fnResults)
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
 	}
@@ -173,11 +178,20 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	}
 
 	if hydErr != nil {
+		if e.Output == nil {
+			updateRenderStatus(hctx, hydErr)
+		}
 		_ = e.saveFnResults(ctx, hctx.fnResults) // Ignore save error to avoid masking hydration error
 		return hctx.fnResults, errors.E(op, root.pkg.UniquePath, hydErr)
 	}
 
-	return hctx.fnResults, e.saveFnResults(ctx, hctx.fnResults)
+	saveErr := e.saveFnResults(ctx, hctx.fnResults)
+
+	if e.Output == nil {
+		updateRenderStatus(hctx, saveErr)
+	}
+
+	return hctx.fnResults, saveErr
 }
 
 func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrationContext, hydErr error) {
@@ -189,6 +203,47 @@ func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrat
 		} else {
 			pr.Printf("Partially executed %d function(s) in %d package(s).\n", hctx.executedFunctionCnt, len(hctx.pkgs))
 		}
+	}
+}
+
+// updateRenderStatus writes a Rendered status condition to the root Kptfile.
+// On success, the root package gets a True condition.
+// On failure, the root package gets a False condition with the error message.
+func updateRenderStatus(hctx *hydrationContext, hydErr error) {
+	if hctx.fileSystem == nil {
+		return
+	}
+
+	rootPath := hctx.root.pkg.UniquePath.String()
+	conditionStatus := kptfilev1.ConditionTrue
+	reason := kptfilev1.ReasonRenderSuccess
+	message := ""
+	if hydErr != nil {
+		conditionStatus = kptfilev1.ConditionFalse
+		reason = kptfilev1.ReasonRenderFailed
+		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
+	}
+	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message))
+}
+
+// setRenderCondition reads the Kptfile at pkgPath, sets the Rendered condition, and writes it back.
+func setRenderCondition(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition) {
+	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
+	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
+	if err != nil {
+		klog.V(3).Infof("failed to read Kptfile for render status update at %s: %v", pkgPath, err)
+		return
+	}
+	if kf.Status == nil {
+		kf.Status = &kptfilev1.Status{}
+	}
+	// Replace any existing Rendered condition
+	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(c kptfilev1.Condition) bool {
+		return c.Type == kptfilev1.ConditionTypeRendered
+	})
+	kf.Status.Conditions = append(kf.Status.Conditions, condition)
+	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
+		klog.V(3).Infof("failed to write render status condition to Kptfile at %s: %v", pkgPath, err)
 	}
 }
 
