@@ -6,7 +6,7 @@ info:
   description: Subpackage with failing mutator
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: subpkg-ns
     - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
