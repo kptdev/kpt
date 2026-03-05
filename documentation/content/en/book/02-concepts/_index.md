@@ -191,7 +191,7 @@ Instead of consuming an existing package, you can also create a package from scr
 
 ![img](/images/lifecycle/flow5.svg)
 
-- **Create**: Initialize a directory using `kpt pkg init`.
+- **Create**: Initialize a package using `kpt pkg init`. The command creates the directory if it doesn't exist.
 
 Now, let's say you have rendered the package, and want to deploy it to a cluster. The workflow
 may look like this:
