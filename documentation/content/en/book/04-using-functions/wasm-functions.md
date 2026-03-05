@@ -180,6 +180,12 @@ func run() error {
     return nil
 }
 
+// process applies the same transformation logic as in the non-WASM build.
+// Ensure this implementation matches the one in main.go.
+func process(rl *fn.ResourceList) (bool, error) {
+    // TODO: copy the implementation from main.go so behavior is consistent.
+    return false, nil
+}
 func transform(input []byte) ([]byte, error) {
     return fn.Run(fn.ResourceListProcessorFunc(process), input)
 }
