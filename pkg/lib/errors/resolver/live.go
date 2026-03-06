@@ -35,7 +35,7 @@ func init() {
 
 const (
 	noInventoryObjErrorMsg = `
-Error: Package uninitialized. Please run "kpt live init" command.
+Error: Package uninitialized. Please run "kpt live init --name=<deployment-name>" command.
 
 The package needs to be initialized to generate the template
 which will store state for resource sets. This state is
