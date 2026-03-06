@@ -15,6 +15,7 @@
 package kptops
 
 import (
+	"strings"
 	"testing"
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
@@ -77,5 +78,95 @@ func TestNormalizeGitLockFields(t *testing.T) {
 	normalizeGitLockFields(lock)
 	if lock.Git.Repo != exampleRepoURL {
 		t.Errorf("Expected unchanged repo URL, got %q", lock.Git.Repo)
+	}
+}
+
+func TestUpdateUpstream_PreservesCommentsAndFormatting(t *testing.T) {
+	input := `
+apiVersion: kpt.dev/v1 # api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# upstream comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # ref inline comment
+`
+
+	upstream := kptfilev1.Upstream{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.Git{
+			Repo:      "https://github.com/example/repo",
+			Directory: "/package",
+			Ref:       "v1.1.0",
+		},
+	}
+
+	lock := kptfilev1.Locator{
+		Type: kptfilev1.GitOrigin,
+		Git: &kptfilev1.GitLock{
+			Repo:      "https://github.com/example/repo",
+			Directory: "/package",
+			Ref:       "v1.1.0",
+			Commit:    "abcdef",
+		},
+	}
+
+	got, err := UpdateUpstream(input, "", upstream, lock)
+	if err != nil {
+		t.Fatalf("UpdateUpstream returned error: %v", err)
+	}
+
+	want := `
+apiVersion: kpt.dev/v1 # api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# upstream comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0 # ref inline comment
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: abcdef
+`
+
+	if strings.TrimSpace(got) != strings.TrimSpace(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", want, got)
+	}
+}
+
+func TestUpdateName_PreservesCommentsAndFormatting(t *testing.T) {
+	input := `
+apiVersion: kpt.dev/v1 # api inline comment
+kind: Kptfile
+metadata:
+  name: old-name # name inline comment
+`
+
+	got, err := UpdateName(input, "new-name")
+	if err != nil {
+		t.Fatalf("UpdateName returned error: %v", err)
+	}
+
+	want := `
+apiVersion: kpt.dev/v1 # api inline comment
+kind: Kptfile
+metadata:
+  name: new-name # name inline comment
+`
+
+	if strings.TrimSpace(got) != strings.TrimSpace(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", want, got)
 	}
 }

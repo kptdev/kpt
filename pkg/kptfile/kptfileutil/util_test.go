@@ -595,9 +595,245 @@ status:
 				t.FailNow()
 			}
 
-			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
+			expectedObj := map[string]any{}
+			err = yaml.Unmarshal([]byte(strings.TrimSpace(tc.expected)), &expectedObj)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualObj := map[string]any{}
+			err = yaml.Unmarshal(c, &actualObj)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			assert.Equal(t, expectedObj, actualObj)
 		})
 	}
+}
+
+func TestUpdateKptfile_PreservesCommentsAndFormatting(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: abcdef
+`)
+
+	localDir := writeKptfileToTemp(t, `
+# local package level comment
+apiVersion: kpt.dev/v1 # api comment
+kind: Kptfile
+metadata:
+  name: sample
+
+# preserve this section comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	content := string(contentBytes)
+
+	assert.Contains(t, content, "# local package level comment")
+	assert.Contains(t, content, "apiVersion: kpt.dev/v1 # api comment")
+	assert.Contains(t, content, "# preserve this section comment")
+	assert.Contains(t, content, "ref: v1.1.0 # keep inline comment")
+	assert.Contains(t, content, "commit: abcdef")
+}
+
+func TestUpdateKptfile_PreservesExactFormattingAndComments(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: def456
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1 # keep api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# preserve this comment block
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep ref inline comment
+
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123 # keep commit inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	want := `
+apiVersion: kpt.dev/v1 # keep api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# preserve this comment block
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0 # keep ref inline comment
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: def456 # keep commit inline comment
+`
+
+	assert.Equal(t, strings.TrimSpace(want), strings.TrimSpace(string(contentBytes)))
+}
+
+func TestWriteFile_ReturnsErrorWhenDirectoryMissing(t *testing.T) {
+	nonExistentDir := filepath.Join(t.TempDir(), "does-not-exist")
+
+	err := WriteFile(nonExistentDir, DefaultKptfile("sample"))
+	assert.Error(t, err)
+}
+
+func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata: [bad
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	assert.Error(t, err)
 }
 
 func TestMerge(t *testing.T) {

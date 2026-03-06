@@ -273,7 +273,7 @@ kind: Kptfile
 metadata:
   name: root-package
   annotations:
-    kpt.dev/bfs-rendering: %t
+    kpt.dev/bfs-rendering: "%t"
 `, renderBfs))
 	assert.NoError(t, err)
 
@@ -341,8 +341,12 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			renderer, outputBuffer, ctx := setupRendererTest(t, tc.renderBfs)
 
 			fnResults, err := renderer.Execute(ctx)
-			assert.NoError(t, err)
-			assert.NotNil(t, fnResults)
+			if !assert.NoError(t, err) {
+				return
+			}
+			if !assert.NotNil(t, fnResults) {
+				return
+			}
 			assert.Equal(t, 0, len(fnResults.Items))
 
 			output := outputBuffer.String()
@@ -426,7 +430,7 @@ kind: Kptfile
 metadata:
   name: root-package
   annotations:
-    ktp.dev/bfs-rendering: true
+    kpt.dev/bfs-rendering: "true"
 `))
 	assert.NoError(t, err)
 
@@ -440,7 +444,9 @@ metadata:
 
 	// Create a mock hydration context
 	root, err := newPkgNode(mockFileSystem, rootPkgPath, nil)
-	assert.NoError(t, err)
+	if !assert.NoError(t, err) {
+		return
+	}
 
 	hctx := &hydrationContext{
 		root:       root,
