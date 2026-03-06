@@ -63,15 +63,15 @@ func (p *packagePrinter) PrintPackage(pkg *pkg.Pkg, _ bool) {
 	p.printfDepth(logDepth, packagePrefixFormat, pkg.DisplayPath)
 }
 
-func (p *packagePrinter) Printf(format string, args ...interface{}) {
+func (p *packagePrinter) Printf(format string, args ...any) {
 	p.printfDepth(logDepth, format, args...)
 }
 
-func (p *packagePrinter) printfDepth(depth int, format string, args ...interface{}) {
+func (p *packagePrinter) printfDepth(depth int, format string, args ...any) {
 	klog.InfofDepth(depth, format, args...)
 }
 
-func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...interface{}) {
+func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...any) {
 	if opt == nil {
 		p.Printf(format, args...)
 		return

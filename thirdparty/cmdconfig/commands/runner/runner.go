@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/go-errors/errors"
@@ -144,10 +145,5 @@ func FixDocs(new string, c *cobra.Command) {
 
 // containsString returns true if slice contains s
 func containsString(slice []string, s string) bool {
-	for _, item := range slice {
-		if item == s {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, s)
 }

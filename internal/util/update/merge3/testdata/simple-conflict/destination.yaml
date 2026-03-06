@@ -1,4 +1,4 @@
-apiVersion: porch.kpt.dev/v1alpha1
+apiVersion: infer.kpt.dev/v1alpha1
 kind: MergeTestResources
 metadata:
   name: "test-resources"

@@ -118,7 +118,7 @@ func TestCmd_execute(t *testing.T) {
 			},
 			UpdateStrategy: kptfilev1.FastForward,
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Repo:      "file://" + g.RepoDirectory,
@@ -787,7 +787,7 @@ Updated 2 package(s).
 
 			tmpl := template.Must(template.New("test").Parse(tc.expectedOutput))
 			var expected bytes.Buffer
-			err = tmpl.Execute(&expected, map[string]interface{}{
+			err = tmpl.Execute(&expected, map[string]any{
 				"PKG_PATH": g.LocalWorkspace.FullPackagePath(),
 				"PKG_NAME": g.LocalWorkspace.PackageDir,
 				"REPOS":    g.Repos,

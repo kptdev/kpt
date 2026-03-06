@@ -20,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 
 	pkgtest "github.com/kptdev/kpt/internal/pkg/testing"
@@ -2078,10 +2079,8 @@ func findStrategiesForTestCase(expectedResults []resultForStrategy) []kptfilev1.
 func findExpectedResultForStrategy(strategyResults []resultForStrategy,
 	strategy kptfilev1.UpdateStrategyType) resultForStrategy {
 	for _, sr := range strategyResults {
-		for _, s := range sr.strategies {
-			if s == strategy {
-				return sr
-			}
+		if slices.Contains(sr.strategies, strategy) {
+			return sr
 		}
 	}
 	panic(fmt.Errorf("unknown strategy %s", string(strategy)))

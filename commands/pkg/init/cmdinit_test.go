@@ -162,13 +162,28 @@ info:
 `, string(b))
 }
 
-// TestCmd_failExists verifies the command throws and error if the directory exists
-func TestCmd_failNotExists(t *testing.T) {
+// TestCmd_AutoCreateDir verifies the command creates the directory if it doesn't exist
+func TestCmd_AutoCreateDir(t *testing.T) {
 	d := t.TempDir()
 	r := initialization.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
 	r.Command.SetArgs([]string{filepath.Join(d, "my-pkg"), "--description", "my description"})
 	err := r.Command.Execute()
-	if assert.Error(t, err) {
-		assert.Contains(t, err.Error(), "does not exist")
-	}
+	assert.NoError(t, err)
+
+	// verify the directory was created
+	_, err = os.Stat(filepath.Join(d, "my-pkg"))
+	assert.NoError(t, err)
+
+	// verify the contents
+	b, err := os.ReadFile(filepath.Join(d, "my-pkg", "Kptfile"))
+	assert.NoError(t, err)
+	assert.Equal(t, `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-pkg
+  annotations:
+    config.kubernetes.io/local-config: "true"
+info:
+  description: my description
+`, string(b))
 }

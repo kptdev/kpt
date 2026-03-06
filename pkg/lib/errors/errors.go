@@ -168,7 +168,7 @@ func (c Class) String() string {
 	return "unknown kind"
 }
 
-func E(args ...interface{}) error {
+func E(args ...any) error {
 	if len(args) == 0 {
 		panic("errors.E must have at least one argument")
 	}
@@ -230,7 +230,7 @@ func Is(err, target error) bool {
 
 // As finds the first error in err's chain that matches target, and if so, sets
 // target to that error value and returns true. Otherwise, it returns false.
-func As(err error, target interface{}) bool {
+func As(err error, target any) bool {
 	return goerrors.As(err, target)
 }
 

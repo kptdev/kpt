@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ type EvalTestCaseConfig struct {
 	execUniquePath types.UniquePath
 	// Image is the image name for the function
 	Image string `json:"image,omitempty" yaml:"image,omitempty"`
+	Tag   string `json:"tag,omitempty" yaml:"tag,omitempty"`
 	// Args are the arguments that will be passed into function.
 	// Args will be passed as 'key=value' format after the '--' in command.
 	Args map[string]string `json:"args,omitempty" yaml:"args,omitempty"`

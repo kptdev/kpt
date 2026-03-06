@@ -1,0 +1,28 @@
+diff --git a/subpkg/Kptfile b/subpkg/Kptfile
+index a332cf5..cb45834 100644
+--- a/subpkg/Kptfile
++++ b/subpkg/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: subpkg
++  labels:
++    pkg: subpkg
+ info:
+   description: Subpackage that also fails
+ pipeline:
+diff --git a/subpkg/service.yaml b/subpkg/service.yaml
+index 276bf9e..7b26a8d 100644
+--- a/subpkg/service.yaml
++++ b/subpkg/service.yaml
+@@ -2,6 +2,10 @@ apiVersion: v1
+ kind: Service
+ metadata:
+   name: sub-service
++  labels:
++    pkg: subpkg
+ spec:
+   ports:
+   - port: 80
++  selector:
++    pkg: subpkg

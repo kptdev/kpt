@@ -74,10 +74,22 @@ PKG_PATH:
   If not specified, no result files are written to the local filesystem.
 ```
 
+#### Kptfile Annotations
+
+```shell
+kpt.dev/save-on-render-failure:
+  Controls whether partially rendered resources are saved when rendering fails.
+  Set to "true" in the Kptfile metadata.annotations section to preserve the state
+  of resources at the point of failure. This is useful for debugging render failures
+  and understanding what changes were applied before the error occurred.
+  This follows the same pattern as kpt.dev/bfs-rendering annotation.
+  Default: false (failures will revert changes).
+```
+
 #### Environment Variables
 
 ```shell
-KRM_FN_RUNTIMETIME:
+KRM_FN_RUNTIME:
   The runtime to run kpt functions. It must be one of "docker", "podman" and "nerdctl".
 ```
 
@@ -123,12 +135,23 @@ $ kpt fn render -o stdout \
 
 ```shell
 # Render my-package-dir with podman as runtime for functions
-$ KRM_FN_RUNTIMETIME=podman kpt fn render my-package-dir
+$ KRM_FN_RUNTIME=podman kpt fn render my-package-dir
 ```
 
 ```shell
 # Render my-package-dir with network access enabled for functions
 $ kpt fn render --allow-network
+```
+
+```shell
+# Example Kptfile with save-on-render-failure annotation
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-package
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
+...
 ```
 
 <!--mdtogo-->

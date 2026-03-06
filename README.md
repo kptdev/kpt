@@ -1,4 +1,4 @@
-<img src="logo/KptLogoLarge.png" width="220">
+<img src="https://raw.githubusercontent.com/kptdev/.github/main/kpt_stacked_color-100x123.png" width="220" alt="kpt logo">
 
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10656/badge)](https://www.bestpractices.dev/projects/10656)
@@ -24,6 +24,8 @@ scale by manipulating declarative [Configuration as Data](docs/design-docs/06-co
 
 See [the FAQ](https://kpt.dev/faq/) for more details about how kpt is different from alternatives.
 
+Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.
+
 ## Why kpt?
 
 kpt enables WYSIWYG editing and interoperable automation applied to declarative configuration data, similar to how the
@@ -35,7 +37,7 @@ The best place to get started and learn about specific features of kpt is to vis
 
 ## Install kpt
 
-kpt installation instructions can be found on [kpt.dev/installation](https://github.com/kptdev/kpt/blob/main/documentation/content/en/installation/kpt-cli.md)
+kpt installation instructions can be found on [kpt.dev/installation/kpt-cli](https://kpt.dev/installation/kpt-cli/)
 
 ## kpt components
 

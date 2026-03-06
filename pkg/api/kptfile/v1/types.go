@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../rollouts/hack/boilerplate.go.txt"
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 const (
 	KptFileName = "Kptfile"
@@ -72,7 +72,7 @@ type KptFile struct {
 	Upstream *Upstream `yaml:"upstream,omitempty" json:"upstream,omitempty"`
 
 	// UpstreamLock is a resolved locator for the last fetch of the package.
-	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
+	UpstreamLock *Locator `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty" json:"info,omitempty"`
@@ -92,6 +92,9 @@ type OriginType string
 const (
 	// GitOrigin specifies a package as having been cloned from a git repository.
 	GitOrigin OriginType = "git"
+
+	// GenericOrigin specifies a package being stored in a custom storage.
+	GenericOrigin OriginType = "generic"
 )
 
 // UpdateStrategyType defines the strategy for updating a package from upstream.
@@ -171,14 +174,20 @@ type Git struct {
 	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
-// UpstreamLock is a resolved locator for the last fetch of the package.
-type UpstreamLock struct {
+// Locator is a resolved locator for the last fetch of the package.
+type Locator struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
 
 	// Git is the resolved locator for a package on Git.
 	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+
+	// Generic is a minimal locator for a package stored in some generic storage type (e.g.: a database)
+	Generic *GenericLock `yaml:"generic,omitempty" json:"generic,omitempty"`
 }
+
+// Deprecated: use `Locator` instead.
+type UpstreamLock = Locator
 
 // GitLock is the resolved locator for a package on Git.
 type GitLock struct {
@@ -197,6 +206,19 @@ type GitLock struct {
 	// Commit is the SHA-1 for the last fetch of the package.
 	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
+}
+
+// GenericLock is a minimal locator for a package stored in a generic storage backend.
+type GenericLock struct {
+	// StoreID is a descriptor of the underlying storage type.
+	// e.g. 'DB' for database
+	StoreID string `yaml:"storeID,omitempty" json:"storeID,omitempty"`
+	// ResourceID is a unique identifier of the resource.
+	// The format depends on the underlying storage.
+	ResourceID string `yaml:"resourceID,omitempty" json:"resourceID,omitempty"`
+	// ResourceVersion indicates the last fetched version of the resource.
+	// The format depends on the underlying storage.
+	ResourceVersion string `yaml:"resourceVersion,omitempty" json:"resourceVersion,omitempty"`
 }
 
 // PackageInfo contains optional information about the package such as license, documentation, etc.
@@ -328,6 +350,10 @@ type Function struct {
 	// this is primarily used for merging function declaration with upstream counterparts
 	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 
+	// `Tag` is an optional field for specifying/overriding the tag of the function image.
+	// Can be a semver constraint satisfying this spec: https://github.com/Masterminds/semver?tab=readme-ov-file#checking-version-constraints
+	Tag string `yaml:"tag,omitempty" json:"tag,omitempty"`
+
 	// `Selectors` are used to specify resources on which the function should be executed
 	// if not specified, all resources are selected
 	Selectors []Selector `yaml:"selectors,omitempty" json:"selectors,omitempty"`
@@ -407,8 +433,11 @@ const (
 
 // BFSRenderAnnotation is an annotation that can be used to indicate that a package
 // should be hydrated from the root package to the subpackages in a Breadth-First Level Order manner.
+// SaveOnRenderFailureAnnotation is an annotation that controls whether partially rendered
+// resources are saved to disk when rendering fails.
 const (
-	BFSRenderAnnotation = "kpt.dev/bfs-rendering"
+	BFSRenderAnnotation           = "kpt.dev/bfs-rendering"
+	SaveOnRenderFailureAnnotation = "kpt.dev/save-on-render-failure"
 )
 
 func ToCondition(value string) ConditionStatus {

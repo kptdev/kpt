@@ -17,8 +17,8 @@ A few areas of work are ongoing. (This is not exhaustive.)
 
 ### Package orchestration
 
-See the [package orchestration documentation](https://docs.nephio.org/docs/porch/)
-for more details.
+Porch is the recommended approach for package orchestration. See the
+[package orchestration documentation](https://docs.nephio.org/docs/porch/) for more details.
 
 ### Explore various options for function runtime
 

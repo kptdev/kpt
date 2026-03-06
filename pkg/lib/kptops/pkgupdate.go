@@ -25,7 +25,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/update"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 )

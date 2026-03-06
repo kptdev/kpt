@@ -124,8 +124,38 @@ The end result is that:
 3. Resources in `mysql` and `wordpress` packages are validated against their
    OpenAPI spec.
 
-If any of the functions in the pipeline fails for whatever reason, then the
-entire pipeline is aborted and the local filesystem is left intact.
+### Debugging render failures
+
+When a render pipeline fails, you can configure the package to save partially rendered resources to disk.
+This is particularly useful for debugging function pipeline issues by inspecting what changes were made before
+the failure occurred.
+
+By default, partially rendered resources are not saved when render fails. To enable this behaviour,
+add the `kpt.dev/save-on-render-failure` annotation to the Kptfile's metadata section:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+  annotations:
+    kpt.dev/save-on-render-failure: "true"
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: wordpress
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
+```
+
+With this annotation set to `"true"`, if a function in the pipeline fails, kpt will save all resources that were
+successfully processed up to the point of failure. This allows you to examine the intermediate state and understand
+what transformations were applied before the error.
+
+This annotation follows the same pattern as `kpt.dev/bfs-rendering` and must be declared in the root package's Kptfile
+before running `kpt fn render`.
+
 
 ### Specifying `function`
 
@@ -135,6 +165,46 @@ The `image` field specifies the container image for the function. You can specif
 an image from any container registry. If the registry is omitted, the default
 container registry for functions catalog (`ghcr.io/kptdev/krm-functions-catalog`) is prepended automatically.
 For example, `set-labels:latest` is automatically expanded to `ghcr.io/kptdev/krm-functions-catalog/set-labels:latest`.
+
+#### `tag`
+
+The `tag` field specifies the exact tag of the function container image *or* a semantic version constraint for the
+desired tag. The version constraints are validated by `github.com/Masterminds/semver/v3`, so they must fulfil that spec.
+
+If a `tag` is provided, it will override whatever tag is already specified within the `image` field,
+*even if `tag` is not a valid semantic version or constraint*.
+
+Examples:
+```yaml
+image: set-labels
+tag: "~0.2"
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3 # latest patch version of 0.2.x
+```
+```yaml
+image: set-labels
+tag: "<0.2"
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5 # latest patch version of 0.1.x
+```
+```yaml
+image: set-labels:v0.2.1
+tag: v0.2.3
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
+```
+```yaml
+image: set-labels@sha256:23631a784be4828a37ae98478df9d586840220ef87037c7703f6c61dcf8e49ac
+tag: v0.2.3
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.3
+```
+```yaml
+image: set-labels:v0.2.1
+tag: de3c135
+---
+result: ghcr.io/kptdev/krm-functions-catalog/set-labels:de3c135
+```
 
 #### `exec`
 

@@ -34,9 +34,8 @@ In this example, the `ConfigMap` `cm-a` is local and not applied.
 Create a new kpt package:
 
 ```shell
-mkdir my-pkg
+kpt pkg init my-pkg
 cd my-pkg
-kpt pkg init
 ```
 
 Configure a local `ConfigMap`:
