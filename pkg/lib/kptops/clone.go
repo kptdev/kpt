@@ -21,49 +21,35 @@ import (
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func UpdateUpstream(kptfileContents string, name string, upstream kptfilev1.Upstream, lock kptfilev1.Locator) (string, error) {
-	kptfile, err := kptfileutil.DecodeKptfile(strings.NewReader(kptfileContents))
-	if err != nil {
-		return "", fmt.Errorf("cannot parse Kptfile: %w", err)
-	}
-
 	// Normalize the repository URL and directory path
 	normalizeGitFields(&upstream)
 	normalizeGitLockFields(&lock) // Use separate function for lock
 
-	// populate the cloneFrom values so we know where the package came from
-	kptfile.UpstreamLock = &lock
-	kptfile.Upstream = &upstream
-	if name != "" {
-		kptfile.Name = name
-	}
-
-	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
-	if err != nil {
-		return "", fmt.Errorf("cannot save Kptfile: %w", err)
-	}
-
-	return string(b), nil
+	return updateKptfileContentsPreservingFormat(kptfileContents, func(kptfile *kptfilev1.KptFile) {
+		kptfile.UpstreamLock = &lock
+		kptfile.Upstream = &upstream
+		if name != "" {
+			kptfile.Name = name
+		}
+	})
 }
 
 func UpdateName(kptfileContents string, name string) (string, error) {
-	kptfile, err := kptfileutil.DecodeKptfile(strings.NewReader(kptfileContents))
+	return updateKptfileContentsPreservingFormat(kptfileContents, func(kptfile *kptfilev1.KptFile) {
+		kptfile.Name = name
+	})
+}
+
+func updateKptfileContentsPreservingFormat(kptfileContents string, mutator func(*kptfilev1.KptFile)) (string, error) {
+	out, err := kptfileutil.UpdateKptfileContent(kptfileContents, mutator)
 	if err != nil {
-		return "", fmt.Errorf("cannot parse Kptfile: %w", err)
+		return "", fmt.Errorf("cannot update Kptfile: %w", err)
 	}
 
-	// update the name of the package
-	kptfile.Name = name
-
-	b, err := yaml.MarshalWithOptions(kptfile, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
-	if err != nil {
-		return "", fmt.Errorf("cannot save Kptfile: %w", err)
-	}
-
-	return string(b), nil
+	return out, nil
 }
 
 func UpdateKptfileUpstream(name string, contents map[string]string, upstream kptfilev1.Upstream, lock kptfilev1.Locator) error {
