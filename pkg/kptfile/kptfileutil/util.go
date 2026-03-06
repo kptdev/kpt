@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/krm-functions-sdk/go/fn"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -42,6 +44,13 @@ var DeprecatedKptfileVersions = []schema.GroupVersionKind{
 
 var SupportedKptfileVersions = []schema.GroupVersionKind{
 	kptfilev1.KptFileGVK(),
+}
+
+var sdkInternalKptfileAnnotations = []string{
+	"config.kubernetes.io/index",
+	"internal.config.kubernetes.io/index",
+	"internal.config.kubernetes.io/path",
+	"internal.config.kubernetes.io/seqindent",
 }
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
@@ -78,6 +87,20 @@ func (e *UnknownKptfileResourceError) Error() string {
 
 func WriteFile(dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteFile"
+	if kf, ok := k.(*kptfilev1.KptFile); ok {
+		if err := writeKptfilePreservingFormat(dir, kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	}
+
+	if kf, ok := k.(kptfilev1.KptFile); ok {
+		if err := writeKptfilePreservingFormat(dir, &kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	}
+
 	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 	if err != nil {
 		return err
@@ -92,6 +115,157 @@ func WriteFile(dir string, k any) error {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 	return nil
+}
+
+func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	if _, err := os.Stat(dir); err != nil {
+		return err
+	}
+
+	content, err := os.ReadFile(kptfilePath)
+	if err != nil {
+		if goerrors.Is(err, os.ErrNotExist) {
+			b, marshalErr := yaml.MarshalWithOptions(kf, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+			if marshalErr != nil {
+				return marshalErr
+			}
+			return os.WriteFile(kptfilePath, b, 0600)
+		}
+		return err
+	}
+
+	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
+	existingKptfile, err := fn.NewKptfileFromPackage(existingResources)
+	if err != nil {
+		return err
+	}
+	if err := applyTypedKptfileToSDK(existingKptfile, kf); err != nil {
+		return err
+	}
+	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
+		return err
+	}
+	return os.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName]), 0600)
+}
+
+func applyTypedKptfileToSDK(sdkKptfile *fn.Kptfile, desired *kptfilev1.KptFile) error {
+	if sdkKptfile == nil || sdkKptfile.Obj == nil {
+		return fmt.Errorf("cannot update empty sdk Kptfile")
+	}
+
+	if err := sdkKptfile.Obj.SetNestedString(desired.APIVersion, "apiVersion"); err != nil {
+		return err
+	}
+	if err := sdkKptfile.Obj.SetNestedString(desired.Kind, "kind"); err != nil {
+		return err
+	}
+	if err := sdkKptfile.Obj.SetNestedString(desired.Name, "metadata", "name"); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Annotations, "metadata", "annotations"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Labels, "metadata", "labels"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Pipeline, "pipeline"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Info, "info"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Inventory, "inventory"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(sdkKptfile.Obj, desired.Status, "status"); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveUpstream(sdkKptfile.Obj, desired.Upstream); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveUpstreamLock(sdkKptfile.Obj, desired.UpstreamLock); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
+	if val == nil || reflect.ValueOf(val).IsZero() {
+		_, err := obj.RemoveNestedField(fields...)
+		return err
+	}
+	return obj.SetNestedField(val, fields...)
+}
+
+func setOrRemoveNestedString(obj *fn.KubeObject, value string, fields ...string) error {
+	if strings.TrimSpace(value) == "" {
+		_, err := obj.RemoveNestedField(fields...)
+		return err
+	}
+	return obj.SetNestedString(value, fields...)
+}
+
+func setOrRemoveUpstream(obj *fn.KubeObject, upstream *kptfilev1.Upstream) error {
+	if upstream == nil {
+		_, err := obj.RemoveNestedField("upstream")
+		return err
+	}
+
+	obj.UpsertMap("upstream")
+	if err := setOrRemoveNestedString(obj, string(upstream.Type), "upstream", "type"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, string(upstream.UpdateStrategy), "upstream", "updateStrategy"); err != nil {
+		return err
+	}
+
+	if upstream.Git == nil {
+		_, err := obj.RemoveNestedField("upstream", "git")
+		return err
+	}
+
+	obj.UpsertMap("upstream").UpsertMap("git")
+	if err := setOrRemoveNestedString(obj, upstream.Git.Repo, "upstream", "git", "repo"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstream.Git.Directory, "upstream", "git", "directory"); err != nil {
+		return err
+	}
+	return setOrRemoveNestedString(obj, upstream.Git.Ref, "upstream", "git", "ref")
+}
+
+func setOrRemoveUpstreamLock(obj *fn.KubeObject, upstreamLock *kptfilev1.Locator) error {
+	if upstreamLock == nil {
+		_, err := obj.RemoveNestedField("upstreamLock")
+		return err
+	}
+
+	obj.UpsertMap("upstreamLock")
+	if err := setOrRemoveNestedString(obj, string(upstreamLock.Type), "upstreamLock", "type"); err != nil {
+		return err
+	}
+
+	if upstreamLock.Git == nil {
+		_, err := obj.RemoveNestedField("upstreamLock", "git")
+		return err
+	}
+
+	obj.UpsertMap("upstreamLock").UpsertMap("git")
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Repo, "upstreamLock", "git", "repo"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Directory, "upstreamLock", "git", "directory"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Ref, "upstreamLock", "git", "ref"); err != nil {
+		return err
+	}
+	return setOrRemoveNestedString(obj, upstreamLock.Git.Commit, "upstreamLock", "git", "commit")
 }
 
 // ValidateInventory returns true and a nil error if the passed inventory
@@ -305,10 +479,59 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 
 	d := yaml.NewDecoder(bytes.NewBuffer(c))
 	d.KnownFields(true)
-	if err := d.Decode(kf); err != nil {
+	if err := d.Decode(&kptfilev1.KptFile{}); err != nil {
 		return kf, err
 	}
+
+	kubeObjects, err := fn.ReadKubeObjectsFromFile(kptfilev1.KptFileName, string(c))
+	if err != nil {
+		return kf, err
+	}
+
+	sdkKptfile, err := fn.NewKptfileFromKubeObjectList(kubeObjects)
+	if err != nil {
+		return kf, err
+	}
+
+	if err := sdkKptfile.Obj.As(kf); err != nil {
+		return kf, err
+	}
+
+	for _, key := range sdkInternalKptfileAnnotations {
+		delete(kf.Annotations, key)
+	}
+	if len(kf.Annotations) == 0 {
+		kf.Annotations = nil
+	}
+
 	return kf, nil
+}
+
+// UpdateKptfileContent updates Kptfile YAML content in-memory using SDK Kptfile
+// read/write APIs while preserving existing YAML document structure and comments.
+func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (string, error) {
+	resources := map[string]string{kptfilev1.KptFileName: content}
+	sdkKptfile, err := fn.NewKptfileFromPackage(resources)
+	if err != nil {
+		return "", err
+	}
+
+	typedKptfile := &kptfilev1.KptFile{}
+	if err := sdkKptfile.Obj.As(typedKptfile); err != nil {
+		return "", err
+	}
+
+	mutator(typedKptfile)
+
+	if err := applyTypedKptfileToSDK(sdkKptfile, typedKptfile); err != nil {
+		return "", err
+	}
+
+	if err := sdkKptfile.WriteToPackage(resources); err != nil {
+		return "", err
+	}
+
+	return resources[kptfilev1.KptFileName], nil
 }
 
 // checkKptfileVersion verifies the apiVersion and kind of the resource
