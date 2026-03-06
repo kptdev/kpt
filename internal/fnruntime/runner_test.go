@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/types"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -659,4 +660,43 @@ func getExpectedPrefix(prefix string) string {
 		return prefix + "/"
 	}
 	return prefix
+}
+
+func TestBuildFunctionDisplayName(t *testing.T) {
+	tests := []struct {
+		name     string
+		image    string
+		tag      string
+		expected string
+	}{
+		{"no tag, no colon", "myimage", "", "myimage:latest"},
+		{"no tag, has colon", "myimage:v1", "", "myimage:v1"},
+		{
+			"no tag, has digest",
+			"myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1",
+			"",
+			"myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1",
+		},
+		{"has tag, no colon", "myimage", "v2", "myimage:v2"},
+		{"has semver tag, no colon", "myimage", "~0.2", "myimage:~0.2"},
+		{"has tag, has colon", "myimage:v1", "v2", "myimage:v2"},
+		{"has semver tag, has colon", "myimage:v1", "~0.2", "myimage:~0.2"},
+		{"has semver tag, has digest", "myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1", "~0.2", "myimage:~0.2"},
+		{"empty image", "", "v1", ""},
+		{"registry with port", "localhost:5000/myimage", "v1", "localhost:5000/myimage:v1"},
+		{"registry with port, no tag", "localhost:5000/myimage", "", "localhost:5000/myimage:latest"},
+		{"registry with port and digest", "localhost:5000/myimage@sha256:b087fe8968d1641f495ee382f8f5b8c8e23b062903042775cc28fa6c6a64f6c1", "v1", "localhost:5000/myimage:v1"},
+		{"registry with port and tag", "localhost:5000/myimage:old", "new", "localhost:5000/myimage:new"},
+		{"registry with port, semver tag", "localhost:5000/myimage:old", "~0.2", "localhost:5000/myimage:~0.2"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := buildFunctionDisplayName(&fnresult.Result{
+				Image: tc.image,
+				Tag:   tc.tag,
+			})
+			assert.Equal(t, tc.expected, result)
+		})
+	}
 }

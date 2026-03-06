@@ -1,0 +1,10 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/dne # non-existing image
+      tag: "0.4.x"
+      configMap:
+        tier: backend

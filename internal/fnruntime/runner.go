@@ -43,7 +43,7 @@ import (
 )
 
 // NewRunner returns a FunctionRunner given a specification of a function
-// and it's config.
+// and its config.
 func NewRunner(
 	ctx context.Context,
 	fsys filesys.FileSystem,
@@ -67,6 +67,7 @@ func NewRunner(
 
 	fnResult := &fnresult.Result{
 		Image:    f.Image,
+		Tag:      f.Tag,
 		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
@@ -157,14 +158,14 @@ func NewRunner(
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
-// and it's config.
+// and its config.
 func NewFunctionRunner(ctx context.Context,
 	fltr *runtimeutil.FunctionFilter,
 	pkgPath types.UniquePath,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
-	name := fnResult.Image
+	name := buildFunctionDisplayName(fnResult)
 	if name == "" {
 		name = fnResult.ExecPath
 	}
@@ -249,6 +250,11 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 
 	fnResult := fr.fnResult
 	output, err = fr.filter.Filter(input)
+	if fr.fnResult.Image != "" {
+		fr.name = fr.fnResult.Image
+	} else {
+		fr.name = fr.fnResult.ExecPath
+	}
 
 	if fr.opts.SetPkgPathAnnotation {
 		if pkgPathErr := setPkgPathAnnotationIfNotExist(output, fr.pkgPath); pkgPathErr != nil {
@@ -507,4 +513,42 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 	}
 	// no need to return ConfigMap if no config given
 	return nil, nil
+}
+
+// buildFunctionDisplayName constructs the display name for a function from its result metadata.
+// It combines the image name with the appropriate tag, handling cases where the tag
+// is already present in the image name or needs to be appended.
+func buildFunctionDisplayName(fnResult *fnresult.Result) string {
+	name := fnResult.Image
+	tag := fnResult.Tag
+
+	if name == "" {
+		return ""
+	}
+	if strings.HasPrefix(fnResult.Image, "builtins/") {
+		// Built-in pseudo-image - no tagging
+		return name
+	}
+
+	// Find digest separator first (takes precedence over tag)
+	separatorIndex := strings.LastIndex(name, "@")
+	if separatorIndex == -1 {
+		// No digest - look for tag separator
+		separatorIndex = strings.LastIndex(name, ":")
+	}
+	nameHasTagOrDigest := separatorIndex != -1 && !strings.Contains(name[separatorIndex+1:], "/")
+
+	// If no tag specified and name already has tag, use as-is
+	if tag == "" {
+		if nameHasTagOrDigest {
+			return name
+		}
+		return name + ":latest"
+	}
+
+	// Tag specified: replace existing tag or append
+	if nameHasTagOrDigest {
+		return name[:separatorIndex] + ":" + tag
+	}
+	return name + ":" + tag
 }

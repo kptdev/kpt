@@ -1,0 +1,13 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+# invalid starlark input results in failure of first fn
+  - image: ghcr.io/kptdev/krm-functions-catalog/starlark
+    tag: ">=0.5.5, <0.5.6"
+    configPath: starlark-failure-fn.yaml
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+    configMap:
+      namespace: staging
