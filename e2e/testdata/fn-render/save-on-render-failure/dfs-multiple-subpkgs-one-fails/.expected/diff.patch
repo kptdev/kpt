@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 291b91b..c47c90d 100755
+index 291b91b..c47c90d 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,13 +1,13 @@
@@ -30,7 +30,7 @@ index 291b91b..c47c90d 100755
 +      configMap:
 +        pkg: root
 diff --git a/service.yaml b/service.yaml
-index dada970..9148b9b 100755
+index dada970..9148b9b 100644
 --- a/service.yaml
 +++ b/service.yaml
 @@ -1,7 +1,7 @@
@@ -49,7 +49,7 @@ index dada970..9148b9b 100755
 +  ports:
 +  - port: 80
 diff --git a/sub1/Kptfile b/sub1/Kptfile
-index b3d9bcf..0f03268 100755
+index b3d9bcf..0f03268 100644
 --- a/sub1/Kptfile
 +++ b/sub1/Kptfile
 @@ -1,9 +1,11 @@
@@ -74,7 +74,7 @@ index b3d9bcf..0f03268 100755
 +      configMap:
 +        pkg: sub1
 diff --git a/sub1/deployment.yaml b/sub1/deployment.yaml
-index 16fcb85..c2245a9 100755
+index 16fcb85..c2245a9 100644
 --- a/sub1/deployment.yaml
 +++ b/sub1/deployment.yaml
 @@ -1,6 +1,15 @@
@@ -100,7 +100,7 @@ index 16fcb85..c2245a9 100755
 +      labels:
 +        pkg: sub1
 diff --git a/sub2/Kptfile b/sub2/Kptfile
-index 8a4836b..6412843 100755
+index 8a4836b..6412843 100644
 --- a/sub2/Kptfile
 +++ b/sub2/Kptfile
 @@ -1,11 +1,13 @@
@@ -129,7 +129,7 @@ index 8a4836b..6412843 100755
 +  validators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
 diff --git a/sub2/deployment.yaml b/sub2/deployment.yaml
-index 16bb7f0..7290360 100755
+index 16bb7f0..7290360 100644
 --- a/sub2/deployment.yaml
 +++ b/sub2/deployment.yaml
 @@ -1,6 +1,15 @@

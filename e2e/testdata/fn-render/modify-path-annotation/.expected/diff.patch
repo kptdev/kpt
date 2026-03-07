@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index b83e710..5d377d4 100755
+index b83e710..5d377d4 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,8 +1,8 @@
@@ -20,7 +20,7 @@ index b83e710..5d377d4 100755
 +  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 +    configPath: starlark-fn.yaml
 diff --git a/deployment.yaml b/newfilename.yaml
-old mode 100755
+old mode 100644
 new mode 100644
 similarity index 97%
 rename from deployment.yaml
@@ -68,7 +68,7 @@ index 027731c..239f0d6
 +spec:
 +  replicas: 3
 diff --git a/starlark-fn.yaml b/starlark-fn.yaml
-index c75f967..0ef906e 100755
+index c75f967..0ef906e 100644
 --- a/starlark-fn.yaml
 +++ b/starlark-fn.yaml
 @@ -1,22 +1,21 @@

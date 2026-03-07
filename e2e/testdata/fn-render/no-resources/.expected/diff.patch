@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index ab9d7ec..714d078 100755
+index ab9d7ec..714d078 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,8 +1,8 @@
@@ -53,7 +53,7 @@ index 0000000..fe3c0c6
 +        ports:
 +        - containerPort: 9876
 diff --git a/starlark-httpbin.yaml b/starlark-httpbin.yaml
-index 782fa3b..40dc660 100755
+index 782fa3b..40dc660 100644
 --- a/starlark-httpbin.yaml
 +++ b/starlark-httpbin.yaml
 @@ -1,91 +1,91 @@

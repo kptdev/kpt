@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index e2f4e83..66b7fc9 100755
+index e2f4e83..66b7fc9 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,9 +1,11 @@
@@ -24,7 +24,7 @@ index e2f4e83..66b7fc9 100755
 +      configMap:
 +        abc: def
 diff --git a/mysql/Kptfile b/mysql/Kptfile
-index 7e407bc..965bc63 100755
+index 7e407bc..965bc63 100644
 --- a/mysql/Kptfile
 +++ b/mysql/Kptfile
 @@ -1,9 +1,12 @@
@@ -50,7 +50,7 @@ index 7e407bc..965bc63 100755
 +      configMap:
 +        foo: bar
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index faf76a1..349681e 100755
+index faf76a1..349681e 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
 @@ -1,81 +1,90 @@
@@ -226,7 +226,7 @@ index faf76a1..349681e 100755
 +  strategy:
 +    type: Recreate
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index 0d53f68..af25a1f 100755
+index 0d53f68..af25a1f 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
 @@ -1,81 +1,86 @@

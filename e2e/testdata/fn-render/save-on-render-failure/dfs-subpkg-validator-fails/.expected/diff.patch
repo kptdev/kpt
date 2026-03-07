@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index e08a4a0..7c3b09a 100755
+index e08a4a0..7c3b09a 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,14 +1,14 @@
@@ -32,7 +32,7 @@ index e08a4a0..7c3b09a 100755
 +        test: "subpkg-fail"
 +        level: "root"
 diff --git a/deployment.yaml b/deployment.yaml
-index 8ae7b44..7123634 100755
+index 8ae7b44..7123634 100644
 --- a/deployment.yaml
 +++ b/deployment.yaml
 @@ -1,7 +1,7 @@
@@ -51,7 +51,7 @@ index 8ae7b44..7123634 100755
 +spec:
 +  replicas: 1
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index ea45393..7dd3a25 100755
+index ea45393..7dd3a25 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -1,13 +1,13 @@
@@ -82,7 +82,7 @@ index ea45393..7dd3a25 100755
 +  validators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
 diff --git a/subpkg/deployment.yaml b/subpkg/deployment.yaml
-index 1c4bc07..98ff830 100755
+index 1c4bc07..98ff830 100644
 --- a/subpkg/deployment.yaml
 +++ b/subpkg/deployment.yaml
 @@ -1,6 +1,7 @@

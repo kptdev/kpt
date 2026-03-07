@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 1e0e356..a7a2d0b 100755
+index 1e0e356..a7a2d0b 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,7 +1,7 @@
@@ -18,7 +18,7 @@ index 1e0e356..a7a2d0b 100755
 +  mutators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
 diff --git a/resources.yaml b/resources.yaml
-index c0974f0..60f96f2 100755
+index c0974f0..60f96f2 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -1,82 +1,82 @@

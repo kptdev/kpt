@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 1e9f852..bc4fd2d 100755
+index 1e9f852..bc4fd2d 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,14 +1,16 @@
@@ -34,7 +34,7 @@ index 1e9f852..bc4fd2d 100755
 +      configMap:
 +        level: root
 diff --git a/configmap.yaml b/configmap.yaml
-index d6381d9..19a7ead 100755
+index d6381d9..19a7ead 100644
 --- a/configmap.yaml
 +++ b/configmap.yaml
 @@ -1,6 +1,8 @@
@@ -53,7 +53,7 @@ index d6381d9..19a7ead 100755
 +data:
 +  level: root
 diff --git a/level1/Kptfile b/level1/Kptfile
-index 141c89b..b42f153 100755
+index 141c89b..b42f153 100644
 --- a/level1/Kptfile
 +++ b/level1/Kptfile
 @@ -1,13 +1,15 @@
@@ -86,7 +86,7 @@ index 141c89b..b42f153 100755
 +  validators:
 +    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
 diff --git a/level1/configmap.yaml b/level1/configmap.yaml
-index 3d47190..10a2e13 100755
+index 3d47190..10a2e13 100644
 --- a/level1/configmap.yaml
 +++ b/level1/configmap.yaml
 @@ -1,6 +1,8 @@
@@ -105,7 +105,7 @@ index 3d47190..10a2e13 100755
 +data:
 +  level: level1
 diff --git a/level1/level2/Kptfile b/level1/level2/Kptfile
-index 378b725..29e69db 100755
+index 378b725..29e69db 100644
 --- a/level1/level2/Kptfile
 +++ b/level1/level2/Kptfile
 @@ -1,11 +1,13 @@
@@ -134,7 +134,7 @@ index 378b725..29e69db 100755
 +      configMap:
 +        level: level2
 diff --git a/level1/level2/configmap.yaml b/level1/level2/configmap.yaml
-index b9bc0d1..1eeeaed 100755
+index b9bc0d1..1eeeaed 100644
 --- a/level1/level2/configmap.yaml
 +++ b/level1/level2/configmap.yaml
 @@ -1,6 +1,8 @@

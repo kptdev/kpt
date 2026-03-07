@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index ff38bf9..f591880 100755
+index ff38bf9..f591880 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -1,8 +1,8 @@
@@ -20,7 +20,7 @@ index ff38bf9..f591880 100755
 +    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
 +      configPath: starlark.yaml
 diff --git a/resources.yaml b/resources.yaml
-index 9d1f786..f2eec52 100755
+index 9d1f786..f2eec52 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -1,26 +1,26 @@
@@ -77,7 +77,7 @@ index 9d1f786..f2eec52 100755
 +spec:
 +  image: nginx:1.2.3
 diff --git a/starlark.yaml b/starlark.yaml
-index c636402..9f8a888 100755
+index c636402..9f8a888 100644
 --- a/starlark.yaml
 +++ b/starlark.yaml
 @@ -1,20 +1,20 @@
