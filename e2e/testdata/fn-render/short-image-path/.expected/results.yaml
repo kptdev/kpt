@@ -6,6 +6,10 @@ exitCode: 0
 items:
   - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
     exitCode: 0
+    results:
+      - message: namespace [default] updated to "staging", 1 value(s) changed
+        severity: info
+      - message: all `depends-on` annotations are up-to-date. no `namespace` changed
+        severity: info
   - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
     exitCode: 0
-
