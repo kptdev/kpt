@@ -63,7 +63,7 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
@@ -141,7 +141,7 @@ metadata:
   name: app-with-db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: staging
     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
@@ -160,7 +160,7 @@ metadata:
   name: db
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
       configMap:
         namespace: db
     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5

@@ -1,34 +1,92 @@
 diff --git a/Kptfile b/Kptfile
-index 3c93e9e..6fa7b45 100644
+index 20fac6a..7f10467 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: app
-+  namespace: staging
+@@ -1,14 +1,16 @@
+-apiVersion: kpt.dev/v1
+-kind: Kptfile
+-metadata:
+-  name: app
+-pipeline:
+-  mutators:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+-      configPath: delete-all.yaml
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
+-      configMap:
+-        namespace: staging
+-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-      configMap:
+-        tier: backend
++apiVersion: kpt.dev/v1
++kind: Kptfile
++metadata:
++  name: app
 +  labels:
 +    tier: backend
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++pipeline:
++  mutators:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      configPath: delete-all.yaml
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
++      configMap:
++        namespace: staging
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++      configMap:
++        tier: backend
 diff --git a/delete-all.yaml b/delete-all.yaml
-index 3c86d8b..6754b0a 100644
+index 9ddbbe2..bea1693 100644
 --- a/delete-all.yaml
 +++ b/delete-all.yaml
-@@ -17,6 +17,9 @@ metadata:
-   name: delete-all
-   annotations:
-     config.kubernetes.io/local-config: "true"
-+  namespace: staging
+@@ -1,22 +1,24 @@
+-# Copyright 2021 The kpt Authors
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-apiVersion: fn.kpt.dev/v1alpha1
+-kind: StarlarkRun
+-metadata:
+-  name: delete-all
+-  annotations:
+-    config.kubernetes.io/local-config: "true"
+-source: |-
+-  # delete all resources
+-  ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
++# Copyright 2021 The kpt Authors
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#      http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++apiVersion: fn.kpt.dev/v1alpha1
++kind: StarlarkRun
++metadata:
++  name: delete-all
++  annotations:
++    config.kubernetes.io/local-config: "true"
 +  labels:
 +    tier: backend
- source: |-
-   # delete all resources
-   ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
++source: |-
++  # delete all resources
++  ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
-index 990ca9b..0000000
+index 73d3f5e..0000000
 --- a/deployment.yaml
 +++ /dev/null
 @@ -1,24 +0,0 @@
@@ -58,7 +116,7 @@ index 990ca9b..0000000
 -          image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
-index 239f0d6..0000000
+index 027731c..0000000
 --- a/resources.yaml
 +++ /dev/null
 @@ -1,19 +0,0 @@

@@ -1,3 +1,37 @@
+diff --git a/Kptfile b/Kptfile
+index 9033153..0f5d7db 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,8 +1,8 @@
+-apiVersion: kpt.dev/v1
+-kind: Kptfile
+-metadata:
+-  name: app-with-generator
+-pipeline:
+-  mutators:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+-      configPath: starlark-httpbin-gen.yaml
++apiVersion: kpt.dev/v1
++kind: Kptfile
++metadata:
++  name: app-with-generator
++pipeline:
++  mutators:
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      configPath: starlark-httpbin-gen.yaml
+diff --git a/db/Kptfile b/db/Kptfile
+index db5e84a..79b7a5a 100644
+--- a/db/Kptfile
++++ b/db/Kptfile
+@@ -1,4 +1,4 @@
+-apiVersion: kpt.dev/v1
+-kind: Kptfile
+-metadata:
+-  name: db
++apiVersion: kpt.dev/v1
++kind: Kptfile
++metadata:
++  name: db
 diff --git a/db/deployment_httpbin.yaml b/db/deployment_httpbin.yaml
 new file mode 100644
 index 0000000..f36c98e
@@ -17,3 +51,228 @@ index 0000000..f36c98e
 +        name: httpbin
 +        ports:
 +        - containerPort: 9876
+diff --git a/db/resources.yaml b/db/resources.yaml
+index c9c269b..dabe43c 100644
+--- a/db/resources.yaml
++++ b/db/resources.yaml
+@@ -1,19 +1,19 @@
+-# Copyright 2021 The kpt Authors
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-apiVersion: apps/v1
+-kind: StatefulSet
+-metadata:
+-  name: db
+-spec:
+-  replicas: 3
++# Copyright 2021 The kpt Authors
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#      http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++apiVersion: apps/v1
++kind: StatefulSet
++metadata:
++  name: db
++spec:
++  replicas: 3
+diff --git a/resources.yaml b/resources.yaml
+index 9d1f786..f2eec52 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -1,26 +1,26 @@
+-# Copyright 2021 The kpt Authors
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-apiVersion: apps/v1
+-kind: Deployment
+-metadata:
+-  name: nginx-deployment
+-spec:
+-  replicas: 3
+----
+-apiVersion: custom.io/v1
+-kind: Custom
+-metadata:
+-  name: custom
+-spec:
+-  image: nginx:1.2.3
++# Copyright 2021 The kpt Authors
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#      http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++apiVersion: apps/v1
++kind: Deployment
++metadata:
++  name: nginx-deployment
++spec:
++  replicas: 3
++---
++apiVersion: custom.io/v1
++kind: Custom
++metadata:
++  name: custom
++spec:
++  image: nginx:1.2.3
+diff --git a/starlark-httpbin-gen.yaml b/starlark-httpbin-gen.yaml
+index 106be2d..285547d 100644
+--- a/starlark-httpbin-gen.yaml
++++ b/starlark-httpbin-gen.yaml
+@@ -1,60 +1,60 @@
+-# Copyright 2021 The kpt Authors
+-#
+-# Licensed under the Apache License, Version 2.0 (the "License");
+-# you may not use this file except in compliance with the License.
+-# You may obtain a copy of the License at
+-#
+-#      http://www.apache.org/licenses/LICENSE-2.0
+-#
+-# Unless required by applicable law or agreed to in writing, software
+-# distributed under the License is distributed on an "AS IS" BASIS,
+-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-# See the License for the specific language governing permissions and
+-# limitations under the License.
+-apiVersion: fn.kpt.dev/v1alpha1
+-kind: StarlarkRun
+-metadata:
+-  name: httpbin-gen
+-source: |-
+-  httpbin_deployment = {
+-     "apiVersion": "apps/v1",
+-     "kind": "Deployment",
+-     "metadata": {
+-        "name": "httpbin",
+-        "annotations": {
+-          "internal.config.kubernetes.io/index": 0,
+-          # generates resource in child directory
+-          "internal.config.kubernetes.io/path": "./db/deployment_httpbin.yaml"
+-        }
+-     },
+-     "spec": {
+-        "replicas": 4,
+-        "template": {
+-           "spec": {
+-              "containers": [
+-                {
+-                  "name": "httpbin",
+-                  "image": "kennethreitz/httpbin",
+-                  "ports": [
+-                    {
+-                       "containerPort": 9876
+-                    }
+-                  ]
+-                }
+-              ]
+-           }
+-        }
+-    }
+-  }
+-  # filter to return if resource is HTTPBin resource
+-  def is_httpbin(r):
+-    return r["apiVersion"] == "apps/v1" and r["kind"] == "Deployment" and r["metadata"]["name"] == "httpbin"
+-
+-  def ensure_httpbin(resources):
+-    for r in resources:
+-      if is_httpbin(r):
+-        return
+-
+-    resources.append(httpbin_deployment)
+-
+-  ensure_httpbin(ctx.resource_list["items"])
++# Copyright 2021 The kpt Authors
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#      http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++apiVersion: fn.kpt.dev/v1alpha1
++kind: StarlarkRun
++metadata:
++  name: httpbin-gen
++source: |-
++  httpbin_deployment = {
++     "apiVersion": "apps/v1",
++     "kind": "Deployment",
++     "metadata": {
++        "name": "httpbin",
++        "annotations": {
++          "internal.config.kubernetes.io/index": 0,
++          # generates resource in child directory
++          "internal.config.kubernetes.io/path": "./db/deployment_httpbin.yaml"
++        }
++     },
++     "spec": {
++        "replicas": 4,
++        "template": {
++           "spec": {
++              "containers": [
++                {
++                  "name": "httpbin",
++                  "image": "kennethreitz/httpbin",
++                  "ports": [
++                    {
++                       "containerPort": 9876
++                    }
++                  ]
++                }
++              ]
++           }
++        }
++    }
++  }
++  # filter to return if resource is HTTPBin resource
++  def is_httpbin(r):
++    return r["apiVersion"] == "apps/v1" and r["kind"] == "Deployment" and r["metadata"]["name"] == "httpbin"
++
++  def ensure_httpbin(resources):
++    for r in resources:
++      if is_httpbin(r):
++        return
++
++    resources.append(httpbin_deployment)
++
++  ensure_httpbin(ctx.resource_list["items"])

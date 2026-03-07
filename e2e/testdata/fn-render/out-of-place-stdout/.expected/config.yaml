@@ -3,8 +3,8 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
 
 stdOut: |
   apiVersion: config.kubernetes.io/v1
@@ -23,7 +23,7 @@ stdOut: |
       namespace: staging
     pipeline:
       mutators:
-      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
         configMap:
           namespace: staging
   # Copyright 2021 The kpt Authors
