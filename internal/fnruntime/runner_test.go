@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/types"
-	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -692,10 +691,7 @@ func TestBuildFunctionDisplayName(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := buildFunctionDisplayName(&fnresult.Result{
-				Image: tc.image,
-				Tag:   tc.tag,
-			})
+			result := buildFunctionDisplayName(tc.image, tc.tag)
 			assert.Equal(t, tc.expected, result)
 		})
 	}

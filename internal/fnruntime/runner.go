@@ -69,7 +69,6 @@ func NewRunner(
 
 	fnResult := &fnresult.Result{
 		Image:    f.Image,
-		Tag:      f.Tag,
 		ExecPath: f.Exec,
 		// TODO(droot): This is required for making structured results subpackage aware.
 		// Enable this once test harness supports filepath based assertions.
@@ -113,7 +112,7 @@ func NewRunner(
 					f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
 					if err != nil {
 						pr := printer.FromContextOrDie(ctx)
-						pr.Printf("[RESOLUTION FAIL] %q\n", buildFunctionDisplayName(fnResult))
+						pr.Printf("[RESOLUTION FAIL] %q\n", buildFunctionDisplayName(fnResult.Image, f.Tag))
 						return nil, err
 					}
 
@@ -552,14 +551,11 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 // buildFunctionDisplayName constructs the display name for a function from its result metadata.
 // It combines the image name with the appropriate tag, handling cases where the tag
 // is already present in the image name or needs to be appended.
-func buildFunctionDisplayName(fnResult *fnresult.Result) string {
-	name := fnResult.Image
-	tag := fnResult.Tag
-
+func buildFunctionDisplayName(name, tag string) string {
 	if name == "" {
 		return ""
 	}
-	if strings.HasPrefix(fnResult.Image, "builtins/") {
+	if strings.HasPrefix(name, "builtins/") {
 		// Built-in pseudo-image - no tagging
 		return name
 	}
