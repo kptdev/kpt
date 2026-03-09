@@ -80,7 +80,6 @@ type ContainerFn struct {
 
 	// Image is the container image to run
 	Image string
-	Tag   string
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy runneroptions.ImagePullPolicy
 	// Container function will be killed after this timeour.
@@ -150,28 +149,6 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	})
 	if err != nil {
 		return err
-	}
-
-	if f.Tag != "" {
-		tagResolver := &TagResolver{
-			lister: &RegClientLister{
-				client: regclient.New(
-					regclient.WithUserAgent(UserAgent),
-					regclient.WithDockerCreds(),
-				),
-			},
-		}
-		f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
-		if err != nil {
-			f.FnResult.Image = buildFunctionDisplayName(f.FnResult)
-			return err
-		}
-		f.FnResult.Image = f.Image
-	} else if noTagOrDigestSpecified(f) {
-		// No Tag specified, either exactly or with a semver constraint;
-		// no tag or digest already in image string.
-		// kpt resolution defaults to "latest": we reflect that in the FnResult
-		f.FnResult.Image = f.Image + ":latest"
 	}
 
 	switch runtime {
@@ -507,11 +484,4 @@ To install nerdctl, follow the instructions at https://github.com/containerd/ner
 		return fmt.Errorf("%v\n%s", err, suggestedText)
 	}
 	return nil
-}
-
-func noTagOrDigestSpecified(f *ContainerFn) bool {
-	ref, err := regclientref.New(f.Image)
-	return err == nil &&
-		ref.Tag == "latest" && ref.Digest == "" &&
-		!strings.Contains(f.Image, ":latest")
 }

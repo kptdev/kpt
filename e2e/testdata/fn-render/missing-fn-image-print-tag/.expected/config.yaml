@@ -14,5 +14,5 @@
 
 exitCode: 1
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/dne:0.4.x"
-  [FAIL] "ghcr.io/kptdev/krm-functions-catalog/dne:0.4.x" in 0s
+  [RESOLUTION FAIL] "ghcr.io/kptdev/krm-functions-catalog/dne:0.4.x"
+  Error: failed to list tags for image "ghcr.io/kptdev/krm-functions-catalog/dne": failed to list tags for ghcr.io/kptdev/krm-functions-catalog/dne:latest: unauthorized

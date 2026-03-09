@@ -35,6 +35,8 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient"
+	regclientref "github.com/regclient/regclient/types/ref"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -97,6 +99,32 @@ func NewRunner(
 		} else {
 			switch {
 			case f.Image != "":
+				if f.Tag != "" {
+					// Combine Image and Tag config to actual image that
+					// will be executed
+					tagResolver := &TagResolver{
+						lister: &RegClientLister{
+							client: regclient.New(
+								regclient.WithUserAgent(UserAgent),
+								regclient.WithDockerCreds(),
+							),
+						},
+					}
+					f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
+					if err != nil {
+						pr := printer.FromContextOrDie(ctx)
+						pr.Printf("[RESOLUTION FAIL] %q\n", buildFunctionDisplayName(fnResult))
+						return nil, err
+					}
+
+					fnResult.Image = f.Image
+				} else if noTagOrDigestSpecified(f) {
+					// No Tag specified, either exactly or with a semver constraint;
+					// no tag or digest already in image string.
+					// kpt resolution defaults to "latest": we reflect that in the FnResult
+					fnResult.Image = f.Image + ":latest"
+				}
+
 				// If allowWasm is true, we will use wasm runtime for image field.
 				if opts.AllowWasm {
 					wFn, err := NewWasmFn(NewOciLoader(filepath.Join(os.TempDir(), "krm-fn-wasm"), f.Image))
@@ -107,7 +135,6 @@ func NewRunner(
 				} else {
 					cfn := &ContainerFn{
 						Image:           f.Image,
-						Tag:             f.Tag,
 						ImagePullPolicy: opts.ImagePullPolicy,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
@@ -157,6 +184,13 @@ func NewRunner(
 	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
 }
 
+func noTagOrDigestSpecified(f *kptfilev1.Function) bool {
+	ref, err := regclientref.New(f.Image)
+	return err == nil &&
+		ref.Tag == "latest" && ref.Digest == "" &&
+		!strings.Contains(f.Image, ":latest")
+}
+
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
 // and its config.
 func NewFunctionRunner(ctx context.Context,
@@ -165,7 +199,7 @@ func NewFunctionRunner(ctx context.Context,
 	fnResult *fnresult.Result,
 	fnResults *fnresult.ResultList,
 	opts runneroptions.RunnerOptions) (*FunctionRunner, error) {
-	name := buildFunctionDisplayName(fnResult)
+	name := fnResult.Image
 	if name == "" {
 		name = fnResult.ExecPath
 	}
