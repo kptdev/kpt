@@ -10,6 +10,10 @@ WASM functions are an alternative to container-based KRM functions. They're fast
 
 ## Why use WASM functions?
 
+{{% alert title="Note" color="warning" %}}
+WASM support in kpt is currently in alpha and not ready for production use. The API and behavior may change in future releases.
+{{% /alert %}}
+
 WASM functions have some advantages over container-based functions:
 
 - Faster startup - no container runtime needed
@@ -43,7 +47,7 @@ pipeline:
 kpt fn render my-package --allow-alpha-wasm
 ```
 
-kpt will detect the function as WASM if the OCI image has a `wasm/js` platform manifest.
+kpt will detect the function as WASM if the OCI image has a `js/wasm` platform manifest.
 
 ### With `fn eval`
 
@@ -92,7 +96,7 @@ kpt alpha wasm push ./my-function.wasm gcr.io/my-org/my-wasm-fn:v1.0.0
 
 What this does:
 1. Compresses the WASM file into a tar archive
-2. Creates an OCI image with `wasm/js` platform
+2. Creates an OCI image with `js/wasm` platform
 3. Pushes to the registry
 
 ### Pull a WASM module
@@ -181,10 +185,12 @@ func run() error {
 }
 
 // process applies the same transformation logic as in the non-WASM build.
-// Ensure this implementation matches the one in main.go.
 func process(rl *fn.ResourceList) (bool, error) {
-    // TODO: copy the implementation from main.go so behavior is consistent.
-    return false, nil
+    for i := range rl.Items {
+        // Your transformation logic
+        rl.Items[i].SetAnnotation("processed-by", "my-fn")
+    }
+    return true, nil
 }
 func transform(input []byte) ([]byte, error) {
     return fn.Run(fn.ResourceListProcessorFunc(process), input)
