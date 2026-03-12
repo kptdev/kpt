@@ -93,12 +93,17 @@ index f983597..e21782c 100644
  kind: Custom
  metadata:
    name: custom
+<<<<<<< HEAD
+=======
++  namespace: staging
+>>>>>>> 7391af6d7 (Fix live apply CRD ordering and align fn-render golden output)
 +  labels:
 +    app: backend
 +    tier: backend
  spec:
    image: nginx:1.2.3
 diff --git a/db/statefulset-filter.yaml b/db/statefulset-filter.yaml
+<<<<<<< HEAD
 index e1f7b67..8ab4033 100644
 --- a/db/statefulset-filter.yaml
 +++ b/db/statefulset-filter.yaml
@@ -106,6 +111,16 @@ index e1f7b67..8ab4033 100644
  kind: StarlarkRun
  metadata:
    name: statefulset-filter
+=======
+index e1f7b67..ac69c02 100644
+--- a/db/statefulset-filter.yaml
++++ b/db/statefulset-filter.yaml
+@@ -15,6 +15,10 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: statefulset-filter
++  namespace: staging
+>>>>>>> 7391af6d7 (Fix live apply CRD ordering and align fn-render golden output)
 +  labels:
 +    app: backend
 +    tier: backend
