@@ -30,7 +30,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: app
-        image: gcr.io/project/app:version
+        image: ghcr.io/project/app:version
         command:
         - java
         - -jar
