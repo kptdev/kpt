@@ -836,6 +836,149 @@ metadata: [bad
 	assert.Error(t, err)
 }
 
+func TestUpdateKptfileContent_UsesDecodeValidation(t *testing.T) {
+	testCases := map[string]struct {
+		content             string
+		expectedErr         any
+		expectedDecodeError string
+	}{
+		"deprecated version": {
+			content: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: sample
+`,
+			expectedErr:         &DeprecatedKptfileError{},
+			expectedDecodeError: "old resource version \"v1alpha2\" found in Kptfile",
+		},
+		"unknown kind": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: ConfigMap
+metadata:
+  name: sample
+`,
+			expectedErr:         &UnknownKptfileResourceError{},
+			expectedDecodeError: "unknown resource type \"kpt.dev/v1, Kind=ConfigMap\" found in Kptfile",
+		},
+		"unknown field": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+unexpectedField: true
+`,
+			expectedDecodeError: "yaml: unmarshal errors:\n  line 6: field unexpectedField not found in type v1.KptFile",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			_, decodeErr := DecodeKptfile(strings.NewReader(tc.content))
+			_, updateErr := UpdateKptfileContent(tc.content, func(*kptfilev1.KptFile) {})
+
+			if !assert.EqualError(t, decodeErr, tc.expectedDecodeError) {
+				t.FailNow()
+			}
+			if !assert.EqualError(t, updateErr, decodeErr.Error()) {
+				t.FailNow()
+			}
+			if tc.expectedErr != nil {
+				assert.IsType(t, tc.expectedErr, decodeErr)
+				assert.IsType(t, tc.expectedErr, updateErr)
+			}
+		})
+	}
+}
+
+func TestUpdateKptfileContent_StripsSDKInternalAnnotations(t *testing.T) {
+	t.Run("preserves user annotations", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/path: Kptfile
+    user.example.com/keep: value
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		if assert.NotNil(t, updatedKf.Annotations) {
+			assert.Equal(t, "value", updatedKf.Annotations["user.example.com/keep"])
+			for _, key := range sdkInternalKptfileAnnotations {
+				assert.NotContains(t, updatedKf.Annotations, key)
+			}
+		}
+		assert.NotContains(t, updatedContent, "config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "internal.config.kubernetes.io/path")
+	})
+
+	t.Run("removes empty annotation map", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/index: "0"
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(*kptfilev1.KptFile) {})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Nil(t, updatedKf.Annotations)
+		assert.NotContains(t, updatedContent, "annotations:")
+	})
+
+	t.Run("handles missing annotations safely", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		assert.Nil(t, updatedKf.Annotations)
+	})
+}
+
 func TestMerge(t *testing.T) {
 	testCases := map[string]struct {
 		origin   string
