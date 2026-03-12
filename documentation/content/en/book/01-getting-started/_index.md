@@ -154,9 +154,7 @@ The pipeline is executed using the `render` command, as follows:
 kpt fn render
 ```
 
-Regardless of how you choose to customize the package — whether by manually editing it or running one-time functions using `kpt fn eval`
- — you need to _render_ the package before applying it to the cluster. This ensures that all the functions declared in the package
-have been executed, and the package is ready to be applied to the cluster.
+Regardless of how you choose to customize the package, whether by manually editing it or running one-time functions using `kpt fn eval`, you need to _render_ the package before applying it to the cluster. This ensures that all the functions declared in the package have been executed, and the package is ready to be applied to the cluster.
 
 ### Applying the package
 
