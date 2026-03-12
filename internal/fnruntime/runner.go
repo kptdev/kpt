@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/shlex"
 	"github.com/kptdev/kpt/internal/builtins"
+	builtinsregistry "github.com/kptdev/kpt/internal/builtins/registry"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
@@ -90,6 +91,8 @@ func NewRunner(
 		if f.Image == runneroptions.FuncGenPkgContext {
 			pkgCtxGenerator := &builtins.PackageContextGenerator{}
 			fltr.Run = pkgCtxGenerator.Run
+		} else if builtinFn := builtinsregistry.Lookup(f.Image); builtinFn != nil {
+			fltr.Run = builtinFn.Run
 		} else {
 			switch {
 			case f.Image != "":
