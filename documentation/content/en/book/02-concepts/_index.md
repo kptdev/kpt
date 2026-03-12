@@ -1,7 +1,7 @@
 ---
 title: "Chapter 2: Concepts"
 linkTitle: "Chapter 2: Concepts"
-description: This describes what is kpt and what are the main concepts behind it
+description: This chapter describes what kpt is and what the main concepts are behind kpt.
 toc: true
 menu:
   main:
@@ -11,45 +11,38 @@ menu:
 
 ## What is kpt?
 
-kpt (Kubernetes Package Transformation) supports management of Configuration as Data (CaD).
+kpt stands for Kubernetes Package Transformation. It supports the management of configuration as data (CaD).
 
-*Configuration as Data* is an approach to management of configuration (incl. configuration of infrastructure, policy,
-services, applications, etc.)  which:
+*Configuration as data* is an approach to the management of configurations, including the configuration of infrastructure, policy, services, applications, and so on, which comprises the following actions:
 
-* makes configuration data the source of truth, stored separately from the live
-  state
-* uses a uniform, serializable data model to represent configuration
-* separates code that acts on the configuration from the data and from packages / bundles of the data
-* abstracts configuration file structure and storage from operations that act upon the configuration data; clients
-  manipulating configuration data don’t need to directly interact with storage (git, container images)
+* Making configuration data the source of truth, stored separately from the live state.
+* Using a uniform, serializable data model to represent the configuration.
+* Separating code that acts on the configuration from the data and from the packages/bundles of the data.
+* Abstracting the configuration file structure and storage from the operations that act upon the configuration data. Clients manipulating configuration data do not need to directly interact with the storage (git, container images).
 
-This enables machine manipulation of configuration for Kubernetes and any infrastructure represented in the 
+This enables the machine manipulation of the configuration for Kubernetes and any infrastructure represented in the 
 [Kubernetes Resource Model (KRM)](https://github.com/kubernetes/design-proposals-archive/blob/main/architecture/resource-management.md).
 
 ![img](/images/cad-overview.svg)
 
-### Configuration as data key principles
+### Key principles of configuration as data
 
-* secrets should be stored separately, in a secret-focused storage system
-* stores a versioned history of configuration changes by change sets to bundles of related configuration data
-* relies on uniformity and consistency of the configuration format, including type metadata, to enable pattern-based
-  operations on the configuration data, along the lines of duck typing
-* separates schemas for the configuration data from the data, and relies on schema information for strongly typed
-  operations and to disambiguate data structures and other variations within the model
-* decouples abstractions of configuration from collections of configuration data
-* represents abstractions of configuration generators as data with schemas, like other configuration data
-* finds, filters / queries / selects, and/or validates configuration data that can be operated on by given code
-  (functions)
-* finds and/or filters / queries / selects code (functions) that can operate on resource types contained within a body
-  of configuration data
-* actuation (reconciliation of configuration data with live state) is separate from transformation of configuration
-  data, and is driven by the declarative data model
-* transformations, particularly value propagation, are preferable to wholesale configuration generation except when the
-  expansion is dramatic (say, >10x)
-* transformation input generation should usually be decoupled from propagation
-* deployment context inputs should be taken from well defined “provider context” objects
-* identifiers and references should be declarative
-* live state should be linked back to sources of truth (configuration)
+There are a number of key principles to be borne in mind, with regard to configuration as data (CaD). These principles are as follows:
+
+* Secrets should be stored separately, in a secret-focused storage system.
+* Storage of a versioned history of the configuration changes by change sets to bundles of related configuration data.
+* Reliance on uniformity and consistency of the configuration format, including type metadata, to enable pattern-based operations on the configuration data, along the lines of duck typing.
+* Separation of schemas for the configuration data from the data, and reliance on schema information for strongly typed operations and to disambiguate data structures and other variations within the model.
+* Decoupling of abstractions of configuration from collections of configuration data.
+* Representation of abstractions of configuration generators as data with schemas, like other configuration data.
+* Finding, filtering/querying/selecting, and/or validating configuration data that can be operated on by given code (functions).
+* Finding and/or filtering/querying/selecting code (functions) that can operate on the resource types contained within a body of configuration data.
+* Actuation (reconciliation of configuration data with live state) is separate from the transformation of configuration data, and is driven by the declarative data model.
+* Transformations, particularly value propagation, are preferable to wholesale configuration generation, except when the expansion is dramatic (for example, >10x).
+* Transformation input generation should usually be decoupled from propagation.
+* Deployment context inputs should be taken from well defined “provider context” objects.
+* Identifiers and references should be declarative.
+* Live state should be linked back to sources of truth (configuration).
 
 ### Components of the kpt toolchain
 
