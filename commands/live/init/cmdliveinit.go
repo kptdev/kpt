@@ -45,8 +45,7 @@ import (
 
 // errNameRequired is returned when --name is not provided or blank.
 var errNameRequired = fmt.Errorf(
-	"--name is required: provide a stable deployment name " +
-		"(e.g. --name=my-app-staging) that remains consistent across re-initializations")
+	"--name is required: provide a stable deployment name (e.g. --name=my-app-staging) that remains consistent across re-initializations")
 
 // InvExistsError defines new error when the inventory
 // values have already been set on the Kptfile.
@@ -342,8 +341,11 @@ func generateHash(namespace, name string) (string, error) {
 	if namespace == "" || name == "" {
 		return "", fmt.Errorf("cannot generate inventory ID: namespace and name must be non-empty")
 	}
-	// Note: SHA-1 is used here strictly for deterministic ID generation,
-	// not for cryptographic security.
+	// Note: SHA-1 is used here strictly for deterministic ID generation, not for
+	// cryptographic security. It is chosen for its simplicity, stable 40-character
+	// hex output, and compatibility with existing inventory IDs; collision resistance
+	// is sufficient for this constrained input space (namespace + name), and no
+	// secrets or security-sensitive data are being protected.
 	h := sha1.New()
 	if _, err := fmt.Fprintf(h, "%d:%s:%d:%s", len(namespace), namespace, len(name), name); err != nil {
 		return "", fmt.Errorf("failed to write hash input: %w", err)
