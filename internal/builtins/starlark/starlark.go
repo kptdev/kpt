@@ -24,15 +24,15 @@ import (
 
 const ImageName = "ghcr.io/kptdev/krm-functions-catalog/starlark"
 
-func init() {
-	registry.Register(&StarlarkRunner{})
+func Register() {
+	registry.Register(&Runner{})
 }
 
-type StarlarkRunner struct{}
+type Runner struct{}
 
-func (s *StarlarkRunner) ImageName() string { return ImageName }
+func (s *Runner) ImageName() string { return ImageName }
 
-func (s *StarlarkRunner) Run(r io.Reader, w io.Writer) error {
+func (s *Runner) Run(r io.Reader, w io.Writer) error {
 	input, err := io.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("reading input: %w", err)

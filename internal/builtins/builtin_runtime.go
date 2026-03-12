@@ -17,6 +17,11 @@ package builtins
 
 import (
 	// Register built-in functions via init()
-	_ "github.com/kptdev/kpt/internal/builtins/applyreplacements"
-	_ "github.com/kptdev/kpt/internal/builtins/starlark"
+	applyreplacements "github.com/kptdev/kpt/internal/builtins/applyreplacements"
+	starlark "github.com/kptdev/kpt/internal/builtins/starlark"
 )
+
+func RegisterBuiltins() {
+	applyreplacements.Register()
+	starlark.Register()
+}
