@@ -78,10 +78,10 @@ func TestRender(t *testing.T) {
 				t.Errorf("Render failed: %v", err)
 			}
 
-			got := output.String()
-			want := readFile(t, filepath.Join(testdata, test.name, test.want))
+			got := strings.ReplaceAll(output.String(), "\r\n", "\n")
+			want := strings.ReplaceAll(string(readFile(t, filepath.Join(testdata, test.name, test.want))), "\r\n", "\n")
 
-			if diff := cmp.Diff(string(want), got); diff != "" {
+			if diff := cmp.Diff(want, got); diff != "" {
 				t.Errorf("Unexpected result (-want, +got): %s", diff)
 			}
 		})

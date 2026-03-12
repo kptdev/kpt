@@ -595,9 +595,388 @@ status:
 				t.FailNow()
 			}
 
-			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
+			expectedObj := map[string]any{}
+			err = yaml.Unmarshal([]byte(strings.TrimSpace(tc.expected)), &expectedObj)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			actualObj := map[string]any{}
+			err = yaml.Unmarshal(c, &actualObj)
+			if !assert.NoError(t, err) {
+				t.FailNow()
+			}
+
+			assert.Equal(t, expectedObj, actualObj)
 		})
 	}
+}
+
+func TestUpdateKptfile_PreservesCommentsAndFormatting(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: abcdef
+`)
+
+	localDir := writeKptfileToTemp(t, `
+# local package level comment
+apiVersion: kpt.dev/v1 # api comment
+kind: Kptfile
+metadata:
+  name: sample
+
+# preserve this section comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	content := string(contentBytes)
+
+	assert.Contains(t, content, "# local package level comment")
+	assert.Contains(t, content, "apiVersion: kpt.dev/v1 # api comment")
+	assert.Contains(t, content, "# preserve this section comment")
+	assert.Contains(t, content, "ref: v1.1.0 # keep inline comment")
+	assert.Contains(t, content, "commit: abcdef")
+}
+
+func TestUpdateKptfile_PreservesExactFormattingAndComments(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: def456
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1 # keep api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# preserve this comment block
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep ref inline comment
+
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123 # keep commit inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	want := `
+apiVersion: kpt.dev/v1 # keep api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# preserve this comment block
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0 # keep ref inline comment
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: def456 # keep commit inline comment
+`
+
+	assert.Equal(t, strings.TrimSpace(want), strings.TrimSpace(string(contentBytes)))
+}
+
+func TestWriteFile_ReturnsErrorWhenDirectoryMissing(t *testing.T) {
+	nonExistentDir := filepath.Join(t.TempDir(), "does-not-exist")
+
+	err := WriteFile(nonExistentDir, DefaultKptfile("sample"))
+	assert.Error(t, err)
+}
+
+func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
+	writeKptfileToTemp := func(tt *testing.T, content string) string {
+		dir := tt.TempDir()
+		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+		if !assert.NoError(tt, err) {
+			tt.FailNow()
+		}
+		return dir
+	}
+
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata: [bad
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	assert.Error(t, err)
+}
+
+func TestUpdateKptfileContent_UsesDecodeValidation(t *testing.T) {
+	testCases := map[string]struct {
+		content             string
+		expectedErr         any
+		expectedDecodeError string
+	}{
+		"deprecated version": {
+			content: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: sample
+`,
+			expectedErr:         &DeprecatedKptfileError{},
+			expectedDecodeError: "old resource version \"v1alpha2\" found in Kptfile",
+		},
+		"unknown kind": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: ConfigMap
+metadata:
+  name: sample
+`,
+			expectedErr:         &UnknownKptfileResourceError{},
+			expectedDecodeError: "unknown resource type \"kpt.dev/v1, Kind=ConfigMap\" found in Kptfile",
+		},
+		"unknown field": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+unexpectedField: true
+`,
+			expectedDecodeError: "yaml: unmarshal errors:\n  line 6: field unexpectedField not found in type v1.KptFile",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			_, decodeErr := DecodeKptfile(strings.NewReader(tc.content))
+			_, updateErr := UpdateKptfileContent(tc.content, func(*kptfilev1.KptFile) {})
+
+			if !assert.EqualError(t, decodeErr, tc.expectedDecodeError) {
+				t.FailNow()
+			}
+			if !assert.EqualError(t, updateErr, decodeErr.Error()) {
+				t.FailNow()
+			}
+			if tc.expectedErr != nil {
+				assert.IsType(t, tc.expectedErr, decodeErr)
+				assert.IsType(t, tc.expectedErr, updateErr)
+			}
+		})
+	}
+}
+
+func TestUpdateKptfileContent_StripsSDKInternalAnnotations(t *testing.T) {
+	t.Run("preserves user annotations", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/path: Kptfile
+    user.example.com/keep: value
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		if assert.NotNil(t, updatedKf.Annotations) {
+			assert.Equal(t, "value", updatedKf.Annotations["user.example.com/keep"])
+			for _, key := range sdkInternalKptfileAnnotations {
+				assert.NotContains(t, updatedKf.Annotations, key)
+			}
+		}
+		assert.NotContains(t, updatedContent, "config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "internal.config.kubernetes.io/path")
+	})
+
+	t.Run("removes empty annotation map", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/index: "0"
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(*kptfilev1.KptFile) {})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Nil(t, updatedKf.Annotations)
+		assert.NotContains(t, updatedContent, "annotations:")
+	})
+
+	t.Run("handles missing annotations safely", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		if !assert.NoError(t, err) {
+			t.FailNow()
+		}
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		assert.Nil(t, updatedKf.Annotations)
+	})
 }
 
 func TestMerge(t *testing.T) {

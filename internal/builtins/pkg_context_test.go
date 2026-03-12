@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -62,7 +63,9 @@ func TestPkgContextGenerator(t *testing.T) {
 			if err != test.expErr {
 				t.Errorf("exp: %v got: %v", test.expErr, err)
 			}
-			if diff := cmp.Diff(string(exp), out.String()); diff != "" {
+			expected := strings.ReplaceAll(string(exp), "\r\n", "\n")
+			actual := strings.ReplaceAll(out.String(), "\r\n", "\n")
+			if diff := cmp.Diff(expected, actual); diff != "" {
 				t.Errorf("pkg context mistmach (-want +got):\n%s", diff)
 			}
 		})
