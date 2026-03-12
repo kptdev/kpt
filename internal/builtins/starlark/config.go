@@ -17,7 +17,7 @@ package starlark
 import (
 	"fmt"
 
-	"github.com/kptdev/krm-functions-catalog/functions/go/starlark/third_party/sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
+	starlarkruntime "github.com/kptdev/krm-functions-catalog/functions/go/starlark/third_party/sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
 	"github.com/kptdev/krm-functions-sdk/go/fn"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -104,7 +104,7 @@ func (sr *Run) Transform(rl *fn.ResourceList) error {
 		nodes = append(nodes, objRN)
 	}
 
-	starFltr := &starlark.SimpleFilter{
+	starFltr := &starlarkruntime.SimpleFilter{
 		Name:           sr.Name,
 		Program:        sr.Source,
 		FunctionConfig: fcRN,

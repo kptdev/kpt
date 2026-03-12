@@ -16,6 +16,7 @@ package registry
 
 import (
 	"io"
+	"log"
 	"strings"
 	"sync"
 )
@@ -39,7 +40,13 @@ func Register(fn BuiltinFunction) {
 func Lookup(imageName string) BuiltinFunction {
 	mu.RLock()
 	defer mu.RUnlock()
-	return registry[normalizeImage(imageName)]
+	normalized := normalizeImage(imageName)
+	fn := registry[normalized]
+	if fn != nil && imageName != normalized {
+		log.Printf("WARNING: builtin function %q is being used instead of the requested image %q. "+
+			"The built-in implementation may differ from the pinned version.", normalized, imageName)
+	}
+	return fn
 }
 
 func List() []string {

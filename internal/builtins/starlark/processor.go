@@ -34,7 +34,7 @@ func Process(resourceList *fn.ResourceList) (bool, error) {
 				Severity: fn.Error,
 			},
 		}
-		return false, nil
+		return false, err
 	}
 
 	return true, nil

@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package builtins registers all built-in KRM functions into the builtin registry.
+// Package builtins registers all built-in KRM functions into the builtin registry
+// via their init() functions.
 package builtins
 
 import (
-	// Register built-in functions via init()
+	// Register apply-replacements builtin function via init()
 	_ "github.com/kptdev/kpt/internal/builtins/applyreplacements"
+	// Register starlark builtin function via init()
 	_ "github.com/kptdev/kpt/internal/builtins/starlark"
 )

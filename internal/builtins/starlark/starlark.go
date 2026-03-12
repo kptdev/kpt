@@ -24,15 +24,18 @@ import (
 
 const ImageName = "ghcr.io/kptdev/krm-functions-catalog/starlark"
 
-func init() {
-	registry.Register(&StarlarkRunner{})
+//nolint:gochecknoinits
+func init() { Register() }
+
+func Register() {
+	registry.Register(&Runner{})
 }
 
-type StarlarkRunner struct{}
+type Runner struct{}
 
-func (s *StarlarkRunner) ImageName() string { return ImageName }
+func (s *Runner) ImageName() string { return ImageName }
 
-func (s *StarlarkRunner) Run(r io.Reader, w io.Writer) error {
+func (s *Runner) Run(r io.Reader, w io.Writer) error {
 	input, err := io.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("reading input: %w", err)
@@ -41,13 +44,13 @@ func (s *StarlarkRunner) Run(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("parsing ResourceList: %w", err)
 	}
-	if _, err := Process(rl); err != nil {
-		return err
-	}
+	_, processErr := Process(rl)
 	out, err := rl.ToYAML()
 	if err != nil {
 		return err
 	}
-	_, err = w.Write(out)
-	return err
+	if _, err = w.Write(out); err != nil {
+		return err
+	}
+	return processErr
 }
