@@ -473,13 +473,7 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	if err != nil {
 		return kf, err
 	}
-	if err := checkKptfileVersion(c); err != nil {
-		return kf, err
-	}
-
-	d := yaml.NewDecoder(bytes.NewBuffer(c))
-	d.KnownFields(true)
-	if err := d.Decode(&kptfilev1.KptFile{}); err != nil {
+	if err := validateKptfileContent(c); err != nil {
 		return kf, err
 	}
 
@@ -497,12 +491,7 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 		return kf, err
 	}
 
-	for _, key := range sdkInternalKptfileAnnotations {
-		delete(kf.Annotations, key)
-	}
-	if len(kf.Annotations) == 0 {
-		kf.Annotations = nil
-	}
+	stripSDKInternalKptfileAnnotations(kf)
 
 	return kf, nil
 }
@@ -510,6 +499,10 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 // UpdateKptfileContent updates Kptfile YAML content in-memory using SDK Kptfile
 // read/write APIs while preserving existing YAML document structure and comments.
 func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (string, error) {
+	if err := validateKptfileContent([]byte(content)); err != nil {
+		return "", err
+	}
+
 	resources := map[string]string{kptfilev1.KptFileName: content}
 	sdkKptfile, err := fn.NewKptfileFromPackage(resources)
 	if err != nil {
@@ -520,6 +513,7 @@ func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (str
 	if err := sdkKptfile.Obj.As(typedKptfile); err != nil {
 		return "", err
 	}
+	stripSDKInternalKptfileAnnotations(typedKptfile)
 
 	mutator(typedKptfile)
 
@@ -532,6 +526,33 @@ func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (str
 	}
 
 	return resources[kptfilev1.KptFileName], nil
+}
+
+func validateKptfileContent(content []byte) error {
+	if err := checkKptfileVersion(content); err != nil {
+		return err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(content))
+	d.KnownFields(true)
+	if err := d.Decode(&kptfilev1.KptFile{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func stripSDKInternalKptfileAnnotations(kf *kptfilev1.KptFile) {
+	if kf == nil || kf.ObjectMeta.Annotations == nil {
+		return
+	}
+
+	for _, key := range sdkInternalKptfileAnnotations {
+		delete(kf.ObjectMeta.Annotations, key)
+	}
+	if len(kf.ObjectMeta.Annotations) == 0 {
+		kf.ObjectMeta.Annotations = nil
+	}
 }
 
 // checkKptfileVersion verifies the apiVersion and kind of the resource
