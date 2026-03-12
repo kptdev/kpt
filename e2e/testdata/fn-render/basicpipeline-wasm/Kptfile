@@ -6,9 +6,9 @@ metadata:
     tier: backend
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
       configMap:
         tier: backend
