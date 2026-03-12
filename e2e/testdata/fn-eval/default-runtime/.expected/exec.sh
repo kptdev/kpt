@@ -15,11 +15,11 @@
 
 set -eo pipefail
 
-# clear environment variable KRM_FN_RUNTIMETIME if it matches the default
-if [ "${KRM_FN_RUNTIMETIME}" = "docker" ]; then
-   unset KRM_FN_RUNTIMETIME
+# clear environment variable KRM_FN_RUNTIME if it matches the default
+if [ "${KRM_FN_RUNTIME}" = "docker" ]; then
+   unset KRM_FN_RUNTIME
 fi
 
-echo "KRM_FN_RUNTIMETIME is ${KRM_FN_RUNTIMETIME}"
-# run eval with KRM_FN_RUNTIMETIME unset.
+echo "KRM_FN_RUNTIME is ${KRM_FN_RUNTIME}"
+# run eval with KRM_FN_RUNTIME unset.
 kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0 -- namespace=staging

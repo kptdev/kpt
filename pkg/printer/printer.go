@@ -33,8 +33,8 @@ var TruncateOutput bool
 // output in the CLI so that we can evolve the kpt CLI UX.
 type Printer interface {
 	PrintPackage(pkg *pkg.Pkg, leadingNewline bool)
-	Printf(format string, args ...interface{})
-	OptPrintf(opt *Options, format string, args ...interface{})
+	Printf(format string, args ...any)
+	OptPrintf(opt *Options, format string, args ...any)
 	OutStream() io.Writer
 	ErrStream() io.Writer
 }
@@ -115,14 +115,14 @@ func (pr *printer) PrintPackage(p *pkg.Pkg, leadingNewline bool) {
 
 // Printf is the wrapper over fmt.Printf that displays the output.
 // this will print messages to stderr stream
-func (pr *printer) Printf(format string, args ...interface{}) {
+func (pr *printer) Printf(format string, args ...any) {
 	fmt.Fprintf(pr.errStream, format, args...)
 }
 
 // OptPrintf is the wrapper over fmt.Printf that displays the output according
 // to the opt, this will print messages to stderr stream
 // https://mehulkar.com/blog/2017/11/stdout-vs-stderr/
-func (pr *printer) OptPrintf(opt *Options, format string, args ...interface{}) {
+func (pr *printer) OptPrintf(opt *Options, format string, args ...any) {
 	if opt == nil {
 		fmt.Fprintf(pr.errStream, format, args...)
 		return

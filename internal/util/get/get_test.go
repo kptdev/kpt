@@ -107,7 +107,7 @@ func TestCommand_Run(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -166,7 +166,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: "git",
 			Git: &kptfilev1.GitLock{
 				Commit:    commit,
@@ -237,7 +237,7 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: "git",
 			Git: &kptfilev1.GitLock{
 				Commit:    commit,
@@ -298,7 +298,7 @@ func TestCommand_Run_destination(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -362,7 +362,7 @@ func TestCommand_Run_subdirAndDestination(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Commit:    commit,
@@ -440,7 +440,7 @@ func TestCommand_Run_branch(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -523,7 +523,7 @@ func TestCommand_Run_tag(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -695,7 +695,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",
@@ -748,7 +748,7 @@ func TestCommand_Run_failExistingDir(t *testing.T) {
 				APIVersion: kptfilev1.TypeMeta.APIVersion,
 				Kind:       kptfilev1.TypeMeta.Kind},
 		},
-		UpstreamLock: &kptfilev1.UpstreamLock{
+		UpstreamLock: &kptfilev1.Locator{
 			Type: kptfilev1.GitOrigin,
 			Git: &kptfilev1.GitLock{
 				Directory: "/",

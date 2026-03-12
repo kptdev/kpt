@@ -21,7 +21,7 @@ import (
 
 // DeferredJSON is a helper that delays JSON formatting until/unless it is needed.
 type DeferredJSON struct {
-	O interface{}
+	O any
 }
 
 // String is the method that is called to format the object.
@@ -35,6 +35,6 @@ func (d DeferredJSON) String() string {
 
 // JSON is a helper that prints the object in JSON format.
 // We use lazy-evaluation to avoid calling json.Marshal unless it is actually needed.
-func JSON(o interface{}) DeferredJSON {
+func JSON(o any) DeferredJSON {
 	return DeferredJSON{o}
 }

@@ -1,0 +1,23 @@
+diff --git a/subpkg/Kptfile b/subpkg/Kptfile
+index f147d84..b3c532e 100644
+--- a/subpkg/Kptfile
++++ b/subpkg/Kptfile
+@@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: subpkg
++  namespace: subpkg-ns
+ info:
+   description: Subpackage with failing validator
+ pipeline:
+diff --git a/subpkg/deployment.yaml b/subpkg/deployment.yaml
+index 302322e..98ff830 100644
+--- a/subpkg/deployment.yaml
++++ b/subpkg/deployment.yaml
+@@ -2,5 +2,6 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: sub-deployment
++  namespace: subpkg-ns
+ spec:
+   replicas: 2

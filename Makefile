@@ -15,6 +15,7 @@
 GOLANG_VERSION    := 1.25.7
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
+YEAR_GEN          := $(shell date '+%Y')
 
 .PHONY: docs fix vet fmt lint test build tidy release release-ci
 
@@ -63,7 +64,7 @@ install-golangci-lint:
 
 .PHONY: install-swagger
 install-swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
 
 .PHONY: install-mdtogo
 install-mdtogo:
@@ -75,13 +76,13 @@ fix:
 fmt:
 	go fmt ./...
 
-schema:
+schema: install-swagger
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo
 	rm -rf internal/docs/generated
 	mkdir internal/docs/generated
-	GOBIN=$(GOBIN) go generate ./...
+	GOBIN=$(GOBIN) YEAR_GEN=$(YEAR_GEN) go generate ./...
 	go fmt ./internal/docs/generated/...
 
 tidy:

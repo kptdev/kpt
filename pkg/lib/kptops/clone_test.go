@@ -53,7 +53,7 @@ func TestNormalizeGitFields(t *testing.T) {
 
 func TestNormalizeGitLockFields(t *testing.T) {
 	// Test case 1: Add .git suffix and normalize directory path
-	lock := &kptfilev1.UpstreamLock{
+	lock := &kptfilev1.Locator{
 		Git: &kptfilev1.GitLock{
 			Repo:      exampleRepoURL,
 			Directory: "/path/to/dir",
@@ -68,7 +68,7 @@ func TestNormalizeGitLockFields(t *testing.T) {
 	}
 
 	// Test case 2: Already has .git suffix
-	lock = &kptfilev1.UpstreamLock{
+	lock = &kptfilev1.Locator{
 		Git: &kptfilev1.GitLock{
 			Repo:      exampleRepoURL,
 			Directory: "path/to/dir",

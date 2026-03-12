@@ -1,0 +1,55 @@
+diff --git a/level1/Kptfile b/level1/Kptfile
+index b5960dd..b42f153 100644
+--- a/level1/Kptfile
++++ b/level1/Kptfile
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: level1
++  labels:
++    level: level1
+ info:
+   description: Level1 with failing validator
+ pipeline:
+diff --git a/level1/configmap.yaml b/level1/configmap.yaml
+index 57d3b69..10a2e13 100644
+--- a/level1/configmap.yaml
++++ b/level1/configmap.yaml
+@@ -2,5 +2,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: level1-config
++  labels:
++    level: level1
+ data:
+   level: level1
+diff --git a/level1/level2/Kptfile b/level1/level2/Kptfile
+index 314d402..29e69db 100644
+--- a/level1/level2/Kptfile
++++ b/level1/level2/Kptfile
+@@ -2,10 +2,12 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: level2
++  labels:
++    level: level1
+ info:
+   description: Level2 that succeeds
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+       configMap:
+-        level: "level2"
++        level: level2
+diff --git a/level1/level2/configmap.yaml b/level1/level2/configmap.yaml
+index ab7d3fa..1eeeaed 100644
+--- a/level1/level2/configmap.yaml
++++ b/level1/level2/configmap.yaml
+@@ -2,5 +2,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: level2-config
++  labels:
++    level: level1
+ data:
+   level: level2

@@ -137,44 +137,41 @@ func (r *Runner) runTearDownScript(pkgPath string) error {
 }
 
 func (r *Runner) runFnEval() error {
-	r.t.Logf("Running test against package %s\n", r.pkgName)
-	tmpDir, err := os.MkdirTemp("", "krm-fn-e2e-*")
-	if err != nil {
-		return fmt.Errorf("failed to create temporary dir: %w", err)
-	}
-	pkgPath := filepath.Join(tmpDir, r.pkgName)
-
-	if r.testCase.Config.Debug {
-		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, pkgPath)
-	}
-	if !r.testCase.Config.Debug {
-		// if debug is true, keep the test directory around for debugging
-		defer os.RemoveAll(tmpDir)
-	}
-	var resultsDir, destDir string
-
-	if r.IsFnResultExpected() {
-		resultsDir = filepath.Join(tmpDir, "results")
-	}
-
-	if r.IsOutOfPlace() {
-		destDir = filepath.Join(pkgPath, outDir)
-	}
-
-	// copy package to temp directory
-	err = copyDir(r.testCase.Path, pkgPath)
-	if err != nil {
-		return fmt.Errorf("failed to copy package: %w", err)
-	}
-
-	// init and commit package files
-	err = r.preparePackage(pkgPath)
-	if err != nil {
-		return fmt.Errorf("failed to prepare package: %w", err)
-	}
-
 	// run function
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
+		r.t.Logf("Running test against package %s, iteration %d \n", r.pkgName, i+1)
+		tmpDir, err := os.MkdirTemp("", "krm-fn-e2e-*")
+		if err != nil {
+			return fmt.Errorf("failed to create temporary dir: %w", err)
+		}
+		pkgPath := filepath.Join(tmpDir, r.pkgName)
+
+		if r.testCase.Config.Debug {
+			fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, pkgPath)
+		}
+		var resultsDir, destDir string
+
+		if r.IsFnResultExpected() {
+			resultsDir = filepath.Join(tmpDir, "results")
+		}
+
+		if r.IsOutOfPlace() {
+			destDir = filepath.Join(pkgPath, outDir)
+		}
+
+		// copy package to temp directory
+		err = copyDir(r.testCase.Path, pkgPath)
+		if err != nil {
+			return fmt.Errorf("failed to copy package: %w", err)
+		}
+
+		// init and commit package files
+		err = r.preparePackage(pkgPath)
+		if err != nil {
+			return fmt.Errorf("failed to prepare package: %w", err)
+		}
+
+
 		err = r.runSetupScript(pkgPath)
 		if err != nil {
 			return err
@@ -211,6 +208,9 @@ func (r *Runner) runFnEval() error {
 			} else if !r.testCase.Config.EvalConfig.execUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--exec", string(r.testCase.Config.EvalConfig.execUniquePath))
 			}
+			if r.testCase.Config.EvalConfig.Tag != "" {
+				kptArgs = append(kptArgs, "--tag", r.testCase.Config.EvalConfig.Tag)
+			}
 			if !r.testCase.Config.EvalConfig.fnConfigUniquePath.Empty() {
 				kptArgs = append(kptArgs, "--fn-config", string(r.testCase.Config.EvalConfig.fnConfigUniquePath))
 			}
@@ -237,7 +237,7 @@ func (r *Runner) runFnEval() error {
 		}
 
 		// compare results
-		err = r.compareResult(i, fnErr, stdout, sanitizeTimestamps(stderr), pkgPath, resultsDir)
+		err = r.compareResult(fnErr, stdout, sanitizeTimestamps(stderr), pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -251,6 +251,11 @@ func (r *Runner) runFnEval() error {
 		if err != nil {
 			return err
 		}
+
+		// cleanup temp directory after iteration
+		if !r.testCase.Config.Debug {
+			os.RemoveAll(tmpDir)
+		}
 	}
 
 	return nil
@@ -260,7 +265,7 @@ func sanitizeTimestamps(stderr string) string {
 	// Output will have non-deterministic output timestamps. We will replace these to static message for
 	// stable comparison in tests.
 	var sanitized []string
-	for _, line := range strings.Split(stderr, "\n") {
+	for line := range strings.SplitSeq(stderr, "\n") {
 		// [PASS] \"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest\" in 2.0s
 		if strings.HasPrefix(line, "[PASS]") || strings.HasPrefix(line, "[FAIL]") {
 			tokens := strings.Fields(line)
@@ -287,54 +292,50 @@ func (r *Runner) IsOutOfPlace() bool {
 }
 
 func (r *Runner) runFnRender() error {
-	r.t.Logf("Running test against package %s\n", r.pkgName)
-	tmpDir, err := os.MkdirTemp("", "kpt-pipeline-e2e-*")
-	if err != nil {
-		return fmt.Errorf("failed to create temporary dir: %w", err)
-	}
-	if r.testCase.Config.Debug {
-		fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, tmpDir)
-	}
-	if !r.testCase.Config.Debug {
-		// if debug is true, keep the test directory around for debugging
-		defer os.RemoveAll(tmpDir)
-	}
-	pkgPath := filepath.Join(tmpDir, r.pkgName)
-	// create dir to store untouched pkg to compare against
-	origPkgPath := filepath.Join(tmpDir, "original")
-	err = os.Mkdir(origPkgPath, 0755)
-	if err != nil {
-		return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
-	}
-
-	var resultsDir, destDir string
-
-	if r.IsFnResultExpected() {
-		resultsDir = filepath.Join(tmpDir, "results")
-	}
-
-	if r.IsOutOfPlace() {
-		destDir = filepath.Join(pkgPath, outDir)
-	}
-
-	// copy package to temp directory
-	err = copyDir(r.testCase.Path, pkgPath)
-	if err != nil {
-		return fmt.Errorf("failed to copy package: %w", err)
-	}
-	err = copyDir(r.testCase.Path, origPkgPath)
-	if err != nil {
-		return fmt.Errorf("failed to copy package: %w", err)
-	}
-
-	// init and commit package files
-	err = r.preparePackage(pkgPath)
-	if err != nil {
-		return fmt.Errorf("failed to prepare package: %w", err)
-	}
-
 	// run function
 	for i := 0; i < r.testCase.Config.RunCount(); i++ {
+		r.t.Logf("Running test against package %s, iteration %d \n", r.pkgName, i+1)
+		tmpDir, err := os.MkdirTemp("", "kpt-pipeline-e2e-*")
+		if err != nil {
+			return fmt.Errorf("failed to create temporary dir: %w", err)
+		}
+		if r.testCase.Config.Debug {
+			fmt.Printf("Running test against package %s in dir %s \n", r.pkgName, tmpDir)
+		}
+		pkgPath := filepath.Join(tmpDir, r.pkgName)
+		// create dir to store untouched pkg to compare against
+		origPkgPath := filepath.Join(tmpDir, "original")
+		err = os.Mkdir(origPkgPath, 0755)
+		if err != nil {
+			return fmt.Errorf("failed to create original dir %s: %w", origPkgPath, err)
+		}
+
+		var resultsDir, destDir string
+
+		if r.IsFnResultExpected() {
+			resultsDir = filepath.Join(tmpDir, "results")
+		}
+
+		if r.IsOutOfPlace() {
+			destDir = filepath.Join(pkgPath, outDir)
+		}
+
+		// copy package to temp directory
+		err = copyDir(r.testCase.Path, pkgPath)
+		if err != nil {
+			return fmt.Errorf("failed to copy package: %w", err)
+		}
+		err = copyDir(r.testCase.Path, origPkgPath)
+		if err != nil {
+			return fmt.Errorf("failed to copy package: %w", err)
+		}
+
+		// init and commit package files
+		err = r.preparePackage(pkgPath)
+		if err != nil {
+			return fmt.Errorf("failed to prepare package: %w", err)
+		}
+
 		err = r.runSetupScript(pkgPath)
 		if err != nil {
 			return err
@@ -388,7 +389,7 @@ func (r *Runner) runFnRender() error {
 			r.t.Logf("kpt error, stdout: %s; stderr: %s", stdout, stderr)
 		}
 		// compare results
-		err = r.compareResult(i, fnErr, stdout, sanitizeTimestamps(stderr), pkgPath, resultsDir)
+		err = r.compareResult(fnErr, stdout, sanitizeTimestamps(stderr), pkgPath, resultsDir)
 		if err != nil {
 			return err
 		}
@@ -398,6 +399,12 @@ func (r *Runner) runFnRender() error {
 		if err != nil {
 			return err
 		}
+
+		// cleanup temp directory after iteration
+		if !r.testCase.Config.Debug {
+			os.RemoveAll(tmpDir)
+		}
+
 		if fnErr != nil {
 			break
 		}
@@ -425,7 +432,7 @@ func (r *Runner) preparePackage(pkgPath string) error {
 	return err
 }
 
-func (r *Runner) compareResult(cnt int, exitErr error, stdout string, inStderr string, tmpPkgPath, resultsPath string) error {
+func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tmpPkgPath, resultsPath string) error {
 	stderr := r.stripLines(inStderr, r.testCase.Config.StdErrStripLines)
 
 	expected, err := newExpected(tmpPkgPath)
@@ -444,44 +451,40 @@ func (r *Runner) compareResult(cnt int, exitErr error, stdout string, inStderr s
 		return fmt.Errorf("actual exit code %d doesn't match expected %d", exitCode, r.testCase.Config.ExitCode)
 	}
 
-	// we only check output and results for the first iteration of running because
-	// idempotency is only applied to changes in file system.
-	if cnt == 0 {
-		err = r.compareOutput(stdout, stderr)
-		if err != nil {
-			return err
-		}
+	err = r.compareOutput(stdout, stderr)
+	if err != nil {
+		return err
+	}
 
-		// compare results
-		actual, err := readActualResults(resultsPath)
-		if err != nil {
-			return fmt.Errorf("failed to read actual results: %w", err)
-		}
+	// compare results
+	actualResults, err := readActualResults(resultsPath)
+	if err != nil {
+		return fmt.Errorf("failed to read actual results: %w", err)
+	}
 
-		actual = r.stripLines(actual, r.testCase.Config.ActualStripLines)
+	actualResults = r.stripLines(actualResults, r.testCase.Config.ActualStripLines)
 
-		diffOfResult, err := diffStrings(actual, expected.Results)
-		if err != nil {
-			return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
-		}
-		if actual != expected.Results {
-			return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
-				actual, diffOfResult)
-		}
+	diffOfResult, err := diffStrings(actualResults, expected.Results)
+	if err != nil {
+		return fmt.Errorf("error when run diff of results: %w: %s", err, diffOfResult)
+	}
+	if actualResults != expected.Results {
+		return fmt.Errorf("actual results doesn't match expected\nActual\n===\n%s\nDiff of Results\n===\n%s",
+			actualResults, diffOfResult)
 	}
 
 	// compare diff
-	actual, err := readActualDiff(tmpPkgPath, r.initialCommit)
+	actualDiff, err := readActualDiff(tmpPkgPath, r.initialCommit)
 	if err != nil {
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
-	if actual != expected.Diff {
-		diffOfDiff, err := diffStrings(actual, expected.Diff)
+	if actualDiff != expected.Diff {
+		diffOfDiff, err := diffStrings(actualDiff, expected.Diff)
 		if err != nil {
 			return fmt.Errorf("error when run diff of diff: %w: %s", err, diffOfDiff)
 		}
 		return fmt.Errorf("actual diff doesn't match expected\nActual\n===\n%s\nDiff of Diff\n===\n%s",
-			actual, diffOfDiff)
+			actualDiff, diffOfDiff)
 	}
 	return nil
 }
