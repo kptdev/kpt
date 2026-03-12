@@ -205,7 +205,7 @@ func (c *ConfigureInventoryInfo) Run(ctx context.Context) error {
 	if c.Name == "" {
 		if c.InventoryID != "" {
 			dirName := filepath.Base(c.Pkg.UniquePath.String())
-			if errs := validation.IsDNS1123Label(dirName); len(errs) > 0 {
+			if errs := validation.IsDNS1123Subdomain(dirName); len(errs) > 0 {
 				return errors.E(op, c.Pkg.UniquePath,
 					fmt.Errorf("directory name %q is not a valid Kubernetes resource name and --name was not provided: %s",
 						dirName, strings.Join(errs, "; ")))
@@ -337,14 +337,14 @@ func generateHash(namespace, name string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// validateName rejects empty, whitespace-only, and non-RFC-1123 names.
+// validateName rejects empty, whitespace-only, and invalid RFC 1123 subdomain names.
 // Returns the trimmed name on success.
 func validateName(name string) (string, error) {
 	trimmed := strings.TrimSpace(name)
 	if trimmed == "" {
 		return "", errNameRequired
 	}
-	if errs := validation.IsDNS1123Label(trimmed); len(errs) > 0 {
+	if errs := validation.IsDNS1123Subdomain(trimmed); len(errs) > 0 {
 		return "", fmt.Errorf("--name %q is not a valid Kubernetes resource name: %s",
 			trimmed, strings.Join(errs, "; "))
 	}
