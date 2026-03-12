@@ -37,13 +37,13 @@ func (*updateErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	if errors.As(err, &pkgNotGitRepoError) {
 		//nolint:lll
 		msg = fmt.Sprintf("Package %q is not within a git repository.", pkgNotGitRepoError.Path)
-		msg += " Please initialize a repository using 'git init' and then commit the changes using 'git commit -m \"COMMIT_MESSAGE\"'."
+		msg += " Please initialize a repository using 'git init' and then commit the changes using 'git commit -m \"<COMMIT_MESSAGE>\"'."
 	}
 
 	var pkgRepoDirtyError *update.PkgRepoDirtyError
 	if errors.As(err, &pkgRepoDirtyError) {
 		msg = fmt.Sprintf("Package %q contains uncommitted changes.", pkgRepoDirtyError.Path)
-		msg += " Please commit the changes using 'git commit -m \"COMMIT_MESSAGE\"'."
+		msg += " Please commit the changes using 'git commit -m \"<COMMIT_MESSAGE>\"'."
 	}
 
 	if msg != "" {
