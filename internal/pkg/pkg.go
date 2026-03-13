@@ -651,7 +651,7 @@ func filterResourceGroups(input []*yaml.RNode) (output []*yaml.RNode, err error)
 			return nil, fmt.Errorf("failed to read metadata for resource %w", err)
 		}
 		// Filter out any non-ResourceGroup files.
-		if !(meta.APIVersion == rgfilev1alpha1.ResourceGroupGVK().GroupVersion().String() && meta.Kind == rgfilev1alpha1.ResourceGroupGVK().Kind) {
+		if meta.APIVersion != rgfilev1alpha1.ResourceGroupGVK().GroupVersion().String() || meta.Kind != rgfilev1alpha1.ResourceGroupGVK().Kind {
 			continue
 		}
 

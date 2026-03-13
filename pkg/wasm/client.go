@@ -105,7 +105,7 @@ func (r *Client) PushWasm(ctx context.Context, wasmFile string, imageName string
 	}
 
 	// Push the image to remote
-	if err = remote.Write(tag.Repository.Digest(hash.String()), img, options...); err != nil {
+	if err = remote.Write(tag.Digest(hash.String()), img, options...); err != nil {
 		return fmt.Errorf("failed to push image %s: %w", tag, err)
 	}
 	fmt.Printf("digest of the image: %v\n", hash.String())

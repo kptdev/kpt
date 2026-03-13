@@ -24,7 +24,7 @@ import (
 func JoinStringsWithQuotes(strs []string) string {
 	b := new(strings.Builder)
 	for i, s := range strs {
-		b.WriteString(fmt.Sprintf("%q", s))
+		fmt.Fprintf(b, "%q", s)
 		if i < (len(strs) - 1) {
 			b.WriteString(", ")
 		}
