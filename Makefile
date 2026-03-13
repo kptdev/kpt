@@ -13,8 +13,11 @@
 # limitations under the License.
 
 GOLANG_VERSION    := 1.25.7
+GOLANGCI_LINT_VERSION := 2.11.3
+
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
+
 YEAR_GEN          := $(shell date '+%Y')
 
 .PHONY: docs fix vet fmt lint test build tidy release release-ci
@@ -62,7 +65,7 @@ install-kind:
 
 .PHONY: install-golangci-lint
 install-golangci-lint:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION)
 
 .PHONY: install-swagger
 install-swagger:
@@ -90,8 +93,8 @@ generate: install-mdtogo
 tidy:
 	go mod tidy
 
-lint: install-golangci-lint
-	$(GOBIN)/golangci-lint run ./...
+lint:
+	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...
 
 test:
 	go test -cover ${LDFLAGS} ./...
