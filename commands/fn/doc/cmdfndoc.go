@@ -58,15 +58,12 @@ type Runner struct {
 	Ctx     context.Context
 }
 
-func (r *Runner) runE(c *cobra.Command, _ []string) error {
+func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	if r.Image == "" {
 		return errors.New("image must be specified")
 	}
-	resolveFunc := (&runneroptions.RunnerOptions{}).ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
-	image, err := resolveFunc(c.Context(), r.Image)
-	if err != nil {
-		return err
-	}
+	resolveFunc := runneroptions.ResolveToImageForCLIFunc(runneroptions.GHCRImagePrefix)
+	image := resolveFunc(r.Image)
 	var out, errout bytes.Buffer
 	dockerRunArgs := []string{
 		"run",
