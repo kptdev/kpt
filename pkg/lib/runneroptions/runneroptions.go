@@ -65,7 +65,7 @@ type RunnerOptions struct {
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
-	opts.ResolveToImage = opts.ResolveToImageForCLIFunc(defaultImagePrefix)
+	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
 }
 
 // InitCELEnvironment initializes the CEL environment for condition evaluation.
