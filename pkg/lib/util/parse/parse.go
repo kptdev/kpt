@@ -277,7 +277,7 @@ func getDest(v, repo, subdir string, explicitDest bool) (string, error) {
 	// LOCATION EXISTS
 	// Check if user explicitly specified current directory (. or paths that resolve to .)
 	// to match git clone behavior
-	if explicitDest && (v == "." || originalV == "") {
+	if explicitDest && v == "." {
 		return v, nil
 	}
 
