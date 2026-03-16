@@ -67,6 +67,7 @@ jobs:
           make test-docker
         env:
           KRM_FN_RUNTIME: ${{ matrix.runtime }}
+          KPT_FN_WASM_RUNTIME: nodejs
 
   build-macos:
     runs-on: macos-latest
