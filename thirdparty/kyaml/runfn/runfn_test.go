@@ -131,7 +131,7 @@ func TestCmd_Execute(t *testing.T) {
 	}
 	fn := &runtimeutil.FunctionSpec{
 		Container: runtimeutil.ContainerSpec{
-			Image: "gcr.io/example.com/image:version",
+			Image: "ghcr.io/example.com/image:version",
 		},
 	}
 
@@ -164,7 +164,7 @@ func TestCmd_Execute_includeMetaResources(t *testing.T) {
 	}
 	fn := &runtimeutil.FunctionSpec{
 		Container: runtimeutil.ContainerSpec{
-			Image: "gcr.io/example.com/image:version",
+			Image: "ghcr.io/example.com/image:version",
 		},
 	}
 
@@ -288,7 +288,7 @@ func TestCmd_Execute_setFnConfigPath(t *testing.T) {
 	}
 	fn := &runtimeutil.FunctionSpec{
 		Container: runtimeutil.ContainerSpec{
-			Image: "gcr.io/example.com/image:version",
+			Image: "ghcr.io/example.com/image:version",
 		},
 	}
 
@@ -328,7 +328,7 @@ func TestCmd_Execute_setOutput(t *testing.T) {
 	}
 	fn := &runtimeutil.FunctionSpec{
 		Container: runtimeutil.ContainerSpec{
-			Image: "gcr.io/example.com/image:version",
+			Image: "ghcr.io/example.com/image:version",
 		},
 	}
 
@@ -367,7 +367,7 @@ func TestCmd_Execute_setInput(t *testing.T) {
 	}
 	fn := &runtimeutil.FunctionSpec{
 		Container: runtimeutil.ContainerSpec{
-			Image: "gcr.io/example.com/image:version",
+			Image: "ghcr.io/example.com/image:version",
 		},
 	}
 

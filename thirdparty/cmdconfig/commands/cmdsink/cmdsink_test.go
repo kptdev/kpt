@@ -56,7 +56,7 @@ items:
     annotations:
       config.kubernetes.io/function: |
         container:
-          image: gcr.io/example/reconciler:v1
+          image: ghcr.io/example/reconciler:v1
       config.kubernetes.io/local-config: "true"
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'f2.yaml'
@@ -119,7 +119,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/example/reconciler:v1
+        image: ghcr.io/example/reconciler:v1
     config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
