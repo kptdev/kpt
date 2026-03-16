@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index abc7b97..1120263 100644
+index abc7b97..0b78750 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+@@ -2,14 +2,21 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: app
@@ -11,6 +11,21 @@ index abc7b97..1120263 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+       configMap:
+         namespace: staging
+       selectors:
+-        - name: nginx-deployment
+-          kind: Deployment
++        - kind: Deployment
++          name: nginx-deployment
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+       configMap:
+         tier: backend
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
 diff --git a/resources.yaml b/resources.yaml
 index f2eec52..6b5d443 100644
 --- a/resources.yaml
