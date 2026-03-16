@@ -1,3 +1,16 @@
+diff --git a/Kptfile b/Kptfile
+index 701e0a1..3107d07 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,3 +4,8 @@ metadata:
+   name: root-pkg
+ info:
+   description: sample description
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
 diff --git a/pkg-a/Kptfile b/pkg-a/Kptfile
 index 088bc03..c42f368 100644
 --- a/pkg-a/Kptfile

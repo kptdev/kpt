@@ -124,6 +124,54 @@ The end result is that:
 3. Resources in `mysql` and `wordpress` packages are validated against their
    OpenAPI spec.
 
+
+### Render status tracking
+
+After each `kpt fn render` execution, kpt records the render status in the root package's `Kptfile`. This provides
+visibility into whether the most recent render succeeded or failed, which is helpful for debugging and
+tracking the state of your package.
+
+The render status is recorded as a `Rendered` condition in the `status.conditions` section of the root `Kptfile`:
+
+**On success:**
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: wordpress
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:latest
+      configMap:
+        app: wordpress
+  validators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
+status:
+  conditions:
+    - type: Rendered
+      status: "True"
+      reason: RenderSuccess
+```
+
+**On failure:**
+
+```yaml
+status:
+  conditions:
+    - type: Rendered
+      status: "False"
+      reason: RenderFailed
+      message: |-
+        pkg.render: pkg .:
+        	pipeline.run: must run with `--allow-exec` option to allow running function binaries
+```
+
+The render status is recorded only when performing in-place rendering (the default mode). It is not recorded when using
+out-of-place modes such as `--output stdout`, `--output unwrap`, or `--output <directory>`.
+
+You can inspect the render status by examining the root `Kptfile` to understand the result of the most recent render operation.
+
 ### Debugging render failures
 
 When a render pipeline fails, you can configure the package to save partially rendered resources to disk.
