@@ -98,6 +98,40 @@ the default depth-first post-order.
 rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is
 essential for programmatic package rendering scenarios where preserving partial progress is valuable.
 
+### Status Conditions
+The Kptfile includes a `status.conditions` field that provides a declarative way to track the execution status of kpt
+operations. This makes package management operations observable and traceable.
+
+When `kpt fn render` executes, a `Rendered` status condition is automatically added to the root Kptfile to indicate 
+whether the rendering operation succeeded or failed.
+This status is recorded only for in-place renders (the default behavior).
+It is not written for out-of-place modes such as stdout (`-o stdout`), unwrap (`-o unwrap`), or 
+directory output (`-o <dir>`).
+
+**On successful render:**
+```yaml
+status:
+  conditions:
+    - type: Rendered
+      status: "True"
+      reason: RenderSuccess
+```
+
+**On failed render:**
+```yaml
+status:
+  conditions:
+    - type: Rendered
+      status: "False"
+      reason: RenderFailed
+      message: |-
+        pkg.render: pkg .:
+        	pipeline.run: must run with `--allow-exec` option to allow running function binaries
+```
+
+The status condition is recorded only in the root Kptfile, not in subpackages. The error message in failure cases 
+provides details about what went wrong during the render operation.
+
 Just as directories can be nested, a package can contain another package, called a _subpackage_.
 
 Let's take a look at the wordpress package as an example:

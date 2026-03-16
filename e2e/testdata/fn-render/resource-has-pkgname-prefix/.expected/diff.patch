@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 21d9773..66b7fc9 100644
+index 21d9773..94b2528 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+@@ -2,8 +2,15 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: wordpress
@@ -11,6 +11,13 @@ index 21d9773..66b7fc9 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
+       configMap:
+         abc: def
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
 diff --git a/mysql/Kptfile b/mysql/Kptfile
 index 3d51a77..965bc63 100644
 --- a/mysql/Kptfile

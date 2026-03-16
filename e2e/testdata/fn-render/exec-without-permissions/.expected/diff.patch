@@ -1,0 +1,18 @@
+diff --git a/Kptfile b/Kptfile
+index 0d98dbb..aba9d69 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,4 +4,12 @@ metadata:
+   name: app
+ pipeline:
+   mutators:
+-    - exec: "sed -e 's/foo/bar/'"
++    - exec: sed -e 's/foo/bar/'
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: must run with `--allow-exec` option to allow running function binaries

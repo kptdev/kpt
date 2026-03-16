@@ -63,9 +63,14 @@ pipeline:
         app: wordpress
   validators:
     - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
+status:
+  conditions:
+    - type: Rendered
+      status: "True"
+      reason: RenderSuccess
 ```
 
-The `Kptfile` contains two sections to keep track of the upstream package:
+The `Kptfile` contains several sections to keep track of the package and its state:
 
 1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
    of information:
@@ -76,6 +81,10 @@ The `Kptfile` contains two sections to keep track of the upstream package:
      or commit SHA.
 2. The `upstreamLock` section records the upstream Git reference (exact Git SHA) that was fetched by kpt. This section
    is managed by kpt and should not be changed manually.
+3. The `status` section records the operational state of the package. This is managed by kpt and tracks the execution
+   status of operations like `render`. The `status.conditions` field contains a list of condition objects, similar to
+   how Kubernetes tracks conditions on resources. For example, after running `kpt fn render`, a `Rendered` condition
+   is automatically recorded to indicate whether the last render succeeded or failed.
 
 Now, let's look at the `Kptfile` for the `mysql` subpackage:
 
@@ -239,6 +248,14 @@ perform the following steps:
    formatting of resources, even though a function (developed by different
    people using different toolchains) may have modified the formatting in some
    way.
+4. Records the render execution status in the root `Kptfile` as a `Rendered` condition
+   under `status.conditions`. On success, the condition has `status: "True"` and
+   `reason: RenderSuccess`. On failure, it has `status: "False"`, `reason: RenderFailed`,
+   and includes error details in the `message` field.
+
+Note that status conditions are only written for in-place renders (the default behavior).
+When using out-of-place output modes like `kpt fn render -o stdout` or `kpt fn render -o <dir>`,
+no status condition is written since the package is not being updated on disk.
 
 [Chapter 4](../04-using-functions/) discusses different ways of running functions in detail.
 

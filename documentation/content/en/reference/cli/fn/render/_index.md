@@ -95,6 +95,60 @@ KRM_FN_RUNTIME:
 
 <!--mdtogo-->
 
+### Render Status Conditions
+
+After every `kpt fn render` execution, a `Rendered` status condition is recorded in the root Kptfile's 
+`status.conditions` field to track the render execution history. This helps users quickly identify whether 
+the last render succeeded or failed.
+
+#### Behavior
+
+- **Success**: When rendering completes successfully, the Kptfile receives a condition with `type: Rendered`,
+`status: "True"`, and `reason: RenderSuccess`.
+- **Failure**: When rendering fails, the Kptfile receives a condition with `type: Rendered`, `status: "False"`,
+`reason: RenderFailed`, and a `message` field containing the error details.
+- **In-place render only**: The status condition is written only when rendering in-place (the default behavior).
+It is NOT written when using out-of-place modes: `-o stdout`, `-o unwrap`, or `-o <DIR>`, since these modes
+do not modify the on-disk package.
+- **Always recorded**: The status is recorded regardless of the `kpt.dev/save-on-render-failure` annotation setting.
+- **Root Kptfile only**: The status condition is written only to the root Kptfile, not to subpackages.
+
+#### Success Example
+
+After a successful render, the root Kptfile will contain:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-package
+status:
+  conditions:
+  - type: Rendered
+    status: "True"
+    reason: RenderSuccess
+```
+
+#### Failure Example
+
+After a failed render, the root Kptfile will contain:
+
+```yaml
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: my-package
+status:
+  conditions:
+  - type: Rendered
+    status: "False"
+    reason: RenderFailed
+    message: |-
+      pkg.render: pkg .:
+        pipeline.run: must run with `--allow-exec` option to allow running function binaries
+```
+
+
 ### Examples
 
 <!--mdtogo:Examples-->
