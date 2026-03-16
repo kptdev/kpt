@@ -17,6 +17,7 @@ package get
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
@@ -80,7 +81,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	explicitDest := len(args) > 1
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
-	} else {
+	} else if filepath.Clean(args[1]) != "." {
 		_, err := os.Lstat(args[1])
 		if err == nil || os.IsExist(err) {
 			resolvedPath, err := argutil.ResolveSymlink(r.ctx, args[1])
