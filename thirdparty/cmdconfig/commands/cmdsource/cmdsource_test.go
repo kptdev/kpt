@@ -52,7 +52,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/example/reconciler:v1
+        image: ghcr.io/example/reconciler:v1
     config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
@@ -117,7 +117,7 @@ items:
     annotations:
       config.kubernetes.io/function: |
         container:
-          image: gcr.io/example/reconciler:v1
+          image: ghcr.io/example/reconciler:v1
       config.kubernetes.io/local-config: "true"
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'f2.yaml'
@@ -320,7 +320,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/example/reconciler:v1
+        image: ghcr.io/example/reconciler:v1
     config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
@@ -388,7 +388,7 @@ items:
     annotations:
       config.kubernetes.io/function: |
         container:
-          image: gcr.io/example/reconciler:v1
+          image: ghcr.io/example/reconciler:v1
       config.kubernetes.io/local-config: "true"
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'f2.yaml'
@@ -451,7 +451,7 @@ func TestSourceCommandJSON(t *testing.T) {
   "metadata": {
     "name": "foo",
     "annotations": {
-      "config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n",
+      "config.kubernetes.io/function": "container:\n  image: ghcr.io/example/reconciler:v1\n",
       "config.kubernetes.io/local-config": "true"
     }
   },
@@ -478,7 +478,7 @@ func TestSourceCommandJSON(t *testing.T) {
 kind: ResourceList
 items:
 - {"kind": "Deployment", "metadata": {"labels": {"app": "nginx2"}, "name": "foo", "annotations": {"app": "nginx2", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f1.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'f1.json', internal.config.kubernetes.io/seqindent: 'compact'}}, "spec": {"replicas": 1}}
-- {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {"config.kubernetes.io/function": "container:\n  image: gcr.io/example/reconciler:v1\n", "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f2.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'f2.json', internal.config.kubernetes.io/seqindent: 'compact'}}, "spec": {"replicas": 3}}
+- {"apiVersion": "v1", "kind": "Abstraction", "metadata": {"name": "foo", "annotations": {"config.kubernetes.io/function": "container:\n  image: ghcr.io/example/reconciler:v1\n", "config.kubernetes.io/local-config": "true", config.kubernetes.io/index: '0', config.kubernetes.io/path: 'f2.json', internal.config.kubernetes.io/index: '0', internal.config.kubernetes.io/path: 'f2.json', internal.config.kubernetes.io/seqindent: 'compact'}}, "spec": {"replicas": 3}}
 `
 
 	if !assert.Equal(t, expected, b.String()) {
@@ -531,7 +531,7 @@ metadata:
   annotations:
     config.kubernetes.io/function: |
       container:
-        image: gcr.io/example/reconciler:v1
+        image: ghcr.io/example/reconciler:v1
     config.kubernetes.io/local-config: "true"
 spec:
   replicas: 3
@@ -597,7 +597,7 @@ items:
     annotations:
       config.kubernetes.io/function: |
         container:
-          image: gcr.io/example/reconciler:v1
+          image: ghcr.io/example/reconciler:v1
       config.kubernetes.io/local-config: "true"
       config.kubernetes.io/index: '0'
       config.kubernetes.io/path: 'f2.yaml'

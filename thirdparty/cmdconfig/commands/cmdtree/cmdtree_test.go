@@ -31,7 +31,7 @@ metadata:
   name: foo
   configFn:
     container:
-      image: gcr.io/example/reconciler:v1
+      image: ghcr.io/example/reconciler:v1
   annotations:
     config.kubernetes.io/local-config: "true"
 spec:
@@ -106,7 +106,7 @@ metadata:
   name: foo
   configFn:
     container:
-      image: gcr.io/example/reconciler:v1
+      image: ghcr.io/example/reconciler:v1
   annotations:
     config.kubernetes.io/local-config: "true"
 spec:
@@ -232,7 +232,7 @@ metadata:
   name: foo
   configFn:
     container:
-      image: gcr.io/example/reconciler:v1
+      image: ghcr.io/example/reconciler:v1
   annotations:
     config.kubernetes.io/local-config: "true"
 spec:
@@ -418,7 +418,7 @@ metadata:
   name: foo
   configFn:
     container:
-      image: gcr.io/example/reconciler:v1
+      image: ghcr.io/example/reconciler:v1
   annotations:
     config.kubernetes.io/local-config: "true"
 spec:
