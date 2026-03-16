@@ -161,20 +161,20 @@ Environment Variables:
 var EvalExamples = `
   # execute container my-fn on the resources in DIR directory and
   # write output back to DIR
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn
 
   # execute container my-fn on the resources in DIR directory with
   # ` + "`" + `functionConfig` + "`" + ` my-fn-config
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn --fn-config my-fn-config
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn --fn-config my-fn-config
 
   # execute container my-fn with an input ConfigMap containing ` + "`" + `data: {foo: bar}` + "`" + `
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
   # execute container my-fn and save it to Kptfile ` + "`" + `pipeline.mutators` + "`" + ` (Default) list.
-  $ kpt fn eval DIR -s -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+  $ kpt fn eval DIR -s -i ghcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
   # execute container my-fn and save it to Kptfile ` + "`" + `pipeline.validators` + "`" + ` list.
-  $ kpt fn eval DIR -s -t validator -i gcr.io/example.com/my-fn:v1.0.0 -- foo=bar
+  $ kpt fn eval DIR -s -t validator -i ghcr.io/example.com/my-fn:v1.0.0 -- foo=bar
 
   # execute executable my-fn on the resources in DIR directory and
   # write output back to DIR
@@ -186,15 +186,15 @@ var EvalExamples = `
 
   # execute container my-fn on the resources in DIR directory,
   # save structured results in /tmp/my-results dir and write output back to DIR
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn --results-dir /tmp/my-results-dir
 
   # execute container my-fn on the resources in DIR directory with network access enabled,
   # and write output back to DIR
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn --network
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn --network
 
   # execute container my-fn on the resource in DIR and export KUBECONFIG
   # and foo environment variable
-  $ kpt fn eval DIR -i gcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
+  $ kpt fn eval DIR -i ghcr.io/example.com/my-fn --env KUBECONFIG -e foo=bar
 
   # execute kubeconform function by mounting schema from a local directory on wordpress package
   $ kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest \
@@ -229,7 +229,7 @@ var EvalExamples = `
 
   # execute container my-fn with podman on the resources in DIR directory and
   # write output back to DIR
-  $ KRM_FN_RUNTIME=podman kpt fn eval DIR -i gcr.io/example.com/my-fn
+  $ KRM_FN_RUNTIME=podman kpt fn eval DIR -i ghcr.io/example.com/my-fn
 `
 
 var RenderShort = `Render a package.`
@@ -272,6 +272,16 @@ Flags:
     to ` + "`" + `results.yaml` + "`" + ` file in the specified directory.
     If not specified, no result files are written to the local filesystem.
 
+Kptfile Annotations:
+
+  kpt.dev/save-on-render-failure:
+    Controls whether partially rendered resources are saved when rendering fails.
+    Set to "true" in the Kptfile metadata.annotations section to preserve the state
+    of resources at the point of failure. This is useful for debugging render failures
+    and understanding what changes were applied before the error occurred.
+    This follows the same pattern as kpt.dev/bfs-rendering annotation.
+    Default: false (failures will revert changes).
+
 Environment Variables:
 
   KRM_FN_RUNTIME:
@@ -305,6 +315,15 @@ var RenderExamples = `
 
   # Render my-package-dir with network access enabled for functions
   $ kpt fn render --allow-network
+
+  # Example Kptfile with save-on-render-failure annotation
+  apiVersion: kpt.dev/v1
+  kind: Kptfile
+  metadata:
+    name: my-package
+    annotations:
+      kpt.dev/save-on-render-failure: "true"
+  ...
 `
 
 var SinkShort = `Write resources to a local directory`
@@ -318,7 +337,7 @@ var SinkExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval - --image gcr.io/example.com/my-fn |
+    kpt fn eval - --image ghcr.io/example.com/my-fn |
     kpt fn sink NEW_DIR
 `
 
@@ -354,6 +373,6 @@ var SourceExamples = `
   # read resources from DIR directory, execute my-fn on them and write the
   # output to DIR directory.
   $ kpt fn source DIR |
-    kpt fn eval - --image gcr.io/example.com/my-fn - |
+    kpt fn eval - --image ghcr.io/example.com/my-fn - |
     kpt fn sink DIR
 `

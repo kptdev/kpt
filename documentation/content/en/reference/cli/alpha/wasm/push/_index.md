@@ -36,8 +36,8 @@ IMAGE:
 <!--mdtogo:Examples-->
 
 ```shell
-# compress ./my-fn.wasm and push it to gcr.io/my-org/my-fn:v1.0.0
-$ kpt alpha wasm push ./my-fn.wasm gcr.io/my-org/my-fn:v1.0.0
+# compress ./my-fn.wasm and push it to ghcr.io/my-org/my-fn:v1.0.0
+$ kpt alpha wasm push ./my-fn.wasm ghcr.io/my-org/my-fn:v1.0.0
 ```
 
 <!--mdtogo-->

@@ -18,8 +18,8 @@ Args:
     The desired path for the wasm file. e.g. /tmp/my-fn.wasm
 `
 var PullExamples = `
-  # pull image gcr.io/my-org/my-fn:v1.0.0 and decompress it to ./my-fn.wasm
-  $ kpt alpha wasm pull gcr.io/my-org/my-fn:v1.0.0 ./my-fn.wasm
+  # pull image ghcr.io/my-org/my-fn:v1.0.0 and decompress it to ./my-fn.wasm
+  $ kpt alpha wasm pull ghcr.io/my-org/my-fn:v1.0.0 ./my-fn.wasm
 `
 
 var PushShort = `Compress a WASM module and push it as an OCI image.`
@@ -34,6 +34,6 @@ Args:
     The desired name of an image. It must be a tag.
 `
 var PushExamples = `
-  # compress ./my-fn.wasm and push it to gcr.io/my-org/my-fn:v1.0.0
-  $ kpt alpha wasm push ./my-fn.wasm gcr.io/my-org/my-fn:v1.0.0
+  # compress ./my-fn.wasm and push it to ghcr.io/my-org/my-fn:v1.0.0
+  $ kpt alpha wasm push ./my-fn.wasm ghcr.io/my-org/my-fn:v1.0.0
 `
