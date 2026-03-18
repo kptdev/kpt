@@ -1,18 +1,9 @@
 diff --git a/Kptfile b/Kptfile
-index ffcf186..9c131fb 100644
+index 17a7822..94b6f80 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,12 +6,14 @@ metadata:
-     tier: backend
- pipeline:
-   mutators:
--    # The following 2 images are built from https://github.com/kptdev/krm-functions-catalog/pull/898.
-     - image: gcr.io/kpt-fn-demo/set-namespace:v0.5.0
--      # ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.0
-       configMap:
-         namespace: staging
-     - image: gcr.io/kpt-fn-demo/set-labels:v0.2.0
--      # ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.0
+@@ -12,3 +12,8 @@ pipeline:
+     - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
        configMap:
          tier: backend
 +status:
