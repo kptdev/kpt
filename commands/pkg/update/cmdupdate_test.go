@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 	"text/template"
-
 	"github.com/kptdev/kpt/commands/pkg/get"
 	"github.com/kptdev/kpt/commands/pkg/update"
 	"github.com/kptdev/kpt/internal/gitutil"
@@ -33,6 +32,7 @@ import (
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -127,6 +127,152 @@ func TestCmd_execute(t *testing.T) {
 				Commit:    commit,
 			},
 		},
+	}) {
+		return
+	}
+}
+
+// TestCmd_subpkgVersions verifies that update is correctly invoked with an upstream 'mysql' package with multiple versions
+func TestCmd_subpkgVersions(t *testing.T) {
+	// Setup version v1 of upstream package
+	g, w, clean := testutil.SetupRepoAndWorkspace(t, testutil.Content{
+		Data:   testutil.Dataset1,
+		Branch: "master",
+	})
+	defer clean()
+
+	commitDs1, err := g.GetCommit()
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = g.Tag("dataset1")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	// update the master branch
+	if !assert.NoError(t, g.ReplaceData(testutil.Dataset2)) {
+		return
+	}
+	_, err = g.Commit("modify upstream package -- ds2")
+	if !assert.NoError(t, err) {
+		return
+	}
+	err = g.Tag("dataset2")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	defer testutil.Chdir(t, w.WorkspaceDirectory)()
+
+	dest := filepath.Join(w.WorkspaceDirectory, "mysql")
+
+	// pkg get package version 'dataset1'
+	getCmd := get.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	getCmd.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/mysql@dataset1", w.WorkspaceDirectory})
+	err = getCmd.Command.Execute()
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset1, "mysql"), dest, true) {
+		return
+	}
+
+	// Reference Kptfile for package version 'dataset1'
+	pkgDs1Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset1, "mysql"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	if !g.AssertKptfile(t, dest, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: "mysql",
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset1",
+				Directory: "/mysql",
+			},
+			UpdateStrategy: kptfilev1.ResourceMerge,  // Defaulted
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset1",
+				Directory: "/mysql",
+				Commit:    commitDs1,
+			},
+		},
+		Info: &kptfilev1.PackageInfo{
+			Description: pkgDs1Kptfile.Info.Description,
+		},
+		Pipeline: pkgDs1Kptfile.Pipeline,
+	}) {
+		return
+	}
+
+	// pkg update to version 'dataset2'
+	updateCmd := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
+	updateCmd.Command.SetArgs([]string{"mysql@dataset2", "--strategy", "fast-forward"})
+	if !assert.NoError(t, updateCmd.Command.Execute()) {
+		return
+	}
+	if !g.AssertEqual(t, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"), dest, true) {
+		return
+	}
+
+	commitDs2, err := g.GetCommit()
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	// Reference Kptfile for package version 'dataset2'
+	pkgDs2Kptfile, err := pkg.ReadKptfile(filesys.FileSystemOrOnDisk{}, filepath.Join(g.DatasetDirectory, testutil.Dataset2, "mysql"))
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	if !g.AssertKptfile(t, dest, kptfilev1.KptFile{
+		ResourceMeta: yaml.ResourceMeta{
+			ObjectMeta: yaml.ObjectMeta{
+				NameMeta: yaml.NameMeta{
+					Name: "mysql",
+				},
+			},
+			TypeMeta: yaml.TypeMeta{
+				APIVersion: kptfilev1.TypeMeta.APIVersion,
+				Kind:       kptfilev1.TypeMeta.Kind},
+		},
+		Upstream: &kptfilev1.Upstream{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.Git{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset2",
+				Directory: "/mysql",
+			},
+			UpdateStrategy: kptfilev1.FastForward,
+		},
+		UpstreamLock: &kptfilev1.UpstreamLock{
+			Type: kptfilev1.GitOrigin,
+			Git: &kptfilev1.GitLock{
+				Repo:      "file://" + g.RepoDirectory,
+				Ref:       "dataset2",
+				Directory: "/mysql",
+				Commit:    commitDs2,
+			},
+		},
+		Info: &kptfilev1.PackageInfo{
+			Description: pkgDs2Kptfile.Info.Description,
+		},
+		Pipeline: pkgDs2Kptfile.Pipeline,
 	}) {
 		return
 	}
