@@ -1,4 +1,4 @@
----
+﻿---
 title: "Using WASM Functions"
 linkTitle: "Using WASM Functions"
 weight: 5
@@ -62,7 +62,7 @@ kpt fn eval my-package --allow-alpha-wasm -i gcr.io/my-org/my-wasm-fn:v1.0.0 -- 
 You can run local `.wasm` files with the `--exec` flag:
 
 ```shell
-kpt fn eval my-package --allow-alpha-wasm --exec ./my-function.wasm
+kpt fn eval my-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
 ```
 
 You can also declare local WASM files in your `Kptfile`:
@@ -134,23 +134,23 @@ Here's how to build a Go KRM function for WASM. You need two files - one for reg
 package main
 
 import (
-    "os"
-    
-    "github.com/kptdev/krm-functions-sdk/go/fn"
+	"os"
+
+	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
 
 func main() {
-    if err := fn.AsMain(fn.ResourceListProcessorFunc(process)); err != nil {
-        os.Exit(1)
-    }
+	if err := fn.AsMain(fn.ResourceListProcessorFunc(process)); err != nil {
+		os.Exit(1)
+	}
 }
 
 func process(rl *fn.ResourceList) (bool, error) {
-    for i := range rl.Items {
-        // Your transformation logic
-        rl.Items[i].SetAnnotation("processed-by", "my-fn")
-    }
-    return true, nil
+	for i := range rl.Items {
+		// Your transformation logic
+		rl.Items[i].SetAnnotation("processed-by", "my-fn")
+	}
+	return true, nil
 }
 ```
 
@@ -162,69 +162,77 @@ func process(rl *fn.ResourceList) (bool, error) {
 package main
 
 import (
-    "syscall/js"
-    
-    "github.com/kptdev/krm-functions-sdk/go/fn"
+	"syscall/js"
+
+	"github.com/kptdev/krm-functions-sdk/go/fn"
+)
+
+// Keep js.Func values referenced at package level to prevent garbage collection.
+var (
+	processResourceListFunc       js.Func
+	processResourceListErrorsFunc js.Func
 )
 
 func main() {
-    if err := run(); err != nil {
-        panic(err)
-    }
+	if err := run(); err != nil {
+		panic(err)
+	}
 }
 
 func run() error {
-    resourceList := []byte("")
-    
-    js.Global().Set("processResourceList", resourceListWrapper(&resourceList))
-    js.Global().Set("processResourceListErrors", resourceListErrors(&resourceList))
-    
-    // Keep the program running
-    select {}
+	resourceList := []byte("")
+
+	processResourceListFunc = resourceListWrapper(&resourceList)
+	js.Global().Set("processResourceList", processResourceListFunc)
+	processResourceListErrorsFunc = resourceListErrors(&resourceList)
+	js.Global().Set("processResourceListErrors", processResourceListErrorsFunc)
+
+	// Keep the program running
+	select {}
 }
 
 // process applies the same transformation logic as in the non-WASM build.
 func process(rl *fn.ResourceList) (bool, error) {
-    for i := range rl.Items {
-        // Your transformation logic
-        rl.Items[i].SetAnnotation("processed-by", "my-fn")
-    }
-    return true, nil
+	for i := range rl.Items {
+		// Your transformation logic
+		rl.Items[i].SetAnnotation("processed-by", "my-fn")
+	}
+	return true, nil
 }
 
 func transform(input []byte) ([]byte, error) {
-    return fn.Run(fn.ResourceListProcessorFunc(process), input)
+	return fn.Run(fn.ResourceListProcessorFunc(process), input)
 }
 
 func resourceListWrapper(resourceList *[]byte) js.Func {
-    return js.FuncOf(func(this js.Value, args []js.Value) any {
-        if len(args) != 1 {
-            return "Invalid number of arguments"
-        }
-        input := args[0].String()
-        output, err := transform([]byte(input))
-        *resourceList = output
-        if err != nil {
-            return "unable to process: " + err.Error()
-        }
-        return string(output)
-    })
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 {
+			return "Invalid number of arguments"
+		}
+		input := args[0].String()
+		output, err := transform([]byte(input))
+		*resourceList = output
+		if err != nil {
+			return "unable to process: " + err.Error()
+		}
+		return string(output)
+	})
 }
 
 func resourceListErrors(resourceList *[]byte) js.Func {
-    return js.FuncOf(func(this js.Value, args []js.Value) any {
-        rl, err := fn.ParseResourceList(*resourceList)
-        if err != nil {
-            return ""
-        }
-        errors := ""
-        for _, r := range rl.Results {
-            if r.Severity == "error" {
-                errors += r.Message
-            }
-        }
-        return errors
-    })
+	return js.FuncOf(func(this js.Value, args []js.Value) any {
+		rl, err := fn.ParseResourceList(*resourceList)
+		if err != nil {
+			return ""
+		}
+		errors := ""
+		for _, r := range rl.Results {
+			if r.Severity == "error" {
+				errors += r.Message
+			}
+		}
+		return errors
+	})
 }
 ```
 
@@ -237,7 +245,7 @@ GOOS=js GOARCH=wasm go build -o my-function.wasm .
 ### Test locally
 
 ```shell
-kpt fn eval ./test-package --allow-alpha-wasm --exec ./my-function.wasm
+kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
 ```
 
 ### Publish
@@ -262,7 +270,7 @@ From development to deployment:
 GOOS=js GOARCH=wasm go build -o my-function.wasm .
 
 # 3. Test locally
-kpt fn eval ./test-package --allow-alpha-wasm --exec ./my-function.wasm
+kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
 
 # 4. Publish
 kpt alpha wasm push ./my-function.wasm gcr.io/my-org/my-wasm-fn:v1.0.0
