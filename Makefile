@@ -22,6 +22,8 @@ YEAR_GEN          := $(shell date '+%Y')
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
+export KPT_FN_WASM_RUNTIME ?= nodejs
+
 LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
