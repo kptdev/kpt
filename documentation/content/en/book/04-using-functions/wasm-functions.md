@@ -180,8 +180,7 @@ func run() error {
     js.Global().Set("processResourceListErrors", resourceListErrors(&resourceList))
     
     // Keep the program running
-    <-make(chan bool)
-    return nil
+    select {}
 }
 
 // process applies the same transformation logic as in the non-WASM build.
