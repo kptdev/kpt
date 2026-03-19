@@ -17,3 +17,4 @@ exitCode: 1
 # The output in stderr is different depending on the runtime.
 # "No such image" is from docker and "image not known" is from podman.
 stdErrRegEx: No such image|image not known
+diffStripRegEx: "\\+\\s+stderr:|docker: Error response from daemon|Run 'docker run|Error:.*image not known|^\\+$"

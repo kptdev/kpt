@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 701e0a1..3107d07 100644
+index 701e0a1..63952e8 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,3 +4,8 @@ metadata:
+@@ -4,3 +4,12 @@ metadata:
    name: root-pkg
  info:
    description: sample description
@@ -11,6 +11,10 @@ index 701e0a1..3107d07 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
 diff --git a/pkg-a/Kptfile b/pkg-a/Kptfile
 index 088bc03..c42f368 100644
 --- a/pkg-a/Kptfile

@@ -9,4 +9,5 @@ pipeline:
     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
       configMap:
         namespace: subpkg-ns
-    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+      configPath: starlark-fn-failure.yaml

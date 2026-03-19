@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 11012de..c9efd96 100644
+index 11012de..9fadb6e 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -7,6 +7,14 @@ pipeline:
+@@ -7,6 +7,26 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
        configMap:
          namespace: staging
@@ -18,3 +18,15 @@ index 11012de..c9efd96 100644
 +      message: |-
 +        pkg.render: pkg .:
 +        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/dne
++        stderr: |-
++          docker: Error response from daemon: error from registry: denied
++          denied
++
++          Run 'docker run --help' for more information
++        exitCode: 125
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/dne: exit code 125'
