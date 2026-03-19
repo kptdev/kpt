@@ -57,11 +57,15 @@ type RunnerOptions struct {
 
 	// ResolveToImage will resolve a partial image to a fully-qualified one
 	ResolveToImage ImageResolveFunc
+
+	// CELEnvironment is the shared CEL environment used to evaluate function conditions.
+	// It is initialised by InitDefaults and reused across all function runners.
+	CELEnvironment *CELEnvironment
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
-	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
+	opts.ResolveToImage = opts.ResolveToImageForCLIFunc(defaultImagePrefix)
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.

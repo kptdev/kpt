@@ -1,0 +1,33 @@
+diff --git a/Kptfile b/Kptfile
+index abc1234..def5678 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -7,3 +7,8 @@ pipeline:
+       configMap:
+         env: production
+       condition: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')"
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
+diff --git a/resources.yaml b/resources.yaml
+index abc1234..def5678 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -3,10 +3,12 @@ kind: ConfigMap
+ metadata:
+   name: app-config
++  labels:
++    env: production
+ data:
+   key: value
+ ---
+ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: my-app
++  labels:
++    env: production
+ spec:
+   replicas: 1
