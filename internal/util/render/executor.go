@@ -379,7 +379,7 @@ func createResultItem(resource *yaml.RNode, message, severity string) kptfilev1.
 
 // extractResultsFromFnResults extracts and categorizes results from function execution.
 // It processes framework.Results and converts them to ResultItem instances,
-// separating successful results from error results based on exit codes.
+// separating successful results from error results based on severity.
 func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.ResultItem, []kptfilev1.ResultItem) {
 	var results []kptfilev1.ResultItem
 	var errorResults []kptfilev1.ResultItem
@@ -405,10 +405,11 @@ func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.Re
 
 			resultItem := createResultItem(nil, message, severity)
 
-			if item.ExitCode == 0 {
-				results = append(results, resultItem)
-			} else {
+			// Classify based on severity instead of ExitCode
+			if severity == "error" {
 				errorResults = append(errorResults, resultItem)
+			} else {
+				results = append(results, resultItem)
 			}
 		}
 	}
