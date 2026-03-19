@@ -120,5 +120,16 @@ func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 	if err := node.Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode resource: %w", err)
 	}
+	// Ensure standard KRM fields are always present so CEL expressions like
+	// r.kind == "Deployment" never error with "no such key".
+	if _, ok := result["apiVersion"]; !ok {
+		result["apiVersion"] = ""
+	}
+	if _, ok := result["kind"]; !ok {
+		result["kind"] = ""
+	}
+	if _, ok := result["metadata"]; !ok {
+		result["metadata"] = map[string]interface{}{}
+	}
 	return result, nil
 }
