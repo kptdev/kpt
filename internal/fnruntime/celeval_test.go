@@ -18,182 +18,116 @@ import (
 	"context"
 	"testing"
 
+	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
-
-	"github.com/GoogleContainerTools/kpt/internal/fnruntime/runneroptions"
 )
 
-func TestNewCELEvaluator(t *testing.T) {
+func newTestEnv(t *testing.T) *runneroptions.CELEnvironment {
+	t.Helper()
 	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
-	assert.NotNil(t, env)
-	assert.NotNil(t, env.Env)
+	return env
 }
 
-func TestNewCELEvaluator_EmptyCondition(t *testing.T) {
-	env, err := runneroptions.NewCELEnvironment()
-	require.NoError(t, err)
+func TestNewCELEnvironment(t *testing.T) {
+	env := newTestEnv(t)
 	assert.NotNil(t, env)
-	assert.NotNil(t, env.Env)
 }
 
 func TestEvaluateCondition_EmptyCondition(t *testing.T) {
-	env, err := runneroptions.NewCELEnvironment()
-	require.NoError(t, err)
-
+	env := newTestEnv(t)
 	result, err := env.EvaluateCondition(context.Background(), "", nil)
 	require.NoError(t, err)
 	assert.True(t, result, "empty condition should return true")
 }
 
 func TestEvaluateCondition_SimpleTrue(t *testing.T) {
-	env, err := runneroptions.NewCELEnvironment()
-	require.NoError(t, err)
-
+	env := newTestEnv(t)
 	result, err := env.EvaluateCondition(context.Background(), "true", nil)
 	require.NoError(t, err)
 	assert.True(t, result)
 }
 
 func TestEvaluateCondition_SimpleFalse(t *testing.T) {
-	env, err := runneroptions.NewCELEnvironment()
-	require.NoError(t, err)
-
+	env := newTestEnv(t)
 	result, err := env.EvaluateCondition(context.Background(), "false", nil)
 	require.NoError(t, err)
 	assert.False(t, result)
 }
 
 func TestEvaluateCondition_ResourceExists(t *testing.T) {
-	// Create test resources
-	configMapYAML := `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: test-config
-data:
-  key: value
-`
-	deploymentYAML := `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-deployment
-spec:
-  replicas: 3
-`
+	env := newTestEnv(t)
 
-	configMap, err := yaml.Parse(configMapYAML)
+	configMap, err := yaml.Parse("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test-config\ndata:\n  key: value")
 	require.NoError(t, err)
-	deployment, err := yaml.Parse(deploymentYAML)
+	deployment, err := yaml.Parse("apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: test-deployment\nspec:\n  replicas: 3")
 	require.NoError(t, err)
 
 	resources := []*yaml.RNode{configMap, deployment}
 
-	// Test: ConfigMap exists
-	condition := `resources.exists(r, r.kind == "ConfigMap" && r.metadata.name == "test-config")`
-	eval, err := NewCELEvaluator(condition)
+	result, err := env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "ConfigMap" && r.metadata.name == "test-config")`, resources)
 	require.NoError(t, err)
-	result, err := eval.EvaluateCondition(context.Background(), resources)
-	require.NoError(t, err)
-	assert.True(t, result, "should find the ConfigMap")
+	assert.True(t, result)
 
-	// Test: ConfigMap with wrong name doesn't exist
-	condition = `resources.exists(r, r.kind == "ConfigMap" && r.metadata.name == "wrong-name")`
-	eval, err = NewCELEvaluator(condition)
+	result, err = env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "ConfigMap" && r.metadata.name == "wrong-name")`, resources)
 	require.NoError(t, err)
-	result, err = eval.EvaluateCondition(context.Background(), resources)
-	require.NoError(t, err)
-	assert.False(t, result, "should not find ConfigMap with wrong name")
+	assert.False(t, result)
 
-	// Test: Deployment exists
-	condition = `resources.exists(r, r.kind == "Deployment")`
-	eval, err = NewCELEvaluator(condition)
+	result, err = env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "Deployment")`, resources)
 	require.NoError(t, err)
-	result, err = eval.EvaluateCondition(context.Background(), resources)
-	require.NoError(t, err)
-	assert.True(t, result, "should find the Deployment")
+	assert.True(t, result)
 }
 
 func TestEvaluateCondition_ResourceCount(t *testing.T) {
-	// Create test resources
-	deploymentYAML := `
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-deployment
-spec:
-  replicas: 3
-`
+	env := newTestEnv(t)
 
-	deployment, err := yaml.Parse(deploymentYAML)
+	deployment, err := yaml.Parse("apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: test-deployment\nspec:\n  replicas: 3")
 	require.NoError(t, err)
-
 	resources := []*yaml.RNode{deployment}
 
-	// Test: Count of deployments is greater than 0
-	condition := `resources.filter(r, r.kind == "Deployment").size() > 0`
-	eval, err := NewCELEvaluator(condition)
+	result, err := env.EvaluateCondition(context.Background(),
+		`resources.filter(r, r.kind == "Deployment").size() > 0`, resources)
 	require.NoError(t, err)
-	result, err := eval.EvaluateCondition(context.Background(), resources)
-	require.NoError(t, err)
-	assert.True(t, result, "should find deployments")
+	assert.True(t, result)
 
-	// Test: Count of ConfigMaps is 0
-	condition = `resources.filter(r, r.kind == "ConfigMap").size() == 0`
-	eval, err = NewCELEvaluator(condition)
+	result, err = env.EvaluateCondition(context.Background(),
+		`resources.filter(r, r.kind == "ConfigMap").size() == 0`, resources)
 	require.NoError(t, err)
-	result, err = eval.EvaluateCondition(context.Background(), resources)
-	require.NoError(t, err)
-	assert.True(t, result, "should not find ConfigMaps")
+	assert.True(t, result)
 }
 
 func TestEvaluateCondition_InvalidExpression(t *testing.T) {
-	// Test invalid syntax
-	_, err := NewCELEvaluator("this is not valid CEL")
+	env := newTestEnv(t)
+	_, err := env.EvaluateCondition(context.Background(), "this is not valid CEL", nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to compile")
 }
 
 func TestEvaluateCondition_NonBooleanResult(t *testing.T) {
-	// Expression that returns a number, not a boolean
-	_, err := NewCELEvaluator("1 + 1")
+	env := newTestEnv(t)
+	_, err := env.EvaluateCondition(context.Background(), "1 + 1", nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "must return a boolean")
 }
 
-// TestEvaluateCondition_Immutability ensures CEL evaluation cannot mutate the input resources
 func TestEvaluateCondition_Immutability(t *testing.T) {
-	configMapYAML := `
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: test-config
-  namespace: default
-data:
-  key: original-value
-`
+	env := newTestEnv(t)
 
-	configMap, err := yaml.Parse(configMapYAML)
+	configMap, err := yaml.Parse("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test-config\n  namespace: default\ndata:\n  key: original-value")
 	require.NoError(t, err)
 
-	resources := []*yaml.RNode{configMap}
-
-	// Store original values
 	originalYAML, err := configMap.String()
 	require.NoError(t, err)
 
-	// Evaluate a condition that accesses the resources
-	condition := `resources.exists(r, r.kind == "ConfigMap")`
-	eval, err := NewCELEvaluator(condition)
-	require.NoError(t, err)
-	
-	_, err = eval.EvaluateCondition(context.Background(), resources)
+	_, err = env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "ConfigMap")`, []*yaml.RNode{configMap})
 	require.NoError(t, err)
 
-	// Verify resources haven't been mutated
 	afterYAML, err := configMap.String()
 	require.NoError(t, err)
 	assert.Equal(t, originalYAML, afterYAML, "CEL evaluation should not mutate input resources")
