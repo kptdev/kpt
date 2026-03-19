@@ -21,15 +21,13 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/ext"
-	k8scellib "k8s.io/apiserver/pkg/cel/library"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const (
-	celCheckFrequency = 100
-	// celCostLimit gives about .1 seconds of CPU time for the evaluation to run
-	celCostLimit = 1000000
-)
+const celCheckFrequency = 100
+
+// celCostLimit gives about .1 seconds of CPU time for the evaluation to run
+const celCostLimit = 1000000
 
 // CELEnvironment holds a shared CEL environment for evaluating conditions.
 // The environment is created once and reused; programs are compiled per condition call.
@@ -38,8 +36,6 @@ type CELEnvironment struct {
 }
 
 // NewCELEnvironment creates a new CELEnvironment with the standard KRM variable bindings.
-// Includes cel-go built-in extensions and k8s-specific validators (IP, CIDR, Quantity, SemVer)
-// from k8s.io/apiserver/pkg/cel/library for full Kubernetes CEL compatibility.
 func NewCELEnvironment() (*CELEnvironment, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
@@ -51,10 +47,6 @@ func NewCELEnvironment() (*CELEnvironment, error) {
 		ext.Sets(),
 		ext.TwoVarComprehensions(),
 		ext.Lists(ext.ListsVersion(3)),
-		k8scellib.IP(),
-		k8scellib.CIDR(),
-		k8scellib.Quantity(),
-		k8scellib.SemverLib(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
@@ -92,7 +84,7 @@ func (e *CELEnvironment) EvaluateCondition(ctx context.Context, condition string
 		return false, fmt.Errorf("failed to convert resources: %w", err)
 	}
 
-	out, _, err := prg.ContextEval(ctx, map[string]any{
+	out, _, err := prg.ContextEval(ctx, map[string]interface{}{
 		"resources": resourceList,
 	})
 	if err != nil {
@@ -107,8 +99,8 @@ func (e *CELEnvironment) EvaluateCondition(ctx context.Context, condition string
 	return bool(result), nil
 }
 
-func resourcesToList(resources []*yaml.RNode) ([]any, error) {
-	result := make([]any, 0, len(resources))
+func resourcesToList(resources []*yaml.RNode) ([]interface{}, error) {
+	result := make([]interface{}, 0, len(resources))
 	for _, resource := range resources {
 		m, err := resourceToMap(resource)
 		if err != nil {
@@ -119,39 +111,14 @@ func resourcesToList(resources []*yaml.RNode) ([]any, error) {
 	return result, nil
 }
 
-func resourceToMap(resource *yaml.RNode) (map[string]any, error) {
+func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 	node := resource.YNode()
 	if node == nil {
 		return nil, fmt.Errorf("resource has nil yaml.Node")
 	}
-	var result map[string]any
+	var result map[string]interface{}
 	if err := node.Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode resource: %w", err)
-	}
-	// Ensure standard KRM fields are always present so CEL expressions like
-	// r.kind == "Deployment" never error with "no such key".
-	if _, ok := result["apiVersion"]; !ok {
-		result["apiVersion"] = ""
-	}
-	if _, ok := result["kind"]; !ok {
-		result["kind"] = ""
-	}
-	// Ensure metadata and its common nested keys exist so expressions like
-	// r.metadata.name and r.metadata.namespace do not fail on missing keys.
-	if mdVal, ok := result["metadata"]; ok {
-		if mdMap, ok := mdVal.(map[string]any); ok {
-			if _, ok := mdMap["name"]; !ok {
-				mdMap["name"] = ""
-			}
-			if _, ok := mdMap["namespace"]; !ok {
-				mdMap["namespace"] = ""
-			}
-			result["metadata"] = mdMap
-		} else {
-			result["metadata"] = map[string]any{"name": "", "namespace": ""}
-		}
-	} else {
-		result["metadata"] = map[string]any{"name": "", "namespace": ""}
 	}
 	return result, nil
 }
