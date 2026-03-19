@@ -1,4 +1,4 @@
-//go:build !cgo
+//go:build !cgo || windows
 
 // Copyright 2022,2026 The kpt Authors
 //
@@ -20,21 +20,21 @@ package fnruntime
 // wasmtime requires cgo, which is not always a viable option.
 
 import (
-	"fmt"
+	"errors"
 	"io"
 )
 
 const (
-	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
+	msg = "wasmtime support is not compiled into this binary. Binaries with wasmtime are available at github.com/kptdev/kpt"
 )
 
 type WasmtimeFn struct {
 }
 
-func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
-	return nil, fmt.Errorf(msg)
+func NewWasmtimeFn(_ WasmLoader) (*WasmtimeFn, error) {
+	return nil, errors.New(msg)
 }
 
-func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
-	return fmt.Errorf(msg)
+func (f *WasmtimeFn) Run(_ io.Reader, _ io.Writer) error {
+	return errors.New(msg)
 }
