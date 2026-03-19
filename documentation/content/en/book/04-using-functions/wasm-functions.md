@@ -191,12 +191,12 @@ WASM support is alpha, which means:
 
 ### Security
 
-WASM functions run in a sandbox:
-- No network access
-- No filesystem access (except input/output resources)
-- Can't execute system commands
+WASM functions are designed to run in a sandboxed environment, but the exact security properties depend on the WASM runtime and how it is configured:
+- Some runtimes (for example, `wasmtime` with default settings) do not grant network or filesystem access unless you explicitly enable those capabilities.
+- Other runtimes (for example, a Node.js-based WASM runtime) execute the module within a local `node` process, where filesystem and network access may be possible depending on the glue code and module implementation.
+- In all cases, you should treat the WASM runtime as part of your trusted computing base and review its configuration and allowed host APIs.
 
-This is more secure but also more restrictive.
+Compared to running arbitrary container images, a well-configured WASM runtime can offer stronger isolation, but the actual security guarantees depend on the chosen runtime and its configuration.
 
 ### Performance
 
