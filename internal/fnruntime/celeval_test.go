@@ -21,47 +21,47 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
+
+	"github.com/GoogleContainerTools/kpt/internal/fnruntime/runneroptions"
 )
 
 func TestNewCELEvaluator(t *testing.T) {
-	eval, err := NewCELEvaluator("true")
+	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
-	assert.NotNil(t, eval)
-	assert.NotNil(t, eval.env)
-	assert.NotNil(t, eval.prg)
+	assert.NotNil(t, env)
+	assert.NotNil(t, env.Env)
 }
 
 func TestNewCELEvaluator_EmptyCondition(t *testing.T) {
-	eval, err := NewCELEvaluator("")
+	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
-	assert.NotNil(t, eval)
-	assert.NotNil(t, eval.env)
-	assert.Nil(t, eval.prg)
+	assert.NotNil(t, env)
+	assert.NotNil(t, env.Env)
 }
 
 func TestEvaluateCondition_EmptyCondition(t *testing.T) {
-	eval, err := NewCELEvaluator("")
+	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
 
-	result, err := eval.EvaluateCondition(context.Background(), nil)
+	result, err := env.EvaluateCondition(context.Background(), "", nil)
 	require.NoError(t, err)
 	assert.True(t, result, "empty condition should return true")
 }
 
 func TestEvaluateCondition_SimpleTrue(t *testing.T) {
-	eval, err := NewCELEvaluator("true")
+	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
 
-	result, err := eval.EvaluateCondition(context.Background(), nil)
+	result, err := env.EvaluateCondition(context.Background(), "true", nil)
 	require.NoError(t, err)
 	assert.True(t, result)
 }
 
 func TestEvaluateCondition_SimpleFalse(t *testing.T) {
-	eval, err := NewCELEvaluator("false")
+	env, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
 
-	result, err := eval.EvaluateCondition(context.Background(), nil)
+	result, err := env.EvaluateCondition(context.Background(), "false", nil)
 	require.NoError(t, err)
 	assert.False(t, result)
 }
