@@ -1,4 +1,4 @@
-﻿---
+---
 title: "Using WASM Functions"
 linkTitle: "Using WASM Functions"
 weight: 5
@@ -38,7 +38,7 @@ metadata:
   name: my-package
 pipeline:
   mutators:
-    - image: gcr.io/my-org/my-wasm-fn:v1.0.0
+    - image: example.registry.io/my-org/my-wasm-fn:v1.0.0
       configMap:
         key: value
 ```
@@ -54,7 +54,7 @@ kpt will detect the function as WASM if the OCI image has a `js/wasm` platform m
 Run WASM functions imperatively:
 
 ```shell
-kpt fn eval my-package --allow-alpha-wasm -i gcr.io/my-org/my-wasm-fn:v1.0.0 -- key=value
+kpt fn eval my-package --allow-alpha-wasm -i example.registry.io/my-org/my-wasm-fn:v1.0.0 -- key=value
 ```
 
 ### Using local WASM files
@@ -91,7 +91,7 @@ Note: Using local WASM files makes your package less portable since the file nee
 Compress and push a WASM module to an OCI registry:
 
 ```shell
-kpt alpha wasm push ./my-function.wasm gcr.io/my-org/my-wasm-fn:v1.0.0
+kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.0.0
 ```
 
 What this does:
@@ -104,7 +104,7 @@ What this does:
 Download and decompress a WASM module:
 
 ```shell
-kpt alpha wasm pull gcr.io/my-org/my-wasm-fn:v1.0.0 ./my-function.wasm
+kpt alpha wasm pull example.registry.io/my-org/my-wasm-fn:v1.0.0 ./my-function.wasm
 ```
 
 Useful for:
@@ -124,117 +124,7 @@ WASM functions follow the [KRM Functions Specification](https://github.com/kuber
 
 ### Example: Go WASM function
 
-Here's how to build a Go KRM function for WASM. You need two files - one for regular builds and one for WASM:
-
-`main.go` (regular build):
-
-```go
-//go:build !(js && wasm)
-
-package main
-
-import (
-	"os"
-
-	"github.com/kptdev/krm-functions-sdk/go/fn"
-)
-
-func main() {
-	if err := fn.AsMain(fn.ResourceListProcessorFunc(process)); err != nil {
-		os.Exit(1)
-	}
-}
-
-func process(rl *fn.ResourceList) (bool, error) {
-	for i := range rl.Items {
-		// Your transformation logic
-		rl.Items[i].SetAnnotation("processed-by", "my-fn")
-	}
-	return true, nil
-}
-```
-
-`main_js.go` (WASM build):
-
-```go
-//go:build js && wasm
-
-package main
-
-import (
-	"syscall/js"
-
-	"github.com/kptdev/krm-functions-sdk/go/fn"
-)
-
-// Keep js.Func values referenced at package level to prevent garbage collection.
-var (
-	processResourceListFunc       js.Func
-	processResourceListErrorsFunc js.Func
-)
-
-func main() {
-	if err := run(); err != nil {
-		panic(err)
-	}
-}
-
-func run() error {
-	resourceList := []byte("")
-
-	processResourceListFunc = resourceListWrapper(&resourceList)
-	js.Global().Set("processResourceList", processResourceListFunc)
-	processResourceListErrorsFunc = resourceListErrors(&resourceList)
-	js.Global().Set("processResourceListErrors", processResourceListErrorsFunc)
-
-	// Keep the program running
-	select {}
-}
-
-// process applies the same transformation logic as in the non-WASM build.
-func process(rl *fn.ResourceList) (bool, error) {
-	for i := range rl.Items {
-		// Your transformation logic
-		rl.Items[i].SetAnnotation("processed-by", "my-fn")
-	}
-	return true, nil
-}
-
-func transform(input []byte) ([]byte, error) {
-	return fn.Run(fn.ResourceListProcessorFunc(process), input)
-}
-
-func resourceListWrapper(resourceList *[]byte) js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 1 {
-			return "Invalid number of arguments"
-		}
-		input := args[0].String()
-		output, err := transform([]byte(input))
-		*resourceList = output
-		if err != nil {
-			return "unable to process: " + err.Error()
-		}
-		return string(output)
-	})
-}
-
-func resourceListErrors(resourceList *[]byte) js.Func {
-	return js.FuncOf(func(this js.Value, args []js.Value) any {
-		rl, err := fn.ParseResourceList(*resourceList)
-		if err != nil {
-			return ""
-		}
-		errors := ""
-		for _, r := range rl.Results {
-			if r.Severity == "error" {
-				errors += r.Message
-			}
-		}
-		return errors
-	})
-}
-```
+For a complete working example of a Go WASM function, see the [starlark function in the krm-functions-catalog](https://github.com/kptdev/krm-functions-catalog/tree/main/functions/go/starlark), which shows the two-file pattern (`run.go` for regular builds and `run_js.go` for WASM builds).
 
 ### Build for WASM
 
@@ -253,10 +143,10 @@ kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.
 Push to a registry:
 
 ```shell
-kpt alpha wasm push ./my-function.wasm gcr.io/my-org/my-wasm-fn:v1.0.0
+kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.0.0
 
 # Test the published version
-kpt fn eval ./test-package --allow-alpha-wasm -i gcr.io/my-org/my-wasm-fn:v1.0.0
+kpt fn eval ./test-package --allow-alpha-wasm -i example.registry.io/my-org/my-wasm-fn:v1.0.0
 ```
 
 ## Complete example
@@ -273,7 +163,7 @@ GOOS=js GOARCH=wasm go build -o my-function.wasm .
 kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
 
 # 4. Publish
-kpt alpha wasm push ./my-function.wasm gcr.io/my-org/my-wasm-fn:v1.0.0
+kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.0.0
 
 # 5. Use in a package
 cat <<EOF > Kptfile
@@ -283,7 +173,7 @@ metadata:
   name: my-package
 pipeline:
   mutators:
-    - image: gcr.io/my-org/my-wasm-fn:v1.0.0
+    - image: example.registry.io/my-org/my-wasm-fn:v1.0.0
 EOF
 
 # 6. Render
