@@ -154,25 +154,17 @@ func NewRunner(
 		}
 	}
 	
-	// Initialize CEL evaluator if a condition is specified
-	var evaluator *CELEvaluator
-	if f.Condition != "" {
-		var err error
-		evaluator, err = NewCELEvaluator(f.Condition)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create CEL evaluator: %w", err)
-		}
-	}
-	
 	fr, err := NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
 	if err != nil {
 		return nil, err
 	}
-	
-	// Set condition and evaluator
-	fr.condition = f.Condition
-	fr.evaluator = evaluator
-	
+
+	// Set condition; the shared CEL environment from opts is used at evaluation time.
+	if f.Condition != "" {
+		fr.condition = f.Condition
+		fr.celEnv = opts.CELEnvironment
+	}
+
 	return fr, nil
 }
 
@@ -214,20 +206,20 @@ type FunctionRunner struct {
 	fnResult         *fnresult.Result
 	fnResults        *fnresult.ResultList
 	opts             runneroptions.RunnerOptions
-	condition        string        // CEL condition expression
-	evaluator        *CELEvaluator // CEL evaluator for condition checking
+	condition        string           // CEL condition expression
+	celEnv           *CELEvaluator    // shared CEL environment for condition evaluation
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
 	
 	// Check condition before executing function
-	if fr.evaluator != nil {
-		shouldExecute, err := fr.evaluator.EvaluateCondition(fr.ctx, input)
+	if fr.celEnv != nil && fr.condition != "" {
+		shouldExecute, err := fr.celEnv.EvaluateCondition(fr.ctx, fr.condition, input)
 		if err != nil {
 			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
 		}
-		
+
 		if !shouldExecute {
 			if !fr.disableCLIOutput {
 				pr.Printf("[SKIPPED] %q (condition not met)\n", fr.name)
