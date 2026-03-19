@@ -1,0 +1,8 @@
+apiVersion: fn.kpt.dev/v1alpha1
+kind: StarlarkRun
+metadata:
+  name: always-fail
+source: |
+  def fail_fn(items):
+    fail("intentional failure for testing")
+  fail_fn(ctx.resource_list["items"])
