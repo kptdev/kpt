@@ -160,7 +160,7 @@ From development to deployment:
 GOOS=js GOARCH=wasm go build -o my-function.wasm .
 
 # 3. Test locally
-kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
+kpt fn eval ./test-package --allow-alpha-wasm --exec ./my-function.wasm
 
 # 4. Publish
 kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.0.0
