@@ -812,7 +812,12 @@ func TestCreateResultItem(t *testing.T) {
 	assert.Empty(t, result.Resource)
 
 	// Test with resource
-	resource := yaml.MustParse(`apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: test`)
+	resource := yaml.MustParse(`
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+`)
 	resultWithResource := createResultItem(resource, "resource processed", "info")
 	assert.Equal(t, "resource processed", resultWithResource.Message)
 	assert.Equal(t, "info", resultWithResource.Severity)

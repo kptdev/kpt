@@ -476,50 +476,50 @@ func ToCondition(value string) ConditionStatus {
 // RenderStatus contains detailed information about pipeline execution results
 type RenderStatus struct {
 	// MutationSteps contains results from mutation pipeline functions
-	MutationSteps []PipelineStepResult `json:"mutationSteps,omitempty"`
+	MutationSteps []PipelineStepResult `yaml:"mutationSteps,omitempty" json:"mutationSteps,omitempty"`
 
 	// ValidationSteps contains results from validation pipeline functions
-	ValidationSteps []PipelineStepResult `json:"validationSteps,omitempty"`
+	ValidationSteps []PipelineStepResult `yaml:"validationSteps,omitempty" json:"validationSteps,omitempty"`
 
 	// ErrorSummary provides a consolidated summary of all errors
-	ErrorSummary string `json:"errorSummary,omitempty"`
+	ErrorSummary string `yaml:"errorSummary,omitempty" json:"errorSummary,omitempty"`
 }
 
 // PipelineStepResult contains the result of executing a single pipeline step
 type PipelineStepResult struct {
 	// Name is the name of the function step
-	Name string `json:"name,omitempty"`
+	Name string `yaml:"name,omitempty" json:"name,omitempty"`
 
 	// Image is the container image that was executed
-	Image string `json:"image,omitempty"`
+	Image string `yaml:"image,omitempty" json:"image,omitempty"`
 
 	// ExecPath is the executable path that was run
-	ExecPath string `json:"execPath,omitempty"`
+	ExecPath string `yaml:"execPath,omitempty" json:"execPath,omitempty"`
 
 	// ExecutionError captures execution failures like network errors, missing images, etc.
-	ExecutionError string `json:"executionError,omitempty"`
+	ExecutionError string `yaml:"executionError,omitempty" json:"executionError,omitempty"`
 
 	// Stderr contains the standard error output from the function execution
-	Stderr string `json:"stderr,omitempty"`
+	Stderr string `yaml:"stderr,omitempty" json:"stderr,omitempty"`
 
 	// ExitCode is the exit code returned by the function
-	ExitCode int `json:"exitCode"`
+	ExitCode int `yaml:"exitCode" json:"exitCode"`
 
 	// Results contains successful results from the function
-	Results []ResultItem `json:"results,omitempty"`
+	Results []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
 
 	// ErrorResults contains error results from the function
-	ErrorResults []ResultItem `json:"errorResults,omitempty"`
+	ErrorResults []ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
 }
 
 // ResultItem represents a single result item from a function execution
 type ResultItem struct {
 	// Resource is the KRM resource that was processed (serialized as YAML string)
-	Resource string `json:"resource,omitempty"`
+	Resource string `yaml:"resource,omitempty" json:"resource,omitempty"`
 
 	// Message contains details about the result
-	Message string `json:"message,omitempty"`
+	Message string `yaml:"message,omitempty" json:"message,omitempty"`
 
 	// Severity indicates the severity level of the result (error, warning, info)
-	Severity string `json:"severity,omitempty"`
+	Severity string `yaml:"severity,omitempty" json:"severity,omitempty"`
 }
