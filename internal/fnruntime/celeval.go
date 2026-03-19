@@ -21,7 +21,6 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/ext"
-	k8scellib "k8s.io/apiserver/pkg/cel/library"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -41,27 +40,13 @@ type CELEvaluator struct {
 func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
-		// Below is a list of Env settings that is a selection of https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apiserver/pkg/cel/environment/base.go
-		// General rules are for maintaining this list.
-		// 1. utility functions should be available. This allows for more compatibility with k8s's own CEL conditions
-		// 2. AST validation is not needed as kpt will recompile CEL expressions every time, there is no cost-saving in exiting early
-		// 3. Compile time optimisations do not make sense, as each CEL expression will be evaluated once before being discarded.
-		// 3. Things that are helping with authorization in k8s are not needed, as they're returning either ResourceCheck or Decision types, which are not needed for kpt
 		cel.HomogeneousAggregateLiterals(),
 		cel.DefaultUTCTimeZone(true),
-		k8scellib.URLs(),
-		k8scellib.Regex(),
-		k8scellib.Lists(),
 		cel.CrossTypeNumericComparisons(true),
 		cel.OptionalTypes(),
-		k8scellib.Quantity(),
 		ext.Strings(ext.StringsVersion(2)),
 		ext.Sets(),
-		k8scellib.IP(),
-		k8scellib.CIDR(),
-		k8scellib.Format(),
 		ext.TwoVarComprehensions(),
-		k8scellib.SemverLib(k8scellib.SemverVersion(1)),
 		ext.Lists(ext.ListsVersion(3)),
 	)
 	if err != nil {
@@ -88,7 +73,6 @@ func NewCELEvaluator(condition string) (*CELEvaluator, error) {
 		prg, err := env.Program(ast,
 			cel.CostLimit(costLimit),
 			cel.InterruptCheckFrequency(checkFrequency),
-			cel.CostTracking(&k8scellib.CostEstimator{}),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CEL program: %w", err)
