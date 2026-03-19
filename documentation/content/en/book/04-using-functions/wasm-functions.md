@@ -62,7 +62,7 @@ kpt fn eval my-package --allow-alpha-wasm -i example.registry.io/my-org/my-wasm-
 You can run local `.wasm` files with the `--exec` flag:
 
 ```shell
-kpt fn eval my-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
+kpt fn eval my-package --allow-alpha-wasm --exec ./my-function.wasm
 ```
 
 You can also declare local WASM files in your `Kptfile`:
