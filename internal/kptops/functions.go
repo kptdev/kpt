@@ -19,7 +19,7 @@ import (
 )
 
 var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.0": applySetters,
+	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.4": applySetters,
 	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
 	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
 }
