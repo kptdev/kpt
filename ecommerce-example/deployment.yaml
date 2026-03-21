@@ -1,21 +1,6 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ecommerce-app
-  labels:
-    app: ecommerce
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ecommerce
-  template:
-    metadata:
-      labels:
-        app: ecommerce
-    spec:
-      containers:
-      - name: ecommerce-container
-        image: nginx
-        ports:
+  containers:
+    - name: ecommerce-container
+      image: nginx:1.18.0
+      ports:
         - containerPort: 80
