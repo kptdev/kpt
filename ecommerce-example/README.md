@@ -1,4 +1,4 @@
- E-commerce Example (kpt)
+E-commerce Example (kpt)
 
 This is a simple e-commerce application example packaged using **kpt**.
 
