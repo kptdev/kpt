@@ -1,0 +1,4 @@
+stdErr: |
+  Package: "condition-not-met"
+  [SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" (condition not met)
+  Successfully executed 1 function(s) in 1 package(s).

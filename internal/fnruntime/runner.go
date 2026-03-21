@@ -153,7 +153,19 @@ func NewRunner(
 			}
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	
+	fr, err := NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set condition; the shared CEL environment from opts is used at evaluation time.
+	if f.Condition != "" {
+		fr.condition = f.Condition
+		fr.celEnv = opts.CELEnvironment
+	}
+
+	return fr, nil
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
@@ -194,10 +206,32 @@ type FunctionRunner struct {
 	fnResult         *fnresult.Result
 	fnResults        *fnresult.ResultList
 	opts             runneroptions.RunnerOptions
+	condition        string           // CEL condition expression
+	celEnv           *CELEvaluator    // shared CEL environment for condition evaluation
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
 	pr := printer.FromContextOrDie(fr.ctx)
+	
+	// Check condition before executing function
+	if fr.celEnv != nil && fr.condition != "" {
+		shouldExecute, err := fr.celEnv.EvaluateCondition(fr.ctx, fr.condition, input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
+		}
+
+		if !shouldExecute {
+			if !fr.disableCLIOutput {
+				pr.Printf("[SKIPPED] %q (condition not met)\n", fr.name)
+			}
+			// Append a skipped result so consumers get one result per pipeline step
+			fr.fnResult.ExitCode = 0
+			fr.fnResults.Items = append(fr.fnResults.Items, *fr.fnResult)
+			// Return input unchanged - function is skipped
+			return input, nil
+		}
+	}
+	
 	if !fr.disableCLIOutput {
 		if fr.opts.AllowWasm {
 			if fr.opts.DisplayResourceCount {
