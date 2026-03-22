@@ -13,7 +13,8 @@
 # limitations under the License.
 
 testType: eval
-image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1
+#image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:latest
+image: gcr.io/kpt-fn-demo/set-namespace:latest
 args:
   namespace: staging
 allowWasm: true

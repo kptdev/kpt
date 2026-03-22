@@ -17,6 +17,6 @@ stdErrStripLines:
   - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
 
 stdErr: |
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" on 1 resource(s)
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
-  Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" as mutator in the Kptfile.
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" on 1 resource(s)
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
+  Added "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" as mutator in the Kptfile.
