@@ -13,5 +13,5 @@
 # limitations under the License.
 
 testType: eval
-image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 fnConfig: ../../config.yaml
