@@ -4,5 +4,5 @@ metadata:
   name: fnresults
 exitCode: 0
 items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
     exitCode: 0
