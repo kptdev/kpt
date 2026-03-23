@@ -14,6 +14,6 @@
 
 testType: eval
 exitCode: 1
-image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 fnConfig: ../../config.yaml
 stdErr: "wrong node kind: expected MappingNode but got ScalarNode: node contents:\nI am not a valid config file\n"

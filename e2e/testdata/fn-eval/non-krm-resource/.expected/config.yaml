@@ -13,10 +13,10 @@
 # limitations under the License.
 
 testType: eval
-image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 args:
   namespace: staging
 exitCode: 1
 stdErr: |
-  [FAIL] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [FAIL] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
   error: input resource list must contain only KRM resources: nonkrm.yaml: resource must have `apiVersion`
