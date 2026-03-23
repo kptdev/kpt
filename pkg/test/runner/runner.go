@@ -480,8 +480,14 @@ func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tm
 	}
 	expectedDiff := expected.Diff
 	if r.testCase.Config.DiffStripRegEx != "" {
-		actualDiff = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
-		expectedDiff = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
+		actualDiff, err = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
+		if err != nil {
+			return err
+		}
+		expectedDiff, err = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
+		if err != nil {
+			return err
+		}
 	}
 	if actualDiff != expectedDiff {
 		diffOfDiff, err := diffStrings(actualDiff, expectedDiff)
@@ -644,8 +650,11 @@ func (r *Runner) stripLines(string2Strip string, linesToStrip []string) string {
 // normalizeDiff removes lines matching stripRegEx and normalizes index/hunk
 // headers in the diff string so that environment-specific output does not
 // cause comparison failures.
-func normalizeDiff(diff, stripRegEx string) string {
-	re := regexp.MustCompile(stripRegEx)
+func normalizeDiff(diff, stripRegEx string) (string, error) {
+	re, err := regexp.Compile(stripRegEx)
+	if err != nil {
+		return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
+	}
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
 	var out []string
@@ -657,5 +666,5 @@ func normalizeDiff(diff, stripRegEx string) string {
 		line = hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
 		out = append(out, line)
 	}
-	return strings.Join(out, "\n")
+	return strings.Join(out, "\n"), nil
 }

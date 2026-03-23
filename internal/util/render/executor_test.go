@@ -808,7 +808,7 @@ func TestCaptureStepResult_FromFnResults(t *testing.T) {
 	})
 
 	fn := kptfilev1.Function{Name: "validate", Image: "gatekeeper:latest"}
-	step := captureStepResult(fn, fnResults, 0)
+	step := captureStepResult(fn, fnResults, 0, nil)
 
 	assert.Equal(t, "validate", step.Name)
 	assert.Equal(t, "gatekeeper:latest", step.Image)
@@ -839,30 +839,28 @@ func TestCaptureStepResult_FromFnResults(t *testing.T) {
 func TestCaptureStepResult_NoNewItems(t *testing.T) {
 	fnResults := fnresult.NewResultList()
 	fn := kptfilev1.Function{Image: "set-namespace:v1"}
-	step := captureStepResult(fn, fnResults, 0)
+	step := captureStepResult(fn, fnResults, 0, fmt.Errorf("output resource list must contain only KRM resources"))
 
 	assert.Equal(t, "set-namespace:v1", step.Image)
-	assert.Equal(t, 0, step.ExitCode)
-	assert.Empty(t, step.Stderr)
+	assert.Equal(t, 1, step.ExitCode)
+	assert.Equal(t, "output resource list must contain only KRM resources", step.ExecutionError)
 	assert.Nil(t, step.Results)
 	assert.Nil(t, step.ErrorResults)
 }
 
-func TestExecutionErrorStep(t *testing.T) {
-	fns := []kptfilev1.Function{
-		{Name: "my-fn", Image: "bad-image:v1", Exec: ""},
-	}
-	step := executionErrorStep(fns, fmt.Errorf("pull access denied"))
+func TestPreExecFailureStep(t *testing.T) {
+	fn := kptfilev1.Function{Name: "my-fn", Image: "bad-image:v1", Exec: ""}
+	step := preExecFailureStep(fn, fmt.Errorf("pull access denied"))
 
 	assert.Equal(t, "my-fn", step.Name)
 	assert.Equal(t, "bad-image:v1", step.Image)
 	assert.Equal(t, "pull access denied", step.ExecutionError)
-	assert.Equal(t, 0, step.ExitCode)
+	assert.Equal(t, 1, step.ExitCode)
 	assert.Nil(t, step.Results)
 }
 
-func TestExecutionErrorStep_EmptyFns(t *testing.T) {
-	step := executionErrorStep(nil, fmt.Errorf("no functions"))
+func TestPreExecFailureStep_EmptyFn(t *testing.T) {
+	step := preExecFailureStep(kptfilev1.Function{}, fmt.Errorf("no functions"))
 	assert.Empty(t, step.Name)
 	assert.Empty(t, step.Image)
 	assert.Empty(t, step.ExecPath)

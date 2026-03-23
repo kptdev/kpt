@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index ef99dad..653c86b 100644
+index ef99dad..2d02fa0 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,15 @@ pipeline:
+@@ -6,3 +6,17 @@ pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
        configPath: starlark-gen-duplicate-path.yaml
@@ -17,4 +17,6 @@ index ef99dad..653c86b 100644
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        exitCode: 0
++        executionError: resource at path "resources.yaml" and index "0" already exists
++        exitCode: 1
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: resource at path "resources.yaml" and index "0" already exists'
