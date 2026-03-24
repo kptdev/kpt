@@ -34,6 +34,13 @@ var (
 	kptfileGVK   = resid.NewGvk(kptfilev1.KptFileGVK().Group, kptfilev1.KptFileGVK().Version, kptfilev1.KptFileGVK().Kind)
 )
 
+// isRootKptfile checks if the given path represents a root Kptfile
+func isRootKptfile(kptfilePath string) bool {
+	cleanPath := path.Clean(kptfilePath)
+	base := path.Base(cleanPath)
+	return base == kptfilev1.KptFileGVK().Kind
+}
+
 // PackageContextGenerator is a built-in KRM function that generates
 // a KRM object that contains package context information that can be
 // used by functions such as `set-namespace` to customize package with
@@ -115,13 +122,23 @@ func pkgContextResource(kptfile *yaml.RNode, packageConfig *builtintypes.Package
 		return nil, err
 	}
 
-	// We only want one "package-context.yaml" in each kpt package
-	if kptfilePath != kptfilev1.KptFileGVK().Kind {
+	// We only want one "package-context.yaml" in the root kpt package
+	// Root package has Kptfile at the root path (no subdirectories), while subpackages
+	// will have paths like "subpkg/Kptfile"
+	// Normalize the path first to handle relative paths like "./Kptfile"
+	cleanPath := path.Clean(kptfilePath)
+	if !isRootKptfile(cleanPath) {
+		return nil, nil
+	}
+
+	// Check if this is the root package by verifying the Kptfile is at the root level
+	if path.Dir(cleanPath) != "." {
+		// This is a subpackage, don't generate package context
 		return nil, nil
 	}
 
 	annotations := map[string]string{
-		kioutil.PathAnnotation: path.Join(path.Dir(kptfilePath), builtintypes.PkgContextFile),
+		kioutil.PathAnnotation: path.Join(path.Dir(cleanPath), builtintypes.PkgContextFile),
 	}
 
 	for k, v := range annotations {
