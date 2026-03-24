@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index abc7b97..0b78750 100644
+index abc7b97..251ecc4 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,14 +2,21 @@ apiVersion: kpt.dev/v1
+@@ -2,14 +2,27 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: app
@@ -26,6 +26,12 @@ index abc7b97..0b78750 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
 diff --git a/resources.yaml b/resources.yaml
 index f2eec52..6b5d443 100644
 --- a/resources.yaml
