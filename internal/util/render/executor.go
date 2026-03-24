@@ -392,9 +392,9 @@ func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.Re
 		// Process the Results field which contains framework.Results
 		for _, result := range item.Results {
 			message := result.Message
-			severity := string(result.Severity) // Convert framework.Severity to string
+			severity := strings.ToLower(strings.TrimSpace(string(result.Severity))) // Normalize and convert framework.Severity to string
 
-			// Default severity if not specified
+			// Default severity if not specified: infer from function exit code
 			if severity == "" {
 				if item.ExitCode == 0 {
 					severity = "info"
@@ -405,7 +405,7 @@ func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.Re
 
 			resultItem := createResultItem(nil, message, severity)
 
-			// Classify based on severity instead of ExitCode
+			// Classify results based on per-result severity, not function exit code
 			if severity == "error" {
 				errorResults = append(errorResults, resultItem)
 			} else {
