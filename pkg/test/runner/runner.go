@@ -38,11 +38,11 @@ type Runner struct {
 }
 
 func getKptBin() (string, error) {
-	p, err := exec.Command("which", "kpt").CombinedOutput()
+	p, err := exec.LookPath("kpt")
 	if err != nil {
 		return "", fmt.Errorf("cannot find command 'kpt' in $PATH: %w", err)
 	}
-	return strings.TrimSpace(string(p)), nil
+	return filepath.Abs(p)
 }
 
 const (

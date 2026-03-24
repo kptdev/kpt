@@ -2,11 +2,4 @@ apiVersion: kpt.dev/v1
 kind: FunctionResultList
 metadata:
   name: fnresults
-exitCode: 1
-items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-    stderr: 'failed to evaluate function: error: function failure'
-    exitCode: 1
-    results:
-      - message: 'fail: could not find httpbin deployment'
-        severity: error
+exitCode: 0

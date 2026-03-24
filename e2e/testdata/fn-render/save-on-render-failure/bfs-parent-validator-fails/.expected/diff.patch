@@ -1,110 +1,51 @@
 diff --git a/Kptfile b/Kptfile
-index d72dbf4..8c66fe7 100644
+index 491b12e..e12299e 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,16 +1,18 @@
--apiVersion: kpt.dev/v1
--kind: Kptfile
--metadata:
--  annotations:
--    kpt.dev/bfs-rendering: "true"
--    kpt.dev/save-on-render-failure: "true"
--  name: bfs-parent-validator-fails
--info:
--  description: BFS - Parent validator fails
--pipeline:
--  mutators:
--    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--      configMap:
--        test: "parent-fail"
--  validators:
--    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
-+apiVersion: kpt.dev/v1
-+kind: Kptfile
-+metadata:
-+  annotations:
-+    kpt.dev/bfs-rendering: "true"
-+    kpt.dev/save-on-render-failure: "true"
-+  name: bfs-parent-validator-fails
+@@ -5,6 +5,8 @@ metadata:
+     kpt.dev/bfs-rendering: "true"
+     kpt.dev/save-on-render-failure: "true"
+   name: bfs-parent-validator-fails
 +  labels:
 +    test: parent-fail
-+info:
-+  description: BFS - Parent validator fails
-+pipeline:
-+  mutators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+      configMap:
-+        test: parent-fail
-+  validators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
+ info:
+   description: BFS - Parent validator fails
+ pipeline:
 diff --git a/configmap.yaml b/configmap.yaml
-index 4f9a1b3..ad595de 100644
+index 20a54f6..ad595de 100644
 --- a/configmap.yaml
 +++ b/configmap.yaml
-@@ -1,6 +1,8 @@
--apiVersion: v1
--kind: ConfigMap
--metadata:
--  name: root-config
--data:
--  key: value
-+apiVersion: v1
-+kind: ConfigMap
-+metadata:
-+  name: root-config
+@@ -2,5 +2,7 @@ apiVersion: v1
+ kind: ConfigMap
+ metadata:
+   name: root-config
 +  labels:
 +    test: parent-fail
-+data:
-+  key: value
+ data:
+   key: value
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index 24faac6..ecbfb69 100644
+index fd277c8..ecbfb69 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
-@@ -1,11 +1,13 @@
--apiVersion: kpt.dev/v1
--kind: Kptfile
--metadata:
--  name: subpkg
--info:
--  description: Subpackage that succeeds
--pipeline:
--  mutators:
--    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
--      configMap:
--        namespace: subpkg-ns
-+apiVersion: kpt.dev/v1
-+kind: Kptfile
-+metadata:
-+  name: subpkg
+@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: subpkg
 +  labels:
 +    test: parent-fail
-+info:
-+  description: Subpackage that succeeds
-+pipeline:
-+  mutators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
-+      configMap:
-+        namespace: subpkg-ns
+ info:
+   description: Subpackage that succeeds
+ pipeline:
 diff --git a/subpkg/service.yaml b/subpkg/service.yaml
-index cd6bc70..fe08496 100644
+index 276bf9e..098c31b 100644
 --- a/subpkg/service.yaml
 +++ b/subpkg/service.yaml
-@@ -1,7 +1,11 @@
--apiVersion: v1
--kind: Service
--metadata:
--  name: sub-service
--spec:
--  ports:
--  - port: 80
-+apiVersion: v1
-+kind: Service
-+metadata:
-+  name: sub-service
+@@ -2,6 +2,8 @@ apiVersion: v1
+ kind: Service
+ metadata:
+   name: sub-service
 +  labels:
 +    test: parent-fail
-+spec:
-+  ports:
-+  - port: 80
-+  selector:
-+    test: parent-fail
+ spec:
+   ports:
+   - port: 80
