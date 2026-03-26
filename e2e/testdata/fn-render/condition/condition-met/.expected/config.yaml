@@ -7,6 +7,6 @@ stdErrStripLines:
 
 stdErr: |
   Package: "condition-met"
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/no-op"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/no-op" in 0s
   Successfully executed 1 function(s) in 1 package(s).
