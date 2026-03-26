@@ -4,7 +4,5 @@ metadata:
   name: app
 pipeline:
   mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-      configMap:
-        env: production
+    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
       condition: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')"
