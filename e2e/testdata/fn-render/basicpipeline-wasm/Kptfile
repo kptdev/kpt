@@ -6,9 +6,10 @@ metadata:
     tier: backend
 pipeline:
   mutators:
+    # The following 2 images are built from https://github.com/kptdev/krm-functions-catalog/pull/898.
     - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1
       configMap:
         namespace: staging
-    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
+    - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.0
       configMap:
         tier: backend

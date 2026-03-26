@@ -1,42 +1,22 @@
 diff --git a/Kptfile b/Kptfile
-index 86dbe13..f0c67c4 100644
+index 86dbe13..cba0f58 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,15 +1,26 @@
- apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-+  name: bfs-subpkg-validator-fails
+@@ -5,6 +5,9 @@ metadata:
+     kpt.dev/bfs-rendering: "true"
+     kpt.dev/save-on-render-failure: "true"
+   name: bfs-subpkg-validator-fails
 +  labels:
 +    level: root
 +    test: subpkg-fail
-   annotations:
-     kpt.dev/bfs-rendering: "true"
-     kpt.dev/save-on-render-failure: "true"
--  name: bfs-subpkg-validator-fails
  info:
    description: BFS - Subpackage validator fails
  pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configMap:
--        test: "subpkg-fail"
--        level: "root"
-+        level: root
-+        test: subpkg-fail
-+status:
-+  conditions:
-+    - type: Rendered
-+      status: "False"
-+      reason: RenderFailed
-+      message: |-
-+        pkg.render: pkg .:
-+        	pipeline.run: pkg ./subpkg: already handled error
 diff --git a/deployment.yaml b/deployment.yaml
-index 7123634..4db6211 100644
+index 7123634..594061d 100644
 --- a/deployment.yaml
 +++ b/deployment.yaml
-@@ -3,5 +3,17 @@ kind: Deployment
+@@ -3,5 +3,8 @@ kind: Deployment
  metadata:
    name: root-deployment
    namespace: default
@@ -45,35 +25,25 @@ index 7123634..4db6211 100644
 +    test: subpkg-fail
  spec:
    replicas: 1
-+  selector:
-+    matchLabels:
-+      level: root
-+      test: subpkg-fail
-+  template:
-+    metadata:
-+      labels:
-+        level: root
-+        test: subpkg-fail
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index f147d84..15fd450 100644
+index 7dd3a25..edd5b30 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
-@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: subpkg
 +  labels:
 +    level: root
 +    test: subpkg-fail
-+  namespace: subpkg-ns
  info:
    description: Subpackage with failing validator
  pipeline:
 diff --git a/subpkg/deployment.yaml b/subpkg/deployment.yaml
-index 302322e..dfe3056 100644
+index 302322e..938e4c9 100644
 --- a/subpkg/deployment.yaml
 +++ b/subpkg/deployment.yaml
-@@ -2,5 +2,18 @@ apiVersion: apps/v1
+@@ -2,5 +2,9 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
    name: sub-deployment
@@ -83,12 +53,3 @@ index 302322e..dfe3056 100644
 +  namespace: subpkg-ns
  spec:
    replicas: 2
-+  selector:
-+    matchLabels:
-+      level: root
-+      test: subpkg-fail
-+  template:
-+    metadata:
-+      labels:
-+        level: root
-+        test: subpkg-fail

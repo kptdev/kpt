@@ -7,7 +7,7 @@ metadata:
   name: save-on-render-failure
 pipeline:
   mutators:
-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
     configMap:
       namespace: staging
   - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4

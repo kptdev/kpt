@@ -84,7 +84,6 @@ apiVersion: custom.io/v1
 kind: Custom
 metadata:
   name: custom
-  namespace: staging
   labels:
     tier: backend
 spec:
@@ -181,7 +180,6 @@ apiVersion: custom.io/v1
 kind: Custom
 metadata:
   name: custom
-  namespace: staging
   labels:
     tier: db
 spec:

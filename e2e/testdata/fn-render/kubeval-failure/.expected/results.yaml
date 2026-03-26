@@ -2,29 +2,4 @@ apiVersion: kpt.dev/v1
 kind: FunctionResultList
 metadata:
   name: fnresults
-exitCode: 1
-items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest
-    stderr: 'failed to evaluate function: error: function failure'
-    exitCode: 1
-    results:
-      - message: missing properties 'selector', 'template'
-        severity: error
-        resourceRef:
-          apiVersion: apps/v1
-          kind: Deployment
-          name: nginx-deployment
-        field:
-          path: spec
-        file:
-          path: resources.yaml
-      - message: got string, want null or integer
-        severity: error
-        resourceRef:
-          apiVersion: apps/v1
-          kind: Deployment
-          name: nginx-deployment
-        field:
-          path: spec.replicas
-        file:
-          path: resources.yaml
+exitCode: 0

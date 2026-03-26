@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -82,15 +82,17 @@ data: {foo: bar}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			pkgPath := os.TempDir()
 			if c.configFileContent != "" {
 				tmp, err := os.CreateTemp("", "kpt-pipeline-*")
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")
-				c.fn.ConfigPath = path.Base(tmp.Name())
+				c.fn.ConfigPath = filepath.Base(tmp.Name())
+				pkgPath = filepath.Dir(tmp.Name())
 			}
-			fsys := filesys.MakeFsOnDisk()
-			cn, err := newFnConfig(fsys, &c.fn, types.UniquePath(os.TempDir()))
+			cn, err := newFnConfig(fsys, &c.fn, types.UniquePath(pkgPath))
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")

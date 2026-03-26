@@ -26,6 +26,7 @@ import (
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/internal/util/render"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -136,6 +137,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		Output:         output,
 		RunnerOptions:  r.RunnerOptions,
 		FileSystem:     filesys.FileSystemOrOnDisk{},
+		Runtime:        kptops.NewSimpleFunctionRuntime(),
 	}
 	if _, err := executor.Execute(r.ctx); err != nil {
 		return err

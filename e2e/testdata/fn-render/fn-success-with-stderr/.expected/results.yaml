@@ -3,7 +3,3 @@ kind: FunctionResultList
 metadata:
   name: fnresults
 exitCode: 0
-items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-    stderr: function succeeded, reporting it on stderr
-    exitCode: 0

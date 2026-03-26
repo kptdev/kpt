@@ -32,7 +32,9 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Skip("skipping symlink test; user likely lacks privilege to create symlinks on Windows")
+	}
 
 	// verify the branch ref is set to the correct value
 	r := NewRunner(fake.CtxWithDefaultPrinter(), "kpt")

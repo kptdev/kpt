@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	otiai10copy "github.com/otiai10/copy"
 )
 
 func runCommand(cmd *exec.Cmd) (string, string, error) {
@@ -39,8 +41,7 @@ func getCommand(pwd, name string, arg []string) *exec.Cmd {
 }
 
 func copyDir(src, dst string) error {
-	_, _, err := runCommand(getCommand("", "cp", []string{"-r", src, dst}))
-	return err
+	return otiai10copy.Copy(src, dst)
 }
 
 func gitInit(d string) error {
