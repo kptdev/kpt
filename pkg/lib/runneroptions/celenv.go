@@ -36,6 +36,10 @@ type CELEnvironment struct {
 }
 
 // NewCELEnvironment creates a new CELEnvironment with the standard KRM variable bindings.
+// It includes cel-go built-in extensions for strings, sets, lists and comprehensions.
+// Note: k8s.io/apiserver CEL library extensions (IP, CIDR, Quantity, SemVer) are intentionally
+// excluded because that dependency causes significant binary size increases and CI build failures.
+// The cel-go built-in extensions are sufficient for KRM resource filtering use cases.
 func NewCELEnvironment() (*CELEnvironment, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
