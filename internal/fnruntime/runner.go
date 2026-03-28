@@ -480,6 +480,42 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 
 	var node *yaml.RNode
 	switch {
+	case f.ResourceRef != nil:
+		// Handle resource reference
+		resources, err := fsys.ReadFile(string(pkgPath))
+		if err != nil {
+			return nil, errors.E(op, fn,
+				fmt.Errorf("failed to read package resources: %w", err))
+		}
+
+		nodes, err := yaml.Parse(string(resources))
+		if err != nil {
+			return nil, errors.E(op, fn,
+				fmt.Errorf("failed to parse package resources: %w", err))
+		}
+
+		// Find the referenced resource
+		elements, err := nodes.Elements()
+		if err != nil {
+			return nil, errors.E(op, fn, err)
+		}
+
+		for _, res := range elements {
+			meta, err := res.GetMeta()
+			if err != nil {
+				continue
+			}
+
+			if meta.Name == f.ResourceRef.Name &&
+				meta.Namespace == f.ResourceRef.Namespace &&
+				meta.Kind == f.ResourceRef.Kind {
+				return res, nil
+			}
+		}
+		return nil, errors.E(op, fn,
+			fmt.Errorf("resource not found: %s/%s/%s",
+				f.ResourceRef.Kind, f.ResourceRef.Namespace, f.ResourceRef.Name))
+
 	case f.ConfigPath != "":
 		path := filepath.Join(string(pkgPath), f.ConfigPath)
 		file, err := fsys.Open(path)
