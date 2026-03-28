@@ -53,7 +53,7 @@ func NewCELEnvironment() (*CELEnvironment, error) {
 		k8scellib.IP(),
 		k8scellib.CIDR(),
 		k8scellib.Quantity(),
-		k8scellib.SemVer(),
+		k8scellib.SemverLib(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
