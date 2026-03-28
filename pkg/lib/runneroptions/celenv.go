@@ -21,6 +21,7 @@ import (
 	"github.com/google/cel-go/cel"
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/ext"
+	k8scellib "k8s.io/apiserver/pkg/cel/library"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -36,10 +37,8 @@ type CELEnvironment struct {
 }
 
 // NewCELEnvironment creates a new CELEnvironment with the standard KRM variable bindings.
-// It includes cel-go built-in extensions for strings, sets, lists and comprehensions.
-// Note: k8s.io/apiserver CEL library extensions (IP, CIDR, Quantity, SemVer) are intentionally
-// excluded because that dependency causes significant binary size increases and CI build failures.
-// The cel-go built-in extensions are sufficient for KRM resource filtering use cases.
+// Includes cel-go built-in extensions and k8s-specific validators (IP, CIDR, Quantity, SemVer)
+// from k8s.io/apiserver/pkg/cel/library for full Kubernetes CEL compatibility.
 func NewCELEnvironment() (*CELEnvironment, error) {
 	env, err := cel.NewEnv(
 		cel.Variable("resources", cel.ListType(cel.DynType)),
@@ -51,6 +50,10 @@ func NewCELEnvironment() (*CELEnvironment, error) {
 		ext.Sets(),
 		ext.TwoVarComprehensions(),
 		ext.Lists(ext.ListsVersion(3)),
+		k8scellib.IP(),
+		k8scellib.CIDR(),
+		k8scellib.Quantity(),
+		k8scellib.SemVer(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
