@@ -132,3 +132,29 @@ func TestEvaluateCondition_Immutability(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, originalYAML, afterYAML, "CEL evaluation should not mutate input resources")
 }
+
+func TestEvaluateCondition_MissingMetadata(t *testing.T) {
+	env := newTestEnv(t)
+
+	// Resource with no metadata at all
+	noMetadata, err := yaml.Parse("apiVersion: v1\nkind: ConfigMap\ndata:\n  key: value")
+	require.NoError(t, err)
+
+	// Resource with metadata but no name
+	noName, err := yaml.Parse("apiVersion: v1\nkind: ConfigMap\nmetadata: {}\ndata:\n  key: other")
+	require.NoError(t, err)
+
+	resources := []*yaml.RNode{noMetadata, noName}
+
+	// Should not error — missing metadata.name defaults to ""
+	result, err := env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "ConfigMap" && r.metadata.name == "test-config")`, resources)
+	require.NoError(t, err)
+	assert.False(t, result, "no resource should match when metadata.name is missing")
+
+	// kind check should still work
+	result, err = env.EvaluateCondition(context.Background(),
+		`resources.exists(r, r.kind == "ConfigMap")`, resources)
+	require.NoError(t, err)
+	assert.True(t, result)
+}

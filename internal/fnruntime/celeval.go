@@ -16,6 +16,6 @@ package fnruntime
 
 import "github.com/kptdev/kpt/pkg/lib/runneroptions"
 
-// CELEvaluator is an alias for runneroptions.CELEnvironment so that runner.go
-// can reference it within the fnruntime package without an import cycle.
+// CELEvaluator is a type alias for runneroptions.CELEnvironment, re-exported
+// through the fnruntime package for convenience.
 type CELEvaluator = runneroptions.CELEnvironment
