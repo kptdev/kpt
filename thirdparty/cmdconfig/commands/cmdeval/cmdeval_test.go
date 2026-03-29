@@ -432,6 +432,7 @@ apiVersion: v1
 				r.runFns.Function = nil
 				r.runFns.FnConfig = nil
 				r.runFns.RunnerOptions.ResolveToImage = nil
+				r.runFns.RunnerOptions.CELEnvironment = nil
 				tt.expectedStruct.FnConfigPath = tt.fnConfigPath
 				if !assert.Equal(t, *tt.expectedStruct, r.runFns) {
 					t.FailNow()
