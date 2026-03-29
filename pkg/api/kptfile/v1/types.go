@@ -363,15 +363,16 @@ type Function struct {
 	Exclusions []Selector `yaml:"exclude,omitempty" json:"exclude,omitempty"`
 
 	// `Condition` is an optional CEL expression that determines whether this
-	// function should be executed. The expression is evaluated against the KRM
-	// resources in the package and should return a boolean value.
+	// function should be executed. The expression is evaluated against the list
+	// of KRM resources passed to this function step (after `Selectors` and
+	// `Exclude` have been applied) and should return a boolean value.
 	// If omitted or evaluates to true, the function executes normally.
 	// If evaluates to false, the function is skipped.
-	// 
-	// Example: Check if a specific ConfigMap exists:
+	//
+	// Example: Check if a specific ConfigMap exists among the selected resources:
 	//   condition: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'my-config')"
 	//
-	// Example: Check resource count:
+	// Example: Check resource count among the selected resources:
 	//   condition: "resources.filter(r, r.kind == 'Deployment').size() > 0"
 	Condition string `yaml:"condition,omitempty" json:"condition,omitempty"`
 }

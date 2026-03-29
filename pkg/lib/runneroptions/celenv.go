@@ -135,8 +135,22 @@ func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 	if _, ok := result["kind"]; !ok {
 		result["kind"] = ""
 	}
-	if _, ok := result["metadata"]; !ok {
-		result["metadata"] = map[string]interface{}{}
+	// Ensure metadata and its common nested keys exist so expressions like
+	// r.metadata.name and r.metadata.namespace do not fail on missing keys.
+	if mdVal, ok := result["metadata"]; ok {
+		if mdMap, ok := mdVal.(map[string]interface{}); ok {
+			if _, ok := mdMap["name"]; !ok {
+				mdMap["name"] = ""
+			}
+			if _, ok := mdMap["namespace"]; !ok {
+				mdMap["namespace"] = ""
+			}
+			result["metadata"] = mdMap
+		} else {
+			result["metadata"] = map[string]interface{}{"name": "", "namespace": ""}
+		}
+	} else {
+		result["metadata"] = map[string]interface{}{"name": "", "namespace": ""}
 	}
 	return result, nil
 }

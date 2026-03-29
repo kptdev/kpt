@@ -158,6 +158,9 @@ func NewRunner(
 
 	// Set condition; the shared CEL environment from opts is used at evaluation time.
 	if f.Condition != "" {
+		if opts.CELEnvironment == nil {
+			return nil, fmt.Errorf("condition specified for function %q but no CEL environment is configured in RunnerOptions", f.Image)
+		}
 		fr.condition = f.Condition
 		fr.celEnv = opts.CELEnvironment
 	}
