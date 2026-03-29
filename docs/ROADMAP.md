@@ -17,8 +17,7 @@ A few areas of work are ongoing. (This is not exhaustive.)
 
 ### Package orchestration
 
-Porch is the recommended approach for package orchestration. See the
-[package orchestration documentation](https://docs.nephio.org/docs/porch/) for more details.
+Package orchestration (Porch) is now part of the Nephio project. For porch-related functionality, refer to the [Nephio documentation](https://docs.nephio.org/docs/porch/).
 
 ### Explore various options for function runtime
 
