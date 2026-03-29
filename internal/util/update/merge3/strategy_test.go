@@ -23,14 +23,14 @@ import (
 )
 
 func TestEqualWillSkip(t *testing.T) {
-	orig := yaml.MustParse(`
-apiVersion: v1
+	origYAML := `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: test
 data:
   foo.txt: "bar"
-`)
+`
+	orig := yaml.MustParse(origYAML)
 	dest := orig.Copy()
 
 	strategy := GetHandlingStrategy(orig, nil, dest)
@@ -38,14 +38,14 @@ data:
 }
 
 func TestNotEqualWillKeepDest(t *testing.T) {
-	orig := yaml.MustParse(`
-apiVersion: v1
+	origYAML := `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: test
 data:
   foo.txt: "bar"
-`)
+`
+	orig := yaml.MustParse(origYAML)
 	dest := orig.Copy()
 	dest.SetDataMap(map[string]string{"foo.txt": "baz"})
 
