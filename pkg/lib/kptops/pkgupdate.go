@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package kptops contains implementations of kpt operations
 package kptops
 
 import (
@@ -30,171 +31,237 @@ import (
 	"k8s.io/klog/v2"
 )
 
-// PkgUpdateOpts are options for invoking kpt PkgUpdate
+// Constants for package update operations
+const (
+	// KptfileName is the name of the kpt configuration file
+	KptfileName = "Kptfile"
+	// EmptyTempDirPrefix is the prefix for empty temporary directories
+	EmptyTempDirPrefix = "kpt-empty-"
+	// RootPackagePath represents the root package path
+	RootPackagePath = "."
+)
+
+// PkgUpdateOpts are options for invoking kpt PkgUpdate.
 type PkgUpdateOpts struct {
+	// Strategy defines the update strategy to use. Currently unused but reserved for future implementation.
 	Strategy string
 }
 
-// PkgUpdate is a wrapper around `kpt pkg update`, running it against the package in packageDir
-func PkgUpdate(ctx context.Context, ref string, packageDir string, _ PkgUpdateOpts) error {
-	// TODO: Printer should be a logr
+// PkgUpdate updates a package from its upstream source.
+// It fetches the latest version of the upstream package and merges changes with the local package.
+//
+// Parameters:
+//   - ctx: Context for cancellation and logging
+//   - ref: Git reference to update to (branch, tag, or commit). If empty, uses the current reference.
+//   - packageDir: Path to the local package directory
+//   - opts: Update options (currently only strategy placeholder)
+//
+// Returns an error if the update fails.
+func PkgUpdate(ctx context.Context, ref string, packageDir string, opts PkgUpdateOpts) error {
+	// Validate inputs
+	if packageDir == "" {
+		return fmt.Errorf("package directory cannot be empty")
+	}
+
+	// Initialize printer with proper context
 	pr := printer.New(os.Stdout, os.Stderr)
 	ctx = printer.WithContext(ctx, pr)
 
-	// This code is based on the kpt pkg update code.
+	// Load and validate package configuration
+	kf, err := loadAndValidateKptfile(packageDir)
+	if err != nil {
+		return fmt.Errorf("failed to load package configuration: %w", err)
+	}
+
+	// Update reference if provided
+	if ref != "" {
+		kf.Upstream.Git.Ref = ref
+	}
+
+	// Save updated Kptfile
+	if err = kptfileutil.WriteFile(packageDir, kf); err != nil {
+		return fmt.Errorf("failed to write Kptfile: %w", err)
+	}
+
+	// Perform update based on upstream type
+	if err := performUpdate(ctx, packageDir, kf); err != nil {
+		return fmt.Errorf("failed to perform update: %w", err)
+	}
+
+	return nil
+}
+
+// loadAndValidateKptfile loads and validates the Kptfile from the package directory.
+// It ensures the package has a valid upstream Git reference.
+func loadAndValidateKptfile(packageDir string) (*kptfilev1.KptFile, error) {
+	if packageDir == "" {
+		return nil, fmt.Errorf("package directory cannot be empty")
+	}
 
 	fsys := os.DirFS(packageDir)
 
-	f, err := fsys.Open("Kptfile")
+	f, err := fsys.Open(KptfileName)
 	if err != nil {
-		return fmt.Errorf("error opening kptfile: %w", err)
+		return nil, fmt.Errorf("error opening Kptfile: %w", err)
 	}
 	defer f.Close()
 
 	kf, err := kptfileutil.DecodeKptfile(f)
 	if err != nil {
-		return fmt.Errorf("error parsing kptfile: %w", err)
+		return nil, fmt.Errorf("error parsing Kptfile: %w", err)
 	}
 
-	if kf.Upstream == nil || kf.Upstream.Git == nil {
-		return fmt.Errorf("package must have an upstream reference")
+	if kf.Upstream == nil {
+		return nil, fmt.Errorf("package must have an upstream reference")
 	}
 
-	// originalRootKfRef := rootKf.Upstream.Git.Ref
-	if ref != "" {
-		kf.Upstream.Git.Ref = ref
-	}
-	// if u.Strategy != "" {
-	// 	rootKf.Upstream.UpdateStrategy = u.Strategy
-	// }
-	if err = kptfileutil.WriteFile(packageDir, kf); err != nil {
-		return err // errors.E(op, u.Pkg.UniquePath, err)
+	if kf.Upstream.Git == nil {
+		return nil, fmt.Errorf("package upstream must have Git configuration")
 	}
 
-	// var updatedDigest string
-	var updatedRepoSpec git.RepoSpec
-	var updatedDir string
-	var originDir string
+	if kf.Upstream.Git.Repo == "" {
+		return nil, fmt.Errorf("package upstream Git repository cannot be empty")
+	}
 
-	//nolint:gocritic
+	return kf, nil
+}
+
+// performUpdate handles the update process based on the upstream type.
+// It delegates to the appropriate update implementation based on the upstream type.
+func performUpdate(ctx context.Context, packageDir string, kf *kptfilev1.KptFile) error {
+	if kf == nil {
+		return fmt.Errorf("kptfile cannot be nil")
+	}
+
 	switch kf.Upstream.Type {
 	case kptfilev1.GitOrigin:
-		g := kf.Upstream.Git
-		upstream := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
-		klog.Infof("Fetching upstream from %s@%s\n", upstream.OrgRepo, upstream.Ref)
-		// pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-		// if err := fetch.ClonerUsingGitExec(ctx, updated); err != nil {
-		// 	return errors.E(op, p.UniquePath, err)
-		// }
-		updated := *upstream
-		if err := fetch.NewCloner(&updated).ClonerUsingGitExec(ctx); err != nil {
-			return err
-		}
-		defer os.RemoveAll(updated.AbsPath())
-		updatedDir = updated.AbsPath()
-		updatedRepoSpec = updated
+		return updateFromGit(ctx, packageDir, kf)
+	case kptfilev1.GenericOrigin:
+		return fmt.Errorf("Generic origin updates are not yet implemented")
+	default:
+		return fmt.Errorf("unsupported upstream type: %s", kf.Upstream.Type)
+	}
+}
 
-		// var origin repoClone
-		if kf.UpstreamLock != nil {
-			gLock := kf.UpstreamLock.Git
-			originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
-			klog.Infof("Fetching origin from %s@%s\n", originRepoSpec.OrgRepo, originRepoSpec.Ref)
-			// pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
-			// if err := fetch.ClonerUsingGitExec(ctx, originRepoSpec); err != nil {
-			// 	return errors.E(op, p.UniquePath, err)
-			// }
-			if err := fetch.NewCloner(originRepoSpec).ClonerUsingGitExec(ctx); err != nil {
-				return err
-			}
-			originDir = originRepoSpec.AbsPath()
-		} else {
-			dir, err := os.MkdirTemp("", "kpt-empty-")
-			if err != nil {
-				return fmt.Errorf("failed to create tempdir: %w", err)
-			}
-			originDir = dir
-			// origin, err = newNilRepoClone()
-			// if err != nil {
-			// 	return errors.E(op, p.UniquePath, err)
-			// }
-		}
-		defer os.RemoveAll(originDir)
-
-		// case kptfilev1.OciOrigin:
-		// 	options := &[]crane.Option{crane.WithAuthFromKeychain(gcrane.Keychain)}
-		// 	updatedDir, err = ioutil.TempDir("", "kpt-get-")
-		// 	if err != nil {
-		// 		return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
-		// 	}
-		// 	defer os.RemoveAll(updatedDir)
-
-		// 	if err = fetch.ClonerUsingOciPull(ctx, kf.Upstream.Oci.Image, &updatedDigest, updatedDir, options); err != nil {
-		// 		return errors.E(op, p.UniquePath, err)
-		// 	}
-
-		// 	if kf.UpstreamLock != nil {
-		// 		originDir, err = ioutil.TempDir("", "kpt-get-")
-		// 		if err != nil {
-		// 			return errors.E(op, errors.Internal, fmt.Errorf("error creating temp directory: %w", err))
-		// 		}
-		// 		defer os.RemoveAll(originDir)
-
-		// 		if err = fetch.ClonerUsingOciPull(ctx, kf.UpstreamLock.Oci.Image, nil, originDir, options); err != nil {
-		// 			return errors.E(op, p.UniquePath, err)
-		// 		}
-		// 	} else {
-		// 		origin, err := newNilRepoClone()
-		// 		if err != nil {
-		// 			return errors.E(op, p.UniquePath, err)
-		// 		}
-		// 		originDir = origin.AbsPath()
-		// 		defer os.RemoveAll(originDir)
-		// 	}
+// updateFromGit performs update from a Git repository.
+// It fetches both the upstream and origin repositories, then merges the changes.
+func updateFromGit(ctx context.Context, packageDir string, kf *kptfilev1.KptFile) error {
+	if kf.Upstream == nil || kf.Upstream.Git == nil {
+		return fmt.Errorf("package must have a Git upstream reference")
 	}
 
-	// s := stack.New()
-	// s.Push(".")
-
-	// for s.Len() > 0 {
-	{
-		// relPath := s.Pop()
-		relPath := "."
-		localPath := filepath.Join(packageDir, relPath)
-		updatedPath := filepath.Join(updatedDir, relPath)
-		originPath := filepath.Join(originDir, relPath)
-		isRoot := false
-		if relPath == "." {
-			isRoot = true
+	// Fetch updated upstream
+	updatedRepoSpec, updatedDir, err := fetchUpstreamGit(ctx, kf.Upstream.Git)
+	if err != nil {
+		return fmt.Errorf("failed to fetch upstream: %w", err)
+	}
+	defer func() {
+		if cleanupErr := os.RemoveAll(updatedDir); cleanupErr != nil {
+			klog.Warningf("Failed to cleanup updated directory %s: %v", updatedDir, cleanupErr)
 		}
+	}()
 
-		// if err := u.updatePackage(ctx, relPath, localPath, updatedPath, originPath, isRoot); err != nil {
-		// 	return errors.E(op, p.UniquePath, err)
-		// }
-
-		updateOptions := updatetypes.Options{
-			RelPackagePath: relPath,
-			LocalPath:      localPath,
-			UpdatedPath:    updatedPath,
-			OriginPath:     originPath,
-			IsRoot:         isRoot,
+	// Fetch origin if available
+	originDir, err := fetchOriginGit(ctx, kf.UpstreamLock)
+	if err != nil {
+		return fmt.Errorf("failed to fetch origin: %w", err)
+	}
+	defer func() {
+		if cleanupErr := os.RemoveAll(originDir); cleanupErr != nil {
+			klog.Warningf("Failed to cleanup origin directory %s: %v", originDir, cleanupErr)
 		}
-		updater := update.ResourceMergeUpdater{}
-		if err := updater.Update(updateOptions); err != nil {
-			return err
-		}
+	}()
 
-		// paths, err := pkgutil.FindSubpackagesForPaths(pkg.Remote, false,
-		// 	localPath, updatedPath, originPath)
-		// if err != nil {
-		// 	return errors.E(op, p.UniquePath, err)
-		// }
-		// for _, path := range paths {
-		// 	s.Push(filepath.Join(relPath, path))
-		// }
+	// Perform the actual update
+	if err := updatePackageResources(ctx, packageDir, updatedDir, originDir); err != nil {
+		return fmt.Errorf("failed to update package resources: %w", err)
 	}
 
+	// Update the upstream lock
 	if err := kptfileutil.UpdateUpstreamLockFromGit(packageDir, &updatedRepoSpec); err != nil {
-		return err // errors.E(op, p.UniquePath, err)
+		return fmt.Errorf("failed to update upstream lock: %w", err)
+	}
+
+	return nil
+}
+
+// fetchUpstreamGit fetches the upstream Git repository.
+// It clones the repository and returns the repository specification and local path.
+func fetchUpstreamGit(ctx context.Context, upstream *kptfilev1.Git) (git.RepoSpec, string, error) {
+	if upstream == nil {
+		return git.RepoSpec{}, "", fmt.Errorf("upstream Git configuration cannot be nil")
+	}
+
+	if upstream.Repo == "" {
+		return git.RepoSpec{}, "", fmt.Errorf("upstream repository cannot be empty")
+	}
+
+	upstreamSpec := &git.RepoSpec{
+		OrgRepo: upstream.Repo,
+		Path:    upstream.Directory,
+		Ref:     upstream.Ref,
+	}
+
+	klog.Infof("Fetching upstream from %s@%s", upstreamSpec.OrgRepo, upstreamSpec.Ref)
+
+	updated := *upstreamSpec
+	if err := fetch.NewCloner(&updated).ClonerUsingGitExec(ctx); err != nil {
+		return git.RepoSpec{}, "", fmt.Errorf("failed to fetch upstream: %w", err)
+	}
+
+	return updated, updated.AbsPath(), nil
+}
+
+// fetchOriginGit fetches the origin Git repository if available.
+// If no upstream lock exists, it creates an empty temporary directory.
+func fetchOriginGit(ctx context.Context, upstreamLock *kptfilev1.Locator) (string, error) {
+	if upstreamLock == nil || upstreamLock.Git == nil {
+		// Create empty directory for origin when no lock exists
+		dir, err := os.MkdirTemp("", EmptyTempDirPrefix)
+		if err != nil {
+			return "", fmt.Errorf("failed to create temporary directory: %w", err)
+		}
+		klog.Infof("No upstream lock found, using empty origin directory: %s", dir)
+		return dir, nil
+	}
+
+	if upstreamLock.Git.Repo == "" {
+		return "", fmt.Errorf("upstream lock repository cannot be empty")
+	}
+
+	originSpec := &git.RepoSpec{
+		OrgRepo: upstreamLock.Git.Repo,
+		Path:    upstreamLock.Git.Directory,
+		Ref:     upstreamLock.Git.Commit,
+	}
+
+	klog.Infof("Fetching origin from %s@%s", originSpec.OrgRepo, originSpec.Ref)
+
+	if err := fetch.NewCloner(originSpec).ClonerUsingGitExec(ctx); err != nil {
+		return "", fmt.Errorf("failed to fetch origin: %w", err)
+	}
+
+	return originSpec.AbsPath(), nil
+}
+
+// updatePackageResources updates the package resources using the merge updater.
+// It performs the actual three-way merge between local, updated, and origin resources.
+func updatePackageResources(ctx context.Context, packageDir, updatedDir, originDir string) error {
+	if packageDir == "" || updatedDir == "" || originDir == "" {
+		return fmt.Errorf("package directory paths cannot be empty")
+	}
+
+	updateOptions := updatetypes.Options{
+		RelPackagePath: RootPackagePath,
+		LocalPath:      filepath.Join(packageDir, RootPackagePath),
+		UpdatedPath:    filepath.Join(updatedDir, RootPackagePath),
+		OriginPath:     filepath.Join(originDir, RootPackagePath),
+		IsRoot:         true,
+	}
+
+	updater := update.ResourceMergeUpdater{}
+	if err := updater.Update(updateOptions); err != nil {
+		return fmt.Errorf("failed to update package resources: %w", err)
 	}
 
 	return nil
