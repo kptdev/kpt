@@ -228,13 +228,13 @@ func NewConfigMap(data map[string]string) (*yaml.RNode, error) {
 		return nil, nil
 	}
 	// create a ConfigMap only for configMap config
-	configMap := yaml.MustParse(`
-apiVersion: v1
+	configMapYAML := `apiVersion: v1
 kind: ConfigMap
 metadata:
   name: function-input
 data: {}
-`)
+`
+	configMap := yaml.MustParse(configMapYAML)
 	if err := node.VisitFields(func(node *yaml.MapNode) error {
 		v := node.Value.YNode()
 		v.Tag = yaml.NodeTagString
