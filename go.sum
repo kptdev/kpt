@@ -118,8 +118,8 @@ github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uq
 github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2 h1:PZ4TcVzgad1OFuH4gHg4j2LKC2KXTuzfsQWil2knSlk=
 github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2/go.mod h1:S8Vrp3yPDp4ga2TOPfZzoO/Y7UGF7KPHS1S0taJ0XOc=
-github.com/kptdev/krm-functions-sdk/go/fn v1.0.0 h1:2xTAEw0/mWNnPNvBR7K3rvrnjmBMxVbtTyu2ZHJjQxo=
-github.com/kptdev/krm-functions-sdk/go/fn v1.0.0/go.mod h1:GxUbq9hEUYUtl2rGyQfzxz++xV+dSRrHpRxsx5l0PvA=
+github.com/kptdev/krm-functions-sdk/go/fn v1.0.2 h1:g9N6SW5axEXMagUbHliH14XpfvvvwkAVDLcN3ApVh2M=
+github.com/kptdev/krm-functions-sdk/go/fn v1.0.2/go.mod h1:NSfdmtQ9AwNg5wdS9gE/H9SQs7Vomzq7E7N9hyEju1U=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
