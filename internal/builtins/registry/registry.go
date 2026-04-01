@@ -16,9 +16,10 @@ package registry
 
 import (
 	"io"
-	"log"
 	"strings"
 	"sync"
+
+	"k8s.io/klog/v2"
 )
 
 type BuiltinFunction interface {
@@ -41,9 +42,13 @@ func Lookup(imageName string) BuiltinFunction {
 	mu.RLock()
 	defer mu.RUnlock()
 	normalized := normalizeImage(imageName)
+	if strings.HasSuffix(imageName, ":latest") ||
+		strings.HasSuffix(imageName, "@sha256:") {
+		return nil
+	}
 	fn := registry[normalized]
 	if fn != nil && imageName != normalized {
-		log.Printf("WARNING: builtin function %q is being used instead of the requested image %q. "+
+		klog.Warningf("WARNING: builtin function %q is being used instead of the requested image %q. "+
 			"The built-in implementation may differ from the pinned version.", normalized, imageName)
 	}
 	return fn

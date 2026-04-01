@@ -14,6 +14,8 @@
 package starlark
 
 import (
+	"fmt"
+
 	"github.com/kptdev/krm-functions-sdk/go/fn"
 )
 
@@ -34,7 +36,7 @@ func Process(resourceList *fn.ResourceList) (bool, error) {
 				Severity: fn.Error,
 			},
 		}
-		return false, err
+		return false, fmt.Errorf("failed to evaluate function: error: %v", err)
 	}
 
 	return true, nil

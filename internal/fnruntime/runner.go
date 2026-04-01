@@ -225,6 +225,12 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
 		}
+		// for builtin functions, print stderr from fnResult if available
+		if fr.fnResult.Stderr != "" {
+			printFnStderr(fr.ctx, fr.fnResult.Stderr)
+			pr.Printf("  Exit code: %d\n\n", fr.fnResult.ExitCode)
+			return nil, errors.ErrAlreadyHandled
+		}
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
@@ -280,6 +286,9 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		if goerrors.As(err, &execErr) {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
+		} else {
+			// builtin functions don't return ExecError, populate stderr from error message
+			fnResult.Stderr = err.Error()
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)

@@ -49,7 +49,7 @@ type Run struct {
 func (sr *Run) Config(fnCfg *fn.KubeObject) error {
 	switch {
 	case fnCfg.IsEmpty():
-		return fmt.Errorf("FunctionConfig is missing. Expect `ConfigMap` or `StarlarkRun`")
+		return fmt.Errorf("FunctionConfig is missing. Expect `ConfigMap`, `StarlarkRun`, or `Run`")
 	case fnCfg.IsGVK("", configMapAPIVersion, configMapKind):
 		cm := &corev1.ConfigMap{}
 		if err := fnCfg.As(cm); err != nil {
@@ -71,9 +71,10 @@ func (sr *Run) Config(fnCfg *fn.KubeObject) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("`functionConfig` must be either %v or %v, but we got: %v",
+		return fmt.Errorf("`functionConfig` must be either %v, %v, or %v but we got: %v",
 			schema.FromAPIVersionAndKind(configMapAPIVersion, configMapKind).String(),
 			schema.FromAPIVersionAndKind(starlarkRunAPIVersion, starlarkRunKind).String(),
+			schema.FromAPIVersionAndKind(starlarkRunAPIVersion, "Run").String(),
 			schema.FromAPIVersionAndKind(fnCfg.GetAPIVersion(), fnCfg.GetKind()).String())
 	}
 

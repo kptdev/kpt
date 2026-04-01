@@ -87,12 +87,12 @@ func (r *Replacements) Config(functionConfig *fn.KubeObject) error {
 func (r *Replacements) Process(rl *fn.ResourceList) (bool, error) {
 	if err := r.Config(rl.FunctionConfig); err != nil {
 		rl.LogResult(err)
-		return false, nil
+		return false, err
 	}
 	transformedItems, err := r.Transform(rl.Items)
 	if err != nil {
 		rl.LogResult(err)
-		return false, nil
+		return false, err
 	}
 	rl.Items = transformedItems
 	return true, nil
