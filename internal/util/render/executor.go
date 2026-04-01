@@ -246,6 +246,11 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 
 // setRenderConditionWithStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
 func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
+	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message))
+}
+
+// setRenderCondition reads the Kptfile at pkgPath, sets the Rendered condition, and writes it back.
+func setRenderCondition(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition) {
 	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
 	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
 	if err != nil {
