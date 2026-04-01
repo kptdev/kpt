@@ -33,8 +33,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
-const rootString = "/root"
-const subPkgString = "/root/subpkg"
+// absPath returns a forward-slash absolute path for use with filesys.MakeFsInMemory(),
+// which only understands Unix-style paths regardless of host OS.
+func absPath(suffix string) string {
+	return "/" + strings.ReplaceAll(suffix, string(filepath.Separator), "/")
+}
+
+var rootString = "/root"
+var subPkgString = "/root/subpkg"
 
 func TestPathRelToRoot(t *testing.T) {
 	tests := []struct {
@@ -257,11 +263,11 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 	assert.NoError(t, err)
 
 	childPkgPath := "/root/subpkg/child"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(childPkgPath)
 	assert.NoError(t, err)
 
 	siblingPkgPath := "/root/sibling"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(siblingPkgPath)
 	assert.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
@@ -388,7 +394,7 @@ metadata:
 
 	t.Run("Error in LocalResources", func(t *testing.T) {
 		// Simulate an error in LocalResources by creating a package with no Kptfile
-		invalidPkgPath := "/invalid"
+		invalidPkgPath := absPath("invalid")
 		err := mockFileSystem.Mkdir(invalidPkgPath)
 		assert.NoError(t, err)
 
