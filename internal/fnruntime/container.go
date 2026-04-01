@@ -31,8 +31,6 @@ import (
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/regclient/regclient"
-	regclientref "github.com/regclient/regclient/types/ref"
 	"golang.org/x/mod/semver"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
 )
@@ -98,29 +96,6 @@ type ContainerFn struct {
 	// FnResult is used to store the information about the result from
 	// the function.
 	FnResult *fnresult.Result
-}
-
-// RegClientLister is a TagLister using the regclient module to list remote OCI tags.
-type RegClientLister struct {
-	client *regclient.RegClient
-}
-
-var _ TagLister = &RegClientLister{}
-
-func (l *RegClientLister) List(ctx context.Context, image string) ([]string, error) {
-	ref, err := regclientref.New(image)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() { _ = l.client.Close(ctx, ref) }()
-
-	tagList, err := l.client.TagList(ctx, ref)
-	if err != nil {
-		return nil, err
-	}
-
-	return tagList.GetTags()
 }
 
 func (r ContainerRuntime) GetBin() string {
@@ -403,7 +378,7 @@ func StringToContainerRuntime(v string) (ContainerRuntime, error) {
 	case "":
 		return Docker, nil
 	default:
-		return "", fmt.Errorf("unsupported runtime: %q the runtime must be either %s or %s", v, Docker, Podman)
+		return "", fmt.Errorf("unsupported runtime: %q the runtime must be one of %v", v, []ContainerRuntime{Docker, Podman, Nerdctl})
 	}
 }
 

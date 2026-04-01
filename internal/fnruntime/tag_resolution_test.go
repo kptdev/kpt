@@ -17,6 +17,7 @@ package fnruntime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/Masterminds/semver/v3"
@@ -28,6 +29,8 @@ type fakeLister struct {
 	tags map[string][]string
 	err  string
 }
+
+var _ TagLister = &fakeLister{}
 
 func (frc *fakeLister) List(_ context.Context, image string) ([]string, error) {
 	if frc.err != "" {
@@ -46,7 +49,9 @@ func (frc *fakeLister) List(_ context.Context, image string) ([]string, error) {
 	return tags, nil
 }
 
-var _ TagLister = &fakeLister{}
+func (frc *fakeLister) Name() string {
+	return "fake"
+}
 
 func TestFilterParseSortTags(t *testing.T) {
 	testCases := map[string]struct {
@@ -126,7 +131,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "0.3.x",
 			repoTags:      tagSet,
-			expectedErr:   "no remote tag matched the version constraint",
+			expectedErr:   "no tag could be found matching the version constraint",
 		},
 		"image preserved on empty tag": {
 			functionImage: image + ":v0.3.1",
@@ -161,7 +166,7 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionImage: image,
 			functionTag:   "~0.1",
 			repoErr:       "test",
-			expectedErr:   "failed to list tags for image",
+			expectedErr:   "no tag could be found matching the version constraint",
 		},
 		"digest replaced correctly": {
 			functionImage: image + "@sha256:59a5a43c8fcafaf14b5fd4463ccb3fda61d6c0b55ff218cbb5783a29c8d6c20c",
@@ -169,15 +174,29 @@ func TestResolveFunctionImage(t *testing.T) {
 			repoTags:      tagSet,
 			expectedTag:   "v0.1.2",
 		},
+		// this case is technically impossible in a live scenario
+		"image exist but has no tags": {
+			functionImage: image,
+			functionTag:   "~0.1",
+			repoTags:      []string{},
+			expectedErr:   "no tag could be found matching the version constraint",
+		},
+		"invalid image ref": {
+			functionImage: "aaaaa~~234..=/",
+			functionTag:   "~0.1",
+			expectedErr:   "failed to parse image \"aaaaa~~234..=/\" as reference",
+		},
 	}
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			tr := &TagResolver{
-				lister: &fakeLister{
-					err: tc.repoErr,
-					tags: map[string][]string{
-						image: tc.repoTags,
+				Listers: []TagLister{
+					&fakeLister{
+						err: tc.repoErr,
+						tags: map[string][]string{
+							image: tc.repoTags,
+						},
 					},
 				},
 			}
@@ -188,6 +207,51 @@ func TestResolveFunctionImage(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, image+":"+tc.expectedTag, resolvedImage)
+		})
+	}
+}
+
+func TestAbbrevSlice(t *testing.T) {
+	tagSet := []string{"v0.1", "v0.2.3", "v0.1.2", "v0", "v0.2", "v0.1.1", "v0.2.1", "v0.2.2"}
+	var versions []*semver.Version
+	for _, tag := range tagSet {
+		versions = append(versions, semver.MustParse(tag))
+	}
+
+	testCases := []struct {
+		input    []*semver.Version
+		expected string
+	}{
+		{
+			input:    []*semver.Version{},
+			expected: "[]",
+		},
+		{
+			input:    versions[:1],
+			expected: "[v0.1]",
+		},
+		{
+			input:    versions[:2],
+			expected: "[v0.1, v0.2.3]",
+		},
+		{
+			input:    versions[:3],
+			expected: "[v0.1, v0.2.3, v0.1.2]",
+		},
+		{
+			input:    versions[:4],
+			expected: "[v0.1, v0.2.3, ..., v0]",
+		},
+		{
+			input:    versions,
+			expected: "[v0.1, v0.2.3, ..., v0.2.2]",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("len %d", len(tc.input)), func(t *testing.T) {
+			result := abbrevSlice(tc.input)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }

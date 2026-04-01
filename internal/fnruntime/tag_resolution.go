@@ -27,11 +27,13 @@ import (
 
 // TagLister is an interface for listing tags for/from a function runtime/runner
 type TagLister interface {
+	Name() string
 	List(ctx context.Context, image string) ([]string, error)
 }
 
 type TagResolver struct {
-	lister TagLister
+	// Listers is a slice of TagListers that are checked in order for a matching tag.
+	Listers []TagLister
 }
 
 // ResolveFunctionImage substitutes the `function.image` with the latest tag matching the constraint in `function.tag`.
@@ -53,20 +55,30 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		// A valid version is a valid constraint, but we don't want to waste time listing
 		// when we are given an exact version. We just return from here.
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {
-		possibleTags, err := tr.lister.List(ctx, image)
-		if err != nil {
-			return "", fmt.Errorf("failed to list tags for image %q: %w", image, err)
-		}
-
-		filteredVersions := filterParseSortTags(possibleTags)
-		for _, version := range filteredVersions {
-			if constraint.Check(version) {
-				ref.Tag = version.Original()
-				return ref.CommonName(), nil
+		for _, lister := range tr.Listers {
+			possibleTags, err := lister.List(ctx, image)
+			if err != nil {
+				klog.Errorf("failed to list tags for image %q using lister %q: %v", image, lister.Name(), err)
+				continue
 			}
+
+			if len(possibleTags) == 0 {
+				klog.Infof("no tags found for image %q with lister %q", image, lister.Name())
+				continue
+			}
+
+			filteredVersions := filterParseSortTags(possibleTags)
+			for _, version := range filteredVersions {
+				if constraint.Check(version) {
+					ref.Tag = version.Original()
+					return ref.CommonName(), nil
+				}
+			}
+
+			klog.Infof("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
 		}
 
-		return "", fmt.Errorf("no remote tag matched the version constraint %q from %s", tag, abbrevSlice(filteredVersions))
+		return "", fmt.Errorf("no tag could be found matching the version constraint %q", tag)
 	} else {
 		klog.Warningf("Tag %q could not be parsed as a semantic version (\"%s\") or constraint (\"%s\"), will use it literally",
 			tag, versionErr, constraintErr)
@@ -115,7 +127,7 @@ func abbrevSlice(slice []*semver.Version) string {
 		for i, v := range slice {
 			out[i] = v.Original()
 		}
-		return "[" + strings.Join(out, ",") + "]"
+		return "[" + strings.Join(out, ", ") + "]"
 	default:
 		return fmt.Sprintf("[%s, %s, ..., %s]",
 			slice[0].Original(), slice[1].Original(), slice[len(slice)-1].Original())
