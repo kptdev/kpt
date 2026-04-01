@@ -57,12 +57,14 @@ func TestPkgContextGenerator(t *testing.T) {
 
 			exp, err := os.ReadFile(filepath.Join("testdata", test.dir, "out.yaml"))
 			assert.NoError(t, err)
+			// Normalize line endings to LF for cross-platform comparison
+			expNormalized := bytes.ReplaceAll(exp, []byte("\r\n"), []byte("\n"))
 
 			err = pkgCtxGenerator.Run(bytes.NewReader(in), out)
 			if err != test.expErr {
 				t.Errorf("exp: %v got: %v", test.expErr, err)
 			}
-			if diff := cmp.Diff(string(exp), out.String()); diff != "" {
+			if diff := cmp.Diff(string(expNormalized), out.String()); diff != "" {
 				t.Errorf("pkg context mistmach (-want +got):\n%s", diff)
 			}
 		})
