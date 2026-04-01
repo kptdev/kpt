@@ -58,7 +58,7 @@ func (l *LocalLister) List(ctx context.Context, image string) ([]string, error) 
 	command.Stderr = stderr
 
 	if err := command.Run(); err != nil {
-		return nil, fmt.Errorf("error whilst listing local tags using %q: %w; stderr: %s", l.Binary, err, stderr.String())
+		return nil, fmt.Errorf("failed to list local tags using %q: %w; stderr: %s", l.Binary, err, stderr.String())
 	}
 
 	return linesToSlice(stdout.String()), nil
