@@ -70,7 +70,9 @@ func linesToSlice(in string) []string {
 	var out []string
 	for line := range strings.Lines(in) {
 		line = strings.TrimSpace(line)
-		out = append(out, line)
+		if line != "" {
+			out = append(out, line)
+		}
 	}
 
 	return out
