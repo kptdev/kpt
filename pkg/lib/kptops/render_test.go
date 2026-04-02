@@ -73,6 +73,9 @@ func TestRender(t *testing.T) {
 				Output:     &output,
 			}
 			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+			if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+				t.Fatalf("Failed to initialize CEL environment: %v", err)
+			}
 
 			if _, err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
 				t.Errorf("Render failed: %v", err)

@@ -166,6 +166,9 @@ type EvalFnRunner struct {
 
 func (r *EvalFnRunner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Ignore error as conditions are optional; if CEL init fails, conditions will error at runtime
+	_ = r.RunnerOptions.InitCELEnvironment()
 }
 
 func (r *EvalFnRunner) runE(c *cobra.Command, _ []string) error {
