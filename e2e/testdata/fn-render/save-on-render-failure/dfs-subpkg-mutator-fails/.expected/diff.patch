@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 80aa788..0fca116 100644
+index 80aa788..77f5c7b 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,13 +1,21 @@
+@@ -1,13 +1,35 @@
  apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
@@ -26,8 +26,22 @@ index 80aa788..0fca116 100644
 +      message: |-
 +        pkg.render: pkg ./subpkg:
 +        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
++        exitCode: 1
++        results:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++        errorResults:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index ec4ce38..d7ac408 100644
+index 7b4318a..2c39656 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,7 @@ apiVersion: kpt.dev/v1
@@ -49,3 +63,15 @@ index 302322e..98ff830 100644
 +  namespace: subpkg-ns
  spec:
    replicas: 2
+diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
+index 55ceaae..3a4003f 100644
+--- a/subpkg/starlark-fn-failure.yaml
++++ b/subpkg/starlark-fn-failure.yaml
+@@ -2,6 +2,7 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  namespace: subpkg-ns
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")

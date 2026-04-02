@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 6f2fe11..34a53c9 100644
+index 6f2fe11..c0c66f5 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,4 +4,9 @@ metadata:
+@@ -4,4 +4,35 @@ metadata:
    name: app
  pipeline:
    mutators:
@@ -13,6 +13,32 @@ index 6f2fe11..34a53c9 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - exec: ./testdata/fn-render/exec-function-stderr/function.sh
++        stderr: |
++          Hello world 0!
++          Hello world 1!
++          Hello world 2!
++          Hello world 3!
++          Hello world 4!
++          Hello world 5!
++          Hello world 6!
++          Hello world 7!
++          Hello world 8!
++          Hello world 9!
++          Hello world 10!
++          Hello world 11!
++          Hello world 12!
++          Hello world 13!
++          Hello world 14!
++          Hello world 15!
++          Hello world 16!
++          Hello world 17!
++          Hello world 18!
++          Hello world 19!
++          Hello world 20!
++        exitCode: 0
 diff --git a/resources.yaml b/resources.yaml
 index 0f69886..ff4bde7 100644
 --- a/resources.yaml

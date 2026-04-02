@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 5b7fc74..e4e96f6 100644
+index 5b7fc74..b2383d6 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -5,3 +5,11 @@ metadata:
+@@ -5,3 +5,20 @@ metadata:
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest
@@ -14,3 +14,12 @@ index 5b7fc74..e4e96f6 100644
 +      message: |-
 +        pkg.render: pkg .:
 +        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest
++        stderr: |-
++          docker: Error response from daemon: No such image: ghcr.io/kptdev/krm-functions-catalog/not-exist:latest
++
++          Run 'docker run --help' for more information
++        exitCode: 125
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/not-exist:latest: exit code 125'
