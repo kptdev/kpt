@@ -25,10 +25,11 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const celCheckFrequency = 100
-
-// celCostLimit gives about .1 seconds of CPU time for the evaluation to run
-const celCostLimit = 1000000
+const (
+	celCheckFrequency = 100
+	// celCostLimit gives about .1 seconds of CPU time for the evaluation to run
+	celCostLimit = 1000000
+)
 
 // CELEnvironment holds a shared CEL environment for evaluating conditions.
 // The environment is created once and reused; programs are compiled per condition call.
@@ -91,7 +92,7 @@ func (e *CELEnvironment) EvaluateCondition(ctx context.Context, condition string
 		return false, fmt.Errorf("failed to convert resources: %w", err)
 	}
 
-	out, _, err := prg.ContextEval(ctx, map[string]interface{}{
+	out, _, err := prg.ContextEval(ctx, map[string]any{
 		"resources": resourceList,
 	})
 	if err != nil {
@@ -106,8 +107,8 @@ func (e *CELEnvironment) EvaluateCondition(ctx context.Context, condition string
 	return bool(result), nil
 }
 
-func resourcesToList(resources []*yaml.RNode) ([]interface{}, error) {
-	result := make([]interface{}, 0, len(resources))
+func resourcesToList(resources []*yaml.RNode) ([]any, error) {
+	result := make([]any, 0, len(resources))
 	for _, resource := range resources {
 		m, err := resourceToMap(resource)
 		if err != nil {
@@ -118,12 +119,12 @@ func resourcesToList(resources []*yaml.RNode) ([]interface{}, error) {
 	return result, nil
 }
 
-func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
+func resourceToMap(resource *yaml.RNode) (map[string]any, error) {
 	node := resource.YNode()
 	if node == nil {
 		return nil, fmt.Errorf("resource has nil yaml.Node")
 	}
-	var result map[string]interface{}
+	var result map[string]any
 	if err := node.Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode resource: %w", err)
 	}
@@ -138,7 +139,7 @@ func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 	// Ensure metadata and its common nested keys exist so expressions like
 	// r.metadata.name and r.metadata.namespace do not fail on missing keys.
 	if mdVal, ok := result["metadata"]; ok {
-		if mdMap, ok := mdVal.(map[string]interface{}); ok {
+		if mdMap, ok := mdVal.(map[string]any); ok {
 			if _, ok := mdMap["name"]; !ok {
 				mdMap["name"] = ""
 			}
@@ -147,10 +148,10 @@ func resourceToMap(resource *yaml.RNode) (map[string]interface{}, error) {
 			}
 			result["metadata"] = mdMap
 		} else {
-			result["metadata"] = map[string]interface{}{"name": "", "namespace": ""}
+			result["metadata"] = map[string]any{"name": "", "namespace": ""}
 		}
 	} else {
-		result["metadata"] = map[string]interface{}{"name": "", "namespace": ""}
+		result["metadata"] = map[string]any{"name": "", "namespace": ""}
 	}
 	return result, nil
 }

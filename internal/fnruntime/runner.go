@@ -162,7 +162,11 @@ func NewRunner(
 	// Set condition; the shared CEL environment from opts is used at evaluation time.
 	if f.Condition != "" {
 		if opts.CELEnvironment == nil {
-			return nil, fmt.Errorf("condition specified for function %q but no CEL environment is configured in RunnerOptions", f.Image)
+			name := f.Image
+			if name == "" {
+				name = f.Exec
+			}
+			return nil, fmt.Errorf("condition specified for function %q but no CEL environment is configured in RunnerOptions", name)
 		}
 		fr.condition = f.Condition
 		fr.celEnv = opts.CELEnvironment
@@ -209,8 +213,8 @@ type FunctionRunner struct {
 	fnResult         *fnresult.Result
 	fnResults        *fnresult.ResultList
 	opts             runneroptions.RunnerOptions
-	condition        string           // CEL condition expression
-	celEnv           *CELEvaluator    // shared CEL environment for condition evaluation
+	condition        string                          // CEL condition expression
+	celEnv           *runneroptions.CELEnvironment   // shared CEL environment for condition evaluation
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
