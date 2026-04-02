@@ -16,7 +16,6 @@
 package runneroptions
 
 import (
-	"context"
 	"fmt"
 	"strings"
 )
@@ -27,7 +26,7 @@ const (
 )
 
 // ImageResolveFunc is the type for a function that can resolve a partial image to a (more) fully-qualified name
-type ImageResolveFunc func(ctx context.Context, image string) (string, error)
+type ImageResolveFunc func(image string) string
 
 type RunnerOptions struct {
 	// ImagePullPolicy controls the image pulling behavior before running the container.
@@ -62,24 +61,24 @@ type RunnerOptions struct {
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
-	opts.ResolveToImage = opts.ResolveToImageForCLIFunc(defaultImagePrefix)
+	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.
 // If the function is a catalog function, it prepends `prefix`, e.g. "set-namespace:v0.1" --> prefix + "set-namespace:v0.1".
 // A "/" is appended to `prefix` if it is not an empty string and does not end with a "/".
-func (opts *RunnerOptions) ResolveToImageForCLIFunc(prefix string) func(_ context.Context, image string) (string, error) {
-	prefix = strings.TrimSuffix(prefix, "/")
+func ResolveToImageForCLIFunc(prefix string) ImageResolveFunc {
+	prefix = strings.TrimRight(prefix, "/")
 	if prefix == "" {
-		return func(_ context.Context, image string) (string, error) {
-			return image, nil
+		return func(image string) string {
+			return image
 		}
 	}
-	return func(_ context.Context, image string) (string, error) {
+	return func(image string) string {
 		if !strings.Contains(image, "/") {
-			return fmt.Sprintf("%s/%s", prefix, image), nil
+			return fmt.Sprintf("%s/%s", prefix, image)
 		}
-		return image, nil
+		return image
 	}
 }
 
