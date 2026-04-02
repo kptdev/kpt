@@ -447,8 +447,6 @@ type PipelineStepResult struct {
 	ExitCode       int          `yaml:"exitCode" json:"exitCode"`
 	Results        []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
 	ErrorResults   []ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
-	// Skipped indicates if the function was skipped due to a condition
-	Skipped bool `yaml:"skipped,omitempty" json:"skipped,omitempty"`
 }
 
 // ResultItem mirrors framework.Result with only the fields needed for Kptfile status.
