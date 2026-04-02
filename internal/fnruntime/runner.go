@@ -75,6 +75,8 @@ func NewRunner(
 			if err != nil {
 				return nil, err
 			}
+		} else if !hasTagOrDigest(f.Image) {
+			f.Image += ":latest"
 		}
 	}
 
@@ -519,4 +521,16 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 	}
 	// no need to return ConfigMap if no config given
 	return nil, nil
+}
+
+// hasTagOrDigest reports whether the image reference contains an explicit tag or digest.
+func hasTagOrDigest(image string) bool {
+	if strings.Contains(image, "@") {
+		return true
+	}
+	lastSlash := strings.LastIndex(image, "/")
+	if lastSlash == -1 {
+		return strings.Contains(image, ":")
+	}
+	return strings.Contains(image[lastSlash:], ":")
 }
