@@ -35,6 +35,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -60,6 +61,21 @@ func NewRunner(
 	if f.Image != "" {
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
+
+		if f.Tag != "" {
+			tagResolver := &TagResolver{
+				lister: &RegClientLister{
+					client: regclient.New(
+						regclient.WithUserAgent(UserAgent),
+						regclient.WithDockerCreds(),
+					),
+				},
+			}
+			f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
 	fnResult := &fnresult.Result{
@@ -103,7 +119,6 @@ func NewRunner(
 				} else {
 					cfn := &ContainerFn{
 						Image:           f.Image,
-						Tag:             f.Tag,
 						ImagePullPolicy: opts.ImagePullPolicy,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
