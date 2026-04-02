@@ -171,7 +171,6 @@ func (r *Runner) runFnEval() error {
 			return fmt.Errorf("failed to prepare package: %w", err)
 		}
 
-
 		err = r.runSetupScript(pkgPath)
 		if err != nil {
 			return err
