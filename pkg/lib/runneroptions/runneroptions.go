@@ -66,13 +66,18 @@ type RunnerOptions struct {
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ResolveToImage = opts.ResolveToImageForCLIFunc(defaultImagePrefix)
+}
+
+// InitCELEnvironment initializes the CEL environment for condition evaluation.
+// This should be called separately after InitDefaults to allow proper error handling.
+// Returns an error if CEL environment creation fails.
+func (opts *RunnerOptions) InitCELEnvironment() error {
 	celEnv, err := NewCELEnvironment()
 	if err != nil {
-		// CEL environment creation should never fail with the standard config;
-		// panic here surfaces misconfiguration immediately rather than silently skipping conditions.
-		panic(fmt.Sprintf("failed to initialise CEL environment: %v", err))
+		return fmt.Errorf("failed to initialise CEL environment: %w", err)
 	}
 	opts.CELEnvironment = celEnv
+	return nil
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.

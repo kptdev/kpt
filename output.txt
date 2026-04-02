@@ -1,0 +1,72 @@
+﻿=== RUN   TestCmd_flagAndArgParsing_Symlink
+    cmdrender_test.go:35: 
+        	Error Trace:	C:/Users/Surbhi/Catroid/kpt/commands/fn/render/cmdrender_test.go:35
+        	Error:      	Received unexpected error:
+        	            	symlink path\to\pkg\dir foo: A required privilege is not held by the client.
+        	Test:       	TestCmd_flagAndArgParsing_Symlink
+Error: GetFileAttributesEx foo: The system cannot find the file specified.
+Usage:
+  render [PKG_PATH] [flags]
+
+Examples:
+
+  # Render the package in current directory
+  $ kpt fn render
+
+  # Render the package in current directory and save results in my-results-dir
+  $ kpt fn render --results-dir my-results-dir
+
+  # Render my-package-dir
+  $ kpt fn render my-package-dir
+
+  # Render the package in current directory and write output resources to another DIR
+  $ kpt fn render -o path/to/dir
+
+  # Render resources in current directory and write unwrapped resources to stdout
+  # which can be piped to kubectl apply
+  $ kpt fn render -o unwrap | kpt fn eval -i ghcr.io/kptdev/krm-functions-catalog/remove-local-config-resources:latest -o unwrap - | kubectl apply -f -
+
+  # Render resources in current directory, write the wrapped resources
+  # to stdout which are piped to 'set-annotations' function,
+  # the transformed resources are written to another directory
+  $ kpt fn render -o stdout \
+  | kpt fn eval - -i ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest -o path/to/dir  -- foo=bar
+
+  # Render my-package-dir with podman as runtime for functions
+  $ KRM_FN_RUNTIME=podman kpt fn render my-package-dir
+
+  # Render my-package-dir with network access enabled for functions
+  $ kpt fn render --allow-network
+
+
+Flags:
+      --allow-alpha-wasm                    allow wasm to be used during pipeline execution.
+      --allow-exec                          allow binary executable to be run during pipeline execution.
+      --allow-network                       allow functions to access network during pipeline execution.
+  -h, --help                                help for render
+      --image-pull-policy ImagePullPolicy   pull image before running the container (one of Always, IfNotPresent, Never) (default IfNotPresent)
+  -o, --output string                       output resources are written to provided location. Allowed values: stdout|unwrap|<OUT_DIR_PATH>
+      --results-dir string                  path to a directory to save function results
+
+    cmdrender_test.go:42: 
+        	Error Trace:	C:/Users/Surbhi/Catroid/kpt/commands/fn/render/cmdrender_test.go:42
+        	Error:      	Received unexpected error:
+        	            	GetFileAttributesEx foo: The system cannot find the file specified.
+        	Test:       	TestCmd_flagAndArgParsing_Symlink
+    cmdrender_test.go:43: 
+        	Error Trace:	C:/Users/Surbhi/Catroid/kpt/commands/fn/render/cmdrender_test.go:43
+        	Error:      	Not equal: 
+        	            	expected: "path\\to\\pkg\\dir"
+        	            	actual  : ""
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1 +1 @@
+        	            	-path\to\pkg\dir
+        	            	+
+        	Test:       	TestCmd_flagAndArgParsing_Symlink
+--- FAIL: TestCmd_flagAndArgParsing_Symlink (0.02s)
+FAIL
+FAIL	github.com/kptdev/kpt/commands/fn/render	0.494s
+FAIL
