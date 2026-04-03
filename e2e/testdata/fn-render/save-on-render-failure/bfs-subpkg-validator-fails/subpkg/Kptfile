@@ -10,4 +10,5 @@ pipeline:
       configMap:
         namespace: subpkg-ns
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+      configPath: starlark-fn-failure.yaml

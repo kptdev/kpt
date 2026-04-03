@@ -424,7 +424,59 @@ func (i Inventory) IsValid() bool {
 }
 
 type Status struct {
-	Conditions []Condition `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions   []Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
+}
+
+// RenderStatus represents the result of performing render operation
+// on a package's resources.
+type RenderStatus struct {
+	MutationSteps   []PipelineStepResult `yaml:"mutationSteps,omitempty" json:"mutationSteps,omitempty"`
+	ValidationSteps []PipelineStepResult `yaml:"validationSteps,omitempty" json:"validationSteps,omitempty"`
+	ErrorSummary    string               `yaml:"errorSummary,omitempty" json:"errorSummary,omitempty"`
+}
+
+// PipelineStepResult contains the structured result from an individual function
+// call in the pipeline.
+type PipelineStepResult struct {
+	Name           string       `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string       `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string       `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string       `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int          `yaml:"exitCode" json:"exitCode"`
+	Results        []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults   []ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+}
+
+// ResultItem mirrors framework.Result with only the fields needed for Kptfile status.
+type ResultItem struct {
+	Message     string `yaml:"message,omitempty" json:"message,omitempty"`
+	Severity    string `yaml:"severity,omitempty" json:"severity,omitempty"`
+	ResourceRef *ResourceRef `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
+	Field       *FieldRef    `yaml:"field,omitempty" json:"field,omitempty"`
+	File        *FileRef     `yaml:"file,omitempty" json:"file,omitempty"`
+}
+
+// ResourceRef identifies a resource.
+type ResourceRef struct {
+	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+	Kind       string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+	Namespace  string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// FieldRef references a field in a resource.
+type FieldRef struct {
+	Path          string `yaml:"path,omitempty" json:"path,omitempty"`
+	CurrentValue  string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
+	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
+}
+
+// FileRef references a file containing a resource.
+type FileRef struct {
+	Path  string `yaml:"path,omitempty" json:"path,omitempty"`
+	Index int    `yaml:"index,omitempty" json:"index,omitempty"`
 }
 
 type Condition struct {

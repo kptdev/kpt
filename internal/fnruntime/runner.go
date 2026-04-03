@@ -58,10 +58,7 @@ func NewRunner(
 		return nil, err
 	}
 	if f.Image != "" {
-		img, err := opts.ResolveToImage(ctx, f.Image)
-		if err != nil {
-			return nil, err
-		}
+		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 	}
 
