@@ -2,7 +2,7 @@ diff --git a/Kptfile b/Kptfile
 index eb90ac3..ace574a 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -5,4 +5,9 @@ metadata:
+@@ -5,4 +5,12 @@ metadata:
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/no-op
@@ -13,3 +13,7 @@ index eb90ac3..ace574a 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/no-op
++        exitCode: 0
