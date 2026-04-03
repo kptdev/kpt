@@ -71,6 +71,16 @@ definitions:
                     this is primarily used for merging function declaration with upstream counterparts
                 type: string
                 x-go-name: Name
+            condition:
+                description: |-
+                    `Condition` is an optional CEL expression that determines whether this
+                    function should be executed. The expression is evaluated against the list
+                    of KRM resources passed to this function step (after `Selectors` and
+                    `Exclude` have been applied) and should return a boolean value.
+                    If omitted or evaluates to true, the function executes normally.
+                    If evaluates to false, the function is skipped.
+                type: string
+                x-go-name: Condition
             selectors:
                 description: |-
                     `Selectors` are used to specify resources on which the function should be executed
