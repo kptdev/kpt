@@ -812,7 +812,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
 		}
-		hctx.executedFunctionCnt++
+		if !mutator.WasSkipped() {
+			hctx.executedFunctionCnt++
+		}
 		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
@@ -870,11 +872,14 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
-		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+		validatorRunner := validator.(*fnruntime.FunctionRunner)
+		if _, err = validatorRunner.Filter(cloneResources(selectedResources)); err != nil {
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
-		hctx.executedFunctionCnt++
+		if !validatorRunner.WasSkipped() {
+			hctx.executedFunctionCnt++
+		}
 		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}
 	return nil
@@ -1059,9 +1064,10 @@ func captureStepResult(fn kptfilev1.Function, fnResults *fnresult.ResultList, re
 		step.Stderr = last.Stderr
 		step.ExitCode = last.ExitCode
 		step.Results = frameworkResultsToItems(last.Results)
-		for _, ri := range step.Results {
-			if ri.Severity == string(framework.Error) {
-				step.ErrorResults = append(step.ErrorResults, ri)
+		step.Skipped = last.Skipped
+		for _, item := range step.Results {
+			if item.Severity == string(framework.Error) {
+				step.ErrorResults = append(step.ErrorResults, item)
 			}
 		}
 	} else if execErr != nil {

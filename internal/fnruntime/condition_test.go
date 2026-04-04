@@ -23,7 +23,6 @@ import (
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
-	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -32,7 +31,6 @@ import (
 
 func TestFunctionRunner_Conditions(t *testing.T) {
 	ctx := context.Background()
-	ctx = printer.WithContext(ctx, printer.New(io.Discard, io.Discard))
 	fsys := filesys.MakeFsInMemory()
 	celEnv, err := runneroptions.NewCELEnvironment()
 	require.NoError(t, err)
@@ -98,7 +96,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 
 			// Override the Run function to track if it's called
 			wasRun := false
-			runner.filter.Run = func(_ io.Reader, _ io.Writer) error {
+			runner.filter.Run = func(r io.Reader, w io.Writer) error {
 				wasRun = true
 				return nil
 			}

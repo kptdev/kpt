@@ -212,6 +212,16 @@ type FunctionRunner struct {
 	opts             runneroptions.RunnerOptions
 	condition        string                          // CEL condition expression
 	celEnv           *runneroptions.CELEnvironment   // shared CEL environment for condition evaluation
+	skipped          bool                            // true if function execution was skipped due to condition
+}
+
+func (fr *FunctionRunner) SetCondition(condition string, celEnv *runneroptions.CELEnvironment) {
+	fr.condition = condition
+	fr.celEnv = celEnv
+}
+
+func (fr *FunctionRunner) WasSkipped() bool {
+	return fr.skipped
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
@@ -230,8 +240,10 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 			}
 			// Append a skipped result so consumers get one result per pipeline step
 			fr.fnResult.ExitCode = 0
+			fr.fnResult.Skipped = true
 			fr.fnResults.Items = append(fr.fnResults.Items, *fr.fnResult)
 			// Return input unchanged - function is skipped
+			fr.skipped = true
 			return input, nil
 		}
 	}
