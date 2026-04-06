@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index c16cdca..8941f26 100644
+index c16cdca..1fd5efb 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -11,7 +11,7 @@ index c16cdca..8941f26 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-@@ -15,3 +17,8 @@ pipeline:
+@@ -15,3 +17,14 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
        configMap:
          tier: backend
@@ -20,6 +20,12 @@ index c16cdca..8941f26 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
 diff --git a/resources.yaml b/resources.yaml
 index d3ed04c..f66e542 100644
 --- a/resources.yaml

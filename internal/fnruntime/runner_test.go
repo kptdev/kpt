@@ -646,9 +646,7 @@ func TestRunnerOptions_InitDefaults(t *testing.T) {
 			opts := &runneroptions.RunnerOptions{}
 			opts.InitDefaults(tc.prefix)
 
-			result, err := opts.ResolveToImage(context.TODO(), fnName)
-
-			assert.NoError(t, err)
+			result := opts.ResolveToImage(fnName)
 			assert.Equal(t, getExpectedPrefix(tc.prefix)+fnName, result)
 		})
 	}

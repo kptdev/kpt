@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 17a7822..94b6f80 100644
+index 17a7822..98fa855 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -12,3 +12,8 @@ pipeline:
+@@ -12,3 +12,22 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
        configMap:
          tier: backend
@@ -11,6 +11,20 @@ index 17a7822..94b6f80 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-namespace:v0.5.1
++        exitCode: 0
++        results:
++          - message: namespace [default] updated to "staging", 1 value(s) changed
++            severity: info
++          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
++            severity: info
++      - image: ghcr.io/kptdev/krm-functions-catalog/wasm/set-labels:v0.2.4
++        exitCode: 0
++        results:
++          - message: set 4 labels in total
++            severity: info
 diff --git a/resources.yaml b/resources.yaml
 index eed43d6..c1de2b0 100644
 --- a/resources.yaml
