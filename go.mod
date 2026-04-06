@@ -11,8 +11,6 @@ require (
 	github.com/google/go-containerregistry v0.20.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.4
-	github.com/kptdev/krm-functions-sdk/go/fn v1.0.0
-	github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2
 	github.com/kptdev/krm-functions-sdk/go/fn v1.0.2
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f

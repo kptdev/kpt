@@ -254,9 +254,29 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 
 // setRenderConditionWithStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
 func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
-	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message))
-	renderStatus := buildRenderStatus(hctx, hydErr)
-	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
+	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
+	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
+	if err != nil {
+		klog.V(3).Infof("failed to read Kptfile for render status update at %s: %v", pkgPath, err)
+		return
+	}
+	if kf.Status == nil {
+		kf.Status = &kptfilev1.Status{}
+	}
+	// Replace any existing Rendered condition
+	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(c kptfilev1.Condition) bool {
+		return c.Type == kptfilev1.ConditionTypeRendered
+	})
+	kf.Status.Conditions = append(kf.Status.Conditions, condition)
+
+	// Update render status if provided
+	if renderStatus != nil {
+		kf.Status.RenderStatus = renderStatus
+	}
+
+	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
+		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
+	}
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
@@ -321,7 +341,6 @@ func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.
 		kf.Status.RenderStatus = renderStatus
 	}
 
-	kf.Status.RenderStatus = renderStatus
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
 		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
@@ -940,7 +959,6 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		function := pl.Mutators[i]
 		stepResult := createPipelineStepResult(function, 0, "", "")
 
-		if function.ConfigPath != "" {
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
 		if pl.Mutators[i].ConfigPath != "" {
