@@ -355,10 +355,7 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 	if spec.Container.Image != "" {
 		fnResult.Image = spec.Container.Image
 
-		resolvedImage, err := r.RunnerOptions.ResolveToImage(context.TODO(), spec.Container.Image)
-		if err != nil {
-			return nil, err
-		}
+		resolvedImage := r.RunnerOptions.ResolveToImage(spec.Container.Image)
 		// If AllowWasm is true, we try to use the image field as a wasm image.
 		// TODO: we can be smarter here. If the image doesn't support wasm/js platform,
 		// it should fallback to run it as container fn.

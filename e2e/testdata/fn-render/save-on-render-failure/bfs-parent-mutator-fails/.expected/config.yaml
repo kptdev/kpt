@@ -1,2 +1,1 @@
 exitCode: 1
-StdErrRegEx: "(docker: Error response from daemon: Head.*denied|Error.*initializing source docker)"

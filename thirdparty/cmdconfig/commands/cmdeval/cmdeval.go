@@ -313,17 +313,14 @@ func (r *EvalFnRunner) preserveCommentsAndFieldOrder(kf *kptfile.KptFile) (*yaml
 
 // getCLIFunctionConfig parses the commandline flags and arguments into explicit
 // function config
-func (r *EvalFnRunner) getCLIFunctionConfig(ctx context.Context, dataItems []string) (*yaml.RNode, error) {
+func (r *EvalFnRunner) getCLIFunctionConfig(dataItems []string) (*yaml.RNode, error) {
 	if r.Image == "" && r.Exec == "" {
 		return nil, nil
 	}
 
 	// TODO: This probably doesn't belong here, but moving it changes the test output
 	if r.Image != "" {
-		img, err := r.RunnerOptions.ResolveToImage(ctx, r.Image)
-		if err != nil {
-			return nil, err
-		}
+		img := r.RunnerOptions.ResolveToImage(r.Image)
 		r.Image = img
 	}
 
@@ -479,7 +476,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	if len(dataItems) > 0 && r.FnConfigPath != "" {
 		return fmt.Errorf("function arguments can only be specified without function config file")
 	}
-	fnConfig, err := r.getCLIFunctionConfig(c.Context(), dataItems)
+	fnConfig, err := r.getCLIFunctionConfig(dataItems)
 	if err != nil {
 		return err
 	}
