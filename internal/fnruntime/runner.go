@@ -86,6 +86,7 @@ func NewRunner(
 		} else if runner != nil {
 			fltr.Run = runner.Run
 		}
+
 	}
 	if fltr.Run == nil {
 		if f.Image == runneroptions.FuncGenPkgContext {
@@ -233,7 +234,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 			return nil, errors.ErrAlreadyHandled
 		}
 		// for builtin functions, print stderr from fnResult if available
-		if fr.fnResult.Stderr != "" {
+		if err != nil && fr.fnResult.Stderr != "" {
 			printFnStderr(fr.ctx, fr.fnResult.Stderr)
 			pr.Printf("  Exit code: %d\n\n", fr.fnResult.ExitCode)
 			return nil, errors.ErrAlreadyHandled
@@ -295,7 +296,15 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 			fnResult.Stderr = execErr.Stderr
 		} else {
 			// builtin functions don't return ExecError, populate stderr from error message
-			fnResult.Stderr = err.Error()
+			if fnResult.Stderr == "" {
+				fnResult.Stderr = err.Error()
+			} else if !strings.Contains(fnResult.Stderr, err.Error()) {
+				if strings.HasSuffix(fnResult.Stderr, "\n") {
+					fnResult.Stderr += err.Error()
+				} else {
+					fnResult.Stderr += "\n" + err.Error()
+				}
+			}
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)

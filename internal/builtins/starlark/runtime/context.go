@@ -41,6 +41,14 @@ func oa() (starlark.Value, error) {
 	return interfaceToValue(openapi.Schema())
 }
 
+// allowlist of safe environment variables to expose to starlark scripts
+var allowedEnvVars = map[string]bool{
+	"HOME":     true,
+	"PATH":     true,
+	"USER":     true,
+	"HOSTNAME": true,
+}
+
 func env() (starlark.Value, error) {
 	env := map[string]interface{}{}
 	for _, e := range os.Environ() {
@@ -48,7 +56,9 @@ func env() (starlark.Value, error) {
 		if len(pair) < 2 {
 			continue
 		}
-		env[pair[0]] = pair[1]
+		if allowedEnvVars[pair[0]] {
+			env[pair[0]] = pair[1]
+		}
 	}
 	value, err := util.Marshal(env)
 	if err != nil {

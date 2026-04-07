@@ -21,25 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
-	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
-
-func parseResourceList(t *testing.T, input string) *framework.ResourceList {
-	t.Helper()
-	rw := &kio.ByteReader{Reader: strings.NewReader(input)}
-	nodes, err := rw.Read()
-	assert.NoError(t, err)
-
-	rl := &framework.ResourceList{Items: nodes}
-	node, err := yaml.Parse(input)
-	if err == nil {
-		fc := node.Field("functionConfig")
-		if fc != nil && fc.Value != nil {
-			rl.FunctionConfig = fc.Value
-		}
-	}
-	return rl
-}
 
 func TestProcess_SetNamespace(t *testing.T) {
 	input := `apiVersion: config.kubernetes.io/v1

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/qri-io/starlib/util"
 	"go.starlark.net/resolve"
@@ -58,7 +59,6 @@ func (sf *Filter) setup() error {
 		return errors.Errorf("Filter Path, Program and URL are mutually exclusive")
 	}
 
-	// read the program from a file
 	if sf.Path != "" {
 		b, err := os.ReadFile(sf.Path)
 		if err != nil {
@@ -67,18 +67,20 @@ func (sf *Filter) setup() error {
 		sf.Program = string(b)
 	}
 
-	// read the program from a URL
 	if sf.URL != "" {
 		err := func() error {
-			resp, err := http.Get(sf.URL)
+			client := &http.Client{Timeout: 30 * time.Second}
+			resp, err := client.Get(sf.URL)
 			if err != nil {
 				return err
 			}
-
 			defer func() {
 				_ = resp.Body.Close()
 			}()
-
+			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+				return fmt.Errorf("failed to fetch starlark program from %s: HTTP %d",
+					sf.URL, resp.StatusCode)
+			}
 			b, err := io.ReadAll(resp.Body)
 			if err != nil {
 				return err

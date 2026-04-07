@@ -48,7 +48,7 @@ func Lookup(imageName string) BuiltinFunction {
 	}
 	fn := registry[normalized]
 	if fn != nil && imageName != normalized {
-		klog.Warningf("WARNING: builtin function %q is being used instead of the requested image %q. "+
+		klog.V(4).Infof("builtin function %q is being used instead of the requested image %q. "+
 			"The built-in implementation may differ from the pinned version.", normalized, imageName)
 	}
 	return fn
