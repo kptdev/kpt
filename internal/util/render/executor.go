@@ -321,45 +321,6 @@ func stepName(s kptfilev1.PipelineStepResult) string {
 	return s.ExecPath
 }
 
-}
-
-func stepName(s kptfilev1.PipelineStepResult) string {
-	if s.Name != "" {
-		return s.Name
-	}
-	if s.Image != "" {
-		return s.Image
-	}
-	return s.ExecPath
-}
-
-// setRenderStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
-func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
-	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
-	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
-	if err != nil {
-		klog.V(3).Infof("failed to read Kptfile for render status update at %s: %v", pkgPath, err)
-		return
-	}
-	if kf.Status == nil {
-		kf.Status = &kptfilev1.Status{}
-	}
-	// Replace any existing Rendered condition
-	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(c kptfilev1.Condition) bool {
-		return c.Type == kptfilev1.ConditionTypeRendered
-	})
-	kf.Status.Conditions = append(kf.Status.Conditions, condition)
-
-	// Update render status if provided
-	if renderStatus != nil {
-		kf.Status.RenderStatus = renderStatus
-	}
-
-	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
-		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
-	}
-}
-
 // recordPipelineStepResult records the result of a pipeline step execution
 func recordPipelineStepResult(hctx *hydrationContext, stepResult kptfilev1.PipelineStepResult, isValidator bool) {
 	if hctx.renderStatus == nil {
