@@ -16,7 +16,6 @@ package v1
 
 import (
 	"fmt"
-	"path"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -158,13 +157,11 @@ func validateFnConfigPathSyntax(p string) error {
 	if strings.TrimSpace(p) == "" {
 		return fmt.Errorf("path must not be empty")
 	}
-	// Use path.IsAbs (forward-slash based) since Kptfile paths are always
-	// slash-separated regardless of the host OS.
-	if path.IsAbs(p) {
+	p = filepath.Clean(p)
+	if filepath.IsAbs(p) {
 		return fmt.Errorf("path must be relative")
 	}
-	cleaned := filepath.Clean(p)
-	if strings.Contains(cleaned, "..") {
+	if strings.Contains(p, "..") {
 		// fn config must not live outside the package directory
 		// Allowing outside path opens up an attack vector that allows
 		// reading any YAML file on package consumer's machine.
