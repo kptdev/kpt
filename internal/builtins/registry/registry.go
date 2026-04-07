@@ -43,7 +43,7 @@ func Lookup(imageName string) BuiltinFunction {
 	defer mu.RUnlock()
 	normalized := normalizeImage(imageName)
 	if strings.HasSuffix(imageName, ":latest") ||
-		strings.HasSuffix(imageName, "@sha256:") {
+		strings.Contains(imageName, "@sha256:") {
 		return nil
 	}
 	fn := registry[normalized]
