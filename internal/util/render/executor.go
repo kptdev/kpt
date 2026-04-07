@@ -277,6 +277,8 @@ func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, conditi
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
 		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
+	renderStatus := buildRenderStatus(hctx, hydErr)
+	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
@@ -307,6 +309,18 @@ func buildRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderSt
 		rs.ErrorSummary = strings.Join(errLines, "\n")
 	}
 	return rs
+}
+
+func stepName(s kptfilev1.PipelineStepResult) string {
+	if s.Name != "" {
+		return s.Name
+	}
+	if s.Image != "" {
+		return s.Image
+	}
+	return s.ExecPath
+}
+
 }
 
 func stepName(s kptfilev1.PipelineStepResult) string {
@@ -430,6 +444,9 @@ func aggregateErrors(renderStatus *kptfilev1.RenderStatus) string {
 
 	if len(errors) == 0 {
 		return ""
+	kf.Status.RenderStatus = renderStatus
+	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
+		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
 
 	return strings.Join(errors, "; ")
@@ -1115,6 +1132,11 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			stepResult.ExitCode = 1
 			recordPipelineStepResult(hctx, stepResult, true)
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+			return err
+		}
+		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {

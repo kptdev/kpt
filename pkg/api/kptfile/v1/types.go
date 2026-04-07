@@ -413,6 +413,7 @@ type Status struct {
 	Conditions []Condition `yaml:"conditions,omitempty" json:"conditions,omitempty"`
 
 	// RenderStatus contains detailed information about pipeline execution results
+	Conditions   []Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
 	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
 }
 
