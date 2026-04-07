@@ -21,10 +21,23 @@ YEAR_GEN          := $(shell date '+%Y')
 
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
+GIT_TAG := $(shell git describe --tags --exact-match 2>/dev/null)
+DIRTY := $(shell git status --porcelain)
+
+# Version logic:
+# - Use tag ONLY if exact match AND clean working tree
+# - Otherwise fallback to dev version
+ifeq ($(GIT_TAG),)
+VERSION := v0.0.0-dev+$(GIT_COMMIT)
+else ifneq ($(DIRTY),)
+VERSION := v0.0.0-dev+$(GIT_COMMIT)
+else
+VERSION := $(GIT_TAG)
+endif
 
 export KPT_FN_WASM_RUNTIME ?= nodejs
 
-LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
+LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${VERSION}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
 else
