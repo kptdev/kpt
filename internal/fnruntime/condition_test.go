@@ -96,7 +96,7 @@ func TestFunctionRunner_Conditions(t *testing.T) {
 
 			// Override the Run function to track if it's called
 			wasRun := false
-			runner.filter.Run = func(r io.Reader, w io.Writer) error {
+			runner.filter.Run = func(_ io.Reader, _ io.Writer) error {
 				wasRun = true
 				return nil
 			}
