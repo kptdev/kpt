@@ -163,13 +163,14 @@ var versionCmd = &cobra.Command{
 
 The version follows semantic versioning (semver) format: vMAJOR.MINOR.PATCH
 For more information, see https://semver.org`,
-	Run: func(_ *cobra.Command, _ []string) {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		// Display version in a clear format
 		if version == "unknown" {
 			fmt.Println("kpt version: unknown (development build)")
 		} else {
 			fmt.Printf("kpt version: %s\n", version)
 		}
+		return nil
 	},
 }
 
