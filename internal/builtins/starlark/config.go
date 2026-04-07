@@ -17,10 +17,10 @@ package starlark
 import (
 	"fmt"
 
-	starlarkruntime "github.com/kptdev/krm-functions-catalog/functions/go/starlark/third_party/sigs.k8s.io/kustomize/kyaml/fn/runtime/starlark"
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	starlarkruntime "github.com/kptdev/kpt/internal/builtins/starlark/runtime"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -40,22 +40,29 @@ const (
 
 type Run struct {
 	yaml.ResourceMeta `json:",inline" yaml:",inline"`
-	// Source is a required field for providing a starlark script inline.
-	Source string `json:"source" yaml:"source"`
-	// Params are the parameters in key-value pairs format.
-	Params map[string]interface{} `json:"params,omitempty" yaml:"params,omitempty"`
+	Source            string                 `json:"source" yaml:"source"`
+	Params            map[string]interface{} `json:"params,omitempty" yaml:"params,omitempty"`
 }
 
-func (sr *Run) Config(fnCfg *fn.KubeObject) error {
-	switch {
-	case fnCfg.IsEmpty():
+func (sr *Run) Config(fnCfg *yaml.RNode) error {
+	if fnCfg == nil {
 		return fmt.Errorf("FunctionConfig is missing. Expect `ConfigMap`, `StarlarkRun`, or `Run`")
-	case fnCfg.IsGVK("", configMapAPIVersion, configMapKind):
+	}
+
+	meta, err := fnCfg.GetMeta()
+	if err != nil {
+		return fmt.Errorf("reading functionConfig metadata: %w", err)
+	}
+
+	apiVersion := meta.APIVersion
+	kind := meta.Kind
+
+	switch {
+	case apiVersion == configMapAPIVersion && kind == configMapKind:
 		cm := &corev1.ConfigMap{}
-		if err := fnCfg.As(cm); err != nil {
+		if err := fnCfg.YNode().Decode(cm); err != nil {
 			return err
 		}
-		// Convert ConfigMap to StarlarkRun
 		sr.Name = cm.Name
 		sr.Namespace = cm.Namespace
 		sr.Params = map[string]interface{}{}
@@ -65,63 +72,34 @@ func (sr *Run) Config(fnCfg *fn.KubeObject) error {
 			}
 			sr.Params[k] = v
 		}
-	case fnCfg.IsGVK(starlarkRunGroup, starlarkRunVersion, starlarkRunKind),
-		fnCfg.IsGVK(starlarkRunGroup, starlarkRunVersion, "Run"):
-		if err := fnCfg.As(sr); err != nil {
+
+	case (apiVersion == starlarkRunAPIVersion && kind == starlarkRunKind) ||
+		(apiVersion == starlarkRunAPIVersion && kind == "Run"):
+		if err := fnCfg.YNode().Decode(sr); err != nil {
 			return err
 		}
+
 	default:
 		return fmt.Errorf("`functionConfig` must be either %v, %v, or %v but we got: %v",
 			schema.FromAPIVersionAndKind(configMapAPIVersion, configMapKind).String(),
 			schema.FromAPIVersionAndKind(starlarkRunAPIVersion, starlarkRunKind).String(),
 			schema.FromAPIVersionAndKind(starlarkRunAPIVersion, "Run").String(),
-			schema.FromAPIVersionAndKind(fnCfg.GetAPIVersion(), fnCfg.GetKind()).String())
+			schema.FromAPIVersionAndKind(apiVersion, kind).String())
 	}
 
-	// Defaulting
 	if sr.Name == "" {
 		sr.Name = defaultProgramName
 	}
-	// Validation
 	if sr.Source == "" {
 		return fmt.Errorf("`source` must not be empty")
 	}
 	return nil
 }
 
-func (sr *Run) Transform(rl *fn.ResourceList) error {
-	var transformedObjects []*fn.KubeObject
-	var nodes []*yaml.RNode
-
-	fcRN, err := yaml.Parse(rl.FunctionConfig.String())
-	if err != nil {
-		return err
+func (sr *Run) Transform(rl *framework.ResourceList) error {
+	starFltr := &starlarkruntime.Filter{
+		Name:    sr.Name,
+		Program: sr.Source,
 	}
-	for _, obj := range rl.Items {
-		objRN, err := yaml.Parse(obj.String())
-		if err != nil {
-			return err
-		}
-		nodes = append(nodes, objRN)
-	}
-
-	starFltr := &starlarkruntime.SimpleFilter{
-		Name:           sr.Name,
-		Program:        sr.Source,
-		FunctionConfig: fcRN,
-	}
-	transformedNodes, err := starFltr.Filter(nodes)
-	if err != nil {
-		return err
-	}
-
-	for _, n := range transformedNodes {
-		obj, err := fn.ParseKubeObject([]byte(n.MustString()))
-		if err != nil {
-			return err
-		}
-		transformedObjects = append(transformedObjects, obj)
-	}
-	rl.Items = transformedObjects
-	return nil
+	return rl.Filter(starFltr)
 }

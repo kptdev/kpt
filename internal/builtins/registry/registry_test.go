@@ -25,8 +25,8 @@ type fakeBuiltin struct {
 	name string
 }
 
-func (f *fakeBuiltin) ImageName() string                  { return f.name }
-func (f *fakeBuiltin) Run(_ io.Reader, _ io.Writer) error { return nil }
+func (f *fakeBuiltin) ImageName() string                               { return f.name }
+func (f *fakeBuiltin) Run(_ io.Reader, _ io.Writer, _ io.Writer) error { return nil }
 
 func TestNormalizeImage(t *testing.T) {
 	tests := []struct {

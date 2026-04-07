@@ -11,17 +11,18 @@ require (
 	github.com/google/go-containerregistry v0.20.6
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2
-	github.com/kptdev/krm-functions-catalog/functions/go/starlark v0.5.5
 	github.com/kptdev/krm-functions-sdk/go/fn v1.0.2
 	github.com/otiai10/copy v1.14.1
 	github.com/philopon/go-toposort v0.0.0-20170620085441-9be86dbd762f
 	github.com/pkg/errors v0.9.1
 	github.com/prep/wasmexec v0.0.0-20220807105708-6554945c1dec
+	github.com/qri-io/starlib v0.5.0
 	github.com/regclient/regclient v0.11.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.11.1
 	github.com/xlab/treeprint v1.2.0
+	go.starlark.net v0.0.0-20250417143717-f57e51f710eb
 	golang.org/x/mod v0.29.0
 	golang.org/x/text v0.31.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -112,7 +113,6 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.2 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
-	github.com/qri-io/starlib v0.5.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
@@ -122,7 +122,6 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
-	go.starlark.net v0.0.0-20250417143717-f57e51f710eb // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.47.0 // indirect

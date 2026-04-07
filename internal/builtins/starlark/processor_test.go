@@ -15,11 +15,31 @@
 package starlark
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+func parseResourceList(t *testing.T, input string) *framework.ResourceList {
+	t.Helper()
+	rw := &kio.ByteReader{Reader: strings.NewReader(input)}
+	nodes, err := rw.Read()
+	assert.NoError(t, err)
+
+	rl := &framework.ResourceList{Items: nodes}
+	node, err := yaml.Parse(input)
+	if err == nil {
+		fc := node.Field("functionConfig")
+		if fc != nil && fc.Value != nil {
+			rl.FunctionConfig = fc.Value
+		}
+	}
+	return rl
+}
 
 func TestProcess_SetNamespace(t *testing.T) {
 	input := `apiVersion: config.kubernetes.io/v1
@@ -41,13 +61,25 @@ functionConfig:
         resource["metadata"]["namespace"] = ns_value
     run(ctx.resource_list["items"], "new-namespace")
 `
-	rl, err := fn.ParseResourceList([]byte(input))
+	rw := &kio.ByteReadWriter{
+		Reader:             strings.NewReader(input),
+		WrappingAPIVersion: kio.ResourceListAPIVersion,
+		WrappingKind:       kio.ResourceListKind,
+	}
+	nodes, err := rw.Read()
 	assert.NoError(t, err)
 
-	ok, err := Process(rl)
+	rl := &framework.ResourceList{
+		Items:          nodes,
+		FunctionConfig: rw.FunctionConfig,
+	}
+
+	err = Process(rl)
 	assert.NoError(t, err)
-	assert.True(t, ok)
-	assert.Equal(t, "new-namespace", rl.Items[0].GetNamespace())
+
+	ns, err := rl.Items[0].GetString("metadata.namespace")
+	assert.NoError(t, err)
+	assert.Equal(t, "new-namespace", ns)
 }
 
 func TestProcess_InvalidScript(t *testing.T) {
@@ -62,11 +94,20 @@ functionConfig:
   source: |
     this is not valid starlark!!!
 `
-	rl, err := fn.ParseResourceList([]byte(input))
+	rw := &kio.ByteReadWriter{
+		Reader:             strings.NewReader(input),
+		WrappingAPIVersion: kio.ResourceListAPIVersion,
+		WrappingKind:       kio.ResourceListKind,
+	}
+	nodes, err := rw.Read()
 	assert.NoError(t, err)
 
-	ok, err := Process(rl)
+	rl := &framework.ResourceList{
+		Items:          nodes,
+		FunctionConfig: rw.FunctionConfig,
+	}
+
+	err = Process(rl)
 	assert.Error(t, err)
-	assert.False(t, ok)
 	assert.Len(t, rl.Results, 1)
 }

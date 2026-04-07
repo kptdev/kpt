@@ -16,8 +16,8 @@ package starlark
 import (
 	"testing"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 func TestStarlarkConfig(t *testing.T) {
@@ -84,12 +84,14 @@ data:
 			expectErrMsg: "`source` must not be empty",
 		},
 	}
+
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			sr := &Run{}
-			ko, err := fn.ParseKubeObject([]byte(tc.config))
+			node, err := yaml.Parse(tc.config)
 			assert.NoError(t, err)
-			err = sr.Config(ko)
+
+			err = sr.Config(node)
 			if tc.expectErrMsg == "" {
 				assert.NoError(t, err)
 			} else {

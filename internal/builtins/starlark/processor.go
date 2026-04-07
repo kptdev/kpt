@@ -16,28 +16,29 @@ package starlark
 import (
 	"fmt"
 
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 )
 
-// Process runs the Starlark function on the given ResourceList
-func Process(resourceList *fn.ResourceList) (bool, error) {
-	err := func() error {
-		sr := &Run{}
-		if err := sr.Config(resourceList.FunctionConfig); err != nil {
-			return err
-		}
-		return sr.Transform(resourceList)
-	}()
+func Process(rl *framework.ResourceList) error {
+	sr := &Run{}
 
-	if err != nil {
-		resourceList.Results = []*fn.Result{
-			{
-				Message:  err.Error(),
-				Severity: fn.Error,
-			},
+	if rl.FunctionConfig != nil {
+		if err := sr.Config(rl.FunctionConfig); err != nil {
+			rl.Results = append(rl.Results, &framework.Result{
+				Message:  fmt.Sprintf("failed to configure starlark: %v", err),
+				Severity: framework.Error,
+			})
+			return rl.Results
 		}
-		return false, fmt.Errorf("failed to evaluate function: error: %v", err)
 	}
 
-	return true, nil
+	if err := sr.Transform(rl); err != nil {
+		rl.Results = append(rl.Results, &framework.Result{
+			Message:  fmt.Sprintf("starlark transform failed: %v", err),
+			Severity: framework.Error,
+		})
+		return rl.Results
+	}
+
+	return nil
 }

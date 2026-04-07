@@ -24,7 +24,7 @@ import (
 
 type BuiltinFunction interface {
 	ImageName() string
-	Run(r io.Reader, w io.Writer) error
+	Run(r io.Reader, w io.Writer, stderr io.Writer) error
 }
 
 var (

@@ -16,6 +16,7 @@ package applyreplacements
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -51,7 +52,7 @@ functionConfig:
 	w := &bytes.Buffer{}
 
 	runner := &Runner{}
-	err := runner.Run(r, w)
+	err := runner.Run(r, w, io.Discard)
 	assert.NoError(t, err)
 	assert.Contains(t, w.String(), "namespace: my-app")
 }
@@ -74,7 +75,7 @@ functionConfig:
 	w := &bytes.Buffer{}
 
 	runner := &Runner{}
-	err := runner.Run(r, w)
-	assert.NoError(t, err)
-	assert.Contains(t, w.String(), "only functionConfig of kind ApplyReplacements")
+	err := runner.Run(r, w, io.Discard)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "only functionConfig of kind ApplyReplacements")
 }

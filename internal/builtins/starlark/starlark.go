@@ -15,11 +15,11 @@
 package starlark
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/kptdev/kpt/internal/builtins/registry"
-	"github.com/kptdev/krm-functions-sdk/go/fn"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/kio"
 )
 
 const ImageName = "ghcr.io/kptdev/krm-functions-catalog/starlark"
@@ -27,30 +27,19 @@ const ImageName = "ghcr.io/kptdev/krm-functions-catalog/starlark"
 //nolint:gochecknoinits
 func init() { Register() }
 
-func Register() {
-	registry.Register(&Runner{})
-}
+func Register() { registry.Register(&Runner{}) }
 
 type Runner struct{}
 
 func (s *Runner) ImageName() string { return ImageName }
 
-func (s *Runner) Run(r io.Reader, w io.Writer) error {
-	input, err := io.ReadAll(r)
-	if err != nil {
-		return fmt.Errorf("reading input: %w", err)
-	}
-	rl, err := fn.ParseResourceList(input)
-	if err != nil {
-		return fmt.Errorf("parsing ResourceList: %w", err)
-	}
-	_, processErr := Process(rl)
-	out, err := rl.ToYAML()
-	if err != nil {
-		return err
-	}
-	if _, err = w.Write(out); err != nil {
-		return err
-	}
-	return processErr
+func (s *Runner) Run(r io.Reader, w io.Writer, _ io.Writer) error {
+	return framework.Execute(
+		framework.ResourceListProcessorFunc(Process),
+		&kio.ByteReadWriter{
+			Reader:                r,
+			Writer:                w,
+			KeepReaderAnnotations: true,
+		},
+	)
 }

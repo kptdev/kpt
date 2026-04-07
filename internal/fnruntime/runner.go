@@ -92,7 +92,14 @@ func NewRunner(
 			pkgCtxGenerator := &builtins.PackageContextGenerator{}
 			fltr.Run = pkgCtxGenerator.Run
 		} else if builtinFn := builtinsregistry.Lookup(f.Image); builtinFn != nil {
-			fltr.Run = builtinFn.Run
+			fltr.Run = func(r io.Reader, w io.Writer) error {
+				var stderrBuf strings.Builder
+				err := builtinFn.Run(r, w, &stderrBuf)
+				if stderrBuf.Len() > 0 {
+					fnResult.Stderr = stderrBuf.String()
+				}
+				return err
+			}
 		} else {
 			switch {
 			case f.Image != "":
