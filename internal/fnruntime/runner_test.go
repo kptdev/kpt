@@ -658,3 +658,38 @@ func getExpectedPrefix(prefix string) string {
 	}
 	return prefix
 }
+
+func TestHasTagOrDigest(t *testing.T) {
+	tests := []struct {
+		name  string
+		image string
+		want  bool
+	}{
+		// With explicit tag
+		{"tag", "nginx:1.25", true},
+		{"latest tag", "nginx:latest", true},
+		{"full path with tag", "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5", true},
+
+		// With digest
+		{"digest only", "nginx@sha256:abc123", true},
+		{"full path with digest", "ghcr.io/kptdev/krm-functions-catalog/set-labels@sha256:abc123", true},
+		{"tag and digest", "nginx:1.25@sha256:abc123", true},
+
+		// Without tag or digest
+		{"bare image", "nginx", false},
+		{"full path no tag", "ghcr.io/kptdev/krm-functions-catalog/set-labels", false},
+		{"two-part no tag", "library/nginx", false},
+
+		// Registry with port (should not confuse port colon with tag colon)
+		{"registry port no tag", "localhost:5000/myimage", false},
+		{"registry port with tag", "localhost:5000/myimage:v1", true},
+		{"registry port with digest", "localhost:5000/myimage@sha256:abc123", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasTagOrDigest(tt.image); got != tt.want {
+				t.Errorf("hasTagOrDigest(%q) = %v, want %v", tt.image, got, tt.want)
+			}
+		})
+	}
+}
