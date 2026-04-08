@@ -139,8 +139,12 @@ func marshalKptfile(k any) ([]byte, error) {
 
 func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
-	if _, err := os.Stat(dir); err != nil {
+	info, err := os.Stat(dir)
+	if err != nil {
 		return errors.E(errors.IO, types.UniquePath(dir), err)
+	}
+	if !info.IsDir() {
+		return errors.E(errors.IO, types.UniquePath(dir), fmt.Errorf("path %q is not a directory", dir))
 	}
 
 	content, err := os.ReadFile(kptfilePath)
@@ -161,7 +165,14 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
 	existingKptfile, err := kptfileko.NewFromPackage(existingResources)
 	if err != nil {
-		return err
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := os.WriteFile(kptfilePath, b, 0600); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
 	}
 	if err := applyTypedKptfileToSDK(existingKptfile, kf); err != nil {
 		return err
@@ -525,6 +536,10 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 // UpdateKptfileContent updates Kptfile YAML content in-memory using SDK Kptfile
 // read/write APIs while preserving existing YAML document structure and comments.
 func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (string, error) {
+	if mutator == nil {
+		return "", fmt.Errorf("mutator cannot be nil")
+	}
+
 	if err := validateKptfileContent([]byte(content)); err != nil {
 		return "", err
 	}

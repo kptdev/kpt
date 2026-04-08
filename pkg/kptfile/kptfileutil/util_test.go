@@ -802,6 +802,41 @@ func TestWriteFile_ReturnsErrorWhenDirectoryMissing(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestWriteFile_ReturnsErrorWhenPathIsFile(t *testing.T) {
+	baseDir := t.TempDir()
+	filePath := filepath.Join(baseDir, "not-a-directory")
+	err := os.WriteFile(filePath, []byte("content"), 0600)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = WriteFile(filePath, DefaultKptfile("sample"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not a directory")
+}
+
+func TestWriteFile_RecoversFromInvalidExistingKptfile(t *testing.T) {
+	dir := t.TempDir()
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	err := os.WriteFile(kptfilePath, []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata: [bad\n"), 0600)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	err = WriteFile(dir, DefaultKptfile("sample"))
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	content, err := os.ReadFile(kptfilePath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, string(content), "apiVersion: kpt.dev/v1")
+	assert.Contains(t, string(content), "kind: Kptfile")
+	assert.Contains(t, string(content), "name: sample")
+}
+
 func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
 	writeKptfileToTemp := func(tt *testing.T, content string) string {
 		dir := tt.TempDir()
@@ -977,6 +1012,21 @@ metadata:
 		assert.Equal(t, "updated-sample", updatedKf.Name)
 		assert.Nil(t, updatedKf.Annotations)
 	})
+}
+
+func TestUpdateKptfileContent_ReturnsErrorOnNilMutator(t *testing.T) {
+	content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`
+
+	_, err := UpdateKptfileContent(content, nil)
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "mutator cannot be nil")
 }
 
 func TestMerge(t *testing.T) {
