@@ -32,16 +32,18 @@ stdOut: |
   custom.kpt.dev/cr apply successful
   apply phase finished
   reconcile phase started
-  custom.kpt.dev/cr reconcile successful
   reconcile phase finished
   inventory update started
   inventory update finished
   apply result: 2 attempted, 2 successful, 0 skipped, 0 failed
-  reconcile result: 2 attempted, 2 successful, 0 skipped, 0 failed, 0 timed out
 
 optionalStdOut:
   - customresourcedefinition.apiextensions.k8s.io/customs.kpt.dev reconcile pending
   - custom.kpt.dev/cr reconcile pending
+  - custom.kpt.dev/cr reconcile successful
+  - custom.kpt.dev/cr reconcile timeout
+  - reconcile result: 2 attempted, 2 successful, 0 skipped, 0 failed, 0 timed out
+  - reconcile result: 2 attempted, 1 successful, 0 skipped, 0 failed, 1 timed out
 
 inventory:
   - group: apiextensions.k8s.io
