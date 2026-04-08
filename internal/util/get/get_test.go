@@ -215,8 +215,12 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 
 	sourceSymlinkPath := filepath.Join(g.DatasetDirectory, testutil.Dataset6, subdir, "config-symlink")
 	info, statErr := os.Lstat(sourceSymlinkPath)
-	assert.NoError(t, statErr)
-	isSymlinkInSource := info.Mode()&os.ModeSymlink != 0
+	isSymlinkInSource := false
+	if statErr == nil {
+		isSymlinkInSource = info.Mode()&os.ModeSymlink != 0
+	} else if !os.IsNotExist(statErr) {
+		assert.NoError(t, statErr)
+	}
 
 	if isSymlinkInSource {
 		// ensure warning for symlink is printed on the CLI

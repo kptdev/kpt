@@ -146,7 +146,7 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	content, err := os.ReadFile(kptfilePath)
 	if err != nil {
 		if goerrors.Is(err, os.ErrNotExist) {
-			b, marshalErr := yaml.MarshalWithOptions(kf, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+			b, marshalErr := marshalKptfile(kf)
 			if marshalErr != nil {
 				return marshalErr
 			}
