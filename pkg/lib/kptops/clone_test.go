@@ -23,6 +23,14 @@ import (
 
 const exampleRepoURL = "https://github.com/example/repo.git"
 
+func normalizeLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}
+
+func normalizeAndTrim(s string) string {
+	return strings.TrimSpace(normalizeLineEndings(s))
+}
+
 func TestNormalizeGitFields(t *testing.T) {
 	// Test case 1: Add .git suffix and normalize directory path
 	upstream := &kptfilev1.Upstream{
@@ -141,8 +149,8 @@ upstreamLock:
     commit: abcdef
 `
 
-	if strings.TrimSpace(got) != strings.TrimSpace(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", want, got)
+	if normalizeAndTrim(got) != normalizeAndTrim(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", normalizeLineEndings(want), normalizeLineEndings(got))
 	}
 }
 
@@ -166,7 +174,7 @@ metadata:
   name: new-name # name inline comment
 `
 
-	if strings.TrimSpace(got) != strings.TrimSpace(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", want, got)
+	if normalizeAndTrim(got) != normalizeAndTrim(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", normalizeLineEndings(want), normalizeLineEndings(got))
 	}
 }
