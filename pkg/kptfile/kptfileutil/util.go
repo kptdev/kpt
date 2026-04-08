@@ -215,7 +215,13 @@ func applyTypedKptfileToSDK(sdkKptfile *kptfileko.KptfileKubeObject, desired *kp
 }
 
 func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
-	if val == nil || reflect.ValueOf(val).IsZero() {
+	if val == nil {
+		_, err := obj.RemoveNestedField(fields...)
+		return err
+	}
+
+	reflectVal := reflect.ValueOf(val)
+	if reflectVal.IsZero() || ((reflectVal.Kind() == reflect.Map || reflectVal.Kind() == reflect.Slice) && reflectVal.Len() == 0) {
 		_, err := obj.RemoveNestedField(fields...)
 		return err
 	}
