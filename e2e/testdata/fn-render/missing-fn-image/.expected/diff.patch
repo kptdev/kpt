@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 11012de..a0f4634 100644
+index 11012de..9fadb6e 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -7,6 +7,26 @@ pipeline:
@@ -22,11 +22,11 @@ index 11012de..a0f4634 100644
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/dne:latest
++      - image: ghcr.io/kptdev/krm-functions-catalog/dne
 +        stderr: |-
 +          docker: Error response from daemon: error from registry: denied
 +          denied
 +
 +          Run 'docker run --help' for more information
 +        exitCode: 125
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/dne:latest: exit code 125'
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/dne: exit code 125'

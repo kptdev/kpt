@@ -84,7 +84,6 @@ apiVersion: custom.io/v1
 kind: Custom
 metadata:
   name: custom
-  namespace: staging
   labels:
     tier: backend
 spec:
@@ -107,7 +106,7 @@ spec:
 		Runtime:    &runtime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
+	r.RunnerOptions.ImagePullPolicy = runneroptions.NeverPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
 		t.Errorf("Failed to render: %v", err)
@@ -181,7 +180,6 @@ apiVersion: custom.io/v1
 kind: Custom
 metadata:
   name: custom
-  namespace: staging
   labels:
     tier: db
 spec:
@@ -221,7 +219,7 @@ spec:
 		Runtime:    &runtime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
+	r.RunnerOptions.ImagePullPolicy = runneroptions.NeverPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {

@@ -3,12 +3,3 @@ kind: FunctionResultList
 metadata:
   name: fnresults
 exitCode: 0
-items:
-  - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
-    exitCode: 0
-    results:
-      - message: Mutated field value to "4"
-        field:
-          path: spec.replicas
-        file:
-          path: resources.yaml

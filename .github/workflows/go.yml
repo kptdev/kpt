@@ -58,6 +58,9 @@ jobs:
         with:
           go-version-file: go/src/github.com/kptdev/kpt/go.mod
           cache: true
+          cache-dependency-path: |
+            go/src/github.com/kptdev/kpt/go.sum
+            go/src/github.com/kptdev/kpt/go.mod
       - name: Build, Test, Lint
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |
@@ -80,6 +83,9 @@ jobs:
         with:
           go-version-file: go/src/github.com/kptdev/kpt/go.mod
           cache: true
+          cache-dependency-path: |
+            go/src/github.com/kptdev/kpt/go.sum
+            go/src/github.com/kptdev/kpt/go.mod
       - name: Build
         working-directory: ${{ env.GOPATH }}/src/github.com/kptdev/kpt
         run: |

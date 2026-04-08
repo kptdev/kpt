@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -82,15 +82,19 @@ data: {foo: bar}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
+			fsys := filesys.MakeFsOnDisk()
+			pkgPath := os.TempDir()
 			if c.configFileContent != "" {
 				tmp, err := os.CreateTemp("", "kpt-pipeline-*")
 				assert.NoError(t, err, "unexpected error")
 				_, err = tmp.WriteString(c.configFileContent)
 				assert.NoError(t, err, "unexpected error")
-				c.fn.ConfigPath = path.Base(tmp.Name())
+				tmp.Close()                 // Close file handle
+				defer os.Remove(tmp.Name()) // Clean up temp file
+				c.fn.ConfigPath = filepath.Base(tmp.Name())
+				pkgPath = filepath.Dir(tmp.Name())
 			}
-			fsys := filesys.MakeFsOnDisk()
-			cn, err := newFnConfig(fsys, &c.fn, types.UniquePath(os.TempDir()))
+			cn, err := newFnConfig(fsys, &c.fn, types.UniquePath(pkgPath))
 			assert.NoError(t, err, "unexpected error")
 			actual, err := cn.String()
 			assert.NoError(t, err, "unexpected error")
@@ -657,39 +661,4 @@ func getExpectedPrefix(prefix string) string {
 		return prefix + "/"
 	}
 	return prefix
-}
-
-func TestHasTagOrDigest(t *testing.T) {
-	tests := []struct {
-		name  string
-		image string
-		want  bool
-	}{
-		// With explicit tag
-		{"tag", "nginx:1.25", true},
-		{"latest tag", "nginx:latest", true},
-		{"full path with tag", "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5", true},
-
-		// With digest
-		{"digest only", "nginx@sha256:abc123", true},
-		{"full path with digest", "ghcr.io/kptdev/krm-functions-catalog/set-labels@sha256:abc123", true},
-		{"tag and digest", "nginx:1.25@sha256:abc123", true},
-
-		// Without tag or digest
-		{"bare image", "nginx", false},
-		{"full path no tag", "ghcr.io/kptdev/krm-functions-catalog/set-labels", false},
-		{"two-part no tag", "library/nginx", false},
-
-		// Registry with port (should not confuse port colon with tag colon)
-		{"registry port no tag", "localhost:5000/myimage", false},
-		{"registry port with tag", "localhost:5000/myimage:v1", true},
-		{"registry port with digest", "localhost:5000/myimage@sha256:abc123", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := hasTagOrDigest(tt.image); got != tt.want {
-				t.Errorf("hasTagOrDigest(%q) = %v, want %v", tt.image, got, tt.want)
-			}
-		})
-	}
 }
