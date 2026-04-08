@@ -42,8 +42,8 @@ optionalStdOut:
   - custom.kpt.dev/cr reconcile pending
   - custom.kpt.dev/cr reconcile successful
   - custom.kpt.dev/cr reconcile timeout
-  - reconcile result: 2 attempted, 2 successful, 0 skipped, 0 failed, 0 timed out
-  - reconcile result: 2 attempted, 1 successful, 0 skipped, 0 failed, 1 timed out
+  - "reconcile result: 2 attempted, 2 successful, 0 skipped, 0 failed, 0 timed out"
+  - "reconcile result: 2 attempted, 1 successful, 0 skipped, 0 failed, 1 timed out"
 
 inventory:
   - group: apiextensions.k8s.io
