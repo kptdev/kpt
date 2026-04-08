@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 8a2f9e1..49b7fb6 100644
+index 6e26cd3..fb2aa71 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,11 +4,35 @@ metadata:
+@@ -4,12 +4,20 @@ metadata:
    name: no-save-on-render-failure
  pipeline:
    mutators:
@@ -12,16 +12,18 @@ index 8a2f9e1..49b7fb6 100644
 -  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
 -    configMap:
 -      app: myapp
--  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
--    configPath: starlark-fn-failure.yaml
+-  - image: invalid-image:v0.0.0
+-    configMap:
+-      tier: backend
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +      configMap:
 +        namespace: staging
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
 +      configMap:
 +        app: myapp
-+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+      configPath: starlark-fn-failure.yaml
++    - image: invalid-image:v0.0.0
++      configMap:
++        tier: backend
 +status:
 +  conditions:
 +    - type: Rendered
@@ -30,19 +32,3 @@ index 8a2f9e1..49b7fb6 100644
 +      message: |-
 +        pkg.render: pkg .:
 +        	pipeline.run: already handled error
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        stderr: 'failed to evaluate function: error: function failure'
-+        exitCode: 1
-+        results:
-+          - message: 'fail: intentional failure for testing'
-+            severity: error
-+        errorResults:
-+          - message: 'fail: intentional failure for testing'
-+            severity: error
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'

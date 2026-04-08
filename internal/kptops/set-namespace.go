@@ -16,8 +16,10 @@ package kptops
 
 import (
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // Simple implementation of set-namespace kpt function, primarily for testing.
@@ -41,10 +43,30 @@ func setNamespace(rl *framework.ResourceList) error {
 	}
 
 	for _, n := range rl.Items {
+		if isUnknown(n) && n.GetNamespace() == "" {
+			continue
+		}
 		if err := n.SetNamespace(namespace); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func isUnknown(n *yaml.RNode) bool {
+	apiVersion := n.GetApiVersion()
+	group := ""
+	if i := strings.Index(apiVersion, "/"); i != -1 {
+		group = apiVersion[:i]
+	}
+	// Heuristic: standard Kubernetes API groups either have no dots in the group
+	// name (e.g., "", "apps", "batch", "autoscaling", "extensions", "policy",
+	// "storage") or end in ".k8s.io" (e.g., "networking.k8s.io").
+	// Custom Resources (CRs) have groups with dots that don't end in ".k8s.io"
+	// (e.g., "custom.io", "stable.example.com").
+	if group == "" || !strings.Contains(group, ".") || strings.HasSuffix(group, ".k8s.io") {
+		return false
+	}
+	return true
 }

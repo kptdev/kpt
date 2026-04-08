@@ -12,5 +12,4 @@ pipeline:
       configMap:
         pkg: root
   validators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-      configPath: starlark-fn-failure.yaml
+    - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0

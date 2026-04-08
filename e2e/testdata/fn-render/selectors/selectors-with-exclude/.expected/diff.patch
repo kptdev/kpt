@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index c16cdca..1fd5efb 100644
+index bc10671..d8897bb 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -10,27 +10,12 @@ index c16cdca..1fd5efb 100644
 +    tier: backend
  pipeline:
    mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-@@ -15,3 +17,14 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configMap:
-         tier: backend
-+status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        exitCode: 0
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest
 diff --git a/resources.yaml b/resources.yaml
-index d3ed04c..f66e542 100644
+index d3ed04c..09153ec 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -17,8 +17,17 @@ metadata:
+@@ -17,6 +17,8 @@ metadata:
    name: nginx-deployment
    labels:
      foo: bar
@@ -38,17 +23,8 @@ index d3ed04c..f66e542 100644
 +  namespace: staging
  spec:
    replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
  ---
- apiVersion: custom.io/v1
- kind: Custom
-@@ -26,5 +35,6 @@ metadata:
+@@ -26,5 +28,6 @@ metadata:
    name: custom
    labels:
      foo: bar

@@ -22,8 +22,8 @@ stdErrStripLines:
 stdErr: |-
   [WARN] resolved symlink "new-link" to ".", please note that the symlinks within the package are ignored
   Package: "basicpipeline-symlink"
-  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0"
-  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0" in 0s
+  [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest"
+  [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest" in 0s
   [RUNNING] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5"
   [PASS] "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5" in 0s
   Successfully executed 2 function(s) in 1 package(s).
