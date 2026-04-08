@@ -59,10 +59,10 @@ information on using pull requests.
 
 Process for code reviews. Before requesting human review, a PR must:
 
-* Must have all tests passing
-* Must have all linting passing
-* Must meet project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
-* Must have all automatically generated comments addressed (AI generated comments, SonarCloud comments, bot generated comments etc)
+* All tests passing
+* All linting passing
+* Meeting project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
+* The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
 * If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
 
 ## Community Guidelines
