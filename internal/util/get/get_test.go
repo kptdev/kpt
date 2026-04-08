@@ -26,6 +26,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -219,7 +220,7 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	if statErr == nil {
 		isSymlinkInSource = info.Mode()&os.ModeSymlink != 0
 	} else if !os.IsNotExist(statErr) {
-		assert.NoError(t, statErr)
+		require.NoError(t, statErr)
 	}
 
 	if isSymlinkInSource {

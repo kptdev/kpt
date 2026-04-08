@@ -140,7 +140,7 @@ func marshalKptfile(k any) ([]byte, error) {
 func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
 	if _, err := os.Stat(dir); err != nil {
-		return err
+		return errors.E(errors.IO, types.UniquePath(dir), err)
 	}
 
 	content, err := os.ReadFile(kptfilePath)
@@ -150,9 +150,12 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 			if marshalErr != nil {
 				return marshalErr
 			}
-			return os.WriteFile(kptfilePath, b, 0600)
+			if writeErr := os.WriteFile(kptfilePath, b, 0600); writeErr != nil {
+				return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+			}
+			return nil
 		}
-		return err
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), err)
 	}
 
 	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
@@ -166,7 +169,10 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
 		return err
 	}
-	return os.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName]), 0600)
+	if writeErr := os.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName]), 0600); writeErr != nil {
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+	}
+	return nil
 }
 
 func applyTypedKptfileToSDK(sdkKptfile *kptfileko.KptfileKubeObject, desired *kptfilev1.KptFile) error {
@@ -215,13 +221,7 @@ func applyTypedKptfileToSDK(sdkKptfile *kptfileko.KptfileKubeObject, desired *kp
 }
 
 func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
-	if val == nil {
-		_, err := obj.RemoveNestedField(fields...)
-		return err
-	}
-
-	reflectVal := reflect.ValueOf(val)
-	if reflectVal.IsZero() || ((reflectVal.Kind() == reflect.Map || reflectVal.Kind() == reflect.Slice) && reflectVal.Len() == 0) {
+	if val == nil || reflect.ValueOf(val).IsZero() {
 		_, err := obj.RemoveNestedField(fields...)
 		return err
 	}
