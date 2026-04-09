@@ -72,7 +72,7 @@ type KptFile struct {
 	Upstream *Upstream `yaml:"upstream,omitempty" json:"upstream,omitempty"`
 
 	// UpstreamLock is a resolved locator for the last fetch of the package.
-	UpstreamLock *UpstreamLock `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
+	UpstreamLock *Locator `yaml:"upstreamLock,omitempty" json:"upstreamLock,omitempty"`
 
 	// Info contains metadata such as license, documentation, etc.
 	Info *PackageInfo `yaml:"info,omitempty" json:"info,omitempty"`
@@ -92,6 +92,9 @@ type OriginType string
 const (
 	// GitOrigin specifies a package as having been cloned from a git repository.
 	GitOrigin OriginType = "git"
+
+	// GenericOrigin specifies a package being stored in a custom storage.
+	GenericOrigin OriginType = "generic"
 )
 
 // UpdateStrategyType defines the strategy for updating a package from upstream.
@@ -171,14 +174,20 @@ type Git struct {
 	Ref string `yaml:"ref,omitempty" json:"ref,omitempty"`
 }
 
-// UpstreamLock is a resolved locator for the last fetch of the package.
-type UpstreamLock struct {
+// Locator is a resolved locator for the last fetch of the package.
+type Locator struct {
 	// Type is the type of origin.
 	Type OriginType `yaml:"type,omitempty" json:"type,omitempty"`
 
 	// Git is the resolved locator for a package on Git.
 	Git *GitLock `yaml:"git,omitempty" json:"git,omitempty"`
+
+	// Generic is a minimal locator for a package stored in some generic storage type (e.g.: a database)
+	Generic *GenericLock `yaml:"generic,omitempty" json:"generic,omitempty"`
 }
+
+// Deprecated: use `Locator` instead.
+type UpstreamLock = Locator
 
 // GitLock is the resolved locator for a package on Git.
 type GitLock struct {
@@ -197,6 +206,19 @@ type GitLock struct {
 	// Commit is the SHA-1 for the last fetch of the package.
 	// This is set by kpt for bookkeeping purposes.
 	Commit string `yaml:"commit,omitempty" json:"commit,omitempty"`
+}
+
+// GenericLock is a minimal locator for a package stored in a generic storage backend.
+type GenericLock struct {
+	// StoreID is a descriptor of the underlying storage type.
+	// e.g. 'DB' for database
+	StoreID string `yaml:"storeID,omitempty" json:"storeID,omitempty"`
+	// ResourceID is a unique identifier of the resource.
+	// The format depends on the underlying storage.
+	ResourceID string `yaml:"resourceID,omitempty" json:"resourceID,omitempty"`
+	// ResourceVersion indicates the last fetched version of the resource.
+	// The format depends on the underlying storage.
+	ResourceVersion string `yaml:"resourceVersion,omitempty" json:"resourceVersion,omitempty"`
 }
 
 // PackageInfo contains optional information about the package such as license, documentation, etc.
@@ -388,7 +410,59 @@ func (i Inventory) IsValid() bool {
 }
 
 type Status struct {
-	Conditions []Condition `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions   []Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
+}
+
+// RenderStatus represents the result of performing render operation
+// on a package's resources.
+type RenderStatus struct {
+	MutationSteps   []PipelineStepResult `yaml:"mutationSteps,omitempty" json:"mutationSteps,omitempty"`
+	ValidationSteps []PipelineStepResult `yaml:"validationSteps,omitempty" json:"validationSteps,omitempty"`
+	ErrorSummary    string               `yaml:"errorSummary,omitempty" json:"errorSummary,omitempty"`
+}
+
+// PipelineStepResult contains the structured result from an individual function
+// call in the pipeline.
+type PipelineStepResult struct {
+	Name           string       `yaml:"name,omitempty" json:"name,omitempty"`
+	Image          string       `yaml:"image,omitempty" json:"image,omitempty"`
+	ExecPath       string       `yaml:"exec,omitempty" json:"exec,omitempty"`
+	ExecutionError string       `yaml:"executionError,omitempty" json:"executionError,omitempty"`
+	Stderr         string       `yaml:"stderr,omitempty" json:"stderr,omitempty"`
+	ExitCode       int          `yaml:"exitCode" json:"exitCode"`
+	Results        []ResultItem `yaml:"results,omitempty" json:"results,omitempty"`
+	ErrorResults   []ResultItem `yaml:"errorResults,omitempty" json:"errorResults,omitempty"`
+}
+
+// ResultItem mirrors framework.Result with only the fields needed for Kptfile status.
+type ResultItem struct {
+	Message     string       `yaml:"message,omitempty" json:"message,omitempty"`
+	Severity    string       `yaml:"severity,omitempty" json:"severity,omitempty"`
+	ResourceRef *ResourceRef `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`
+	Field       *FieldRef    `yaml:"field,omitempty" json:"field,omitempty"`
+	File        *FileRef     `yaml:"file,omitempty" json:"file,omitempty"`
+}
+
+// ResourceRef identifies a resource.
+type ResourceRef struct {
+	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
+	Kind       string `yaml:"kind,omitempty" json:"kind,omitempty"`
+	Name       string `yaml:"name,omitempty" json:"name,omitempty"`
+	Namespace  string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// FieldRef references a field in a resource.
+type FieldRef struct {
+	Path          string `yaml:"path,omitempty" json:"path,omitempty"`
+	CurrentValue  string `yaml:"currentValue,omitempty" json:"currentValue,omitempty"`
+	ProposedValue string `yaml:"proposedValue,omitempty" json:"proposedValue,omitempty"`
+}
+
+// FileRef references a file containing a resource.
+type FileRef struct {
+	Path  string `yaml:"path,omitempty" json:"path,omitempty"`
+	Index int    `yaml:"index,omitempty" json:"index,omitempty"`
 }
 
 type Condition struct {
@@ -408,6 +482,23 @@ const (
 	ConditionFalse   ConditionStatus = "False"
 	ConditionUnknown ConditionStatus = "Unknown"
 )
+
+// Rendered condition type and reasons
+const (
+	ConditionTypeRendered = "Rendered"
+	ReasonRenderSuccess   = "RenderSuccess"
+	ReasonRenderFailed    = "RenderFailed"
+)
+
+// NewRenderedCondition creates a Rendered status condition.
+func NewRenderedCondition(status ConditionStatus, reason, message string) Condition {
+	return Condition{
+		Type:    ConditionTypeRendered,
+		Status:  status,
+		Reason:  reason,
+		Message: message,
+	}
+}
 
 // BFSRenderAnnotation is an annotation that can be used to indicate that a package
 // should be hydrated from the root package to the subpackages in a Breadth-First Level Order manner.

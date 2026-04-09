@@ -78,7 +78,7 @@ func (e *UnknownKptfileResourceError) Error() string {
 
 func WriteFile(dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteFile"
-	b, err := yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+	b, err := marshalKptfile(k)
 	if err != nil {
 		return err
 	}
@@ -92,6 +92,25 @@ func WriteFile(dir string, k any) error {
 		return errors.E(op, errors.IO, types.UniquePath(dir), err)
 	}
 	return nil
+}
+
+// WriteKptfileToFS writes a Kptfile to the given filesystem at the specified directory.
+func WriteKptfileToFS(fs filesys.FileSystem, dir string, k any) error {
+	const op errors.Op = "kptfileutil.WriteKptfileToFS"
+	b, err := marshalKptfile(k)
+	if err != nil {
+		return err
+	}
+	err = fs.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), b)
+	if err != nil {
+		return errors.E(op, errors.IO, types.UniquePath(dir), err)
+	}
+	return nil
+}
+
+// marshalKptfile marshals a Kptfile struct to YAML bytes.
+func marshalKptfile(k any) ([]byte, error) {
+	return yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
 }
 
 // ValidateInventory returns true and a nil error if the passed inventory
@@ -251,7 +270,7 @@ func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
 	}
 
 	// populate the cloneFrom values so we know where the package came from
-	kpgfile.UpstreamLock = &kptfilev1.UpstreamLock{
+	kpgfile.UpstreamLock = &kptfilev1.Locator{
 		Type: kptfilev1.GitOrigin,
 		Git: &kptfilev1.GitLock{
 			Repo:      spec.OrgRepo,

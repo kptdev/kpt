@@ -17,7 +17,7 @@ set -eo pipefail
 # Download schema file
 SCHEMA_DIR="schema/master-standalone"
 mkdir -p "$SCHEMA_DIR"
-curl -sSL 'https://kubernetesjsonschema.dev/master-standalone/configmap-v1.json' -o $SCHEMA_DIR/configmap-v1.json
+curl -fsSL 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/master-standalone/configmap-v1.json' -o "$SCHEMA_DIR/configmap-v1.json"
 
 kpt fn eval \
 --image ghcr.io/kptdev/krm-functions-catalog/kubeconform:latest \

@@ -117,11 +117,9 @@ Create a resource from a file or from stdin.
 # You should be under the `./blueprint` git directory. If not, check the above
 # section  "Prerequisites | Repositories"
 
-# create a directory
-$ mkdir basens
-
-# let's initialize the package
+# initialize the package (directory will be created automatically if it doesn't exist)
 $ kpt pkg init basens --description "kpt package for provisioning namespace"
+creating package directory basens
 writing basens/Kptfile
 writing basens/README.md
 writing basens/package-context.yaml

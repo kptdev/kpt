@@ -1,13 +1,18 @@
 diff --git a/Kptfile b/Kptfile
-index 491b12e..8c66fe7 100644
+index 17ef3d8..93810be 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -5,12 +5,14 @@ metadata:
-     kpt.dev/bfs-rendering: "true"
-     kpt.dev/save-on-render-failure: "true"
-   name: bfs-parent-validator-fails
+@@ -1,17 +1,42 @@
+ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
++  name: bfs-parent-validator-fails
 +  labels:
 +    test: parent-fail
+   annotations:
+     kpt.dev/bfs-rendering: "true"
+     kpt.dev/save-on-render-failure: "true"
+-  name: bfs-parent-validator-fails
  info:
    description: BFS - Parent validator fails
  pipeline:
@@ -17,7 +22,31 @@ index 491b12e..8c66fe7 100644
 -        test: "parent-fail"
 +        test: parent-fail
    validators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/invalid-image:v0.0.0
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+       configPath: starlark-fn-failure.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
++        exitCode: 1
++        results:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++        errorResults:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
 diff --git a/configmap.yaml b/configmap.yaml
 index 20a54f6..ad595de 100644
 --- a/configmap.yaml
@@ -30,6 +59,19 @@ index 20a54f6..ad595de 100644
 +    test: parent-fail
  data:
    key: value
+diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
+index 55ceaae..eb4b975 100644
+--- a/starlark-fn-failure.yaml
++++ b/starlark-fn-failure.yaml
+@@ -2,6 +2,8 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  labels:
++    test: parent-fail
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
 index e940ae8..88a8d4e 100644
 --- a/subpkg/Kptfile

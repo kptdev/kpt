@@ -1,0 +1,31 @@
+diff --git a/Kptfile b/Kptfile
+index 8c3173a..526d266 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,5 +4,25 @@ metadata:
+   name: db
+ pipeline:
+   validators:
+-    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest # validates httpbin deployment exists
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+       configPath: starlark-httpbin-val.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: already handled error
++  renderStatus:
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
++        exitCode: 1
++        results:
++          - message: 'fail: could not find httpbin deployment'
++            severity: error
++        errorResults:
++          - message: 'fail: could not find httpbin deployment'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'

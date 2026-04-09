@@ -213,7 +213,8 @@ $ git commit -am "added tenant-a"
 $ git push origin onboarding-tenant-a
 
 # make a pull request for platform team to merge
-# TODO (link to an example PR will be great here)
+# Create a PR with the changes above. 
+# See example tenant packages at: https://github.com/kptdev/kpt/tree/main/package-examples/tenant
 ```
 
 ## Day 2 use-cases

@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 21d9773..66b7fc9 100644
+index 21d9773..da35b9b 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
+@@ -2,8 +2,102 @@ apiVersion: kpt.dev/v1
  kind: Kptfile
  metadata:
    name: wordpress
@@ -11,6 +11,100 @@ index 21d9773..66b7fc9 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
+       configMap:
+         abc: def
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
++        exitCode: 0
++        results:
++          - message: 'set annotations: {"foo":"bar"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: Kptfile
++          - message: 'set annotations: {"foo":"bar"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++          - message: 'set annotations: {"foo":"bar"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 1
++          - message: 'set annotations: {"foo":"bar"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 2
++          - message: 'set annotations: {"foo":"bar"}'
++            field:
++              path: spec.template.metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 2
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
++        exitCode: 0
++        results:
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: Kptfile
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 1
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 2
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: spec.template.metadata.annotations
++            file:
++              path: mysql-deployment.yaml
++              index: 2
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: wordpress-deployment.yaml
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: wordpress-deployment.yaml
++              index: 1
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: metadata.annotations
++            file:
++              path: wordpress-deployment.yaml
++              index: 2
++          - message: 'set annotations: {"abc":"def"}'
++            field:
++              path: spec.template.metadata.annotations
++            file:
++              path: wordpress-deployment.yaml
++              index: 2
 diff --git a/mysql/Kptfile b/mysql/Kptfile
 index 3d51a77..965bc63 100644
 --- a/mysql/Kptfile

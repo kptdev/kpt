@@ -17,6 +17,7 @@ package get
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
@@ -76,9 +77,11 @@ type Runner struct {
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	const op errors.Op = "cmdget.preRunE"
+	// Track if destination was explicitly provided
+	explicitDest := len(args) > 1
 	if len(args) == 1 {
 		args = append(args, pkg.CurDir)
-	} else {
+	} else if filepath.Clean(args[1]) != "." {
 		_, err := os.Lstat(args[1])
 		if err == nil || os.IsExist(err) {
 			resolvedPath, err := argutil.ResolveSymlink(r.ctx, args[1])
@@ -88,7 +91,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 			args[1] = resolvedPath
 		}
 	}
-	t, err := parse.GitParseArgs(r.ctx, args)
+	t, err := parse.GitParseArgs(r.ctx, args, explicitDest)
 	if err != nil {
 		return errors.E(op, err)
 	}

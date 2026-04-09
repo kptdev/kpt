@@ -81,7 +81,49 @@ of reverting all changes. This is particularly useful for debugging render failu
 
 Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
 
-Let us now have a look at the wordpress package as an example:
+- **`kpt.dev/bfs-rendering`**: When set to `"true"`, renders the package hierarchy in breadth-first order instead of
+the default depth-first post-order.
+- **`kpt.dev/save-on-render-failure`**: When set to `"true"`, saves partially rendered resources to disk even when
+rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is
+essential for programmatic package rendering scenarios where preserving partial progress is valuable.
+
+### Status Conditions
+The Kptfile includes a `status.conditions` field that provides a declarative way to track the execution status of kpt
+operations. This makes package management operations observable and traceable.
+
+When `kpt fn render` executes, a `Rendered` status condition is automatically added to the root Kptfile to indicate 
+whether the rendering operation succeeded or failed.
+This status is recorded only for in-place renders (the default behavior).
+It is not written for out-of-place modes such as stdout (`-o stdout`), unwrap (`-o unwrap`), or 
+directory output (`-o <dir>`).
+
+**On successful render:**
+```yaml
+status:
+  conditions:
+    - type: Rendered
+      status: "True"
+      reason: RenderSuccess
+```
+
+**On failed render:**
+```yaml
+status:
+  conditions:
+    - type: Rendered
+      status: "False"
+      reason: RenderFailed
+      message: |-
+        pkg.render: pkg .:
+        	pipeline.run: must run with `--allow-exec` option to allow running function binaries
+```
+
+The status condition is recorded only in the root Kptfile, not in subpackages. The error message in failure cases 
+provides details about what went wrong during the render operation.
+
+Just as directories can be nested, a package can contain another package, called a _subpackage_.
+
+Let's take a look at the wordpress package as an example:
 
 ```shell
 kpt pkg get https://github.com/kptdev/kpt/package-examples/wordpress@v1.0.0-beta.59
@@ -165,7 +207,7 @@ Instead of consuming an existing package, you can also create a package from scr
 
 ![img](/images/lifecycle/flow5.svg)
 
-- **Create**: Initialize a directory using the `kpt pkg init` command.
+- **Create**: Initialize a package using `kpt pkg init`. The command creates the directory if it doesn't exist.
 
 Let us suppose that you have rendered the package, and would like to deploy it to a cluster. The workflow may look like this:
 

@@ -1,0 +1,17 @@
+diff --git a/Kptfile b/Kptfile
+index 828d292..7502f3c 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -5,3 +5,12 @@ metadata:
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/drop-comments:v0.1
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/drop-comments:v0.1
++        exitCode: 0

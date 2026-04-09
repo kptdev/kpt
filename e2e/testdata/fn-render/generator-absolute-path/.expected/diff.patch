@@ -1,3 +1,20 @@
+diff --git a/Kptfile b/Kptfile
+index 714d078..84b97ca 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -6,3 +6,12 @@ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+       configPath: starlark-httpbin.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
 diff --git a/another/file/out.yaml b/another/file/out.yaml
 new file mode 100644
 index 0000000..f36c98e

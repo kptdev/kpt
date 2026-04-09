@@ -1,17 +1,61 @@
 diff --git a/Kptfile b/Kptfile
-index ec2c042..d795f4f 100644
+index 8e0454e..f230a89 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,7 +4,9 @@ metadata:
+@@ -1,18 +1,43 @@
+ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
++  name: save-on-render-failure
++  namespace: staging
    annotations:
++    app: myapp
      kpt.dev/bfs-rendering: "true"
      kpt.dev/save-on-render-failure: "true"
-+    app: myapp
-   name: save-on-render-failure
-+  namespace: staging
+-  name: save-on-render-failure
  pipeline:
    mutators:
-   - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+-    configMap:
+-      namespace: staging
+-  - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
+-    configMap:
+-      app: myapp
+-  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+-    configPath: starlark-fn-failure.yaml
+-
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++      configMap:
++        namespace: staging
++    - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
++      configMap:
++        app: myapp
++    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++      configPath: starlark-fn-failure.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:v0.1.4
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
++        exitCode: 1
++        results:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++        errorResults:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
 diff --git a/resources.yaml b/resources.yaml
 index 0848ba0..7eece9b 100644
 --- a/resources.yaml
@@ -29,3 +73,17 @@ index 0848ba0..7eece9b 100644
 +    metadata:
 +      annotations:
 +        app: myapp
+diff --git a/starlark-fn-failure.yaml b/starlark-fn-failure.yaml
+index 55ceaae..d2841c7 100644
+--- a/starlark-fn-failure.yaml
++++ b/starlark-fn-failure.yaml
+@@ -2,6 +2,9 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  annotations:
++    app: myapp
++  namespace: staging
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")

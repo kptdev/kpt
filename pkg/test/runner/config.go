@@ -58,6 +58,11 @@ type TestCaseConfig struct {
 	// ActualStripLines is a list of lines that should be ignored on the actual function output
 	ActualStripLines []string `json:"actualStripLines,omitempty" yaml:"actualStripLines,omitempty"`
 
+	// DiffStripRegEx is a regular expression. Lines matching this pattern are
+	// removed from both actual and expected diffs before comparison, making
+	// tests resilient to environment-specific output such as docker daemon errors
+	DiffStripRegEx string `json:"diffStripRegEx,omitempty" yaml:"diffStripRegEx,omitempty"`
+
 	// StdErr is the expected standard error output and should be checked
 	// when a nonzero exit code is expected. Default: ""
 	StdErr string `json:"stdErr,omitempty" yaml:"stdErr,omitempty"`

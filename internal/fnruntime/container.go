@@ -80,7 +80,6 @@ type ContainerFn struct {
 
 	// Image is the container image to run
 	Image string
-	Tag   string
 	// ImagePullPolicy controls the image pulling behavior.
 	ImagePullPolicy runneroptions.ImagePullPolicy
 	// Container function will be killed after this timeour.
@@ -150,21 +149,6 @@ func (f *ContainerFn) Run(reader io.Reader, writer io.Writer) error {
 	})
 	if err != nil {
 		return err
-	}
-
-	if f.Tag != "" {
-		tagResolver := &TagResolver{
-			lister: &RegClientLister{
-				client: regclient.New(
-					regclient.WithUserAgent(UserAgent),
-					regclient.WithDockerCreds(),
-				),
-			},
-		}
-		f.Image, err = tagResolver.ResolveFunctionImage(f.Ctx, f.Image, f.Tag)
-		if err != nil {
-			return err
-		}
 	}
 
 	switch runtime {

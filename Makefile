@@ -22,6 +22,8 @@ YEAR_GEN          := $(shell date '+%Y')
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
+export KPT_FN_WASM_RUNTIME ?= nodejs
+
 LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
@@ -64,7 +66,7 @@ install-golangci-lint:
 
 .PHONY: install-swagger
 install-swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
+	go install github.com/go-swagger/go-swagger/cmd/swagger@v0.33.1
 
 .PHONY: install-mdtogo
 install-mdtogo:
@@ -76,7 +78,7 @@ fix:
 fmt:
 	go fmt ./...
 
-schema:
+schema: install-swagger
 	GOBIN=$(GOBIN) scripts/generate-schema.sh
 
 generate: install-mdtogo

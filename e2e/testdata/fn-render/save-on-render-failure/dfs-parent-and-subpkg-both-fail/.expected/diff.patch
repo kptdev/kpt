@@ -1,5 +1,47 @@
+diff --git a/Kptfile b/Kptfile
+index 2e71448..1a82d1e 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,9 +1,9 @@
+ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
++  name: dfs-parent-and-subpkg-both-fail
+   annotations:
+     kpt.dev/save-on-render-failure: "true"
+-  name: dfs-parent-and-subpkg-both-fail
+ info:
+   description: DFS - Both parent and subpackage fail
+ pipeline:
+@@ -14,3 +14,26 @@ pipeline:
+   validators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
+       configPath: starlark-fn-failure.yaml
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg ./subpkg:
++        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
++    validationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        stderr: 'failed to evaluate function: error: function failure'
++        exitCode: 1
++        results:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++        errorResults:
++          - message: 'fail: intentional failure for testing'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
 diff --git a/subpkg/Kptfile b/subpkg/Kptfile
-index a332cf5..cb45834 100644
+index 492902c..3cb271d 100644
 --- a/subpkg/Kptfile
 +++ b/subpkg/Kptfile
 @@ -2,6 +2,8 @@ apiVersion: kpt.dev/v1
@@ -26,3 +68,16 @@ index 276bf9e..7b26a8d 100644
    - port: 80
 +  selector:
 +    pkg: subpkg
+diff --git a/subpkg/starlark-fn-failure.yaml b/subpkg/starlark-fn-failure.yaml
+index 55ceaae..1a57ad9 100644
+--- a/subpkg/starlark-fn-failure.yaml
++++ b/subpkg/starlark-fn-failure.yaml
+@@ -2,6 +2,8 @@ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:
+   name: always-fail
++  labels:
++    pkg: subpkg
+ source: |
+   def fail_fn(items):
+     fail("intentional failure for testing")

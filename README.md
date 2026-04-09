@@ -1,4 +1,4 @@
-<img src="logo/KptLogoLarge.png" width="220">
+<img src="https://raw.githubusercontent.com/kptdev/.github/main/kpt_stacked_color-100x123.png" width="220" alt="kpt logo">
 
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10656/badge)](https://www.bestpractices.dev/projects/10656)
@@ -23,6 +23,8 @@ scale by manipulating declarative [Configuration as Data](docs/design-docs/06-co
   need to directly interact with storage (git, container images).
 
 See [the FAQ](https://kpt.dev/faq/) for more details about how kpt is different from alternatives.
+
+Use our [public Dosu space](https://github.dosu.com/kptdev/kpt) to ask anything about kpt.
 
 ## Why kpt?
 

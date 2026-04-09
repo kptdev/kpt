@@ -1,0 +1,24 @@
+diff --git a/Kptfile b/Kptfile
+index 0d98dbb..a70d5e2 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -4,4 +4,18 @@ metadata:
+   name: app
+ pipeline:
+   mutators:
+-    - exec: "sed -e 's/foo/bar/'"
++    - exec: sed -e 's/foo/bar/'
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: must run with `--allow-exec` option to allow running function binaries
++  renderStatus:
++    mutationSteps:
++      - exec: sed -e 's/foo/bar/'
++        executionError: must run with `--allow-exec` option to allow running function binaries
++        exitCode: 1
++    errorSummary: 'sed -e ''s/foo/bar/'': must run with `--allow-exec` option to allow running function binaries'

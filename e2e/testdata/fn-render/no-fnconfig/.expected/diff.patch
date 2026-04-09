@@ -1,0 +1,30 @@
+diff --git a/Kptfile b/Kptfile
+index f2d1249..6772376 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -8,3 +8,25 @@ pipeline:
+       configMap:
+         namespace: staging
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++status:
++  conditions:
++    - type: Rendered
++      status: "False"
++      reason: RenderFailed
++      message: |-
++        pkg.render: pkg .:
++        	pipeline.run: already handled error
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        stderr: '[error] : failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
++        exitCode: 1
++        results:
++          - message: 'failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
++            severity: error
++        errorResults:
++          - message: 'failed to configure function: `functionConfig` must be either a `ConfigMap` or `SetLabels`'
++            severity: error
++    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5: exit code 1'
