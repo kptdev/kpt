@@ -107,6 +107,9 @@ spec:
 		Runtime:    &runtime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		t.Fatalf("Failed to initialize CEL environment: %v", err)
+	}
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())
 	if err != nil {
@@ -221,6 +224,9 @@ spec:
 		Runtime:    &runtime{},
 	}
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	if err := r.RunnerOptions.InitCELEnvironment(); err != nil {
+		t.Fatalf("Failed to initialize CEL environment: %v", err)
+	}
 	r.RunnerOptions.ImagePullPolicy = runneroptions.IfNotPresentPull
 
 	_, err := r.Execute(fake.CtxWithDefaultPrinter())

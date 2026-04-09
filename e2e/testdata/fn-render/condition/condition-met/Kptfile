@@ -1,0 +1,8 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: app
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
+      condition: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')"
