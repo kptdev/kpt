@@ -58,12 +58,12 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		for _, lister := range tr.Listers {
 			possibleTags, err := lister.List(ctx, image)
 			if err != nil {
-				klog.Errorf("failed to list tags for image %q using lister %q: %v", image, lister.Name(), err)
+				klog.V(2).Infof("failed to list tags for image %q using lister %q: %v", image, lister.Name(), err)
 				continue
 			}
 
 			if len(possibleTags) == 0 {
-				klog.Infof("no tags found for image %q with lister %q", image, lister.Name())
+				klog.V(2).Infof("no tags found for image %q with lister %q", image, lister.Name())
 				continue
 			}
 
