@@ -1,23 +1,12 @@
 diff --git a/Kptfile b/Kptfile
-index 2210a5f..ac7ae33 100755
+index eb90ac3..ac7ae33 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -1,8 +1,18 @@
--apiVersion: kpt.dev/v1
--kind: Kptfile
--metadata:
--  name: app
--pipeline:
--  mutators:
--    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
+@@ -5,4 +5,14 @@ metadata:
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/no-op
 -      condition: "resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')"
-+apiVersion: kpt.dev/v1
-+kind: Kptfile
-+metadata:
-+  name: app
-+pipeline:
-+  mutators:
-+    - image: ghcr.io/kptdev/krm-functions-catalog/no-op
 +      condition: resources.exists(r, r.kind == 'ConfigMap' && r.metadata.name == 'app-config')
 +status:
 +  conditions:
@@ -30,20 +19,13 @@ index 2210a5f..ac7ae33 100755
 +        exitCode: 0
 +        skipped: true
 diff --git a/resources.yaml b/resources.yaml
-index d9eb99a..c8cdecf 100755
+index 7806994..c8cdecf 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -1,6 +1,6 @@
--apiVersion: apps/v1
--kind: Deployment
--metadata:
--  name: my-app
--spec:
+@@ -3,4 +3,4 @@ kind: Deployment
+ metadata:
+   name: my-app
+ spec:
 -  replicas: 1
 \ No newline at end of file
-+apiVersion: apps/v1
-+kind: Deployment
-+metadata:
-+  name: my-app
-+spec:
 +  replicas: 1
