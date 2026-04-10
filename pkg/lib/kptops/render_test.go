@@ -29,7 +29,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"k8s.io/klog/v2"
 )
-
 func TestPackagePrinter(t *testing.T) {
 	t.Run("PrintPackage without leading newline", func(t *testing.T) {
 		var errBuf bytes.Buffer

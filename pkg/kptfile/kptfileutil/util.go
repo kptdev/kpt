@@ -88,14 +88,13 @@ func (e *UnknownKptfileResourceError) Error() string {
 
 func WriteFile(dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteFile"
-	if kf, ok := k.(*kptfilev1.KptFile); ok {
+	switch kf := k.(type) {
+	case *kptfilev1.KptFile:
 		if err := writeKptfilePreservingFormat(dir, kf); err != nil {
 			return errors.E(op, types.UniquePath(dir), err)
 		}
 		return nil
-	}
-
-	if kf, ok := k.(kptfilev1.KptFile); ok {
+	case kptfilev1.KptFile:
 		if err := writeKptfilePreservingFormat(dir, &kf); err != nil {
 			return errors.E(op, types.UniquePath(dir), err)
 		}
@@ -174,7 +173,7 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 		}
 		return nil
 	}
-	if err := applyTypedKptfileToSDK(existingKptfile, kf); err != nil {
+	if err := applyTypedKptfileToKubeObject(existingKptfile, kf); err != nil {
 		return err
 	}
 	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
@@ -186,9 +185,9 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	return nil
 }
 
-func applyTypedKptfileToSDK(sdkKptfile *kptfileko.KptfileKubeObject, desired *kptfilev1.KptFile) error {
+func applyTypedKptfileToKubeObject(sdkKptfile *kptfileko.KptfileKubeObject, desired *kptfilev1.KptFile) error {
 	if sdkKptfile == nil {
-		return fmt.Errorf("cannot update empty sdk Kptfile")
+		return fmt.Errorf("cannot update empty Kptfile KubeObject")
 	}
 
 	if err := sdkKptfile.SetNestedString(desired.APIVersion, "apiVersion"); err != nil {
@@ -558,7 +557,7 @@ func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (str
 
 	mutator(typedKptfile)
 
-	if err := applyTypedKptfileToSDK(sdkKptfile, typedKptfile); err != nil {
+	if err := applyTypedKptfileToKubeObject(sdkKptfile, typedKptfile); err != nil {
 		return "", err
 	}
 

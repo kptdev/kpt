@@ -30,6 +30,7 @@ import (
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -100,8 +101,9 @@ func TestPathRelToRoot(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			newPath, err := pathRelToRoot(tc.rootPath,
 				tc.subPkgPath, tc.resourcePath)
-			assert.Equal(t, newPath, tc.expected)
+			assert.Equal(t, tc.expected, newPath)
 			if tc.errString != "" {
+				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errString)
 			}
 		})
@@ -231,14 +233,14 @@ metadata:
 		tc := tests[i]
 		t.Run(tc.name, func(t *testing.T) {
 			output, err := kio.ParseAll(tc.output)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			selectedInput, err := kio.ParseAll(tc.selectedInput)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			input, err := kio.ParseAll(tc.input)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			result := fnruntime.MergeWithInput(output, selectedInput, input)
 			actual, err := kio.StringAll(result)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
 	}
@@ -253,19 +255,19 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 
 	rootPkgPath := rootString
 	err := mockFileSystem.Mkdir(rootPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	subPkgPath := subPkgString
 	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	childPkgPath := "/root/subpkg/child"
 	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	siblingPkgPath := "/root/sibling"
 	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
 apiVersion: kpt.dev/v1
@@ -275,7 +277,7 @@ metadata:
   annotations:
     kpt.dev/bfs-rendering: "%t"
 `, renderBfs))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
@@ -283,7 +285,7 @@ kind: Kptfile
 metadata:
   name: sub-package
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(siblingPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
@@ -291,7 +293,7 @@ kind: Kptfile
 metadata:
   name: sibling-package
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(childPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
@@ -299,7 +301,7 @@ kind: Kptfile
 metadata:
   name: child-package
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	renderer := &Renderer{
 		PkgPath:        rootPkgPath,
@@ -341,12 +343,8 @@ func TestRenderer_Execute_RenderOrder(t *testing.T) {
 			renderer, outputBuffer, ctx := setupRendererTest(t, tc.renderBfs)
 
 			fnResults, err := renderer.Execute(ctx)
-			if !assert.NoError(t, err) {
-				return
-			}
-			if !assert.NotNil(t, fnResults) {
-				return
-			}
+			require.NoError(t, err)
+			require.NotNil(t, fnResults)
 			assert.Equal(t, 0, len(fnResults.Items))
 
 			output := outputBuffer.String()
@@ -361,7 +359,7 @@ func TestHydrate_ErrorCases(t *testing.T) {
 	// Create a mock root package
 	rootPath := rootString
 	err := mockFileSystem.Mkdir(rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Add a Kptfile to the root package
 	err = mockFileSystem.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
@@ -370,10 +368,10 @@ kind: Kptfile
 metadata:
   name: root-package
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	root, err := newPkgNode(mockFileSystem, rootPath, nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       root,
@@ -397,7 +395,7 @@ metadata:
 		// Simulate an error in LocalResources by creating a package with no Kptfile
 		invalidPkgPath := "/invalid"
 		err := mockFileSystem.Mkdir(invalidPkgPath)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		invalidPkgNode, err := newPkgNode(mockFileSystem, invalidPkgPath, nil)
 		if err != nil {
@@ -418,11 +416,11 @@ func TestHydrateBfsOrder_ErrorCases(t *testing.T) {
 
 	rootPkgPath := rootString
 	err := mockFileSystem.Mkdir(rootPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	subPkgPath := subPkgString
 	err = mockFileSystem.Mkdir(subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
@@ -432,7 +430,7 @@ metadata:
   annotations:
     kpt.dev/bfs-rendering: "true"
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
@@ -440,13 +438,11 @@ kind: Kptfile
 metadata:
   name: sub-package
 `))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Create a mock hydration context
 	root, err := newPkgNode(mockFileSystem, rootPkgPath, nil)
-	if !assert.NoError(t, err) {
-		return
-	}
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       root,
@@ -485,7 +481,7 @@ metadata:
 		}
 
 		_, err := hydrateBfsOrder(ctx, root, hctx)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	})
 }
 
@@ -494,7 +490,7 @@ func TestHydrateBfsOrder_RunPipelineError(t *testing.T) {
 	mockFileSystem := filesys.MakeFsInMemory()
 
 	rootPkgPath := rootString
-	assert.NoError(t, mockFileSystem.Mkdir(rootPkgPath))
+	require.NoError(t, mockFileSystem.Mkdir(rootPkgPath))
 
 	// Write a Kptfile with an invalid api version
 	_ = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), []byte(`
@@ -587,9 +583,9 @@ func TestRenderer_PrintPipelineExecutionSummary(t *testing.T) {
 func TestUpdateRenderStatus_Success(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.Mkdir(rootPath))
 
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -597,7 +593,7 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -609,8 +605,8 @@ metadata:
 	updateRenderStatus(hctx, nil)
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
 	assert.Equal(t, kptfilev1.ConditionTypeRendered, rootKf.Status.Conditions[0].Type)
 	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
@@ -620,9 +616,9 @@ metadata:
 func TestUpdateRenderStatus_Failure(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.Mkdir(rootPath))
 
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -630,7 +626,7 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -642,8 +638,8 @@ metadata:
 	updateRenderStatus(hctx, fmt.Errorf("set-annotations failed: some error"))
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
 	assert.Equal(t, kptfilev1.ConditionFalse, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderFailed, rootKf.Status.Conditions[0].Reason)
@@ -653,10 +649,10 @@ metadata:
 func TestUpdateRenderStatus_ReplacesExistingCondition(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.Mkdir(rootPath))
 
 	// Kptfile with an existing Rendered condition from a previous run
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -670,7 +666,7 @@ status:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -682,8 +678,8 @@ status:
 	updateRenderStatus(hctx, nil)
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
 	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, rootKf.Status.Conditions[0].Reason)
@@ -693,18 +689,18 @@ status:
 func TestUpdateRenderStatus_OnlyUpdatesRootKptfile(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.Mkdir(rootPath))
 
 	subPkgPath := subPkgString
-	assert.NoError(t, mockFS.Mkdir(subPkgPath))
+	require.NoError(t, mockFS.Mkdir(subPkgPath))
 
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: root-package
 `)))
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.WriteFile(filepath.Join(subPkgPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -712,9 +708,9 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	subPkg, err := pkg.New(mockFS, subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -728,14 +724,14 @@ metadata:
 
 	// Root should have the condition
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 	assert.Len(t, rootKf.Status.Conditions, 1)
 	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 
 	// Subpackage should NOT have any condition
 	subKf, err := kptfileutil.ReadKptfile(mockFS, subPkgPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.True(t, subKf.Status == nil || len(subKf.Status.Conditions) == 0)
 }
 
@@ -753,7 +749,7 @@ func TestBuildRenderStatus_SuccessWithMutationSteps(t *testing.T) {
 		},
 	}
 	rs := buildRenderStatus(hctx, nil)
-	assert.NotNil(t, rs)
+	require.NotNil(t, rs)
 	assert.Len(t, rs.MutationSteps, 2)
 	assert.Empty(t, rs.ValidationSteps)
 	assert.Empty(t, rs.ErrorSummary)
@@ -770,7 +766,7 @@ func TestBuildRenderStatus_FailureWithErrorSummary(t *testing.T) {
 		},
 	}
 	rs := buildRenderStatus(hctx, fmt.Errorf("pipeline failed"))
-	assert.NotNil(t, rs)
+	require.NotNil(t, rs)
 	assert.Contains(t, rs.ErrorSummary, "bad-image:v1: exit code 1")
 	assert.Contains(t, rs.ErrorSummary, "gatekeeper:latest: image not found")
 }
@@ -917,8 +913,8 @@ func TestFrameworkResultsToItems_NilFieldValues(t *testing.T) {
 func TestUpdateRenderStatus_WritesRenderStatus(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -926,7 +922,7 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -943,8 +939,8 @@ metadata:
 	updateRenderStatus(hctx, fmt.Errorf("validation failed"))
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 
 	// Condition should be set
 	assert.Len(t, rootKf.Status.Conditions, 1)
@@ -952,7 +948,7 @@ metadata:
 
 	// RenderStatus should be populated
 	rs := rootKf.Status.RenderStatus
-	assert.NotNil(t, rs)
+	require.NotNil(t, rs)
 	assert.Len(t, rs.MutationSteps, 1)
 	assert.Equal(t, "set-namespace:v1", rs.MutationSteps[0].Image)
 	assert.Len(t, rs.ValidationSteps, 1)
@@ -963,8 +959,8 @@ metadata:
 func TestUpdateRenderStatus_NilRenderStatusWhenNoSteps(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -972,7 +968,7 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	hctx := &hydrationContext{
 		root:       &pkgNode{pkg: rootPkg},
@@ -983,16 +979,16 @@ metadata:
 	updateRenderStatus(hctx, nil)
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status)
 	assert.Nil(t, rootKf.Status.RenderStatus)
 }
 
 func TestUpdateRenderStatus_ClearsPreviousRenderStatus(t *testing.T) {
 	mockFS := filesys.MakeFsInMemory()
 	rootPath := rootString
-	assert.NoError(t, mockFS.Mkdir(rootPath))
-	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+	require.NoError(t, mockFS.Mkdir(rootPath))
+	require.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
 apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
@@ -1000,7 +996,7 @@ metadata:
 `)))
 
 	rootPkg, err := pkg.New(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// First render: failure with steps
 	hctx := &hydrationContext{
@@ -1014,8 +1010,8 @@ metadata:
 	updateRenderStatus(hctx, fmt.Errorf("fail"))
 
 	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
-	assert.NotNil(t, rootKf.Status.RenderStatus)
+	require.NoError(t, err)
+	require.NotNil(t, rootKf.Status.RenderStatus)
 
 	// Second render: success with no steps (empty pipeline)
 	hctx2 := &hydrationContext{
@@ -1026,7 +1022,7 @@ metadata:
 	updateRenderStatus(hctx2, nil)
 
 	rootKf, err = kptfileutil.ReadKptfile(mockFS, rootPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Nil(t, rootKf.Status.RenderStatus)
 }
 
@@ -1080,7 +1076,7 @@ metadata:
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			nodes, err := kio.ParseAll(tc.inputYAML)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			clearAnnotationsOnMutFailure(nodes)
 

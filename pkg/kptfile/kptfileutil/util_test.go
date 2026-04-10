@@ -22,6 +22,7 @@ import (
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -61,15 +62,6 @@ func TestValidateInventory(t *testing.T) {
 }
 
 func TestUpdateKptfile(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		return dir
-	}
-
 	testCases := map[string]struct {
 		origin         string
 		updated        string
@@ -586,26 +578,18 @@ status:
 			}
 
 			err := UpdateKptfile(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			c, err := os.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			expectedObj := map[string]any{}
 			err = yaml.Unmarshal([]byte(strings.TrimSpace(tc.expected)), &expectedObj)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			actualObj := map[string]any{}
 			err = yaml.Unmarshal(c, &actualObj)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			assert.Equal(t, expectedObj, actualObj)
 		})
@@ -613,15 +597,6 @@ status:
 }
 
 func TestUpdateKptfile_PreservesCommentsAndFormatting(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(tt, err) {
-			tt.FailNow()
-		}
-		return dir
-	}
-
 	originDir := writeKptfileToTemp(t, `
 apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -672,14 +647,10 @@ upstream:
 `)
 
 	err := UpdateKptfile(localDir, updatedDir, originDir, true)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 	content := string(contentBytes)
 
 	assert.Contains(t, content, "# local package level comment")
@@ -690,15 +661,6 @@ upstream:
 }
 
 func TestUpdateKptfile_PreservesExactFormattingAndComments(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(tt, err) {
-			tt.FailNow()
-		}
-		return dir
-	}
-
 	originDir := writeKptfileToTemp(t, `
 apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -762,14 +724,10 @@ upstreamLock:
 `)
 
 	err := UpdateKptfile(localDir, updatedDir, originDir, true)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	want := `
 apiVersion: kpt.dev/v1 # keep api inline comment
@@ -806,9 +764,7 @@ func TestWriteFile_ReturnsErrorWhenPathIsFile(t *testing.T) {
 	baseDir := t.TempDir()
 	filePath := filepath.Join(baseDir, "not-a-directory")
 	err := os.WriteFile(filePath, []byte("content"), 0600)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	err = WriteFile(filePath, DefaultKptfile("sample"))
 	assert.Error(t, err)
@@ -819,34 +775,19 @@ func TestWriteFile_RecoversFromInvalidExistingKptfile(t *testing.T) {
 	dir := t.TempDir()
 	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
 	err := os.WriteFile(kptfilePath, []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata: [bad\n"), 0600)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	err = WriteFile(dir, DefaultKptfile("sample"))
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 
 	content, err := os.ReadFile(kptfilePath)
-	if !assert.NoError(t, err) {
-		t.FailNow()
-	}
+	require.NoError(t, err)
 	assert.Contains(t, string(content), "apiVersion: kpt.dev/v1")
 	assert.Contains(t, string(content), "kind: Kptfile")
 	assert.Contains(t, string(content), "name: sample")
 }
 
 func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(tt, err) {
-			tt.FailNow()
-		}
-		return dir
-	}
-
 	originDir := writeKptfileToTemp(t, `
 apiVersion: kpt.dev/v1
 kind: Kptfile
@@ -944,14 +885,10 @@ metadata:
 		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
 			kf.Name = "updated-sample"
 		})
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		assert.Equal(t, "updated-sample", updatedKf.Name)
 		if assert.NotNil(t, updatedKf.Annotations) {
@@ -976,14 +913,10 @@ metadata:
 `
 
 		updatedContent, err := UpdateKptfileContent(content, func(*kptfilev1.KptFile) {})
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		assert.Nil(t, updatedKf.Annotations)
 		assert.NotContains(t, updatedContent, "annotations:")
@@ -1000,14 +933,10 @@ metadata:
 		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
 			kf.Name = "updated-sample"
 		})
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
+		require.NoError(t, err)
 
 		assert.Equal(t, "updated-sample", updatedKf.Name)
 		assert.Nil(t, updatedKf.Annotations)
@@ -1791,7 +1720,7 @@ pipeline:
   - name: ref-folders
     image: ghcr.io/kptdev/krm-functions-catalog/ref-folders
     configMap:
-      band: Hüsker Dü
+      band: HÃ¼sker DÃ¼
 `,
 			expected: `
 apiVersion: kpt.dev/v1
@@ -1810,18 +1739,16 @@ pipeline:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			localKf, err := DecodeKptfile(strings.NewReader(tc.local))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			updatedKf, err := DecodeKptfile(strings.NewReader(tc.update))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			originKf, err := DecodeKptfile(strings.NewReader(tc.origin))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = merge(localKf, updatedKf, originKf)
 			if tc.err == nil {
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
+				require.NoError(t, err)
 				actual, err := yaml.Marshal(localKf)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				if !assert.Equal(t,
 					strings.TrimSpace(tc.expected), strings.TrimSpace(string(actual))) {
 					t.FailNow()
@@ -1836,4 +1763,12 @@ pipeline:
 			}
 		})
 	}
+}
+
+func writeKptfileToTemp(t *testing.T, content string) string {
+	t.Helper()
+	dir := t.TempDir()
+	err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+	require.NoError(t, err)
+	return dir
 }
