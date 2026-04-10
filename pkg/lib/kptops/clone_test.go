@@ -15,21 +15,13 @@
 package kptops
 
 import (
-	"strings"
 	"testing"
 
+	utilstrings "github.com/kptdev/kpt/internal/util/strings"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 )
 
 const exampleRepoURL = "https://github.com/example/repo.git"
-
-func normalizeLineEndings(s string) string {
-	return strings.ReplaceAll(s, "\r\n", "\n")
-}
-
-func normalizeAndTrim(s string) string {
-	return strings.TrimSpace(normalizeLineEndings(s))
-}
 
 func TestNormalizeGitFields(t *testing.T) {
 	// Test case 1: Add .git suffix and normalize directory path
@@ -149,8 +141,8 @@ upstreamLock:
     commit: abcdef
 `
 
-	if normalizeAndTrim(got) != normalizeAndTrim(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", normalizeLineEndings(want), normalizeLineEndings(got))
+	if utilstrings.NormalizeAndTrim(got) != utilstrings.NormalizeAndTrim(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", utilstrings.NormalizeLineEndings(want), utilstrings.NormalizeLineEndings(got))
 	}
 }
 
@@ -174,7 +166,7 @@ metadata:
   name: new-name # name inline comment
 `
 
-	if normalizeAndTrim(got) != normalizeAndTrim(want) {
-		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", normalizeLineEndings(want), normalizeLineEndings(got))
+	if utilstrings.NormalizeAndTrim(got) != utilstrings.NormalizeAndTrim(want) {
+		t.Fatalf("updated Kptfile mismatch\nwant:\n%s\n\ngot:\n%s", utilstrings.NormalizeLineEndings(want), utilstrings.NormalizeLineEndings(got))
 	}
 }

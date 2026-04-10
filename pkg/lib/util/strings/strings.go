@@ -31,3 +31,13 @@ func JoinStringsWithQuotes(strs []string) string {
 	}
 	return b.String()
 }
+
+// NormalizeLineEndings converts CRLF line endings to LF.
+func NormalizeLineEndings(s string) string {
+	return strings.ReplaceAll(s, "\r\n", "\n")
+}
+
+// NormalizeAndTrim normalizes line endings and trims surrounding whitespace.
+func NormalizeAndTrim(s string) string {
+	return strings.TrimSpace(NormalizeLineEndings(s))
+}

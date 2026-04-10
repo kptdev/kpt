@@ -18,10 +18,10 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	utilstrings "github.com/kptdev/kpt/internal/util/strings"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,8 +63,8 @@ func TestPkgContextGenerator(t *testing.T) {
 			if err != test.expErr {
 				t.Errorf("exp: %v got: %v", test.expErr, err)
 			}
-			expected := strings.ReplaceAll(string(exp), "\r\n", "\n")
-			actual := strings.ReplaceAll(out.String(), "\r\n", "\n")
+			expected := utilstrings.NormalizeLineEndings(string(exp))
+			actual := utilstrings.NormalizeLineEndings(out.String())
 			if diff := cmp.Diff(expected, actual); diff != "" {
 				t.Errorf("pkg context mistmach (-want +got):\n%s", diff)
 			}
