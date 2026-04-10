@@ -66,7 +66,7 @@ func TestPkgContextGenerator(t *testing.T) {
 			expected := utilstrings.NormalizeLineEndings(string(exp))
 			actual := utilstrings.NormalizeLineEndings(out.String())
 			if diff := cmp.Diff(expected, actual); diff != "" {
-				t.Errorf("pkg context mistmach (-want +got):\n%s", diff)
+				t.Errorf("pkg context mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}

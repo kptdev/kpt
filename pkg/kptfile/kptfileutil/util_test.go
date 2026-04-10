@@ -1720,7 +1720,7 @@ pipeline:
   - name: ref-folders
     image: ghcr.io/kptdev/krm-functions-catalog/ref-folders
     configMap:
-      band: HÃ¼sker DÃ¼
+        band: H\u00fcsker D\u00fc
 `,
 			expected: `
 apiVersion: kpt.dev/v1
