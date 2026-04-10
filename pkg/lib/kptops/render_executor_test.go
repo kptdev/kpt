@@ -262,11 +262,11 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 	require.NoError(t, err)
 
 	childPkgPath := "/root/subpkg/child"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(childPkgPath)
 	require.NoError(t, err)
 
 	siblingPkgPath := "/root/sibling"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(siblingPkgPath)
 	require.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
