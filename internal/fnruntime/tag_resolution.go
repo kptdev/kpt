@@ -55,6 +55,7 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		// A valid version is a valid constraint, but we don't want to waste time listing
 		// when we are given an exact version. We just return from here.
 	} else if constraint, constraintErr := semver.NewConstraint(tag); constraintErr == nil {
+		var allFilteredVersions []*semver.Version
 		for _, lister := range tr.Listers {
 			possibleTags, err := lister.List(ctx, image)
 			if err != nil {
@@ -67,18 +68,22 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 				continue
 			}
 
-			filteredVersions := filterParseSortTags(possibleTags)
-			for _, version := range filteredVersions {
-				if constraint.Check(version) {
-					ref.Tag = version.Original()
-					return ref.CommonName(), nil
-				}
+			filteredVersions := filterParseTags(possibleTags, constraint)
+			if len(filteredVersions) > 0 {
+				allFilteredVersions = append(allFilteredVersions, filteredVersions...)
+			} else {
+				klog.V(2).Infof("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
 			}
-
-			klog.Infof("no tag matched the version constraint %q when using lister %q (from %s)", tag, lister.Name(), abbrevSlice(filteredVersions))
 		}
 
-		return "", fmt.Errorf("no tag could be found matching the version constraint %q", tag)
+		if len(allFilteredVersions) == 0 {
+			return "", fmt.Errorf("no tag could be found matching the version constraint %q", tag)
+		}
+
+		sortVersions(allFilteredVersions)
+
+		ref.Tag = allFilteredVersions[0].Original()
+		return ref.CommonName(), nil
 	} else {
 		klog.Warningf("Tag %q could not be parsed as a semantic version (\"%s\") or constraint (\"%s\"), will use it literally",
 			tag, versionErr, constraintErr)
@@ -88,8 +93,8 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 	return ref.CommonName(), nil
 }
 
-// filterParseSortTags takes in a list of potential tags, and returns all the valid semvers in descending order
-func filterParseSortTags(tags []string) []*semver.Version {
+// filterParseTags takes in a list of potential tags, and returns all the valid semvers matching the constraint
+func filterParseTags(tags []string, constraint *semver.Constraints) []*semver.Version {
 	var versions []*semver.Version
 	for _, tag := range tags {
 		if strings.HasPrefix(tag, "sha256-") {
@@ -108,14 +113,20 @@ func filterParseSortTags(tags []string) []*semver.Version {
 			continue
 		}
 
-		versions = append(versions, version)
+		if constraint.Check(version) {
+			versions = append(versions, version)
+		} else {
+			klog.V(3).Infof("Tag %q did not match constraint %q", tag, constraint.String())
+		}
 	}
 
+	return versions
+}
+
+func sortVersions(versions []*semver.Version) {
 	slices.SortFunc(versions, func(a, b *semver.Version) int {
 		return b.Compare(a) // we want descending order
 	})
-
-	return versions
 }
 
 func abbrevSlice(slice []*semver.Version) string {

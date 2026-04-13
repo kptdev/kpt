@@ -54,6 +54,7 @@ func (frc *fakeLister) Name() string {
 }
 
 func TestFilterParseSortTags(t *testing.T) {
+	constraint, _ := semver.NewConstraint("*") // match everything
 	testCases := map[string]struct {
 		tags     []string
 		expected []string
@@ -82,7 +83,8 @@ func TestFilterParseSortTags(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			res := filterParseSortTags(tc.tags)
+			res := filterParseTags(tc.tags, constraint)
+			sortVersions(res)
 			assert.Equal(t, tc.expected, stringifyVersionSlice(res))
 		})
 	}
@@ -201,6 +203,87 @@ func TestResolveFunctionImage(t *testing.T) {
 				},
 			}
 			resolvedImage, err := tr.ResolveFunctionImage(t.Context(), tc.functionImage, tc.functionTag)
+			if tc.expectedErr != "" {
+				assert.ErrorContains(t, err, tc.expectedErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, image+":"+tc.expectedTag, resolvedImage)
+		})
+	}
+}
+
+func TestResolveFunctionImageMultipleListers(t *testing.T) {
+	const image = "ghcr.io/kptdev/krm-functions-catalog/test-function"
+
+	testCases := map[string]struct {
+		listers     []TagLister
+		functionTag string
+		expectedTag string
+		expectedErr string
+	}{
+		"combined tags from all listers": {
+			listers: []TagLister{
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0", "v0.1.1"}}},
+				&fakeLister{tags: map[string][]string{image: {"v0.2.0"}}},
+			},
+			functionTag: "~0.1",
+			expectedTag: "v0.1.1",
+		},
+		"highest match from second lister": {
+			listers: []TagLister{
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0"}}},
+				&fakeLister{tags: map[string][]string{image: {"v0.2.0", "v0.2.1"}}},
+			},
+			functionTag: "*",
+			expectedTag: "v0.2.1",
+		},
+		"continue after error": {
+			listers: []TagLister{
+				&fakeLister{err: "registry unavailable"},
+				&fakeLister{tags: map[string][]string{image: {"v0.3.0"}}},
+			},
+			functionTag: "*",
+			expectedTag: "v0.3.0",
+		},
+		"continues after empty list": {
+			listers: []TagLister{
+				&fakeLister{tags: map[string][]string{image: {}}},
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0", "v0.1.2"}}},
+			},
+			functionTag: "~0.1",
+			expectedTag: "v0.1.2",
+		},
+		"no match in any lister": {
+			listers: []TagLister{
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0"}}},
+				&fakeLister{tags: map[string][]string{image: {"v0.2.0"}}},
+			},
+			functionTag: "0.3.x",
+			expectedErr: "no tag could be found matching the version constraint",
+		},
+		"duplicate tags": {
+			listers: []TagLister{
+				&fakeLister{tags: map[string][]string{image: {"v0.1.0", "v0.2.0"}}},
+				&fakeLister{tags: map[string][]string{image: {"v0.2.0", "v0.1.5"}}},
+			},
+			functionTag: "*",
+			expectedTag: "v0.2.0",
+		},
+		"all listers fail": {
+			listers: []TagLister{
+				&fakeLister{err: "a down"},
+				&fakeLister{err: "b down"},
+			},
+			functionTag: "*",
+			expectedErr: "no tag could be found matching the version constraint",
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			tr := &TagResolver{Listers: tc.listers}
+			resolvedImage, err := tr.ResolveFunctionImage(t.Context(), image, tc.functionTag)
 			if tc.expectedErr != "" {
 				assert.ErrorContains(t, err, tc.expectedErr)
 				return
