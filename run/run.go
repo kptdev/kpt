@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -155,12 +156,44 @@ func newHelp(e []string, c *cobra.Command) func(command *cobra.Command, strings 
 
 var version = "unknown"
 
+// initVersion enriches the version string with runtime build information.
+// It reads VCS revision from Go's build info when available (i.e., when
+// built with module mode). This provides the commit hash for development builds.
+//
+// For release builds, goreleaser injects the proper version tag (e.g., v1.0.0-beta.62)
+// via ldflags. In that case, version will already be set to a proper semver string
+// and this function will not override it.
+func initVersion() {
+	// If version is already set to a proper release version (starts with 'v'),
+	// don't override it. Goreleaser sets the version at build time for releases.
+	if strings.HasPrefix(version, "v") && !strings.Contains(version, "-dev+") {
+		return
+	}
+
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if setting.Key == "vcs.revision" {
+				shortCommit := setting.Value
+				if len(shortCommit) >= 12 {
+					shortCommit = shortCommit[:12]
+				}
+				version = "v0.0.0-dev+" + shortCommit
+				return
+			}
+		}
+	}
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of kpt",
 	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("%s\n", version)
 	},
+}
+
+func init() {
+	initVersion()
 }
 
 // hideFlags hides any cobra flags that are unlikely to be used by
