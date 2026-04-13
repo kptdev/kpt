@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+SHELL := bash
+.SHELLFLAGS := -exc
+
 GOLANG_VERSION    := 1.25.7
-GOLANGCI_LINT_VERSION := 2.11.3
+GOLANGCI_LINT_VERSION := 2.11.4
 
 GORELEASER_CONFIG = release/tag/goreleaser.yaml
 GORELEASER_IMAGE  := ghcr.io/goreleaser/goreleaser-cross:v$(GOLANG_VERSION)
@@ -93,8 +96,13 @@ generate: install-mdtogo
 tidy:
 	go mod tidy
 
+# if the local version of golangci-lint matches the one we want, we can use that without overhead
 lint:
-	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...
+	@if [[ `command -v golangci-lint` && `golangci-lint version --short` == $(GOLANGCI_LINT_VERSION) ]]; then \
+		golangci-lint run -v ./...; \
+	else \
+		go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION) run -v ./...; \
+	fi
 
 test:
 	go test -cover ${LDFLAGS} ./...
