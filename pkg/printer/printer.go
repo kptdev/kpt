@@ -45,6 +45,9 @@ type Options struct {
 	PkgPath types.UniquePath
 	// PkgDisplayPath is the display path for the package
 	PkgDisplayPath types.DisplayPath
+	// PkgDisplayName is the display name of the package.
+	// It takes precedence over PkgPath and PkgDisplayPath in most logging scenarios.
+	PkgDisplayName string
 }
 
 // NewOpt returns a pointer to new options
@@ -61,6 +64,11 @@ func (opt *Options) Pkg(p types.UniquePath) *Options {
 // PkgDisplayPath sets the package display path in options
 func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
 	opt.PkgDisplayPath = p
+	return opt
+}
+
+func (opt *Options) PkgName(name string) *Options {
+	opt.PkgDisplayName = name
 	return opt
 }
 
@@ -128,9 +136,12 @@ func (pr *printer) OptPrintf(opt *Options, format string, args ...any) {
 		return
 	}
 	o := pr.errStream
-	if !opt.PkgDisplayPath.Empty() {
+	switch {
+	case opt.PkgDisplayName != "":
+		format = fmt.Sprintf("Package: %q", opt.PkgDisplayName) + format
+	case !opt.PkgDisplayPath.Empty():
 		format = fmt.Sprintf("Package: %q", string(opt.PkgDisplayPath)) + format
-	} else if !opt.PkgPath.Empty() {
+	case !opt.PkgPath.Empty():
 		// try to print relative path of the pkg if we can else use abs path
 		relPath, err := opt.PkgPath.RelativePath()
 		if err != nil {
