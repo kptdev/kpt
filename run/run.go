@@ -37,6 +37,8 @@ var pgr []string
 
 func GetMain(ctx context.Context) *cobra.Command {
 	os.Setenv(commandutil.EnableAlphaCommmandsEnvName, "true")
+	// Initialize version info from build settings at startup.
+	initVersion()
 	cmd := &cobra.Command{
 		Use:          "kpt",
 		Short:        overview.CliShort,
@@ -190,10 +192,6 @@ var versionCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		fmt.Printf("%s\n", version)
 	},
-}
-
-func init() {
-	initVersion()
 }
 
 // hideFlags hides any cobra flags that are unlikely to be used by
