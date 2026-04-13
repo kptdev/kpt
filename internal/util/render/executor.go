@@ -1176,18 +1176,17 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		var err error
 		var runner *fnruntime.FunctionRunner
-		function := fns[i]
 		displayResourceCount := false
-		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
+		if len(fns[i].Selectors) > 0 || len(fns[i].Exclusions) > 0 {
 			displayResourceCount = true
 		}
-		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
+		if fns[i].Exec != "" && !hctx.runnerOptions.AllowExec {
 			return nil, i, errAllowedExecNotSpecified
 		}
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, opts, hctx.runtime)
+		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &fns[i], pkgPath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			return nil, i, err
 		}
