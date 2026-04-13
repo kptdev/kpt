@@ -28,6 +28,10 @@ import (
 // TruncateOutput defines should output be truncated
 var TruncateOutput bool
 
+const (
+	packagePrefixFormat = "Package: %q"
+)
+
 // Printer defines capabilities to display content in kpt CLI.
 // The main intention, at the moment, is to abstract away printing
 // output in the CLI so that we can evolve the kpt CLI UX.
@@ -67,6 +71,7 @@ func (opt *Options) PkgDisplay(p types.DisplayPath) *Options {
 	return opt
 }
 
+// PkgName sets the package display name in options
 func (opt *Options) PkgName(name string) *Options {
 	opt.PkgDisplayName = name
 	return opt
@@ -138,16 +143,16 @@ func (pr *printer) OptPrintf(opt *Options, format string, args ...any) {
 	o := pr.errStream
 	switch {
 	case opt.PkgDisplayName != "":
-		format = fmt.Sprintf("Package: %q", opt.PkgDisplayName) + format
+		format = fmt.Sprintf(packagePrefixFormat, opt.PkgDisplayName) + format
 	case !opt.PkgDisplayPath.Empty():
-		format = fmt.Sprintf("Package: %q", string(opt.PkgDisplayPath)) + format
+		format = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath)) + format
 	case !opt.PkgPath.Empty():
 		// try to print relative path of the pkg if we can else use abs path
 		relPath, err := opt.PkgPath.RelativePath()
 		if err != nil {
 			relPath = string(opt.PkgPath)
 		}
-		format = fmt.Sprintf("Package: %q", relPath) + format
+		format = fmt.Sprintf(packagePrefixFormat, relPath) + format
 	}
 	fmt.Fprintf(o, format, args...)
 }
