@@ -116,8 +116,6 @@ github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.18.2 h1:iiPHWW0YrcFgpBYhsA6D1+fqHssJscY/Tm/y2Uqnapk=
 github.com/klauspost/compress v1.18.2/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
-github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2 h1:PZ4TcVzgad1OFuH4gHg4j2LKC2KXTuzfsQWil2knSlk=
-github.com/kptdev/krm-functions-catalog/functions/go/apply-setters v0.2.2/go.mod h1:S8Vrp3yPDp4ga2TOPfZzoO/Y7UGF7KPHS1S0taJ0XOc=
 github.com/kptdev/krm-functions-sdk/go/fn v1.0.2 h1:g9N6SW5axEXMagUbHliH14XpfvvvwkAVDLcN3ApVh2M=
 github.com/kptdev/krm-functions-sdk/go/fn v1.0.2/go.mod h1:NSfdmtQ9AwNg5wdS9gE/H9SQs7Vomzq7E7N9hyEju1U=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
