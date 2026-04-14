@@ -35,6 +35,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
+	"github.com/regclient/regclient"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/fn/runtime/runtimeutil"
@@ -58,11 +59,25 @@ func NewRunner(
 		return nil, err
 	}
 	if f.Image != "" {
-		img, err := opts.ResolveToImage(ctx, f.Image)
-		if err != nil {
-			return nil, err
-		}
+		img := opts.ResolveToImage(f.Image)
 		f.Image = img
+
+		if f.Tag != "" {
+			tagResolver := &TagResolver{
+				lister: &RegClientLister{
+					client: regclient.New(
+						regclient.WithUserAgent(UserAgent),
+						regclient.WithDockerCreds(),
+					),
+				},
+			}
+			f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
+			if err != nil {
+				return nil, err
+			}
+		} else if !hasTagOrDigest(f.Image) {
+			f.Image += ":latest"
+		}
 	}
 
 	fnResult := &fnresult.Result{
@@ -106,7 +121,6 @@ func NewRunner(
 				} else {
 					cfn := &ContainerFn{
 						Image:           f.Image,
-						Tag:             f.Tag,
 						ImagePullPolicy: opts.ImagePullPolicy,
 						Perm: ContainerFnPermission{
 							AllowNetwork: opts.AllowNetwork,
@@ -507,4 +521,16 @@ func newFnConfig(fsys filesys.FileSystem, f *kptfilev1.Function, pkgPath types.U
 	}
 	// no need to return ConfigMap if no config given
 	return nil, nil
+}
+
+// hasTagOrDigest reports whether the image reference contains an explicit tag or digest.
+func hasTagOrDigest(image string) bool {
+	if strings.Contains(image, "@") {
+		return true
+	}
+	lastSlash := strings.LastIndex(image, "/")
+	if lastSlash == -1 {
+		return strings.Contains(image, ":")
+	}
+	return strings.Contains(image[lastSlash:], ":")
 }

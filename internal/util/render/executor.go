@@ -37,6 +37,7 @@ import (
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -121,10 +122,16 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	// adjust the relative paths of the resources.
 	err = adjustRelPath(hctx)
 	if err != nil {
+		if e.Output == nil {
+			updateRenderStatus(hctx, err)
+		}
 		return nil, err
 	}
 
 	if err = trackOutputFiles(hctx); err != nil {
+		if e.Output == nil {
+			updateRenderStatus(hctx, err)
+		}
 		return nil, err
 	}
 
@@ -157,6 +164,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 
 			if hydErr == nil {
 				if err = pruneResources(e.FileSystem, hctx); err != nil {
+					updateRenderStatus(hctx, err)
 					return nil, err
 				}
 			}
@@ -206,7 +214,7 @@ func (e *Renderer) printPipelineExecutionSummary(pr printer.Printer, hctx hydrat
 	}
 }
 
-// updateRenderStatus writes a Rendered status condition to the root Kptfile.
+// updateRenderStatus writes a Rendered status condition and RenderStatus to the root Kptfile.
 // On success, the root package gets a True condition.
 // On failure, the root package gets a False condition with the error message.
 func updateRenderStatus(hctx *hydrationContext, hydErr error) {
@@ -223,11 +231,52 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 		reason = kptfilev1.ReasonRenderFailed
 		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
 	}
-	setRenderCondition(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message))
+	renderStatus := buildRenderStatus(hctx, hydErr)
+	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
 }
 
-// setRenderCondition reads the Kptfile at pkgPath, sets the Rendered condition, and writes it back.
-func setRenderCondition(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition) {
+// buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
+func buildRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderStatus {
+	if len(hctx.mutationSteps) == 0 && len(hctx.validationSteps) == 0 {
+		return nil
+	}
+	rs := &kptfilev1.RenderStatus{
+		MutationSteps:   hctx.mutationSteps,
+		ValidationSteps: hctx.validationSteps,
+	}
+	if hydErr != nil {
+		var errLines []string
+		for _, s := range hctx.mutationSteps {
+			if s.ExecutionError != "" {
+				errLines = append(errLines, fmt.Sprintf("%s: %s", stepName(s), s.ExecutionError))
+			} else if s.ExitCode != 0 {
+				errLines = append(errLines, fmt.Sprintf("%s: exit code %d", stepName(s), s.ExitCode))
+			}
+		}
+		for _, s := range hctx.validationSteps {
+			if s.ExecutionError != "" {
+				errLines = append(errLines, fmt.Sprintf("%s: %s", stepName(s), s.ExecutionError))
+			} else if s.ExitCode != 0 {
+				errLines = append(errLines, fmt.Sprintf("%s: exit code %d", stepName(s), s.ExitCode))
+			}
+		}
+		rs.ErrorSummary = strings.Join(errLines, "\n")
+	}
+	return rs
+}
+
+func stepName(s kptfilev1.PipelineStepResult) string {
+	if s.Name != "" {
+		return s.Name
+	}
+	if s.Image != "" {
+		return s.Image
+	}
+	return s.ExecPath
+}
+
+// setRenderStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
+func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
 	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
 	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
 	if err != nil {
@@ -242,8 +291,9 @@ func setRenderCondition(fs filesys.FileSystem, pkgPath string, condition kptfile
 		return c.Type == kptfilev1.ConditionTypeRendered
 	})
 	kf.Status.Conditions = append(kf.Status.Conditions, condition)
+	kf.Status.RenderStatus = renderStatus
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
-		klog.V(3).Infof("failed to write render status condition to Kptfile at %s: %v", pkgPath, err)
+		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
 }
 
@@ -288,6 +338,10 @@ type hydrationContext struct {
 	// saveOnRenderFailure indicates whether partially rendered resources
 	// should be saved when rendering fails. Read from the root Kptfile annotation.
 	saveOnRenderFailure bool
+
+	// mutationSteps and validationSteps track per-function results for RenderStatus.
+	mutationSteps   []kptfilev1.PipelineStepResult
+	validationSteps []kptfilev1.PipelineStepResult
 
 	runnerOptions runneroptions.RunnerOptions
 
@@ -696,12 +750,16 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		return input, nil
 	}
 
-	mutators, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
+	mutators, failIdx, err := fnChain(ctx, hctx, pn.pkg.UniquePath, pl.Mutators)
 	if err != nil {
+		// Capture execution error (e.g. missing exec, image resolution failure)
+		hctx.mutationSteps = append(hctx.mutationSteps, preExecFailureStep(pl.Mutators[failIdx], err))
 		return nil, err
 	}
 
 	for i, mutator := range mutators {
+		resultCountBeforeExec := len(hctx.fnResults.Items)
+
 		if pl.Mutators[i].ConfigPath != "" {
 			// functionConfigs are included in the function inputs during `render`
 			// and as a result, they can be mutated during the `render`.
@@ -751,9 +809,11 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		err = mutation.Execute()
 		if err != nil {
 			clearAnnotationsOnMutFailure(input)
+			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
 		}
 		hctx.executedFunctionCnt++
+		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
 
 		if len(selectors) > 0 || len(exclusions) > 0 {
 			// merge the output resources with input resources
@@ -786,6 +846,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		function := pl.Validators[i]
+		resultCountBeforeExec := len(hctx.fnResults.Items)
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
 		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
@@ -798,6 +859,7 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
+			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
 			return errAllowedExecNotSpecified
 		}
 		opts := hctx.runnerOptions
@@ -805,12 +867,15 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts.DisplayResourceCount = displayResourceCount
 		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
+			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
 		hctx.executedFunctionCnt++
+		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}
 	return nil
 }
@@ -912,29 +977,28 @@ func pathRelToRoot(rootPkgPath, subPkgPath, resourcePath string) (relativePath s
 }
 
 // fnChain returns a slice of function runners given a list of functions defined in pipeline.
-func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, error) {
+func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePath, fns []kptfilev1.Function) ([]*fnruntime.FunctionRunner, int, error) {
 	var runners []*fnruntime.FunctionRunner
 	for i := range fns {
 		var err error
 		var runner *fnruntime.FunctionRunner
-		function := fns[i]
 		displayResourceCount := false
-		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
+		if len(fns[i].Selectors) > 0 || len(fns[i].Exclusions) > 0 {
 			displayResourceCount = true
 		}
-		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
-			return nil, errAllowedExecNotSpecified
+		if fns[i].Exec != "" && !hctx.runnerOptions.AllowExec {
+			return nil, i, errAllowedExecNotSpecified
 		}
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, opts, hctx.runtime)
+		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &fns[i], pkgPath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
-			return nil, err
+			return nil, i, err
 		}
 		runners = append(runners, runner)
 	}
-	return runners, nil
+	return runners, -1, nil
 }
 
 // trackInputFiles records file paths of input resources in the hydration context.
@@ -979,4 +1043,83 @@ func pruneResources(fsys filesys.FileSystem, hctx *hydrationContext) error {
 		}
 	}
 	return nil
+}
+
+// captureStepResult builds a PipelineStepResult from the fnresult.Result items
+// appended since resultCountBeforeExec.
+func captureStepResult(fn kptfilev1.Function, fnResults *fnresult.ResultList, resultCountBeforeExec int, execErr error) kptfilev1.PipelineStepResult {
+	step := kptfilev1.PipelineStepResult{
+		Name:     fn.Name,
+		Image:    fn.Image,
+		ExecPath: fn.Exec,
+	}
+	if resultCountBeforeExec < len(fnResults.Items) {
+		last := fnResults.Items[len(fnResults.Items)-1]
+		step.Stderr = last.Stderr
+		step.ExitCode = last.ExitCode
+		step.Results = frameworkResultsToItems(last.Results)
+		for _, ri := range step.Results {
+			if ri.Severity == string(framework.Error) {
+				step.ErrorResults = append(step.ErrorResults, ri)
+			}
+		}
+	} else if execErr != nil {
+		step.ExitCode = 1
+		step.ExecutionError = execErr.Error()
+	}
+	return step
+}
+
+// preExecFailureStep creates a PipelineStepResult for errors that occur before
+// the function is executed (e.g. image pull failure, missing exec permission).
+// ExitCode is set to 1 to indicate failure; the executionError field provides
+// the specific reason the function could not be started.
+func preExecFailureStep(fn kptfilev1.Function, err error) kptfilev1.PipelineStepResult {
+	return kptfilev1.PipelineStepResult{
+		Name:           fn.Name,
+		Image:          fn.Image,
+		ExecPath:       fn.Exec,
+		ExitCode:       1,
+		ExecutionError: err.Error(),
+	}
+}
+
+// frameworkResultsToItems converts framework.Results to []ResultItem.
+func frameworkResultsToItems(results framework.Results) []kptfilev1.ResultItem {
+	if len(results) == 0 {
+		return nil
+	}
+	items := make([]kptfilev1.ResultItem, len(results))
+	for i, r := range results {
+		items[i] = kptfilev1.ResultItem{
+			Message:  r.Message,
+			Severity: string(r.Severity),
+		}
+		if r.ResourceRef != nil {
+			items[i].ResourceRef = &kptfilev1.ResourceRef{
+				APIVersion: r.ResourceRef.APIVersion,
+				Kind:       r.ResourceRef.Kind,
+				Name:       r.ResourceRef.Name,
+				Namespace:  r.ResourceRef.Namespace,
+			}
+		}
+		if r.Field != nil {
+			items[i].Field = &kptfilev1.FieldRef{
+				Path: r.Field.Path,
+			}
+			if r.Field.CurrentValue != nil {
+				items[i].Field.CurrentValue = fmt.Sprintf("%v", r.Field.CurrentValue)
+			}
+			if r.Field.ProposedValue != nil {
+				items[i].Field.ProposedValue = fmt.Sprintf("%v", r.Field.ProposedValue)
+			}
+		}
+		if r.File != nil {
+			items[i].File = &kptfilev1.FileRef{
+				Path:  r.File.Path,
+				Index: r.File.Index,
+			}
+		}
+	}
+	return items
 }

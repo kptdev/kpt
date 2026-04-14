@@ -25,12 +25,15 @@ import (
 	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
+	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
+	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/kio"
+	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
 // absPath returns a forward-slash absolute path for use with filesys.MakeFsInMemory(),
@@ -734,6 +737,304 @@ metadata:
 	subKf, err := kptfileutil.ReadKptfile(mockFS, subPkgPath)
 	assert.NoError(t, err)
 	assert.True(t, subKf.Status == nil || len(subKf.Status.Conditions) == 0)
+}
+
+func TestBuildRenderStatus_NoSteps(t *testing.T) {
+	hctx := &hydrationContext{}
+	rs := buildRenderStatus(hctx, nil)
+	assert.Nil(t, rs)
+}
+
+func TestBuildRenderStatus_SuccessWithMutationSteps(t *testing.T) {
+	hctx := &hydrationContext{
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "set-namespace:v1", ExitCode: 0},
+			{Image: "set-annotations:v1", ExitCode: 0},
+		},
+	}
+	rs := buildRenderStatus(hctx, nil)
+	assert.NotNil(t, rs)
+	assert.Len(t, rs.MutationSteps, 2)
+	assert.Empty(t, rs.ValidationSteps)
+	assert.Empty(t, rs.ErrorSummary)
+}
+
+func TestBuildRenderStatus_FailureWithErrorSummary(t *testing.T) {
+	hctx := &hydrationContext{
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "set-namespace:v1", ExitCode: 0},
+			{Image: "bad-image:v1", ExitCode: 1},
+		},
+		validationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "gatekeeper:latest", ExecutionError: "image not found"},
+		},
+	}
+	rs := buildRenderStatus(hctx, fmt.Errorf("pipeline failed"))
+	assert.NotNil(t, rs)
+	assert.Contains(t, rs.ErrorSummary, "bad-image:v1: exit code 1")
+	assert.Contains(t, rs.ErrorSummary, "gatekeeper:latest: image not found")
+}
+
+func TestBuildRenderStatus_UsesNameForErrorSummary(t *testing.T) {
+	hctx := &hydrationContext{
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{Name: "my-step", Image: "img:v1", ExitCode: 1},
+		},
+	}
+	rs := buildRenderStatus(hctx, fmt.Errorf("fail"))
+	assert.Equal(t, "my-step: exit code 1", rs.ErrorSummary)
+}
+
+func TestBuildRenderStatus_UsesExecPathForErrorSummary(t *testing.T) {
+	hctx := &hydrationContext{
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{ExecPath: "/usr/bin/my-fn", ExecutionError: "not found"},
+		},
+	}
+	rs := buildRenderStatus(hctx, fmt.Errorf("fail"))
+	assert.Equal(t, "/usr/bin/my-fn: not found", rs.ErrorSummary)
+}
+
+func TestCaptureStepResult_FromFnResults(t *testing.T) {
+	fnResults := fnresult.NewResultList()
+	fnResults.Items = append(fnResults.Items, fnresult.Result{
+		Image:    "gatekeeper:latest",
+		ExitCode: 1,
+		Stderr:   "validation failed",
+		Results: framework.Results{
+			{Message: "banned key found", Severity: framework.Error,
+				ResourceRef: &yaml.ResourceIdentifier{
+					TypeMeta: yaml.TypeMeta{APIVersion: "v1", Kind: "ConfigMap"},
+					NameMeta: yaml.NameMeta{Name: "my-cm", Namespace: "default"},
+				},
+				File: &framework.File{Path: "resources.yaml", Index: 2},
+			},
+			{Message: "missing label", Severity: framework.Warning},
+		},
+	})
+
+	fn := kptfilev1.Function{Name: "validate", Image: "gatekeeper:latest"}
+	step := captureStepResult(fn, fnResults, 0, nil)
+
+	assert.Equal(t, "validate", step.Name)
+	assert.Equal(t, "gatekeeper:latest", step.Image)
+	assert.Equal(t, 1, step.ExitCode)
+	assert.Equal(t, "validation failed", step.Stderr)
+	assert.Len(t, step.Results, 2)
+
+	// First result — error with full resource ref and file
+	assert.Equal(t, "banned key found", step.Results[0].Message)
+	assert.Equal(t, "error", step.Results[0].Severity)
+	assert.Equal(t, "v1", step.Results[0].ResourceRef.APIVersion)
+	assert.Equal(t, "ConfigMap", step.Results[0].ResourceRef.Kind)
+	assert.Equal(t, "my-cm", step.Results[0].ResourceRef.Name)
+	assert.Equal(t, "default", step.Results[0].ResourceRef.Namespace)
+	assert.Equal(t, "resources.yaml", step.Results[0].File.Path)
+	assert.Equal(t, 2, step.Results[0].File.Index)
+
+	// Second result — warning, no resource ref
+	assert.Equal(t, "missing label", step.Results[1].Message)
+	assert.Equal(t, "warning", step.Results[1].Severity)
+	assert.Nil(t, step.Results[1].ResourceRef)
+
+	// ErrorResults should only contain the error-severity item
+	assert.Len(t, step.ErrorResults, 1)
+	assert.Equal(t, "banned key found", step.ErrorResults[0].Message)
+}
+
+func TestCaptureStepResult_NoNewItems(t *testing.T) {
+	fnResults := fnresult.NewResultList()
+	fn := kptfilev1.Function{Image: "set-namespace:v1"}
+	step := captureStepResult(fn, fnResults, 0, fmt.Errorf("output resource list must contain only KRM resources"))
+
+	assert.Equal(t, "set-namespace:v1", step.Image)
+	assert.Equal(t, 1, step.ExitCode)
+	assert.Equal(t, "output resource list must contain only KRM resources", step.ExecutionError)
+	assert.Nil(t, step.Results)
+	assert.Nil(t, step.ErrorResults)
+}
+
+func TestPreExecFailureStep(t *testing.T) {
+	fn := kptfilev1.Function{Name: "my-fn", Image: "bad-image:v1", Exec: ""}
+	step := preExecFailureStep(fn, fmt.Errorf("pull access denied"))
+
+	assert.Equal(t, "my-fn", step.Name)
+	assert.Equal(t, "bad-image:v1", step.Image)
+	assert.Equal(t, "pull access denied", step.ExecutionError)
+	assert.Equal(t, 1, step.ExitCode)
+	assert.Nil(t, step.Results)
+}
+
+func TestPreExecFailureStep_EmptyFn(t *testing.T) {
+	step := preExecFailureStep(kptfilev1.Function{}, fmt.Errorf("no functions"))
+	assert.Empty(t, step.Name)
+	assert.Empty(t, step.Image)
+	assert.Empty(t, step.ExecPath)
+	assert.Equal(t, "no functions", step.ExecutionError)
+}
+
+func TestFrameworkResultsToItems_Nil(t *testing.T) {
+	items := frameworkResultsToItems(nil)
+	assert.Nil(t, items)
+}
+
+func TestFrameworkResultsToItems_WithFieldRef(t *testing.T) {
+	results := framework.Results{
+		{
+			Message:  "wrong value",
+			Severity: framework.Error,
+			Field: &framework.Field{
+				Path:          ".spec.replicas",
+				CurrentValue:  "invalid",
+				ProposedValue: 3,
+			},
+		},
+	}
+	items := frameworkResultsToItems(results)
+	assert.Len(t, items, 1)
+	assert.Equal(t, ".spec.replicas", items[0].Field.Path)
+	assert.Equal(t, "invalid", items[0].Field.CurrentValue)
+	assert.Equal(t, "3", items[0].Field.ProposedValue)
+}
+
+func TestFrameworkResultsToItems_NilFieldValues(t *testing.T) {
+	results := framework.Results{
+		{
+			Message:  "field info",
+			Severity: framework.Info,
+			Field: &framework.Field{
+				Path: ".spec.replicas",
+			},
+		},
+	}
+	items := frameworkResultsToItems(results)
+	assert.Len(t, items, 1)
+	assert.Equal(t, ".spec.replicas", items[0].Field.Path)
+	assert.Empty(t, items[0].Field.CurrentValue)
+	assert.Empty(t, items[0].Field.ProposedValue)
+}
+
+func TestUpdateRenderStatus_WritesRenderStatus(t *testing.T) {
+	mockFS := filesys.MakeFsInMemory()
+	rootPath := rootString
+	assert.NoError(t, mockFS.Mkdir(rootPath))
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+`)))
+
+	rootPkg, err := pkg.New(mockFS, rootPath)
+	assert.NoError(t, err)
+
+	hctx := &hydrationContext{
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "set-namespace:v1", ExitCode: 0},
+		},
+		validationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "gatekeeper:latest", ExitCode: 1, Stderr: "failed"},
+		},
+	}
+
+	updateRenderStatus(hctx, fmt.Errorf("validation failed"))
+
+	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
+	assert.NoError(t, err)
+	assert.NotNil(t, rootKf.Status)
+
+	// Condition should be set
+	assert.Len(t, rootKf.Status.Conditions, 1)
+	assert.Equal(t, kptfilev1.ConditionFalse, rootKf.Status.Conditions[0].Status)
+
+	// RenderStatus should be populated
+	rs := rootKf.Status.RenderStatus
+	assert.NotNil(t, rs)
+	assert.Len(t, rs.MutationSteps, 1)
+	assert.Equal(t, "set-namespace:v1", rs.MutationSteps[0].Image)
+	assert.Len(t, rs.ValidationSteps, 1)
+	assert.Equal(t, "gatekeeper:latest", rs.ValidationSteps[0].Image)
+	assert.Contains(t, rs.ErrorSummary, "gatekeeper:latest: exit code 1")
+}
+
+func TestUpdateRenderStatus_NilRenderStatusWhenNoSteps(t *testing.T) {
+	mockFS := filesys.MakeFsInMemory()
+	rootPath := rootString
+	assert.NoError(t, mockFS.Mkdir(rootPath))
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+`)))
+
+	rootPkg, err := pkg.New(mockFS, rootPath)
+	assert.NoError(t, err)
+
+	hctx := &hydrationContext{
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
+	}
+
+	updateRenderStatus(hctx, nil)
+
+	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
+	assert.NoError(t, err)
+	assert.NotNil(t, rootKf.Status)
+	assert.Nil(t, rootKf.Status.RenderStatus)
+}
+
+func TestUpdateRenderStatus_ClearsPreviousRenderStatus(t *testing.T) {
+	mockFS := filesys.MakeFsInMemory()
+	rootPath := rootString
+	assert.NoError(t, mockFS.Mkdir(rootPath))
+	assert.NoError(t, mockFS.WriteFile(filepath.Join(rootPath, "Kptfile"), []byte(`
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root-package
+`)))
+
+	rootPkg, err := pkg.New(mockFS, rootPath)
+	assert.NoError(t, err)
+
+	// First render: failure with steps
+	hctx := &hydrationContext{
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
+		mutationSteps: []kptfilev1.PipelineStepResult{
+			{Image: "bad:v1", ExitCode: 1},
+		},
+	}
+	updateRenderStatus(hctx, fmt.Errorf("fail"))
+
+	rootKf, err := kptfileutil.ReadKptfile(mockFS, rootPath)
+	assert.NoError(t, err)
+	assert.NotNil(t, rootKf.Status.RenderStatus)
+
+	// Second render: success with no steps (empty pipeline)
+	hctx2 := &hydrationContext{
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
+	}
+	updateRenderStatus(hctx2, nil)
+
+	rootKf, err = kptfileutil.ReadKptfile(mockFS, rootPath)
+	assert.NoError(t, err)
+	assert.Nil(t, rootKf.Status.RenderStatus)
+}
+
+func TestStepName(t *testing.T) {
+	assert.Equal(t, "my-step", stepName(kptfilev1.PipelineStepResult{Name: "my-step", Image: "img:v1"}))
+	assert.Equal(t, "img:v1", stepName(kptfilev1.PipelineStepResult{Image: "img:v1"}))
+	assert.Equal(t, "/usr/bin/fn", stepName(kptfilev1.PipelineStepResult{ExecPath: "/usr/bin/fn"}))
+	assert.Equal(t, "", stepName(kptfilev1.PipelineStepResult{}))
 }
 
 func TestPkgNode_ClearAnnotationsOnMutFailure(t *testing.T) {

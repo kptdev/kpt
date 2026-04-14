@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index 5d377d4..784c77a 100644
+index 5d377d4..4c721ab 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,5 +4,10 @@ metadata:
+@@ -4,5 +4,14 @@ metadata:
    name: app
  pipeline:
    mutators:
@@ -15,6 +15,10 @@ index 5d377d4..784c77a 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
 diff --git a/deployment.yaml b/newfilename.yaml
 similarity index 100%
 rename from deployment.yaml

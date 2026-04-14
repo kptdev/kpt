@@ -1,5 +1,5 @@
 diff --git a/Kptfile b/Kptfile
-index 364e274..9ad7200 100644
+index 364e274..79d669a 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
@@ -12,7 +12,7 @@ index 364e274..9ad7200 100644
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-@@ -12,3 +15,8 @@ pipeline:
+@@ -12,3 +15,22 @@ pipeline:
      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
        configMap:
          tier: backend
@@ -21,6 +21,20 @@ index 364e274..9ad7200 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
 diff --git a/db/Kptfile b/db/Kptfile
 index 6c7674c..11fe9cc 100644
 --- a/db/Kptfile

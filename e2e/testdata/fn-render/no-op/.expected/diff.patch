@@ -1,8 +1,8 @@
 diff --git a/Kptfile b/Kptfile
-index a7a2d0b..2b5abc5 100644
+index a7a2d0b..3dbfee4 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -5,3 +5,8 @@ metadata:
+@@ -5,3 +5,12 @@ metadata:
  pipeline:
    mutators:
      - image: ghcr.io/kptdev/krm-functions-catalog/no-op
@@ -11,3 +11,7 @@ index a7a2d0b..2b5abc5 100644
 +    - type: Rendered
 +      status: "True"
 +      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
++        exitCode: 0

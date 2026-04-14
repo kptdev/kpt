@@ -61,7 +61,7 @@ func TestCmdExecute(t *testing.T) {
 	dest := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 
 	getRunner := get.NewRunner(fake.CtxWithDefaultPrinter(), "")
-	getRunner.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/", "./"})
+	getRunner.Command.SetArgs([]string{"file://" + g.RepoDirectory + ".git/"})
 	err := getRunner.Command.Execute()
 	assert.NoError(t, err)
 
