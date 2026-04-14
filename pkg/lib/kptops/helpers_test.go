@@ -44,18 +44,17 @@ type runtime struct{}
 
 var _ FunctionRuntime = &runtime{}
 
-func (e *runtime) GetRunner(ctx context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
+func (e *runtime) GetRunner(_ context.Context, funct *kptfilev1.Function) (fn.FunctionRunner, error) {
 	processor, ok := testFunctions[funct.Image]
 	if !ok {
 		return nil, &fn.NotFoundError{Function: *funct}
 	}
-	return &runner{ctx: ctx, processor: processor}, nil
+	return &runner{processor: processor}, nil
 }
 
 func (e *runtime) Close() error { return nil }
 
 type runner struct {
-	ctx       context.Context
 	processor framework.ResourceListProcessorFunc
 }
 
