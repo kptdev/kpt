@@ -277,8 +277,6 @@ func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, conditi
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
 		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
-	renderStatus := buildRenderStatus(hctx, hydErr)
-	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
@@ -405,9 +403,6 @@ func aggregateErrors(renderStatus *kptfilev1.RenderStatus) string {
 
 	if len(errors) == 0 {
 		return ""
-	kf.Status.RenderStatus = renderStatus
-	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
-		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
 
 	return strings.Join(errors, "; ")
