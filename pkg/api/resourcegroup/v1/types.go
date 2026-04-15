@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package v1alpha1 defines ResourceGroup schema.
-// Version: v1alpha1
-//
-// Deprecated: v1alpha1 is deprecated. Use github.com/kptdev/kpt/pkg/api/resourcegroup/v1 instead.
-// This package is maintained for backward compatibility only and will be removed in v2.0.0.
+// Package v1 defines ResourceGroup schema.
+// Version: v1 (stable)
 // swagger:meta
-package v1alpha1
+package v1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -36,18 +33,16 @@ const (
 	// Deprecated: prefer ResourceGroupGVK
 	RGFileGroup = "kpt.dev"
 	// Deprecated: prefer ResourceGroupGVK
-	RGFileVersion = "v1alpha1"
+	RGFileVersion = "v1"
 	// Deprecated: prefer ResourceGroupGVK
 	RGFileAPIVersion = RGFileGroup + "/" + RGFileVersion
 )
 
 // ResourceGroupGVK is the GroupVersionKind of ResourceGroup objects
-//
-// Deprecated: Use github.com/kptdev/kpt/pkg/api/resourcegroup/v1.ResourceGroupGVK instead.
 func ResourceGroupGVK() schema.GroupVersionKind {
 	return schema.GroupVersionKind{
 		Group:   "kpt.dev",
-		Version: "v1alpha1",
+		Version: "v1",
 		Kind:    "ResourceGroup",
 	}
 }
@@ -61,6 +56,7 @@ var DefaultMeta = yaml.ResourceMeta{
 }
 
 // ResourceGroup contains the inventory information about a package managed with kpt.
+// This is the stable v1 API for ResourceGroup.
 // swagger:model resourcegroup
 type ResourceGroup struct {
 	yaml.ResourceMeta `yaml:",inline" json:",inline"`
