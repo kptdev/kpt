@@ -101,7 +101,8 @@ func NewRunner(ctx context.Context, factory k8scmdutil.Factory,
 	}
 	r.Command = cmd
 
-	cmd.Flags().StringVar(&r.Name, "name", "", "Stable deployment name for this package (required)")
+	cmd.Flags().StringVar(&r.Name, "name", "", "Stable deployment name for this package (like a Helm release name; use the same name when re-initializing to maintain ownership of deployed resources)")
+	_ = cmd.MarkFlagRequired("name")
 	cmd.Flags().BoolVar(&r.Force, "force", false, "Set inventory values even if already set in Kptfile or ResourceGroup file")
 	cmd.Flags().BoolVar(&r.Quiet, "quiet", false, "If true, do not print output message for initialization")
 	cmd.Flags().StringVar(&r.InventoryID, "inventory-id", "", "Override the auto-derived inventory ID (advanced)")

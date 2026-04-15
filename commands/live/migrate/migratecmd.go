@@ -401,7 +401,7 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 				return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
 			}
 			// Force mode: proceed to overwrite the existing RG file.
-		case rgFileErr != nil && !goerrors.Is(rgFileErr, os.ErrNotExist):
+		case !goerrors.Is(rgFileErr, os.ErrNotExist):
 			return errors.E(op, errors.IO, types.UniquePath(dir), rgFileErr)
 		}
 
