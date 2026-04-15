@@ -405,11 +405,6 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 			return errors.E(op, errors.IO, types.UniquePath(dir), rgFileErr)
 		}
 
-		if kf.Inventory.Name == "" {
-			return errors.E(op, types.UniquePath(dir),
-				fmt.Errorf("kptfile inventory has empty name; re-run: kpt live init --name=<name>"))
-		}
-
 		err = (&initialization.ConfigureInventoryInfo{
 			Pkg:         p,
 			Factory:     mr.factory,
@@ -498,16 +493,10 @@ func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string
 
 		if err != nil {
 			var invExistsError *initialization.InvExistsError
-			var legacyErr *initialization.LegacyRGMissingInventoryIDError
-			if errors.As(err, &invExistsError) {
+			switch {
+			case errors.As(err, &invExistsError):
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
-			} else if errors.As(err, &legacyErr) {
-				// Legacy RG without inventory-id detected. If force is
-				// not set, surface the error so the user sees repair
-				// instructions. (When force *is* set, ConfigureInventoryInfo
-				// already overwrites the RG, so we never land here.)
-				return err
-			} else {
+			default:
 				return err
 			}
 		}

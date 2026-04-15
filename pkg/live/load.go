@@ -38,10 +38,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-// inventoryIDfmt is the string format used for generating an inventoryID that is stored on the live cluster
-// if one is not provided when the user runs `kpt live init`. This format should be of `namespace-name`.
-const inventoryIDfmt = "%s-%s"
-
 // InventoryInfoValidationError is the error returned if validation of the
 // inventory information fails.
 type InventoryInfoValidationError struct {
@@ -326,13 +322,11 @@ func generateInventoryObj(inv kptfilev1.Inventory) *unstructured.Unstructured {
 
 	// inventoryID must be set by the caller (via kpt live init --name=...).
 	// validateInventory() enforces this before we reach here. If somehow
-	// empty, log a warning — do NOT silently generate a fallback ID, as it
-	// would differ from the deterministic SHA-1 hash that init produces,
-	// leading to ownership conflicts (see issue #4387).
+	// empty, log a warning and preserve the empty value rather than generating
+	// a legacy fallback ID that could conflict with deterministic init IDs.
 	if inv.InventoryID == "" {
 		klog.Warningf("generateInventoryObj called with empty inventoryID for %s/%s; "+
 			"this should have been caught by validateInventory", inv.Namespace, inv.Name)
-		inv.InventoryID = fmt.Sprintf(inventoryIDfmt, inv.Namespace, inv.Name)
 	}
 
 	groupVersion := fmt.Sprintf("%s/%s", ResourceGroupGVK.Group, ResourceGroupGVK.Version)
