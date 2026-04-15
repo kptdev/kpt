@@ -653,15 +653,15 @@ func validateKptfileContent(content []byte) error {
 }
 
 func stripSDKInternalKptfileAnnotations(kf *kptfilev1.KptFile) {
-	if kf == nil || kf.ObjectMeta.Annotations == nil {
+	if kf == nil || kf.Annotations == nil {
 		return
 	}
 
 	for _, key := range sdkInternalKptfileAnnotations {
-		delete(kf.ObjectMeta.Annotations, key)
+		delete(kf.Annotations, key)
 	}
-	if len(kf.ObjectMeta.Annotations) == 0 {
-		kf.ObjectMeta.Annotations = nil
+	if len(kf.Annotations) == 0 {
+		kf.Annotations = nil
 	}
 }
 
