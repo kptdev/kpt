@@ -27,9 +27,12 @@ YEAR_GEN          := $(shell date '+%Y')
 
 GOBIN := $(shell go env GOPATH)/bin
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
+# Use git describe to get semantic version, fallback to commit hash for dev builds
+VERSION := $(shell git describe --tags --match='v*' --abbrev=0 2>/dev/null || echo "v0.0.0-dev+${GIT_COMMIT}")
 
 export KPT_FN_WASM_RUNTIME ?= nodejs
 
+LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${VERSION}
 LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
 ifeq ($(OS),Windows_NT)
 	# Do nothing

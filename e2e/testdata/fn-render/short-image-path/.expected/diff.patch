@@ -1,4 +1,5 @@
 diff --git a/Kptfile b/Kptfile
+index d4e5935..0759cb0 100644
 index d4e5935..24022da 100644
 --- a/Kptfile
 +++ b/Kptfile
@@ -23,6 +24,9 @@ index d4e5935..24022da 100644
 +      reason: RenderSuccess
 +  renderStatus:
 +    mutationSteps:
++      - image: set-namespace:v0.2.0
++        exitCode: 0
++      - image: set-labels:v0.1.5
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +        exitCode: 0
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5

@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kptops
-
-import (
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
-)
-
-var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
-	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.4": applySetters,
-	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
-	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
-}
-
-func FindProcessor(image string) framework.ResourceListProcessorFunc {
-	return functions[image]
-}
+// Package v1 contains the stable v1 API for ResourceGroup.
+// This API is stable and follows semantic versioning.
+// Breaking changes will only be introduced in a new major version (v2).
+//
+// +kubebuilder:object:generate=true
+// +groupName=kpt.dev
+package v1

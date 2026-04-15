@@ -1,4 +1,4 @@
-//go:build cgo
+//go:build cgo && !windows
 
 // Copyright 2022,2026 The kpt Authors
 //

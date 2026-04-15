@@ -1,4 +1,5 @@
 diff --git a/Kptfile b/Kptfile
+index 2985a1a..1cc880e 100644
 index 2985a1a..30b4376 100644
 --- a/Kptfile
 +++ b/Kptfile
@@ -20,6 +21,7 @@ index 2985a1a..30b4376 100644
 +      reason: RenderSuccess
 +  renderStatus:
 +    mutationSteps:
++      - image: set-labels:v0.1.5
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
 +        exitCode: 0
 diff --git a/kustomization.yaml b/kustomization.yaml

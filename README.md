@@ -3,8 +3,13 @@
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10656/badge)](https://www.bestpractices.dev/projects/10656)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkptdev%2Fkpt.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkptdev%2Fkpt?ref=badge_shield)
+[![Release](https://img.shields.io/github/v/release/kptdev/kpt)](https://github.com/kptdev/kpt/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kptdev/kpt)](https://goreportcard.com/report/github.com/kptdev/kpt)
 
 # kpt: Automate Kubernetes Configuration Editing
+
+> **Version 1.0.0 Released!**  
+> kpt v1.0.0 is now stable with guaranteed API compatibility. See [VERSIONING.md](docs/VERSIONING.md) for details.
 
 kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience,
 which simplifies managing Kubernetes platforms and KRM-driven infrastructure (e.g.,
@@ -39,6 +44,22 @@ The best place to get started and learn about specific features of kpt is to vis
 
 kpt installation instructions can be found on [kpt.dev/installation/kpt-cli](https://kpt.dev/installation/kpt-cli/)
 
+**Quick Install**:
+```bash
+# macOS (Homebrew)
+brew install kpt
+
+# Linux
+curl -L https://github.com/kptdev/kpt/releases/latest/download/kpt_linux_amd64 -o kpt
+chmod +x kpt
+sudo mv kpt /usr/local/bin/
+
+# Verify installation
+kpt version
+```
+
+**Version Information**: kpt follows [semantic versioning](https://semver.org/). See [VERSIONING.md](docs/VERSIONING.md) for our versioning policy and compatibility guarantees.
+
 ## kpt components
 
 The kpt toolchain includes the following components:
@@ -58,6 +79,14 @@ The kpt toolchain includes the following components:
 ## Roadmap
 
 You can read about the big upcoming features in the [roadmap doc](/docs/ROADMAP.md).
+
+## Documentation
+
+- **[Versioning Policy](docs/VERSIONING.md)** - Semantic versioning and compatibility guarantees
+- **[Migration Guide](docs/MIGRATION_V1.md)** - Migrating to kpt v1.0.0
+- **[Backward Compatibility](docs/BACKWARD_COMPATIBILITY.md)** - Compatibility policy and testing
+- **[Design Docs](docs/design-docs/)** - Technical design documents
+- **[Style Guides](docs/style-guides/)** - Documentation and error message guidelines
 
 ## Contributing
 
