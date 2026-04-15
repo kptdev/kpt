@@ -37,6 +37,10 @@ const (
 	noInventoryObjErrorMsg = `
 Error: Package uninitialized. Please run "kpt live init --name=DEPLOYMENT_NAME" command.
 
+The --name flag is required and must be a stable identifier (like a Helm release
+name). If you lose your local package and re-initialize, using the same --name
+ensures kpt can reconnect to previously deployed resources.
+
 The package needs to be initialized to generate the template
 which will store state for resource sets. This state is
 necessary to perform functionality such as deleting an entire

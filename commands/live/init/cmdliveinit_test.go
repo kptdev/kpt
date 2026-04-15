@@ -616,5 +616,81 @@ func TestCmd_MissingNameFlagReturnsError(t *testing.T) {
 
 	err = runner.Command.Execute()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "--name is required")
+	// Cobra enforces --name as required and returns its own error message.
+	assert.Contains(t, err.Error(), "\"name\"")
+}
+
+// TestRoundTrip_SameNameProducesSameInventoryID is the key test for issue #4387:
+// if a user loses their local package and re-initializes with the same --name
+// and same namespace, the inventory-id MUST be identical, so kpt live apply
+// can reconnect to existing cluster resources.
+func TestRoundTrip_SameNameProducesSameInventoryID(t *testing.T) {
+	tf := cmdtesting.NewTestFactory().WithNamespace("my-namespace")
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	const deploymentName = "my-app-staging"
+
+	// --- First initialization ---
+	w1, clean1 := testutil.SetupWorkspace(t)
+	defer clean1()
+	require.NoError(t, os.WriteFile(
+		filepath.Join(w1.WorkspaceDirectory, kptfilev1.KptFileName),
+		[]byte(kptFile), 0600))
+
+	revert1 := testutil.Chdir(t, w1.WorkspaceDirectory)
+	defer revert1()
+
+	runner1 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
+	runner1.RGFileName = "resourcegroup.yaml"
+	runner1.Command.SetArgs([]string{
+		"--name", deploymentName,
+	})
+	require.NoError(t, runner1.Command.Execute())
+
+	rg1, err := pkg.ReadRGFile(w1.WorkspaceDirectory, "resourcegroup.yaml")
+	require.NoError(t, err)
+	require.NotNil(t, rg1)
+	firstInvID := rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+	assert.NotEmpty(t, firstInvID, "first init must produce an inventory-id")
+
+	// --- Simulate losing the package: create a brand-new workspace ---
+	revert1() // leave the first directory
+
+	w2, clean2 := testutil.SetupWorkspace(t)
+	defer clean2()
+	require.NoError(t, os.WriteFile(
+		filepath.Join(w2.WorkspaceDirectory, kptfilev1.KptFileName),
+		[]byte(kptFile), 0600))
+
+	revert2 := testutil.Chdir(t, w2.WorkspaceDirectory)
+	defer revert2()
+
+	// Re-create factory with same namespace to ensure same context.
+	tf2 := cmdtesting.NewTestFactory().WithNamespace("my-namespace")
+	defer tf2.Cleanup()
+
+	runner2 := NewRunner(fake.CtxWithDefaultPrinter(), tf2, ioStreams)
+	runner2.RGFileName = "resourcegroup.yaml"
+	runner2.Command.SetArgs([]string{
+		"--name", deploymentName,
+	})
+	require.NoError(t, runner2.Command.Execute())
+
+	rg2, err := pkg.ReadRGFile(w2.WorkspaceDirectory, "resourcegroup.yaml")
+	require.NoError(t, err)
+	require.NotNil(t, rg2)
+	secondInvID := rg2.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+
+	// --- THE KEY ASSERTION ---
+	// Same name + same namespace MUST produce the exact same inventory-id,
+	// so kpt live apply can reconnect to the existing deployment.
+	assert.Equal(t, firstInvID, secondInvID,
+		"re-initializing with the same --name and namespace must produce the same inventory-id (issue #4387)")
+
+	// Also verify the name and namespace are correct.
+	assert.Equal(t, deploymentName, rg1.Name)
+	assert.Equal(t, deploymentName, rg2.Name)
+	assert.Equal(t, "my-namespace", rg1.Namespace)
+	assert.Equal(t, "my-namespace", rg2.Namespace)
 }
