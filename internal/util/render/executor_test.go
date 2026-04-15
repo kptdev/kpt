@@ -44,6 +44,8 @@ func absPath(suffix string) string {
 
 var rootString = "/root"
 var subPkgString = "/root/subpkg"
+const rootString = "/root"
+const subPkgString = "/root/subpkg"
 
 func TestPathRelToRoot(t *testing.T) {
 	tests := []struct {
@@ -604,6 +606,9 @@ metadata:
 		pkgs:         map[types.UniquePath]*pkgNode{},
 		fileSystem:   mockFS,
 		renderStatus: &kptfilev1.RenderStatus{},
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
 
@@ -642,6 +647,9 @@ metadata:
 		pkgs:         map[types.UniquePath]*pkgNode{},
 		fileSystem:   mockFS,
 		renderStatus: &kptfilev1.RenderStatus{},
+		root:       &pkgNode{pkg: rootPkg},
+		pkgs:       map[types.UniquePath]*pkgNode{},
+		fileSystem: mockFS,
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
 

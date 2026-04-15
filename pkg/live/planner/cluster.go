@@ -244,7 +244,7 @@ func (r *ClusterPlanner) fetchResources(ctx context.Context, e event.Event) ([]A
 	var actions []Action
 	for _, ag := range e.InitEvent.ActionGroups {
 		// We only care about the Apply, Prune and Delete actions.
-		if !(ag.Action == event.ApplyAction || ag.Action == event.PruneAction || ag.Action == event.DeleteAction) {
+		if ag.Action != event.ApplyAction && ag.Action != event.PruneAction && ag.Action != event.DeleteAction {
 			continue
 		}
 		for _, id := range ag.Identifiers {

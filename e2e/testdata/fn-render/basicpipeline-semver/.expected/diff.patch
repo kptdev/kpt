@@ -1,5 +1,6 @@
 diff --git a/Kptfile b/Kptfile
 index 2336da4..c1090e8 100644
+index 2336da4..ca2bcea 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -2,13 +2,34 @@ apiVersion: kpt.dev/v1
@@ -28,6 +29,7 @@ index 2336da4..c1090e8 100644
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.3
 +        exitCode: 0
 +        results:
 +          - message: namespace [default] updated to "staging", 1 value(s) changed
@@ -35,6 +37,7 @@ index 2336da4..c1090e8 100644
 +          - message: all `depends-on` annotations are up-to-date. no `namespace` changed
 +            severity: info
 +      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.2.4
 +        exitCode: 0
 +        results:
 +          - message: set 4 labels in total

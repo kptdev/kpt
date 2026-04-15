@@ -277,6 +277,8 @@ func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, conditi
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
 		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
+	renderStatus := buildRenderStatus(hctx, hydErr)
+	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
 }
 
 // buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
@@ -463,6 +465,26 @@ func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.Re
 	}
 
 	return results, errorResults
+// setRenderStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
+func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
+	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
+	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
+	if err != nil {
+		klog.V(3).Infof("failed to read Kptfile for render status update at %s: %v", pkgPath, err)
+		return
+	}
+	if kf.Status == nil {
+		kf.Status = &kptfilev1.Status{}
+	}
+	// Replace any existing Rendered condition
+	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(c kptfilev1.Condition) bool {
+		return c.Type == kptfilev1.ConditionTypeRendered
+	})
+	kf.Status.Conditions = append(kf.Status.Conditions, condition)
+	kf.Status.RenderStatus = renderStatus
+	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
+		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
+	}
 }
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
@@ -1089,6 +1111,11 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			recordPipelineStepResult(hctx, stepResult, true)
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
+			return err
+		}
+		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
 		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
@@ -1221,18 +1248,18 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 	for i := range fns {
 		var err error
 		var runner *fnruntime.FunctionRunner
-		function := fns[i]
 		displayResourceCount := false
-		if len(function.Selectors) > 0 || len(function.Exclusions) > 0 {
+		if len(fns[i].Selectors) > 0 || len(fns[i].Exclusions) > 0 {
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
+		if fns[i].Exec != "" && !hctx.runnerOptions.AllowExec {
 			return nil, i, errAllowedExecNotSpecified
 		}
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
 		opts.DisplayResourceCount = displayResourceCount
-		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pkgPath, hctx.fnResults, opts, hctx.runtime)
+		runner, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &fns[i], pkgPath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
 			return nil, i, err
 		}

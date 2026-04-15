@@ -1,5 +1,6 @@
 diff --git a/Kptfile b/Kptfile
 index a7a2d0b..ed39ce3 100644
+index a7a2d0b..3dbfee4 100644
 --- a/Kptfile
 +++ b/Kptfile
 @@ -5,3 +5,12 @@ metadata:
@@ -14,4 +15,5 @@ index a7a2d0b..ed39ce3 100644
 +  renderStatus:
 +    mutationSteps:
 +      - image: ghcr.io/kptdev/krm-functions-catalog/no-op
++      - image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
 +        exitCode: 0

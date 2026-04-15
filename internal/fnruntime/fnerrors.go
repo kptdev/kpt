@@ -54,7 +54,7 @@ func (fe *ExecError) String() string {
 		Separator: ", ",
 	}
 	b.WriteString(errLine.String())
-	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
+	fmt.Fprintf(&b, "  Exit Code: %d\n", fe.ExitCode)
 	return b.String()
 }
 
