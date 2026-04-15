@@ -105,6 +105,8 @@ func TestPathRelToRoot(t *testing.T) {
 			if tc.errString != "" {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errString)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
