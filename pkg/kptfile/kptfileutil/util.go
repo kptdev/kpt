@@ -120,6 +120,19 @@ func WriteFile(dir string, k any) error {
 // WriteKptfileToFS writes a Kptfile to the given filesystem at the specified directory.
 func WriteKptfileToFS(fs filesys.FileSystem, dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteKptfileToFS"
+	switch kf := k.(type) {
+	case *kptfilev1.KptFile:
+		if err := writeKptfileToFSPreservingFormat(fs, dir, kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	case kptfilev1.KptFile:
+		if err := writeKptfileToFSPreservingFormat(fs, dir, &kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	}
+
 	b, err := marshalKptfile(k)
 	if err != nil {
 		return err
@@ -185,6 +198,62 @@ func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
 	return nil
 }
 
+func writeKptfileToFSPreservingFormat(fs filesys.FileSystem, dir string, kf *kptfilev1.KptFile) error {
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	if !fs.IsDir(dir) {
+		return errors.E(errors.IO, types.UniquePath(dir), fmt.Errorf("path %q is not a directory", dir))
+	}
+
+	if !fs.Exists(kptfilePath) {
+		// File does not exist: fall back to fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+
+	content, err := fs.ReadFile(kptfilePath)
+	if err != nil {
+		// File exists but cannot be read: fall back to fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+
+	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
+	existingKptfile, err := kptfileko.NewFromPackage(existingResources)
+	if err != nil {
+		// Existing file is corrupt: overwrite with fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+	if err := applyTypedKptfileToKubeObject(existingKptfile, kf); err != nil {
+		return err
+	}
+	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
+		return err
+	}
+	if writeErr := fs.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName])); writeErr != nil {
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+	}
+	return nil
+}
+
 func applyTypedKptfileToKubeObject(sdkKptfile *kptfileko.KptfileKubeObject, desired *kptfilev1.KptFile) error {
 	if sdkKptfile == nil {
 		return fmt.Errorf("cannot update empty Kptfile KubeObject")
@@ -231,7 +300,8 @@ func applyTypedKptfileToKubeObject(sdkKptfile *kptfileko.KptfileKubeObject, desi
 }
 
 func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
-	if val == nil || reflect.ValueOf(val).IsZero() {
+	rv := reflect.ValueOf(val)
+	if val == nil || !rv.IsValid() || rv.IsZero() {
 		_, err := obj.RemoveNestedField(fields...)
 		return err
 	}
