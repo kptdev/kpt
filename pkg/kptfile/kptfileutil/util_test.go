@@ -23,6 +23,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -785,6 +786,110 @@ func TestWriteFile_RecoversFromInvalidExistingKptfile(t *testing.T) {
 	assert.Contains(t, string(content), "apiVersion: kpt.dev/v1")
 	assert.Contains(t, string(content), "kind: Kptfile")
 	assert.Contains(t, string(content), "name: sample")
+}
+
+func TestWriteFile_RoundTripIdempotency(t *testing.T) {
+	original := strings.TrimSpace(`
+# Package-level comment
+apiVersion: kpt.dev/v1 # api version comment
+kind: Kptfile
+metadata:
+  name: my-package
+  annotations:
+    example.com/team: platform
+# upstream comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0 # pinned version
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0
+    commit: abc123def456
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+      configMap:
+        namespace: my-ns
+info:
+  description: A sample package
+`)
+
+	// Write the original content
+	dir := t.TempDir()
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	err := os.WriteFile(kptfilePath, []byte(original), 0600)
+	require.NoError(t, err)
+
+	// Read it back as a typed KptFile
+	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
+	require.NoError(t, err)
+
+	// Write it via WriteFile (first write)
+	err = WriteFile(dir, kf)
+	require.NoError(t, err)
+
+	firstWrite, err := os.ReadFile(kptfilePath)
+	require.NoError(t, err)
+
+	// Write it again via WriteFile (second write)
+	err = WriteFile(dir, kf)
+	require.NoError(t, err)
+
+	secondWrite, err := os.ReadFile(kptfilePath)
+	require.NoError(t, err)
+
+	// The two writes must produce byte-identical output (idempotency)
+	assert.Equal(t, string(firstWrite), string(secondWrite), "WriteFile must be idempotent")
+
+	// Comments should be preserved
+	assert.Contains(t, string(secondWrite), "# Package-level comment")
+	assert.Contains(t, string(secondWrite), "# api version comment")
+	assert.Contains(t, string(secondWrite), "# upstream comment")
+	assert.Contains(t, string(secondWrite), "# pinned version")
+}
+
+func TestWriteKptfileToFS_PreservesFormatting(t *testing.T) {
+	original := strings.TrimSpace(`
+# This comment must survive
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0 # inline comment
+`)
+
+	fs := filesys.MakeFsInMemory()
+	dir := "/test-pkg"
+	require.NoError(t, fs.MkdirAll(dir))
+	require.NoError(t, fs.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(original)))
+
+	// Read, modify, and write back via WriteKptfileToFS
+	kf, err := ReadKptfile(fs, dir)
+	require.NoError(t, err)
+
+	kf.Upstream.Git.Ref = "v2.0.0"
+	err = WriteKptfileToFS(fs, dir, kf)
+	require.NoError(t, err)
+
+	result, err := fs.ReadFile(filepath.Join(dir, kptfilev1.KptFileName))
+	require.NoError(t, err)
+
+	content := string(result)
+	assert.Contains(t, content, "# This comment must survive")
+	assert.Contains(t, content, "# inline comment")
+	assert.Contains(t, content, "ref: v2.0.0")
+	assert.NotContains(t, content, "ref: v1.0.0")
 }
 
 func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
