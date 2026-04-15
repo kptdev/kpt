@@ -213,7 +213,7 @@ func TestCmd_Run(t *testing.T) {
 		"Missing name is an error": {
 			kptfile:          kptFile,
 			name:             "",
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			namespace:        "testns",
 			inventoryID:      "",
 			expectedErrorMsg: "--name is required",
@@ -221,7 +221,7 @@ func TestCmd_Run(t *testing.T) {
 		"Whitespace-only name is rejected": {
 			kptfile:          kptFile,
 			name:             "   ",
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			namespace:        "testns",
 			inventoryID:      "",
 			expectedErrorMsg: "--name is required",
@@ -229,14 +229,14 @@ func TestCmd_Run(t *testing.T) {
 		"Invalid DNS name is rejected": {
 			kptfile:          kptFile,
 			name:             "My_App!",
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			namespace:        "testns",
 			inventoryID:      "",
 			expectedErrorMsg: "not a valid Kubernetes resource name",
 		},
 		"Explicit inventory-id is preserved when both flags are set": {
 			kptfile:     kptFile,
-			rgfilename:  "resourcegroup.yaml",
+			rgfilename:  rgfilev1alpha1.RGFileName,
 			name:        "my-pkg",
 			namespace:   "my-ns",
 			inventoryID: "custom-legacy-id-123",
@@ -248,7 +248,7 @@ func TestCmd_Run(t *testing.T) {
 		},
 		"Provided name derives deterministic inventory ID": {
 			kptfile:     kptFile,
-			rgfilename:  "resourcegroup.yaml",
+			rgfilename:  rgfilev1alpha1.RGFileName,
 			name:        "my-pkg",
 			namespace:   "my-ns",
 			inventoryID: "",
@@ -293,7 +293,7 @@ func TestCmd_Run(t *testing.T) {
 		"ResourceGroup without inventory-id is legacy error": {
 			kptfile:          kptFile,
 			resourcegroup:    resourceGroupInventory,
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			name:             inventoryName,
 			namespace:        inventoryNamespace,
 			inventoryID:      inventoryID,
@@ -303,7 +303,7 @@ func TestCmd_Run(t *testing.T) {
 		"ResourceGroup with inventory already set is error": {
 			kptfile:          kptFile,
 			resourcegroup:    resourceGroupInventoryWithID,
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			name:             inventoryName,
 			namespace:        inventoryNamespace,
 			inventoryID:      inventoryID,
@@ -313,7 +313,7 @@ func TestCmd_Run(t *testing.T) {
 		"ResourceGroup with inventory and Kptfile with inventory already set is error": {
 			kptfile:          kptFileWithInventory,
 			resourcegroup:    resourceGroupInventoryWithID,
-			rgfilename:       "resourcegroup.yaml",
+			rgfilename:       rgfilev1alpha1.RGFileName,
 			name:             inventoryName,
 			namespace:        inventoryNamespace,
 			inventoryID:      inventoryID,
@@ -323,7 +323,7 @@ func TestCmd_Run(t *testing.T) {
 		"The force flag allows changing inventory information even if already set in Kptfile": {
 			kptfile:     kptFileWithInventory,
 			name:        inventoryName,
-			rgfilename:  "resourcegroup.yaml",
+			rgfilename:  rgfilev1alpha1.RGFileName,
 			namespace:   inventoryNamespace,
 			inventoryID: inventoryID,
 			force:       true,
@@ -336,7 +336,7 @@ func TestCmd_Run(t *testing.T) {
 		"The force flag allows changing inventory information even if already set in ResourceGroup": {
 			kptfile:       kptFile,
 			resourcegroup: resourceGroupInventoryWithID,
-			rgfilename:    "resourcegroup.yaml",
+			rgfilename:    rgfilev1alpha1.RGFileName,
 			name:          inventoryName,
 			namespace:     inventoryNamespace,
 			inventoryID:   inventoryID,
@@ -515,7 +515,7 @@ func TestConfigureInventoryInfo_InvalidDirectoryNameFallback(t *testing.T) {
 		Quiet:       true,
 		Name:        "",
 		InventoryID: "explicit-inv-id-123",
-		RGFileName:  "resourcegroup.yaml",
+		RGFileName:  rgfilev1alpha1.RGFileName,
 	}
 	err = c.Run(fake.CtxWithDefaultPrinter())
 
@@ -548,13 +548,13 @@ func TestConfigureInventoryInfo_ValidDirectoryNameFallback(t *testing.T) {
 		Quiet:       true,
 		Name:        "",
 		InventoryID: "explicit-inv-id-456",
-		RGFileName:  "resourcegroup.yaml",
+		RGFileName:  rgfilev1alpha1.RGFileName,
 	}
 	err = c.Run(fake.CtxWithDefaultPrinter())
 
 	require.NoError(t, err)
 
-	rg, err := pkg.ReadRGFile(validDir, "resourcegroup.yaml")
+	rg, err := pkg.ReadRGFile(validDir, rgfilev1alpha1.RGFileName)
 	require.NoError(t, err)
 	require.NotNil(t, rg)
 	assert.Equal(t, "my-valid-pkg", rg.Name)
@@ -583,13 +583,13 @@ func TestConfigureInventoryInfo_DottedDirectoryNameFallback(t *testing.T) {
 		Quiet:       true,
 		Name:        "",
 		InventoryID: "explicit-inv-id-789",
-		RGFileName:  "resourcegroup.yaml",
+		RGFileName:  rgfilev1alpha1.RGFileName,
 	}
 	err = c.Run(fake.CtxWithDefaultPrinter())
 
 	require.NoError(t, err)
 
-	rg, err := pkg.ReadRGFile(validDir, "resourcegroup.yaml")
+	rg, err := pkg.ReadRGFile(validDir, rgfilev1alpha1.RGFileName)
 	require.NoError(t, err)
 	require.NotNil(t, rg)
 	assert.Equal(t, "my.valid.pkg", rg.Name)
@@ -611,7 +611,7 @@ func TestCmd_MissingNameFlagReturnsError(t *testing.T) {
 	defer revert()
 
 	runner := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
-	runner.RGFileName = "resourcegroup.yaml"
+	runner.RGFileName = rgfilev1alpha1.RGFileName
 	runner.Command.SetArgs([]string{})
 
 	err = runner.Command.Execute()
@@ -642,13 +642,13 @@ func TestRoundTrip_SameNameProducesSameInventoryID(t *testing.T) {
 	defer revert1()
 
 	runner1 := NewRunner(fake.CtxWithDefaultPrinter(), tf, ioStreams)
-	runner1.RGFileName = "resourcegroup.yaml"
+	runner1.RGFileName = rgfilev1alpha1.RGFileName
 	runner1.Command.SetArgs([]string{
 		"--name", deploymentName,
 	})
 	require.NoError(t, runner1.Command.Execute())
 
-	rg1, err := pkg.ReadRGFile(w1.WorkspaceDirectory, "resourcegroup.yaml")
+	rg1, err := pkg.ReadRGFile(w1.WorkspaceDirectory, rgfilev1alpha1.RGFileName)
 	require.NoError(t, err)
 	require.NotNil(t, rg1)
 	firstInvID := rg1.Labels[rgfilev1alpha1.RGInventoryIDLabel]
@@ -671,13 +671,13 @@ func TestRoundTrip_SameNameProducesSameInventoryID(t *testing.T) {
 	defer tf2.Cleanup()
 
 	runner2 := NewRunner(fake.CtxWithDefaultPrinter(), tf2, ioStreams)
-	runner2.RGFileName = "resourcegroup.yaml"
+	runner2.RGFileName = rgfilev1alpha1.RGFileName
 	runner2.Command.SetArgs([]string{
 		"--name", deploymentName,
 	})
 	require.NoError(t, runner2.Command.Execute())
 
-	rg2, err := pkg.ReadRGFile(w2.WorkspaceDirectory, "resourcegroup.yaml")
+	rg2, err := pkg.ReadRGFile(w2.WorkspaceDirectory, rgfilev1alpha1.RGFileName)
 	require.NoError(t, err)
 	require.NotNil(t, rg2)
 	secondInvID := rg2.Labels[rgfilev1alpha1.RGInventoryIDLabel]
