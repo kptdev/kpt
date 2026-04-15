@@ -207,12 +207,12 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 				t.Fatalf("unable to read ResourceGroup file")
 				return
 			}
-			assert.Equal(t, inventoryNamespace, rg.ObjectMeta.Namespace)
-			if len(rg.ObjectMeta.Name) == 0 {
+			assert.Equal(t, inventoryNamespace, rg.Namespace)
+			if len(rg.Name) == 0 {
 				t.Errorf("inventory name not set in Kptfile")
 			}
-			if rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
-				t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.ObjectMeta.Labels[rgfilev1alpha1.RGInventoryIDLabel])
+			if rg.Labels[rgfilev1alpha1.RGInventoryIDLabel] != testInventoryID {
+				t.Errorf("inventory id not set correctly in ResourceGroup: %s", rg.Labels[rgfilev1alpha1.RGInventoryIDLabel])
 			}
 		})
 	}

@@ -91,8 +91,6 @@ func removeAnnotations(n *yaml.RNode, annotations ...kioutil.AnnotationKey) erro
 
 // kyamlNodeToUnstructured take a resource represented as a kyaml RNode and
 // turns it into an Unstructured object.
-//
-//nolint:interfacer
 func kyamlNodeToUnstructured(n *yaml.RNode) (*unstructured.Unstructured, error) {
 	if err := validateMetadataStringMaps(n); err != nil {
 		return nil, err
