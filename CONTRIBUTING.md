@@ -64,10 +64,11 @@ Process for code reviews. Before requesting human review, a PR must:
 * Meeting project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
 * The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
 * If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
+* The PR description states whether AI was used to help create the PR; if so, it lists the AI tools used and the areas where they were used
 
-## Declare any use of AI
+## Declare any use of AI 
 
-> The use of AI in the creation of PRs is allowed but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
+> In addition to the above, the use of AI in the creation of PRs is allowed, but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
 
 Update the PR description to state whether you used AI to help you create this PR; if so, list the AI tools you have used and in what areas.
 
