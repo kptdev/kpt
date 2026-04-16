@@ -66,7 +66,7 @@ Process for code reviews. Before requesting human review, a PR must:
 * If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
 * The PR description states whether AI was used to help create the PR; if so, it lists the AI tools used and the areas where they were used
 
-## Declare any use of AI 
+## Declare any use of AI
 
 > In addition to the above, the use of AI in the creation of PRs is allowed, but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
 
@@ -87,7 +87,7 @@ I have used the following AI tools:
 Following the [guidance of the Linux kernel](https://docs.kernel.org/process/coding-assistants.html#attribution)
 we recommend the attribution of AI tools in the commit messages using the following format:
 
-```shell
+```text
 Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
 ```
 
@@ -101,7 +101,7 @@ Basic development tools (git, gcc, make, editors) should not be listed.
 
 Example:
 
-```shell
+```text
 Assisted-by: Claude:claude-3-opus coccinelle sparse
 ```
 
