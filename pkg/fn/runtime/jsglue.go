@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnruntime
+package runtime
 
 // The glue code below has been tested with node.js v18.6.0.
 // It may need some small changes to work with v14 and v16.
