@@ -67,7 +67,7 @@ Process for code reviews. Before requesting human review, a PR must:
 
 ## Declare any use of AI 
 
-> The use of AI in the creation of PRs is allowed but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools. 
+> The use of AI in the creation of PRs is allowed but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
 
 Update the PR description to state whether you used AI to help you create this PR; if so, list the AI tools you have used and in what areas.
 
@@ -81,9 +81,9 @@ I have used the following AI tools:
 - Amazon Q to generate unit tests
 ```
 
-### Attribute AI in the git commit messages
+### Attribute AI in the Git commit messages
 
-Following the [guideance of the Linux kernel](https://docs.kernel.org/process/coding-assistants.html#attribution)
+Following the [guidance of the Linux kernel](https://docs.kernel.org/process/coding-assistants.html#attribution)
 we recommend the attribution of AI tools in the commit messages using the following format:
 
 ```shell
