@@ -15,7 +15,7 @@ itself.
 
 All files should have the copyright notice.
 ```
-// Copyright 2025 The kpt Authors
+// Copyright 2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ All files should have the copyright notice.
 
 If the file has never been modified: use the creation year only
 
-* Example: `Copyright 2025 The kpt Authors`
+* Example: `Copyright 2026 The kpt Authors`
 
 If the file has been modified: use a year range from creation to last modification
 
@@ -64,6 +64,45 @@ Process for code reviews. Before requesting human review, a PR must:
 * Meeting project code quality requirements, including passing all configured static analysis / SonarCloud quality gates and not reducing automated test coverage for the affected components
 * The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
 * If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
+
+## Declare any use of AI 
+
+> The use of AI in the creation of PRs is allowed but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools. 
+
+Update the PR description to state whether you used AI to help you create this PR; if so, list the AI tools you have used and in what areas.
+
+For example:
+```shell
+I have used AI in the creation of this PR.
+
+I have used the following AI tools:
+- Microsoft Copilot to analyse the code
+- Claude code to generate the function someNewFunctionIAdded()
+- Amazon Q to generate unit tests
+```
+
+### Attribute AI in the git commit messages
+
+Following the [guideance of the Linux kernel](https://docs.kernel.org/process/coding-assistants.html#attribution)
+we recommend the attribution of AI tools in the commit messages using the following format:
+
+```shell
+Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
+```
+
+Where: 
+
+- `AGENT_NAME` is the name of the AI tool or framework
+- `MODEL_VERSION` is the specific model version used
+- `[TOOL1] [TOOL2]` are optional specialized analysis tools used (e.g., coccinelle, sparse, smatch, clang-tidy)
+
+Basic development tools (git, gcc, make, editors) should not be listed.
+
+Example:
+
+```shell
+Assisted-by: Claude:claude-3-opus coccinelle sparse
+```
 
 ## Community Guidelines
 
