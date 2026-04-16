@@ -72,7 +72,7 @@ Process for code reviews. Before requesting human review, a PR must:
 Update the PR description to state whether you used AI to help you create this PR; if so, list the AI tools you have used and in what areas.
 
 For example:
-```shell
+```text
 I have used AI in the creation of this PR.
 
 I have used the following AI tools:
