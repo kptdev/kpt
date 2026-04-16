@@ -65,7 +65,7 @@ Process for code reviews. Before requesting human review, a PR must:
 * The comments from the first run of automatically generated comments (AI generated comments, SonarCloud comments, bot generated comments, etc.) of the PR are addressed (addressing further re-runs of AI are optional)
 * If it is not possible to resolve an automatic comment, please add a sub-comment indicating why the automated comment cannot be resolved or ask for help in resolving the comment
 
-## Declare any use of AI 
+## Declare any use of AI
 
 > The use of AI in the creation of PRs is allowed but you must declare any use of AI and you must be able to explain the PR code independently of any AI tools.
 
@@ -76,8 +76,8 @@ For example:
 I have used AI in the creation of this PR.
 
 I have used the following AI tools:
-- Microsoft Copilot to analyse the code
-- Claude code to generate the function someNewFunctionIAdded()
+- GitHub Copilot to analyse the code
+- Claude Code to generate the function someNewFunctionIAdded()
 - Amazon Q to generate unit tests
 ```
 
@@ -90,7 +90,7 @@ we recommend the attribution of AI tools in the commit messages using the follow
 Assisted-by: AGENT_NAME:MODEL_VERSION [TOOL1] [TOOL2]
 ```
 
-Where: 
+Where:
 
 - `AGENT_NAME` is the name of the AI tool or framework
 - `MODEL_VERSION` is the specific model version used
