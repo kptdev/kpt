@@ -86,6 +86,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 		root:          root,
 		pkgs:          map[types.UniquePath]*pkgNode{},
 		fnResults:     fnresult.NewResultList(),
+		renderStatus:  &kptfilev1.RenderStatus{},
 		runnerOptions: e.RunnerOptions,
 		fileSystem:    e.FileSystem,
 		runtime:       e.Runtime,
@@ -226,57 +227,33 @@ func updateRenderStatus(hctx *hydrationContext, hydErr error) {
 	conditionStatus := kptfilev1.ConditionTrue
 	reason := kptfilev1.ReasonRenderSuccess
 	message := ""
+
 	if hydErr != nil {
 		conditionStatus = kptfilev1.ConditionFalse
 		reason = kptfilev1.ReasonRenderFailed
 		message = strings.ReplaceAll(hydErr.Error(), rootPath, ".")
 	}
-	renderStatus := buildRenderStatus(hctx, hydErr)
-	setRenderStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), renderStatus)
-}
 
-// buildRenderStatus constructs a RenderStatus from the tracked pipeline step results.
-func buildRenderStatus(hctx *hydrationContext, hydErr error) *kptfilev1.RenderStatus {
-	if len(hctx.mutationSteps) == 0 && len(hctx.validationSteps) == 0 {
-		return nil
-	}
-	rs := &kptfilev1.RenderStatus{
-		MutationSteps:   hctx.mutationSteps,
-		ValidationSteps: hctx.validationSteps,
-	}
-	if hydErr != nil {
-		var errLines []string
-		for _, s := range hctx.mutationSteps {
-			if s.ExecutionError != "" {
-				errLines = append(errLines, fmt.Sprintf("%s: %s", stepName(s), s.ExecutionError))
-			} else if s.ExitCode != 0 {
-				errLines = append(errLines, fmt.Sprintf("%s: exit code %d", stepName(s), s.ExitCode))
+	// Update error summary in render status
+	if hctx.renderStatus != nil {
+		// Aggregate errors from pipeline steps
+		pipelineErrors := aggregateErrors(hctx.renderStatus)
+		if pipelineErrors != "" {
+			if message != "" {
+				hctx.renderStatus.ErrorSummary = message + "; " + pipelineErrors
+			} else {
+				hctx.renderStatus.ErrorSummary = pipelineErrors
 			}
+		} else if message != "" {
+			hctx.renderStatus.ErrorSummary = message
 		}
-		for _, s := range hctx.validationSteps {
-			if s.ExecutionError != "" {
-				errLines = append(errLines, fmt.Sprintf("%s: %s", stepName(s), s.ExecutionError))
-			} else if s.ExitCode != 0 {
-				errLines = append(errLines, fmt.Sprintf("%s: exit code %d", stepName(s), s.ExitCode))
-			}
-		}
-		rs.ErrorSummary = strings.Join(errLines, "\n")
 	}
-	return rs
+
+	setRenderConditionWithStatus(hctx.fileSystem, rootPath, kptfilev1.NewRenderedCondition(conditionStatus, reason, message), hctx.renderStatus)
 }
 
-func stepName(s kptfilev1.PipelineStepResult) string {
-	if s.Name != "" {
-		return s.Name
-	}
-	if s.Image != "" {
-		return s.Image
-	}
-	return s.ExecPath
-}
-
-// setRenderStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
-func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
+// setRenderConditionWithStatus reads the Kptfile at pkgPath, sets the Rendered condition and RenderStatus, and writes it back.
+func setRenderConditionWithStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.Condition, renderStatus *kptfilev1.RenderStatus) {
 	fsOrDisk := filesys.FileSystemOrOnDisk{FileSystem: fs}
 	kf, err := kptfileutil.ReadKptfile(fsOrDisk, pkgPath)
 	if err != nil {
@@ -291,10 +268,161 @@ func setRenderStatus(fs filesys.FileSystem, pkgPath string, condition kptfilev1.
 		return c.Type == kptfilev1.ConditionTypeRendered
 	})
 	kf.Status.Conditions = append(kf.Status.Conditions, condition)
-	kf.Status.RenderStatus = renderStatus
+
+	// Update render status if provided
+	if renderStatus != nil {
+		kf.Status.RenderStatus = renderStatus
+	}
+
 	if err := kptfileutil.WriteKptfileToFS(fs, pkgPath, kf); err != nil {
 		klog.V(3).Infof("failed to write render status to Kptfile at %s: %v", pkgPath, err)
 	}
+}
+
+// recordPipelineStepResult records the result of a pipeline step execution
+func recordPipelineStepResult(hctx *hydrationContext, stepResult kptfilev1.PipelineStepResult, isValidator bool) {
+	if hctx.renderStatus == nil {
+		return
+	}
+
+	if isValidator {
+		hctx.renderStatus.ValidationSteps = append(hctx.renderStatus.ValidationSteps, stepResult)
+	} else {
+		hctx.renderStatus.MutationSteps = append(hctx.renderStatus.MutationSteps, stepResult)
+	}
+}
+
+// createPipelineStepResult creates a PipelineStepResult from function execution data
+func createPipelineStepResult(function kptfilev1.Function, exitCode int, stderr, executionError string) kptfilev1.PipelineStepResult {
+	result := kptfilev1.PipelineStepResult{
+		Name:           function.Name,
+		Image:          function.Image,
+		ExecPath:       function.Exec,
+		ExitCode:       exitCode,
+		Stderr:         stderr,
+		ExecutionError: executionError,
+	}
+
+	// If no name is provided, use image or exec as name
+	if result.Name == "" {
+		if result.Image != "" {
+			result.Name = result.Image
+		} else if result.ExecPath != "" {
+			result.Name = result.ExecPath
+		}
+	}
+
+	return result
+}
+
+// aggregateErrors creates an error summary from all pipeline step results
+func aggregateErrors(renderStatus *kptfilev1.RenderStatus) string {
+	if renderStatus == nil {
+		return ""
+	}
+
+	var errors []string
+
+	// Collect errors from mutation steps
+	for i, step := range renderStatus.MutationSteps {
+		if step.ExitCode != 0 || step.ExecutionError != "" {
+			stepDesc := fmt.Sprintf("mutation step %d", i+1)
+			if step.Name != "" {
+				stepDesc = fmt.Sprintf("mutation step '%s'", step.Name)
+			}
+
+			if step.ExecutionError != "" {
+				errors = append(errors, fmt.Sprintf("%s: %s", stepDesc, step.ExecutionError))
+			} else {
+				errors = append(errors, fmt.Sprintf("%s: exit code %d", stepDesc, step.ExitCode))
+				if step.Stderr != "" {
+					errors = append(errors, fmt.Sprintf("%s stderr: %s", stepDesc, step.Stderr))
+				}
+			}
+		}
+	}
+
+	// Collect errors from validation steps
+	for i, step := range renderStatus.ValidationSteps {
+		if step.ExitCode != 0 || step.ExecutionError != "" {
+			stepDesc := fmt.Sprintf("validation step %d", i+1)
+			if step.Name != "" {
+				stepDesc = fmt.Sprintf("validation step '%s'", step.Name)
+			}
+
+			if step.ExecutionError != "" {
+				errors = append(errors, fmt.Sprintf("%s: %s", stepDesc, step.ExecutionError))
+			} else {
+				errors = append(errors, fmt.Sprintf("%s: exit code %d", stepDesc, step.ExitCode))
+				if step.Stderr != "" {
+					errors = append(errors, fmt.Sprintf("%s stderr: %s", stepDesc, step.Stderr))
+				}
+			}
+		}
+	}
+
+	if len(errors) == 0 {
+		return ""
+	}
+
+	return strings.Join(errors, "; ")
+}
+
+// createResultItem creates a ResultItem from a KRM resource and metadata.
+// It serializes the resource as YAML string for JSON output compatibility.
+func createResultItem(resource *yaml.RNode, message, severity string) kptfilev1.ResultItem {
+	item := kptfilev1.ResultItem{
+		Message:  message,
+		Severity: severity,
+	}
+	if resource != nil {
+		// Serialize the resource as YAML string for JSON output
+		if yamlStr, err := resource.String(); err == nil {
+			item.Resource = yamlStr
+		}
+	}
+
+	return item
+}
+
+// extractResultsFromFnResults extracts and categorizes results from function execution.
+// It processes framework.Results and converts them to ResultItem instances,
+// separating successful results from error results based on severity.
+func extractResultsFromFnResults(fnResults *fnresult.ResultList) ([]kptfilev1.ResultItem, []kptfilev1.ResultItem) {
+	var results []kptfilev1.ResultItem
+	var errorResults []kptfilev1.ResultItem
+
+	if fnResults == nil {
+		return results, errorResults
+	}
+
+	for _, item := range fnResults.Items {
+		// Process the Results field which contains framework.Results
+		for _, result := range item.Results {
+			message := result.Message
+			severity := string(result.Severity) // Convert framework.Severity to string
+
+			// Default severity if not specified
+			if severity == "" {
+				if item.ExitCode == 0 {
+					severity = "info"
+				} else {
+					severity = "error"
+				}
+			}
+
+			resultItem := createResultItem(nil, message, severity)
+
+			// Classify based on severity instead of ExitCode
+			if severity == "error" {
+				errorResults = append(errorResults, resultItem)
+			} else {
+				results = append(results, resultItem)
+			}
+		}
+	}
+
+	return results, errorResults
 }
 
 func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.ResultList) error {
@@ -334,6 +462,9 @@ type hydrationContext struct {
 	// fnResults stores function results gathered
 	// during pipeline execution.
 	fnResults *fnresult.ResultList
+
+	// renderStatus stores detailed pipeline execution results
+	renderStatus *kptfilev1.RenderStatus
 
 	// saveOnRenderFailure indicates whether partially rendered resources
 	// should be saved when rendering fails. Read from the root Kptfile annotation.
@@ -758,6 +889,9 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 	}
 
 	for i, mutator := range mutators {
+		function := pl.Mutators[i]
+		stepResult := createPipelineStepResult(function, 0, "", "")
+
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 
 		if pl.Mutators[i].ConfigPath != "" {
@@ -768,10 +902,16 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			for _, r := range input {
 				pkgPath, err := pkg.GetPkgPathAnnotation(r)
 				if err != nil {
+					stepResult.ExecutionError = err.Error()
+					stepResult.ExitCode = 1
+					recordPipelineStepResult(hctx, stepResult, false)
 					return nil, err
 				}
 				currPath, _, err := kioutil.GetFileAnnotations(r)
 				if err != nil {
+					stepResult.ExecutionError = err.Error()
+					stepResult.ExitCode = 1
+					recordPipelineStepResult(hctx, stepResult, false)
 					return nil, err
 				}
 				if pkgPath == pn.pkg.UniquePath.String() && // resource belong to current package
@@ -789,12 +929,18 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 			// set kpt-resource-id annotation on each resource before mutation
 			err = fnruntime.SetResourceIDs(input)
 			if err != nil {
+				stepResult.ExecutionError = err.Error()
+				stepResult.ExitCode = 1
+				recordPipelineStepResult(hctx, stepResult, false)
 				return nil, err
 			}
 		}
 		// select the resources on which function should be applied
 		selectedInput, err := fnruntime.SelectInput(input, selectors, exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
+			stepResult.ExecutionError = err.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, false)
 			return nil, err
 		}
 		output := &kio.PackageBuffer{}
@@ -808,10 +954,27 @@ func (pn *pkgNode) runMutators(ctx context.Context, hctx *hydrationContext, inpu
 		}
 		err = mutation.Execute()
 		if err != nil {
+			stepResult.ExecutionError = err.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, false)
 			clearAnnotationsOnMutFailure(input)
 			hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, err))
 			return input, err
 		}
+
+		// Record successful execution with results
+		stepResult.ExitCode = 0
+
+		// Extract results from function execution if available
+		if hctx.fnResults != nil && len(hctx.fnResults.Items) > 0 {
+			// Get the most recent result (for this function)
+			lastResult := hctx.fnResults.Items[len(hctx.fnResults.Items)-1]
+			results, errorResults := extractResultsFromFnResults(&fnresult.ResultList{Items: []fnresult.Result{lastResult}})
+			stepResult.Results = results
+			stepResult.ErrorResults = errorResults
+		}
+
+		recordPipelineStepResult(hctx, stepResult, false)
 		hctx.executedFunctionCnt++
 		hctx.mutationSteps = append(hctx.mutationSteps, captureStepResult(pl.Mutators[i], hctx.fnResults, resultCountBeforeExec, nil))
 
@@ -846,11 +1009,16 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 
 	for i := range pl.Validators {
 		function := pl.Validators[i]
+		stepResult := createPipelineStepResult(function, 0, "", "")
+
 		resultCountBeforeExec := len(hctx.fnResults.Items)
 		// validators are run on a copy of mutated resources to ensure
 		// resources are not mutated.
 		selectedResources, err := fnruntime.SelectInput(input, function.Selectors, function.Exclusions, &fnruntime.SelectionContext{RootPackagePath: hctx.root.pkg.UniquePath})
 		if err != nil {
+			stepResult.ExecutionError = err.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, true)
 			return err
 		}
 		var validator kio.Filter
@@ -859,6 +1027,9 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
+			stepResult.ExecutionError = errAllowedExecNotSpecified.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, true)
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, errAllowedExecNotSpecified))
 			return errAllowedExecNotSpecified
 		}
@@ -867,6 +1038,15 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 		opts.DisplayResourceCount = displayResourceCount
 		validator, err = fnruntime.NewRunner(ctx, hctx.fileSystem, &function, pn.pkg.UniquePath, hctx.fnResults, opts, hctx.runtime)
 		if err != nil {
+			stepResult.ExecutionError = err.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, true)
+			return err
+		}
+		if _, err = validator.Filter(cloneResources(selectedResources)); err != nil {
+			stepResult.ExecutionError = err.Error()
+			stepResult.ExitCode = 1
+			recordPipelineStepResult(hctx, stepResult, true)
 			hctx.validationSteps = append(hctx.validationSteps, preExecFailureStep(function, err))
 			return err
 		}
@@ -874,6 +1054,20 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, err))
 			return err
 		}
+
+		// Record successful execution with results
+		stepResult.ExitCode = 0
+
+		// Extract results from function execution if available
+		if hctx.fnResults != nil && len(hctx.fnResults.Items) > 0 {
+			// Get the most recent result (for this function)
+			lastResult := hctx.fnResults.Items[len(hctx.fnResults.Items)-1]
+			results, errorResults := extractResultsFromFnResults(&fnresult.ResultList{Items: []fnresult.Result{lastResult}})
+			stepResult.Results = results
+			stepResult.ErrorResults = errorResults
+		}
+
+		recordPipelineStepResult(hctx, stepResult, true)
 		hctx.executedFunctionCnt++
 		hctx.validationSteps = append(hctx.validationSteps, captureStepResult(function, hctx.fnResults, resultCountBeforeExec, nil))
 	}

@@ -410,7 +410,9 @@ func (i Inventory) IsValid() bool {
 }
 
 type Status struct {
-	Conditions   []Condition   `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+	Conditions []Condition `yaml:"conditions,omitempty" json:"conditions,omitempty"`
+
+	// RenderStatus contains detailed information about pipeline execution results
 	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
 }
 
@@ -437,6 +439,9 @@ type PipelineStepResult struct {
 
 // ResultItem mirrors framework.Result with only the fields needed for Kptfile status.
 type ResultItem struct {
+	Resource    string `yaml:"resource,omitempty" json:"resource,omitempty"`
+	Message     string `yaml:"message,omitempty" json:"message,omitempty"`
+	Severity    string `yaml:"severity,omitempty" json:"severity,omitempty"`
 	Message     string       `yaml:"message,omitempty" json:"message,omitempty"`
 	Severity    string       `yaml:"severity,omitempty" json:"severity,omitempty"`
 	ResourceRef *ResourceRef `yaml:"resourceRef,omitempty" json:"resourceRef,omitempty"`

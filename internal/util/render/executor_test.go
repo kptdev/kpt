@@ -36,8 +36,14 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
-const rootString = "/root"
-const subPkgString = "/root/subpkg"
+// absPath returns a forward-slash absolute path for use with filesys.MakeFsInMemory(),
+// which only understands Unix-style paths regardless of host OS.
+func absPath(suffix string) string {
+	return "/" + strings.ReplaceAll(suffix, string(filepath.Separator), "/")
+}
+
+var rootString = "/root"
+var subPkgString = "/root/subpkg"
 
 func TestPathRelToRoot(t *testing.T) {
 	tests := []struct {
@@ -260,11 +266,11 @@ func setupRendererTest(t *testing.T, renderBfs bool) (*Renderer, *bytes.Buffer, 
 	assert.NoError(t, err)
 
 	childPkgPath := "/root/subpkg/child"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(childPkgPath)
 	assert.NoError(t, err)
 
 	siblingPkgPath := "/root/sibling"
-	err = mockFileSystem.Mkdir(subPkgPath)
+	err = mockFileSystem.Mkdir(siblingPkgPath)
 	assert.NoError(t, err)
 
 	err = mockFileSystem.WriteFile(filepath.Join(rootPkgPath, "Kptfile"), fmt.Appendf(nil, `
@@ -391,7 +397,7 @@ metadata:
 
 	t.Run("Error in LocalResources", func(t *testing.T) {
 		// Simulate an error in LocalResources by creating a package with no Kptfile
-		invalidPkgPath := "/invalid"
+		invalidPkgPath := absPath("invalid")
 		err := mockFileSystem.Mkdir(invalidPkgPath)
 		assert.NoError(t, err)
 
@@ -594,9 +600,10 @@ metadata:
 	assert.NoError(t, err)
 
 	hctx := &hydrationContext{
-		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
-		fileSystem: mockFS,
+		root:         &pkgNode{pkg: rootPkg},
+		pkgs:         map[types.UniquePath]*pkgNode{},
+		fileSystem:   mockFS,
+		renderStatus: &kptfilev1.RenderStatus{},
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
 
@@ -609,6 +616,10 @@ metadata:
 	assert.Equal(t, kptfilev1.ConditionTypeRendered, rootKf.Status.Conditions[0].Type)
 	assert.Equal(t, kptfilev1.ConditionTrue, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderSuccess, rootKf.Status.Conditions[0].Reason)
+
+	// Verify render status is preserved
+	assert.NotNil(t, rootKf.Status.RenderStatus)
+	assert.Empty(t, rootKf.Status.RenderStatus.ErrorSummary)
 }
 
 func TestUpdateRenderStatus_Failure(t *testing.T) {
@@ -627,9 +638,10 @@ metadata:
 	assert.NoError(t, err)
 
 	hctx := &hydrationContext{
-		root:       &pkgNode{pkg: rootPkg},
-		pkgs:       map[types.UniquePath]*pkgNode{},
-		fileSystem: mockFS,
+		root:         &pkgNode{pkg: rootPkg},
+		pkgs:         map[types.UniquePath]*pkgNode{},
+		fileSystem:   mockFS,
+		renderStatus: &kptfilev1.RenderStatus{},
 	}
 	hctx.pkgs[rootPkg.UniquePath] = &pkgNode{pkg: rootPkg}
 
@@ -642,6 +654,10 @@ metadata:
 	assert.Equal(t, kptfilev1.ConditionFalse, rootKf.Status.Conditions[0].Status)
 	assert.Equal(t, kptfilev1.ReasonRenderFailed, rootKf.Status.Conditions[0].Reason)
 	assert.Contains(t, rootKf.Status.Conditions[0].Message, "set-annotations failed")
+
+	// Verify render status contains error summary
+	assert.NotNil(t, rootKf.Status.RenderStatus)
+	assert.Contains(t, rootKf.Status.RenderStatus.ErrorSummary, "set-annotations failed")
 }
 
 func TestUpdateRenderStatus_ReplacesExistingCondition(t *testing.T) {
@@ -1089,6 +1105,195 @@ metadata:
 					assert.Contains(t, annotations, "other.annotation")
 				}
 			}
+		})
+	}
+}
+
+func TestCreateResultItem(t *testing.T) {
+	// Test basic functionality
+	result := createResultItem(nil, "test message", "error")
+	assert.Equal(t, "test message", result.Message)
+	assert.Equal(t, "error", result.Severity)
+	assert.Empty(t, result.Resource)
+
+	// Test with resource
+	resource := yaml.MustParse(`apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test`)
+	resultWithResource := createResultItem(resource, "resource processed", "info")
+	assert.Equal(t, "resource processed", resultWithResource.Message)
+	assert.Equal(t, "info", resultWithResource.Severity)
+	assert.NotEmpty(t, resultWithResource.Resource)
+}
+
+func TestExtractResultsFromFnResults(t *testing.T) {
+	// Test with nil results
+	results, errorResults := extractResultsFromFnResults(nil)
+	assert.Empty(t, results)
+	assert.Empty(t, errorResults)
+
+	// Test with empty results
+	emptyResults := &fnresult.ResultList{Items: []fnresult.Result{}}
+	results, errorResults = extractResultsFromFnResults(emptyResults)
+	assert.Empty(t, results)
+	assert.Empty(t, errorResults)
+}
+
+func TestCreatePipelineStepResult(t *testing.T) {
+	tests := []struct {
+		name           string
+		function       kptfilev1.Function
+		exitCode       int
+		stderr         string
+		executionError string
+		expectedName   string
+	}{
+		{
+			name: "function with name",
+			function: kptfilev1.Function{
+				Name:  "test-function",
+				Image: "gcr.io/image:tag",
+			},
+			exitCode:     0,
+			expectedName: "test-function",
+		},
+		{
+			name: "function without name but with image",
+			function: kptfilev1.Function{
+				Image: "gcr.io/image:tag",
+			},
+			exitCode:     0,
+			expectedName: "gcr.io/image:tag",
+		},
+		{
+			name: "function without name but with exec",
+			function: kptfilev1.Function{
+				Exec: "/usr/bin/test",
+			},
+			exitCode:     0,
+			expectedName: "/usr/bin/test",
+		},
+		{
+			name: "function with execution error",
+			function: kptfilev1.Function{
+				Name:  "failing-function",
+				Image: "gcr.io/image:tag",
+			},
+			exitCode:       1,
+			stderr:         "some error output",
+			executionError: "network timeout",
+			expectedName:   "failing-function",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := createPipelineStepResult(tc.function, tc.exitCode, tc.stderr, tc.executionError)
+
+			assert.Equal(t, tc.expectedName, result.Name)
+			assert.Equal(t, tc.function.Image, result.Image)
+			assert.Equal(t, tc.function.Exec, result.ExecPath)
+			assert.Equal(t, tc.exitCode, result.ExitCode)
+			assert.Equal(t, tc.stderr, result.Stderr)
+			assert.Equal(t, tc.executionError, result.ExecutionError)
+		})
+	}
+}
+
+func TestRecordPipelineStepResult(t *testing.T) {
+	hctx := &hydrationContext{
+		renderStatus: &kptfilev1.RenderStatus{},
+	}
+
+	// Test recording mutation step
+	mutationStep := kptfilev1.PipelineStepResult{
+		Name:     "mutation-step",
+		Image:    "gcr.io/mutation:tag",
+		ExitCode: 0,
+	}
+	recordPipelineStepResult(hctx, mutationStep, false)
+
+	assert.Len(t, hctx.renderStatus.MutationSteps, 1)
+	assert.Equal(t, mutationStep, hctx.renderStatus.MutationSteps[0])
+	assert.Len(t, hctx.renderStatus.ValidationSteps, 0)
+
+	// Test recording validation step
+	validationStep := kptfilev1.PipelineStepResult{
+		Name:     "validation-step",
+		Image:    "gcr.io/validation:tag",
+		ExitCode: 0,
+	}
+	recordPipelineStepResult(hctx, validationStep, true)
+
+	assert.Len(t, hctx.renderStatus.MutationSteps, 1)
+	assert.Len(t, hctx.renderStatus.ValidationSteps, 1)
+	assert.Equal(t, validationStep, hctx.renderStatus.ValidationSteps[0])
+}
+
+func TestAggregateErrors(t *testing.T) {
+	tests := []struct {
+		name           string
+		renderStatus   *kptfilev1.RenderStatus
+		expectedErrors string
+	}{
+		{
+			name:           "no errors",
+			renderStatus:   &kptfilev1.RenderStatus{},
+			expectedErrors: "",
+		},
+		{
+			name: "mutation step with execution error",
+			renderStatus: &kptfilev1.RenderStatus{
+				MutationSteps: []kptfilev1.PipelineStepResult{
+					{
+						Name:           "failing-mutation",
+						ExecutionError: "network timeout",
+						ExitCode:       1,
+					},
+				},
+			},
+			expectedErrors: "mutation step 'failing-mutation': network timeout",
+		},
+		{
+			name: "validation step with exit code",
+			renderStatus: &kptfilev1.RenderStatus{
+				ValidationSteps: []kptfilev1.PipelineStepResult{
+					{
+						Name:     "failing-validation",
+						ExitCode: 1,
+						Stderr:   "validation failed",
+					},
+				},
+			},
+			expectedErrors: "validation step 'failing-validation': exit code 1; validation step 'failing-validation' stderr: validation failed",
+		},
+		{
+			name: "multiple errors",
+			renderStatus: &kptfilev1.RenderStatus{
+				MutationSteps: []kptfilev1.PipelineStepResult{
+					{
+						Name:           "mutation-1",
+						ExecutionError: "image not found",
+						ExitCode:       1,
+					},
+				},
+				ValidationSteps: []kptfilev1.PipelineStepResult{
+					{
+						Name:     "validation-1",
+						ExitCode: 1,
+						Stderr:   "invalid resource",
+					},
+				},
+			},
+			expectedErrors: "mutation step 'mutation-1': image not found; validation step 'validation-1': exit code 1; validation step 'validation-1' stderr: invalid resource",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			result := aggregateErrors(tc.renderStatus)
+			assert.Equal(t, tc.expectedErrors, result)
 		})
 	}
 }
