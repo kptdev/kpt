@@ -30,7 +30,9 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 export KPT_FN_WASM_RUNTIME ?= nodejs
 
-LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=${GIT_COMMIT}
+# For local development builds: inject dev version with commit hash
+# Goreleaser releases set version via ldflags from git tags (handled in release workflow)
+LDFLAGS := -ldflags "-X github.com/kptdev/kpt/run.version=v0.0.0-dev+${GIT_COMMIT}
 ifeq ($(OS),Windows_NT)
 	# Do nothing
 else
