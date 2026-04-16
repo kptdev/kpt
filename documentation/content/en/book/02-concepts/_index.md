@@ -37,7 +37,7 @@ There are a number of key principles to be borne in mind, with regard to configu
 * Representation of abstractions of configuration generators as data with schemas, like other configuration data.
 * Finding, filtering/querying/selecting, and/or validating configuration data that can be operated on by the given code (functions).
 * Finding and/or filtering/querying/selecting code (functions) that can operate on the resource types contained within a body of configuration data.
-* Actuation (reconciliation of configuration data with live state) that is separate from the transformation of configuration data, and is driven by the declarative data model.
+* Actuation (reconciliation of the configuration data with the live state) that is separate from the transformation of the configuration data, and is driven by the declarative data model.
 * Transformations, particularly value propagation, are preferable to wholesale configuration generation, except when the expansion is dramatic (for example, >10x).
 * Transformation input generation should usually be decoupled from propagation.
 * Deployment context inputs should be taken from well-defined “provider context” objects.
@@ -74,6 +74,8 @@ Validation goes hand-in-hand with customization. KRM functions can be used to au
 A kpt package is a bundle of configuration _data_. It is represented as a directory tree containing the KRM resources using YAML as the file format.
 
 A package is explicitly declared using a file named `Kptfile`. This file  contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
+
+Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
 
 ### Kptfile annotations
 
@@ -153,7 +155,7 @@ three direct resources in three files:
 2. `wordpress/mysql`: This is a subpackage of the `wordpress` package, since it contains a `Kptfile`. This package contains three resources in the 
 `wordpress/mysql/deployment.yaml` file.
 
-kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the localfilesystem using `kpt pkg` commands. All other functionalities (namely,
+kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the localfilesystem using `kpt pkg` commands. All the other functionalities (namely,
 `kpt fn` and `kpt live`) use the package from the local filesystem, rather than the remote Git repository. It can be thought of as the _vendoring_ used by tooling for some programming languages. The main difference is that kpt is designed to enable you to modify the vendored package on the local filesystem, and then update the package by merging the local and upstream changes.
 
 There is one scenario where a Kptfile is implicit: you can use kpt to fetch any Git directory containing KRM resources, even if the directory does not contain a `Kptfile`. Effectively, you are telling kpt to treat the Git directory as a package. kpt automatically creates the `Kptfile` on the local filesystem to keep track of the upstream repository. This means that kpt is compatible with a
