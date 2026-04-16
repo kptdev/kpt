@@ -414,6 +414,11 @@ type Status struct {
 	RenderStatus *RenderStatus `yaml:"renderStatus,omitempty" json:"renderStatus,omitempty"`
 }
 
+// IsEmpty returns true if the Status has no meaningful content.
+func (s Status) IsEmpty() bool {
+	return len(s.Conditions) == 0 && s.RenderStatus == nil
+}
+
 // RenderStatus represents the result of performing render operation
 // on a package's resources.
 type RenderStatus struct {

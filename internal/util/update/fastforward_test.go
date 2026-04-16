@@ -27,8 +27,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const setLabelsImageV01 = "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1"
+
 func TestUpdate_FastForward(t *testing.T) {
-	setLabelsImage := "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1"
 	testCases := map[string]struct {
 		origin         *pkgbuilder.RootPkg
 		local          *pkgbuilder.RootPkg
@@ -175,7 +176,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
 							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
-							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -216,7 +217,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
 							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
-							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -262,7 +263,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
 							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 						WithStatusRenderStatus(
-							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 							nil, ""),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -288,7 +289,7 @@ func TestUpdate_FastForward(t *testing.T) {
 						WithStatusCondition(kptfilev1.NewRenderedCondition(
 							kptfilev1.ConditionFalse, kptfilev1.ReasonRenderFailed, "function failed")).
 						WithStatusRenderStatus(
-							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 1, ExecutionError: "validation error"}},
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 1, ExecutionError: "validation error"}},
 							nil, "render failed"),
 				).
 				WithResource(pkgbuilder.DeploymentResource),
@@ -348,11 +349,11 @@ func TestFastForward_RenderStatusDoesNotMaskLocalEdits(t *testing.T) {
 			pkgbuilder.NewKptfile().
 				WithUpstream(kptRepo, "/", "master", "fast-forward").
 				WithUpstreamLock(kptRepo, "/", "master", "abc123").
-				WithPipeline(pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1")).
+				WithPipeline(pkgbuilder.NewFunction(setLabelsImageV01)).
 				WithStatusCondition(kptfilev1.NewRenderedCondition(
 					kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
 				WithStatusRenderStatus(
-					[]kptfilev1.PipelineStepResult{{Image: "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1", ExitCode: 0}},
+					[]kptfilev1.PipelineStepResult{{Image: setLabelsImageV01, ExitCode: 0}},
 					nil, ""),
 		).
 		WithResource(pkgbuilder.DeploymentResource).
@@ -372,6 +373,7 @@ func TestFastForward_RenderStatusDoesNotMaskLocalEdits(t *testing.T) {
 		UpdatedPath:    filepath.Join(updated, "/"),
 		IsRoot:         true,
 	})
-	assert.Error(t, err, "local pipeline change should block fast-forward even with render status present")
-	assert.Contains(t, err.Error(), "local package files have been modified")
+	if assert.Error(t, err, "local pipeline change should block fast-forward even with render status present") {
+		assert.Contains(t, err.Error(), "local package files have been modified")
+	}
 }

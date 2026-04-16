@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"slices"
 
 	"github.com/kptdev/kpt/internal/pkg"
@@ -186,7 +185,7 @@ func clearRenderStatus(kf *kptfilev1.KptFile) {
 	if len(kf.Status.Conditions) == 0 {
 		kf.Status.Conditions = nil
 	}
-	if reflect.DeepEqual(*kf.Status, kptfilev1.Status{}) {
+	if kf.Status.IsEmpty() {
 		kf.Status = nil
 	}
 }

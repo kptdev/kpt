@@ -216,8 +216,8 @@ For associative lists:
 The fast-forward strategy updates a local package with the changes from upstream, but will
 fail if the local package has been modified since it was fetched.
 
-Render status (`status.renderStatus` and the `Rendered` condition in `status.conditions`) written by `kpt fn render` 
-is not considered a local modification. It is automatically cleared from the local Kptfile after a successful 
+Render status (`status.renderStatus` and the `Rendered` condition in `status.conditions`) written by `kpt fn render`
+is not considered a local modification. It is automatically cleared from the local Kptfile after a successful
 fast-forward update.
 
 #### Force-delete-replace strategy
