@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,11 +22,13 @@ import (
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestUpdate_FastForward(t *testing.T) {
+	setLabelsImage := "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1"
 	testCases := map[string]struct {
 		origin         *pkgbuilder.RootPkg
 		local          *pkgbuilder.RootPkg
@@ -161,8 +163,149 @@ func TestUpdate_FastForward(t *testing.T) {
 				).
 				WithResource(pkgbuilder.ConfigMapResource),
 		},
+		"render status on local Kptfile does not block fast-forward": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123").
+						WithStatusCondition(kptfilev1.NewRenderedCondition(
+							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+						WithStatusRenderStatus(
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							nil, ""),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			relPackagePath: "/",
+			isRoot:         true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"non-rendered conditions are preserved after fast-forward": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithStatusCondition(kptfilev1.Condition{
+							Type:   "Ready",
+							Status: kptfilev1.ConditionTrue,
+							Reason: "AllReady",
+						}),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123").
+						WithStatusCondition(kptfilev1.Condition{
+							Type:   "Ready",
+							Status: kptfilev1.ConditionTrue,
+							Reason: "AllReady",
+						}).
+						WithStatusCondition(kptfilev1.NewRenderedCondition(
+							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+						WithStatusRenderStatus(
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							nil, ""),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithStatusCondition(kptfilev1.Condition{
+							Type:   "Ready",
+							Status: kptfilev1.ConditionTrue,
+							Reason: "AllReady",
+						}),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			relPackagePath: "/",
+			isRoot:         true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123").
+						WithStatusCondition(kptfilev1.Condition{
+							Type:   "Ready",
+							Status: kptfilev1.ConditionTrue,
+							Reason: "AllReady",
+						}),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"upstream render status is cleared after fast-forward": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithStatusCondition(kptfilev1.NewRenderedCondition(
+							kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+						WithStatusRenderStatus(
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 0}},
+							nil, ""),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			relPackagePath: "/",
+			isRoot:         true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
+		"failed render status is cleared after fast-forward": {
+			origin: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			local: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123").
+						WithStatusCondition(kptfilev1.NewRenderedCondition(
+							kptfilev1.ConditionFalse, kptfilev1.ReasonRenderFailed, "function failed")).
+						WithStatusRenderStatus(
+							[]kptfilev1.PipelineStepResult{{Image: setLabelsImage, ExitCode: 1, ExecutionError: "validation error"}},
+							nil, "render failed"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+			updated: pkgbuilder.NewRootPkg().
+				WithKptfile().
+				WithResource(pkgbuilder.DeploymentResource),
+			relPackagePath: "/",
+			isRoot:         true,
+			expected: pkgbuilder.NewRootPkg().
+				WithKptfile(
+					pkgbuilder.NewKptfile().
+						WithUpstream(kptRepo, "/", "master", "fast-forward").
+						WithUpstreamLock(kptRepo, "/", "master", "abc123"),
+				).
+				WithResource(pkgbuilder.DeploymentResource),
+		},
 	}
-
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			repos := testutil.EmptyReposInfo
@@ -187,4 +330,48 @@ func TestUpdate_FastForward(t *testing.T) {
 			testutil.KptfileAwarePkgEqual(t, local, expected, false)
 		})
 	}
+}
+
+// TestFastForward_RenderStatusDoesNotMaskLocalEdits verifies that real local
+// changes (e.g. pipeline edits) still block fast-forward even when render
+// status is also present.
+func TestFastForward_RenderStatusDoesNotMaskLocalEdits(t *testing.T) {
+	repos := testutil.EmptyReposInfo
+
+	origin := pkgbuilder.NewRootPkg().
+		WithKptfile().
+		WithResource(pkgbuilder.DeploymentResource).
+		ExpandPkg(t, repos)
+
+	local := pkgbuilder.NewRootPkg().
+		WithKptfile(
+			pkgbuilder.NewKptfile().
+				WithUpstream(kptRepo, "/", "master", "fast-forward").
+				WithUpstreamLock(kptRepo, "/", "master", "abc123").
+				WithPipeline(pkgbuilder.NewFunction("ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1")).
+				WithStatusCondition(kptfilev1.NewRenderedCondition(
+					kptfilev1.ConditionTrue, kptfilev1.ReasonRenderSuccess, "")).
+				WithStatusRenderStatus(
+					[]kptfilev1.PipelineStepResult{{Image: "ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1", ExitCode: 0}},
+					nil, ""),
+		).
+		WithResource(pkgbuilder.DeploymentResource).
+		ExpandPkg(t, repos)
+
+	updated := pkgbuilder.NewRootPkg().
+		WithKptfile().
+		WithResource(pkgbuilder.DeploymentResource).
+		ExpandPkg(t, repos)
+
+	updater := &update.FastForwardUpdater{}
+
+	err := updater.Update(updatetypes.Options{
+		RelPackagePath: "/",
+		OriginPath:     filepath.Join(origin, "/"),
+		LocalPath:      filepath.Join(local, "/"),
+		UpdatedPath:    filepath.Join(updated, "/"),
+		IsRoot:         true,
+	})
+	assert.Error(t, err, "local pipeline change should block fast-forward even with render status present")
+	assert.Contains(t, err.Error(), "local package files have been modified")
 }
