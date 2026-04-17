@@ -270,10 +270,10 @@ type ValidateError struct {
 
 func (e *ValidateError) Error() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Kptfile is invalid:\nField: `%s`\n", e.Field))
+	fmt.Fprintf(&sb, "Kptfile is invalid:\nField: `%s`\n", e.Field)
 	if e.Value != "" {
-		sb.WriteString(fmt.Sprintf("Value: %q\n", e.Value))
+		fmt.Fprintf(&sb, "Value: %q\n", e.Value)
 	}
-	sb.WriteString(fmt.Sprintf("Reason: %s\n", e.Reason))
+	fmt.Fprintf(&sb, "Reason: %s\n", e.Reason)
 	return sb.String()
 }

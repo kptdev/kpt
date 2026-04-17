@@ -266,7 +266,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	}
 
 	pr := printer.FromContextOrDie(ctx)
-	pr.PrintPackage(p, !(p == u.Pkg))
+	pr.PrintPackage(p, p != u.Pkg)
 
 	g := kf.Upstream.Git
 	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}

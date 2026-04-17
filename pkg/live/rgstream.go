@@ -98,7 +98,7 @@ func isKptfile(resource []byte) bool {
 	d := yaml.NewDecoder(bytes.NewReader(resource))
 	d.KnownFields(true)
 	if err := d.Decode(&kptFileTemplate); err == nil {
-		return kptFileTemplate.ResourceMeta.TypeMeta == kptfilev1.TypeMeta.TypeMeta
+		return kptFileTemplate.TypeMeta == kptfilev1.TypeMeta.TypeMeta
 	}
 	return false
 }
