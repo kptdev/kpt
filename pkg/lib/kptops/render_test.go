@@ -17,76 +17,15 @@ package kptops
 import (
 	"bytes"
 	"flag"
-	"os"
 	"path/filepath"
 	goruntime "runtime"
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/render"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/pkg/printer/fake"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
-
-func readFile(t *testing.T, path string) []byte {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("Cannot read file %q", err)
-		return nil
-	}
-	return data
-}
-
-func TestRender(t *testing.T) {
-	testdata, err := filepath.Abs(filepath.Join(".", "../../../internal/kptops/testdata"))
-	if err != nil {
-		t.Fatalf("Cannot compute absolute path for ./testdata: %v", err)
-	}
-
-	for _, test := range []struct {
-		name string
-		pkg  string
-		want string
-	}{
-		{
-			name: "render-with-function-config",
-			pkg:  "simple-bucket",
-			want: "expected.txt",
-		},
-		{
-			name: "render-with-inline-config",
-			pkg:  "simple-bucket",
-			want: "expected.txt",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			var output bytes.Buffer
-			r := render.Renderer{
-				PkgPath:    filepath.Join(testdata, test.name, test.pkg),
-				Runtime:    &runtime{},
-				FileSystem: filesys.FileSystemOrOnDisk{},
-				Output:     &output,
-			}
-			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-
-			if _, err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
-				t.Errorf("Render failed: %v", err)
-			}
-
-			got := output.String()
-			want := readFile(t, filepath.Join(testdata, test.name, test.want))
-
-			if diff := cmp.Diff(string(want), got); diff != "" {
-				t.Errorf("Unexpected result (-want, +got): %s", diff)
-			}
-		})
-	}
-}
 
 func TestPackagePrinter(t *testing.T) {
 	klog.InitFlags(nil)

@@ -139,7 +139,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 
 		msg.WriteString("\nDetails:\n")
 		for _, v := range inventoryInfoValidationError.Violations {
-			msg.WriteString(fmt.Sprintf("%s\n", v.Reason))
+			fmt.Fprintf(&msg, "%s\n", v.Reason)
 		}
 
 		return ResolvedResult{Message: msg.String()}, true
@@ -148,10 +148,10 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 	var unknownTypesError *manifestreader.UnknownTypesError
 	if errors.As(err, &unknownTypesError) {
 		var msg strings.Builder
-		msg.WriteString(fmt.Sprintf("Error: %d resource types not found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds)))
+		fmt.Fprintf(&msg, "Error: %d resource types not found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds))
 		msg.WriteString("\n\nResource types:\n")
 		for _, gvk := range unknownTypesError.GroupVersionKinds {
-			msg.WriteString(fmt.Sprintf("%s\n", gvk))
+			fmt.Fprintf(&msg, "%s\n", gvk)
 		}
 
 		return ResolvedResult{Message: msg.String()}, true

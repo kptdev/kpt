@@ -1,5 +1,4 @@
 //go:build docker
-// +build docker
 
 // Copyright 2021,2026 The kpt Authors
 //

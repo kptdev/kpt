@@ -48,7 +48,6 @@ func TestContainerFn(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		ctx := context.Background()
 		t.Run(tt.name, func(t *testing.T) {
 			errBuff := &bytes.Buffer{}
@@ -101,7 +100,6 @@ func TestIsSupportedDockerVersion(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			require := require.New(t)
 			err := isSupportedDockerVersion(tt.inputV)
