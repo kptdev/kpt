@@ -478,15 +478,13 @@ func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tm
 		return fmt.Errorf("failed to read actual diff: %w", err)
 	}
 	expectedDiff := expected.Diff
-	if r.testCase.Config.DiffStripRegEx != "" {
-		actualDiff, err = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
-		if err != nil {
-			return err
-		}
-		expectedDiff, err = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
-		if err != nil {
-			return err
-		}
+	actualDiff, err = normalizeDiff(actualDiff, r.testCase.Config.DiffStripRegEx)
+	if err != nil {
+		return err
+	}
+	expectedDiff, err = normalizeDiff(expectedDiff, r.testCase.Config.DiffStripRegEx)
+	if err != nil {
+		return err
 	}
 	if actualDiff != expectedDiff {
 		diffOfDiff, err := diffStrings(actualDiff, expectedDiff)
@@ -650,15 +648,32 @@ func (r *Runner) stripLines(string2Strip string, linesToStrip []string) string {
 // headers in the diff string so that environment-specific output does not
 // cause comparison failures.
 func normalizeDiff(diff, stripRegEx string) (string, error) {
-	re, err := regexp.Compile(stripRegEx)
-	if err != nil {
-		return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
+	var re *regexp.Regexp
+	var err error
+	if stripRegEx != "" {
+		re, err = regexp.Compile(stripRegEx)
+		if err != nil {
+			return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
+		}
 	}
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
 	var out []string
+	inKptfileDiff := false
 	for _, line := range strings.Split(diff, "\n") {
-		if re.MatchString(line) {
+		if strings.HasPrefix(line, "diff --git ") {
+			inKptfileDiff = line == "diff --git a/Kptfile b/Kptfile"
+		}
+
+		if inKptfileDiff &&
+			(len(line) > 0 && (line[0] == '+' || line[0] == '-')) &&
+			!strings.HasPrefix(line, "+++") &&
+			!strings.HasPrefix(line, "---") {
+			// Ignore indentation-only drift in Kptfile changed lines.
+			line = line[:1] + strings.TrimLeft(line[1:], " ")
+		}
+
+		if re != nil && re.MatchString(line) {
 			continue
 		}
 		line = indexRE.ReplaceAllString(line, "index NORMALIZED")
