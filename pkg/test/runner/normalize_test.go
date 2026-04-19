@@ -233,3 +233,125 @@ index fedcba9..7654321 100644
 		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
 	}
 }
+
+func TestNormalizeDiff_HunkHeaderContextInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,4 +1,8 @@ metadata:
++status: True`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,4 +1,8 @@ pipeline:
++status: True`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
+
+func TestNormalizeDiff_KptfileQuotedScalarWithSpacesInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-exec: "sed -e 's/foo/bar/'"
++exec: sed -e 's/foo/bar/'`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-exec: sed -e 's/foo/bar/'
++exec: "sed -e 's/foo/bar/'"`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
+
+func TestNormalizeDiff_KptfileSingleQuotedScalarInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-stderr: 'failed to evaluate function: error: function failure'
++stderr: failed to evaluate function: error: function failure`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-stderr: failed to evaluate function: error: function failure
++stderr: 'failed to evaluate function: error: function failure'`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
+
+func TestNormalizeDiff_KptfileEscapedSingleQuotedScalarInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-errorSummary: 'can''t render package'
++errorSummary: can't render package`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-errorSummary: can't render package
++errorSummary: 'can''t render package'`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
