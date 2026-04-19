@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -658,10 +659,52 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 	}
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
+	mapLikeYAMLRE := regexp.MustCompile(`^\s*-?\s*[A-Za-z0-9_.-]+:\s*.*$`)
 	var out []string
+	var kptChangedRun []string
 	inKptfileDiff := false
+	flushKptChangedRun := func() {
+		if len(kptChangedRun) == 0 {
+			return
+		}
+
+		allMapLike := true
+		for _, runLine := range kptChangedRun {
+			if len(runLine) < 2 || !mapLikeYAMLRE.MatchString(runLine[1:]) {
+				allMapLike = false
+				break
+			}
+		}
+		if !allMapLike {
+			out = append(out, kptChangedRun...)
+			kptChangedRun = nil
+			return
+		}
+
+		var removed []string
+		var added []string
+		for _, runLine := range kptChangedRun {
+			switch runLine[0] {
+			case '-':
+				removed = append(removed, runLine[1:])
+			case '+':
+				added = append(added, runLine[1:])
+			}
+		}
+		sort.Strings(removed)
+		sort.Strings(added)
+		for _, line := range removed {
+			out = append(out, "-"+line)
+		}
+		for _, line := range added {
+			out = append(out, "+"+line)
+		}
+		kptChangedRun = nil
+	}
+
 	for _, line := range strings.Split(diff, "\n") {
 		if strings.HasPrefix(line, "diff --git ") {
+			flushKptChangedRun()
 			inKptfileDiff = line == "diff --git a/Kptfile b/Kptfile"
 		}
 
@@ -671,7 +714,15 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 			!strings.HasPrefix(line, "---") {
 			// Ignore indentation-only drift in Kptfile changed lines.
 			line = line[:1] + strings.TrimLeft(line[1:], " ")
+			if re != nil && re.MatchString(line) {
+				continue
+			}
+			line = indexRE.ReplaceAllString(line, "index NORMALIZED")
+			line = hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
+			kptChangedRun = append(kptChangedRun, line)
+			continue
 		}
+		flushKptChangedRun()
 
 		if re != nil && re.MatchString(line) {
 			continue
@@ -680,5 +731,6 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 		line = hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
 		out = append(out, line)
 	}
+	flushKptChangedRun()
 	return strings.Join(out, "\n"), nil
 }
