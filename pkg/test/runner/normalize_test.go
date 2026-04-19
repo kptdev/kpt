@@ -163,3 +163,73 @@ index ccccccc..ddddddd 100644
 		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
 	}
 }
+
+func TestNormalizeDiff_KptfileMultilineAndTabOrderInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,5 +1,8 @@
+-message: |-
+-  pkg.render: pkg .:
++reason: RenderFailed
++	pipeline.run: pkg ./subpkg: already handled error
++message: |-
+ status: "False"`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,5 +1,8 @@
+-  pkg.render: pkg .:
+-message: |-
++message: |-
++pipeline.run: pkg ./subpkg: already handled error
++reason: RenderFailed
+ status: "False"`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
+
+func TestNormalizeDiff_KptfileQuotedScalarInsensitive(t *testing.T) {
+	actual := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-level: "root"
++level: root`
+
+	expected := `diff --git a/Kptfile b/Kptfile
+index fedcba9..7654321 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,3 +1,3 @@
+-level: root
++level: "root"`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
