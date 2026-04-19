@@ -658,8 +658,9 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 		}
 	}
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
-	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
-	quotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[A-Za-z0-9_.-]+:\s*)"([A-Za-z0-9_.-]+)"\s*$`)
+	hunkRE := regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@.*$`)
+	doubleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)"(.*)"\s*$`)
+	singleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)'(.*)'\s*$`)
 	var out []string
 	var kptChangedRun []string
 	inKptfileDiff := false
@@ -680,8 +681,10 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 		}
 		normalizePayload := func(payload string) string {
 			payload = strings.TrimLeft(payload, " \t")
-			if m := quotedScalarRE.FindStringSubmatch(payload); m != nil {
+			if m := doubleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
 				payload = m[1] + m[2]
+			} else if m := singleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
+				payload = m[1] + strings.ReplaceAll(m[2], "''", "'")
 			}
 			return payload
 		}
