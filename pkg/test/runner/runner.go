@@ -659,25 +659,12 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 	}
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+,\d+ \+\d+,\d+ @@`)
-	mapLikeYAMLRE := regexp.MustCompile(`^\s*-?\s*[A-Za-z0-9_.-]+:\s*.*$`)
+	quotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[A-Za-z0-9_.-]+:\s*)"([A-Za-z0-9_.-]+)"\s*$`)
 	var out []string
 	var kptChangedRun []string
 	inKptfileDiff := false
 	flushKptChangedRun := func() {
 		if len(kptChangedRun) == 0 {
-			return
-		}
-
-		allMapLike := true
-		for _, runLine := range kptChangedRun {
-			if len(runLine) < 2 || !mapLikeYAMLRE.MatchString(runLine[1:]) {
-				allMapLike = false
-				break
-			}
-		}
-		if !allMapLike {
-			out = append(out, kptChangedRun...)
-			kptChangedRun = nil
 			return
 		}
 
@@ -690,6 +677,19 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 			case '+':
 				added = append(added, runLine[1:])
 			}
+		}
+		normalizePayload := func(payload string) string {
+			payload = strings.TrimLeft(payload, " \t")
+			if m := quotedScalarRE.FindStringSubmatch(payload); m != nil {
+				payload = m[1] + m[2]
+			}
+			return payload
+		}
+		for i := range removed {
+			removed[i] = normalizePayload(removed[i])
+		}
+		for i := range added {
+			added[i] = normalizePayload(added[i])
 		}
 		sort.Strings(removed)
 		sort.Strings(added)
@@ -713,7 +713,7 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 			!strings.HasPrefix(line, "+++") &&
 			!strings.HasPrefix(line, "---") {
 			// Ignore indentation-only drift in Kptfile changed lines.
-			line = line[:1] + strings.TrimLeft(line[1:], " ")
+			line = line[:1] + strings.TrimLeft(line[1:], " \t")
 			if re != nil && re.MatchString(line) {
 				continue
 			}
