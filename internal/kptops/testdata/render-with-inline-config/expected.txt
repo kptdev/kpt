@@ -16,7 +16,7 @@ items:
     description: A Google Cloud Storage bucket
   pipeline:
     mutators:
-    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.0
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.4
       configMap:
         name: updated-bucket-name
         namespace: updated-namespace
