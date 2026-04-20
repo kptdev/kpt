@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
@@ -55,6 +56,16 @@ func (u FastForwardUpdater) Update(options updatetypes.Options) error {
 	}
 
 	if err := (&ReplaceUpdater{}).Update(options); err != nil {
+		return errors.E(op, types.UniquePath(options.LocalPath), err)
+	}
+
+	// Remove stale render status from the updated local Kptfile.
+	localKf, err := kptfileutil.ReadKptfile(filesys.FileSystemOrOnDisk{}, options.LocalPath)
+	if err != nil {
+		return errors.E(op, types.UniquePath(options.LocalPath), err)
+	}
+	clearRenderStatus(localKf)
+	if err := kptfileutil.WriteFile(options.LocalPath, localKf); err != nil {
 		return errors.E(op, types.UniquePath(options.LocalPath), err)
 	}
 	return nil
@@ -126,6 +137,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 	}
 	localKf.Upstream = nil
 	localKf.UpstreamLock = nil
+	clearRenderStatus(localKf)
 
 	_, err = os.Stat(filepath.Join(orgPath, kptfilev1.KptFileName))
 	if err != nil {
@@ -146,6 +158,7 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 		return false, errors.E(op, types.UniquePath(localPath), err)
 	}
 
+	clearRenderStatus(orgKf)
 	orgKf.Name = localKf.Name
 	equal, err := kptfileutil.Equal(localKf, orgKf)
 	if err != nil {
@@ -158,4 +171,21 @@ func hasKfDiff(localPath, orgPath string) (bool, error) {
 func isDefaultKptfile(localKf *kptfilev1.KptFile, name string) (bool, error) {
 	defaultKf := kptfileutil.DefaultKptfile(name)
 	return kptfileutil.Equal(localKf, defaultKf)
+}
+
+func clearRenderStatus(kf *kptfilev1.KptFile) {
+	if kf.Status == nil {
+		return
+	}
+	kf.Status.RenderStatus = nil
+
+	kf.Status.Conditions = slices.DeleteFunc(kf.Status.Conditions, func(condition kptfilev1.Condition) bool {
+		return condition.Type == kptfilev1.ConditionTypeRendered
+	})
+	if len(kf.Status.Conditions) == 0 {
+		kf.Status.Conditions = nil
+	}
+	if kf.Status.IsEmpty() {
+		kf.Status = nil
+	}
 }

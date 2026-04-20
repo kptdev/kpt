@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -329,6 +329,7 @@ type Kptfile struct {
 	UpstreamLock *UpstreamLock
 	Pipeline     *Pipeline
 	Inventory    *Inventory
+	Status       *kptfilev1.Status
 }
 
 func NewKptfile() *Kptfile {
@@ -385,6 +386,30 @@ func (k *Kptfile) WithUpstreamLockRef(repoRef, dir, ref string, index int) *Kptf
 		Dir:     dir,
 		Ref:     ref,
 		Index:   index,
+	}
+	return k
+}
+
+// WithStatusCondition adds a status condition to the Kptfile.
+func (k *Kptfile) WithStatusCondition(condition kptfilev1.Condition) *Kptfile {
+	if k.Status == nil {
+		k.Status = &kptfilev1.Status{
+			Conditions: []kptfilev1.Condition{},
+		}
+	}
+	k.Status.Conditions = append(k.Status.Conditions, condition)
+	return k
+}
+
+// WithStatusRenderStatus adds render status info to the Kptfile.
+func (k *Kptfile) WithStatusRenderStatus(mutationSteps []kptfilev1.PipelineStepResult, validationSteps []kptfilev1.PipelineStepResult, errorSummary string) *Kptfile {
+	if k.Status == nil {
+		k.Status = &kptfilev1.Status{}
+	}
+	k.Status.RenderStatus = &kptfilev1.RenderStatus{
+		MutationSteps:   mutationSteps,
+		ValidationSteps: validationSteps,
+		ErrorSummary:    errorSummary,
 	}
 	return k
 }
@@ -644,6 +669,9 @@ func buildKptfile(pkg *pkg, pkgName string, reposInfo ReposInfo) string {
 		if inventory.ID != "" {
 			kptfile.Inventory.InventoryID = inventory.ID
 		}
+	}
+	if pkg.Kptfile.Status != nil {
+		kptfile.Status = pkg.Kptfile.Status
 	}
 	b, err := yaml.Marshal(kptfile)
 	if err != nil {
