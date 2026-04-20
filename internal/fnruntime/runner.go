@@ -27,6 +27,7 @@ import (
 
 	"github.com/google/shlex"
 	"github.com/kptdev/kpt/internal/builtins"
+	builtinsregistry "github.com/kptdev/kpt/internal/builtins/registry"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
@@ -118,11 +119,21 @@ func NewRunner(
 		} else if runner != nil {
 			fltr.Run = runner.Run
 		}
+
 	}
 	if fltr.Run == nil {
 		if f.Image == runneroptions.FuncGenPkgContext {
 			pkgCtxGenerator := &builtins.PackageContextGenerator{}
 			fltr.Run = pkgCtxGenerator.Run
+		} else if builtinFn := builtinsregistry.Lookup(f.Image); builtinFn != nil {
+			fltr.Run = func(r io.Reader, w io.Writer) error {
+				var stderrBuf strings.Builder
+				err := builtinFn.Run(r, w, &stderrBuf)
+				if stderrBuf.Len() > 0 {
+					fnResult.Stderr = stderrBuf.String()
+				}
+				return err
+			}
 		} else {
 			switch {
 			case f.Image != "":
@@ -254,6 +265,12 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
 		}
+		// for builtin functions, print stderr from fnResult if available
+		if err != nil && fr.fnResult.Stderr != "" {
+			printFnStderr(fr.ctx, fr.fnResult.Stderr)
+			pr.Printf("  Exit code: %d\n\n", fr.fnResult.ExitCode)
+			return nil, errors.ErrAlreadyHandled
+		}
 		return nil, err
 	}
 	if !fr.disableCLIOutput {
@@ -309,6 +326,17 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		if goerrors.As(err, &execErr) {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
+		} else {
+			// builtin functions don't return ExecError, populate stderr from error message
+			if fnResult.Stderr == "" {
+				fnResult.Stderr = err.Error()
+			} else if !strings.Contains(fnResult.Stderr, err.Error()) {
+				if strings.HasSuffix(fnResult.Stderr, "\n") {
+					fnResult.Stderr += err.Error()
+				} else {
+					fnResult.Stderr += "\n" + err.Error()
+				}
+			}
 		}
 		// accumulate the results
 		fr.fnResults.Items = append(fr.fnResults.Items, *fnResult)
