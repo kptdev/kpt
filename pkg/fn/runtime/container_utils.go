@@ -1,4 +1,4 @@
-package fnruntime
+package runtime
 
 import (
 	"bytes"

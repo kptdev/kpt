@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnruntime
+package runtime
 
 import (
 	"errors"
@@ -23,7 +23,7 @@ import (
 	"log"
 	"os"
 
-	wasmtime "github.com/bytecodealliance/wasmtime-go"
+	"github.com/bytecodealliance/wasmtime-go"
 	"github.com/prep/wasmexec"
 	"github.com/prep/wasmexec/wasmtimexec"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
