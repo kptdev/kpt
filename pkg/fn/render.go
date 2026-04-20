@@ -24,6 +24,10 @@ import (
 type RenderOptions struct {
 	PkgPath string
 	Runtime FunctionRuntime
+	// DisplayName is a human-readable name used for logs and diagnostics.
+	// It is not intended to be a unique or stable identifier; if empty, no
+	// explicit display name was provided.
+	DisplayName string
 }
 
 type Renderer interface {

@@ -44,6 +44,7 @@ func (r *renderer) Render(ctx context.Context, pkg filesys.FileSystem, opts fn.R
 	rr := render.Renderer{
 		PkgPath:       opts.PkgPath,
 		Runtime:       opts.Runtime,
+		DisplayName:   opts.DisplayName,
 		FileSystem:    pkg,
 		RunnerOptions: r.runnerOptions,
 	}
@@ -77,10 +78,13 @@ func (p *packagePrinter) OptPrintf(opt *printer.Options, format string, args ...
 		return
 	}
 	var prefix string
-	if !opt.PkgDisplayPath.Empty() {
-		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgDisplayPath))
-	} else if !opt.PkgPath.Empty() {
-		prefix = fmt.Sprintf(packagePrefixFormat, string(opt.PkgPath))
+	switch {
+	case opt.PkgDisplayName != "":
+		prefix = fmt.Sprintf("Package %q: ", opt.PkgDisplayName)
+	case !opt.PkgDisplayPath.Empty():
+		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgDisplayPath))
+	case !opt.PkgPath.Empty():
+		prefix = fmt.Sprintf("Package %q: ", string(opt.PkgPath))
 	}
 	p.printfDepth(logDepth, prefix+format, args...)
 }

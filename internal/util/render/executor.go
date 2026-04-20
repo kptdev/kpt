@@ -68,6 +68,9 @@ type Renderer struct {
 
 	// FileSystem is the input filesystem to operate on
 	FileSystem filesys.FileSystem
+
+	// DisplayName is an optional field to modify the package name displayed in logs
+	DisplayName string
 }
 
 // Execute runs a pipeline.
@@ -84,6 +87,7 @@ func (e *Renderer) Execute(ctx context.Context) (*fnresult.ResultList, error) {
 	// initialize hydration context
 	hctx := &hydrationContext{
 		root:          root,
+		rootName:      e.DisplayName,
 		pkgs:          map[types.UniquePath]*pkgNode{},
 		fnResults:     fnresult.NewResultList(),
 		runnerOptions: e.RunnerOptions,
@@ -349,6 +353,8 @@ type hydrationContext struct {
 
 	// function runtime
 	runtime fn.FunctionRuntime
+
+	rootName string
 }
 
 // pkgNode represents a package being hydrated. Think of it as a node in the hydration DAG.
@@ -709,7 +715,8 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 	// TODO: the DisplayPath is a relative file path. It cannot represent the
 	// package structure. We should have function to get the relative package
 	// path here.
-	pr.OptPrintf(printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath), "\n")
+	prOpts := printer.NewOpt().PkgDisplay(pn.pkg.DisplayPath).PkgName(hctx.rootName)
+	pr.OptPrintf(prOpts, "\n")
 
 	pl, err := pn.pkg.Pipeline()
 	if err != nil {
@@ -730,11 +737,11 @@ func (pn *pkgNode) runPipeline(ctx context.Context, hctx *hydrationContext, inpu
 
 	mutatedResources, err := pn.runMutators(ctx, hctx, input)
 	if err != nil {
-		return mutatedResources, errors.E(op, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.rootName, pn.pkg.UniquePath, err)
 	}
 
 	if err = pn.runValidators(ctx, hctx, mutatedResources); err != nil {
-		return mutatedResources, errors.E(op, pn.pkg.UniquePath, err)
+		return mutatedResources, errors.E(op, hctx.rootName, pn.pkg.UniquePath, err)
 	}
 	return mutatedResources, nil
 }
