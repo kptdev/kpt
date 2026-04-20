@@ -734,7 +734,10 @@ func (pn *pkgNode) runValidators(ctx context.Context, hctx *hydrationContext, in
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
-			return errAllowedExecNotSpecified
+			// WASM functions are sandboxed and don't require --allow-exec if --allow-alpha-wasm is set
+			if !(hctx.runnerOptions.AllowWasm && strings.HasSuffix(function.Exec, ".wasm")) {
+				return errAllowedExecNotSpecified
+			}
 		}
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true
@@ -859,7 +862,10 @@ func fnChain(ctx context.Context, hctx *hydrationContext, pkgPath types.UniquePa
 			displayResourceCount = true
 		}
 		if function.Exec != "" && !hctx.runnerOptions.AllowExec {
-			return nil, errAllowedExecNotSpecified
+			// WASM functions are sandboxed and don't require --allow-exec if --allow-alpha-wasm is set
+			if !(hctx.runnerOptions.AllowWasm && strings.HasSuffix(function.Exec, ".wasm")) {
+				return nil, errAllowedExecNotSpecified
+			}
 		}
 		opts := hctx.runnerOptions
 		opts.SetPkgPathAnnotation = true

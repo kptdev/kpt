@@ -121,7 +121,7 @@ func NewRunner(
 				}
 			case f.Exec != "":
 				// If AllowWasm is true, we will use wasm runtime for exec field.
-				if opts.AllowWasm {
+				if opts.AllowWasm && strings.HasSuffix(f.Exec, ".wasm") {
 					wFn, err := NewWasmFn(&FsLoader{Filename: f.Exec})
 					if err != nil {
 						return nil, err

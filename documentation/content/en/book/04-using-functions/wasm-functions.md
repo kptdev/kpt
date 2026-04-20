@@ -18,7 +18,7 @@ WASM functions have some advantages over container-based functions:
 
 - Faster startup - no container runtime needed
 - Smaller size - WASM modules are typically much smaller than container images
-- Better security - sandboxed execution with no host access by default
+- Better isolation - sandboxed execution with limited host access
 - More portable - run anywhere WASM is supported
 - Lower resource usage
 
@@ -47,7 +47,7 @@ pipeline:
 kpt fn render my-package --allow-alpha-wasm
 ```
 
-kpt will detect the function as WASM if the OCI image has a `js/wasm` platform manifest.
+kpt will use the WASM runtime for an OCI image if the `--allow-alpha-wasm` flag is present and the image has a `js/wasm` platform manifest.
 
 ### With `fn eval`
 
@@ -79,7 +79,7 @@ pipeline:
 ```
 
 ```shell
-kpt fn render my-package --allow-alpha-wasm --allow-exec
+kpt fn render my-package --allow-alpha-wasm
 ```
 
 Note: Using local WASM files makes your package less portable since the file needs to exist on every system.
@@ -135,7 +135,7 @@ GOOS=js GOARCH=wasm go build -o my-function.wasm .
 ### Test locally
 
 ```shell
-kpt fn eval ./test-package --allow-alpha-wasm --allow-exec --exec ./my-function.wasm
+kpt fn eval ./test-package --allow-alpha-wasm --exec ./my-function.wasm
 ```
 
 ### Publish
@@ -149,73 +149,40 @@ kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.
 kpt fn eval ./test-package --allow-alpha-wasm -i example.registry.io/my-org/my-wasm-fn:v1.0.0
 ```
 
-## Complete example
+## Mixed pipelines
 
-From development to deployment:
-
-```shell
-# 1. Write your function code (main.go and main_js.go)
-
-# 2. Build
-GOOS=js GOARCH=wasm go build -o my-function.wasm .
-
-# 3. Test locally
-kpt fn eval ./test-package --allow-alpha-wasm --exec ./my-function.wasm
-
-# 4. Publish
-kpt alpha wasm push ./my-function.wasm example.registry.io/my-org/my-wasm-fn:v1.0.0
-
-# 5. Use in a package
-cat <<EOF > Kptfile
-apiVersion: kpt.dev/v1
-kind: Kptfile
-metadata:
-  name: my-package
-pipeline:
-  mutators:
-    - image: example.registry.io/my-org/my-wasm-fn:v1.0.0
-EOF
-
-# 6. Render
-kpt fn render my-package --allow-alpha-wasm
-```
+{{< note title="Limitation" >}}
+Currently, enabling `--allow-alpha-wasm` will cause kpt to attempt to run all **image-based** functions in the pipeline using the WASM runtime. Mixed pipelines containing both WASM and standard container images are not yet fully supported. However, mixed pipelines with local `.wasm` files and standard executables are supported.
+{{< /note >}}
 
 ## Limitations
 
-### Alpha status
-
-WASM support is alpha, which means:
-- API may change
-- Requires `--allow-alpha-wasm` flag
-- Some features may be limited
-
 ### Security
 
-WASM functions are designed to run in a sandboxed environment, but the exact security properties depend on the WASM runtime and how it is configured:
-- Some runtimes (for example, `wasmtime` with default settings) do not grant network or filesystem access unless you explicitly enable those capabilities.
-- Other runtimes (for example, a Node.js-based WASM runtime) execute the module within a local `node` process, where filesystem and network access may be possible depending on the glue code and module implementation.
-- In all cases, you should treat the WASM runtime as part of your trusted computing base and review its configuration and allowed host APIs.
+WASM functions run in a sandboxed environment with restricted access. The current implementation using Wasmtime provides the following protections:
+- No network access by default.
+- Restricted filesystem access (functions cannot access host files outside the KRM interface).
+- No ability to execute system commands.
 
-Compared to running arbitrary container images, a well-configured WASM runtime can offer stronger isolation, but the actual security guarantees depend on the chosen runtime and its configuration.
+These restrictions provide a higher level of isolation compared to traditional executables, though they may limit some use cases.
 
 ### Performance
 
-- Faster startup than containers
-- CPU-intensive operations may be slower
-- Different memory patterns
-- Benchmark if performance is critical
+- Faster startup than containers as no container runtime overhead is involved.
+- CPU-intensive operations may be slower than native execution.
+- Memory usage patterns differ from container-based functions.
 
 ### Compatibility
 
-Not all container functions can convert to WASM:
-- Functions needing network access
-- Functions with complex dependencies
-- Platform-specific code
+Not all container functions can convert to WASM, especially those needing:
+- Host network access.
+- Complex system dependencies.
+- OS-specific features (e.g. syscalls not supported by WASI).
 
 ## See also
 
 - [KRM Functions Specification](https://github.com/kubernetes-sigs/kustomize/blob/master/cmd/config/docs/api-conventions/functions-spec.md)
 - [Functions Catalog](https://catalog.kpt.dev/)
-- [kpt alpha wasm push](../../../reference/cli/alpha/wasm/push/)
-- [kpt alpha wasm pull](../../../reference/cli/alpha/wasm/pull/)
+- [kpt alpha wasm push]({{< relref "/reference/cli/alpha/wasm/push" >}})
+- [kpt alpha wasm pull]({{< relref "/reference/cli/alpha/wasm/pull" >}})
 - [WASM function examples](https://github.com/kptdev/krm-functions-catalog/tree/main/functions/go)
