@@ -1,199 +1,189 @@
 diff --git a/Kptfile b/Kptfile
-index 21d9773..da35b9b 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,8 +2,102 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: wordpress
-+  annotations:
-+    abc: def
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
-       configMap:
-         abc: def
+@@ NORMALIZED @@
+-abc: def
+-configMap:
++abc: def
++annotations:
++- image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
++abc: def
++conditions:
++- type: Rendered
++configMap:
++exitCode: 0
++file:
++file:
++file:
++file:
++file:
++index: 1
++index: 2
++index: 2
++message: set annotations: {"foo":"bar"}
++- field:
++message: set annotations: {"foo":"bar"}
++- field:
++message: set annotations: {"foo":"bar"}
++- field:
++message: set annotations: {"foo":"bar"}
++message: set annotations: {"foo":"bar"}
++- field:
++mutationSteps:
++path: Kptfile
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: spec.template.metadata.annotations
++reason: RenderSuccess
++renderStatus:
++results:
++- field:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
-+        exitCode: 0
-+        results:
-+          - message: 'set annotations: {"foo":"bar"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: Kptfile
-+          - message: 'set annotations: {"foo":"bar"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+          - message: 'set annotations: {"foo":"bar"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 1
-+          - message: 'set annotations: {"foo":"bar"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 2
-+          - message: 'set annotations: {"foo":"bar"}'
-+            field:
-+              path: spec.template.metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 2
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
-+        exitCode: 0
-+        results:
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: Kptfile
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 1
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 2
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: spec.template.metadata.annotations
-+            file:
-+              path: mysql-deployment.yaml
-+              index: 2
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: wordpress-deployment.yaml
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: wordpress-deployment.yaml
-+              index: 1
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: metadata.annotations
-+            file:
-+              path: wordpress-deployment.yaml
-+              index: 2
-+          - message: 'set annotations: {"abc":"def"}'
-+            field:
-+              path: spec.template.metadata.annotations
-+            file:
-+              path: wordpress-deployment.yaml
-+              index: 2
++status: True
++- image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
++exitCode: 0
++file:
++file:
++file:
++file:
++file:
++file:
++file:
++file:
++file:
++index: 1
++index: 1
++index: 2
++index: 2
++index: 2
++index: 2
++message: set annotations: {"abc":"def"}
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++message: set annotations: {"abc":"def"}
++- field:
++path: Kptfile
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: metadata.annotations
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: mysql-deployment.yaml
++path: spec.template.metadata.annotations
++path: spec.template.metadata.annotations
++path: wordpress-deployment.yaml
++path: wordpress-deployment.yaml
++path: wordpress-deployment.yaml
++path: wordpress-deployment.yaml
++results:
++- field:
 diff --git a/mysql/Kptfile b/mysql/Kptfile
-index 3d51a77..965bc63 100644
+index NORMALIZED 100644
 --- a/mysql/Kptfile
 +++ b/mysql/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: mysql
-+  annotations:
-+    foo: bar
-+    abc: def
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-annotations:latest
+@@ NORMALIZED @@
++abc: def
++annotations:
++foo: bar
 diff --git a/mysql/mysql-deployment.yaml b/mysql/mysql-deployment.yaml
-index 1b0fbd4..349681e 100644
+index NORMALIZED 100644
 --- a/mysql/mysql-deployment.yaml
 +++ b/mysql/mysql-deployment.yaml
-@@ -18,6 +18,8 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    foo: bar
 +    abc: def
- spec:
-   selector:
-     app: wordpress
-@@ -33,6 +35,8 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+spec:
+selector:
+app: wordpress
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    foo: bar
 +    abc: def
- spec:
-   resources:
-     requests:
-@@ -47,6 +51,8 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+spec:
+resources:
+requests:
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    foo: bar
 +    abc: def
- spec:
-   selector:
-     matchLabels:
-@@ -57,6 +63,9 @@ spec:
-       labels:
-         app: wordpress
-         tier: mysql
+spec:
+selector:
+matchLabels:
+@@ NORMALIZED @@
+labels:
+app: wordpress
+tier: mysql
 +      annotations:
 +        foo: bar
 +        abc: def
-     spec:
-       containers:
-         - name: mysql
+spec:
+containers:
+- name: mysql
 diff --git a/wordpress-deployment.yaml b/wordpress-deployment.yaml
-index d018dfa..af25a1f 100644
+index NORMALIZED 100644
 --- a/wordpress-deployment.yaml
 +++ b/wordpress-deployment.yaml
-@@ -16,6 +16,7 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
- spec:
-   type: LoadBalancer
-   selector:
-@@ -31,6 +32,7 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+spec:
+type: LoadBalancer
+selector:
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
- spec:
-   resources:
-     requests:
-@@ -45,6 +47,7 @@ metadata:
-   annotations:
-     projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
-     teamname: 'YOURTEAM' # kpt-set: ${teamname}
+spec:
+resources:
+requests:
+@@ NORMALIZED @@
+annotations:
+projectId: 'PROJECT_ID' # kpt-set: ${gcloud.core.project}
+teamname: 'YOURTEAM' # kpt-set: ${teamname}
 +    abc: def
- spec:
-   selector:
-     matchLabels:
-@@ -55,6 +58,8 @@ spec:
-       labels:
-         app: wordpress
-         tier: frontend
+spec:
+selector:
+matchLabels:
+@@ NORMALIZED @@
+labels:
+app: wordpress
+tier: frontend
 +      annotations:
 +        abc: def
-     spec:
-       containers:
-         - name: wordpress
+spec:
+containers:
+- name: wordpress

@@ -1,17 +1,16 @@
 diff --git a/Kptfile b/Kptfile
-index a7a2d0b..3dbfee4 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -5,3 +5,12 @@ metadata:
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/no-op
+@@ NORMALIZED @@
+-- image: ghcr.io/kptdev/krm-functions-catalog/no-op
++- image: ghcr.io/kptdev/krm-functions-catalog/no-op
++conditions:
++- type: Rendered
++mutationSteps:
++reason: RenderSuccess
++renderStatus:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
-+        exitCode: 0
++status: True
++- image: ghcr.io/kptdev/krm-functions-catalog/no-op:latest
++exitCode: 0

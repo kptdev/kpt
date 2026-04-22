@@ -1,18 +1,19 @@
 diff --git a/Kptfile b/Kptfile
-index 0bfdbb0..10e2d27 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,13 @@ pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configPath: db/labelconfig.yaml
+@@ NORMALIZED @@
+-- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+-configPath: db/labelconfig.yaml
++- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++Field: `pipeline.mutators[0].configPath`
++Reason: functionConfig must exist in the current package
++Value: db/labelconfig.yaml
++conditions:
++- type: Rendered
++configPath: db/labelconfig.yaml
++message: |
++pkg.render: pkg .: Kptfile is invalid:
++reason: RenderFailed
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "False"
-+      reason: RenderFailed
-+      message: |
-+        pkg.render: pkg .: Kptfile is invalid:
-+        Field: `pipeline.mutators[0].configPath`
-+        Value: "db/labelconfig.yaml"
-+        Reason: functionConfig must exist in the current package
++status: False

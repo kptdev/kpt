@@ -1,56 +1,51 @@
 diff --git a/Kptfile b/Kptfile
-index 1307fb5..fee64dc 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: app
-+  namespace: staging
-+  labels:
-+    tier: backend
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-@@ -10,3 +13,14 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configMap:
-         tier: backend
+@@ NORMALIZED @@
+-configMap:
+-configMap:
+-namespace: staging
+-tier: backend
++labels:
++namespace: staging
++tier: backend
++- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++configMap:
++namespace: staging
++- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++conditions:
++- type: Rendered
++configMap:
++exitCode: 0
++exitCode: 0
++mutationSteps:
++reason: RenderSuccess
++renderStatus:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        exitCode: 0
++status: True
++tier: backend
 diff --git a/db/Kptfile b/db/Kptfile
-index 79b7a5a..15f086b 100644
+index NORMALIZED 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
-@@ -2,3 +2,6 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: db
-+  namespace: staging
-+  labels:
-+    tier: backend
+@@ NORMALIZED @@
++labels:
++namespace: staging
++tier: backend
 diff --git a/db/resources.yaml b/db/resources.yaml
-index f2eec52..84cfb26 100644
+index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -15,12 +15,25 @@ apiVersion: apps/v1
- kind: Deployment
- metadata:
-   name: nginx-deployment
+@@ NORMALIZED @@
+kind: Deployment
+metadata:
+name: nginx-deployment
 +  namespace: staging
 +  labels:
 +    tier: backend
- spec:
-   replicas: 3
+spec:
+replicas: 3
 +  selector:
 +    matchLabels:
 +      tier: backend
@@ -58,13 +53,13 @@ index f2eec52..84cfb26 100644
 +    metadata:
 +      labels:
 +        tier: backend
- ---
- apiVersion: custom.io/v1
- kind: Custom
- metadata:
-   name: custom
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+name: custom
 +  namespace: staging
 +  labels:
 +    tier: backend
- spec:
-   image: nginx:1.2.3
+spec:
+image: nginx:1.2.3
