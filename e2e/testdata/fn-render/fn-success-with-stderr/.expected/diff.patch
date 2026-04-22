@@ -1,18 +1,17 @@
 diff --git a/Kptfile b/Kptfile
-index f591880..1a3d92d 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,13 @@ pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-       configPath: starlark.yaml
+@@ NORMALIZED @@
+-configPath: starlark.yaml
++- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++conditions:
++- type: Rendered
++configPath: starlark.yaml
++exitCode: 0
++mutationSteps:
++reason: RenderSuccess
++renderStatus:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        stderr: function succeeded, reporting it on stderr
-+        exitCode: 0
++status: True
++stderr: function succeeded, reporting it on stderr

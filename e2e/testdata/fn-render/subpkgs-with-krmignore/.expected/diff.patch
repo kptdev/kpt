@@ -1,65 +1,57 @@
 diff --git a/Kptfile b/Kptfile
-index 82686a8..7570107 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: app-with-db
-+  namespace: staging
-+  labels:
-+    tier: db
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-@@ -10,3 +13,18 @@ pipeline:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-       configMap:
-         tier: db
+@@ NORMALIZED @@
+-configMap:
+-configMap:
+-namespace: staging
+-tier: db
++labels:
++namespace: staging
++tier: db
++- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++configMap:
++namespace: staging
++- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++conditions:
++- type: Rendered
++configMap:
++exitCode: 0
++exitCode: 0
++mutationSteps:
++reason: RenderSuccess
++renderStatus:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+        exitCode: 0
-+      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+        exitCode: 0
++status: True
++tier: db
++- image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++exitCode: 0
++- image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++exitCode: 0
 diff --git a/db/Kptfile b/db/Kptfile
-index 264dd2e..8dd7c37 100644
+index NORMALIZED 100644
 --- a/db/Kptfile
 +++ b/db/Kptfile
-@@ -2,6 +2,10 @@ apiVersion: kpt.dev/v1
- kind: Kptfile
- metadata:
-   name: db
-+  namespace: staging
-+  labels:
-+    app: backend
-+    tier: db
- pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+@@ NORMALIZED @@
++app: backend
++labels:
++namespace: staging
++tier: db
 diff --git a/db/resources.yaml b/db/resources.yaml
-index dabe43c..e9be40c 100644
+index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
-@@ -15,5 +15,18 @@ apiVersion: apps/v1
- kind: StatefulSet
- metadata:
-   name: db
+@@ NORMALIZED @@
+kind: StatefulSet
+metadata:
+name: db
 +  namespace: staging
 +  labels:
 +    app: backend
 +    tier: db
- spec:
-   replicas: 3
+spec:
+replicas: 3
 +  selector:
 +    matchLabels:
 +      app: backend
@@ -70,18 +62,18 @@ index dabe43c..e9be40c 100644
 +        app: backend
 +        tier: db
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..8b2113d 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -15,12 +15,25 @@ apiVersion: apps/v1
- kind: Deployment
- metadata:
-   name: nginx-deployment
+@@ NORMALIZED @@
+kind: Deployment
+metadata:
+name: nginx-deployment
 +  namespace: staging
 +  labels:
 +    tier: db
- spec:
-   replicas: 3
+spec:
+replicas: 3
 +  selector:
 +    matchLabels:
 +      tier: db
@@ -89,13 +81,13 @@ index f2eec52..8b2113d 100644
 +    metadata:
 +      labels:
 +        tier: db
- ---
- apiVersion: custom.io/v1
- kind: Custom
- metadata:
-   name: custom
+---
+apiVersion: custom.io/v1
+kind: Custom
+metadata:
+name: custom
 +  namespace: staging
 +  labels:
 +    tier: db
- spec:
-   image: nginx:1.2.3
+spec:
+image: nginx:1.2.3
