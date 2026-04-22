@@ -661,9 +661,21 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 	hunkRE := regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@.*$`)
 	doubleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)"(.*)"\s*$`)
 	singleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)'(.*)'\s*$`)
+	mapKeyOnlyRE := regexp.MustCompile(`^[A-Za-z0-9_.-]+:\s*.*$`)
 	var out []string
 	var kptChangedRun []string
 	inKptfileDiff := false
+	isKptfileDiffHeader := func(line string) bool {
+		parts := strings.Fields(line)
+		if len(parts) < 4 || parts[0] != "diff" || parts[1] != "--git" {
+			return false
+		}
+		left := parts[2]
+		right := parts[3]
+		leftIsKptfile := left == "a/Kptfile" || strings.HasSuffix(left, "/Kptfile")
+		rightIsKptfile := right == "b/Kptfile" || strings.HasSuffix(right, "/Kptfile")
+		return leftIsKptfile && rightIsKptfile
+	}
 	flushKptChangedRun := func() {
 		if len(kptChangedRun) == 0 {
 			return
@@ -694,8 +706,84 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 		for i := range added {
 			added[i] = normalizePayload(added[i])
 		}
-		sort.Strings(removed)
-		sort.Strings(added)
+		sortMapKeySegments := func(lines []string) {
+			isListItem := func(line string) bool {
+				return strings.HasPrefix(strings.TrimLeft(line, " \t"), "- image:")
+			}
+			sortChunk := func(chunk []string) {
+				if len(chunk) <= 1 {
+					return
+				}
+			type block struct {
+				lines    []string
+				sortable bool
+			}
+			isSortableMapKey := func(line string) bool {
+				trimmed := strings.TrimLeft(line, " \t")
+				return mapKeyOnlyRE.MatchString(trimmed) && !strings.HasPrefix(trimmed, "- ")
+			}
+
+			var blocks []block
+				for i := 0; i < len(chunk); {
+					if !isSortableMapKey(chunk[i]) {
+						blocks = append(blocks, block{lines: []string{chunk[i]}, sortable: false})
+						i++
+						continue
+					}
+
+					j := i + 1
+					for j < len(chunk) && !isSortableMapKey(chunk[j]) {
+						j++
+					}
+					blocks = append(blocks, block{lines: append([]string(nil), chunk[i:j]...), sortable: true})
+					i++
+					i = j
+				}
+
+				for i := 0; i < len(blocks); {
+					if !blocks[i].sortable {
+						i++
+						continue
+					}
+					j := i + 1
+					for j < len(blocks) && blocks[j].sortable {
+						j++
+					}
+					sort.Slice(blocks[i:j], func(a, b int) bool {
+						return blocks[i+a].lines[0] < blocks[i+b].lines[0]
+					})
+					i = j
+				}
+
+				idx := 0
+				for _, b := range blocks {
+					for _, line := range b.lines {
+						chunk[idx] = line
+						idx++
+					}
+				}
+			}
+
+			for i := 0; i < len(lines); {
+				if isListItem(lines[i]) {
+					j := i + 1
+					for j < len(lines) && !isListItem(lines[j]) {
+						j++
+					}
+					sortChunk(lines[i+1 : j])
+					i = j
+					continue
+				}
+				j := i
+				for j < len(lines) && !isListItem(lines[j]) {
+					j++
+				}
+				sortChunk(lines[i:j])
+				i = j
+			}
+		}
+		sortMapKeySegments(removed)
+		sortMapKeySegments(added)
 		for _, line := range removed {
 			out = append(out, "-"+line)
 		}
@@ -706,9 +794,12 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 	}
 
 	for _, line := range strings.Split(diff, "\n") {
+		if line == `\ No newline at end of file` {
+			continue
+		}
 		if strings.HasPrefix(line, "diff --git ") {
 			flushKptChangedRun()
-			inKptfileDiff = line == "diff --git a/Kptfile b/Kptfile"
+			inKptfileDiff = isKptfileDiffHeader(line)
 		}
 
 		if inKptfileDiff &&
@@ -723,6 +814,10 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 			line = indexRE.ReplaceAllString(line, "index NORMALIZED")
 			line = hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
 			kptChangedRun = append(kptChangedRun, line)
+			continue
+		}
+		if inKptfileDiff && strings.HasPrefix(line, " ") {
+			// Hunk context lines are unstable anchors; compare only semantic changes.
 			continue
 		}
 		flushKptChangedRun()
