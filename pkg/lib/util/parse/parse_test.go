@@ -217,6 +217,17 @@ func Test_parseURL(t *testing.T) {
 }
 
 func Test_GitParseArgs(t *testing.T) {
+	// Swap in a hermetic default-branch resolver so the test does not hit
+	// github.com (or any network) to discover HEAD. Without this the test
+	// failed intermittently when the remote returned transient errors
+	// (e.g. HTTP 500 from github.com). The stub mirrors what a real
+	// ls-remote would return for kpt's default branch.
+	origResolver := defaultBranchResolver
+	defaultBranchResolver = func(_ context.Context, _ string) (string, error) {
+		return "main", nil
+	}
+	t.Cleanup(func() { defaultBranchResolver = origResolver })
+
 	tests := map[string]struct {
 		ghURL    string
 		skip     bool
