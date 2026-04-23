@@ -588,7 +588,7 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 		return kf, err
 	}
 	if len(kubeObjects) != 1 {
-		return kf, fmt.Errorf("Kptfile must contain exactly one YAML document, found %d", len(kubeObjects))
+		return kf, fmt.Errorf("expected exactly one YAML document in Kptfile, found %d", len(kubeObjects))
 	}
 
 	sdkKptfile, err := kptfileko.NewFromKubeObjectList(kubeObjects)
@@ -665,7 +665,7 @@ func validateSingleKptfileDocument(content []byte) error {
 		return err
 	}
 	if len(kubeObjects) != 1 {
-		return fmt.Errorf("Kptfile must contain exactly one YAML document, found %d", len(kubeObjects))
+		return fmt.Errorf("expected exactly one YAML document in Kptfile, found %d", len(kubeObjects))
 	}
 	return nil
 }
