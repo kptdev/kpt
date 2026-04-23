@@ -40,7 +40,7 @@ There are a number of key principles to be borne in mind, with regard to configu
 * Actuation (reconciliation of the configuration data with the live state) that is separate from the transformation of the configuration data, and is driven by the declarative data model.
 * Transformations, particularly value propagation, are preferable to wholesale configuration generation, except when the expansion is dramatic (for example, >10x).
 * Transformation input generation should usually be decoupled from propagation.
-* Deployment context inputs should be taken from well-defined “provider context” objects.
+* Deployment context inputs should be taken from well-defined "provider context" objects.
 * Identifiers and references should be declarative.
 * The live state should be linked back to the sources of truth (configuration).
 
@@ -143,7 +143,7 @@ three direct resources in three files:
 2. `wordpress/mysql`: This is a subpackage of the `wordpress` package, since it contains a `Kptfile`. This package contains three resources in the 
 `wordpress/mysql/deployment.yaml` file.
 
-kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the local filesystem using `kpt pkg` commands. All the other functionalities (namely,
+kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the local filesystem using `kpt pkg` commands. All the other commands (namely,
 `kpt fn` and `kpt live`) use the package from the local filesystem, rather than the remote Git repository. It can be thought of as the _vendoring_ used by tooling for some programming languages. The main difference is that kpt is designed to enable you to modify the vendored package on the local filesystem, and then update the package by merging the local and upstream changes.
 
 There is one scenario where a Kptfile is implicit: you can use kpt to fetch any Git directory containing KRM resources, even if the directory does not contain a `Kptfile`. Effectively, you are telling kpt to treat the Git directory as a package. kpt automatically creates the `Kptfile` on the local filesystem to keep track of the upstream repository. This means that kpt is compatible with a
