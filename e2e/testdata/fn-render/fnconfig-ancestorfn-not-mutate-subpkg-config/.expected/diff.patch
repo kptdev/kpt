@@ -32,50 +32,50 @@ index NORMALIZED 100644
 --- a/db/labelconfig.yaml
 +++ b/db/labelconfig.yaml
 @@ NORMALIZED @@
-kind: ConfigMap
-metadata:
-name: label-config
-+  labels:
-+    tier: db
-+  namespace: staging
-data:
-tier: db
+ kind: ConfigMap
+ metadata:
+ name: label-config
++labels:
++tier: db
++namespace: staging
+ data:
+ tier: db
 diff --git a/db/resources.yaml b/db/resources.yaml
 index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ NORMALIZED @@
-kind: StatefulSet
-metadata:
-name: db
-+  labels:
-+    tier: db
-+  namespace: staging
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
+ kind: StatefulSet
+ metadata:
+ name: db
++labels:
++tier: db
++namespace: staging
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: db
++template:
++metadata:
++labels:
++tier: db
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  namespace: staging
-spec:
-replicas: 3
----
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++namespace: staging
+ spec:
+ replicas: 3
+ ---
 @@ NORMALIZED @@
-kind: Custom
-metadata:
-name: custom
-+  namespace: staging
-spec:
-image: nginx:1.2.3
+ kind: Custom
+ metadata:
+ name: custom
++namespace: staging
+ spec:
+ image: nginx:1.2.3

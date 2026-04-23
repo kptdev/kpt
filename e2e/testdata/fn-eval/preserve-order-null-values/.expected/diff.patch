@@ -4,16 +4,16 @@ index f410b70..13bc056 100644
 +++ b/resources.yaml
 @@ -16,6 +16,7 @@ kind: Deployment
  metadata:
-   name: nginx-deployment
-   createTimestamp: null
-+  namespace: staging
+ name: nginx-deployment
+ createTimestamp: null
++namespace: staging
  spec:
-   replicas: 3
+ replicas: 3
  ---
 @@ -23,5 +24,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
-   name: custom
-+  namespace: staging
+ name: custom
++namespace: staging
  spec:
-   image: nginx:1.2.3
+ image: nginx:1.2.3

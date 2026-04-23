@@ -25,21 +25,21 @@ index NORMALIZED 100644
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
-+  name: custom
++name: custom
 +spec:
-+  image: nginx:1.2.3
++image: nginx:1.2.3
 +---
-# Copyright 2021 The kpt Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
+ # Copyright 2021 The kpt Authors
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
 @@ NORMALIZED @@
-name: nginx-deployment
-spec:
-replicas: 3
+ name: nginx-deployment
+ spec:
+ replicas: 3
 ----
 -apiVersion: custom.io/v1
 -kind: Custom
 -metadata:
--  name: custom
+-name: custom
 -spec:
--  image: nginx:1.2.3
+-image: nginx:1.2.3

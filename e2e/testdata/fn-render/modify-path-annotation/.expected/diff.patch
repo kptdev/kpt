@@ -21,10 +21,10 @@ index NORMALIZED 100644
 --- a/starlark-fn.yaml
 +++ b/starlark-fn.yaml
 @@ NORMALIZED @@
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
 -
-apiVersion: fn.kpt.dev/v1alpha1
-kind: StarlarkRun
-metadata:
+ apiVersion: fn.kpt.dev/v1alpha1
+ kind: StarlarkRun
+ metadata:

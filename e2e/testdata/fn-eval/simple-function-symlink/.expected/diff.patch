@@ -5,15 +5,15 @@ index f2eec52..b66c419 100644
 @@ -15,6 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-   name: nginx-deployment
-+  namespace: staging
+ name: nginx-deployment
++namespace: staging
  spec:
-   replicas: 3
+ replicas: 3
  ---
 @@ -22,5 +23,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
-   name: custom
-+  namespace: staging
+ name: custom
++namespace: staging
  spec:
-   image: nginx:1.2.3
+ image: nginx:1.2.3

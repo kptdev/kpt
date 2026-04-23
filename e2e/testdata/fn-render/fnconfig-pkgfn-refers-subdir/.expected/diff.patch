@@ -21,38 +21,38 @@ index NORMALIZED 100644
 --- a/confs/labelconfig.yaml
 +++ b/confs/labelconfig.yaml
 @@ NORMALIZED @@
-kind: ConfigMap
-metadata:
-name: label-config
-+  labels:
-+    tier: db
-data:
-tier: db
+ kind: ConfigMap
+ metadata:
+ name: label-config
++labels:
++tier: db
+ data:
+ tier: db
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  labels:
-+    tier: db
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
----
-apiVersion: custom.io/v1
-kind: Custom
-metadata:
-name: custom
-+  labels:
-+    tier: db
-spec:
-image: nginx:1.2.3
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++labels:
++tier: db
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: db
++template:
++metadata:
++labels:
++tier: db
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+ name: custom
++labels:
++tier: db
+ spec:
+ image: nginx:1.2.3

@@ -657,6 +657,8 @@ func normalizeDiff(diff, stripRegEx string) (string, error) {
 			return "", fmt.Errorf("unable to compile DiffStripRegEx %q: %w", stripRegEx, err)
 		}
 	}
+	// Normalize CRLF to LF for cross-platform safety.
+	diff = strings.ReplaceAll(diff, "\r", "")
 	indexRE := regexp.MustCompile(`^index [0-9a-f]+\.\.[0-9a-f]+`)
 	hunkRE := regexp.MustCompile(`^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@.*$`)
 	doubleQuotedScalarRE := regexp.MustCompile(`^(\s*-?\s*[^:]+:\s*)"(.*)"\s*$`)

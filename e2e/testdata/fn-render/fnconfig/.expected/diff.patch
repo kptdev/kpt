@@ -41,64 +41,64 @@ index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ NORMALIZED @@
-kind: StatefulSet
-metadata:
-name: db
-+  namespace: staging
-+  labels:
-+    app: backend
-+    tier: db
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      app: backend
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        app: backend
-+        tier: db
+ kind: StatefulSet
+ metadata:
+ name: db
++namespace: staging
++labels:
++app: backend
++tier: db
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++app: backend
++tier: db
++template:
++metadata:
++labels:
++app: backend
++tier: db
 diff --git a/labelconfig.yaml b/labelconfig.yaml
 index NORMALIZED 100644
 --- a/labelconfig.yaml
 +++ b/labelconfig.yaml
 @@ NORMALIZED @@
-kind: ConfigMap
-metadata:
-name: label-config
-+  namespace: staging
-+  labels:
-+    tier: db
-data:
-tier: db
+ kind: ConfigMap
+ metadata:
+ name: label-config
++namespace: staging
++labels:
++tier: db
+ data:
+ tier: db
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  namespace: staging
-+  labels:
-+    tier: db
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: db
-+  template:
-+    metadata:
-+      labels:
-+        tier: db
----
-apiVersion: custom.io/v1
-kind: Custom
-metadata:
-name: custom
-+  namespace: staging
-+  labels:
-+    tier: db
-spec:
-image: nginx:1.2.3
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++namespace: staging
++labels:
++tier: db
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: db
++template:
++metadata:
++labels:
++tier: db
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+ name: custom
++namespace: staging
++labels:
++tier: db
+ spec:
+ image: nginx:1.2.3

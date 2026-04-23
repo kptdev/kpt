@@ -7,7 +7,6 @@ index 0000000..3a2c718
 +apiVersion: kpt.dev/v1
 +kind: Kptfile
 +metadata:
-+  name: app
 +  namespace: staging
 +  labels:
 +    tier: backend
@@ -41,26 +40,26 @@ index 0000000..84cfb26
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  name: nginx-deployment
-+  namespace: staging
-+  labels:
-+    tier: backend
++name: nginx-deployment
++namespace: staging
++labels:
++tier: backend
 +spec:
-+  replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
++replicas: 3
++selector:
++matchLabels:
++tier: backend
++template:
++metadata:
++labels:
++tier: backend
 +---
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
-+  name: custom
-+  namespace: staging
-+  labels:
-+    tier: backend
++name: custom
++namespace: staging
++labels:
++tier: backend
 +spec:
-+  image: nginx:1.2.3
++image: nginx:1.2.3

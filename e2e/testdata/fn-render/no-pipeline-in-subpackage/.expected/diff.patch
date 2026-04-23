@@ -38,28 +38,28 @@ index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  namespace: staging
-+  labels:
-+    tier: backend
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
----
-apiVersion: custom.io/v1
-kind: Custom
-metadata:
-name: custom
-+  namespace: staging
-+  labels:
-+    tier: backend
-spec:
-image: nginx:1.2.3
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++namespace: staging
++labels:
++tier: backend
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: backend
++template:
++metadata:
++labels:
++tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+ name: custom
++namespace: staging
++labels:
++tier: backend
+ spec:
+ image: nginx:1.2.3

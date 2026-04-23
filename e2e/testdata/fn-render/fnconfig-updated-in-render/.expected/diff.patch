@@ -32,76 +32,76 @@ index NORMALIZED 100644
 --- a/app.yaml
 +++ b/app.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata: # kpt-merge: example/deployment
-name: deployment
--  namespace: example
-+  namespace: frontend
-labels:
--    app.kubernetes.io/app: example
-+    app.kubernetes.io/app: frontend
-spec:
-replicas: 3
-template:
+ kind: Deployment
+ metadata: # kpt-merge: example/deployment
+ name: deployment
+-namespace: example
++namespace: frontend
+ labels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
+ spec:
+ replicas: 3
+ template:
 @@ NORMALIZED @@
-- containerPort: 80
-metadata:
-labels:
--        app.kubernetes.io/app: example
-+        app.kubernetes.io/app: frontend
-selector:
-matchLabels:
--      app.kubernetes.io/app: example
-+      app.kubernetes.io/app: frontend
+ - containerPort: 80
+ metadata:
+ labels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
+ selector:
+ matchLabels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
 diff --git a/label-input.yaml b/label-input.yaml
 index NORMALIZED 100644
 --- a/label-input.yaml
 +++ b/label-input.yaml
 @@ NORMALIZED @@
-annotations:
-config.kubernetes.io/local-config: "true"
-labels:
--    app.kubernetes.io/app: example
-+    app.kubernetes.io/app: frontend
-data:
--  app.kubernetes.io/app: example
-+  app.kubernetes.io/app: frontend
+ annotations:
+ config.kubernetes.io/local-config: "true"
+ labels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
+ data:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
 diff --git a/namespace.yaml b/namespace.yaml
 index NORMALIZED 100644
 --- a/namespace.yaml
 +++ b/namespace.yaml
 @@ NORMALIZED @@
-apiVersion: v1
-kind: Namespace
-metadata: # kpt-merge: /example
--  name: example
-+  name: frontend
-labels:
--    app.kubernetes.io/app: example
-+    app.kubernetes.io/app: frontend
-spec: {}
+ apiVersion: v1
+ kind: Namespace
+ metadata: # kpt-merge: /example
+-name: example
++name: frontend
+ labels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
+ spec: {}
 diff --git a/package-context.yaml b/package-context.yaml
 index NORMALIZED 100644
 --- a/package-context.yaml
 +++ b/package-context.yaml
 @@ NORMALIZED @@
-name: kptfile.kpt.dev
-annotations:
-config.kubernetes.io/local-config: "true"
-+  labels:
-+    app.kubernetes.io/app: frontend
-data:
-name: frontend
+ name: kptfile.kpt.dev
+ annotations:
+ config.kubernetes.io/local-config: "true"
++labels:
++app.kubernetes.io/app: frontend
+ data:
+ name: frontend
 diff --git a/update-labels.yaml b/update-labels.yaml
 index NORMALIZED 100644
 --- a/update-labels.yaml
 +++ b/update-labels.yaml
 @@ NORMALIZED @@
-annotations:
-config.kubernetes.io/local-config: "true"
-labels:
--    app.kubernetes.io/app: example
-+    app.kubernetes.io/app: frontend
-replacements:
-- source:
-kind: ConfigMap
+ annotations:
+ config.kubernetes.io/local-config: "true"
+ labels:
+-app.kubernetes.io/app: example
++app.kubernetes.io/app: frontend
+ replacements:
+ - source:
+ kind: ConfigMap
