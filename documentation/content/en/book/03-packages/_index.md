@@ -14,21 +14,19 @@ menu:
 
 ## Getting a package
 
-Packaging in kpt is based on Git forking. Producers publish packages by committing them to a Git repository. Consumers
-fork the package to use it.
+Packaging in kpt is based on Git forking. The producer publishes a package by committing it to a Git repository. The consumer forks the package, in order to use it.
 
-Let's revisit the Wordpress example:
+Let us revisit the Wordpress example:
 
 ```shell
 kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61
 ```
 
-A package in a Git repo can be fetched by specifying a branch, tag, or commit SHA. In this case, we are specifying tag
-`v1.0.0-beta.61`.
+A package in a Git repository can be fetched by specifying a branch, tag, or commit SHA. In the above example, `v1.0.0-beta.61` is specified.
 
-Refer to the [get command reference](../../reference/cli/pkg/get/) for usage.
+See the [get command reference](../../reference/cli/pkg/get/) for usage.
 
-The `Kptfile` contains metadata about the origin of the forked package. Take a look at the content of the `Kptfile` on
+The `Kptfile` contains the metadata about the origin of the forked package. Have a look at the content of the `Kptfile` on
 your local filesystem:
 
 ```yaml
@@ -70,23 +68,18 @@ status:
       reason: RenderSuccess
 ```
 
-The `Kptfile` contains several sections to keep track of the package and its state:
+The `Kptfile` contains several sections to keep track of the package and its state: the `upstream` section, the `upstreamLock` section, and the `status` section. These sections are defined as follows:
 
 1. The `upstream` section contains the user-specified Git reference to the upstream package. This contains three pieces
-   of information:
-   - `repo`: The Git repository where the package can be found
-   - `directory`: The directory within the Git repository where this package can
-     be found
-   - `ref`: The Git reference for the package. This can be either a branch, tag,
-     or commit SHA.
-2. The `upstreamLock` section records the upstream Git reference (exact Git SHA) that was fetched by kpt. This section
-   is managed by kpt and should not be changed manually.
+of information:
+   - `repo`: This is the Git repository where the package can be found.
+   - `directory`: This is the directory within the Git repository where this package can be found.
+   - `ref`: This is the Git reference for the package. This can be a branch, tag, or a commit SHA.
+2. The `upstreamLock` section records the upstream Git reference (the exact Git SHA) that was fetched by kpt. This section is managed by kpt and should not be changed manually.
 3. The `status` section records the operational state of the package. This is managed by kpt and tracks the execution
-   status of operations like `render`. The `status.conditions` field contains a list of condition objects, similar to
-   how Kubernetes tracks conditions on resources. For example, after running `kpt fn render`, a `Rendered` condition
-   is automatically recorded to indicate whether the last render succeeded or failed.
+status of operations such as `render`. The `status.conditions` field contains a list of condition objects, similarly to the way in which Kubernetes tracks the conditions on the resources. For example, after running `kpt fn render`, a `Rendered` condition is automatically recorded to indicate whether the last render succeeded or failed.
 
-Now, let's look at the `Kptfile` for the `mysql` subpackage:
+Let us now look at the `Kptfile` for the `mysql` subpackage:
 
 ```yaml
 # wordpress/mysql/Kptfile
@@ -105,47 +98,41 @@ pipeline:
         tier: mysql
 ```
 
-As you can see, this `Kptfile` doesn't have the `upstream` and `upstreamLock` sections. This is because there are two
-different package types in kpt:
+This `Kptfile` does not have the `upstream` and `upstreamLock` sections. This is because there are two different package types in kpt: the **independent package** and the **dependent package**:
 
-- **Independent package:** A package where the `Kptfile` has `upstream` defined.
-- **Dependent package:** A package where the `Kptfile` doesn’t have `upstream` defined.
+- **Independent package:** This is a package in which the `Kptfile` has `upstream` defined.
+- **Dependent package:** This is a package in which the `Kptfile` does not have `upstream` defined.
 
 In this case, the `mysql` subpackage is a _dependent package_. The upstream package for `mysql` is automatically
-inferred from the parent package. You can think of the `Kptfile` in the `mysql` package as implicitly inheriting the
-`upstream` section of its parent, with the only difference being that `upstream.directory` in the subpackage would
-instead point to `/package-examples/wordpress/mysql`.
+inferred from the parent package. Think of the `Kptfile` in the `mysql` package as implicitly inheriting the `upstream` section
+of its parent, with the only difference being that the `upstream.directory` in the subpackage instead points to `/package-examples/wordpress/mysql`.
 
-### Package Name and Identifier
+### Package name and identifier
 
-It is possible to specify a different local directory name to the `get` command.
-For example, the following fetches the packages to a directory named `mywordpress`:
+It is possible to specify a different local directory name to the `get` command. For example, the following command fetches the packages to a directory named `mywordpress`:
 
 ```shell
 kpt pkg get https://github.com/kptdev/kpt.git/package-examples/wordpress@v1.0.0-beta.61 mywordpress
 ```
 
-The _name of a package_ is given by its directory name. Since the Kptfile is a KRM resource and follows the familiar
-structure of KRM resources, the name of the package is also available from the `metadata.name` field. This must always
-be the name of the directory, and kpt will update it automatically when forking a package. In this case, `metadata.name`
-is set to `mywordpress`.
+The _name of a package_ is given by its directory name. Since the `Kptfile` is a KRM resource and follows the familiar
+structure of the KRM resources, the name of the package is also available from the `metadata.name` field. This must always
+be the name of the directory. kpt updates it automatically when forking a package. In this case, `metadata.name` is set to
+`mywordpress`.
 
 In general, the package name is not unique. The _unique identifier_ for a package is defined as the relative path from
-the top package to the subpackage. For example, we could have two subpackages with the name `mysql` having the
-following identifiers:
+the top package to the subpackage. For example, we could have two subpackages with the name `mysql` having the following
+identifiers:
 
 - `wordpress/backend/mysql`
 - `wordpress/frontend/mysql`
 
 ## Exploring a package
 
-After you fetch a package to your local filesystem, you typically want to explore the package to understand how it is
-composed and how it can be customized for your needs. Given a kpt package is just an ordinary directory of
-human-readable YAML files, you can naturally use your favorite file explorer, shell commands, or editor to explore the
+After having fetched a package to your local filesystem, it is generally a good idea to analyze the package, in order to understand how it is structured and how it can be customized to suit your needs. Given that a kpt package is simply an ordinary directory of human-readable YAML files, you can use your favorite file explorer, shell commands, or editor to explore the
 package.
 
-kpt also provides the `tree` command which is handy for quickly viewing package
-hierarchy and the constituent packages, files, and resources:
+kpt also provides the `tree` command which is handy for quickly viewing the package hierarchy and the constituent packages, files, and resources:
 
 ```shell
 kpt pkg tree wordpress/
@@ -162,11 +149,10 @@ Package "wordpress"
     └── [deployment.yaml]  Service wordpress-mysql
 ```
 
-Refer to the [tree command reference](../../reference/cli/pkg/tree/) for usage.
+See the [tree command reference](../../reference/cli/pkg/tree/) for usage.
 
-In addition, you can use a kpt function such as `search-replace` to run a query
-on the package. For example, to search for resources that have a field with path
-`spec.selector.tier`:
+In addition, you can use a kpt function, such as `search-replace`, to run a query on the package. For example, to search for resources that have a field with the
+`spec.selector.tier` path, use the following kpt function:
 
 ```shell
 kpt fn eval wordpress -i search-replace:latest -- 'by-path=spec.selector.tier'
