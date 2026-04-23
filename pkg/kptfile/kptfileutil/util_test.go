@@ -947,6 +947,20 @@ unexpectedField: true
 `,
 			expectedDecodeError: "yaml: unmarshal errors:\n  line 6: field unexpectedField not found in type v1.KptFile",
 		},
+    "multiple yaml documents": {
+      content: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extra
+`,
+      expectedDecodeError: "Kptfile must contain exactly one YAML document, found 2",
+    },
 	}
 
 	for tn, tc := range testCases {
@@ -992,7 +1006,7 @@ metadata:
 		assert.Equal(t, "updated-sample", updatedKf.Name)
 		if assert.NotNil(t, updatedKf.Annotations) {
 			assert.Equal(t, "value", updatedKf.Annotations["user.example.com/keep"])
-			for _, key := range sdkInternalKptfileAnnotations {
+      for _, key := range sdkGeneratedKptfileAnnotations {
 				assert.NotContains(t, updatedKf.Annotations, key)
 			}
 		}

@@ -860,6 +860,13 @@ func (n *diffNormalizer) normalize(diff string) string {
 		}
 		line = n.indexRE.ReplaceAllString(line, "index NORMALIZED")
 		line = n.hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
+		// Strip leading whitespace from non-Kptfile context/changed lines
+		// to make comparison indentation-insensitive across environments.
+		if len(line) > 0 && (line[0] == ' ' || line[0] == '+' || line[0] == '-') &&
+			!strings.HasPrefix(line, "+++") && !strings.HasPrefix(line, "---") &&
+			!strings.HasPrefix(line, "diff --git") {
+			line = line[:1] + strings.TrimLeft(line[1:], " \t")
+		}
 		n.out = append(n.out, line)
 	}
 	n.flushKptChangedRun()

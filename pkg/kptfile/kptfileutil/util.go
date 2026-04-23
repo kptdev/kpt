@@ -47,7 +47,7 @@ var SupportedKptfileVersions = []schema.GroupVersionKind{
 	kptfilev1.KptFileGVK(),
 }
 
-var sdkInternalKptfileAnnotations = []string{
+var sdkGeneratedKptfileAnnotations = []string{
 	"config.kubernetes.io/index",
 	"internal.config.kubernetes.io/index",
 	"internal.config.kubernetes.io/path",
@@ -587,6 +587,9 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	if err != nil {
 		return kf, err
 	}
+	if len(kubeObjects) != 1 {
+		return kf, fmt.Errorf("Kptfile must contain exactly one YAML document, found %d", len(kubeObjects))
+	}
 
 	sdkKptfile, err := kptfileko.NewFromKubeObjectList(kubeObjects)
 	if err != nil {
@@ -597,7 +600,7 @@ func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 		return kf, err
 	}
 
-	stripSDKInternalKptfileAnnotations(kf)
+	stripSDKGeneratedKptfileAnnotations(kf)
 
 	return kf, nil
 }
@@ -623,7 +626,7 @@ func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (str
 	if err := sdkKptfile.As(typedKptfile); err != nil {
 		return "", err
 	}
-	stripSDKInternalKptfileAnnotations(typedKptfile)
+	stripSDKGeneratedKptfileAnnotations(typedKptfile)
 
 	mutator(typedKptfile)
 
@@ -643,6 +646,10 @@ func validateKptfileContent(content []byte) error {
 		return err
 	}
 
+	if err := validateSingleKptfileDocument(content); err != nil {
+		return err
+	}
+
 	d := yaml.NewDecoder(bytes.NewBuffer(content))
 	d.KnownFields(true)
 	if err := d.Decode(&kptfilev1.KptFile{}); err != nil {
@@ -652,12 +659,23 @@ func validateKptfileContent(content []byte) error {
 	return nil
 }
 
-func stripSDKInternalKptfileAnnotations(kf *kptfilev1.KptFile) {
+func validateSingleKptfileDocument(content []byte) error {
+	kubeObjects, err := fn.ReadKubeObjectsFromFile(kptfilev1.KptFileName, string(content))
+	if err != nil {
+		return err
+	}
+	if len(kubeObjects) != 1 {
+		return fmt.Errorf("Kptfile must contain exactly one YAML document, found %d", len(kubeObjects))
+	}
+	return nil
+}
+
+func stripSDKGeneratedKptfileAnnotations(kf *kptfilev1.KptFile) {
 	if kf == nil || kf.Annotations == nil {
 		return
 	}
 
-	for _, key := range sdkInternalKptfileAnnotations {
+	for _, key := range sdkGeneratedKptfileAnnotations {
 		delete(kf.Annotations, key)
 	}
 	if len(kf.Annotations) == 0 {
