@@ -50,8 +50,8 @@ The kpt toolchain includes the following components:
 
 - [**kpt CLI**](../../reference/cli/): The kpt CLI supports package and function operations, as well as deployment, either through direct apply or through GitOps. By keeping an inventory of deployed resources, kpt enables resource pruning, aggregated status and observability, and an improved preview experience.
 
-- [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can be used to create functions to transform and/or validate the YAML KRM input/output format. However, we provide software development kits (SDKs) to simplify the function authoring process, in 
-[Go](../05-developing-functions/#developing-in-Go). 
+- [**Function SDK**](https://github.com/kptdev/krm-functions-sdk): Any general-purpose or domain-specific language can be used to create functions to transform and/or validate the YAML KRM input/output format. However, we provide software development kits (SDKs) to simplify the function authoring process, in
+  [Go](../05-developing-functions/#developing-in-go).
 
 - [**Function catalog**](https://catalog.kpt.dev/function-catalog): This is a catalog of off-the-shelf, tested functions. kpt makes configurations easy to create and transform, via reusable functions. Because the functions are expected to be used for in-place transformation, they need to be idempotent.
 
@@ -68,7 +68,7 @@ Validation goes hand-in-hand with customization. KRM functions can be used to au
 
 A kpt package is a bundle of configuration _data_. It is represented as a directory tree containing the KRM resources using YAML as the file format.
 
-A package is explicitly declared using a file named `Kptfile`. This file  contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
+A package is explicitly declared using a file named `Kptfile`. This file contains a KRM resource of type `Kptfile`. The Kptfile contains metadata about the package and is simply a regular resource in the YAML format.
 
 Just as directories can be nested, a package can contain another package. This is called a _subpackage_.
 
@@ -77,7 +77,7 @@ Just as directories can be nested, a package can contain another package. This i
 The Kptfile supports annotations that control package-level behavior:
 
 - **`kpt.dev/bfs-rendering`**: When set to `"true"`, this annotation renders the package hierarchy in breadth-first order, instead of the default depth-first
-post-order.
+  post-order.
 - **`kpt.dev/save-on-render-failure`**: When set to `"true"`, this annotation saves partially rendered resources to disk, even when rendering fails, instead of reverting all changes. This is particularly useful for debugging render failures and is essential for programmatic package rendering scenarios, where preserving partial progress is valuable.
 
 ### Status Conditions
@@ -143,7 +143,7 @@ three direct resources in three files:
 2. `wordpress/mysql`: This is a subpackage of the `wordpress` package, since it contains a `Kptfile`. This package contains three resources in the 
 `wordpress/mysql/deployment.yaml` file.
 
-kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the localfilesystem using `kpt pkg` commands. All the other functionalities (namely,
+kpt uses Git as the underlying version control system. A typical workflow starts by fetching an _upstream_ package from a Git repository to the local filesystem using `kpt pkg` commands. All the other functionalities (namely,
 `kpt fn` and `kpt live`) use the package from the local filesystem, rather than the remote Git repository. It can be thought of as the _vendoring_ used by tooling for some programming languages. The main difference is that kpt is designed to enable you to modify the vendored package on the local filesystem, and then update the package by merging the local and upstream changes.
 
 There is one scenario where a Kptfile is implicit: you can use kpt to fetch any Git directory containing KRM resources, even if the directory does not contain a `Kptfile`. Effectively, you are telling kpt to treat the Git directory as a package. kpt automatically creates the `Kptfile` on the local filesystem to keep track of the upstream repository. This means that kpt is compatible with a
@@ -204,7 +204,7 @@ Let us suppose that you have rendered the package, and would like to deploy it t
 - **Apply**: Use the `kpt live apply` command.
 - **Observe**: Use the `kpt live status` command.
 
-First, use the kpt `live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
+First, use the `kpt live apply --dry-run` command to validate the resources in your package and verify that the expected resources will be applied and pruned. If the preview looks good, then apply the package, using the `kpt live apply` command. Afterwards, you may observe the status of the package on the cluster.
 
 Typically, it is best to store the package in Git:
 
