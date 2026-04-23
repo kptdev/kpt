@@ -35,6 +35,18 @@ type Target struct {
 	Destination string
 }
 
+// defaultBranchResolver resolves the default branch of a remote git repo.
+// Indirected through a package variable so tests can swap in a hermetic
+// stub without making live network calls to github.com (or wherever the
+// repo is hosted).
+var defaultBranchResolver = func(ctx context.Context, repo string) (string, error) {
+	gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
+	if err != nil {
+		return "", err
+	}
+	return gur.GetDefaultBranch(ctx)
+}
+
 func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target, error) {
 	g := Target{}
 	if args[0] == "-" {
@@ -64,11 +76,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 		return g, err
 	}
 	if version == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
-		if err != nil {
-			return g, err
-		}
-		defaultRef, err := gur.GetDefaultBranch(ctx)
+		defaultRef, err := defaultBranchResolver(ctx, repo)
 		if err != nil {
 			return g, err
 		}
@@ -97,11 +105,7 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitD
 		dir = "/"
 	}
 	if ref == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
-		if err != nil {
-			return g, err
-		}
-		defaultRef, err := gur.GetDefaultBranch(ctx)
+		defaultRef, err := defaultBranchResolver(ctx, repo)
 		if err != nil {
 			return g, err
 		}
