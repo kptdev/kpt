@@ -5,7 +5,7 @@ index 903c6a5..98b8a68 100644
 @@ -15,5 +15,6 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-   name: nginx-deployment
-+  namespace: staging
+ name: nginx-deployment
++namespace: staging
  spec:
-   replicas: 3
+ replicas: 3

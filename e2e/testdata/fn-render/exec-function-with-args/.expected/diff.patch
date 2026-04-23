@@ -24,17 +24,17 @@ index 0f69886..ff4bde7 100644
 @@ -15,7 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-   name: nginx-deployment
--  namespace: foo
-+  namespace: bar
+ name: nginx-deployment
+-namespace: foo
++namespace: bar
  spec:
-   replicas: 3
+ replicas: 3
  ---
 @@ -23,6 +23,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
-   name: custom
--  namespace: foo
-+  namespace: bar
+ name: custom
+-namespace: foo
++namespace: bar
  spec:
-   image: nginx:1.2.3
+ image: nginx:1.2.3

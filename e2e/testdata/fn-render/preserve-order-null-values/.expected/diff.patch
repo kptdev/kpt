@@ -30,28 +30,28 @@ index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-metadata:
-name: nginx-deployment
-createTimestamp: null
-+  namespace: staging
-+  labels:
-+    tier: backend
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
----
-apiVersion: custom.io/v1
-kind: Custom
-metadata:
-name: custom
-+  namespace: staging
-+  labels:
-+    tier: backend
-spec:
-image: nginx:1.2.3
+ metadata:
+ name: nginx-deployment
+ createTimestamp: null
++namespace: staging
++labels:
++tier: backend
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: backend
++template:
++metadata:
++labels:
++tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+ name: custom
++namespace: staging
++labels:
++tier: backend
+ spec:
+ image: nginx:1.2.3

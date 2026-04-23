@@ -3,10 +3,10 @@ index 90bc5cf..6d24ecb 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -27,6 +27,7 @@ metadata:
-   labels:
-     foo: bar
-     foo-1: bar
-+  namespace: staging
+ labels:
+ foo: bar
+ foo-1: bar
++namespace: staging
  ---
  apiVersion: custom.io/v1
  kind: Custom

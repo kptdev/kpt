@@ -23,27 +23,27 @@ index NORMALIZED
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  name: httpbin
++name: httpbin
 +spec:
-+  replicas: 4
-+  template:
-+    spec:
-+      containers:
-+      - image: kennethreitz/httpbin
-+        name: httpbin
-+        ports:
-+        - containerPort: 9876
++replicas: 4
++template:
++spec:
++containers:
++- image: kennethreitz/httpbin
++name: httpbin
++ports:
++- containerPort: 9876
 +---
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  name: httpbin-2
++name: httpbin-2
 +spec:
-+  replicas: 4
-+  template:
-+    spec:
-+      containers:
-+      - image: kennethreitz/httpbin
-+        name: httpbin
-+        ports:
-+        - containerPort: 9876
++replicas: 4
++template:
++spec:
++containers:
++- image: kennethreitz/httpbin
++name: httpbin
++ports:
++- containerPort: 9876

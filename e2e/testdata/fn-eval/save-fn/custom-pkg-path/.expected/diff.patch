@@ -18,10 +18,10 @@ index 21135f9..1000dd9 100644
 @@ -15,5 +15,6 @@ apiVersion: v1
  kind: ConfigMap
  metadata:
-   name: fn-config
-+  namespace: staging
+ name: fn-config
++namespace: staging
  data:
-   namespace: staging
+ namespace: staging
 diff --git a/sub-pkg/resources.yaml b/sub-pkg/resources.yaml
 index eed43d6..81473ca 100644
 --- a/sub-pkg/resources.yaml
@@ -29,15 +29,15 @@ index eed43d6..81473ca 100644
 @@ -15,6 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
-   name: nginx-deployment
-+  namespace: staging
+ name: nginx-deployment
++namespace: staging
  spec:
-   replicas: 3
+ replicas: 3
  ---
 @@ -22,5 +23,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
-   name: custom
-+  namespace: staging
+ name: custom
++namespace: staging
  spec:
-   image: nginx:1.2.3
+ image: nginx:1.2.3

@@ -30,10 +30,6 @@ index NORMALIZED 100644
 +message: missing properties 'selector', 'template'
 +message: missing properties 'selector', 'template'
 +message: |-
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
 +path: resources.yaml
 +path: resources.yaml
 +path: resources.yaml

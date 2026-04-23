@@ -44,12 +44,6 @@ index NORMALIZED 100644
 +message: |-
 +message: |-
 +The following banned keys are being used in the ConfigMap: {"private_key"}
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
-+name: nginx-deployment
-+name: some-secret
-+name: some-secret
 +namespace: default
 +namespace: default
 +path: resources.yaml

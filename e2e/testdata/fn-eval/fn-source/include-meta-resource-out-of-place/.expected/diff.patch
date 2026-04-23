@@ -7,7 +7,6 @@ index 0000000..ede2393
 +apiVersion: kpt.dev/v1
 +kind: Kptfile
 +metadata:
-+  name: app
 +  namespace: staging
 +pipeline:
 +  mutators:
@@ -35,10 +34,10 @@ index 0000000..37baaa2
 +apiVersion: v1
 +kind: ConfigMap
 +metadata:
-+  name: label-config
-+  namespace: staging
++name: label-config
++namespace: staging
 +data:
-+  tier: app
++tier: app
 diff --git a/out/resources.yaml b/out/resources.yaml
 new file mode 100644
 index 0000000..b66c419
@@ -61,15 +60,15 @@ index 0000000..b66c419
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  name: nginx-deployment
-+  namespace: staging
++name: nginx-deployment
++namespace: staging
 +spec:
-+  replicas: 3
++replicas: 3
 +---
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
-+  name: custom
-+  namespace: staging
++name: custom
++namespace: staging
 +spec:
-+  image: nginx:1.2.3
++image: nginx:1.2.3

@@ -25,41 +25,41 @@ index NORMALIZED 100644
 --- a/kustomization.yaml
 +++ b/kustomization.yaml
 @@ NORMALIZED @@
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
 -
-# kustomization.yaml contents
-resources:
-- resources.yaml
+ # kustomization.yaml contents
+ resources:
+ - resources.yaml
 +metadata:
-+  labels:
-+    tier: backend
++labels:
++tier: backend
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  labels:
-+    tier: backend
-spec:
-replicas: 3
-+  selector:
-+    matchLabels:
-+      tier: backend
-+  template:
-+    metadata:
-+      labels:
-+        tier: backend
----
-apiVersion: custom.io/v1
-kind: Custom
-metadata:
-name: custom
-+  labels:
-+    tier: backend
-spec:
-image: nginx:1.2.3 # kpt-set: {something}
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++labels:
++tier: backend
+ spec:
+ replicas: 3
++selector:
++matchLabels:
++tier: backend
++template:
++metadata:
++labels:
++tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+ name: custom
++labels:
++tier: backend
+ spec:
+ image: nginx:1.2.3 # kpt-set: {something}

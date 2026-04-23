@@ -34,15 +34,15 @@ index NORMALIZED 100644
 --- a/delete-all.yaml
 +++ b/delete-all.yaml
 @@ NORMALIZED @@
-name: delete-all
-annotations:
-config.kubernetes.io/local-config: "true"
-+  namespace: staging
-+  labels:
-+    tier: backend
-source: |-
-# delete all resources
-ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
+ name: delete-all
+ annotations:
+ config.kubernetes.io/local-config: "true"
++namespace: staging
++labels:
++tier: backend
+ source: |-
+ # delete all resources
+ ctx.resource_list["items"] = [x for x in ctx.resource_list["items"] if x["kind"] in ["Kptfile", "StarlarkRun"]]
 diff --git a/deployment.yaml b/deployment.yaml
 deleted file mode 100644
 index NORMALIZED
@@ -65,14 +65,14 @@ index NORMALIZED
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--  name: httpbin
+-name: httpbin
 -spec:
--  replicas: 4
--  template:
--    spec:
--      containers:
--        - name: httpbin
--          image: kennethreitz/httpbin
+-replicas: 4
+-template:
+-spec:
+-containers:
+-- name: httpbin
+-image: kennethreitz/httpbin
 diff --git a/resources.yaml b/resources.yaml
 deleted file mode 100644
 index NORMALIZED
@@ -95,6 +95,6 @@ index NORMALIZED
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--  name: nginx-deployment
+-name: nginx-deployment
 -spec:
--  replicas: 3
+-replicas: 3

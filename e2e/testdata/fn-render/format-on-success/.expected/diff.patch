@@ -30,21 +30,21 @@ index NORMALIZED 100644
 --- a/db/resources.yaml
 +++ b/db/resources.yaml
 @@ NORMALIZED @@
-kind: StatefulSet
-metadata:
-name: db
-+  namespace: staging
-spec:
-replicas: 3
+ kind: StatefulSet
+ metadata:
+ name: db
++namespace: staging
+ spec:
+ replicas: 3
 diff --git a/resources.yaml b/resources.yaml
 index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-kind: Deployment
-metadata:
-name: nginx-deployment
-+  namespace: staging
-spec:
-replicas: 3
-selector:
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++namespace: staging
+ spec:
+ replicas: 3
+ selector:

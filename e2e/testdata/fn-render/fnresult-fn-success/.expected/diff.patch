@@ -25,11 +25,11 @@ index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ NORMALIZED @@
-metadata:
-name: nginx-deployment
-spec:
--  replicas: 3
-+  replicas: 4
----
-apiVersion: custom.io/v1
-kind: Custom
+ metadata:
+ name: nginx-deployment
+ spec:
+-replicas: 3
++replicas: 4
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
