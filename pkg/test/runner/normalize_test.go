@@ -496,6 +496,75 @@ index fedcba9..7654321 100644
 	}
 }
 
+func TestNormalizeDiff_NonKptfileIndentDriftInsensitive(t *testing.T) {
+	// Goldens committed in this branch stripped YAML indentation from
+	// non-Kptfile hunks, while the actual fn output preserves 2-space
+	// indent. Both sides should normalize to the same form.
+	actual := `diff --git a/resources.yaml b/resources.yaml
+index 1234567..89abcde 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,6 +15,7 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: staging
+ spec:
+   replicas: 3`
+
+	expected := `diff --git a/resources.yaml b/resources.yaml
+index fedcba9..7654321 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,6 +15,7 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+ name: nginx-deployment
++namespace: staging
+ spec:
+ replicas: 3`
+
+	gotActual, err := normalizeDiff(actual, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(actual) failed: %v", err)
+	}
+	gotExpected, err := normalizeDiff(expected, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff(expected) failed: %v", err)
+	}
+
+	if diff := cmp.Diff(gotExpected, gotActual); diff != "" {
+		t.Fatalf("normalized diffs mismatch (-want, +got): %s", diff)
+	}
+}
+
+func TestNormalizeDiff_NonKptfilePreservesContextLines(t *testing.T) {
+	// Unlike Kptfile diffs (where context lines are unstable anchors
+	// and dropped), non-Kptfile diffs keep context lines — they just
+	// get their leading whitespace stripped.
+	input := `diff --git a/resources.yaml b/resources.yaml
+index 1234567..89abcde 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -1,4 +1,5 @@
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: staging
+ spec:`
+
+	got, err := normalizeDiff(input, "")
+	if err != nil {
+		t.Fatalf("normalizeDiff failed: %v", err)
+	}
+
+	for _, want := range []string{" kind: Deployment", " metadata:", " name: nginx-deployment", "+namespace: staging", " spec:"} {
+		if !strings.Contains(got, want) {
+			t.Fatalf("expected normalized output to contain %q, got:\n%s", want, got)
+		}
+	}
+}
+
 func TestNormalizeDiff_KptfilePreservesNestedStructure(t *testing.T) {
 	input := `diff --git a/Kptfile b/Kptfile
 index 1234567..89abcde 100644
