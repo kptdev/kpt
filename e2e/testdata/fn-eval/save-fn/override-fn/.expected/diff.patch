@@ -12,6 +12,7 @@ index c093436..6dd6980 100644
 -  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 -    configMap:
 -      namespace: oldNs
+-    name: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
 +      configMap:
 +        namespace: newNs
@@ -22,15 +23,15 @@ index eed43d6..0b0d2ce 100644
 @@ -15,6 +15,7 @@ apiVersion: apps/v1
  kind: Deployment
  metadata:
- name: nginx-deployment
-+namespace: newNs
+   name: nginx-deployment
++  namespace: newNs
  spec:
- replicas: 3
+   replicas: 3
  ---
 @@ -22,5 +23,6 @@ apiVersion: custom.io/v1
  kind: Custom
  metadata:
- name: custom
-+namespace: newNs
+   name: custom
++  namespace: newNs
  spec:
- image: nginx:1.2.3
+   image: nginx:1.2.3
