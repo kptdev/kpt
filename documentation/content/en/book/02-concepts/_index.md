@@ -216,7 +216,7 @@ The publishing flow is orthogonal to the deployment flow. This allows you to act
 
 ## Functions
 
-A Kubernetes Resource Model (KRM) function (formerly called a _kpt_ function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. kpt functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
+A Kubernetes Resource Model (KRM) function (formerly called a _kpt function_) is a containerized program that can perform create, read, update, and delete (CRUD) operations on KRM resources stored on the local filesystem. KRM functions are the extensible mechanism to automate the mutation and validation of KRM resources. The following are some example use cases:
 
 - Enforce all `Namespace` resources to have a `cost-center` label.
 - Add a label to resources based on certain filtering criteria.
