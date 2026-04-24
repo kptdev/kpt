@@ -47,6 +47,14 @@ var SupportedKptfileVersions = []schema.GroupVersionKind{
 	kptfilev1.KptFileGVK(),
 }
 
+// sdkGeneratedKptfileAnnotations are annotations that the kptfileko SDK
+// synthesizes in-memory while parsing a Kptfile — they track the resource's
+// position within a multi-doc stream, its on-disk path, and whitespace
+// preservation hints. They are NOT user-authored content; they do not exist
+// in the file on disk. Decoders in this package strip them so that callers
+// of ReadKptfile / DecodeKptfile see exactly what the user wrote, and so
+// that round-trips (read → mutate → write) don't leak these artifacts into
+// the serialized YAML.
 var sdkGeneratedKptfileAnnotations = []string{
 	"config.kubernetes.io/index",
 	"internal.config.kubernetes.io/index",
@@ -301,11 +309,33 @@ func applyTypedKptfileToKubeObject(sdkKptfile *kptfileko.KptfileKubeObject, desi
 
 func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
 	rv := reflect.ValueOf(val)
-	if val == nil || !rv.IsValid() || rv.IsZero() {
+	if val == nil || !rv.IsValid() || rv.IsZero() || isEmptyContainer(rv) {
 		_, err := obj.RemoveNestedField(fields...)
 		return err
 	}
 	return obj.SetNestedField(val, fields...)
+}
+
+// isEmptyContainer reports whether rv is a non-nil but empty map, slice, or
+// array (or a pointer/interface to one). reflect.Value.IsZero returns true
+// only for the nil forms of these types; without this check, an
+// empty-but-non-nil map or slice would be serialized as "{}" / "[]" and
+// cause Kptfile format drift (the regression this package is trying to
+// prevent).
+func isEmptyContainer(rv reflect.Value) bool {
+	if !rv.IsValid() {
+		return false
+	}
+	switch rv.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if rv.IsNil() {
+			return true
+		}
+		return isEmptyContainer(rv.Elem())
+	case reflect.Map, reflect.Slice, reflect.Array:
+		return rv.Len() == 0
+	}
+	return false
 }
 
 func setOrRemoveNestedString(obj *fn.KubeObject, value string, fields ...string) error {
@@ -573,6 +603,17 @@ func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
 	return kf, nil
 }
 
+// DecodeKptfile parses a single YAML document from in and returns it as a
+// typed KptFile.
+//
+// The returned KptFile is stripped of the kptfileko SDK's internal
+// bookkeeping annotations (see sdkGeneratedKptfileAnnotations); those keys
+// are not part of the file on disk and are intentionally hidden from
+// callers of this decode API so that (a) what you read is what the user
+// wrote, and (b) mutate-and-write round-trips don't leak SDK artifacts
+// into the serialized Kptfile. Callers that genuinely need to observe
+// those SDK-internal keys must go through the kptfileko API directly
+// rather than DecodeKptfile.
 func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	kf := &kptfilev1.KptFile{}
 	c, err := io.ReadAll(in)

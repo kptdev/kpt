@@ -1031,14 +1031,43 @@ metadata:
 		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
 		require.NoError(t, err)
 
-		// After stripping SDK annotations, the annotation map is empty.
-		// merge3 may leave an empty map marker (annotations: {}) which
-		// is semantically equivalent to no annotations.
-		if updatedKf.Annotations != nil {
-			assert.Empty(t, updatedKf.Annotations)
-		}
+		// All annotations were SDK-internal, so the resulting map must be
+		// nil (not an empty map). The setOrRemoveNestedField path now
+		// removes empty maps / slices as well as nil ones, which prevents
+		// `annotations: {}` from leaking into the serialized Kptfile.
+		assert.Nil(t, updatedKf.Annotations)
 		assert.NotContains(t, updatedContent, "config.kubernetes.io/index")
 		assert.NotContains(t, updatedContent, "internal.config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "annotations: {}")
+		assert.NotContains(t, updatedContent, "annotations: []")
+	})
+
+	t.Run("empty-but-non-nil labels map is removed cleanly", func(t *testing.T) {
+		// Regression test for copilot's finding that reflect.Value.IsZero
+		// treats only nil maps/slices as zero. Before the fix, mutating
+		// labels to an empty-but-non-nil map would leak as `labels: {}`
+		// into the serialized Kptfile — format drift.
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  labels:
+    team: platform
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			// Mutator replaces labels with an empty-but-non-nil map.
+			kf.Labels = map[string]string{}
+		})
+		require.NoError(t, err)
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		require.NoError(t, err)
+
+		assert.Nil(t, updatedKf.Labels, "empty labels should be removed, not serialized as {}")
+		assert.NotContains(t, updatedContent, "labels: {}")
+		assert.NotContains(t, updatedContent, "labels: []")
 	})
 
 	t.Run("handles missing annotations safely", func(t *testing.T) {
