@@ -47,13 +47,17 @@ type ClusterPlanner struct {
 	resourceFetcher ResourceFetcher
 }
 
-func NewClusterPlanner(f util.Factory) (*ClusterPlanner, error) {
+// NewClusterPlanner builds a ClusterPlanner. ctx is the caller's context
+// and is plumbed into the inventory wrapper so Apply / ApplyWithPrune on
+// the underlying ResourceGroup honor caller cancellation (Ctrl-C,
+// deadlines).
+func NewClusterPlanner(ctx context.Context, f util.Factory) (*ClusterPlanner, error) {
 	fetcher, err := NewResourceFetcher(f)
 	if err != nil {
 		return nil, err
 	}
 
-	invClient, err := inventory.NewClient(f, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
+	invClient, err := inventory.NewClient(f, live.WrapInventoryObjWithContext(ctx), live.InvToUnstructuredFunc, inventory.StatusPolicyNone, live.ResourceGroupGVK)
 	if err != nil {
 		return nil, err
 	}
