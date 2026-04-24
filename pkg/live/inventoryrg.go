@@ -92,7 +92,7 @@ var _ inventory.Info = &InventoryResourceGroup{}
 
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
-// an the Inventory interface.
+// the Inventory interface.
 //
 // The wrapped inventory will use context.Background() for cluster API
 // calls. Prefer WrapInventoryObjWithContext when you have a caller
@@ -302,7 +302,7 @@ func (icm *InventoryResourceGroup) Apply(dc dynamic.Interface, mapper meta.RESTM
 	}
 	ctx := icm.contextOrBackground()
 
-	// Get cluster object, if exsists.
+	// Get cluster object, if exists.
 	clusterObj, err := namespacedClient.Get(ctx, invInfo.GetName(), metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err

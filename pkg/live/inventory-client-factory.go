@@ -43,14 +43,25 @@ func NewClusterClientFactory() *ClusterClientFactory {
 
 // NewClusterClientFactoryWithContext returns a ClusterClientFactory that
 // threads ctx into every inventory client it produces.
+//
+// A nil ctx is normalized to context.Background() so the docstring's
+// promise ("threads ctx into every inventory client") holds for every
+// input: there is no hidden code path that silently drops propagation.
 func NewClusterClientFactoryWithContext(ctx context.Context) *ClusterClientFactory {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	return &ClusterClientFactory{StatusPolicy: inventory.StatusPolicyNone, Ctx: ctx}
 }
 
 func (ccf *ClusterClientFactory) NewClient(factory cmdutil.Factory) (inventory.Client, error) {
-	wrap := WrapInventoryObj
-	if ccf.Ctx != nil {
-		wrap = WrapInventoryObjWithContext(ccf.Ctx)
+	// Defense in depth: normalize a nil Ctx here too. This covers the
+	// case where a caller constructed ClusterClientFactory as a struct
+	// literal (e.g. &ClusterClientFactory{StatusPolicy: ...}) and left
+	// Ctx unset — see NewClusterClientFactory, which does exactly that.
+	ctx := ccf.Ctx
+	if ctx == nil {
+		ctx = context.Background()
 	}
-	return inventory.NewClient(factory, wrap, InvToUnstructuredFunc, ccf.StatusPolicy, ResourceGroupGVK)
+	return inventory.NewClient(factory, WrapInventoryObjWithContext(ctx), InvToUnstructuredFunc, ccf.StatusPolicy, ResourceGroupGVK)
 }
