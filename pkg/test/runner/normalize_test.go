@@ -642,3 +642,62 @@ index 1234567..89abcde 100644
 		t.Fatalf("regression-guard: the tight \\s+ pattern *should* fail to strip the post-indent-strip line (that's the bug we fixed); got:\n%s", gotStrict)
 	}
 }
+
+// TestIsKptfileDiffHeader_SpaceInPath locks in the fix for copilot's
+// finding that strings.Fields mis-parses `diff --git` headers when the
+// path contains spaces. Git c-quotes such paths; the normalizer must
+// parse both the quoted and unquoted forms.
+func TestIsKptfileDiffHeader_SpaceInPath(t *testing.T) {
+	n := &diffNormalizer{}
+
+	cases := []struct {
+		name string
+		line string
+		want bool
+	}{
+		{
+			name: "unquoted simple",
+			line: `diff --git a/Kptfile b/Kptfile`,
+			want: true,
+		},
+		{
+			name: "unquoted subdir",
+			line: `diff --git a/db/Kptfile b/db/Kptfile`,
+			want: true,
+		},
+		{
+			name: "quoted path with space",
+			line: `diff --git "a/my pkg/Kptfile" "b/my pkg/Kptfile"`,
+			want: true,
+		},
+		{
+			name: "quoted with escaped quote",
+			line: `diff --git "a/weird\"name/Kptfile" "b/weird\"name/Kptfile"`,
+			want: true,
+		},
+		{
+			name: "unquoted non-Kptfile",
+			line: `diff --git a/resources.yaml b/resources.yaml`,
+			want: false,
+		},
+		{
+			name: "quoted non-Kptfile",
+			line: `diff --git "a/my pkg/resources.yaml" "b/my pkg/resources.yaml"`,
+			want: false,
+		},
+		{
+			name: "malformed",
+			line: `diff --git only-one-path`,
+			want: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := n.isKptfileDiffHeader(tc.line)
+			if got != tc.want {
+				t.Fatalf("isKptfileDiffHeader(%q) = %v, want %v", tc.line, got, tc.want)
+			}
+		})
+	}
+}
