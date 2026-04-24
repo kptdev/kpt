@@ -228,7 +228,7 @@ func runApply(r *Runner, invInfo inventory.Info, objs []*unstructured.Unstructur
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return err
 			}
-		} else if !live.ResourceGroupCRDMatched(r.ctx, f) {
+		} else if !live.ResourceGroupCRDMatchedWithContext(r.ctx, f) {
 			if err = cmdutil.InstallResourceGroupCRD(r.ctx, f); err != nil {
 				return &cmdutil.ResourceGroupCRDNotLatestError{
 					Err: err,

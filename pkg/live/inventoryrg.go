@@ -109,9 +109,15 @@ func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Storage {
 // inventory.NewClient's WrapObjFunc parameter. The returned function
 // produces an InventoryResourceGroup that carries ctx, so subsequent
 // Apply / ApplyWithPrune calls honor the caller's cancellation and
-// timeout. ctx MUST NOT be nil; pass context.Background() explicitly if
-// you truly want no cancellation.
+// timeout.
+//
+// If ctx is nil it is normalized to context.Background() so callers
+// cannot accidentally trigger a nil-deref inside client-go. Prefer
+// passing a real ctx (e.g. cmd.Context()) to actually gain cancellation.
 func WrapInventoryObjWithContext(ctx context.Context) func(*unstructured.Unstructured) inventory.Storage {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	return func(obj *unstructured.Unstructured) inventory.Storage {
 		if obj != nil {
 			klog.V(4).Infof("wrapping Inventory obj with ctx: %s/%s\n", obj.GetNamespace(), obj.GetName())
@@ -427,9 +433,22 @@ func ResourceGroupCRDApplied(factory cmdutil.Factory) bool {
 // ResourceGroupCRDMatched checks if the ResourceGroup CRD
 // in the cluster matches the CRD in the kpt binary.
 //
-// ctx is used for the live cluster Get call; cancelling it (e.g. via
-// Ctrl-C or a command-level timeout) aborts the check.
-func ResourceGroupCRDMatched(ctx context.Context, factory cmdutil.Factory) bool {
+// This signature is preserved for backward compatibility with external
+// callers; it delegates to ResourceGroupCRDMatchedWithContext with
+// context.Background(). Prefer ResourceGroupCRDMatchedWithContext when
+// you have a caller context so Ctrl-C and timeouts can abort the check.
+func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
+	return ResourceGroupCRDMatchedWithContext(context.Background(), factory)
+}
+
+// ResourceGroupCRDMatchedWithContext is the context-aware variant of
+// ResourceGroupCRDMatched. ctx is used for the live cluster Get call;
+// cancelling it (e.g. via Ctrl-C or a command-level timeout) aborts the
+// check. A nil ctx is normalized to context.Background().
+func ResourceGroupCRDMatchedWithContext(ctx context.Context, factory cmdutil.Factory) bool {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	mapper, err := factory.ToRESTMapper()
 	if err != nil {
 		klog.V(4).Infof("error retrieving RESTMapper when checking ResourceGroup CRD: %s\n", err)
