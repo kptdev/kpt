@@ -590,3 +590,55 @@ index 1234567..89abcde 100644
 		t.Fatalf("expected configMap lines to stay grouped with set-namespace image line, got:\n%s", got)
 	}
 }
+
+// TestNormalizeDiff_StripREAppliesAfterKptfileIndentStrip pins the contract
+// that per-test diffStripRegEx patterns are evaluated against the
+// post-indent-strip form of Kptfile +/- lines. Test configs (e.g.
+// image-pull-policy-never, missing-fn-image) therefore use `\s*` rather
+// than `\s+` when matching keys like `stderr:` so they survive the
+// Kptfile indent-stripping step. This test locks that behavior in so
+// future normalizer changes can't silently re-break the interaction.
+func TestNormalizeDiff_StripREAppliesAfterKptfileIndentStrip(t *testing.T) {
+	// Raw pre-normalization diff, as produced by git diff against a Kptfile
+	// where the rendered pipeline wrote a multi-line stderr block.
+	input := `diff --git a/Kptfile b/Kptfile
+index 1234567..89abcde 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -1,4 +1,8 @@
++status:
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/dne:latest
++        exitCode: 125
++        stderr: |-
++          Error: ghcr.io/kptdev/krm-functions-catalog/dne:latest: image not known`
+
+	// \s* (not \s+) is the key: after the normalizer strips the leading
+	// whitespace off Kptfile +/- lines, the regex still has to match
+	// `+stderr:` with zero spaces after the `+`.
+	stripRE := `\+\s*stderr:|Error:.*image not known`
+
+	got, err := normalizeDiff(input, stripRE)
+	if err != nil {
+		t.Fatalf("normalizeDiff failed: %v", err)
+	}
+
+	if strings.Contains(got, "stderr:") {
+		t.Fatalf("expected stderr label to be stripped, got:\n%s", got)
+	}
+	if strings.Contains(got, "image not known") {
+		t.Fatalf("expected stderr body (matching Error:.*image not known) to be stripped, got:\n%s", got)
+	}
+
+	// Sanity: the relaxed \s* also matches the pre-indent-strip form, so a
+	// stripRE authored for the raw diff still wins after normalization.
+	stripREStrictPlus := `\+\s+stderr:` // old form with \s+
+	gotStrict, err := normalizeDiff(input, stripREStrictPlus)
+	if err != nil {
+		t.Fatalf("normalizeDiff failed: %v", err)
+	}
+	if !strings.Contains(gotStrict, "stderr:") {
+		t.Fatalf("regression-guard: the tight \\s+ pattern *should* fail to strip the post-indent-strip line (that's the bug we fixed); got:\n%s", gotStrict)
+	}
+}

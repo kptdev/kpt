@@ -217,16 +217,15 @@ func Test_parseURL(t *testing.T) {
 }
 
 func Test_GitParseArgs(t *testing.T) {
-	// Swap in a hermetic default-branch resolver so the test does not hit
-	// github.com (or any network) to discover HEAD. Without this the test
-	// failed intermittently when the remote returned transient errors
-	// (e.g. HTTP 500 from github.com). The stub mirrors what a real
-	// ls-remote would return for kpt's default branch.
-	origResolver := defaultBranchResolver
-	defaultBranchResolver = func(_ context.Context, _ string) (string, error) {
+	// Use a hermetic stub resolver so the test does not hit github.com
+	// (or any network) to discover HEAD. Without this the test failed
+	// intermittently when the remote returned transient errors (e.g. HTTP
+	// 500 from github.com). The stub is passed via the unexported
+	// gitParseArgs helper — no package-level state is mutated, so tests
+	// remain safe under t.Parallel().
+	stubResolver := func(_ context.Context, _ string) (string, error) {
 		return "main", nil
 	}
-	t.Cleanup(func() { defaultBranchResolver = origResolver })
 
 	tests := map[string]struct {
 		ghURL    string
@@ -269,7 +268,7 @@ func Test_GitParseArgs(t *testing.T) {
 				t.SkipNow()
 			}
 			ctx := printer.WithContext(context.Background(), printer.New(nil, nil))
-			actual, err := GitParseArgs(ctx, []string{test.ghURL, test.expected.Destination}, true)
+			actual, err := gitParseArgs(ctx, []string{test.ghURL, test.expected.Destination}, true, stubResolver)
 			assert.NoError(t, err)
 			assert.Equal(t, test.expected, actual)
 		})
