@@ -35,11 +35,15 @@ type Target struct {
 	Destination string
 }
 
-// defaultBranchResolver resolves the default branch of a remote git repo.
-// Indirected through a package variable so tests can swap in a hermetic
-// stub without making live network calls to github.com (or wherever the
-// repo is hosted).
-var defaultBranchResolver = func(ctx context.Context, repo string) (string, error) {
+// branchResolver looks up the default branch of a remote git repo.
+// Plumbed as a parameter (rather than a package-level global) so tests
+// can supply a hermetic stub without mutating shared state — parallel
+// tests stay race-free.
+type branchResolver func(ctx context.Context, repo string) (string, error)
+
+// defaultBranchResolver is the production branchResolver. It performs a
+// live ls-remote against the repo; unit tests should never use it.
+func defaultBranchResolver(ctx context.Context, repo string) (string, error) {
 	gur, err := gitutil.NewGitUpstreamRepo(ctx, repo)
 	if err != nil {
 		return "", err
@@ -47,7 +51,13 @@ var defaultBranchResolver = func(ctx context.Context, repo string) (string, erro
 	return gur.GetDefaultBranch(ctx)
 }
 
+// GitParseArgs is the public entry point; it always uses the live
+// defaultBranchResolver. Tests use gitParseArgs directly with a stub.
 func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target, error) {
+	return gitParseArgs(ctx, args, explicitDest, defaultBranchResolver)
+}
+
+func gitParseArgs(ctx context.Context, args []string, explicitDest bool, resolve branchResolver) (Target, error) {
 	g := Target{}
 	if args[0] == "-" {
 		return g, nil
@@ -55,7 +65,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 
 	// Simple parsing if contains .git{$|/)
 	if HasGitSuffix(args[0]) {
-		return targetFromPkgURL(ctx, args[0], args[1], explicitDest)
+		return targetFromPkgURL(ctx, args[0], args[1], explicitDest, resolve)
 	}
 
 	// GitHub parsing if contains github.com
@@ -64,7 +74,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 		if err != nil {
 			return g, err
 		}
-		return targetFromPkgURL(ctx, ghPkgURL, args[1], explicitDest)
+		return targetFromPkgURL(ctx, ghPkgURL, args[1], explicitDest, resolve)
 	}
 
 	uri, version, err := getURIAndVersion(args[0])
@@ -76,7 +86,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 		return g, err
 	}
 	if version == "" {
-		defaultRef, err := defaultBranchResolver(ctx, repo)
+		defaultRef, err := resolve(ctx, repo)
 		if err != nil {
 			return g, err
 		}
@@ -95,7 +105,7 @@ func GitParseArgs(ctx context.Context, args []string, explicitDest bool) (Target
 }
 
 // targetFromPkgURL parses a pkg url and destination into kptfile git info and local destination Target
-func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitDest bool) (Target, error) {
+func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitDest bool, resolve branchResolver) (Target, error) {
 	g := Target{}
 	repo, dir, ref, err := URL(pkgURL)
 	if err != nil {
@@ -105,7 +115,7 @@ func targetFromPkgURL(ctx context.Context, pkgURL string, dest string, explicitD
 		dir = "/"
 	}
 	if ref == "" {
-		defaultRef, err := defaultBranchResolver(ctx, repo)
+		defaultRef, err := resolve(ctx, repo)
 		if err != nil {
 			return g, err
 		}
