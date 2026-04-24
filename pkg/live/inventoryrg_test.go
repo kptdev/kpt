@@ -20,6 +20,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apis/actuation"
 	"sigs.k8s.io/cli-utils/pkg/common"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -275,6 +276,50 @@ func TestWrapInventoryObj_LeavesContextNil(t *testing.T) {
 	if icm.ctx != nil {
 		t.Fatalf("expected legacy wrapper to leave ctx nil; got %v", icm.ctx)
 	}
+}
+
+// TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground proves the
+// factory is nil-safe: passing a nil ctx cannot produce a wrapper that
+// would nil-deref inside client-go. The stored ctx is normalized to
+// context.Background() at factory construction time.
+func TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground(t *testing.T) {
+	//nolint:staticcheck // SA1012: deliberately passing a nil context to exercise the nil-safety guard.
+	storage := WrapInventoryObjWithContext(nil)(inventoryObj)
+	icm, ok := storage.(*InventoryResourceGroup)
+	if !ok {
+		t.Fatalf("WrapInventoryObjWithContext(nil) produced unexpected type %T", storage)
+	}
+	if icm.ctx == nil {
+		t.Fatal("expected nil ctx to be normalized to Background(); got nil")
+	}
+	// Background() never cancels; Done() returns a nil channel.
+	if icm.ctx.Done() != nil {
+		t.Fatalf("expected Background()-equivalent ctx; Done() returned non-nil")
+	}
+}
+
+// TestResourceGroupCRDMatched_BackCompatSignaturePreserved is a
+// compile-time guard that the legacy ResourceGroupCRDMatched(factory)
+// signature is still exported, alongside the new context-aware
+// ResourceGroupCRDMatchedWithContext(ctx, factory). If either function
+// is renamed, removed, or has its signature changed, this test stops
+// compiling and the API-compat break is visible immediately.
+//
+// Uses typed anonymous-function parameters so the compiler verifies
+// signature assignability. This pattern is deliberate — staticcheck's
+// QF1011 would otherwise suggest removing a `var _ T = fn` type
+// annotation, which would silently destroy the guarantee.
+//
+// We don't invoke the functions because both require a live
+// cmdutil.Factory; their runtime behavior is exercised by the
+// apply/destroy e2e tests.
+func TestResourceGroupCRDMatched_BackCompatSignaturePreserved(t *testing.T) {
+	pinSignatures := func(
+		_ func(cmdutil.Factory) bool,
+		_ func(context.Context, cmdutil.Factory) bool,
+	) {
+	}
+	pinSignatures(ResourceGroupCRDMatched, ResourceGroupCRDMatchedWithContext)
 }
 
 // TestContextOrBackground covers both the override path (caller-supplied
