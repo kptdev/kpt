@@ -17,6 +17,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -24,6 +25,10 @@ import (
 	regclientref "github.com/regclient/regclient/types/ref"
 	"k8s.io/klog/v2"
 )
+
+const imageTagError = "start with an alphanumeric character or underscore, followed by at most 127 alphanumeric characters, underscores, periods, or dashes"
+
+var imageTagRegex = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$`)
 
 // TagLister is an interface for listing tags for/from a function runtime/runner
 type TagLister interface {
@@ -85,10 +90,22 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 		ref.Tag = allFilteredVersions[0].Original()
 		return ref.CommonName(), nil
 	} else {
+		resolvedImage, tagErr := imageWithLiteralTag(ref, tag)
+		if tagErr != nil {
+			return "", tagErr
+		}
 		klog.Warningf("Tag %q could not be parsed as a semantic version (\"%s\") or constraint (\"%s\"), will use it literally",
 			tag, versionErr, constraintErr)
+		return resolvedImage, nil
 	}
 
+	return imageWithLiteralTag(ref, tag)
+}
+
+func imageWithLiteralTag(ref regclientref.Ref, tag string) (string, error) {
+	if !imageTagRegex.MatchString(tag) {
+		return "", fmt.Errorf("`function.tag` %q must be a valid image tag: %s", tag, imageTagError)
+	}
 	ref.Tag = tag
 	return ref.CommonName(), nil
 }
