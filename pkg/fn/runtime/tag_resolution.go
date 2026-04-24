@@ -26,7 +26,7 @@ import (
 	"k8s.io/klog/v2"
 )
 
-const imageTagError = "start with an alphanumeric character or underscore, followed by at most 127 alphanumeric characters, underscores, periods, or dashes"
+const imageTagError = "must start with an alphanumeric character or underscore, followed by at most 127 alphanumeric characters, underscores, periods, or dashes"
 
 var imageTagRegex = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$`)
 
