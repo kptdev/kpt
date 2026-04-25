@@ -1,8 +1,59 @@
-diff --git a/new-link b/new-link
-new file mode 120000
-index 0000000..6a04314
---- /dev/null
-+++ b/new-link
-@@ -0,0 +1 @@
-+./
-\ No newline at end of file
+diff --git a/Kptfile b/Kptfile
+index 1307fb5..fee64dc 100644
+--- a/Kptfile
++++ b/Kptfile
+@@ -2,6 +2,9 @@ apiVersion: kpt.dev/v1
+ kind: Kptfile
+ metadata:
+   name: app
++  namespace: staging
++  labels:
++    tier: backend
+ pipeline:
+   mutators:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
+@@ -10,3 +13,14 @@ pipeline:
+     - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
+       configMap:
+         tier: backend
++status:
++  conditions:
++    - type: Rendered
++      status: "True"
++      reason: RenderSuccess
++  renderStatus:
++    mutationSteps:
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
++        exitCode: 0
++      - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
++        exitCode: 0
+diff --git a/resources.yaml b/resources.yaml
+index f2eec52..84cfb26 100644
+--- a/resources.yaml
++++ b/resources.yaml
+@@ -15,12 +15,25 @@ apiVersion: apps/v1
+ kind: Deployment
+ metadata:
+   name: nginx-deployment
++  namespace: staging
++  labels:
++    tier: backend
+ spec:
+   replicas: 3
++  selector:
++    matchLabels:
++      tier: backend
++  template:
++    metadata:
++      labels:
++        tier: backend
+ ---
+ apiVersion: custom.io/v1
+ kind: Custom
+ metadata:
+   name: custom
++  namespace: staging
++  labels:
++    tier: backend
+ spec:
+   image: nginx:1.2.3
