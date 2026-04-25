@@ -17,6 +17,7 @@ package render
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
@@ -32,7 +33,9 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Skipf("skipping test due to symlink creation failure (requires admin/developer mode on Windows): %v", err)
+	}
 
 	// verify the branch ref is set to the correct value
 	r := NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -40,7 +43,7 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	r.Command.SetArgs([]string{"foo"})
 	err = r.Command.Execute()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join("path", "to", "pkg", "dir"), r.pkgPath)
+	assert.Equal(t, strings.ToLower(filepath.Join("path", "to", "pkg", "dir")), strings.ToLower(r.pkgPath))
 }
 
 // NoOpRunE is a noop function to replace the run function of a command.  Useful for testing argument parsing.
