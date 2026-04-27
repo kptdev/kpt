@@ -146,6 +146,12 @@ func TestResolveFunctionImage(t *testing.T) {
 			repoTags:      tagSet,
 			expectedTag:   "v0.3.1",
 		},
+		"exact semver tag with invalid image tag syntax": {
+			functionImage: image,
+			functionTag:   "v0.3.1+build",
+			repoTags:      tagSet,
+			expectedErr:   "`function.tag` \"v0.3.1+build\" must be a valid image tag",
+		},
 		"no listing with exact semver tag": {
 			functionImage: image,
 			functionTag:   "v0.3.1",
@@ -163,6 +169,12 @@ func TestResolveFunctionImage(t *testing.T) {
 			functionTag:   "master-git-38f885f",
 			repoErr:       "test",
 			expectedTag:   "master-git-38f885f",
+		},
+		"invalid non-semver tag": {
+			functionImage: image,
+			functionTag:   ">>0.1",
+			repoTags:      tagSet,
+			expectedErr:   "`function.tag` \">>0.1\" must be a valid image tag",
 		},
 		"list failure": {
 			functionImage: image,
