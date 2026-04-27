@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 
@@ -28,6 +29,8 @@ import (
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/krm-functions-sdk/go/fn"
+	"github.com/kptdev/krm-functions-sdk/go/fn/kptfileko"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -42,6 +45,21 @@ var DeprecatedKptfileVersions = []schema.GroupVersionKind{
 
 var SupportedKptfileVersions = []schema.GroupVersionKind{
 	kptfilev1.KptFileGVK(),
+}
+
+// sdkGeneratedKptfileAnnotations are annotations that the kptfileko SDK
+// synthesizes in-memory while parsing a Kptfile — they track the resource's
+// position within a multi-doc stream, its on-disk path, and whitespace
+// preservation hints. They are NOT user-authored content; they do not exist
+// in the file on disk. Decoders in this package strip them so that callers
+// of ReadKptfile / DecodeKptfile see exactly what the user wrote, and so
+// that round-trips (read → mutate → write) don't leak these artifacts into
+// the serialized YAML.
+var sdkGeneratedKptfileAnnotations = []string{
+	"config.kubernetes.io/index",
+	"internal.config.kubernetes.io/index",
+	"internal.config.kubernetes.io/path",
+	"internal.config.kubernetes.io/seqindent",
 }
 
 // KptfileError records errors regarding reading or parsing of a Kptfile.
@@ -78,6 +96,19 @@ func (e *UnknownKptfileResourceError) Error() string {
 
 func WriteFile(dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteFile"
+	switch kf := k.(type) {
+	case *kptfilev1.KptFile:
+		if err := writeKptfilePreservingFormat(dir, kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	case kptfilev1.KptFile:
+		if err := writeKptfilePreservingFormat(dir, &kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	}
+
 	b, err := marshalKptfile(k)
 	if err != nil {
 		return err
@@ -97,6 +128,19 @@ func WriteFile(dir string, k any) error {
 // WriteKptfileToFS writes a Kptfile to the given filesystem at the specified directory.
 func WriteKptfileToFS(fs filesys.FileSystem, dir string, k any) error {
 	const op errors.Op = "kptfileutil.WriteKptfileToFS"
+	switch kf := k.(type) {
+	case *kptfilev1.KptFile:
+		if err := writeKptfileToFSPreservingFormat(fs, dir, kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	case kptfilev1.KptFile:
+		if err := writeKptfileToFSPreservingFormat(fs, dir, &kf); err != nil {
+			return errors.E(op, types.UniquePath(dir), err)
+		}
+		return nil
+	}
+
 	b, err := marshalKptfile(k)
 	if err != nil {
 		return err
@@ -111,6 +155,253 @@ func WriteKptfileToFS(fs filesys.FileSystem, dir string, k any) error {
 // marshalKptfile marshals a Kptfile struct to YAML bytes.
 func marshalKptfile(k any) ([]byte, error) {
 	return yaml.MarshalWithOptions(k, &yaml.EncoderOptions{SeqIndent: yaml.WideSequenceStyle})
+}
+
+func writeKptfilePreservingFormat(dir string, kf *kptfilev1.KptFile) error {
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	info, err := os.Stat(dir)
+	if err != nil {
+		return errors.E(errors.IO, types.UniquePath(dir), err)
+	}
+	if !info.IsDir() {
+		return errors.E(errors.IO, types.UniquePath(dir), fmt.Errorf("path %q is not a directory", dir))
+	}
+
+	content, err := os.ReadFile(kptfilePath)
+	if err != nil {
+		if goerrors.Is(err, os.ErrNotExist) {
+			b, marshalErr := marshalKptfile(kf)
+			if marshalErr != nil {
+				return marshalErr
+			}
+			if writeErr := os.WriteFile(kptfilePath, b, 0600); writeErr != nil {
+				return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+			}
+			return nil
+		}
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), err)
+	}
+
+	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
+	existingKptfile, err := kptfileko.NewFromPackage(existingResources)
+	if err != nil {
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := os.WriteFile(kptfilePath, b, 0600); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+	if err := applyTypedKptfileToKubeObject(existingKptfile, kf); err != nil {
+		return err
+	}
+	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
+		return err
+	}
+	if writeErr := os.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName]), 0600); writeErr != nil {
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+	}
+	return nil
+}
+
+func writeKptfileToFSPreservingFormat(fs filesys.FileSystem, dir string, kf *kptfilev1.KptFile) error {
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	if !fs.IsDir(dir) {
+		return errors.E(errors.IO, types.UniquePath(dir), fmt.Errorf("path %q is not a directory", dir))
+	}
+
+	if !fs.Exists(kptfilePath) {
+		// File does not exist: fall back to fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+
+	content, err := fs.ReadFile(kptfilePath)
+	if err != nil {
+		// File exists but cannot be read: fall back to fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+
+	existingResources := map[string]string{kptfilev1.KptFileName: string(content)}
+	existingKptfile, err := kptfileko.NewFromPackage(existingResources)
+	if err != nil {
+		// Existing file is corrupt: overwrite with fresh marshal.
+		b, marshalErr := marshalKptfile(kf)
+		if marshalErr != nil {
+			return marshalErr
+		}
+		if writeErr := fs.WriteFile(kptfilePath, b); writeErr != nil {
+			return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+		}
+		return nil
+	}
+	if err := applyTypedKptfileToKubeObject(existingKptfile, kf); err != nil {
+		return err
+	}
+	if err := existingKptfile.WriteToPackage(existingResources); err != nil {
+		return err
+	}
+	if writeErr := fs.WriteFile(kptfilePath, []byte(existingResources[kptfilev1.KptFileName])); writeErr != nil {
+		return errors.E(errors.IO, types.UniquePath(kptfilePath), writeErr)
+	}
+	return nil
+}
+
+func applyTypedKptfileToKubeObject(sdkKptfile *kptfileko.KptfileKubeObject, desired *kptfilev1.KptFile) error {
+	if sdkKptfile == nil {
+		return fmt.Errorf("cannot update empty Kptfile KubeObject")
+	}
+
+	if err := sdkKptfile.SetNestedString(desired.APIVersion, "apiVersion"); err != nil {
+		return err
+	}
+	if err := sdkKptfile.SetNestedString(desired.Kind, "kind"); err != nil {
+		return err
+	}
+	if err := sdkKptfile.SetNestedString(desired.Name, "metadata", "name"); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Annotations, "metadata", "annotations"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Labels, "metadata", "labels"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Pipeline, "pipeline"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Info, "info"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Inventory, "inventory"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedField(&sdkKptfile.KubeObject, desired.Status, "status"); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveUpstream(&sdkKptfile.KubeObject, desired.Upstream); err != nil {
+		return err
+	}
+
+	if err := setOrRemoveUpstreamLock(&sdkKptfile.KubeObject, desired.UpstreamLock); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setOrRemoveNestedField(obj *fn.KubeObject, val any, fields ...string) error {
+	rv := reflect.ValueOf(val)
+	if val == nil || !rv.IsValid() || rv.IsZero() || isEmptyContainer(rv) {
+		_, err := obj.RemoveNestedField(fields...)
+		return err
+	}
+	return obj.SetNestedField(val, fields...)
+}
+
+// isEmptyContainer reports whether rv is a non-nil but empty map, slice, or
+// array (or a pointer/interface to one). reflect.Value.IsZero returns true
+// only for the nil forms of these types; without this check, an
+// empty-but-non-nil map or slice would be serialized as "{}" / "[]" and
+// cause Kptfile format drift (the regression this package is trying to
+// prevent).
+func isEmptyContainer(rv reflect.Value) bool {
+	if !rv.IsValid() {
+		return false
+	}
+	switch rv.Kind() {
+	case reflect.Pointer, reflect.Interface:
+		if rv.IsNil() {
+			return true
+		}
+		return isEmptyContainer(rv.Elem())
+	case reflect.Map, reflect.Slice, reflect.Array:
+		return rv.Len() == 0
+	}
+	return false
+}
+
+func setOrRemoveNestedString(obj *fn.KubeObject, value string, fields ...string) error {
+	if strings.TrimSpace(value) == "" {
+		_, err := obj.RemoveNestedField(fields...)
+		return err
+	}
+	return obj.SetNestedString(value, fields...)
+}
+
+func setOrRemoveUpstream(obj *fn.KubeObject, upstream *kptfilev1.Upstream) error {
+	if upstream == nil {
+		_, err := obj.RemoveNestedField("upstream")
+		return err
+	}
+
+	obj.UpsertMap("upstream")
+	if err := setOrRemoveNestedString(obj, string(upstream.Type), "upstream", "type"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, string(upstream.UpdateStrategy), "upstream", "updateStrategy"); err != nil {
+		return err
+	}
+
+	if upstream.Git == nil {
+		_, err := obj.RemoveNestedField("upstream", "git")
+		return err
+	}
+
+	obj.UpsertMap("upstream").UpsertMap("git")
+	if err := setOrRemoveNestedString(obj, upstream.Git.Repo, "upstream", "git", "repo"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstream.Git.Directory, "upstream", "git", "directory"); err != nil {
+		return err
+	}
+	return setOrRemoveNestedString(obj, upstream.Git.Ref, "upstream", "git", "ref")
+}
+
+func setOrRemoveUpstreamLock(obj *fn.KubeObject, upstreamLock *kptfilev1.Locator) error {
+	if upstreamLock == nil {
+		_, err := obj.RemoveNestedField("upstreamLock")
+		return err
+	}
+
+	obj.UpsertMap("upstreamLock")
+	if err := setOrRemoveNestedString(obj, string(upstreamLock.Type), "upstreamLock", "type"); err != nil {
+		return err
+	}
+
+	if upstreamLock.Git == nil {
+		_, err := obj.RemoveNestedField("upstreamLock", "git")
+		return err
+	}
+
+	obj.UpsertMap("upstreamLock").UpsertMap("git")
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Repo, "upstreamLock", "git", "repo"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Directory, "upstreamLock", "git", "directory"); err != nil {
+		return err
+	}
+	if err := setOrRemoveNestedString(obj, upstreamLock.Git.Ref, "upstreamLock", "git", "ref"); err != nil {
+		return err
+	}
+	return setOrRemoveNestedString(obj, upstreamLock.Git.Commit, "upstreamLock", "git", "commit")
 }
 
 // ValidateInventory returns true and a nil error if the passed inventory
@@ -312,22 +603,125 @@ func ReadKptfile(fs filesys.FileSystem, p string) (*kptfilev1.KptFile, error) {
 	return kf, nil
 }
 
+// DecodeKptfile parses a single YAML document from in and returns it as a
+// typed KptFile.
+//
+// The returned KptFile is stripped of the kptfileko SDK's internal
+// bookkeeping annotations (see sdkGeneratedKptfileAnnotations); those keys
+// are not part of the file on disk and are intentionally hidden from
+// callers of this decode API so that (a) what you read is what the user
+// wrote, and (b) mutate-and-write round-trips don't leak SDK artifacts
+// into the serialized Kptfile. Callers that genuinely need to observe
+// those SDK-internal keys must go through the kptfileko API directly
+// rather than DecodeKptfile.
 func DecodeKptfile(in io.Reader) (*kptfilev1.KptFile, error) {
 	kf := &kptfilev1.KptFile{}
 	c, err := io.ReadAll(in)
 	if err != nil {
 		return kf, err
 	}
-	if err := checkKptfileVersion(c); err != nil {
+	if err := validateKptfileContent(c); err != nil {
 		return kf, err
 	}
 
-	d := yaml.NewDecoder(bytes.NewBuffer(c))
-	d.KnownFields(true)
-	if err := d.Decode(kf); err != nil {
+	kubeObjects, err := fn.ReadKubeObjectsFromFile(kptfilev1.KptFileName, string(c))
+	if err != nil {
 		return kf, err
 	}
+	if len(kubeObjects) != 1 {
+		return kf, fmt.Errorf("expected exactly one YAML document in Kptfile, found %d", len(kubeObjects))
+	}
+
+	sdkKptfile, err := kptfileko.NewFromKubeObjectList(kubeObjects)
+	if err != nil {
+		return kf, err
+	}
+
+	if err := sdkKptfile.As(kf); err != nil {
+		return kf, err
+	}
+
+	stripSDKGeneratedKptfileAnnotations(kf)
+
 	return kf, nil
+}
+
+// UpdateKptfileContent updates Kptfile YAML content in-memory using SDK Kptfile
+// read/write APIs while preserving existing YAML document structure and comments.
+func UpdateKptfileContent(content string, mutator func(*kptfilev1.KptFile)) (string, error) {
+	if mutator == nil {
+		return "", fmt.Errorf("mutator cannot be nil")
+	}
+
+	if err := validateKptfileContent([]byte(content)); err != nil {
+		return "", err
+	}
+
+	resources := map[string]string{kptfilev1.KptFileName: content}
+	sdkKptfile, err := kptfileko.NewFromPackage(resources)
+	if err != nil {
+		return "", err
+	}
+
+	typedKptfile := &kptfilev1.KptFile{}
+	if err := sdkKptfile.As(typedKptfile); err != nil {
+		return "", err
+	}
+	stripSDKGeneratedKptfileAnnotations(typedKptfile)
+
+	mutator(typedKptfile)
+
+	if err := applyTypedKptfileToKubeObject(sdkKptfile, typedKptfile); err != nil {
+		return "", err
+	}
+
+	if err := sdkKptfile.WriteToPackage(resources); err != nil {
+		return "", err
+	}
+
+	return resources[kptfilev1.KptFileName], nil
+}
+
+func validateKptfileContent(content []byte) error {
+	if err := checkKptfileVersion(content); err != nil {
+		return err
+	}
+
+	if err := validateSingleKptfileDocument(content); err != nil {
+		return err
+	}
+
+	d := yaml.NewDecoder(bytes.NewBuffer(content))
+	d.KnownFields(true)
+	if err := d.Decode(&kptfilev1.KptFile{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateSingleKptfileDocument(content []byte) error {
+	kubeObjects, err := fn.ReadKubeObjectsFromFile(kptfilev1.KptFileName, string(content))
+	if err != nil {
+		return err
+	}
+	if len(kubeObjects) != 1 {
+		return fmt.Errorf("expected exactly one YAML document in Kptfile, found %d", len(kubeObjects))
+	}
+	return nil
+}
+
+func stripSDKGeneratedKptfileAnnotations(kf *kptfilev1.KptFile) {
+	if kf == nil || kf.Annotations == nil {
+		return
+	}
+
+	for _, key := range sdkGeneratedKptfileAnnotations {
+		delete(kf.Annotations, key)
+	}
+	if len(kf.Annotations) == 0 {
+		kf.Annotations = nil
+	}
 }
 
 // checkKptfileVersion verifies the apiVersion and kind of the resource

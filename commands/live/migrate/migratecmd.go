@@ -386,8 +386,8 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 		switch {
 		case rgFileErr == nil:
 			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
-		case err != nil && !goerrors.Is(err, os.ErrNotExist):
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+		case rgFileErr != nil && !goerrors.Is(rgFileErr, os.ErrNotExist):
+			return errors.E(op, errors.IO, types.UniquePath(dir), rgFileErr)
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{

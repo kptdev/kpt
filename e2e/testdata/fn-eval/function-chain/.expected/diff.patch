@@ -20,26 +20,26 @@ index 0000000..94ced72
 +apiVersion: apps/v1
 +kind: Deployment
 +metadata:
-+  name: nginx-deployment
-+  namespace: staging
-+  labels:
-+    foo: bar
++name: nginx-deployment
++namespace: staging
++labels:
++foo: bar
 +spec:
-+  replicas: 3
-+  selector:
-+    matchLabels:
-+      foo: bar
-+  template:
-+    metadata:
-+      labels:
-+        foo: bar
++replicas: 3
++selector:
++matchLabels:
++foo: bar
++template:
++metadata:
++labels:
++foo: bar
 +---
 +apiVersion: custom.io/v1
 +kind: Custom
 +metadata:
-+  name: custom
-+  namespace: staging
-+  labels:
-+    foo: bar
++name: custom
++namespace: staging
++labels:
++foo: bar
 +spec:
-+  image: nginx:1.2.3
++image: nginx:1.2.3

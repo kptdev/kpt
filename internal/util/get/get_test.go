@@ -26,6 +26,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
@@ -213,15 +214,33 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	}.Run(fake.CtxWithPrinter(cliOutput, cliOutput))
 	assert.NoError(t, err)
 
-	// ensure warning for symlink is printed on the CLI
-	assert.Contains(t, cliOutput.String(), `[Warn] Ignoring symlink "config-symlink"`)
+	sourceSymlinkPath := filepath.Join(g.DatasetDirectory, testutil.Dataset6, subdir, "config-symlink")
+	info, statErr := os.Lstat(sourceSymlinkPath)
+	isSymlinkInSource := false
+	if statErr == nil {
+		isSymlinkInSource = info.Mode()&os.ModeSymlink != 0
+	} else if !os.IsNotExist(statErr) {
+		require.NoError(t, statErr)
+	}
+
+	if isSymlinkInSource {
+		// ensure warning for symlink is printed on the CLI
+		assert.Contains(t, cliOutput.String(), `[Warn] Ignoring symlink "config-symlink"`)
+	} else {
+		// on environments without symlink materialization, there is no ignore warning
+		assert.NotContains(t, cliOutput.String(), `[Warn] Ignoring symlink "config-symlink"`)
+	}
 
 	// verify the cloned contents do not contains symlinks
 	diff, err := testutil.Diff(filepath.Join(g.DatasetDirectory, testutil.Dataset6, subdir), absPath, true)
 	assert.NoError(t, err)
 	diff = diff.Difference(testutil.KptfileSet)
-	// original repo contains symlink and cloned doesn't, so the difference
-	assert.Contains(t, diff.List(), "config-symlink")
+	if isSymlinkInSource {
+		// original repo contains symlink and cloned doesn't, so the difference
+		assert.Contains(t, diff.List(), "config-symlink")
+	} else {
+		assert.NotContains(t, diff.List(), "config-symlink")
+	}
 
 	// verify the KptFile contains the expected values
 	commit, err := g.GetCommit()

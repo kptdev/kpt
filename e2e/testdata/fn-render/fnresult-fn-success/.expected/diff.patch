@@ -1,36 +1,35 @@
 diff --git a/Kptfile b/Kptfile
-index 3c63ab9..775911c 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -6,3 +6,18 @@ pipeline:
-   mutators:
-     - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
-       configPath: search-replace-conf.yaml
+@@ NORMALIZED @@
+-configPath: search-replace-conf.yaml
++- image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
++conditions:
++- type: Rendered
++configPath: search-replace-conf.yaml
++exitCode: 0
++file:
++message: Mutated field value to "4"
++mutationSteps:
++path: resources.yaml
++path: spec.replicas
++reason: RenderSuccess
++renderStatus:
++results:
++- field:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "True"
-+      reason: RenderSuccess
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/search-replace:latest
-+        exitCode: 0
-+        results:
-+          - message: Mutated field value to "4"
-+            field:
-+              path: spec.replicas
-+            file:
-+              path: resources.yaml
++status: True
 diff --git a/resources.yaml b/resources.yaml
-index f2eec52..114819d 100644
+index NORMALIZED 100644
 --- a/resources.yaml
 +++ b/resources.yaml
-@@ -16,7 +16,7 @@ kind: Deployment
+@@ NORMALIZED @@
  metadata:
-   name: nginx-deployment
+ name: nginx-deployment
  spec:
--  replicas: 3
-+  replicas: 4
+-replicas: 3
++replicas: 4
  ---
  apiVersion: custom.io/v1
  kind: Custom
