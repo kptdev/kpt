@@ -6,11 +6,13 @@ package cmdcat
 import (
 	"bytes"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +30,8 @@ func writeFile(t *testing.T, path, content string) {
 func runCat(t *testing.T, args ...string) (string, error) {
 	t.Helper()
 	b := &bytes.Buffer{}
-	r := GetCatRunner(context.Background(), "")
+	ctx := printer.WithContext(context.Background(), printer.New(nil, io.Discard))
+	r := GetCatRunner(ctx, "")
 	r.Command.SetArgs(args)
 	r.Command.SetOut(b)
 	r.Command.SetErr(&bytes.Buffer{})
@@ -323,11 +326,18 @@ metadata:
 	for _, arg := range []string{d, d + "/", "./" + filepath.Base(d)} {
 		t.Run(arg, func(t *testing.T) {
 			// Run from d's parent so "./<name>" resolves.
-			oldWd, _ := os.Getwd()
+			oldWd, err := os.Getwd()
+			if err != nil {
+				t.Fatal(err)
+			}
 			if err := os.Chdir(filepath.Dir(d)); err != nil {
 				t.Fatal(err)
 			}
-			defer os.Chdir(oldWd)
+			defer func() {
+				if err := os.Chdir(oldWd); err != nil {
+					t.Fatal(err)
+				}
+			}()
 
 			got, err := runCat(t, arg)
 			assert.NoError(t, err)
@@ -389,10 +399,12 @@ data:
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "broken.yaml")
 
-	// Stderr must carry the contextual diagnostic.
+	// Stderr must carry the contextual diagnostic. Inject a printer via
+	// context (mirroring how run.go wires the root cobra err stream) and
+	// assert on its err stream.
 	var errBuf bytes.Buffer
-	r := GetCatRunner(context.Background(), "")
-	r.errWriter = &errBuf
+	ctx := printer.WithContext(context.Background(), printer.New(nil, &errBuf))
+	r := GetCatRunner(ctx, "")
 	r.Command.SetArgs([]string{d})
 	r.Command.SetOut(&bytes.Buffer{})
 	r.Command.SetErr(&bytes.Buffer{})
@@ -422,7 +434,8 @@ metadata:
 `)
 	_, err := runCat(t, kpt)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "not a YAML/JSON file")
+	assert.Contains(t, err.Error(), "Kptfile")
+	assert.Contains(t, err.Error(), "metadata")
 }
 
 // TestCmd_NonYAMLFileErrors: a regular non-YAML/JSON/Kptfile file must

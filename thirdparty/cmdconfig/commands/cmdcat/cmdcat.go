@@ -1,4 +1,4 @@
-// Copyright 2019-2026 The Kpt Authors.
+// Copyright 2019-2026 The kpt Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package cmdcat
@@ -14,6 +14,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -24,8 +25,7 @@ import (
 // GetCatRunner returns a command CatRunner.
 func GetCatRunner(ctx context.Context, _ string) *CatRunner {
 	r := &CatRunner{
-		Ctx:       ctx,
-		errWriter: os.Stderr,
+		Ctx: ctx,
 	}
 	c := &cobra.Command{
 		Use:     "cat [FILE | DIR]",
@@ -63,7 +63,6 @@ type CatRunner struct {
 	Styles             []string
 	StripComments      bool
 	RecurseSubPackages bool
-	errWriter          io.Writer
 }
 
 func (r *CatRunner) runE(c *cobra.Command, args []string) error {
@@ -76,6 +75,9 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		switch strings.ToLower(filepath.Ext(args[0])) {
 		case ".yaml", ".yml", ".json":
 		default:
+			if filepath.Base(args[0]) == kptfilev1.KptFileName {
+				return fmt.Errorf("%q is a %s package metadata file, not a resource file; no resources will be read", args[0], kptfilev1.KptFileName)
+			}
 			return fmt.Errorf("%q is not a YAML/JSON file; no resources will be read", args[0])
 		}
 	}
@@ -114,7 +116,8 @@ func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	if err != nil {
 		// Emit a contextual diagnostic on stderr so the user knows which
 		// package failed; the runner currently aborts on the first error.
-		fmt.Fprintf(r.errWriter, "kpt pkg cat: %s in package %q\n", err.Error(), pkgPath)
+		fmt.Fprintf(printer.FromContextOrDie(r.Ctx).ErrStream(),
+			"kpt pkg cat: %s in package %q\n", err.Error(), pkgPath)
 		return err
 	}
 	fmt.Fprint(w, out.String())
