@@ -20,9 +20,11 @@ import (
 	"strings"
 	"testing"
 
+	initialization "github.com/kptdev/kpt/commands/live/init"
 	"github.com/kptdev/kpt/internal/pkg"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -141,6 +143,13 @@ func TestKptMigrate_migrateKptfileToRG(t *testing.T) {
 			rgFilename: "custom-rg.yaml",
 			dryRun:     false,
 			isError:    false,
+		},
+		"Legacy ResourceGroup without inventory-id and force false returns error": {
+			kptfile:       kptFileWithInventory,
+			rgFilename:    "resourcegroup.yaml",
+			resourcegroup: legacyResourceGroupNoInvID,
+			dryRun:        false,
+			isError:       true,
 		},
 	}
 
@@ -449,3 +458,86 @@ metadata:
   labels:
     cli-utils.sigs.k8s.io/inventory-id: SSSSSSSSSS-RRRRR
 `
+
+// legacyResourceGroupNoInvID is a ResourceGroup that was created before the
+// inventory-id label became mandatory — it has no inventory-id label.
+var legacyResourceGroupNoInvID = `
+apiVersion: kpt.dev/v1alpha1
+kind: ResourceGroup
+metadata:
+  name: foo
+  namespace: test-namespace
+`
+
+func TestKptMigrate_legacyRGMissingInvID_forceFalse(t *testing.T) {
+	// A legacy ResourceGroup without inventory-id must produce
+	// LegacyRGMissingInventoryIDError when force is false.
+	tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	dir := t.TempDir()
+	// Write a Kptfile with inventory so migrateKptfileToRG is exercised.
+	err := os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFileWithInventory), 0600)
+	assert.NoError(t, err)
+
+	// Write a legacy ResourceGroup file WITHOUT inventory-id label.
+	err = os.WriteFile(filepath.Join(dir, "resourcegroup.yaml"), []byte(legacyResourceGroupNoInvID), 0600)
+	assert.NoError(t, err)
+
+	ctx := fake.CtxWithDefaultPrinter()
+	cmLoader := manifestreader.NewManifestLoader(tf)
+	migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+	migrateRunner.dryRun = false
+	migrateRunner.force = false
+	migrateRunner.rgFile = "resourcegroup.yaml"
+	migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+		return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+	}
+
+	err = migrateRunner.migrateKptfileToRG([]string{dir})
+	assert.Error(t, err)
+
+	// Verify the error is specifically LegacyRGMissingInventoryIDError.
+	var legacyErr *initialization.LegacyRGMissingInventoryIDError
+	assert.True(t, errors.As(err, &legacyErr),
+		"expected LegacyRGMissingInventoryIDError, got %T: %v", err, err)
+}
+
+func TestKptMigrate_legacyRGMissingInvID_forceTrue(t *testing.T) {
+	// When force is true, the legacy ResourceGroup must be repaired: the
+	// inventory-id label is generated and written back.
+	tf := cmdtesting.NewTestFactory().WithNamespace(inventoryNamespace)
+	defer tf.Cleanup()
+	ioStreams, _, _, _ := genericclioptions.NewTestIOStreams() //nolint:dogsled
+
+	dir := t.TempDir()
+	// Write a Kptfile with inventory.
+	err := os.WriteFile(filepath.Join(dir, "Kptfile"), []byte(kptFileWithInventory), 0600)
+	assert.NoError(t, err)
+
+	// Write a legacy ResourceGroup file WITHOUT inventory-id label.
+	err = os.WriteFile(filepath.Join(dir, "resourcegroup.yaml"), []byte(legacyResourceGroupNoInvID), 0600)
+	assert.NoError(t, err)
+
+	ctx := fake.CtxWithDefaultPrinter()
+	cmLoader := manifestreader.NewManifestLoader(tf)
+	migrateRunner := NewRunner(ctx, tf, cmLoader, ioStreams)
+	migrateRunner.dryRun = false
+	migrateRunner.force = true
+	migrateRunner.rgFile = "resourcegroup.yaml"
+	migrateRunner.cmInvClientFunc = func(_ util.Factory) (inventory.Client, error) {
+		return inventory.NewFakeClient([]object.ObjMetadata{}), nil
+	}
+
+	err = migrateRunner.migrateKptfileToRG([]string{dir})
+	assert.NoError(t, err)
+
+	// Verify the ResourceGroup now has a valid inventory-id label.
+	rg, err := pkg.ReadRGFile(dir, "resourcegroup.yaml")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	invID := rg.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+	assert.NotEmpty(t, invID, "expected inventory-id label to be set after force repair")
+}

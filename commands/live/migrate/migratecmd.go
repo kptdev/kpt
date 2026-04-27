@@ -377,17 +377,32 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 		}
 
 		if _, err := kptfileutil.ValidateInventory(kf.Inventory); err != nil {
-			// Kptfile does not contain inventory: migration is not needed.
-			return nil
+			if kf.Inventory == nil {
+				return nil
+			}
+			return errors.E(op, types.UniquePath(dir),
+				fmt.Errorf("inventory in Kptfile is incomplete and cannot be migrated: %w", err))
 		}
 
-		// Make sure resourcegroup file does not exist.
+		// Check if resourcegroup file already exists.
 		_, rgFileErr := os.Stat(filepath.Join(dir, mr.rgFile))
 		switch {
 		case rgFileErr == nil:
-			return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
-		case err != nil && !goerrors.Is(err, os.ErrNotExist):
-			return errors.E(op, errors.IO, types.UniquePath(dir), err)
+			if !mr.force {
+				// When not in force mode, check if this is a legacy RG
+				// (missing inventory-id) and surface the specific error.
+				rg, readErr := p.ReadRGFile(mr.rgFile)
+				if readErr == nil {
+					invID := rg.Labels[rgfilev1alpha1.RGInventoryIDLabel]
+					if invID == "" {
+						return errors.E(op, types.UniquePath(dir), &initialization.LegacyRGMissingInventoryIDError{})
+					}
+				}
+				return errors.E(op, errors.IO, types.UniquePath(dir), "the resourcegroup file already exists and inventory information cannot be migrated")
+			}
+			// Force mode: proceed to overwrite the existing RG file.
+		case !goerrors.Is(rgFileErr, os.ErrNotExist):
+			return errors.E(op, errors.IO, types.UniquePath(dir), rgFileErr)
 		}
 
 		err = (&initialization.ConfigureInventoryInfo{
@@ -478,9 +493,10 @@ func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string
 
 		if err != nil {
 			var invExistsError *initialization.InvExistsError
-			if errors.As(err, &invExistsError) {
+			switch {
+			case errors.As(err, &invExistsError):
 				fmt.Fprint(mr.ioStreams.Out, "values already exist...")
-			} else {
+			default:
 				return err
 			}
 		}
