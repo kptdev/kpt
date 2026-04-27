@@ -234,7 +234,7 @@ const crypto = require('crypto');
             }
             const timeOrigin = Date.now() - performance.now();
             this.importObject = {
-                gojs: {
+                go: {
                     // Go's SP does not change as long as no Go code is running. Some operations (e.g. calls, getters and setters)
                     // may synchronously trigger a Go event handler. This makes Go code get executed in the middle of the imported
                     // function. A goroutine can switch to a new stack if the current stack is too small (see morestack function).
@@ -456,8 +456,6 @@ const crypto = require('crypto');
                     },
                 }
             };
-            // Expose imports under both "gojs" (Go 1.21+) and "go" (Go <1.21)
-            this.importObject.go = this.importObject.gojs;
         }
         async run(instance) {
             if (!(instance instanceof WebAssembly.Instance)) {
