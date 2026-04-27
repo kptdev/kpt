@@ -351,7 +351,9 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	err := os.MkdirAll(filepath.Join(dir, "path", "to", "pkg", "dir"), 0700)
 	assert.NoError(t, err)
 	err = os.Symlink(filepath.Join("path", "to", "pkg", "dir"), "foo")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Skipf("skipping test due to symlink creation failure (requires admin/developer mode on Windows): %v", err)
+	}
 
 	// verify the branch ref is set to the correct value
 	r := update.NewRunner(fake.CtxWithDefaultPrinter(), "kpt")
@@ -363,7 +365,8 @@ func TestCmd_flagAndArgParsing_Symlink(t *testing.T) {
 	assert.Equal(t, kptfilev1.ResourceMerge, r.Update.Strategy)
 	cwd, err := os.Getwd()
 	assert.NoError(t, err)
-	assert.Equal(t, filepath.Join(cwd, "path", "to", "pkg", "dir"), r.Update.Pkg.UniquePath.String())
+	expected := filepath.Join(cwd, "path", "to", "pkg", "dir")
+	assert.Equal(t, strings.ToLower(expected), strings.ToLower(r.Update.Pkg.UniquePath.String()))
 }
 
 // TestCmd_fail verifies that that command returns an error when it fails rather than exiting the process

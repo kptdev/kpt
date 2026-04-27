@@ -57,11 +57,28 @@ type RunnerOptions struct {
 
 	// ResolveToImage will resolve a partial image to a fully-qualified one
 	ResolveToImage ImageResolveFunc
+
+	// CELEnvironment is the shared CEL environment used to evaluate function conditions.
+	// It is initialized by InitCELEnvironment and reused across all function runners.
+	// It may be nil until InitCELEnvironment has been called successfully.
+	CELEnvironment *CELEnvironment
 }
 
 func (opts *RunnerOptions) InitDefaults(defaultImagePrefix string) {
 	opts.ImagePullPolicy = IfNotPresentPull
 	opts.ResolveToImage = ResolveToImageForCLIFunc(defaultImagePrefix)
+}
+
+// InitCELEnvironment initializes the CEL environment for condition evaluation.
+// This should be called separately after InitDefaults to allow proper error handling.
+// Returns an error if CEL environment creation fails.
+func (opts *RunnerOptions) InitCELEnvironment() error {
+	celEnv, err := NewCELEnvironment()
+	if err != nil {
+		return fmt.Errorf("failed to initialise CEL environment: %w", err)
+	}
+	opts.CELEnvironment = celEnv
+	return nil
 }
 
 // ResolveToImageForCLIFunc returns a func that converts the KRM function short path to the full image url.

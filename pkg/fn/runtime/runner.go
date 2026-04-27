@@ -182,7 +182,26 @@ func NewRunner(
 			}
 		}
 	}
-	return NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+
+	fr, err := NewFunctionRunner(ctx, fltr, pkgPath, fnResult, fnResults, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set condition; the shared CEL environment from opts is used at evaluation time.
+	if f.Condition != "" {
+		if opts.CELEnvironment == nil {
+			name := f.Image
+			if name == "" {
+				name = f.Exec
+			}
+			return nil, fmt.Errorf("condition specified for function %q but no CEL environment is configured in RunnerOptions", name)
+		}
+		fr.condition = f.Condition
+		fr.celEnv = opts.CELEnvironment
+	}
+
+	return fr, nil
 }
 
 // NewFunctionRunner returns a FunctionRunner given a specification of a function
@@ -223,10 +242,46 @@ type FunctionRunner struct {
 	fnResult         *fnresult.Result
 	fnResults        *fnresult.ResultList
 	opts             runneroptions.RunnerOptions
+	condition        string                        // CEL condition expression
+	celEnv           *runneroptions.CELEnvironment // shared CEL environment for condition evaluation
+	skipped          bool                          // true if function execution was skipped due to condition
+}
+
+func (fr *FunctionRunner) SetCondition(condition string, celEnv *runneroptions.CELEnvironment) {
+	fr.condition = condition
+	fr.celEnv = celEnv
+}
+
+func (fr *FunctionRunner) WasSkipped() bool {
+	return fr.skipped
 }
 
 func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err error) {
+	fr.skipped = false
+	fr.fnResult.Skipped = false
 	pr := printer.FromContextOrDie(fr.ctx)
+
+	// Check condition before executing function
+	if fr.celEnv != nil && fr.condition != "" {
+		shouldExecute, err := fr.celEnv.EvaluateCondition(fr.ctx, fr.condition, input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to evaluate condition for function %q: %w", fr.name, err)
+		}
+
+		if !shouldExecute {
+			if !fr.disableCLIOutput {
+				pr.Printf("[SKIPPED] %q (condition not met)\n", fr.name)
+			}
+			// Append a skipped result so consumers get one result per pipeline step
+			fr.fnResult.ExitCode = 0
+			fr.fnResult.Skipped = true
+			fr.fnResults.Items = append(fr.fnResults.Items, *fr.fnResult)
+			// Return input unchanged - function is skipped
+			fr.skipped = true
+			return input, nil
+		}
+	}
+
 	if !fr.disableCLIOutput {
 		if fr.opts.AllowWasm {
 			if fr.opts.DisplayResourceCount {

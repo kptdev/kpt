@@ -1,0 +1,11 @@
+actualStripLines:
+  - "    stderr: 'WARNING: The requested image''s platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested'"
+
+stdErrStripLines:
+  - "  Stderr:"
+  - "    \"WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested\""
+
+stdErr: |
+  Package: "condition-not-met"
+  [SKIPPED] "ghcr.io/kptdev/krm-functions-catalog/no-op:latest" (condition not met)
+  Successfully executed 0 function(s) in 1 package(s).

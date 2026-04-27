@@ -150,6 +150,12 @@ func (c Command) Run(ctx context.Context) error {
 		pr.Printf("\nCustomizing package for deployment.\n")
 		hookCmd := hook.Executor{}
 		hookCmd.RunnerOptions.InitDefaults(c.DefaultKrmFunctionImagePrefix)
+		// Initialize CEL environment for condition evaluation.
+		// Fail early if initialization does not succeed because hook execution
+		// may require CEL to evaluate conditions.
+		if err := hookCmd.RunnerOptions.InitCELEnvironment(); err != nil {
+			return fmt.Errorf("initializing CEL environment for deployment hooks: %w", err)
+		}
 		hookCmd.PkgPath = c.Destination
 
 		builtinHooks := []kptfilev1.Function{

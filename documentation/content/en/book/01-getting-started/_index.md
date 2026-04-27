@@ -43,7 +43,7 @@ documents for [`kpt fn render`](../../reference/cli/fn/render/) and [`kpt fn eva
 
 ### Kubernetes cluster
 
-To deploy the examples, you need a Kubernetes cluster and a configured kubectl context.
+To deploy the examples, you need a Kubernetes cluster and a configured kubeconfig context.
 
 For testing purposes, the [kind](https://kind.sigs.k8s.io/docs/user/quick-start/) tool is useful for running an ephemeral Kubernetes
 cluster on your local host.
@@ -106,7 +106,7 @@ vim deployment.yaml
 #### Automating one-time edits with functions
 
 The [`kpt fn`](../../reference/cli/fn/) set of commands enables you to execute programs called _kpt functions_. These programs are
-packaged as containers and take YAML files as input, mutate or validate them, and then output YAML.
+packaged as containers and take in YAML files, mutate or validate them, and then output YAML.
 
 For example, you can use a function (`ghcr.io/kptdev/krm-functions-catalog/search-replace:latest`) to search for and replace all the occurrences of the `app` key, in the `spec` section of the YAML document (`spec.**.app`), and set the value to `my-nginx`. 
 

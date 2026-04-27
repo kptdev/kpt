@@ -97,6 +97,7 @@ type RunFns struct {
 	Selector kptfile.Selector
 
 	Exclusion kptfile.Selector
+	Condition string
 }
 
 // Execute runs the command
@@ -413,5 +414,9 @@ func (r *RunFns) defaultFnFilterProvider(spec runtimeutil.FunctionSpec, fnConfig
 		opts.DisplayResourceCount = true
 	}
 
-	return fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	runner, _ := fnruntime.NewFunctionRunner(r.Ctx, fltr, "", fnResult, r.fnResults, opts)
+	if r.Condition != "" {
+		runner.SetCondition(r.Condition, opts.CELEnvironment)
+	}
+	return runner, nil
 }
