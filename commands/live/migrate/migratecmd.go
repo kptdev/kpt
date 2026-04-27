@@ -58,8 +58,8 @@ type Runner struct {
 	name            string
 	rgFile          string
 	force           bool
-	rgInvClientFunc func(util.Factory) (inventory.Client, error)
-	cmInvClientFunc func(util.Factory) (inventory.Client, error)
+	rgInvClientFunc func(context.Context, util.Factory) (inventory.Client, error)
+	cmInvClientFunc func(context.Context, util.Factory) (inventory.Client, error)
 	cmLoader        manifestreader.ManifestLoader
 	cmNotMigrated   bool // flag to determine if migration from ConfigMap has occurred
 }
@@ -348,11 +348,11 @@ func validateParams(reader io.Reader, args []string) error {
 	return nil
 }
 
-func rgInvClient(factory util.Factory) (inventory.Client, error) {
-	return inventory.NewClient(factory, live.WrapInventoryObj, live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
+func rgInvClient(ctx context.Context, factory util.Factory) (inventory.Client, error) {
+	return inventory.NewClient(factory, live.WrapInventoryObjWithContext(ctx), live.InvToUnstructuredFunc, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
-func cmInvClient(factory util.Factory) (inventory.Client, error) {
+func cmInvClient(_ context.Context, factory util.Factory) (inventory.Client, error) {
 	return inventory.NewClient(factory, inventory.WrapInventoryObj, inventory.InvInfoToConfigMap, inventory.StatusPolicyAll, live.ResourceGroupGVK)
 }
 
@@ -412,11 +412,11 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 func (mr *Runner) migrateCMToRG(stdinBytes []byte, args []string) error {
 	// Create the inventory clients for reading inventories based on RG and
 	// ConfigMap.
-	rgInvClient, err := mr.rgInvClientFunc(mr.factory)
+	rgInvClient, err := mr.rgInvClientFunc(mr.ctx, mr.factory)
 	if err != nil {
 		return err
 	}
-	cmInvClient, err := mr.cmInvClientFunc(mr.factory)
+	cmInvClient, err := mr.cmInvClientFunc(mr.ctx, mr.factory)
 	if err != nil {
 		return err
 	}
