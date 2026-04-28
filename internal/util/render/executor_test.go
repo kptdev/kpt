@@ -22,11 +22,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/fnruntime"
 	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/types"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"

@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/kptdev/kpt/commands/fn/doc"
-	"github.com/kptdev/kpt/internal/fnruntime"
+	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"sigs.k8s.io/kustomize/kyaml/testutil"
 )

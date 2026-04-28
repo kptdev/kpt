@@ -91,7 +91,7 @@ func (r *Runner) PreRunE(_ *cobra.Command, _ []string) error {
 }
 
 func (r *Runner) validateOutputFormat() error {
-	if !(r.output == "text" || r.output == "krm") {
+	if r.output != "text" && r.output != "krm" {
 		return fmt.Errorf("unknown output format %q. Must be either 'text' or 'krm'", r.output)
 	}
 	return nil

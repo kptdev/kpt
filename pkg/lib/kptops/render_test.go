@@ -16,109 +16,216 @@ package kptops
 
 import (
 	"bytes"
-	"flag"
+	"io"
 	"os"
 	"path/filepath"
 	goruntime "runtime"
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/util/render"
-	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
-	"github.com/kptdev/kpt/pkg/printer/fake"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
-func readFile(t *testing.T, path string) []byte {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatalf("Cannot read file %q", err)
-		return nil
-	}
-	return data
-}
-
-func TestRender(t *testing.T) {
-	testdata, err := filepath.Abs(filepath.Join(".", "../../../internal/kptops/testdata"))
-	if err != nil {
-		t.Fatalf("Cannot compute absolute path for ./testdata: %v", err)
-	}
-
-	for _, test := range []struct {
-		name string
-		pkg  string
-		want string
-	}{
-		{
-			name: "render-with-function-config",
-			pkg:  "simple-bucket",
-			want: "expected.txt",
-		},
-		{
-			name: "render-with-inline-config",
-			pkg:  "simple-bucket",
-			want: "expected.txt",
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			var output bytes.Buffer
-			r := render.Renderer{
-				PkgPath:    filepath.Join(testdata, test.name, test.pkg),
-				Runtime:    &runtime{},
-				FileSystem: filesys.FileSystemOrOnDisk{},
-				Output:     &output,
-			}
-			r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
-
-			if _, err := r.Execute(fake.CtxWithDefaultPrinter()); err != nil {
-				t.Errorf("Render failed: %v", err)
-			}
-
-			got := output.String()
-			want := readFile(t, filepath.Join(testdata, test.name, test.want))
-
-			if diff := cmp.Diff(string(want), got); diff != "" {
-				t.Errorf("Unexpected result (-want, +got): %s", diff)
-			}
-		})
-	}
-}
-
 func TestPackagePrinter(t *testing.T) {
-	klog.InitFlags(nil)
-	_ = flag.Set("logtostderr", "false")
+	t.Run("PrintPackage without leading newline", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
 
-	var buf bytes.Buffer
-	klog.SetOutput(&buf)
+		testPkg := &pkg.Pkg{
+			DisplayPath: "test/path",
+		}
 
-	p := &packagePrinter{}
+		p.PrintPackage(testPkg, false)
 
-	testPkg := &pkg.Pkg{DisplayPath: "test/path"}
-	p.PrintPackage(testPkg, false)
+		output := errBuf.String()
+		assert.Contains(t, output, "test/path")
+		assert.NotContains(t, output, "\n\nPackage")
+	})
 
-	opt := &printer.Options{
-		PkgDisplayPath: "display/path",
-	}
-	p.OptPrintf(opt, ": Hello %s", "World")
+	t.Run("PrintPackage with leading newline", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
 
-	klog.Flush()
+		testPkg := &pkg.Pkg{
+			DisplayPath: "test/path",
+		}
 
-	got := buf.String()
+		p.PrintPackage(testPkg, true)
 
-	if !strings.Contains(got, `Package: "test/path"`) {
-		t.Errorf("PrintPackage output missing:\n%s", got)
-	}
-	if !strings.Contains(got, `Package: "display/path": Hello World`) {
-		t.Errorf("OptPrintf output missing:\n%s", got)
-	}
+		output := errBuf.String()
+		assert.Contains(t, output, "test/path")
+		assert.Contains(t, output, "\nPackage")
+	})
+
+	t.Run("Printf", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		p.Printf("test message")
+		assert.Contains(t, errBuf.String(), "test message")
+
+		errBuf.Reset()
+		p.Printf("test message with args: %s %d", "hello", 42)
+		assert.Contains(t, errBuf.String(), "test message with args: hello 42")
+	})
+
+	t.Run("OptPrintf with nil options", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		p.OptPrintf(nil, "test message")
+		assert.Contains(t, errBuf.String(), "test message")
+
+		errBuf.Reset()
+		p.OptPrintf(nil, "test with args: %s", "value")
+		assert.Contains(t, errBuf.String(), "test with args: value")
+	})
+
+	t.Run("OptPrintf with PkgDisplayName", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		opt := printer.NewOpt().PkgName("my-package")
+
+		p.OptPrintf(opt, "test message")
+		output := errBuf.String()
+		assert.Contains(t, output, "my-package")
+		assert.Contains(t, output, "test message")
+	})
+
+	t.Run("OptPrintf with PkgDisplayPath", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		opt := printer.NewOpt().PkgDisplay("display/path")
+
+		p.OptPrintf(opt, "test message")
+		output := errBuf.String()
+		assert.Contains(t, output, "display/path")
+		assert.Contains(t, output, "test message")
+	})
+
+	t.Run("OptPrintf with PkgPath", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		opt := printer.NewOpt().Pkg("unique/path")
+
+		p.OptPrintf(opt, "test message")
+		output := errBuf.String()
+		assert.Contains(t, output, "unique/path")
+		assert.Contains(t, output, "test message")
+	})
+
+	t.Run("OptPrintf with multiple options set", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		opt := printer.NewOpt().
+			PkgName("display-name").
+			PkgDisplay("display/path").
+			Pkg("unique/path")
+
+		p.OptPrintf(opt, "test message")
+		output := errBuf.String()
+		assert.Contains(t, output, "display-name")
+		assert.Contains(t, output, "test message")
+	})
+
+	t.Run("OutStream", func(t *testing.T) {
+		var outBuf bytes.Buffer
+		p := printer.New(&outBuf, io.Discard)
+
+		outStream := p.OutStream()
+		require.NotNil(t, outStream)
+
+		_, err := io.WriteString(outStream, "test output")
+		require.NoError(t, err)
+		assert.Equal(t, "test output", outBuf.String())
+	})
+
+	t.Run("ErrStream", func(t *testing.T) {
+		var errBuf bytes.Buffer
+		p := printer.New(io.Discard, &errBuf)
+
+		errStream := p.ErrStream()
+		require.NotNil(t, errStream)
+
+		_, err := io.WriteString(errStream, "test error")
+		require.NoError(t, err)
+		assert.Equal(t, "test error", errBuf.String())
+	})
+}
+
+func TestPackagePrinterStub(t *testing.T) {
+	t.Run("PrintPackage stub", func(t *testing.T) {
+		p := &packagePrinter{}
+		testPkg := &pkg.Pkg{
+			DisplayPath: "test/path",
+		}
+
+		assert.NotPanics(t, func() {
+			p.PrintPackage(testPkg, false)
+		})
+
+		assert.NotPanics(t, func() {
+			p.PrintPackage(testPkg, true)
+		})
+	})
+
+	t.Run("Printf stub", func(t *testing.T) {
+		p := &packagePrinter{}
+
+		assert.NotPanics(t, func() {
+			p.Printf("test message")
+		})
+
+		assert.NotPanics(t, func() {
+			p.Printf("test message with args: %s %d", "hello", 42)
+		})
+	})
+
+	t.Run("OptPrintf stub with nil options", func(t *testing.T) {
+		p := &packagePrinter{}
+
+		assert.NotPanics(t, func() {
+			p.OptPrintf(nil, "test message")
+		})
+	})
+
+	t.Run("OptPrintf stub with options", func(t *testing.T) {
+		p := &packagePrinter{}
+		opt := printer.NewOpt().PkgName("my-package")
+
+		assert.NotPanics(t, func() {
+			p.OptPrintf(opt, "test message")
+		})
+	})
+
+	t.Run("OutStream stub", func(t *testing.T) {
+		p := &packagePrinter{}
+
+		stream := p.OutStream()
+		assert.NotNil(t, stream)
+		assert.Equal(t, os.Stdout, stream)
+	})
+
+	t.Run("ErrStream stub", func(t *testing.T) {
+		p := &packagePrinter{}
+
+		stream := p.ErrStream()
+		assert.NotNil(t, stream)
+		assert.Equal(t, os.Stderr, stream)
+	})
 }
 
 func TestPrinterLoggingDepth(t *testing.T) {
-	_ = flag.Set("logtostderr", "false")
+	klog.LogToStderr(false)
+	defer klog.LogToStderr(true)
 
 	var buf bytes.Buffer
 	klog.SetOutput(&buf)

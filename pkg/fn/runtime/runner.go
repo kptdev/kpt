@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnruntime
+package runtime
 
 import (
 	"context"
@@ -62,14 +62,29 @@ func NewRunner(
 		img := opts.ResolveToImage(f.Image)
 		f.Image = img
 
+		listers := []TagLister{
+			&RegClientLister{
+				client: regclient.New(
+					regclient.WithUserAgent(UserAgent),
+					regclient.WithDockerCreds(),
+				),
+			},
+		}
+
+		if containerRuntime, err := StringToContainerRuntime(os.Getenv(ContainerRuntimeEnv)); err == nil {
+			listers = append(
+				[]TagLister{
+					&LocalLister{
+						Binary: containerRuntime.GetBin(),
+					},
+				},
+				listers...,
+			)
+		}
+
 		if f.Tag != "" {
 			tagResolver := &TagResolver{
-				lister: &RegClientLister{
-					client: regclient.New(
-						regclient.WithUserAgent(UserAgent),
-						regclient.WithDockerCreds(),
-					),
-				},
+				Listers: listers,
 			}
 			f.Image, err = tagResolver.ResolveFunctionImage(ctx, f.Image, f.Tag)
 			if err != nil {

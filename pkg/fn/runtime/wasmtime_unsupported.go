@@ -1,4 +1,6 @@
-// Copyright 2022 The kpt Authors
+//go:build !cgo
+
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,27 +14,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package kptops
+package runtime
+
+// Stub functions for running without wasmtime support compiled in.
+// wasmtime requires cgo, which is not always a viable option.
 
 import (
 	"fmt"
-
-	function "github.com/kptdev/krm-functions-catalog/functions/go/apply-setters/applysetters"
-	"sigs.k8s.io/kustomize/kyaml/fn/framework"
+	"io"
 )
 
-func applySetters(rl *framework.ResourceList) error {
-	if rl.FunctionConfig == nil {
-		return nil // nothing to do
-	}
+const (
+	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
+)
 
-	var fn function.ApplySetters
-	function.Decode(rl.FunctionConfig, &fn)
-	items, err := fn.Filter(rl.Items)
-	if err != nil {
-		return fmt.Errorf("apply-setter evaluation failed: %w", err)
-	}
+type WasmtimeFn struct {
+}
 
-	rl.Items = items
-	return nil
+func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
+	return nil, fmt.Errorf(msg)
+}
+
+func (f *WasmtimeFn) Run(r io.Reader, w io.Writer) error {
+	return fmt.Errorf(msg)
 }

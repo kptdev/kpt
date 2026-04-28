@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fnruntime
+package runtime
 
 import (
 	"fmt"
@@ -54,7 +54,7 @@ func (fe *ExecError) String() string {
 		Separator: ", ",
 	}
 	b.WriteString(errLine.String())
-	b.WriteString(fmt.Sprintf("  Exit Code: %d\n", fe.ExitCode))
+	fmt.Fprintf(&b, "  Exit Code: %d\n", fe.ExitCode)
 	return b.String()
 }
 
