@@ -241,11 +241,10 @@ func As(err error, target any) bool {
 // pipeline. If the error is not wrapped by kio pipeline, it
 // will return the original error.
 func UnwrapKioError(err error) error {
-	kioErr, ok := goerrors.AsType[*kyaml_errors.Error](err)
-	if !ok {
-		return err
+	if kioErr, ok := goerrors.AsType[*kyaml_errors.Error](err); ok {
+		return kioErr.Err
 	}
-	return kioErr.Err
+	return err
 }
 
 // UnwrapErrors unwraps any *Error errors in the chain and returns
