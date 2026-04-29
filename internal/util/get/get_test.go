@@ -202,6 +202,13 @@ func TestCommand_Run_subdir_symlinks(t *testing.T) {
 	})
 	defer clean()
 
+	// Skip if the test repo doesn't have real symlinks (e.g. Windows/WSL with
+	// core.symlinks=false). In that case git stores symlink targets as plain files.
+	symlinkInRepo := filepath.Join(g.DatasetDirectory, testutil.Dataset6, subdir, "config-symlink")
+	if fi, err := os.Lstat(symlinkInRepo); err != nil || fi.Mode()&os.ModeSymlink == 0 {
+		t.Skip("skipping: test repo does not contain real symlinks on this system")
+	}
+
 	defer testutil.Chdir(t, w.WorkspaceDirectory)()
 
 	cliOutput := &bytes.Buffer{}

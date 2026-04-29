@@ -85,6 +85,9 @@ type Runner struct {
 
 func (r *Runner) InitDefaults() {
 	r.RunnerOptions.InitDefaults(runneroptions.GHCRImagePrefix)
+	// Initialize CEL environment for condition evaluation
+	// Ignore error as conditions are optional; if CEL init fails, conditions will error at runtime
+	_ = r.RunnerOptions.InitCELEnvironment()
 }
 
 func (r *Runner) preRunE(_ *cobra.Command, args []string) error {

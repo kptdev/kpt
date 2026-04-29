@@ -39,6 +39,8 @@ type Result struct {
 	ExitCode int `yaml:"exitCode"`
 	// Results is the list of results for the function
 	Results framework.Results `yaml:"results,omitempty"`
+	// Skipped indicates if the function was skipped due to a condition
+	Skipped bool `yaml:"skipped,omitempty"`
 }
 
 const (
