@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -256,8 +256,7 @@ func isManifestNotFoundErr(err error) bool {
 	if err == nil {
 		return false
 	}
-	var terr *transport.Error
-	isTransportError := errors.As(err, &terr)
+	terr, isTransportError := errors.AsType[*transport.Error](err)
 	if !isTransportError {
 		return false
 	}

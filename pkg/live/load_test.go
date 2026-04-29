@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"testing"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdtesting "k8s.io/kubectl/pkg/cmd/testing"
-	"k8s.io/kubectl/pkg/util/slice"
 	"sigs.k8s.io/cli-utils/pkg/object"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 )
@@ -614,7 +614,7 @@ func TestValidateInventory(t *testing.T) {
 			assert.Equal(t, len(tc.expectedErrorFields), len(invInfoValError.Violations))
 			fields := invInfoValError.Violations.Fields()
 			for i := range tc.expectedErrorFields {
-				if !slice.ContainsString(fields, tc.expectedErrorFields[i], nil) {
+				if !slices.Contains(fields, tc.expectedErrorFields[i]) {
 					t.Errorf("expected error for field %s, but didn't find it", tc.expectedErrorFields[i])
 				}
 			}

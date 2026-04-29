@@ -66,8 +66,7 @@ func (f *ExecFn) Run(r io.Reader, w io.Writer) error {
 	}
 
 	if err := cmd.Run(); err != nil {
-		var exitErr *exec.ExitError
-		if goerrors.As(err, &exitErr) {
+		if exitErr, ok := goerrors.AsType[*exec.ExitError](err); ok {
 			return &ExecError{
 				OriginalErr:    exitErr,
 				ExitCode:       exitErr.ExitCode(),

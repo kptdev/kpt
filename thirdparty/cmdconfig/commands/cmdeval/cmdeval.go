@@ -1,4 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
+// Copyright 2019,2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package cmdeval
@@ -283,7 +283,7 @@ func (r *EvalFnRunner) SaveFnToKptfile() {
 		pr.Printf("function is not added to Kptfile: %v\n", err)
 		return
 	}
-	pr.Printf(usrMsg)
+	pr.Printf("%s", usrMsg)
 }
 
 // preserveCommentsAndFieldOrder syncs the mutated Kptfile with the original to preserve
