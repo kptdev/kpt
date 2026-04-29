@@ -22,6 +22,8 @@ import (
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
 
@@ -61,15 +63,6 @@ func TestValidateInventory(t *testing.T) {
 }
 
 func TestUpdateKptfile(t *testing.T) {
-	writeKptfileToTemp := func(tt *testing.T, content string) string {
-		dir := tt.TempDir()
-		err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
-		if !assert.NoError(t, err) {
-			t.FailNow()
-		}
-		return dir
-	}
-
 	testCases := map[string]struct {
 		origin         string
 		updated        string
@@ -586,18 +579,531 @@ status:
 			}
 
 			err := UpdateKptfile(dirs["local"], dirs["updated"], dirs["origin"], tc.updateUpstream)
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
 			c, err := os.ReadFile(filepath.Join(dirs["local"], kptfilev1.KptFileName))
-			if !assert.NoError(t, err) {
-				t.FailNow()
-			}
+			require.NoError(t, err)
 
-			assert.Equal(t, strings.TrimSpace(tc.expected)+"\n", string(c))
+			expectedObj := map[string]any{}
+			err = yaml.Unmarshal([]byte(strings.TrimSpace(tc.expected)), &expectedObj)
+			require.NoError(t, err)
+
+			actualObj := map[string]any{}
+			err = yaml.Unmarshal(c, &actualObj)
+			require.NoError(t, err)
+
+			assert.Equal(t, expectedObj, actualObj)
 		})
 	}
+}
+
+func TestUpdateKptfile_PreservesCommentsAndFormatting(t *testing.T) {
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: abcdef
+`)
+
+	localDir := writeKptfileToTemp(t, `
+# local package level comment
+apiVersion: kpt.dev/v1 # api comment
+kind: Kptfile
+metadata:
+  name: sample
+
+# preserve this section comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	require.NoError(t, err)
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	require.NoError(t, err)
+	content := string(contentBytes)
+
+	// Head/section comments and inline comments on UNCHANGED fields survive.
+	assert.Contains(t, content, "# local package level comment")
+	assert.Contains(t, content, "apiVersion: kpt.dev/v1 # api comment")
+	assert.Contains(t, content, "# preserve this section comment")
+	// Inline comments on CHANGED scalars are lost during merge3 -
+	// the entire YAML node is replaced by the one from the update.
+	assert.Contains(t, content, "ref: v1.1.0")
+	assert.Contains(t, content, "commit: abcdef")
+}
+
+func TestUpdateKptfile_PreservesExactFormattingAndComments(t *testing.T) {
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.1.0
+    commit: def456
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1 # keep api inline comment
+kind: Kptfile
+metadata:
+  name: sample
+# preserve this comment block
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0 # keep ref inline comment
+
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: package
+    ref: v1.0.0
+    commit: abc123 # keep commit inline comment
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	require.NoError(t, err)
+
+	contentBytes, err := os.ReadFile(filepath.Join(localDir, kptfilev1.KptFileName))
+	require.NoError(t, err)
+
+	// Verify structural preservation:
+	// - Head/section comments survive
+	// - Inline comments on UNCHANGED fields (apiVersion) survive
+	// - Inline comments on CHANGED scalars (ref, commit) are lost
+	//   because merge3 replaces the entire YAML node from the update.
+	content := string(contentBytes)
+	assert.Contains(t, content, "apiVersion: kpt.dev/v1 # keep api inline comment")
+	assert.Contains(t, content, "# preserve this comment block")
+	assert.Contains(t, content, "ref: v1.1.0")
+	assert.Contains(t, content, "commit: def456")
+	assert.NotContains(t, content, "ref: v1.0.0")
+	assert.NotContains(t, content, "commit: abc123")
+}
+
+func TestWriteFile_ReturnsErrorWhenDirectoryMissing(t *testing.T) {
+	nonExistentDir := filepath.Join(t.TempDir(), "does-not-exist")
+
+	err := WriteFile(nonExistentDir, DefaultKptfile("sample"))
+	assert.Error(t, err)
+}
+
+func TestWriteFile_ReturnsErrorWhenPathIsFile(t *testing.T) {
+	baseDir := t.TempDir()
+	filePath := filepath.Join(baseDir, "not-a-directory")
+	err := os.WriteFile(filePath, []byte("content"), 0600)
+	require.NoError(t, err)
+
+	err = WriteFile(filePath, DefaultKptfile("sample"))
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "not a directory")
+}
+
+func TestWriteFile_RecoversFromInvalidExistingKptfile(t *testing.T) {
+	dir := t.TempDir()
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	err := os.WriteFile(kptfilePath, []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata: [bad\n"), 0600)
+	require.NoError(t, err)
+
+	err = WriteFile(dir, DefaultKptfile("sample"))
+	require.NoError(t, err)
+
+	content, err := os.ReadFile(kptfilePath)
+	require.NoError(t, err)
+	assert.Contains(t, string(content), "apiVersion: kpt.dev/v1")
+	assert.Contains(t, string(content), "kind: Kptfile")
+	assert.Contains(t, string(content), "name: sample")
+}
+
+func TestWriteFile_RoundTripIdempotency(t *testing.T) {
+	original := strings.TrimSpace(`
+# Package-level comment
+apiVersion: kpt.dev/v1 # api version comment
+kind: Kptfile
+metadata:
+  name: my-package
+  annotations:
+    example.com/team: platform
+# upstream comment
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0 # pinned version
+upstreamLock:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0
+    commit: abc123def456
+pipeline:
+  mutators:
+    - image: gcr.io/kpt-fn/set-namespace:v0.4.1
+      configMap:
+        namespace: my-ns
+info:
+  description: A sample package
+`)
+
+	// Write the original content
+	dir := t.TempDir()
+	kptfilePath := filepath.Join(dir, kptfilev1.KptFileName)
+	err := os.WriteFile(kptfilePath, []byte(original), 0600)
+	require.NoError(t, err)
+
+	// Read it back as a typed KptFile
+	kf, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, dir)
+	require.NoError(t, err)
+
+	// Write it via WriteFile (first write)
+	err = WriteFile(dir, kf)
+	require.NoError(t, err)
+
+	firstWrite, err := os.ReadFile(kptfilePath)
+	require.NoError(t, err)
+
+	// Write it again via WriteFile (second write)
+	err = WriteFile(dir, kf)
+	require.NoError(t, err)
+
+	secondWrite, err := os.ReadFile(kptfilePath)
+	require.NoError(t, err)
+
+	// The two writes must produce byte-identical output (idempotency)
+	assert.Equal(t, string(firstWrite), string(secondWrite), "WriteFile must be idempotent")
+
+	// Comments should be preserved
+	assert.Contains(t, string(secondWrite), "# Package-level comment")
+	assert.Contains(t, string(secondWrite), "# api version comment")
+	assert.Contains(t, string(secondWrite), "# upstream comment")
+	assert.Contains(t, string(secondWrite), "# pinned version")
+}
+
+func TestWriteKptfileToFS_PreservesFormatting(t *testing.T) {
+	original := strings.TrimSpace(`
+# This comment must survive
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+upstream:
+  type: git
+  git:
+    repo: https://github.com/example/repo.git
+    directory: /
+    ref: v1.0.0 # inline comment
+`)
+
+	fs := filesys.MakeFsInMemory()
+	dir := "/test-pkg"
+	require.NoError(t, fs.MkdirAll(dir))
+	require.NoError(t, fs.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(original)))
+
+	// Read, modify, and write back via WriteKptfileToFS
+	kf, err := ReadKptfile(fs, dir)
+	require.NoError(t, err)
+
+	kf.Upstream.Git.Ref = "v2.0.0"
+	err = WriteKptfileToFS(fs, dir, kf)
+	require.NoError(t, err)
+
+	result, err := fs.ReadFile(filepath.Join(dir, kptfilev1.KptFileName))
+	require.NoError(t, err)
+
+	content := string(result)
+	// Head comments on unchanged fields survive merge3.
+	assert.Contains(t, content, "# This comment must survive")
+	// Inline comment on the CHANGED ref scalar is lost during merge3.
+	assert.Contains(t, content, "ref: v2.0.0")
+	assert.NotContains(t, content, "ref: v1.0.0")
+}
+
+func TestUpdateKptfile_ReturnsErrorOnInvalidLocalKptfile(t *testing.T) {
+	originDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	updatedDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`)
+
+	localDir := writeKptfileToTemp(t, `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata: [bad
+`)
+
+	err := UpdateKptfile(localDir, updatedDir, originDir, true)
+	assert.Error(t, err)
+}
+
+func TestUpdateKptfileContent_UsesDecodeValidation(t *testing.T) {
+	testCases := map[string]struct {
+		content             string
+		expectedErr         any
+		expectedDecodeError string
+	}{
+		"deprecated version": {
+			content: `
+apiVersion: kpt.dev/v1alpha2
+kind: Kptfile
+metadata:
+  name: sample
+`,
+			expectedErr:         &DeprecatedKptfileError{},
+			expectedDecodeError: "old resource version \"v1alpha2\" found in Kptfile",
+		},
+		"unknown kind": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: ConfigMap
+metadata:
+  name: sample
+`,
+			expectedErr:         &UnknownKptfileResourceError{},
+			expectedDecodeError: "unknown resource type \"kpt.dev/v1, Kind=ConfigMap\" found in Kptfile",
+		},
+		"unknown field": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+unexpectedField: true
+`,
+			expectedDecodeError: "yaml: unmarshal errors:\n  line 6: field unexpectedField not found in type v1.KptFile",
+		},
+		"multiple yaml documents": {
+			content: `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: extra
+`,
+			expectedDecodeError: "expected exactly one YAML document in Kptfile, found 2",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			_, decodeErr := DecodeKptfile(strings.NewReader(tc.content))
+			_, updateErr := UpdateKptfileContent(tc.content, func(*kptfilev1.KptFile) {})
+
+			if !assert.EqualError(t, decodeErr, tc.expectedDecodeError) {
+				t.FailNow()
+			}
+			if !assert.EqualError(t, updateErr, decodeErr.Error()) {
+				t.FailNow()
+			}
+			if tc.expectedErr != nil {
+				assert.IsType(t, tc.expectedErr, decodeErr)
+				assert.IsType(t, tc.expectedErr, updateErr)
+			}
+		})
+	}
+}
+
+func TestUpdateKptfileContent_StripsSDKInternalAnnotations(t *testing.T) {
+	t.Run("preserves user annotations", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/path: Kptfile
+    user.example.com/keep: value
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		require.NoError(t, err)
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		require.NoError(t, err)
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		if assert.NotNil(t, updatedKf.Annotations) {
+			assert.Equal(t, "value", updatedKf.Annotations["user.example.com/keep"])
+			for _, key := range sdkGeneratedKptfileAnnotations {
+				assert.NotContains(t, updatedKf.Annotations, key)
+			}
+		}
+		assert.NotContains(t, updatedContent, "config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "internal.config.kubernetes.io/path")
+	})
+
+	t.Run("removes empty annotation map", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  annotations:
+    config.kubernetes.io/index: "0"
+    internal.config.kubernetes.io/index: "0"
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(*kptfilev1.KptFile) {})
+		require.NoError(t, err)
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		require.NoError(t, err)
+
+		// All annotations were SDK-internal, so the resulting map must be
+		// nil (not an empty map). The setOrRemoveNestedField path now
+		// removes empty maps / slices as well as nil ones, which prevents
+		// `annotations: {}` from leaking into the serialized Kptfile.
+		assert.Nil(t, updatedKf.Annotations)
+		assert.NotContains(t, updatedContent, "config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "internal.config.kubernetes.io/index")
+		assert.NotContains(t, updatedContent, "annotations: {}")
+		assert.NotContains(t, updatedContent, "annotations: []")
+	})
+
+	t.Run("empty-but-non-nil labels map is removed cleanly", func(t *testing.T) {
+		// Regression test for copilot's finding that reflect.Value.IsZero
+		// treats only nil maps/slices as zero. Before the fix, mutating
+		// labels to an empty-but-non-nil map would leak as `labels: {}`
+		// into the serialized Kptfile — format drift.
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+  labels:
+    team: platform
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			// Mutator replaces labels with an empty-but-non-nil map.
+			kf.Labels = map[string]string{}
+		})
+		require.NoError(t, err)
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		require.NoError(t, err)
+
+		assert.Nil(t, updatedKf.Labels, "empty labels should be removed, not serialized as {}")
+		assert.NotContains(t, updatedContent, "labels: {}")
+		assert.NotContains(t, updatedContent, "labels: []")
+	})
+
+	t.Run("handles missing annotations safely", func(t *testing.T) {
+		content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`
+
+		updatedContent, err := UpdateKptfileContent(content, func(kf *kptfilev1.KptFile) {
+			kf.Name = "updated-sample"
+		})
+		require.NoError(t, err)
+
+		updatedKf, err := DecodeKptfile(strings.NewReader(updatedContent))
+		require.NoError(t, err)
+
+		assert.Equal(t, "updated-sample", updatedKf.Name)
+		assert.Nil(t, updatedKf.Annotations)
+	})
+}
+
+func TestUpdateKptfileContent_ReturnsErrorOnNilMutator(t *testing.T) {
+	content := `
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: sample
+`
+
+	_, err := UpdateKptfileContent(content, nil)
+	if !assert.Error(t, err) {
+		t.FailNow()
+	}
+	assert.Contains(t, err.Error(), "mutator cannot be nil")
 }
 
 func TestMerge(t *testing.T) {
@@ -1362,7 +1868,7 @@ pipeline:
   - name: ref-folders
     image: ghcr.io/kptdev/krm-functions-catalog/ref-folders
     configMap:
-      band: Hüsker Dü
+        band: "H\u00fcsker D\u00fc"
 `,
 			expected: `
 apiVersion: kpt.dev/v1
@@ -1381,18 +1887,16 @@ pipeline:
 	for tn, tc := range testCases {
 		t.Run(tn, func(t *testing.T) {
 			localKf, err := DecodeKptfile(strings.NewReader(tc.local))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			updatedKf, err := DecodeKptfile(strings.NewReader(tc.update))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			originKf, err := DecodeKptfile(strings.NewReader(tc.origin))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = merge(localKf, updatedKf, originKf)
 			if tc.err == nil {
-				if !assert.NoError(t, err) {
-					t.FailNow()
-				}
+				require.NoError(t, err)
 				actual, err := yaml.Marshal(localKf)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				if !assert.Equal(t,
 					strings.TrimSpace(tc.expected), strings.TrimSpace(string(actual))) {
 					t.FailNow()
@@ -1407,4 +1911,12 @@ pipeline:
 			}
 		})
 	}
+}
+
+func writeKptfileToTemp(t *testing.T, content string) string {
+	t.Helper()
+	dir := t.TempDir()
+	err := os.WriteFile(filepath.Join(dir, kptfilev1.KptFileName), []byte(content), 0600)
+	require.NoError(t, err)
+	return dir
 }

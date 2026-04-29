@@ -20,13 +20,13 @@ index f2eec52..0000000
 -apiVersion: apps/v1
 -kind: Deployment
 -metadata:
--  name: nginx-deployment
+-name: nginx-deployment
 -spec:
--  replicas: 3
+-replicas: 3
 ----
 -apiVersion: custom.io/v1
 -kind: Custom
 -metadata:
--  name: custom
+-name: custom
 -spec:
--  image: nginx:1.2.3
+-image: nginx:1.2.3

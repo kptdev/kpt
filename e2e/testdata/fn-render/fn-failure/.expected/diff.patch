@@ -1,45 +1,28 @@
 diff --git a/Kptfile b/Kptfile
-index 3447ba3..9127985 100644
+index NORMALIZED 100644
 --- a/Kptfile
 +++ b/Kptfile
-@@ -4,12 +4,31 @@ metadata:
-   name: app
- pipeline:
-   mutators:
+@@ NORMALIZED @@
 -# invalid starlark input results in failure of first fn
--  - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
--    configPath: starlark-failure-fn.yaml
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
--    configMap:
--      namespace: staging
--  - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
--    configMap:
--      tier: backend
-+    - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+      configPath: starlark-failure-fn.yaml
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.2.0
-+      configMap:
-+        namespace: staging
-+    - image: ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5
-+      configMap:
-+        tier: backend
++# invalid starlark input results in failure of first fn
+@@ NORMALIZED @@
++conditions:
++- type: Rendered
++errorSummary: ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1
++message: |-
++mutationSteps:
++pipeline.run: already handled error
++pkg.render: pkg .:
++reason: RenderFailed
++renderStatus:
 +status:
-+  conditions:
-+    - type: Rendered
-+      status: "False"
-+      reason: RenderFailed
-+      message: |-
-+        pkg.render: pkg .:
-+        	pipeline.run: already handled error
-+  renderStatus:
-+    mutationSteps:
-+      - image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
-+        stderr: 'failed to evaluate function: error: function failure'
-+        exitCode: 1
-+        results:
-+          - message: 'httpbin-gen:3:73: got newline, want primary expression'
-+            severity: error
-+        errorResults:
-+          - message: 'httpbin-gen:3:73: got newline, want primary expression'
-+            severity: error
-+    errorSummary: 'ghcr.io/kptdev/krm-functions-catalog/starlark:latest: exit code 1'
++status: False
++- image: ghcr.io/kptdev/krm-functions-catalog/starlark:latest
++errorResults:
++- message: httpbin-gen:3:73: got newline, want primary expression
++exitCode: 1
++results:
++- message: httpbin-gen:3:73: got newline, want primary expression
++severity: error
++severity: error
++stderr: failed to evaluate function: error: function failure
