@@ -1,4 +1,4 @@
-// Copyright 2019-2026 The kpt Authors
+// Copyright 2019,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,9 +46,12 @@ func GetCommand(ctx context.Context, name string) *cobra.Command {
 	}
 
 	pkg.AddCommand(
-		get.NewCommand(ctx, name), initialization.NewCommand(ctx, name),
-		update.NewCommand(ctx, name), diff.NewCommand(ctx, name),
-		cmdtree.NewCommand(ctx, name), cmdcat.NewCommand(ctx, name),
+		get.NewCommand(ctx, name),
+		initialization.NewCommand(ctx, name),
+		update.NewCommand(ctx, name),
+		diff.NewCommand(ctx, name),
+		cmdtree.NewCommand(ctx, name),
+		cmdcat.NewCommand(ctx, name),
 	)
 	return pkg
 }
