@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -187,8 +187,7 @@ func E(args ...any) error {
 		case Class:
 			e.Class = a
 		case *Error:
-			cp := *a
-			e.Err = &cp
+			e.Err = new(*a)
 		case error:
 			e.Err = a
 		case string:
@@ -242,8 +241,8 @@ func As(err error, target any) bool {
 // pipeline. If the error is not wrapped by kio pipeline, it
 // will return the original error.
 func UnwrapKioError(err error) error {
-	var kioErr *kyaml_errors.Error
-	if !goerrors.As(err, &kioErr) {
+	kioErr, ok := goerrors.AsType[*kyaml_errors.Error](err)
+	if !ok {
 		return err
 	}
 	return kioErr.Err

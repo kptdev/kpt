@@ -249,8 +249,7 @@ func (fr *FunctionRunner) Filter(input []*yaml.RNode) (output []*yaml.RNode, err
 		printOpt := printer.NewOpt()
 		pr.OptPrintf(printOpt, "[FAIL] %q in %v\n", fr.name, time.Since(t0).Truncate(time.Millisecond*100))
 		printFnResult(fr.ctx, fr.fnResult, printOpt)
-		var fnErr *ExecError
-		if goerrors.As(err, &fnErr) {
+		if fnErr, ok := goerrors.AsType[*ExecError](err); ok {
 			printFnExecErr(fr.ctx, fnErr)
 			return nil, errors.ErrAlreadyHandled
 		}
@@ -299,14 +298,13 @@ func (fr *FunctionRunner) do(input []*yaml.RNode) (output []*yaml.RNode, err err
 		return output, resultErr
 	}
 	if err != nil {
-		var execErr *ExecError
 		// set exitCode to non-zero by default in case of an error.
 		// It will be overridden with appropriate exitCode if the function runtime returns execError.
 		// builtinruntime and podEvaluator function runtime do not return execError so having
 		// a default is important.
 		fnResult.ExitCode = 1
 		fr.fnResults.ExitCode = 1
-		if goerrors.As(err, &execErr) {
+		if execErr, ok := goerrors.AsType[*ExecError](err); ok {
 			fnResult.ExitCode = execErr.ExitCode
 			fnResult.Stderr = execErr.Stderr
 		}

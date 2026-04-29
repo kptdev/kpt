@@ -15,7 +15,7 @@
 SHELL := bash
 .SHELLFLAGS := -exc
 
-GOLANG_VERSION    := 1.25.9
+GOLANG_VERSION    := 1.26.2
 GOLANGCI_LINT_VERSION := 2.11.4
 
 GORELEASER_CONFIG = release/tag/goreleaser.yaml

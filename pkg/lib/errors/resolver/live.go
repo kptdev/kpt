@@ -78,20 +78,17 @@ Error: Multiple ResourceGroup objects found. Please make sure at most one Resour
 type liveErrorResolver struct{}
 
 func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	var noInventoryObjError *inventory.NoInventoryObjError
-	if errors.As(err, &noInventoryObjError) {
+	if _, ok := errors.AsType[*inventory.NoInventoryObjError](err); ok {
 		msg := noInventoryObjErrorMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var multipleInventoryObjError *inventory.MultipleInventoryObjError
-	if errors.As(err, &multipleInventoryObjError) {
+	if _, ok := errors.AsType[*inventory.MultipleInventoryObjError](err); ok {
 		msg := multipleInventoryObjErrorMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var resourceGroupCRDInstallError *cmdutil.ResourceGroupCRDInstallError
-	if errors.As(err, &resourceGroupCRDInstallError) {
+	if resourceGroupCRDInstallError, ok := errors.AsType[*cmdutil.ResourceGroupCRDInstallError](err); ok {
 		msg := "Error: Unable to install the ResourceGroup CRD."
 
 		cause := resourceGroupCRDInstallError.Err
@@ -100,38 +97,32 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var noResourceGroupCRDError *cmdutil.NoResourceGroupCRDError
-	if errors.As(err, &noResourceGroupCRDError) {
+	if _, ok := errors.AsType[*cmdutil.NoResourceGroupCRDError](err); ok {
 		msg := noResourceGroupCRDMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var invExistsError *initialization.InvExistsError
-	if errors.As(err, &invExistsError) {
+	if _, ok := errors.AsType[*initialization.InvExistsError](err); ok {
 		msg := invInfoAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var invInfoInRGAlreadyExistsError *initialization.InvInRGExistsError
-	if errors.As(err, &invInfoInRGAlreadyExistsError) {
+	if _, ok := errors.AsType[*initialization.InvInRGExistsError](err); ok {
 		msg := invInfoInRGAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var invInKfExistsError *initialization.InvInKfExistsError
-	if errors.As(err, &invInKfExistsError) {
+	if _, ok := errors.AsType[*initialization.InvInKfExistsError](err); ok {
 		msg := invInfoInKfAlreadyExistsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var multipleResourceGroupsError *pkg.MultipleResourceGroupsError
-	if errors.As(err, &multipleResourceGroupsError) {
+	if _, ok := errors.AsType[*pkg.MultipleResourceGroupsError](err); ok {
 		msg := multipleResourceGroupsMsg
 		return ResolvedResult{Message: msg}, true
 	}
 
-	var inventoryInfoValidationError *live.InventoryInfoValidationError
-	if errors.As(err, &inventoryInfoValidationError) {
+	if inventoryInfoValidationError, ok := errors.AsType[*live.InventoryInfoValidationError](err); ok {
 		var msg strings.Builder
 		msg.WriteString("Error: The inventory information is not valid.")
 		msg.WriteString(" Please update the information in the ResourceGroup file or provide information with the command line flags.")
@@ -145,8 +136,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{Message: msg.String()}, true
 	}
 
-	var unknownTypesError *manifestreader.UnknownTypesError
-	if errors.As(err, &unknownTypesError) {
+	if unknownTypesError, ok := errors.AsType[*manifestreader.UnknownTypesError](err); ok {
 		var msg strings.Builder
 		fmt.Fprintf(&msg, "Error: %d resource types not found in the cluster or as CRDs among the applied resources.", len(unknownTypesError.GroupVersionKinds))
 		msg.WriteString("\n\nResource types:\n")
@@ -157,8 +147,7 @@ func (*liveErrorResolver) Resolve(err error) (ResolvedResult, bool) {
 		return ResolvedResult{Message: msg.String()}, true
 	}
 
-	var resultError *common.ResultError
-	if errors.As(err, &resultError) {
+	if _, ok := errors.AsType[*common.ResultError](err); ok {
 		return ResolvedResult{
 			Message:  "", // Printer summary now replaces ResultError message
 			ExitCode: 3,

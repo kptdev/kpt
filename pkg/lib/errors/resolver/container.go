@@ -30,8 +30,8 @@ func init() {
 type containerImageErrorResolver struct{}
 
 func (*containerImageErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	var containerImageError *fnruntime.ContainerImageError
-	if !errors.As(err, &containerImageError) {
+	containerImageError, ok := errors.AsType[*fnruntime.ContainerImageError](err)
+	if !ok {
 		return ResolvedResult{}, false
 	}
 	return ResolvedResult{

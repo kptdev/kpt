@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022-2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,9 +28,9 @@ func TestNotFound(t *testing.T) {
 	fn := &kptfilev1.Function{Image: "foo"}
 	err = &NotFoundError{Function: *fn}
 
-	var notFoundErr *NotFoundError
-	if !errors.As(err, &notFoundErr) {
-		t.Fatalf("expected NotFoundError to satisfy errors.As")
+	notFoundErr, ok := errors.AsType[*NotFoundError](err)
+	if !ok {
+		t.Fatalf("expected NotFoundError to satisfy errors.AsType")
 	}
 
 	if diff := cmp.Diff(notFoundErr.Function, *fn); diff != "" {
