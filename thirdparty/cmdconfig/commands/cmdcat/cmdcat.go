@@ -1,4 +1,4 @@
-// Copyright 2019-2026 The kpt Authors.
+// Copyright 2019,2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package cmdcat
@@ -110,7 +110,7 @@ func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	err := kio.Pipeline{
 		Inputs:  []kio.Reader{input},
 		Filters: r.catFilters(),
-		Outputs: r.out(out),
+		Outputs: r.outputWriter(out),
 	}.Execute()
 
 	if err != nil {
@@ -138,7 +138,7 @@ func (r *CatRunner) catFilters() []kio.Filter {
 	return fltrs
 }
 
-func (r *CatRunner) out(w io.Writer) []kio.Writer {
+func (r *CatRunner) outputWriter(w io.Writer) []kio.Writer {
 	var outputs []kio.Writer
 	var functionConfig *yaml.RNode
 

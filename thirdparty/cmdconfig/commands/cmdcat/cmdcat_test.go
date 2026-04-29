@@ -1,4 +1,4 @@
-// Copyright 2019-2026 The kpt Authors.
+// Copyright 2019,2026 The Kubernetes Authors.
 // SPDX-License-Identifier: Apache-2.0
 
 package cmdcat
@@ -14,6 +14,7 @@ import (
 
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const f1Yaml = "f1.yaml"
@@ -88,7 +89,7 @@ spec:
 `)
 
 	got, err := runCat(t, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `kind: Deployment
 metadata:
   labels:
@@ -149,7 +150,7 @@ spec:
 `)
 
 	got, err := runCat(t, filepath.Join(d, f1Yaml))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `kind: Deployment
 metadata:
   labels:
@@ -179,7 +180,7 @@ spec:
 `)
 
 	got, err := runCat(t, filepath.Join(d, f1Yaml), "--annotate")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `kind: Deployment
 metadata:
   labels:
@@ -208,7 +209,7 @@ metadata:
 `)
 
 	got, err := runCat(t, filepath.Join(d, f1Yaml))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotContains(t, got, "config.kubernetes.io/path",
 		"config.kubernetes.io/path should be cleared by default")
 	assert.NotContains(t, got, "internal.config.kubernetes.io/path",
@@ -246,7 +247,7 @@ spec:
 `)
 
 	got, err := runCat(t, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, `kind: Deployment
 metadata:
   labels:
@@ -299,7 +300,7 @@ metadata:
 `)
 
 	got, err := runCat(t, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// exactly one of each resource, separated by a single ---.
 	assert.Equal(t, 2, strings.Count(got, "\nkind: ConfigMap\n"),
 		"each pkg should be emitted exactly once")
@@ -340,7 +341,7 @@ metadata:
 			}()
 
 			got, err := runCat(t, arg)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, 1, strings.Count(got, "\nkind: ConfigMap\n"),
 				"arg %q should yield exactly one resource", arg)
 		})
@@ -371,7 +372,7 @@ metadata:
 `)
 
 	got, err := runCat(t, d)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.False(t, strings.HasSuffix(got, "---\n") || strings.HasSuffix(got, "---"),
 		"output must not end with a stray separator; got %q", got)
 	assert.Equal(t, 0, strings.Count(got, "\n---\n"),
@@ -477,7 +478,7 @@ metadata:
 `)
 
 	got, err := runCat(t, d, "-R=false")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Contains(t, got, "name: root-cm")
 	assert.NotContains(t, got, "name: sub-cm",
 		"sub-pkg should not be traversed when -R=false")
@@ -494,7 +495,7 @@ metadata:
 `)
 
 	got, err := runCat(t, filepath.Join(d, "f.yaml"), "--strip-comments")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.NotContains(t, got, "top comment")
 	assert.NotContains(t, got, "inline comment")
 }
@@ -513,7 +514,7 @@ data:
 `)
 
 	got, err := runCat(t, filepath.Join(d, "f.yaml"), "--format=false")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	zIdx := strings.Index(got, "z-last")
 	aIdx := strings.Index(got, "a-first")
 	assert.True(t, zIdx >= 0 && aIdx >= 0, "both keys should be present")
