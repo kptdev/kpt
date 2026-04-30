@@ -7,6 +7,7 @@ description: >
     Deploy local packages to a cluster.
 menu:
   main:
+    identifier: "alpha-live"
     parent: "alpha"
 ---
 

@@ -16,7 +16,7 @@
 					<div class="media-body">
 						<h3 class="mt-3 mb-1"><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></h5>
 						<p class="mb-2 mb-md-3"><small class="text-muted">{{ .Date.Format ($.Param "time_format_blog") }}</small></p>
-						{{ partial "featured-image.html" (dict "p" . "w" 250 "h" 125 "class" "float-left mr-3 pt-1 d-none d-md-block") }}
+						{{ partial "featured-image.html" (dict "p" . "w" 250 "h" 125 "class" "float-left me-3 pt-1 d-none d-md-block") }}
 						<p class="pt-0 mt-0">{{ .Plain | safeHTML | truncate 250 }}</p>
 					</div>
 				</li>

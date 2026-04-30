@@ -7,6 +7,7 @@ description: |
    Deploy local packages to a cluster.
 menu:
   main:
+    identifier: "live"
     parent: "References"
 ---
 <!--mdtogo:Short

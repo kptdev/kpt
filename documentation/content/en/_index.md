@@ -17,7 +17,7 @@ toc_hide: true
 kpt is a package-centric toolchain that enables a WYSIWYG configuration authoring, automation, and delivery experience, which simplifies managing Kubernetes platforms and KRM-driven infrastructure at scale by manipulating declarative Configuration as Data.
         </div>
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-6 text-center" style="margin-top: -6rem;">
         <img src="/images/kpt_stacked_color.svg" alt="kpt logo" style="max-width: 300px;">
     </div>
 </div>

@@ -3,11 +3,11 @@
         <a class="navbar-brand" href="{{ .Site.Home.RelPermalink }}">
 		<span class="navbar-logo">{{ if .Site.Params.ui.navbar_logo }}{{ with resources.Get "icons/logo.svg" }}{{ ( . | minify).Content | safeHTML }}{{ end }}{{ end }}</span>
 	</a>
-	<div class="td-navbar-nav-scroll ml-lg-auto mr-xl-5" id="main_navbar">
+	<div class="td-navbar-nav-scroll ms-lg-auto me-xl-5" id="main_navbar">
 		<ul class="navbar-nav mt-0 mt-lg-0">
 			{{ $p := . }}
 			{{ range .Site.Menus.main }}
-			<li class="nav-item mr-3 ml-3 mb-0 mb-lg-0">
+			<li class="nav-item me-3 ms-3 mb-0 mb-lg-0">
 				{{ $active := or ($p.IsMenuCurrent "main" .) ($p.HasMenuCurrent "main" .) }}
 				{{ with .Page }}
 				{{ $active = or $active ( $.IsDescendant .)  }}
@@ -18,12 +18,12 @@
 			</li>
 			{{ end }}
 			{{ if  .Site.Params.versions }}
-			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+			<li class="nav-item dropdown me-4 d-none d-lg-block">
 				{{ partial "navbar-version-selector.html" . }}
 			</li>
 			{{ end }}
 			{{ if  (gt (len .Site.Home.Translations) 0) }}
-			<li class="nav-item dropdown mr-4 d-none d-lg-block">
+			<li class="nav-item dropdown me-4 d-none d-lg-block">
 				{{ partial "navbar-lang-selector.html" . }}
 			</li>
 			{{ end }}
