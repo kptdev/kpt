@@ -57,7 +57,7 @@ anchor = "smart"
 [languages]
 [languages.en]
 title = "kpt documentation"
-label ="English"
+label = "English"
 # Weight used for sorting.
 weight = 1
 contentDir = "content/en"
