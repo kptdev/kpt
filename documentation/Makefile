@@ -3,7 +3,7 @@ serve:
 		--disableFastRender \
 		--buildDrafts \
 		--buildFuture \
-		--ignoreCache
+		--ignoreCache \
 		--printI18nWarnings \
 		--printMemoryUsage \
 		--printPathWarnings \
