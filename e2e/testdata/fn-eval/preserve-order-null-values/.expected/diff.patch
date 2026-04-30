@@ -1,5 +1,5 @@
 diff --git a/resources.yaml b/resources.yaml
-index f410b70..13bc056 100644
+index f410b70..6d94d47 100644
 --- a/resources.yaml
 +++ b/resources.yaml
 @@ -16,6 +16,7 @@ kind: Deployment
@@ -9,11 +9,3 @@ index f410b70..13bc056 100644
 +  namespace: staging
  spec:
    replicas: 3
- ---
-@@ -23,5 +24,6 @@ apiVersion: custom.io/v1
- kind: Custom
- metadata:
-   name: custom
-+  namespace: staging
- spec:
-   image: nginx:1.2.3

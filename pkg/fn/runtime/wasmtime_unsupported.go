@@ -24,11 +24,19 @@ import (
 	"io"
 )
 
+<<<<<<< HEAD:pkg/fn/runtime/wasmtime_unsupported.go
 const (
 	msg = "wasmtime support is not complied into this binary. Binaries with wasmtime is avilable at github.com/kptdev/kpt"
 )
 
 type WasmtimeFn struct {
+=======
+var functions map[string]framework.ResourceListProcessorFunc = map[string]framework.ResourceListProcessorFunc{
+	"ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2.0": applySetters,
+	"ghcr.io/kptdev/krm-functions-catalog/set-labels:v0.1.5":    setLabels,
+	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:v0.4.1": setNamespace,
+	"ghcr.io/kptdev/krm-functions-catalog/set-namespace:latest":  setNamespace,
+>>>>>>> 84fa5a86a (fix: register set-namespace:latest in kptops function registry):internal/kptops/functions.go
 }
 
 func NewWasmtimeFn(loader WasmLoader) (*WasmtimeFn, error) {
