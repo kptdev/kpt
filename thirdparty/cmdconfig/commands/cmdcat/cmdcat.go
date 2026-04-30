@@ -14,7 +14,6 @@ import (
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -114,14 +113,13 @@ func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
 	}.Execute()
 
 	if err != nil {
-		// Emit a contextual diagnostic on stderr so the user knows which
-		// package failed; the runner currently aborts on the first error.
-		fmt.Fprintf(printer.FromContextOrDie(r.Ctx).ErrStream(),
-			"kpt pkg cat: %s in package %q\n", err.Error(), pkgPath)
-		return err
+		// Wrap with package context so the user knows which package failed;
+		// the root command's error handler is responsible for printing.
+		return fmt.Errorf("kpt pkg cat: %q: %w", pkgPath, err)
 	}
-	fmt.Fprint(w, out.String())
-	if out.String() != "" {
+	outStr := out.String()
+	fmt.Fprint(w, outStr)
+	if outStr != "" {
 		fmt.Fprint(w, "---")
 	}
 	return nil
