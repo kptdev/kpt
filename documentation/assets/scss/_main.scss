@@ -95,3 +95,12 @@ section {
 a:hover {
 	color: $link-hover-color !important;
 }
+
+// Homepage hero logo: pull it up to visually align with the H1, but only at
+// the `lg` breakpoint and above where the two hero columns sit side-by-side.
+// Below `lg`, the columns stack and the negative margin would cause overlap.
+body.td-home .td-home-hero-logo {
+	@media (min-width: 992px) {
+		margin-top: -6rem;
+	}
+}
