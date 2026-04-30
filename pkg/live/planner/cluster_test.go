@@ -21,6 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/cli-utils/pkg/apply"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/inventory"
@@ -165,4 +166,28 @@ func (fii *FakeInventoryInfo) ID() string {
 
 func (fii *FakeInventoryInfo) Strategy() inventory.Strategy {
 	return inventory.NameStrategy
+}
+
+// TestNewClusterPlanner_BackCompatSignaturePreserved is a compile-time
+// guard that both the legacy NewClusterPlanner(f) entry point and the
+// new context-aware NewClusterPlannerWithContext(ctx, f) remain
+// exported with their current signatures. If either is renamed,
+// removed, or has its parameter list changed, this test stops
+// compiling and the API-compat break is visible immediately.
+//
+// Uses typed anonymous-function parameters so the compiler verifies
+// signature assignability. This pattern is deliberate — staticcheck's
+// QF1011 would otherwise suggest removing a `var _ T = fn` type
+// annotation, which would silently destroy the guarantee.
+//
+// Runtime behavior of both constructors is exercised through the
+// command-level tests that instantiate the planner via the real
+// factory in commands/alpha/live/plan.
+func TestNewClusterPlanner_BackCompatSignaturePreserved(t *testing.T) {
+	pinSignatures := func(
+		_ func(util.Factory) (*ClusterPlanner, error),
+		_ func(context.Context, util.Factory) (*ClusterPlanner, error),
+	) {
+	}
+	pinSignatures(NewClusterPlanner, NewClusterPlannerWithContext)
 }

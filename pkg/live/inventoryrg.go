@@ -1,4 +1,4 @@
-// Copyright 2020 The kpt Authors
+// Copyright 2020,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,10 +59,28 @@ var ResourceGroupGVK = schema.GroupVersionKind{
 // InventoryResourceGroup wraps a ResourceGroup resource and implements
 // the Inventory and InventoryInfo interface. This wrapper loads and stores the
 // object metadata (inventory) to and from the wrapped ResourceGroup.
+//
+// ctx, if non-nil, is the caller's context and is used for the live
+// Kubernetes API calls performed by Apply / ApplyWithPrune. It exists on
+// the struct (rather than as a parameter) because the upstream
+// inventory.Storage interface signatures do not include a context; see
+// WrapInventoryObjWithContext.
 type InventoryResourceGroup struct {
+	ctx       context.Context
 	inv       *unstructured.Unstructured
 	objMetas  []object.ObjMetadata
 	objStatus []actuation.ObjectStatus
+}
+
+// contextOrBackground returns the caller-supplied context if set, or
+// context.Background() otherwise. Callers going through
+// WrapInventoryObjWithContext get real cancellation/timeout propagation;
+// legacy callers using WrapInventoryObj continue to work unchanged.
+func (icm *InventoryResourceGroup) contextOrBackground() context.Context {
+	if icm.ctx != nil {
+		return icm.ctx
+	}
+	return context.Background()
 }
 
 func (icm *InventoryResourceGroup) Strategy() inventory.Strategy {
@@ -74,12 +92,38 @@ var _ inventory.Info = &InventoryResourceGroup{}
 
 // WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
 // wraps it with the InventoryResourceGroup and upcasts the wrapper as
-// an the Inventory interface.
+// the Inventory interface.
+//
+// The wrapped inventory will use context.Background() for cluster API
+// calls. Prefer WrapInventoryObjWithContext when you have a caller
+// context (e.g. cmd.Context()) so that Ctrl-C and caller-side timeouts
+// actually cancel the in-flight request.
 func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Storage {
 	if obj != nil {
 		klog.V(4).Infof("wrapping Inventory obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
 	}
 	return &InventoryResourceGroup{inv: obj}
+}
+
+// WrapInventoryObjWithContext returns a wrapper function compatible with
+// inventory.NewClient's WrapObjFunc parameter. The returned function
+// produces an InventoryResourceGroup that carries ctx, so subsequent
+// Apply / ApplyWithPrune calls honor the caller's cancellation and
+// timeout.
+//
+// If ctx is nil it is normalized to context.Background() so callers
+// cannot accidentally trigger a nil-deref inside client-go. Prefer
+// passing a real ctx (e.g. cmd.Context()) to actually gain cancellation.
+func WrapInventoryObjWithContext(ctx context.Context) func(*unstructured.Unstructured) inventory.Storage {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return func(obj *unstructured.Unstructured) inventory.Storage {
+		if obj != nil {
+			klog.V(4).Infof("wrapping Inventory obj with ctx: %s/%s\n", obj.GetNamespace(), obj.GetName())
+		}
+		return &InventoryResourceGroup{ctx: ctx, inv: obj}
+	}
 }
 
 func WrapInventoryInfoObj(obj *unstructured.Unstructured) inventory.Info {
@@ -256,9 +300,10 @@ func (icm *InventoryResourceGroup) Apply(dc dynamic.Interface, mapper meta.RESTM
 	if err != nil {
 		return err
 	}
+	ctx := icm.contextOrBackground()
 
-	// Get cluster object, if exsists.
-	clusterObj, err := namespacedClient.Get(context.TODO(), invInfo.GetName(), metav1.GetOptions{})
+	// Get cluster object, if exists.
+	clusterObj, err := namespacedClient.Get(ctx, invInfo.GetName(), metav1.GetOptions{})
 	if err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -267,10 +312,10 @@ func (icm *InventoryResourceGroup) Apply(dc dynamic.Interface, mapper meta.RESTM
 
 	if clusterObj == nil {
 		// Create cluster inventory object, if it does not exist on cluster.
-		appliedObj, err = namespacedClient.Create(context.TODO(), invInfo, metav1.CreateOptions{})
+		appliedObj, err = namespacedClient.Create(ctx, invInfo, metav1.CreateOptions{})
 	} else {
 		// Update the cluster inventory object instead.
-		appliedObj, err = namespacedClient.Update(context.TODO(), invInfo, metav1.UpdateOptions{})
+		appliedObj, err = namespacedClient.Update(ctx, invInfo, metav1.UpdateOptions{})
 	}
 	if err != nil {
 		return err
@@ -279,7 +324,7 @@ func (icm *InventoryResourceGroup) Apply(dc dynamic.Interface, mapper meta.RESTM
 	// Update status.
 	if statusPolicy == inventory.StatusPolicyAll {
 		invInfo.SetResourceVersion(appliedObj.GetResourceVersion())
-		_, err = namespacedClient.UpdateStatus(context.TODO(), invInfo, metav1.UpdateOptions{})
+		_, err = namespacedClient.UpdateStatus(ctx, invInfo, metav1.UpdateOptions{})
 	}
 
 	return err
@@ -290,11 +335,12 @@ func (icm *InventoryResourceGroup) ApplyWithPrune(dc dynamic.Interface, mapper m
 	if err != nil {
 		return err
 	}
+	ctx := icm.contextOrBackground()
 
 	// Update the cluster inventory object.
 	// Since the ResourceGroup CRD specifies the status as a sub-resource, this
 	// will not update the status.
-	appliedObj, err := namespacedClient.Update(context.TODO(), invInfo, metav1.UpdateOptions{})
+	appliedObj, err := namespacedClient.Update(ctx, invInfo, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -314,7 +360,7 @@ func (icm *InventoryResourceGroup) ApplyWithPrune(dc dynamic.Interface, mapper m
 			if err != nil {
 				return err
 			}
-			_, err = namespacedClient.UpdateStatus(context.TODO(), appliedObj, metav1.UpdateOptions{})
+			_, err = namespacedClient.UpdateStatus(ctx, appliedObj, metav1.UpdateOptions{})
 			if err != nil {
 				return err
 			}
@@ -386,7 +432,23 @@ func ResourceGroupCRDApplied(factory cmdutil.Factory) bool {
 
 // ResourceGroupCRDMatched checks if the ResourceGroup CRD
 // in the cluster matches the CRD in the kpt binary.
+//
+// This signature is preserved for backward compatibility with external
+// callers; it delegates to ResourceGroupCRDMatchedWithContext with
+// context.Background(). Prefer ResourceGroupCRDMatchedWithContext when
+// you have a caller context so Ctrl-C and timeouts can abort the check.
 func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
+	return ResourceGroupCRDMatchedWithContext(context.Background(), factory)
+}
+
+// ResourceGroupCRDMatchedWithContext is the context-aware variant of
+// ResourceGroupCRDMatched. ctx is used for the live cluster Get call;
+// cancelling it (e.g. via Ctrl-C or a command-level timeout) aborts the
+// check. A nil ctx is normalized to context.Background().
+func ResourceGroupCRDMatchedWithContext(ctx context.Context, factory cmdutil.Factory) bool {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	mapper, err := factory.ToRESTMapper()
 	if err != nil {
 		klog.V(4).Infof("error retrieving RESTMapper when checking ResourceGroup CRD: %s\n", err)
@@ -410,7 +472,7 @@ func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
 		return false
 	}
 
-	liveCRD, err := dc.Resource(mapping.Resource).Get(context.TODO(), "resourcegroups.kpt.dev", metav1.GetOptions{
+	liveCRD, err := dc.Resource(mapping.Resource).Get(ctx, "resourcegroups.kpt.dev", metav1.GetOptions{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: crd.GetAPIVersion(),
 			Kind:       "CustomResourceDefinition",
