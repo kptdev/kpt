@@ -398,11 +398,16 @@ data:
 
 	_, err := runCat(t, d)
 	assert.Error(t, err)
+	// The returned error must carry the pkg-path context ("kpt pkg cat: "<pkg>":")
+	// as well as the underlying file that failed. The root cobra handler
+	// (main.handleErr) is responsible for printing; ExecuteCmd must not
+	// write to stderr itself, or the user would see the message twice.
+	assert.Contains(t, err.Error(), "kpt pkg cat:")
+	assert.Contains(t, err.Error(), d)
 	assert.Contains(t, err.Error(), "broken.yaml")
 
-	// Stderr must carry the contextual diagnostic. Inject a printer via
-	// context (mirroring how run.go wires the root cobra err stream) and
-	// assert on its err stream.
+	// Sanity-check that ExecuteCmd itself does not write to the printer's
+	// ErrStream — otherwise the root handler would duplicate the output.
 	var errBuf bytes.Buffer
 	ctx := printer.WithContext(context.Background(), printer.New(nil, &errBuf))
 	r := GetCatRunner(ctx, "")
@@ -410,8 +415,8 @@ data:
 	r.Command.SetOut(&bytes.Buffer{})
 	r.Command.SetErr(&bytes.Buffer{})
 	_ = r.Command.Execute()
-	assert.Contains(t, errBuf.String(), "kpt pkg cat:")
-	assert.Contains(t, errBuf.String(), "broken.yaml")
+	assert.Empty(t, errBuf.String(),
+		"ExecuteCmd must not print to ErrStream; the root handler prints the returned error")
 }
 
 // TestCmd_NonExistent verifies a clean error on a missing path.
