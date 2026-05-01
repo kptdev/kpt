@@ -20,7 +20,7 @@
           <aside class="d-none d-xl-block col-xl-2 td-sidebar-toc d-print-none">
             {{ partial "toc.html" . }}
           </aside>
-          <main class="col-12 col-md-9 col-xl-7 pl-md-5" role="main">
+          <main class="col-12 col-md-9 col-xl-7 ps-md-5" role="main">
             {{ partial "version-banner.html" . }}
             {{ if not .Site.Params.ui.breadcrumb_disable }}{{ partial "breadcrumb.html" . }}{{ end }}
             {{ with .Params.Category}}<div class="category"><i class="{{ lower . }}"></i>{{ upper . }}</div>{{ end }}

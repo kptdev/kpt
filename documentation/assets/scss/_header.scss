@@ -36,6 +36,14 @@
 	// Main nav bar.
 	.td-navbar-nav-scroll {
 		margin-top: 0;
+		@include media-breakpoint-up(lg) {
+			// Docsy 0.14 added a large-screen rule that forces this
+			// container to `margin-left: auto !important`, right-aligning
+			// the nav. Override it only at the same breakpoint to restore
+			// the prior left-aligned behavior without affecting smaller
+			// layouts.
+			margin-left: 0 !important;
+		}
 		.navbar-nav {
 			padding-bottom: 0;
 			display: flex;
