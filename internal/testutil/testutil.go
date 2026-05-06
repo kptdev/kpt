@@ -27,8 +27,10 @@ import (
 
 	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/util/git"
+	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/philopon/go-toposort"
@@ -907,4 +909,18 @@ func (ri *ReposInfo) ResolveCommitIndex(repoRef string, index int) (string, bool
 		return "", false
 	}
 	return commits[index], true
+}
+
+// CreatePkgOrFail creates a new package from the provided path. Unlike the
+// pkg.New function, it fails the test instead of returning an error.
+func CreatePkgOrFail(t *testing.T, path string) *pkg.Pkg {
+	absPath, _, err := pathutil.ResolveAbsAndRelPaths(path)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	p, err := pkg.New(filesys.FileSystemOrOnDisk{}, absPath)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	return p
 }

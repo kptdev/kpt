@@ -20,14 +20,14 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )

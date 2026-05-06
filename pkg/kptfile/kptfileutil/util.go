@@ -24,10 +24,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/git"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -194,7 +194,7 @@ func UpdateKptfileWithoutOrigin(localPath, updatedPath string, updateUpstream bo
 		updatedKf = &kptfilev1.KptFile{}
 	}
 
-	err = merge(localKf, updatedKf, &kptfilev1.KptFile{})
+	err = MergeKptfiles(localKf, updatedKf, &kptfilev1.KptFile{})
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 		originKf = &kptfilev1.KptFile{}
 	}
 
-	err = merge(localKf, updatedKf, originKf)
+	err = MergeKptfiles(localKf, updatedKf, originKf)
 	if err != nil {
 		return err
 	}
@@ -379,10 +379,10 @@ func isSupportedKptfileVersion(gvk schema.GroupVersionKind) bool {
 	return slices.Contains(SupportedKptfileVersions, gvk)
 }
 
-// merge merges the Kptfiles from various sources and updates localKf with output
+// MergeKptfiles merges the Kptfiles from various sources and updates localKf with output
 // please refer to https://github.com/kptdev/kpt/blob/main/docs/design-docs/03-pipeline-merge.md
 // for related design
-func merge(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
+func MergeKptfiles(localKf, updatedKf, originalKf *kptfilev1.KptFile) error {
 	shouldAddSyntheticMergeName := shouldAddFnKey(localKf, updatedKf, originalKf)
 	if shouldAddSyntheticMergeName {
 		addNameForMerge(localKf, updatedKf, originalKf)
@@ -471,7 +471,7 @@ func shouldAddFnKeyUtil(fns []kptfilev1.Function) bool {
 }
 
 // addNameForMerge adds name field for all the functions if empty
-// name is primarily used as merge-key
+// name is primarily used as MergeKptfiles-key
 func addNameForMerge(kfs ...*kptfilev1.KptFile) {
 	for _, kf := range kfs {
 		if kf == nil || kf.Pipeline == nil {

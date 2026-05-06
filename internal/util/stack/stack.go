@@ -17,7 +17,7 @@ package stack
 import (
 	"fmt"
 
-	"github.com/kptdev/kpt/internal/pkg"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 )
 
 // New returns a new stack for elements of string type.

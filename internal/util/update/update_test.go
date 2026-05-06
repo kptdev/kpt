@@ -23,7 +23,6 @@ import (
 	"slices"
 	"testing"
 
-	pkgtest "github.com/kptdev/kpt/internal/pkg/testing"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/update"
@@ -76,7 +75,7 @@ func TestCommand_Run_noRefChanges(t *testing.T) {
 			}
 			upstreamRepo := g.Repos[testutil.Upstream]
 			cmd := &update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 			}
 			// Update the local package
@@ -139,7 +138,7 @@ func TestCommand_Run_subDir(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "v1.2",
 				Strategy: strategy,
 			}).Run(fake.CtxWithDefaultPrinter())) {
@@ -195,7 +194,7 @@ func TestCommand_Run_noChanges(t *testing.T) {
 
 			// Update the local package
 			err := (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: u.updater,
 			}).Run(fake.CtxWithDefaultPrinter())
 			if u.err == "" {
@@ -377,7 +376,7 @@ func TestCommand_Run_localPackageChanges(t *testing.T) {
 
 			// run the command
 			err = (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      masterBranch,
 				Strategy: tc.strategy,
 			}).Run(fake.CtxWithDefaultPrinter())
@@ -447,7 +446,7 @@ func TestCommand_Run_toBranchRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "exp",
 			}).Run(fake.CtxWithDefaultPrinter())) {
@@ -811,7 +810,7 @@ func TestCommand_Run_toBranchRefWithSubpkgs(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, path.Join(g.LocalWorkspace.FullPackagePath(), tc.updateSubPkg)),
+				Pkg:      testutil.CreatePkgOrFail(t, path.Join(g.LocalWorkspace.FullPackagePath(), tc.updateSubPkg)),
 				Strategy: tc.strategy,
 				Ref:      tc.updateRef,
 			}).Run(fake.CtxWithDefaultPrinter())) {
@@ -857,7 +856,7 @@ func TestCommand_Run_toTagRef(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
 			}).Run(fake.CtxWithDefaultPrinter())) {
@@ -914,7 +913,7 @@ func TestCommand_ResourceMerge_NonKRMUpdates(t *testing.T) {
 
 			// Update the local package
 			if !assert.NoError(t, (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Strategy: strategy,
 				Ref:      "v1.0",
 			}).Run(fake.CtxWithDefaultPrinter())) {
@@ -957,7 +956,7 @@ func TestCommand_Run_noUpstreamReference(t *testing.T) {
 
 	// Update the local package
 	err := (&update.Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 
 	assert.Contains(t, err.Error(), "must have an upstream reference")
@@ -970,7 +969,7 @@ func TestCommand_Run_failInvalidPath(t *testing.T) {
 		t.Run(string(strategy), func(t *testing.T) {
 			path := filepath.Join("fake", "path")
 			err := (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, path),
+				Pkg:      testutil.CreatePkgOrFail(t, path),
 				Strategy: strategy,
 			}).Run(fake.CtxWithDefaultPrinter())
 			if assert.Error(t, err) {
@@ -1035,7 +1034,7 @@ func TestCommand_Run_badUpstreamLock(t *testing.T) {
 
 			// Update the local package.
 			err = (&update.Command{
-				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg: testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 
 			if assert.Error(t, err) {
@@ -1070,7 +1069,7 @@ func TestCommand_Run_failInvalidRef(t *testing.T) {
 			}
 
 			err := (&update.Command{
-				Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 				Ref:      "exp",
 				Strategy: strategy,
 			}).Run(fake.CtxWithDefaultPrinter())
@@ -1128,7 +1127,7 @@ func TestCommand_Run_manualChange(t *testing.T) {
 	}
 
 	err := (&update.Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1182,7 +1181,7 @@ func TestCommand_Run_symlinks(t *testing.T) {
 	upstreamRepo := g.Repos[testutil.Upstream]
 
 	err := (&update.Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 	}).Run(fake.CtxWithDefaultPrinter())
 	if !assert.NoError(t, err) {
 		t.FailNow()
@@ -1230,7 +1229,7 @@ func TestCommand_Run_badStrategy(t *testing.T) {
 
 	// Update the local package
 	err := (&update.Command{
-		Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+		Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 		Strategy: strategy,
 	}).Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err, strategy) {
@@ -2009,7 +2008,7 @@ func TestCommand_Run_local_subpackages(t *testing.T) {
 				}
 
 				err := (&update.Command{
-					Pkg:      pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+					Pkg:      testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 					Strategy: strategy,
 				}).Run(fake.CtxWithDefaultPrinter())
 
@@ -3545,7 +3544,7 @@ func TestRun_remote_subpackages(t *testing.T) {
 			}
 
 			err := (&update.Command{
-				Pkg: pkgtest.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
+				Pkg: testutil.CreatePkgOrFail(t, g.LocalWorkspace.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 
 			if tc.expectedErrMsg != "" {
@@ -3690,7 +3689,7 @@ func TestRootPackageIsUnfetched(t *testing.T) {
 			testutil.AddKptfileToWorkspace(t, w, kf)
 
 			err := (&update.Command{
-				Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+				Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 			}).Run(fake.CtxWithDefaultPrinter())
 			if !assert.NoError(t, err) {
 				t.FailNow()
@@ -3761,7 +3760,7 @@ func TestMultiUpdateCache(t *testing.T) {
 	}
 	testutil.AddKptfileToWorkspace(t, w, kf)
 	cmd := update.Command{
-		Pkg: pkgtest.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}
 	err := cmd.Run(fake.CtxWithDefaultPrinter())
 	if !assert.NoError(t, err) {

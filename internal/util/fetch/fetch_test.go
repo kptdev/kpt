@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	pkgtesting "github.com/kptdev/kpt/internal/pkg/testing"
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
 	"github.com/kptdev/kpt/internal/util/fetch"
@@ -85,7 +84,7 @@ func TestCommand_Run_failNoKptfile(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, pkgPath),
+		Pkg: testutil.CreatePkgOrFail(t, pkgPath),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -104,7 +103,7 @@ func TestCommand_Run_failNoGit(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -127,7 +126,7 @@ func TestCommand_Run_failEmptyRepo(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -150,7 +149,7 @@ func TestCommand_Run_failNoRevision(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -177,7 +176,7 @@ func TestCommand_Run(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
@@ -240,7 +239,7 @@ func TestCommand_Run_subdir(t *testing.T) {
 
 	absPath := filepath.Join(w.WorkspaceDirectory, g.RepoName)
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
@@ -318,7 +317,7 @@ func TestCommand_Run_branch(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
@@ -400,7 +399,7 @@ func TestCommand_Run_tag(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	assert.NoError(t, err)
 
@@ -508,7 +507,7 @@ func TestCommand_Run_subdir_at_tag(t *testing.T) {
 				t.FailNow()
 			}
 
-			actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+			actualPkg := testutil.CreatePkgOrFail(t, rw.FullPackagePath())
 			err = fetch.Command{
 				Pkg: actualPkg,
 			}.Run(fake.CtxWithDefaultPrinter())
@@ -566,7 +565,7 @@ func TestCommand_Run_no_subdir_at_valid_tag(t *testing.T) {
 		t.FailNow()
 	}
 
-	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	actualPkg := testutil.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = fetch.Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithDefaultPrinter())
@@ -613,7 +612,7 @@ func TestCommand_Run_no_subdir_at_invalid_tag(t *testing.T) {
 		t.FailNow()
 	}
 
-	actualPkg := pkgtesting.CreatePkgOrFail(t, rw.FullPackagePath())
+	actualPkg := testutil.CreatePkgOrFail(t, rw.FullPackagePath())
 	err = fetch.Command{
 		Pkg: actualPkg,
 	}.Run(fake.CtxWithDefaultPrinter())
@@ -637,7 +636,7 @@ func TestCommand_Run_failInvalidRepo(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -661,7 +660,7 @@ func TestCommand_Run_failInvalidBranch(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()
@@ -688,7 +687,7 @@ func TestCommand_Run_failInvalidTag(t *testing.T) {
 	}
 
 	err = fetch.Command{
-		Pkg: pkgtesting.CreatePkgOrFail(t, w.FullPackagePath()),
+		Pkg: testutil.CreatePkgOrFail(t, w.FullPackagePath()),
 	}.Run(fake.CtxWithDefaultPrinter())
 	if !assert.Error(t, err) {
 		t.FailNow()

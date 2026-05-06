@@ -22,10 +22,10 @@ import (
 	"strings"
 
 	"github.com/kptdev/kpt/internal/builtins"
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/man"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	builtintypes "github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/errors"
 	"sigs.k8s.io/kustomize/kyaml/filesys"

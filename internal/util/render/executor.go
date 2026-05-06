@@ -23,8 +23,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/pkg"
-	"github.com/kptdev/kpt/internal/types"
 	"github.com/kptdev/kpt/internal/util/attribution"
 	"github.com/kptdev/kpt/internal/util/printerutil"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
@@ -33,7 +31,9 @@ import (
 	fnruntime "github.com/kptdev/kpt/pkg/fn/runtime"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"

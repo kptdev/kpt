@@ -20,10 +20,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/kptdev/kpt/internal/pkg"
 	"github.com/kptdev/kpt/internal/util/render"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	"github.com/kptdev/kpt/pkg/fn"
+	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
