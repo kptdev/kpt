@@ -17,4 +17,4 @@ stdErr: |
   Kptfile is invalid:
   Field: `pipeline.mutators[0].configPath`
   Value: "db/labelconfig.yaml"
-  Reason: functionConfig must exist in the current package
+  Reason: functionConfig resource for mutator "set-labels" is missing from path "db/labelconfig.yaml", this also occurs if "db/labelconfig.yaml" is part of a subpackage
