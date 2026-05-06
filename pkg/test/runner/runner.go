@@ -503,7 +503,7 @@ func (r *Runner) compareResult(exitErr error, stdout string, inStderr string, tm
 func (r *Runner) compareOutput(stdout string, stderr string) error {
 	expectedStderr := r.testCase.Config.StdErr
 	conditionedStderr := removeArmPlatformWarning(stderr)
-	conditionedStderr = removeTmpDirPrefix(stderr)
+	conditionedStderr = removeTmpDirPrefix(conditionedStderr)
 
 	if !strings.Contains(conditionedStderr, expectedStderr) {
 		r.t.Logf("stderr diff is %s", cmp.Diff(expectedStderr, conditionedStderr))
@@ -529,7 +529,7 @@ func (r *Runner) compareOutput(stdout string, stderr string) error {
 
 // removeTmpDirPrefix so that error messages can be compared properly
 func removeTmpDirPrefix(stderr string) string {
-	re := regexp.MustCompile(`/tmp/kpt-pipeline-e2e-\d+/`)
+	re := regexp.MustCompile(`/?\w+/kpt-pipeline-e2e-\d+/`)
 	return re.ReplaceAllString(stderr, "")
 }
 

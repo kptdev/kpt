@@ -468,6 +468,7 @@ func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath s
 	}
 }
 
+// PipelineStepNameOrImage returns the name if it's not empty or extracts the base name of the image
 func PipelineStepNameOrImage(name, image string) string {
 	if name != "" {
 		return name
@@ -476,7 +477,9 @@ func PipelineStepNameOrImage(name, image string) string {
 	return ImageBaseName(image)
 }
 
-// TODO: I feel like this must already exist somewhere
+// ImageBaseName extracts the "base name" from a full/partial image repository name
+//
+// TODO: This probably already exist somewhere
 func ImageBaseName(fullName string) string {
 	ref, err := regclientref.New(fullName)
 	if err != nil {
