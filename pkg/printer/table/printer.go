@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/cli-runtime/pkg/genericiooptions"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/cli-utils/pkg/apply/event"
 	"sigs.k8s.io/cli-utils/pkg/common"
@@ -21,7 +21,7 @@ import (
 )
 
 type Printer struct {
-	IOStreams genericclioptions.IOStreams
+	IOStreams genericiooptions.IOStreams
 }
 
 func (t *Printer) Print(ch <-chan event.Event, _ common.DryRunStrategy, _ bool) error {

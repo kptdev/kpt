@@ -22,12 +22,11 @@ import (
 	"strings"
 
 	"github.com/kptdev/kpt/pkg/lib/types"
+	merge4 "github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 
 	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
-	"github.com/kptdev/kpt/internal/util/merge"
 	"github.com/kptdev/kpt/internal/util/pkgutil"
-	"github.com/kptdev/kpt/internal/util/update/merge3"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -168,7 +167,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 		return err
 	}
 
-	mergedKos, err := merge3.Merge(
+	mergedKos, err := merge4.Merge(
 		originalKos, updatedKos, destinationKos, crdSchemas,
 	)
 	if err != nil {
@@ -372,8 +371,8 @@ func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, 
 	var kubeobjects fn.KubeObjects
 	copy(kubeobjects, updated)
 	kubeobjects = append(kubeobjects, destination...)
-	_, crdObjects := merge3.FilterCrds(kubeobjects)
-	crdSchemas, err := merge3.SchemasFromCrdKubeObjects(crdObjects)
+	_, crdObjects := merge4.FilterCrds(kubeobjects)
+	crdSchemas, err := merge4.SchemasFromCrdKubeObjects(crdObjects)
 	if err != nil {
 		klog.Error("An error occurred during CRD extraction: %w", err)
 		return nil, nil
@@ -392,7 +391,7 @@ func loadResourcesFromDirectory(directoryPath string, mergeSourceAnnotation stri
 	if err != nil {
 		return nil, err
 	}
-	reader := merge.PruningLocalPackageReader{
+	reader := PruningLocalPackageReader{
 		LocalPackageReader: kio.LocalPackageReader{
 			PackagePath:        directoryPath,
 			IncludeSubpackages: false,

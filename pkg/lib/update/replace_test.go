@@ -21,8 +21,8 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	"github.com/kptdev/kpt/internal/util/update"
-	updatetypes "github.com/kptdev/kpt/pkg/lib/update/updatetypes"
+	"github.com/kptdev/kpt/pkg/lib/update"
+	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/stretchr/testify/assert"
 )
 

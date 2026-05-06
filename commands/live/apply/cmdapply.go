@@ -20,12 +20,12 @@ import (
 	"os"
 	"time"
 
-	alphaprinterstable "github.com/kptdev/kpt/internal/alpha/printers/table"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/strings"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/live"
+	alphaprinterstable "github.com/kptdev/kpt/pkg/printer/table"
 	"github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
