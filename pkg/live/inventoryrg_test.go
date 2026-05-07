@@ -18,6 +18,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	cmdutil "k8s.io/kubectl/pkg/cmd/util"
@@ -157,31 +159,17 @@ func TestLoadStore(t *testing.T) {
 			_ = wrapped.Store(tc.objs, tc.objStatus)
 			invStored, err := wrapped.GetObject()
 			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
+				require.Error(t, err)
 				return
 			}
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
+			require.NoError(t, err)
 			wrapped = WrapInventoryObj(invStored)
 			objs, err := wrapped.Load()
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
-			if !objs.Equal(tc.objs) {
-				t.Fatalf("expected inventory objs (%v), got (%v)", tc.objs, objs)
-			}
+			require.NoError(t, err)
+			require.True(t, objs.Equal(tc.objs), "expected inventory objs (%v), got (%v)", tc.objs, objs)
 			resourceStatus, _, err := unstructured.NestedSlice(invStored.Object, "status", "resourceStatuses")
-			if err != nil {
-				t.Fatalf("unexpected error %v received", err)
-			}
-			if len(resourceStatus) != len(tc.objStatus) {
-				t.Fatalf("expected %d resource status but got %d", len(tc.objStatus), len(resourceStatus))
-			}
+			require.NoError(t, err)
+			require.Len(t, resourceStatus, len(tc.objStatus), "expected %d resource status but got %d", len(tc.objStatus), len(resourceStatus))
 		})
 	}
 }
@@ -227,92 +215,47 @@ func TestIsResourceGroupInventory(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actual, err := IsResourceGroupInventory(tc.invObj)
 			if tc.isError {
-				if err == nil {
-					t.Fatalf("expected error but received none")
-				}
+				require.Error(t, err)
 				return
 			}
-			if !tc.isError && err != nil {
-				t.Fatalf("unexpected error %v received", err)
-				return
-			}
-			if tc.expected != actual {
-				t.Errorf("expected inventory as (%t), got (%t)", tc.expected, actual)
-			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual, "expected inventory as (%t), got (%t)", tc.expected, actual)
 		})
 	}
 }
 
-// TestWrapInventoryObjWithContext_StoresContext proves the new factory
-// threads the caller's context into the InventoryResourceGroup struct.
-// This is the mechanism the Apply / ApplyWithPrune methods use to honor
-// Ctrl-C / caller timeouts instead of the old context.TODO() behavior.
+// TestWrapInventoryObjWithContext_StoresContext stores ctx on the wrapper.
 func TestWrapInventoryObjWithContext_StoresContext(t *testing.T) {
 	type ctxKey struct{}
 	ctx := context.WithValue(context.Background(), ctxKey{}, "propagated")
 
 	storage := WrapInventoryObjWithContext(ctx)(inventoryObj)
 	icm, ok := storage.(*InventoryResourceGroup)
-	if !ok {
-		t.Fatalf("WrapInventoryObjWithContext produced unexpected type %T", storage)
-	}
-	if icm.ctx == nil {
-		t.Fatal("expected ctx on InventoryResourceGroup; got nil")
-	}
-	if got := icm.ctx.Value(ctxKey{}); got != "propagated" {
-		t.Fatalf("expected stored ctx to carry propagated value; got %v", got)
-	}
+	require.True(t, ok, "WrapInventoryObjWithContext produced unexpected type %T", storage)
+	require.NotNil(t, icm.ctx, "expected ctx on InventoryResourceGroup; got nil")
+	require.Equal(t, "propagated", icm.ctx.Value(ctxKey{}), "expected stored ctx to carry propagated value")
 }
 
-// TestWrapInventoryObj_LeavesContextNil confirms the legacy wrapper keeps
-// ctx nil so contextOrBackground falls back to context.Background() —
-// preserving the pre-refactor behavior for callers that haven't migrated.
+// TestWrapInventoryObj_LeavesContextNil keeps legacy nil ctx.
 func TestWrapInventoryObj_LeavesContextNil(t *testing.T) {
 	storage := WrapInventoryObj(inventoryObj)
 	icm, ok := storage.(*InventoryResourceGroup)
-	if !ok {
-		t.Fatalf("WrapInventoryObj produced unexpected type %T", storage)
-	}
-	if icm.ctx != nil {
-		t.Fatalf("expected legacy wrapper to leave ctx nil; got %v", icm.ctx)
-	}
+	require.True(t, ok, "WrapInventoryObj produced unexpected type %T", storage)
+	require.Nil(t, icm.ctx, "expected legacy wrapper to leave ctx nil; got %v", icm.ctx)
 }
 
-// TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground proves the
-// factory is nil-safe: passing a nil ctx cannot produce a wrapper that
-// would nil-deref inside client-go. The stored ctx is normalized to
-// context.Background() at factory construction time.
+// TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground normalizes nil ctx.
 func TestWrapInventoryObjWithContext_NilCtxDefaultsToBackground(t *testing.T) {
 	//nolint:staticcheck // SA1012: deliberately passing a nil context to exercise the nil-safety guard.
 	storage := WrapInventoryObjWithContext(nil)(inventoryObj)
 	icm, ok := storage.(*InventoryResourceGroup)
-	if !ok {
-		t.Fatalf("WrapInventoryObjWithContext(nil) produced unexpected type %T", storage)
-	}
-	if icm.ctx == nil {
-		t.Fatal("expected nil ctx to be normalized to Background(); got nil")
-	}
+	require.True(t, ok, "WrapInventoryObjWithContext(nil) produced unexpected type %T", storage)
+	require.NotNil(t, icm.ctx, "expected nil ctx to be normalized to Background(); got nil")
 	// Background() never cancels; Done() returns a nil channel.
-	if icm.ctx.Done() != nil {
-		t.Fatalf("expected Background()-equivalent ctx; Done() returned non-nil")
-	}
+	require.Nil(t, icm.ctx.Done(), "expected Background()-equivalent ctx; Done() returned non-nil")
 }
 
-// TestResourceGroupCRDMatched_BackCompatSignaturePreserved is a
-// compile-time guard that the legacy ResourceGroupCRDMatched(factory)
-// signature is still exported, alongside the new context-aware
-// ResourceGroupCRDMatchedWithContext(ctx, factory). If either function
-// is renamed, removed, or has its signature changed, this test stops
-// compiling and the API-compat break is visible immediately.
-//
-// Uses typed anonymous-function parameters so the compiler verifies
-// signature assignability. This pattern is deliberate — staticcheck's
-// QF1011 would otherwise suggest removing a `var _ T = fn` type
-// annotation, which would silently destroy the guarantee.
-//
-// We don't invoke the functions because both require a live
-// cmdutil.Factory; their runtime behavior is exercised by the
-// apply/destroy e2e tests.
+// TestResourceGroupCRDMatched_BackCompatSignaturePreserved pins exported signatures.
 func TestResourceGroupCRDMatched_BackCompatSignaturePreserved(t *testing.T) {
 	pinSignatures := func(
 		_ func(cmdutil.Factory) bool,
@@ -322,38 +265,28 @@ func TestResourceGroupCRDMatched_BackCompatSignaturePreserved(t *testing.T) {
 	pinSignatures(ResourceGroupCRDMatched, ResourceGroupCRDMatchedWithContext)
 }
 
-// TestContextOrBackground covers both the override path (caller-supplied
-// ctx is returned verbatim, including cancellation state) and the
-// fallback path (nil ctx becomes context.Background()).
+// TestContextOrBackground covers stored ctx and fallback behavior.
 func TestContextOrBackground(t *testing.T) {
 	t.Run("returns stored ctx when set", func(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		icm := &InventoryResourceGroup{ctx: ctx}
 
 		got := icm.contextOrBackground()
-		if got != ctx {
-			t.Fatalf("expected contextOrBackground to return the stored ctx")
-		}
-		// Cancellation on the original ctx must be visible through the
-		// returned ctx — proof the value isn't copied or unwrapped.
+		require.Same(t, ctx, got, "expected contextOrBackground to return the stored ctx")
+		// Cancellation on the original ctx must be visible through the returned ctx.
 		cancel()
 		select {
 		case <-got.Done():
-			// expected
 		default:
-			t.Fatalf("returned ctx did not observe cancellation of the stored ctx")
+			require.FailNow(t, "returned ctx did not observe cancellation of the stored ctx")
 		}
 	})
 
 	t.Run("falls back to Background when nil", func(t *testing.T) {
 		icm := &InventoryResourceGroup{}
 		got := icm.contextOrBackground()
-		if got == nil {
-			t.Fatal("contextOrBackground returned nil; expected context.Background()")
-		}
+		require.NotNil(t, got, "contextOrBackground returned nil; expected context.Background()")
 		// Background() never cancels; Done() returns a nil channel.
-		if got.Done() != nil {
-			t.Fatalf("expected Background-equivalent ctx; Done channel was not nil")
-		}
+		require.Nil(t, got.Done(), "expected Background-equivalent ctx; Done channel was not nil")
 	})
 }

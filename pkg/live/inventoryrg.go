@@ -56,15 +56,8 @@ var ResourceGroupGVK = schema.GroupVersionKind{
 	Kind:    "ResourceGroup",
 }
 
-// InventoryResourceGroup wraps a ResourceGroup resource and implements
-// the Inventory and InventoryInfo interface. This wrapper loads and stores the
-// object metadata (inventory) to and from the wrapped ResourceGroup.
-//
-// ctx, if non-nil, is the caller's context and is used for the live
-// Kubernetes API calls performed by Apply / ApplyWithPrune. It exists on
-// the struct (rather than as a parameter) because the upstream
-// inventory.Storage interface signatures do not include a context; see
-// WrapInventoryObjWithContext.
+// InventoryResourceGroup wraps a ResourceGroup inventory and carries a caller
+// context for API calls.
 type InventoryResourceGroup struct {
 	ctx       context.Context
 	inv       *unstructured.Unstructured
@@ -72,10 +65,7 @@ type InventoryResourceGroup struct {
 	objStatus []actuation.ObjectStatus
 }
 
-// contextOrBackground returns the caller-supplied context if set, or
-// context.Background() otherwise. Callers going through
-// WrapInventoryObjWithContext get real cancellation/timeout propagation;
-// legacy callers using WrapInventoryObj continue to work unchanged.
+// contextOrBackground returns ctx when set, otherwise Background().
 func (icm *InventoryResourceGroup) contextOrBackground() context.Context {
 	if icm.ctx != nil {
 		return icm.ctx
@@ -90,14 +80,7 @@ func (icm *InventoryResourceGroup) Strategy() inventory.Strategy {
 var _ inventory.Storage = &InventoryResourceGroup{}
 var _ inventory.Info = &InventoryResourceGroup{}
 
-// WrapInventoryObj takes a passed ResourceGroup (as a resource.Info),
-// wraps it with the InventoryResourceGroup and upcasts the wrapper as
-// the Inventory interface.
-//
-// The wrapped inventory will use context.Background() for cluster API
-// calls. Prefer WrapInventoryObjWithContext when you have a caller
-// context (e.g. cmd.Context()) so that Ctrl-C and caller-side timeouts
-// actually cancel the in-flight request.
+// WrapInventoryObj wraps inventory and uses Background() for API calls.
 func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Storage {
 	if obj != nil {
 		klog.V(4).Infof("wrapping Inventory obj: %s/%s\n", obj.GetNamespace(), obj.GetName())
@@ -105,15 +88,8 @@ func WrapInventoryObj(obj *unstructured.Unstructured) inventory.Storage {
 	return &InventoryResourceGroup{inv: obj}
 }
 
-// WrapInventoryObjWithContext returns a wrapper function compatible with
-// inventory.NewClient's WrapObjFunc parameter. The returned function
-// produces an InventoryResourceGroup that carries ctx, so subsequent
-// Apply / ApplyWithPrune calls honor the caller's cancellation and
-// timeout.
-//
-// If ctx is nil it is normalized to context.Background() so callers
-// cannot accidentally trigger a nil-deref inside client-go. Prefer
-// passing a real ctx (e.g. cmd.Context()) to actually gain cancellation.
+// WrapInventoryObjWithContext returns a WrapObjFunc that stores ctx.
+// Nil ctx is normalized to Background().
 func WrapInventoryObjWithContext(ctx context.Context) func(*unstructured.Unstructured) inventory.Storage {
 	if ctx == nil {
 		ctx = context.Background()
@@ -430,21 +406,13 @@ func ResourceGroupCRDApplied(factory cmdutil.Factory) bool {
 	return true
 }
 
-// ResourceGroupCRDMatched checks if the ResourceGroup CRD
-// in the cluster matches the CRD in the kpt binary.
-//
-// This signature is preserved for backward compatibility with external
-// callers; it delegates to ResourceGroupCRDMatchedWithContext with
-// context.Background(). Prefer ResourceGroupCRDMatchedWithContext when
-// you have a caller context so Ctrl-C and timeouts can abort the check.
+// ResourceGroupCRDMatched checks the cluster CRD using Background().
 func ResourceGroupCRDMatched(factory cmdutil.Factory) bool {
 	return ResourceGroupCRDMatchedWithContext(context.Background(), factory)
 }
 
-// ResourceGroupCRDMatchedWithContext is the context-aware variant of
-// ResourceGroupCRDMatched. ctx is used for the live cluster Get call;
-// cancelling it (e.g. via Ctrl-C or a command-level timeout) aborts the
-// check. A nil ctx is normalized to context.Background().
+// ResourceGroupCRDMatchedWithContext checks the cluster CRD using ctx.
+// Nil ctx is normalized to Background().
 func ResourceGroupCRDMatchedWithContext(ctx context.Context, factory cmdutil.Factory) bool {
 	if ctx == nil {
 		ctx = context.Background()
