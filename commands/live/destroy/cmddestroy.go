@@ -192,7 +192,7 @@ func runDestroy(r *Runner, inv inventory.Info, dryRunStrategy common.DryRunStrat
 		DryRunStrategy:   dryRunStrategy,
 		EmitStatusEvents: true,
 	}
-	ch := destroyer.Run(context.Background(), inv, options)
+	ch := destroyer.Run(r.ctx, inv, options)
 
 	// Print the preview strategy unless the output format is json.
 	if dryRunStrategy.ClientOrServerDryRun() && r.output != printers.JSONPrinter {
