@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package pkgutil contains utility functions for packages
-package pkgutil
+package pkg
 
 import (
 	"io"
@@ -24,7 +24,6 @@ import (
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
-	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
@@ -69,8 +68,8 @@ func WalkPackage(src string, c func(string, os.FileInfo, error) error) error {
 
 // CopyPackage copies the content of a single package from src to dst. If includeSubpackages
 // is true, it will copy resources belonging to any subpackages.
-func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMatcher) error {
-	subpackagesToCopy, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, src, matcher, true)
+func CopyPackage(src, dst string, copyRootKptfile bool, matcher SubpackageMatcher) error {
+	subpackagesToCopy, err := Subpackages(filesys.FileSystemOrOnDisk{}, src, matcher, true)
 	if err != nil {
 		return err
 	}
@@ -172,7 +171,7 @@ func CopyPackage(src, dst string, copyRootKptfile bool, matcher pkg.SubpackageMa
 
 // RemoveStaleItems removes files and directories from the dst package that were present in the org package,
 // but are not present in the src package. It does not remove the root Kptfile of the dst package.
-func RemoveStaleItems(org, src, dst string, _ bool, _ pkg.SubpackageMatcher) error {
+func RemoveStaleItems(org, src, dst string, _ bool, _ SubpackageMatcher) error {
 	var dirsToDelete []string
 	walkErr := filepath.Walk(dst, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -319,10 +318,10 @@ func SubPkgFirstSorter(paths []string) func(i, j int) bool {
 
 // FindSubpackagesForPaths traverses the provided package paths
 // and finds all subpackages using the provided pkgLocatorFunc
-func FindSubpackagesForPaths(matcher pkg.SubpackageMatcher, recurse bool, pkgPaths ...string) ([]string, error) {
+func FindSubpackagesForPaths(matcher SubpackageMatcher, recurse bool, pkgPaths ...string) ([]string, error) {
 	uniquePaths := make(map[string]bool)
 	for _, path := range pkgPaths {
-		paths, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, path, matcher, recurse)
+		paths, err := Subpackages(filesys.FileSystemOrOnDisk{}, path, matcher, recurse)
 		if err != nil {
 			return []string{}, err
 		}
@@ -369,7 +368,7 @@ func FormatPackage(pkgPath string) {
 // subpackages. This is used to format Kptfiles in the order of go structures
 // TODO: phanimarupaka remove this method after addressing https://github.com/kptdev/kpt/issues/2052
 func RoundTripKptfilesInPkg(pkgPath string) error {
-	paths, err := pkg.Subpackages(filesys.FileSystemOrOnDisk{}, pkgPath, pkg.All, true)
+	paths, err := Subpackages(filesys.FileSystemOrOnDisk{}, pkgPath, All, true)
 	if err != nil {
 		return err
 	}

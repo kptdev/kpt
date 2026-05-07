@@ -17,7 +17,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/kptdev/kpt/internal/util/strings"
+	"github.com/kptdev/kpt/pkg/lib/util/strings"
 )
 
 // ValidationError is an error type used when validation fails.

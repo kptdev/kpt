@@ -25,7 +25,7 @@ import (
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
 	"github.com/kptdev/kpt/internal/util/pathutil"
-	"github.com/kptdev/kpt/internal/util/render"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
@@ -130,7 +130,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	executor := render.Renderer{
+	executor := kptops.Renderer{
 		PkgPath:        absPkgPath,
 		ResultsDirPath: r.resultsDirPath,
 		Output:         output,

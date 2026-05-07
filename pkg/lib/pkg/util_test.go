@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkgutil_test
+package pkg_test
 
 import (
 	"os"
@@ -22,9 +22,8 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
-	"github.com/kptdev/kpt/pkg/lib/pkg"
+	. "github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -83,7 +82,7 @@ func TestWalkPackage(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 
 			var visited []string
-			if err := pkgutil.WalkPackage(pkgPath, func(s string, _ os.FileInfo, err error) error {
+			if err := WalkPackage(pkgPath, func(s string, _ os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -109,7 +108,7 @@ func TestCopyPackage(t *testing.T) {
 	testCases := map[string]struct {
 		pkg               *pkgbuilder.RootPkg
 		copyRootKptfile   bool
-		subpackageMatcher pkg.SubpackageMatcher
+		subpackageMatcher SubpackageMatcher
 		expected          []string
 	}{
 		"subpackages without root kptfile": {
@@ -122,7 +121,7 @@ func TestCopyPackage(t *testing.T) {
 						WithFile("def.yaml", "123"),
 				),
 			copyRootKptfile:   false,
-			subpackageMatcher: pkg.Local,
+			subpackageMatcher: Local,
 			expected: []string{
 				".",
 				"abc.yaml",
@@ -139,7 +138,7 @@ func TestCopyPackage(t *testing.T) {
 					pkgbuilder.NewSubPkg(".git").
 						WithFile("INDEX", "ABC123"),
 				),
-			subpackageMatcher: pkg.None,
+			subpackageMatcher: None,
 			expected: []string{
 				".",
 				"abc.yaml",
@@ -156,7 +155,7 @@ func TestCopyPackage(t *testing.T) {
 						WithFile("def.yaml", "123"),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.None,
+			subpackageMatcher: None,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -178,7 +177,7 @@ func TestCopyPackage(t *testing.T) {
 						WithFile("def.yaml", "123"),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.All,
+			subpackageMatcher: All,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -206,7 +205,7 @@ func TestCopyPackage(t *testing.T) {
 						WithFile("def.yaml", "123"),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Local,
+			subpackageMatcher: Local,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -231,7 +230,7 @@ func TestCopyPackage(t *testing.T) {
 						WithFile("def.yaml", "123"),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Remote,
+			subpackageMatcher: Remote,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -257,7 +256,7 @@ func TestCopyPackage(t *testing.T) {
 					),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Local,
+			subpackageMatcher: Local,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -286,7 +285,7 @@ func TestCopyPackage(t *testing.T) {
 					),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Local,
+			subpackageMatcher: Local,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -315,7 +314,7 @@ func TestCopyPackage(t *testing.T) {
 					),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Remote,
+			subpackageMatcher: Remote,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -344,7 +343,7 @@ func TestCopyPackage(t *testing.T) {
 					),
 				),
 			copyRootKptfile:   true,
-			subpackageMatcher: pkg.Remote,
+			subpackageMatcher: Remote,
 			expected: []string{
 				".",
 				"Kptfile",
@@ -365,7 +364,7 @@ func TestCopyPackage(t *testing.T) {
 			pkgPath := tc.pkg.ExpandPkg(t, testutil.EmptyReposInfo)
 			dest := t.TempDir()
 
-			err := pkgutil.CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
+			err := CopyPackage(pkgPath, dest, tc.copyRootKptfile, tc.subpackageMatcher)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -538,7 +537,7 @@ func TestFindLocalRecursiveSubpackagesForPaths(t *testing.T) {
 				pkgPaths = append(pkgPaths, p.ExpandPkg(t, testutil.EmptyReposInfo))
 			}
 
-			paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, pkgPaths...)
+			paths, err := FindSubpackagesForPaths(Local, true, pkgPaths...)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}
@@ -561,7 +560,7 @@ func TestRemoveStaleItems_RemovesFile(t *testing.T) {
 	assert.NoError(t, os.WriteFile(filepath.Join(dst, fileName), []byte("content"), 0644))
 
 	// Should remove file.txt from dst
-	err := pkgutil.RemoveStaleItems(org, src, dst, true, pkg.All)
+	err := RemoveStaleItems(org, src, dst, true, All)
 	assert.NoError(t, err)
 	_, err = os.Stat(filepath.Join(dst, fileName))
 	assert.True(t, os.IsNotExist(err))
@@ -584,7 +583,7 @@ func TestRemoveStaleItems_ErrorOnRemove(t *testing.T) {
 	assert.NoError(t, os.Mkdir(filePathDst, 0755))
 	assert.NoError(t, os.WriteFile(filepath.Join(filePathDst, "dummy"), []byte("x"), 0644))
 
-	err := pkgutil.RemoveStaleItems(org, src, dst, true, pkg.All)
+	err := RemoveStaleItems(org, src, dst, true, All)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "directory not empty")
 }

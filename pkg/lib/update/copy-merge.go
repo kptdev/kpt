@@ -15,7 +15,6 @@
 package update
 
 import (
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -44,10 +43,10 @@ func (u CopyMergeUpdater) Update(options updatetypes.Options) error {
 	if err := kptfileutil.UpdateKptfile(dst, src, options.OriginPath, true); err != nil {
 		return errors.E(op, types.UniquePath(dst), err)
 	}
-	if err := pkgutil.CopyPackage(src, dst, options.IsRoot, pkg.All); err != nil {
+	if err := pkg.CopyPackage(src, dst, options.IsRoot, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dst), err)
 	}
-	if err := pkgutil.RemoveStaleItems(org, src, dst, options.IsRoot, pkg.All); err != nil {
+	if err := pkg.RemoveStaleItems(org, src, dst, options.IsRoot, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dst), err)
 	}
 	return nil

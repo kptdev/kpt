@@ -18,7 +18,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -42,7 +41,7 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 		return errors.E(op, types.UniquePath(options.LocalPath), err)
 	}
 
-	paths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
+	paths, err := pkg.FindSubpackagesForPaths(pkg.Local, true, options.LocalPath, options.UpdatedPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(options.LocalPath), err)
 	}
@@ -54,7 +53,7 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 		}
 		localSubPkgPath := filepath.Join(options.LocalPath, p)
 		updatedSubPkgPath := filepath.Join(options.UpdatedPath, p)
-		err = pkgutil.RemovePackageContent(localSubPkgPath, !isRootPkg)
+		err = pkg.RemovePackageContent(localSubPkgPath, !isRootPkg)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)
 		}
@@ -71,7 +70,7 @@ func (u ReplaceUpdater) Update(options updatetypes.Options) error {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		} else {
-			if err = pkgutil.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
+			if err = pkg.CopyPackage(updatedSubPkgPath, localSubPkgPath, !isRootPkg, pkg.None); err != nil {
 				return errors.E(op, types.UniquePath(localSubPkgPath), err)
 			}
 		}

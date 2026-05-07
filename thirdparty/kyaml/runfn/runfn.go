@@ -22,7 +22,6 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 
-	"github.com/kptdev/kpt/internal/util/printerutil"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -249,7 +248,7 @@ func (r RunFns) runFunctions(input kio.Reader, output kio.Writer, fltrs []kio.Fi
 }
 
 func (r RunFns) printFnResultsStatus(resultsFile string) {
-	printerutil.PrintFnResultInfo(r.Ctx, resultsFile, true)
+	printer.PrintFnResultInfo(r.Ctx, resultsFile, true)
 }
 
 // mergeContainerEnv will merge the envs specified by command line (imperative) and config

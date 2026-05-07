@@ -20,12 +20,12 @@ import (
 	"io"
 
 	"github.com/kptdev/kpt/internal/util/pathutil"
-	"github.com/kptdev/kpt/internal/util/strings"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/util/strings"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package render
+package kptops
 
 import (
 	"context"
@@ -23,8 +23,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/util/attribution"
-	"github.com/kptdev/kpt/internal/util/printerutil"
 	fnresult "github.com/kptdev/kpt/pkg/api/fnresult/v1"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/fn"
@@ -34,6 +32,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"github.com/kptdev/kpt/pkg/printer"
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -308,7 +307,7 @@ func (e *Renderer) saveFnResults(ctx context.Context, fnResults *fnresult.Result
 		return fmt.Errorf("failed to save function results: %w", err)
 	}
 
-	printerutil.PrintFnResultInfo(ctx, resultsFile, false)
+	printer.PrintFnResultInfo(ctx, resultsFile, false)
 	return nil
 }
 

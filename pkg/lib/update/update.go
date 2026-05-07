@@ -26,8 +26,6 @@ import (
 	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/util/fetch"
 	"github.com/kptdev/kpt/internal/util/git"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
-	"github.com/kptdev/kpt/internal/util/stack"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -35,6 +33,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
+	"github.com/kptdev/kpt/pkg/lib/util/stack"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -312,7 +311,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 			return errors.E(op, p.UniquePath, err)
 		}
 
-		paths, err := pkgutil.FindSubpackagesForPaths(pkg.Remote, false,
+		paths, err := pkg.FindSubpackagesForPaths(pkg.Remote, false,
 			localPath, updatedPath, originPath)
 		if err != nil {
 			return errors.E(op, p.UniquePath, err)
@@ -377,7 +376,7 @@ func (u Command) updatePackage(ctx context.Context, subPkgPath, localPath, updat
 	// the package hierarchy and that package is the root.
 	case !originExists && !localExists && updatedExists:
 		pr.Printf("Adding package %q from upstream.\n", packageName(localPath))
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
+		if err := pkg.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 

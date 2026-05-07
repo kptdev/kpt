@@ -28,7 +28,7 @@ import (
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
-	"github.com/kptdev/kpt/internal/util/diff"
+	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )

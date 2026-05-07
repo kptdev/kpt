@@ -26,7 +26,6 @@ import (
 
 	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/util/fetch"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -149,7 +148,7 @@ func (c *Command) Run(ctx context.Context) error {
 		return errors.Errorf("failed to create stage dir for current package: %v", err)
 	}
 
-	err = pkgutil.CopyPackage(c.Path, currPkg, true, pkg.Local)
+	err = pkg.CopyPackage(c.Path, currPkg, true, pkg.Local)
 	if err != nil {
 		return errors.Errorf("failed to stage current package: %v", err)
 	}

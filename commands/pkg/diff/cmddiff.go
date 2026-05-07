@@ -20,9 +20,9 @@ import (
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
 	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/diff"
 	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"

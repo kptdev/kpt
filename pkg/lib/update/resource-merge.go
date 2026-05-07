@@ -21,12 +21,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	merge4 "github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 
-	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -65,7 +64,7 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 	// Find all subpackages in local, upstream and original. They are sorted
 	// in increasing order based on the depth of the subpackage relative to the
 	// root package.
-	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true,
+	subPkgPaths, err := pkg.FindSubpackagesForPaths(pkg.Local, true,
 		options.LocalPath, options.UpdatedPath, options.OriginPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(options.LocalPath), err)
@@ -95,17 +94,17 @@ func (u ResourceMergeUpdater) Update(options updatetypes.Options) error {
 // original version of the package.
 func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, originalPath string, isRootPkg bool) error {
 	const op errors.Op = "update.updatePackage"
-	localExists, err := pkgutil.Exists(localPath)
+	localExists, err := pkg.Exists(localPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
 
-	updatedExists, err := pkgutil.Exists(updatedPath)
+	updatedExists, err := pkg.Exists(updatedPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
 
-	originalExists, err := pkgutil.Exists(originalPath)
+	originalExists, err := pkg.Exists(originalPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -117,7 +116,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 			fmt.Errorf("subpackage %q added in both upstream and local", subPkgPath))
 	// Package added in upstream
 	case !originalExists && !localExists && updatedExists:
-		if err := pkgutil.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
+		if err := pkg.CopyPackage(updatedPath, localPath, !isRootPkg, pkg.None); err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
 	// Package added locally
@@ -133,7 +132,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 	// Package deleted from upstream
 	case originalExists && localExists && !updatedExists:
 		// Check the diff. If there are local changes, we keep the subpackage.
-		diff, err := pkgdiff.PkgDiff(originalPath, localPath)
+		diff, err := diff.PkgDiff(originalPath, localPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
@@ -286,7 +285,7 @@ func getSubDirsAndNonKrmFiles(root string) (sets.String, sets.String, error) {
 	const op errors.Op = "update.getSubDirsAndNonKrmFiles"
 	files := sets.String{}
 	dirs := sets.String{}
-	err := pkgutil.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
+	err := pkg.WalkPackage(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.E(op, errors.IO, err)
 		}

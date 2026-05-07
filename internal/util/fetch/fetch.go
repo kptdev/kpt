@@ -29,7 +29,6 @@ import (
 
 	"github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/internal/util/git"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -142,7 +141,7 @@ func (c *Cloner) cloneAndCopy(ctx context.Context, dest string) error {
 
 	sourcePath := filepath.Join(c.repoSpec.Dir, c.repoSpec.Path)
 	pr.Printf("Adding package %q.\n", strings.TrimPrefix(c.repoSpec.Path, "/"))
-	if err := pkgutil.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
+	if err := pkg.CopyPackage(sourcePath, dest, true, pkg.All); err != nil {
 		return errors.E(op, types.UniquePath(dest), err)
 	}
 

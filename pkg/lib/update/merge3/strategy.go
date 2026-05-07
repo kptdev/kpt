@@ -16,7 +16,7 @@
 package merge3
 
 import (
-	"github.com/kptdev/kpt/internal/util/attribution"
+	"github.com/kptdev/kpt/pkg/lib/util/attribution"
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
 	"sigs.k8s.io/kustomize/kyaml/yaml"

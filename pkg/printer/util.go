@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package printerutil
+package printer
 
 import (
 	"context"
-
-	"github.com/kptdev/kpt/pkg/printer"
 )
 
 // PrintFnResultInfo displays information about the function results file.
 func PrintFnResultInfo(ctx context.Context, resultsFile string, withNewLine bool) {
-	pr := printer.FromContextOrDie(ctx)
+	pr := FromContextOrDie(ctx)
 	if resultsFile != "" {
 		if withNewLine {
 			pr.Printf("\n")

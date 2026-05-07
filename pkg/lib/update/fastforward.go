@@ -20,12 +20,11 @@ import (
 	"path/filepath"
 	"slices"
 
-	pkgdiff "github.com/kptdev/kpt/internal/util/diff"
-	"github.com/kptdev/kpt/internal/util/pkgutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
+	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -73,7 +72,7 @@ func (u FastForwardUpdater) Update(options updatetypes.Options) error {
 
 func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string) error {
 	const op errors.Op = "update.checkForLocalChanges"
-	found, err := pkgutil.Exists(originalPath)
+	found, err := pkg.Exists(originalPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -81,7 +80,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		return nil
 	}
 
-	subPkgPaths, err := pkgutil.FindSubpackagesForPaths(pkg.Local, true, localPath, originalPath)
+	subPkgPaths, err := pkg.FindSubpackagesForPaths(pkg.Local, true, localPath, originalPath)
 	if err != nil {
 		return errors.E(op, types.UniquePath(localPath), err)
 	}
@@ -90,11 +89,11 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 		localSubPkgPath := filepath.Join(localPath, subPkgPath)
 		originalSubPkgPath := filepath.Join(originalPath, subPkgPath)
 
-		localExists, err := pkgutil.Exists(localSubPkgPath)
+		localExists, err := pkg.Exists(localSubPkgPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)
 		}
-		originalExists, err := pkgutil.Exists(originalSubPkgPath)
+		originalExists, err := pkg.Exists(originalSubPkgPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)
 		}
@@ -102,7 +101,7 @@ func (u FastForwardUpdater) checkForLocalChanges(localPath, originalPath string)
 			aggDiff.Insert("%s (Package)", subPkgPath)
 			continue
 		}
-		d, err := pkgdiff.PkgDiff(localSubPkgPath, originalSubPkgPath)
+		d, err := diff.PkgDiff(localSubPkgPath, originalSubPkgPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localSubPkgPath), err)
 		}
