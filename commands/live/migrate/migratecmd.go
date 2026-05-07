@@ -25,13 +25,13 @@ import (
 
 	initialization "github.com/kptdev/kpt/commands/live/init"
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/types"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/live"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -251,7 +251,7 @@ func (mr *Runner) migrateObjs(rgInvClient inventory.Client,
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(mr.ctx, path)
+		path, err = argsutil.ResolveSymlink(mr.ctx, path)
 		if err != nil {
 			return err
 		}
@@ -363,7 +363,7 @@ func (mr *Runner) migrateKptfileToRG(args []string) error {
 	klog.V(4).Infoln("attempting to migrate from Kptfile inventory")
 	fmt.Fprint(mr.ioStreams.Out, "  reading existing Kptfile...")
 	if !mr.dryRun {
-		dir, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
+		dir, _, err := path.ResolveAbsAndRelPaths(args[0])
 		if err != nil {
 			return err
 		}
@@ -459,7 +459,7 @@ func (mr *Runner) migrateCMToRG(stdinBytes []byte, args []string) error {
 func (mr *Runner) createRGfile(ctx context.Context, args []string, prevID string) error {
 	fmt.Fprint(mr.ioStreams.Out, "  creating ResourceGroup object file...")
 	if !mr.dryRun {
-		dir, _, err := pathutil.ResolveAbsAndRelPaths(args[0])
+		dir, _, err := path.ResolveAbsAndRelPaths(args[0])
 		if err != nil {
 			return err
 		}

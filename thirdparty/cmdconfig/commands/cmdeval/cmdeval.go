@@ -14,12 +14,13 @@ import (
 
 	"github.com/google/shlex"
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfile "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/kptdev/kpt/thirdparty/kyaml/runfn"
@@ -200,8 +201,8 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
-		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
-		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.runFns.Path)
+		fnConfigAbsPath, _, _ := path.ResolveAbsAndRelPaths(r.FnConfigPath)
+		pkgAbsPath, _, _ := path.ResolveAbsAndRelPaths(r.runFns.Path)
 		newFn.ConfigPath, _ = filepath.Rel(pkgAbsPath, fnConfigAbsPath)
 	} else {
 		data := map[string]string{}
@@ -519,7 +520,7 @@ func (r *EvalFnRunner) preRunE(c *cobra.Command, args []string) error {
 	}
 
 	if path != "" {
-		path, err = argutil.ResolveSymlink(r.Ctx, path)
+		path, err = argsutil.ResolveSymlink(r.Ctx, path)
 		if err != nil {
 			return err
 		}

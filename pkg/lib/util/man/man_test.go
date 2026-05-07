@@ -21,8 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	man "github.com/kptdev/kpt/internal/util/man"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/util/man"
 	"github.com/stretchr/testify/assert"
 )
 

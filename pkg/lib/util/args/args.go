@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// The argutil package contains libraries for parsing commandline args.
-package argutil
+// Package args contains libraries for parsing commandline args.
+package args
 
 import (
 	"context"

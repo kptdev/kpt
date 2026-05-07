@@ -23,11 +23,11 @@ import (
 	"os"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/fndocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -100,7 +100,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		r.pkgPath = args[0]
 	}
 	var err error
-	r.pkgPath, err = argutil.ResolveSymlink(r.ctx, r.pkgPath)
+	r.pkgPath, err = argsutil.ResolveSymlink(r.ctx, r.pkgPath)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (r *Runner) runE(_ *cobra.Command, _ []string) error {
 		// capture the content to be written
 		output = &outContent
 	}
-	absPkgPath, _, err := pathutil.ResolveAbsAndRelPaths(r.pkgPath)
+	absPkgPath, _, err := path.ResolveAbsAndRelPaths(r.pkgPath)
 	if err != nil {
 		return err
 	}

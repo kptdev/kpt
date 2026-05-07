@@ -53,7 +53,7 @@ type RepoSpec struct {
 }
 
 // AbsPath is the absolute path to the subdirectory
-func (rs RepoSpec) AbsPath() string {
+func (rs *RepoSpec) AbsPath() string {
 	return filepath.Join(rs.Dir, rs.Path)
 }
 
@@ -80,7 +80,7 @@ func isAWSHost(host string) bool {
 	return strings.Contains(host, "amazonaws.com")
 }
 
-// lookupCommit looks up the sha of the current commit on the repo at the
+// LookupCommit looks up the sha of the current commit on the repo at the
 // provided path.
 func LookupCommit(repoPath string) (string, error) {
 	const op errors.Op = "git.LookupCommit"

@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
 	"github.com/kptdev/kpt/pkg/lib/util/strings"
 	"github.com/kptdev/kpt/pkg/live"
@@ -174,7 +174,7 @@ func (r *Runner) runE(c *cobra.Command, args []string) error {
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(r.ctx, path)
+		path, err = argsutil.ResolveSymlink(r.ctx, path)
 		if err != nil {
 			return err
 		}

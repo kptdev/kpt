@@ -21,15 +21,15 @@ import (
 	"strings"
 
 	docs "github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/get"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/types"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/lib/util/parse"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
@@ -84,7 +84,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	} else if filepath.Clean(args[1]) != "." {
 		_, err := os.Lstat(args[1])
 		if err == nil || os.IsExist(err) {
-			resolvedPath, err := argutil.ResolveSymlink(r.ctx, args[1])
+			resolvedPath, err := argsutil.ResolveSymlink(r.ctx, args[1])
 			if err != nil {
 				return errors.E(op, err)
 			}
@@ -97,7 +97,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 	}
 
 	r.Get.Git = &t.Git
-	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(t.Destination)
+	absDestPath, _, err := path.ResolveAbsAndRelPaths(t.Destination)
 	if err != nil {
 		return err
 	}

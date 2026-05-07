@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
@@ -51,7 +51,7 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 		args = append(args, root)
 	}
 	root = filepath.Clean(args[0])
-	resolvedPath, err := argutil.ResolveSymlink(r.Ctx, args[0])
+	resolvedPath, err := argsutil.ResolveSymlink(r.Ctx, args[0])
 	if err != nil {
 		return err
 	}

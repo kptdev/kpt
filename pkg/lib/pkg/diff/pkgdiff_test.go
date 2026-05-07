@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package diff
+package diff_test
 
 import (
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/internal/testutil/pkgbuilder"
+	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/stretchr/testify/assert"
 	"sigs.k8s.io/kustomize/kyaml/sets"
 )
@@ -141,7 +142,7 @@ func TestPkgDiff(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			pkg1Dir := test.pkg1.ExpandPkg(t, testutil.EmptyReposInfo)
 			pkg2Dir := test.pkg2.ExpandPkg(t, testutil.EmptyReposInfo)
-			diff, err := PkgDiff(pkg1Dir, pkg2Dir)
+			diff, err := diff.PkgDiff(pkg1Dir, pkg2Dir)
 			if !assert.NoError(t, err) {
 				t.FailNow()
 			}

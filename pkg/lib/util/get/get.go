@@ -23,17 +23,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/hook"
-	"github.com/kptdev/kpt/internal/util/fetch"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
+	"github.com/kptdev/kpt/pkg/lib/kptops"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/lib/util/attribution"
+	"github.com/kptdev/kpt/pkg/lib/util/fetch"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/lib/util/stack"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -122,7 +122,7 @@ func (c Command) Run(ctx context.Context) error {
 		return cleanUpDirAndError(c.Destination, err)
 	}
 
-	absDestPath, _, err := pathutil.ResolveAbsAndRelPaths(c.Destination)
+	absDestPath, _, err := path.ResolveAbsAndRelPaths(c.Destination)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (c Command) Run(ctx context.Context) error {
 	if c.IsDeploymentInstance {
 		pr := printer.FromContextOrDie(ctx)
 		pr.Printf("\nCustomizing package for deployment.\n")
-		hookCmd := hook.Executor{}
+		hookCmd := kptops.Executor{}
 		hookCmd.RunnerOptions.InitDefaults(c.DefaultKrmFunctionImagePrefix)
 		hookCmd.PkgPath = c.Destination
 

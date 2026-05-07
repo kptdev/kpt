@@ -22,9 +22,9 @@ import (
 
 	initialization "github.com/kptdev/kpt/commands/pkg/init"
 	"github.com/kptdev/kpt/internal/testutil"
-	"github.com/kptdev/kpt/internal/util/man"
 	"github.com/kptdev/kpt/pkg/lib/builtins"
 	"github.com/kptdev/kpt/pkg/lib/builtins/builtintypes"
+	"github.com/kptdev/kpt/pkg/lib/util/man"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
 )

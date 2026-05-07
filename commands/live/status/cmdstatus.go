@@ -19,7 +19,7 @@ import (
 	"os"
 
 	"github.com/kptdev/kpt/internal/docs/generated/livedocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/live"
 	kptstatus "github.com/kptdev/kpt/pkg/status"
 	"github.com/spf13/cobra"
@@ -74,7 +74,7 @@ func (rir *RGInventoryLoader) GetInvInfo(cmd *cobra.Command, args []string) (inv
 	path := args[0]
 	var err error
 	if args[0] != "-" {
-		path, err = argutil.ResolveSymlink(rir.ctx, path)
+		path, err = argsutil.ResolveSymlink(rir.ctx, path)
 		if err != nil {
 			return nil, err
 		}

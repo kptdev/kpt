@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/kptdev/kpt/internal/util/get"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
+	"github.com/kptdev/kpt/pkg/lib/util/get"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 )
 

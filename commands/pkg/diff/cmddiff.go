@@ -19,11 +19,11 @@ import (
 	"os"
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
-	"github.com/kptdev/kpt/internal/util/argutil"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
+	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -80,7 +80,7 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		args = append(args, pkg.CurDir)
 	}
 	dirVer := args[0]
-	dir, version, err := argutil.ParseDirVersion(dirVer)
+	dir, version, err := argsutil.ParseDirVersion(dirVer)
 	if err != nil {
 		return err
 	}
@@ -96,12 +96,12 @@ func (r *Runner) preRunE(_ *cobra.Command, args []string) error {
 		r.DiffType = diff.Type(r.diffType)
 	}
 
-	resolvedPath, err := argutil.ResolveSymlink(r.ctx, dir)
+	resolvedPath, err := argsutil.ResolveSymlink(r.ctx, dir)
 	if err != nil {
 		return err
 	}
 
-	absResolvedPath, _, err := pathutil.ResolveAbsAndRelPaths(resolvedPath)
+	absResolvedPath, _, err := path.ResolveAbsAndRelPaths(resolvedPath)
 	if err != nil {
 		return err
 	}

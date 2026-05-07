@@ -24,13 +24,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/util/git"
-	"github.com/kptdev/kpt/internal/util/pathutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	rgfilev1alpha1 "github.com/kptdev/kpt/pkg/api/resourcegroup/v1alpha1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
+	"github.com/kptdev/kpt/pkg/lib/util/git"
+	"github.com/kptdev/kpt/pkg/lib/util/path"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -503,7 +503,7 @@ func ReadRGFile(pkgPath, rgfile string) (*rgfilev1alpha1.ResourceGroup, error) {
 	if filepath.Base(rgfile) == rgfile {
 		absPath = filepath.Join(pkgPath, rgfile)
 	} else {
-		rgFilePath, _, err := pathutil.ResolveAbsAndRelPaths(rgfile)
+		rgFilePath, _, err := path.ResolveAbsAndRelPaths(rgfile)
 		if err != nil {
 			return nil, &RGError{
 				Path: types.UniquePath(rgfile),

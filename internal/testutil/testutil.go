@@ -25,13 +25,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kptdev/kpt/internal/gitutil"
-	"github.com/kptdev/kpt/internal/util/git"
-	"github.com/kptdev/kpt/internal/util/pathutil"
+	git2 "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
+	"github.com/kptdev/kpt/pkg/lib/util/git"
+	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/philopon/go-toposort"
 	"github.com/stretchr/testify/assert"
@@ -436,7 +436,7 @@ func SetupWorkspace(t *testing.T) (*TestWorkspace, func()) {
 	err := w.SetupTestWorkspace()
 	assert.NoError(t, err)
 
-	gr, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gr, err := git2.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -463,7 +463,7 @@ func AddKptfileToWorkspace(t *testing.T, w *TestWorkspace, kf *kptfilev1.KptFile
 		t.FailNow()
 	}
 
-	gitRunner, err := gitutil.NewLocalGitRunner(w.WorkspaceDirectory)
+	gitRunner, err := git2.NewLocalGitRunner(w.WorkspaceDirectory)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -873,7 +873,7 @@ func ConfigureTestKptCache(m *testing.M) int {
 	defer func() {
 		_ = os.RemoveAll(cacheDir)
 	}()
-	if err := os.Setenv(gitutil.RepoCacheDirEnv, cacheDir); err != nil {
+	if err := os.Setenv(git2.RepoCacheDirEnv, cacheDir); err != nil {
 		panic(fmt.Errorf("error setting repo cache env variable: %w", err))
 	}
 	return m.Run()

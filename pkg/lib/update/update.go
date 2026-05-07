@@ -23,9 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/gitutil"
-	"github.com/kptdev/kpt/internal/util/fetch"
-	"github.com/kptdev/kpt/internal/util/git"
+	git2 "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -33,6 +31,8 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
+	"github.com/kptdev/kpt/pkg/lib/util/fetch"
+	"github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/lib/util/stack"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -101,7 +101,7 @@ type Command struct {
 	Strategy kptfilev1.UpdateStrategyType
 
 	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec CloneRef
-	cachedUpstreamRepos map[string]*gitutil.GitUpstreamRepo
+	cachedUpstreamRepos map[string]*git2.GitUpstreamRepo
 }
 
 func GetUpdater(strategy string) updatetypes.Updater {
@@ -147,7 +147,7 @@ func (u *Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	if u.cachedUpstreamRepos == nil {
-		u.cachedUpstreamRepos = make(map[string]*gitutil.GitUpstreamRepo)
+		u.cachedUpstreamRepos = make(map[string]*git2.GitUpstreamRepo)
 	}
 	packageCount := 0
 
@@ -198,7 +198,7 @@ func (u *Command) Run(ctx context.Context) error {
 }
 
 // GetCachedUpstreamRepos returns repos cached during update
-func (u Command) GetCachedUpstreamRepos() map[string]*gitutil.GitUpstreamRepo {
+func (u Command) GetCachedUpstreamRepos() map[string]*git2.GitUpstreamRepo {
 	return u.cachedUpstreamRepos
 }
 
