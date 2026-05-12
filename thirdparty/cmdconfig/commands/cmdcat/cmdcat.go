@@ -1,5 +1,16 @@
-// Copyright 2019,2026 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2019,2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdcat
 
@@ -8,11 +19,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/kptdev/kpt/internal/docs/generated/pkgdocs"
+	"github.com/kptdev/kpt/internal/util/argutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
 	"github.com/spf13/cobra"
@@ -20,6 +34,10 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/kio/filters"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+// krmMatch is the set of file globs that should be processed by this command,
+// including the default KRM resource matches and Kptfile.
+var krmMatch = append(append([]string{}, kio.DefaultMatch...), kptfilev1.KptFileName)
 
 // GetCatRunner returns a command CatRunner.
 func GetCatRunner(ctx context.Context, _ string) *CatRunner {
@@ -35,7 +53,7 @@ func GetCatRunner(ctx context.Context, _ string) *CatRunner {
 		Args:    cobra.MaximumNArgs(1),
 	}
 	c.Flags().BoolVar(&r.Format, "format", true,
-		"format resource config yaml before printing.")
+		"format resource config YAML before printing (reorders fields to canonical order).")
 	c.Flags().BoolVar(&r.KeepAnnotations, "annotate", false,
 		"annotate resources with their file origins.")
 	c.Flags().StringSliceVar(&r.Styles, "style", []string{},
@@ -70,56 +88,120 @@ func (r *CatRunner) runE(c *cobra.Command, args []string) error {
 		args = append(args, ".")
 	}
 
-	if info, err := os.Stat(args[0]); err == nil && !info.IsDir() {
-		switch strings.ToLower(filepath.Ext(args[0])) {
-		case ".yaml", ".yml", ".json":
-		default:
-			if filepath.Base(args[0]) == kptfilev1.KptFileName {
-				return fmt.Errorf("%q is a %s package metadata file, not a resource file; no resources will be read", args[0], kptfilev1.KptFileName)
-			}
-			return fmt.Errorf("%q is not a YAML/JSON file; no resources will be read", args[0])
-		}
+	if err := r.Ctx.Err(); err != nil {
+		return runner.HandleError(r.Ctx, err)
+	}
+
+	resolvedPath, err := argutil.ResolveSymlink(r.Ctx, args[0])
+	if err != nil {
+		return runner.HandleError(r.Ctx, err)
 	}
 
 	out := &bytes.Buffer{}
-	e := runner.ExecuteCmdOnPkgs{
-		Writer:             out,
-		NeedOpenAPI:        false,
-		RecurseSubPackages: r.RecurseSubPackages,
-		CmdRunner:          r,
-		RootPkgPath:        filepath.Clean(args[0]),
-		SkipPkgPathPrint:   true,
-	}
 
-	err := e.Execute()
-	if err != nil {
-		return err
+	// Single file: process directly without package traversal.
+	if info, err := os.Stat(resolvedPath); err == nil && !info.IsDir() {
+		if err := r.ExecuteCmd(out, resolvedPath); err != nil {
+			return runner.HandleError(r.Ctx, err)
+		}
+	} else {
+		e := runner.ExecuteCmdOnPkgs{
+			Writer:             out,
+			NeedOpenAPI:        false,
+			RecurseSubPackages: r.RecurseSubPackages,
+			CmdRunner:          r,
+			RootPkgPath:        filepath.Clean(resolvedPath),
+			SkipPkgPathPrint:   true,
+		}
+		if err := e.Execute(); err != nil {
+			return runner.HandleError(r.Ctx, err)
+		}
 	}
 
 	res := strings.TrimSuffix(out.String(), "---\n")
 	res = strings.TrimSuffix(res, "---")
 	fmt.Fprintf(writer, "%s", res)
-
 	return nil
 }
 
+// ExecuteCmd outputs the contents of a single package at pkgPath.
+// It intentionally does NOT recurse into nested subpackages (directories
+// containing a Kptfile). Subpackage recursion is handled by the caller
+// (runner.ExecuteCmdOnPkgs) which invokes ExecuteCmd once per package
+// when RecurseSubPackages is set. Callers invoking ExecuteCmd directly
+// will only see the top-level package content; use ExecuteCmdOnPkgs for
+// recursive traversal.
 func (r *CatRunner) ExecuteCmd(w io.Writer, pkgPath string) error {
-	input := kio.LocalPackageReader{PackagePath: pkgPath, PackageFileName: kptfilev1.KptFileName}
-	out := &bytes.Buffer{}
-	err := kio.Pipeline{
-		Inputs:  []kio.Reader{input},
-		Filters: r.catFilters(),
-		Outputs: r.outputWriter(out),
-	}.Execute()
+	var parts []string
 
+	err := filepath.WalkDir(pkgPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if r.Ctx.Err() != nil {
+			return r.Ctx.Err()
+		}
+
+		// Skip symlinks to avoid reading outside the package.
+		if d.Type()&os.ModeSymlink != 0 {
+			return nil
+		}
+		if d.IsDir() {
+			if path != pkgPath {
+				// Skip nested subpackages; the caller is responsible for
+				// recursing into them via RecurseSubPackages if desired.
+				if _, statErr := os.Stat(filepath.Join(path, kptfilev1.KptFileName)); statErr == nil {
+					return filepath.SkipDir
+				}
+			}
+			return nil
+		}
+
+		relPath, _ := filepath.Rel(pkgPath, path)
+		if relPath == "." {
+			relPath = filepath.Base(path)
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+
+		if ext == ".yaml" || ext == ".yml" || ext == ".json" || filepath.Base(path) == kptfilev1.KptFileName {
+			// KRM file: read through pipeline with formatting.
+			buf := &bytes.Buffer{}
+			input := kio.LocalPackageReader{PackagePath: path, PackageFileName: "", MatchFilesGlob: krmMatch}
+			pErr := kio.Pipeline{
+				Inputs:  []kio.Reader{input},
+				Filters: r.catFilters(),
+				Outputs: r.outputWriter(buf),
+			}.Execute()
+			if pErr != nil {
+				return fmt.Errorf("kpt pkg cat: %q: %w", relPath, pErr)
+			}
+			if s := buf.String(); s != "" {
+				parts = append(parts, s)
+			}
+		} else {
+			// Non-KRM file: display raw if it's valid UTF-8 text.
+			data, readErr := os.ReadFile(path)
+			if readErr != nil {
+				return readErr
+			}
+			if !utf8.Valid(data) {
+				return nil // skip binary files
+			}
+			content := string(data)
+			if !strings.HasSuffix(content, "\n") {
+				content += "\n"
+			}
+			parts = append(parts, content)
+		}
+		return nil
+	})
 	if err != nil {
-		// Wrap with package context so the user knows which package failed;
-		// the root command's error handler is responsible for printing.
-		return fmt.Errorf("kpt pkg cat: %q: %w", pkgPath, err)
+		return err
 	}
-	outStr := out.String()
-	fmt.Fprint(w, outStr)
-	if outStr != "" {
+
+	combined := strings.Join(parts, "---\n")
+	fmt.Fprint(w, combined)
+	if combined != "" {
 		fmt.Fprint(w, "---")
 	}
 	return nil

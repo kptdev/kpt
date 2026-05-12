@@ -1,16 +1,29 @@
-// Copyright 2019,2026 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2019,2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdcat
 
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/stretchr/testify/assert"
@@ -197,8 +210,8 @@ spec:
 `, got)
 }
 
-// TestCmd_AnnotateDefaultOff verifies Issue 8: in default mode, neither
-// config.kubernetes.io/path nor internal.config.kubernetes.io/path leaks.
+// TestCmd_AnnotateDefaultOff verifies that in default mode (no --annotate),
+// neither config.kubernetes.io/path nor internal.config.kubernetes.io/path leaks.
 func TestCmd_AnnotateDefaultOff(t *testing.T) {
 	d := t.TempDir()
 	writeFile(t, filepath.Join(d, f1Yaml), `
@@ -213,7 +226,7 @@ metadata:
 	assert.NotContains(t, got, "config.kubernetes.io/path",
 		"config.kubernetes.io/path should be cleared by default")
 	assert.NotContains(t, got, "internal.config.kubernetes.io/path",
-		"internal.config.kubernetes.io/path should be cleared by default (Issue 8)")
+		"internal.config.kubernetes.io/path should be cleared by default")
 }
 
 // TestCmd_Subpkgs covers a directory with a regular sub-directory (no Kptfile).
@@ -272,7 +285,7 @@ spec:
 
 // TestCmd_NestedPackages exercises a true multi-pkg tree (Kptfile in root and
 // in subdir) and asserts each pkg's resource is emitted exactly once.
-// This guards Issue 3 (path-clean) and Issue 9 (no double-traverse).
+// This guards against path-cleaning bugs and double-traversal of subpackages.
 func TestCmd_NestedPackages(t *testing.T) {
 	d := t.TempDir()
 	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
@@ -301,16 +314,15 @@ metadata:
 
 	got, err := runCat(t, d)
 	require.NoError(t, err)
-	// exactly one of each resource, separated by a single ---.
+	// Both packages' resources and Kptfiles should be emitted.
 	assert.Equal(t, 2, strings.Count(got, "\nkind: ConfigMap\n"),
 		"each pkg should be emitted exactly once")
-	assert.Equal(t, 1, strings.Count(got, "\n---\n"),
-		"a single separator between the two packages")
 	assert.Contains(t, got, "name: root-cm")
 	assert.Contains(t, got, "name: sub-cm")
+	assert.Contains(t, got, "kind: Kptfile", "Kptfile should be included in output")
 }
 
-// TestCmd_PathCleaning (Issue 3): ./path and path/ must behave like path.
+// TestCmd_PathCleaning verifies that ./path and path/ behave identically to path.
 func TestCmd_PathCleaning(t *testing.T) {
 	d := t.TempDir()
 	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
@@ -348,8 +360,8 @@ metadata:
 	}
 }
 
-// TestCmd_TrailingSeparator (Issue 4): a pkg followed by an empty sub-pkg
-// must not leave a stray `---\n` at the end of output.
+// TestCmd_TrailingSeparator verifies that output does not end with a stray
+// `---\n` separator.
 func TestCmd_TrailingSeparator(t *testing.T) {
 	d := t.TempDir()
 	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
@@ -375,11 +387,9 @@ metadata:
 	require.NoError(t, err)
 	assert.False(t, strings.HasSuffix(got, "---\n") || strings.HasSuffix(got, "---"),
 		"output must not end with a stray separator; got %q", got)
-	assert.Equal(t, 0, strings.Count(got, "\n---\n"),
-		"no inter-pkg separator expected when only one pkg has resources")
 }
 
-// TestCmd_BrokenYAMLReturnsError (Issue 5, narrowed): a broken YAML file
+// TestCmd_BrokenYAMLReturnsError verifies that a broken YAML file
 // must cause a non-nil error; the command must not silently succeed.
 func TestCmd_BrokenYAMLReturnsError(t *testing.T) {
 	d := t.TempDir()
@@ -427,32 +437,38 @@ func TestCmd_NonExistent(t *testing.T) {
 	assert.Contains(t, err.Error(), "no such file or directory")
 }
 
-// TestCmd_KptfileArgRejected: passing the Kptfile directly must error.
-// The Kptfile is package metadata, not a resource; the directory form of
-// `kpt pkg cat` excludes it from output, so the file form must too.
-func TestCmd_KptfileArgRejected(t *testing.T) {
+// TestCmd_KptfileArgDisplayed: passing the Kptfile directly should display
+// its content since cat now shows all package files.
+func TestCmd_KptfileArgDisplayed(t *testing.T) {
 	d := t.TempDir()
-	kpt := filepath.Join(d, "Kptfile")
-	writeFile(t, kpt, `apiVersion: kpt.dev/v1
+	kptContent := `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`
+	writeFile(t, filepath.Join(d, "Kptfile"), kptContent)
+
+	got, err := runCat(t, d)
+	require.NoError(t, err)
+	assert.Contains(t, got, "kind: Kptfile")
+	assert.Contains(t, got, "name: root")
+}
+
+// TestCmd_NonYAMLFileDisplayed: non-YAML files in a package directory
+// should be displayed as raw content.
+func TestCmd_NonYAMLFileDisplayed(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
 kind: Kptfile
 metadata:
   name: root
 `)
-	_, err := runCat(t, kpt)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Kptfile")
-	assert.Contains(t, err.Error(), "metadata")
-}
+	writeFile(t, filepath.Join(d, "README.md"), "# Hello\nThis is a readme.\n")
 
-// TestCmd_NonYAMLFileErrors: a regular non-YAML/JSON/Kptfile file must
-// fail loudly rather than silently succeed with no output.
-func TestCmd_NonYAMLFileErrors(t *testing.T) {
-	d := t.TempDir()
-	md := filepath.Join(d, "README.md")
-	writeFile(t, md, "# hi\n")
-	_, err := runCat(t, md)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "not a YAML/JSON file")
+	got, err := runCat(t, d)
+	require.NoError(t, err)
+	assert.Contains(t, got, "# Hello")
+	assert.Contains(t, got, "This is a readme.")
 }
 
 // TestCmd_RecurseFalse ensures -R=false limits traversal to the root pkg.
@@ -505,24 +521,320 @@ metadata:
 	assert.NotContains(t, got, "inline comment")
 }
 
-// TestCmd_FormatFalse verifies --format=false preserves original map key
-// order (Issue 6 — documented as won't-fix, but the flag must work).
+// TestCmd_FormatTrue verifies that the default --format=true reorders fields
+// to canonical Kubernetes order (apiVersion, kind, metadata, spec).
+func TestCmd_FormatTrue(t *testing.T) {
+	d := t.TempDir()
+	// Deliberately non-canonical order: metadata before apiVersion/kind.
+	writeFile(t, filepath.Join(d, "f.yaml"), `metadata:
+  name: c
+apiVersion: v1
+kind: ConfigMap
+`)
+
+	got, err := runCat(t, filepath.Join(d, "f.yaml"))
+	require.NoError(t, err)
+	apiIdx := strings.Index(got, "apiVersion:")
+	kindIdx := strings.Index(got, "kind:")
+	metaIdx := strings.Index(got, "metadata:")
+	assert.True(t, apiIdx >= 0 && kindIdx >= 0 && metaIdx >= 0, "all fields should be present")
+	assert.Less(t, apiIdx, kindIdx,
+		"with --format=true, apiVersion should come before kind")
+	assert.Less(t, kindIdx, metaIdx,
+		"with --format=true, kind should come before metadata")
+}
+
+// TestCmd_FormatFalse verifies --format=false preserves the original field
+// order, even when it differs from the canonical Kubernetes ordering.
 func TestCmd_FormatFalse(t *testing.T) {
 	d := t.TempDir()
-	writeFile(t, filepath.Join(d, "f.yaml"), `apiVersion: v1
-kind: ConfigMap
-metadata:
+	// Deliberately non-canonical order: metadata before apiVersion/kind.
+	writeFile(t, filepath.Join(d, "f.yaml"), `metadata:
   name: c
-data:
-  z-last: "1"
-  a-first: "2"
+apiVersion: v1
+kind: ConfigMap
 `)
 
 	got, err := runCat(t, filepath.Join(d, "f.yaml"), "--format=false")
 	require.NoError(t, err)
-	zIdx := strings.Index(got, "z-last")
-	aIdx := strings.Index(got, "a-first")
-	assert.True(t, zIdx >= 0 && aIdx >= 0, "both keys should be present")
-	assert.Less(t, zIdx, aIdx,
-		"with --format=false, original order (z-last before a-first) must be preserved")
+	metaIdx := strings.Index(got, "metadata:")
+	apiIdx := strings.Index(got, "apiVersion:")
+	kindIdx := strings.Index(got, "kind:")
+	assert.True(t, metaIdx >= 0 && apiIdx >= 0 && kindIdx >= 0, "all fields should be present")
+	assert.Less(t, metaIdx, apiIdx,
+		"with --format=false, metadata should remain before apiVersion")
+	assert.Less(t, apiIdx, kindIdx,
+		"with --format=false, apiVersion should remain before kind")
+}
+
+// TestCmd_SingleKptfileArg verifies that passing Kptfile as a direct file
+// argument displays only the Kptfile content, not the entire package.
+func TestCmd_SingleKptfileArg(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+	writeFile(t, filepath.Join(d, "cm.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+
+	got, err := runCat(t, filepath.Join(d, "Kptfile"))
+	require.NoError(t, err)
+	assert.Contains(t, got, "kind: Kptfile")
+	assert.NotContains(t, got, "kind: ConfigMap",
+		"only Kptfile should be displayed, not other package files")
+}
+
+// TestCmd_SingleNonKRMFileArg verifies that passing a non-KRM file directly
+// outputs its raw content.
+func TestCmd_SingleNonKRMFileArg(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "README.md"), "# Title\nSome content.\n")
+
+	got, err := runCat(t, filepath.Join(d, "README.md"))
+	require.NoError(t, err)
+	assert.Equal(t, "# Title\nSome content.\n", got)
+}
+
+// TestCmd_EmptyDirectory verifies that an empty directory produces no output
+// and no error.
+func TestCmd_EmptyDirectory(t *testing.T) {
+	d := t.TempDir()
+
+	got, err := runCat(t, d)
+	require.NoError(t, err)
+	assert.Empty(t, got)
+}
+
+// TestCmd_StyleFlag verifies that --style flag is accepted without error.
+func TestCmd_StyleFlag(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "f.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+data:
+  key: value
+`)
+
+	got, err := runCat(t, filepath.Join(d, "f.yaml"), "--style=DoubleQuotedStyle")
+	require.NoError(t, err)
+	assert.Contains(t, got, "kind: ConfigMap")
+	assert.Contains(t, got, "name: test")
+}
+
+// TestCmd_DirectoryOrder verifies that files are output in filesystem walk
+// order, with KRM and non-KRM files interleaved correctly.
+func TestCmd_DirectoryOrder(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+	writeFile(t, filepath.Join(d, "a.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: a-cm
+`)
+	writeFile(t, filepath.Join(d, "b-readme.txt"), "hello\n")
+	writeFile(t, filepath.Join(d, "c.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: c-cm
+`)
+
+	got, err := runCat(t, d)
+	require.NoError(t, err)
+	// Verify all content is present.
+	assert.Contains(t, got, "kind: Kptfile")
+	assert.Contains(t, got, "name: a-cm")
+	assert.Contains(t, got, "hello")
+	assert.Contains(t, got, "name: c-cm")
+	// Verify order: Kptfile < a.yaml < b-readme.txt < c.yaml (alphabetical walk).
+	kptIdx := strings.Index(got, "kind: Kptfile")
+	aIdx := strings.Index(got, "name: a-cm")
+	bIdx := strings.Index(got, "hello")
+	cIdx := strings.Index(got, "name: c-cm")
+	assert.Less(t, kptIdx, aIdx, "Kptfile should appear before a.yaml")
+	assert.Less(t, aIdx, bIdx, "a.yaml should appear before b-readme.txt")
+	assert.Less(t, bIdx, cIdx, "b-readme.txt should appear before c.yaml")
+}
+
+// TestCmd_SingleYAMLFileArg exercises the code path where LocalPackageReader
+// is given a single file path (not a directory) with an empty PackageFileName.
+// This guards against kyaml tightening validation on that usage.
+func TestCmd_SingleYAMLFileArg(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "deploy.yaml"), `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+`)
+
+	got, err := runCat(t, filepath.Join(d, "deploy.yaml"))
+	require.NoError(t, err)
+	assert.Contains(t, got, "kind: Deployment")
+	assert.Contains(t, got, "name: nginx")
+	assert.Contains(t, got, "replicas:")
+}
+
+// TestCmd_ContextCancellation verifies that a cancelled context aborts the walk.
+func TestCmd_ContextCancellation(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+	writeFile(t, filepath.Join(d, "a.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+
+	ctx, cancel := context.WithCancel(
+		printer.WithContext(context.Background(), printer.New(nil, io.Discard)),
+	)
+	cancel()
+	defer cancel()
+
+	r := GetCatRunner(ctx, "")
+	r.Command.SilenceUsage = true
+	r.Command.SetArgs([]string{d})
+	out := &bytes.Buffer{}
+	r.Command.SetOut(out)
+	r.Command.SetErr(&bytes.Buffer{})
+
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Empty(t, out.String(), "no output should be produced when ctx is cancelled before walk")
+}
+
+// TestCmd_ContextCancellation_Deadline verifies DeadlineExceeded behaves the same.
+func TestCmd_ContextCancellation_Deadline(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+
+	ctx, cancel := context.WithTimeout(
+		printer.WithContext(context.Background(), printer.New(nil, io.Discard)), 0,
+	)
+	defer cancel()
+
+	r := GetCatRunner(ctx, "")
+	r.Command.SilenceUsage = true
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(&bytes.Buffer{})
+	r.Command.SetErr(&bytes.Buffer{})
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.DeadlineExceeded)
+}
+
+// TestCmd_ContextCancellation_SingleFile verifies the single-file path honors cancellation.
+func TestCmd_ContextCancellation_SingleFile(t *testing.T) {
+	d := t.TempDir()
+	f := filepath.Join(d, "a.yaml")
+	writeFile(t, f, `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+
+	ctx, cancel := context.WithCancel(
+		printer.WithContext(context.Background(), printer.New(nil, io.Discard)),
+	)
+	cancel()
+	defer cancel()
+
+	r := GetCatRunner(ctx, "")
+	r.Command.SilenceUsage = true
+	r.Command.SetArgs([]string{f})
+	r.Command.SetOut(&bytes.Buffer{})
+	r.Command.SetErr(&bytes.Buffer{})
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+}
+
+// TestCmd_ContextCancellation_MidWalk verifies that cancellation during a walk
+// stops work before all files are processed.
+func TestCmd_ContextCancellation_MidWalk(t *testing.T) {
+	d := t.TempDir()
+	writeFile(t, filepath.Join(d, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+	for i := 0; i < 500; i++ {
+		writeFile(t, filepath.Join(d, fmt.Sprintf("f%03d.yaml", i)),
+			fmt.Sprintf("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cm-%d\n", i))
+	}
+
+	ctx, cancel := context.WithCancel(
+		printer.WithContext(context.Background(), printer.New(nil, io.Discard)),
+	)
+	go func() {
+		time.Sleep(2 * time.Millisecond)
+		cancel()
+	}()
+	defer cancel()
+
+	r := GetCatRunner(ctx, "")
+	r.Command.SilenceUsage = true
+	out := &bytes.Buffer{}
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(out)
+	r.Command.SetErr(&bytes.Buffer{})
+	err := r.Command.Execute()
+	require.Error(t, err)
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Empty(t, out.String(), "no output should leak on cancellation")
+}
+
+// TestCmd_SymlinkArg verifies that a symlink argument is resolved and its
+// target content is displayed, while symlinks inside the package are skipped.
+func TestCmd_SymlinkArg(t *testing.T) {
+	d := t.TempDir()
+	real := filepath.Join(d, "real")
+	require.NoError(t, os.MkdirAll(real, 0o755))
+	writeFile(t, filepath.Join(real, "Kptfile"), `apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: root
+`)
+	writeFile(t, filepath.Join(real, "cm.yaml"), `apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cm
+`)
+	// Create a file that a symlink inside the package points to.
+	writeFile(t, filepath.Join(d, "external.yaml"), `apiVersion: v1
+kind: Secret
+metadata:
+  name: secret
+`)
+	// Symlink inside the package — should be skipped.
+	require.NoError(t, os.Symlink(filepath.Join(d, "external.yaml"), filepath.Join(real, "link.yaml")))
+
+	// Symlink as the argument — should be resolved.
+	link := filepath.Join(d, "pkg-link")
+	require.NoError(t, os.Symlink(real, link))
+
+	got, err := runCat(t, link)
+	require.NoError(t, err)
+	assert.Contains(t, got, "name: cm", "target content should be displayed")
+	assert.Contains(t, got, "kind: Kptfile", "Kptfile should be displayed")
+	assert.NotContains(t, got, "kind: Secret", "symlinked file inside package should be skipped")
 }
