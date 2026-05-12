@@ -7,7 +7,6 @@ ignore = "exit 1"
 NODE_VERSION = "18.16.1"
 HUGO_VERSION = "0.147.8"
 HUGO_ENABLEGITINFO = "true"
-GO_VERSION = "1.26.3"
 
 [context.production.environment]
 HUGO_ENV = "production"
