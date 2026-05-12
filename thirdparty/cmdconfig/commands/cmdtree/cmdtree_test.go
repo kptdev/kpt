@@ -1,5 +1,16 @@
-// Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2019,2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdtree
 
@@ -8,11 +19,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kptdev/kpt/internal/testutil"
 	"github.com/kptdev/kpt/pkg/printer/fake"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTreeCommandDefaultCurDir_files(t *testing.T) {
@@ -207,7 +220,8 @@ resources:
 	}
 
 	if !assert.Equal(t, fmt.Sprintf(`%s
-└── [f2.yaml]  Deployment bar
+├── [f2.yaml]  Deployment bar
+└── Kustomization
 `, filepath.Base(d)), b.String()) {
 		return
 	}
@@ -479,4 +493,106 @@ spec:
 		return
 	}
 	assert.Contains(t, stderr.String(), "please note that the symlinks within the package are ignored")
+}
+
+// TestTreeCommand_NonKRMInSubpackage verifies non-KRM files in a subpackage
+// appear under the subpackage branch, not the parent.
+func TestTreeCommand_NonKRMInSubpackage(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: root\n"), 0600))
+	require.NoError(t, os.MkdirAll(filepath.Join(d, "sub"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "sub", "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: sub\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "sub", "NOTES.txt"), []byte("hello\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	out := b.String()
+	assert.Contains(t, out, "NOTES.txt")
+	subIdx := strings.Index(out, `Package "sub"`)
+	notesIdx := strings.Index(out, "NOTES.txt")
+	assert.Greater(t, notesIdx, subIdx, "NOTES.txt should be under the subpackage branch")
+}
+
+// TestTreeCommand_DotfilesExcluded verifies dotfiles and dot-dirs are excluded.
+func TestTreeCommand_DotfilesExcluded(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: root\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, ".hidden"), []byte("secret\n"), 0600))
+	require.NoError(t, os.MkdirAll(filepath.Join(d, ".git"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(d, ".git", "config"), []byte("[core]\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "visible.txt"), []byte("hi\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	out := b.String()
+	assert.Contains(t, out, "visible.txt")
+	assert.NotContains(t, out, ".hidden")
+	assert.NotContains(t, out, ".git")
+	assert.NotContains(t, out, "config")
+}
+
+// TestTreeCommand_SymlinkFileSkipped verifies symlinked files inside a package are skipped.
+func TestTreeCommand_SymlinkFileSkipped(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: root\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "real.txt"), []byte("content\n"), 0600))
+	require.NoError(t, os.Symlink(filepath.Join(d, "real.txt"), filepath.Join(d, "link.txt")))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	out := b.String()
+	assert.Contains(t, out, "real.txt")
+	assert.NotContains(t, out, "link.txt")
+}
+
+// TestTreeCommand_MultipleNonKRMSorted verifies multiple non-KRM files are sorted.
+func TestTreeCommand_MultipleNonKRMSorted(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: root\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "zebra.md"), []byte("z\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "alpha.txt"), []byte("a\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "middle.log"), []byte("m\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	out := b.String()
+	alphaIdx := strings.Index(out, "alpha.txt")
+	middleIdx := strings.Index(out, "middle.log")
+	zebraIdx := strings.Index(out, "zebra.md")
+	assert.Less(t, alphaIdx, middleIdx, "alpha.txt should come before middle.log")
+	assert.Less(t, middleIdx, zebraIdx, "middle.log should come before zebra.md")
+}
+
+// TestTreeCommand_DedupKRMFile verifies a YAML file rendered as KRM is not
+// duplicated in the non-KRM list.
+func TestTreeCommand_DedupKRMFile(t *testing.T) {
+	d := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(d, "Kptfile"), []byte("apiVersion: kpt.dev/v1\nkind: Kptfile\nmetadata:\n  name: root\n"), 0600))
+	require.NoError(t, os.WriteFile(filepath.Join(d, "cm.yaml"), []byte("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: cfg\n"), 0600))
+
+	b := &bytes.Buffer{}
+	r := GetTreeRunner(fake.CtxWithPrinter(b, nil), "")
+	r.Command.SetArgs([]string{d})
+	r.Command.SetOut(b)
+	require.NoError(t, r.Command.Execute())
+
+	out := b.String()
+	assert.Contains(t, out, "[cm.yaml]  ConfigMap cfg")
+	assert.Equal(t, 1, strings.Count(out, "cm.yaml"), "cm.yaml should appear exactly once (as KRM, not duplicated)")
 }

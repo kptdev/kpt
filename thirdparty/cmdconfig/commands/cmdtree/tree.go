@@ -1,5 +1,16 @@
-// Copyright 2019 The Kubernetes Authors.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2019,2026 The kpt Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package cmdtree
 
@@ -33,10 +44,11 @@ var GraphStructures = []string{string(TreeStructurePackage)}
 // TODO(pwittrock): test this package better.  it is lower-risk since it is only
 // used for printing rather than updating or editing.
 type TreeWriter struct {
-	Writer    io.Writer
-	Root      string
-	Fields    []TreeWriterField
-	Structure TreeStructure
+	Writer      io.Writer
+	Root        string
+	Fields      []TreeWriterField
+	Structure   TreeStructure
+	NonKRMFiles map[string][]string // package-relative dir → filenames
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -52,10 +64,26 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	// create the new tree
 	tree := treeprint.New()
 
+	// p.sort sorts nodes within each package (side-effect) and returns sorted keys.
+	allKeys := p.sort(indexByPackage)
+
+	// Merge keys from NonKRMFiles that aren't already in allKeys.
+	if len(p.NonKRMFiles) > 0 {
+		seen := map[string]bool{}
+		for _, k := range allKeys {
+			seen[k] = true
+		}
+		for k := range p.NonKRMFiles {
+			if !seen[k] {
+				allKeys = append(allKeys, k)
+			}
+		}
+		sort.Strings(allKeys)
+	}
+
 	// add each package to the tree
 	treeIndex := map[string]treeprint.Tree{}
-	keys := p.sort(indexByPackage)
-	for _, pkg := range keys {
+	for _, pkg := range allKeys {
 		// create a branch for this package -- search for the parent package and create
 		// the branch under it -- requires that the keys are sorted
 		branch := tree
@@ -82,6 +110,28 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 			var err error
 			if _, err = p.doResource(indexByPackage[pkg][i], "", branch); err != nil {
 				return err
+			}
+		}
+
+		// print non-KRM files (skip files already rendered as KRM resources)
+		if len(p.NonKRMFiles[pkg]) > 0 {
+			rendered := map[string]bool{}
+			for _, node := range indexByPackage[pkg] {
+				_ = kioutil.CopyLegacyAnnotations(node)
+				meta, _ := node.GetMeta()
+				if pathAnno := meta.Annotations[kioutil.PathAnnotation]; pathAnno != "" {
+					rendered[filepath.Base(pathAnno)] = true
+				}
+			}
+			names := make([]string, 0, len(p.NonKRMFiles[pkg]))
+			for _, name := range p.NonKRMFiles[pkg] {
+				if !rendered[name] {
+					names = append(names, name)
+				}
+			}
+			sort.Strings(names)
+			for _, name := range names {
+				branch.AddNode(name)
 			}
 		}
 	}
