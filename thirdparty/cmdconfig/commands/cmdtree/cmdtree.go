@@ -95,17 +95,20 @@ func (r *TreeRunner) runE(c *cobra.Command, args []string) error {
 }
 
 // discoverNonKRMFiles walks the package tree and returns filenames
-// indexed by their package-relative directory path. Symlinks are skipped.
-// Files that are successfully rendered as KRM resources will be deduplicated
-// by the TreeWriter.
+// indexed by their containing directory path relative to root.
+// Symlinks are skipped. Files that are successfully rendered as KRM resources
+// will be deduplicated by the TreeWriter.
 func discoverNonKRMFiles(ctx context.Context, root string) map[string][]string {
 	result := map[string][]string{}
 	pr := printer.FromContextOrDie(ctx)
 
-	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+	if err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			fmt.Fprintf(pr.ErrStream(), "[WARN] %s: %v\n", path, err)
 			return nil
+		}
+		if ctx.Err() != nil {
+			return ctx.Err()
 		}
 		if d.Type()&os.ModeSymlink != 0 {
 			return nil
@@ -123,10 +126,16 @@ func discoverNonKRMFiles(ctx context.Context, root string) map[string][]string {
 		if name == kptfilev1.KptFileName {
 			return nil
 		}
-		rel, _ := filepath.Rel(root, filepath.Dir(path))
+		rel, err := filepath.Rel(root, filepath.Dir(path))
+		if err != nil {
+			fmt.Fprintf(pr.ErrStream(), "[WARN] %s: %v\n", path, err)
+			return nil
+		}
 		result[rel] = append(result[rel], name)
 		return nil
-	})
+	}); err != nil && ctx.Err() == nil {
+		fmt.Fprintf(pr.ErrStream(), "[WARN] failed to walk %s: %v\n", root, err)
+	}
 	return result
 }
 

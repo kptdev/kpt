@@ -48,7 +48,7 @@ type TreeWriter struct {
 	Root        string
 	Fields      []TreeWriterField
 	Structure   TreeStructure
-	NonKRMFiles map[string][]string // package-relative dir → filenames
+	NonKRMFiles map[string][]string // root-relative dir → file basenames in that dir, or relative paths after roll-up from subdirs
 }
 
 // TreeWriterField configures a Resource field to be included in the tree
@@ -67,18 +67,37 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 	// p.sort sorts nodes within each package (side-effect) and returns sorted keys.
 	allKeys := p.sort(indexByPackage)
 
-	// Merge keys from NonKRMFiles that aren't already in allKeys.
+	// Merge NonKRMFiles keys that already exist in the KRM index (these dirs
+	// already have branches). For dirs not in the index, roll files up to the
+	// nearest ancestor dir that IS in the index, prefixing with the relative path.
+	nonKRM := map[string][]string{}
 	if len(p.NonKRMFiles) > 0 {
-		seen := map[string]bool{}
+		krmKeys := map[string]bool{}
 		for _, k := range allKeys {
-			seen[k] = true
+			krmKeys[k] = true
 		}
-		for k := range p.NonKRMFiles {
-			if !seen[k] {
-				allKeys = append(allKeys, k)
+		for dir, files := range p.NonKRMFiles {
+			if krmKeys[dir] {
+				nonKRM[dir] = append(nonKRM[dir], files...)
+				continue
+			}
+			// Find nearest ancestor that is a known key.
+			ancestor := dir
+			for !krmKeys[ancestor] && ancestor != "." {
+				ancestor = filepath.Dir(ancestor)
+			}
+			if !krmKeys[ancestor] {
+				ancestor = "."
+			}
+			// Prefix filenames with the relative path from ancestor to dir.
+			rel, err := filepath.Rel(ancestor, dir)
+			if err != nil {
+				continue
+			}
+			for _, f := range files {
+				nonKRM[ancestor] = append(nonKRM[ancestor], filepath.Join(rel, f))
 			}
 		}
-		sort.Strings(allKeys)
 	}
 
 	// add each package to the tree
@@ -114,17 +133,24 @@ func (p TreeWriter) packageStructure(nodes []*yaml.RNode) error {
 		}
 
 		// print non-KRM files (skip files already rendered as KRM resources)
-		if len(p.NonKRMFiles[pkg]) > 0 {
+		if len(nonKRM[pkg]) > 0 {
 			rendered := map[string]bool{}
 			for _, node := range indexByPackage[pkg] {
 				_ = kioutil.CopyLegacyAnnotations(node)
 				meta, _ := node.GetMeta()
 				if pathAnno := meta.Annotations[kioutil.PathAnnotation]; pathAnno != "" {
-					rendered[filepath.Base(pathAnno)] = true
+					// pathAnno is relative to root; strip pkg prefix to get path relative to package
+					rel := pathAnno
+					if pkg != "." {
+						if r, err := filepath.Rel(pkg, pathAnno); err == nil {
+							rel = r
+						}
+					}
+					rendered[rel] = true
 				}
 			}
-			names := make([]string, 0, len(p.NonKRMFiles[pkg]))
-			for _, name := range p.NonKRMFiles[pkg] {
+			names := make([]string, 0, len(nonKRM[pkg]))
+			for _, name := range nonKRM[pkg] {
 				if !rendered[name] {
 					names = append(names, name)
 				}
