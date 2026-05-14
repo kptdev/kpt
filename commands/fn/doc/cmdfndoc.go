@@ -99,7 +99,7 @@ items: []
 	err = cmd.Run()
 	pr := printer.FromContextOrDie(r.Ctx)
 	if err != nil {
-		pr.Printf(errout.String())
+		pr.Printf("%s", &errout)
 		return fmt.Errorf("please ensure the container has an entrypoint and it supports --help flag: %w", err)
 	}
 	fmt.Fprintln(pr.OutStream(), out.String())

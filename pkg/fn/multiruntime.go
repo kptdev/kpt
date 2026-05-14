@@ -1,4 +1,4 @@
-// Copyright 2022 The kpt Authors
+// Copyright 2022,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,8 +40,7 @@ func (r *MultiRuntime) GetRunner(ctx context.Context, fn *kptfilev1.Function) (F
 	for _, runtime := range r.runtimes {
 		runner, err := runtime.GetRunner(ctx, fn)
 		if err != nil {
-			var notFoundError *NotFoundError
-			if !errors.As(err, &notFoundError) {
+			if _, ok := errors.AsType[*NotFoundError](err); !ok {
 				return nil, err
 			}
 		} else {

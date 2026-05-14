@@ -15,11 +15,6 @@ Please refer to the [release notes] page for more information about the latest f
 
 A few areas of work are ongoing. (This is not exhaustive.)
 
-### Package orchestration
-
-Porch is the recommended approach for package orchestration. See the
-[package orchestration documentation](https://docs.nephio.org/docs/porch/) for more details.
-
 ### Explore various options for function runtime
 
 Currently, `kpt fn render` has dependency on docker to execute functions in pipeline.

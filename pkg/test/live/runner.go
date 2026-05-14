@@ -1,4 +1,4 @@
-// Copyright 2021 The kpt Authors
+// Copyright 2021,2026 The kpt Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,8 +90,7 @@ func (r *Runner) RunApply(t *testing.T) (string, string, error) {
 
 func (r *Runner) VerifyExitCode(t *testing.T, err error) {
 	exitCode := 0
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
+	if exitErr, ok := errors.AsType[*exec.ExitError](err); ok {
 		exitCode = exitErr.ExitCode()
 	}
 	if want, got := r.Config.ExitCode, exitCode; want != got {

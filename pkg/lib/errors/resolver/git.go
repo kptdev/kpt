@@ -32,8 +32,8 @@ func init() {
 type gitExecErrorResolver struct{}
 
 func (*gitExecErrorResolver) Resolve(err error) (ResolvedResult, bool) {
-	var gitExecErr *gitutil.GitExecError
-	if !goerrors.As(err, &gitExecErr) {
+	gitExecErr, ok := goerrors.AsType[*gitutil.GitExecError](err)
+	if !ok {
 		return ResolvedResult{}, false
 	}
 	fullCommand := fmt.Sprintf("git %s %s", gitExecErr.Command,
