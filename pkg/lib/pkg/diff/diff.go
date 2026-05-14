@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
@@ -169,7 +169,7 @@ func (c *Command) Run(ctx context.Context) error {
 	var upstreamTargetPkg string
 
 	if c.Ref == "" {
-		gur, err := gitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
+		gur, err := internalgitutil.NewGitUpstreamRepo(ctx, kptFile.UpstreamLock.Git.Repo)
 		if err != nil {
 			return err
 		}

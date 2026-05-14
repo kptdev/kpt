@@ -21,9 +21,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/pkg/lib/pkg/diff"
+	pkgdiff "github.com/kptdev/kpt/pkg/lib/pkg/diff"
 	"github.com/kptdev/kpt/pkg/lib/types"
-	merge4 "github.com/kptdev/kpt/pkg/lib/update/merge3"
+	"github.com/kptdev/kpt/pkg/lib/update/merge3"
 	"sigs.k8s.io/kustomize/kyaml/pathutil"
 
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
@@ -132,7 +132,7 @@ func (u ResourceMergeUpdater) updatePackage(subPkgPath, localPath, updatedPath, 
 	// Package deleted from upstream
 	case originalExists && localExists && !updatedExists:
 		// Check the diff. If there are local changes, we keep the subpackage.
-		diff, err := diff.PkgDiff(originalPath, localPath)
+		diff, err := pkgdiff.PkgDiff(originalPath, localPath)
 		if err != nil {
 			return errors.E(op, types.UniquePath(localPath), err)
 		}
@@ -166,7 +166,7 @@ func (u ResourceMergeUpdater) mergePackage(localPath, updatedPath, originalPath,
 		return err
 	}
 
-	mergedKos, err := merge4.Merge(
+	mergedKos, err := merge3.Merge(
 		originalKos, updatedKos, destinationKos, crdSchemas,
 	)
 	if err != nil {
@@ -370,8 +370,8 @@ func getCrdSchemas(updated fn.KubeObjects, destination fn.KubeObjects) ([]byte, 
 	var kubeobjects fn.KubeObjects
 	copy(kubeobjects, updated)
 	kubeobjects = append(kubeobjects, destination...)
-	_, crdObjects := merge4.FilterCrds(kubeobjects)
-	crdSchemas, err := merge4.SchemasFromCrdKubeObjects(crdObjects)
+	_, crdObjects := merge3.FilterCrds(kubeobjects)
+	crdSchemas, err := merge3.SchemasFromCrdKubeObjects(crdObjects)
 	if err != nil {
 		klog.Error("An error occurred during CRD extraction: %w", err)
 		return nil, nil

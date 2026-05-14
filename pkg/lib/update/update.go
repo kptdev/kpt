@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	git2 "github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
@@ -32,7 +32,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/update/updatetypes"
 	"github.com/kptdev/kpt/pkg/lib/util/addmergecomment"
 	"github.com/kptdev/kpt/pkg/lib/util/fetch"
-	"github.com/kptdev/kpt/pkg/lib/util/git"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/lib/util/stack"
 	"github.com/kptdev/kpt/pkg/printer"
 	"sigs.k8s.io/kustomize/kyaml/copyutil"
@@ -101,7 +101,7 @@ type Command struct {
 	Strategy kptfilev1.UpdateStrategyType
 
 	// cachedUpstreamRepos is an upstream repo already fetched for a given repoSpec CloneRef
-	cachedUpstreamRepos map[string]*git2.GitUpstreamRepo
+	cachedUpstreamRepos map[string]*internalgitutil.GitUpstreamRepo
 }
 
 func GetUpdater(strategy string) updatetypes.Updater {
@@ -147,7 +147,7 @@ func (u *Command) Run(ctx context.Context) error {
 		return errors.E(op, u.Pkg.UniquePath, err)
 	}
 	if u.cachedUpstreamRepos == nil {
-		u.cachedUpstreamRepos = make(map[string]*git2.GitUpstreamRepo)
+		u.cachedUpstreamRepos = make(map[string]*internalgitutil.GitUpstreamRepo)
 	}
 	packageCount := 0
 
@@ -198,7 +198,7 @@ func (u *Command) Run(ctx context.Context) error {
 }
 
 // GetCachedUpstreamRepos returns repos cached during update
-func (u Command) GetCachedUpstreamRepos() map[string]*git2.GitUpstreamRepo {
+func (u Command) GetCachedUpstreamRepos() map[string]*internalgitutil.GitUpstreamRepo {
 	return u.cachedUpstreamRepos
 }
 
@@ -268,7 +268,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	pr.PrintPackage(p, p != u.Pkg)
 
 	g := kf.Upstream.Git
-	updated := &git.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
+	updated := &gitutil.RepoSpec{OrgRepo: g.Repo, Path: g.Directory, Ref: g.Ref}
 	pr.Printf("Fetching upstream from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 	cloner := fetch.NewCloner(updated, fetch.WithCachedRepo(u.cachedUpstreamRepos))
 	if err := cloner.ClonerUsingGitExec(ctx); err != nil {
@@ -279,7 +279,7 @@ func (u Command) updateRootPackage(ctx context.Context, p *pkg.Pkg) error {
 	var origin repoClone
 	if kf.UpstreamLock != nil {
 		gLock := kf.UpstreamLock.Git
-		originRepoSpec := &git.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
+		originRepoSpec := &gitutil.RepoSpec{OrgRepo: gLock.Repo, Path: gLock.Directory, Ref: gLock.Commit}
 		pr.Printf("Fetching origin from %s@%s\n", kf.Upstream.Git.Repo, kf.Upstream.Git.Ref)
 		if err := fetch.NewCloner(originRepoSpec, fetch.WithCachedRepo(u.cachedUpstreamRepos)).ClonerUsingGitExec(ctx); err != nil {
 			return errors.E(op, p.UniquePath, err)

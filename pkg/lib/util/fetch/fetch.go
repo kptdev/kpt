@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kptdev/kpt/internal/gitutil"
+	internalgitutil "github.com/kptdev/kpt/internal/gitutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/otiai10/copy"
@@ -31,7 +31,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/pkg"
-	"github.com/kptdev/kpt/pkg/lib/util/git"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/printer"
 )
 
@@ -55,7 +55,7 @@ func (c Command) Run(ctx context.Context) error {
 	}
 
 	g := kf.Upstream.Git
-	repoSpec := &git.RepoSpec{
+	repoSpec := &gitutil.RepoSpec{
 		OrgRepo: g.Repo,
 		Path:    g.Directory,
 		Ref:     g.Ref,
@@ -97,21 +97,21 @@ func (c Command) validate(kf *kptfilev1.KptFile) error {
 // rather than recloning them each time.
 type Cloner struct {
 	// repoSpec spec to clone
-	repoSpec *git.RepoSpec
+	repoSpec *gitutil.RepoSpec
 
 	// cachedRepos
-	cachedRepo map[string]*gitutil.GitUpstreamRepo
+	cachedRepo map[string]*internalgitutil.GitUpstreamRepo
 }
 
 type NewClonerOption func(*Cloner)
 
-func WithCachedRepo(r map[string]*gitutil.GitUpstreamRepo) NewClonerOption {
+func WithCachedRepo(r map[string]*internalgitutil.GitUpstreamRepo) NewClonerOption {
 	return func(c *Cloner) {
 		c.cachedRepo = r
 	}
 }
 
-func NewCloner(r *git.RepoSpec, opts ...NewClonerOption) *Cloner {
+func NewCloner(r *gitutil.RepoSpec, opts ...NewClonerOption) *Cloner {
 	c := &Cloner{
 		repoSpec: r,
 	}
@@ -119,7 +119,7 @@ func NewCloner(r *git.RepoSpec, opts ...NewClonerOption) *Cloner {
 		opt(c)
 	}
 	if c.cachedRepo == nil {
-		c.cachedRepo = make(map[string]*gitutil.GitUpstreamRepo)
+		c.cachedRepo = make(map[string]*internalgitutil.GitUpstreamRepo)
 	}
 	return c
 }
@@ -169,7 +169,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	// fetches and caches all tag and branch refs from the upstream repo.
 	upstreamRepo, exists := c.cachedRepo[c.repoSpec.CloneSpec()]
 	if !exists {
-		newUpstreamRemp, err := gitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec())
+		newUpstreamRemp, err := internalgitutil.NewGitUpstreamRepo(ctx, c.repoSpec.CloneSpec())
 		if err != nil {
 			return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 		}
@@ -196,7 +196,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
 
-	gitRunner, err := gitutil.NewLocalGitRunner(dir)
+	gitRunner, err := internalgitutil.NewLocalGitRunner(dir)
 	if err != nil {
 		return errors.E(op, errors.Git, errors.Repo(c.repoSpec.CloneSpec()), err)
 	}
@@ -214,7 +214,7 @@ func (c *Cloner) ClonerUsingGitExec(ctx context.Context) error {
 	// sure that any changes in the local worktree are cleaned out.
 	_, err = gitRunner.Run(ctx, "reset", "--hard", commit)
 	if err != nil {
-		gitutil.AmendGitExecError(err, func(e *gitutil.GitExecError) {
+		internalgitutil.AmendGitExecError(err, func(e *internalgitutil.GitExecError) {
 			e.Repo = c.repoSpec.CloneSpec()
 			e.Ref = commit
 		})

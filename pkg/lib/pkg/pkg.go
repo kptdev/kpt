@@ -30,7 +30,7 @@ import (
 	"github.com/kptdev/kpt/pkg/kptfile/kptfileutil"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
-	"github.com/kptdev/kpt/pkg/lib/util/git"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/lib/util/path"
 	regclientref "github.com/regclient/regclient/types/ref"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
@@ -54,7 +54,7 @@ var MatchAllKRM = append([]string{kptfilev1.KptFileName}, kio.MatchAll...)
 // RemoteKptfileError records errors regarding reading or parsing of a Kptfile
 // in a remote repo.
 type RemoteKptfileError struct {
-	RepoSpec *git.RepoSpec
+	RepoSpec *gitutil.RepoSpec
 	Err      error
 }
 

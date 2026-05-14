@@ -27,7 +27,7 @@ import (
 	kptfilev1 "github.com/kptdev/kpt/pkg/api/kptfile/v1"
 	"github.com/kptdev/kpt/pkg/lib/errors"
 	"github.com/kptdev/kpt/pkg/lib/types"
-	"github.com/kptdev/kpt/pkg/lib/util/git"
+	gitutil "github.com/kptdev/kpt/pkg/lib/util/git"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/sets"
@@ -261,7 +261,7 @@ func UpdateKptfile(localPath, updatedPath, originPath string, updateUpstream boo
 // by path by using the values from spec. It will also populate the commit
 // field in upstreamLock using the latest commit of the git repo given
 // by spec.
-func UpdateUpstreamLockFromGit(path string, spec *git.RepoSpec) error {
+func UpdateUpstreamLockFromGit(path string, spec *gitutil.RepoSpec) error {
 	const op errors.Op = "kptfileutil.UpdateUpstreamLockFromGit"
 	// read KptFile cloned with the package if it exists
 	kpgfile, err := ReadKptfile(filesys.FileSystemOrOnDisk{}, path)

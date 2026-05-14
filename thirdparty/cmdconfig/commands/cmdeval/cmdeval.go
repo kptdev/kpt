@@ -19,7 +19,6 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/runneroptions"
 	argsutil "github.com/kptdev/kpt/pkg/lib/util/args"
 	"github.com/kptdev/kpt/pkg/lib/util/cmdutil"
-	"github.com/kptdev/kpt/pkg/lib/util/path"
 	pathutil "github.com/kptdev/kpt/pkg/lib/util/path"
 	"github.com/kptdev/kpt/pkg/printer"
 	"github.com/kptdev/kpt/thirdparty/cmdconfig/commands/runner"
@@ -201,8 +200,8 @@ func (r *EvalFnRunner) NewFunction() *kptfile.Function {
 		newFn.Exclusions = []kptfile.Selector{r.Exclusion}
 	}
 	if r.FnConfigPath != "" {
-		fnConfigAbsPath, _, _ := path.ResolveAbsAndRelPaths(r.FnConfigPath)
-		pkgAbsPath, _, _ := path.ResolveAbsAndRelPaths(r.runFns.Path)
+		fnConfigAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.FnConfigPath)
+		pkgAbsPath, _, _ := pathutil.ResolveAbsAndRelPaths(r.runFns.Path)
 		newFn.ConfigPath, _ = filepath.Rel(pkgAbsPath, fnConfigAbsPath)
 	} else {
 		data := map[string]string{}

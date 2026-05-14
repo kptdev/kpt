@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package pkgutil contains utility functions for packages
+// Package pkg contains utility functions for packages
 package pkg
 
 import (
