@@ -21,9 +21,12 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/distribution/reference"
 	regclientref "github.com/regclient/regclient/types/ref"
 	"k8s.io/klog/v2"
 )
+
+const imageTagError = "must start with an alphanumeric character or underscore, followed by at most 127 alphanumeric characters, underscores, periods, or dashes"
 
 // TagLister is an interface for listing tags for/from a function runtime/runner
 type TagLister interface {
@@ -89,6 +92,15 @@ func (tr *TagResolver) ResolveFunctionImage(ctx context.Context, image, tag stri
 			tag, versionErr, constraintErr)
 	}
 
+	return imageWithLiteralTag(ref, tag)
+}
+
+func imageWithLiteralTag(ref regclientref.Ref, tag string) (string, error) {
+	// reference.TagRegexp is the canonical OCI/Docker tag pattern but is
+	// unanchored, so require a full-string match to reject embedded matches.
+	if match := reference.TagRegexp.FindString(tag); match != tag {
+		return "", fmt.Errorf("`function.tag` %q must be a valid image tag: %s", tag, imageTagError)
+	}
 	ref.Tag = tag
 	return ref.CommonName(), nil
 }

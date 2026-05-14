@@ -535,3 +535,54 @@ func Chdir(t *testing.T, path string) func() {
 	}
 	return revertFunc
 }
+
+func TestPipelineStepNameOrImage(t *testing.T) {
+	const expected = "image"
+
+	testCases := map[string]struct {
+		name  string
+		image string
+	}{
+		"has name": {
+			name:  "image",
+			image: "different-image",
+		},
+		"no registry, no path, no tag": {
+			image: "image",
+		},
+		"no registry, no path, with tag": {
+			image: "image:v0.1.0",
+		},
+		"no registry, with path, no tag": {
+			image: "kptdev/krm-functions-catalog/image",
+		},
+		"no registry, with path, with tag": {
+			image: "kptdev/krm-functions-catalog/image:v0.1.0",
+		},
+		"with registry, no path, no tag": {
+			image: "my-registry.com/image",
+		},
+		"with registry, no path, with tag": {
+			image: "my-registry.com/image:v0.1.0",
+		},
+		"with registry, with path, no tag": {
+			image: "my-registry.com/kptdev/krm-functions-catalog/image",
+		},
+		"with registry, with path, with tag": {
+			image: "my-registry.com/kptdev/krm-functions-catalog/image:v0.1.0",
+		},
+		"with digest, no tag": {
+			image: "my-registry.com/kptdev/krm-functions-catalog/image@sha256:7d89a74f106241391f687fc2985c8e6de597bb21f0d0014def5edc730618d9cc",
+		},
+		"with digest, with tag": {
+			image: "my-registry.com/kptdev/krm-functions-catalog/image:v0.1.0@sha256:7d89a74f106241391f687fc2985c8e6de597bb21f0d0014def5edc730618d9cc",
+		},
+	}
+
+	for tn, tc := range testCases {
+		t.Run(tn, func(t *testing.T) {
+			actual := PipelineStepNameOrImage(tc.name, tc.image)
+			assert.Equal(t, expected, actual)
+		})
+	}
+}

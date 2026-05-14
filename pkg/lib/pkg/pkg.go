@@ -17,6 +17,7 @@ package pkg
 
 import (
 	"bytes"
+	stderrors "errors"
 	"fmt"
 	"io"
 	"os"
@@ -31,6 +32,7 @@ import (
 	"github.com/kptdev/kpt/pkg/lib/types"
 	"github.com/kptdev/kpt/pkg/lib/util/git"
 	"github.com/kptdev/kpt/pkg/lib/util/path"
+	regclientref "github.com/regclient/regclient/types/ref"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 	"sigs.k8s.io/kustomize/kyaml/kio"
 	"sigs.k8s.io/kustomize/kyaml/kio/kioutil"
@@ -430,33 +432,66 @@ func (p *Pkg) ValidatePipeline() error {
 
 	resourcesByPath := sets.String{}
 
+	// TODO: should we use go.uber.org/multierr instead?
+	var errs []error
 	for _, r := range resources {
 		rPath, _, err := kioutil.GetFileAnnotations(r)
 		if err != nil {
-			return fmt.Errorf("resource missing path annotation err: %w", err)
+			errs = append(errs, fmt.Errorf("resource %q missing path annotation err: %w", r.GetName(), err))
 		}
 		resourcesByPath.Insert(filepath.Clean(rPath))
 	}
 
+	if len(errs) > 0 {
+		return stderrors.Join(errs...)
+	}
+
 	for i, fn := range pl.Mutators {
 		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
-			return &kptfilev1.ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "mutators", i),
-				Value:  fn.ConfigPath,
-				Reason: "functionConfig must exist in the current package",
-			}
+			errs = append(errs, makeStepValidationErr("mutator", i, fn.Name, fn.Image, fn.ConfigPath))
 		}
 	}
 	for i, fn := range pl.Validators {
 		if fn.ConfigPath != "" && !resourcesByPath.Has(filepath.Clean(fn.ConfigPath)) {
-			return &kptfilev1.ValidateError{
-				Field:  fmt.Sprintf("pipeline.%s[%d].configPath", "validators", i),
-				Value:  fn.ConfigPath,
-				Reason: "functionConfig must exist in the current package",
-			}
+			errs = append(errs, makeStepValidationErr("validator", i, fn.Name, fn.Image, fn.ConfigPath))
 		}
 	}
-	return nil
+	return stderrors.Join(errs...)
+}
+
+func makeStepValidationErr(stepType string, i int, fnName, fnImage, configPath string) *kptfilev1.ValidateError {
+	return &kptfilev1.ValidateError{
+		Field: fmt.Sprintf("pipeline.%s[%d].configPath", stepType+"s", i),
+		Value: configPath,
+		Reason: fmt.Sprintf("functionConfig resource for %s %q is missing from path %q, this also occurs if %q is part of a subpackage",
+			stepType, PipelineStepNameOrImage(fnName, fnImage), configPath, configPath),
+	}
+}
+
+// PipelineStepNameOrImage returns the name if it's not empty or extracts the base name of the image
+func PipelineStepNameOrImage(name, image string) string {
+	if name != "" {
+		return name
+	}
+
+	return ImageBaseName(image)
+}
+
+// ImageBaseName extracts the "base name" from a full/partial image repository name
+//
+// TODO: This probably already exist somewhere
+func ImageBaseName(fullName string) string {
+	ref, err := regclientref.New(fullName)
+	if err != nil {
+		return fullName
+	}
+
+	i := strings.LastIndex(ref.Repository, "/")
+	if i == -1 {
+		return ref.Repository
+	}
+
+	return ref.Repository[i+1:]
 }
 
 // GetPkgPathAnnotation returns the package path annotation on
