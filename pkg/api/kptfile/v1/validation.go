@@ -177,7 +177,7 @@ func GetValidatedFnConfigFromPath(fsys filesys.FileSystem, pkgPath types.UniqueP
 	path := filepath.Join(string(pkgPath), configPath)
 	file, err := fsys.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("functionConfig must exist in the current package")
+		return nil, fmt.Errorf("failed to open functionConfig from path %q: %w", configPath, err)
 	}
 	defer file.Close()
 	reader := kio.ByteReader{Reader: file, PreserveSeqIndent: true, WrapBareSeqNode: true, DisableUnwrapping: true}
