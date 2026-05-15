@@ -15,6 +15,7 @@
 // Package defines Kptfile schema.
 // Version: v1
 // swagger:meta
+// +kubebuilder:object:generate=true
 package v1
 
 import (
@@ -267,7 +268,6 @@ type Subpackage struct {
 }
 
 // Pipeline declares a pipeline of functions used to mutate or validate resources.
-// +kubebuilder:object:generate=true
 type Pipeline struct {
 	//  Sources defines the source packages to resolve as input to the pipeline. Possible values:
 	//  a) A slash-separated, OS-agnostic relative package path which may include '.' and '..' e.g. './base', '../foo'
@@ -315,7 +315,6 @@ func (p *Pipeline) IsEmpty() bool {
 }
 
 // Function specifies a KRM function.
-// +kubebuilder:object:generate=true
 type Function struct {
 	// `Image` specifies the function container image.
 	// It can either be fully qualified, e.g.:
@@ -365,7 +364,6 @@ type Function struct {
 
 // Selector specifies the selection criteria
 // please update IsEmpty method if more properties are added
-// +kubebuilder:object:generate=true
 type Selector struct {
 	// APIVersion of the target resources
 	APIVersion string `yaml:"apiVersion,omitempty" json:"apiVersion,omitempty"`
