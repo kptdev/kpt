@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +kubebuilder:object:generate=true
 package v1
 
 import (
@@ -19,6 +20,8 @@ import (
 	"sigs.k8s.io/kustomize/kyaml/fn/framework"
 	"sigs.k8s.io/kustomize/kyaml/yaml"
 )
+
+//go:generate go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.19.0 object:headerFile="../../../../hack/boilerplate.go.txt",year=$YEAR_GEN
 
 // Result contains the structured result from an individual function
 type Result struct {
