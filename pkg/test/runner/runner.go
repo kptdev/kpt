@@ -755,7 +755,6 @@ func (n *diffNormalizer) isKptfileDiffHeader(line string) bool {
 }
 
 func (n *diffNormalizer) normalizePayload(payload string) string {
-
 	if m := n.doubleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
 		payload = m[1] + m[2]
 	} else if m := n.singleQuotedScalarRE.FindStringSubmatch(payload); m != nil {
@@ -924,22 +923,6 @@ func (n *diffNormalizer) normalize(diff string) string {
 		}
 		line = n.indexRE.ReplaceAllString(line, "index NORMALIZED")
 		line = n.hunkRE.ReplaceAllString(line, "@@ NORMALIZED @@")
-		// Strip leading whitespace from non-Kptfile diff lines to tolerate
-		// legacy goldens under e2e/testdata/fn-{render,eval}/**/.expected/
-		// whose resources.yaml hunks were indent-stripped by a prior
-		// hand-edit. This is a LOSSY normalization — it will hide
-		// genuine YAML indentation changes (e.g. a field moving to a new
-		// nesting level). The correct long-term fix is to regenerate
-		// those goldens via `KPT_E2E_UPDATE_EXPECTED=true` on a docker-
-		// or podman-capable host and then remove this branch. Until
-		// then, tests that need to assert exact indentation should do so
-		// via diffStripRegEx or by parsing the resulting YAML in a
-		// custom assertion rather than relying on this diff comparison.
-		if len(line) > 0 && (line[0] == ' ' || line[0] == '+' || line[0] == '-') &&
-			!strings.HasPrefix(line, "+++") && !strings.HasPrefix(line, "---") &&
-			!strings.HasPrefix(line, "diff --git") {
-
-		}
 		n.out = append(n.out, line)
 	}
 	n.flushKptChangedRun()
